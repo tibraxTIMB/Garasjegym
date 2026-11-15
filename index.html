@@ -74,6 +74,7 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 
 .coffee-order{border:1px solid var(--line);border-left:6px solid #d94a4a;border-radius:14px;padding:12px;margin:10px 0;background:var(--panel)}
 .coffee-order.done{border-left-color:#2eaa68}
+.coffee-order.stage-new,.member-order.stage-new{border-left-color:#d94a4a}.coffee-order.stage-making,.member-order.stage-making{border-left-color:#e29a32}.coffee-order.stage-done,.member-order.stage-done{border-left-color:#2eaa68}.member-order{padding:12px;border:1px solid var(--line);border-left:6px solid;border-radius:13px;margin:9px 0;background:var(--panel)}.member-order .order-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.member-order.stage-new .status-dot{background:#5b2428;color:#ffdada}.member-order.stage-making .status-dot{background:#765019;color:#fff0cc}.member-order.stage-done .status-dot{background:#174b32;color:#d7ffe7}
 .coffee-member-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px;margin:12px 0}.coffee-stat{background:#111a24;border:1px solid var(--line);border-radius:12px;padding:11px}.coffee-stat strong{display:block}.coffee-stat ul{margin:7px 0 0;padding-left:18px;color:var(--muted);font-size:12px}.coffee-order-wrap{position:relative}.coffee-order-wrap .swipe-delete{display:none;margin:0 0 8px auto}@media(hover:hover){.coffee-order-wrap .swipe-delete{display:inline-flex}}.coffee-order-wrap.swiped .swipe-delete{display:block}.coffee-order-wrap .coffee-order{margin-bottom:5px}
 .coffee-order .order-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .coffee-order .status-dot{font-size:12px;font-weight:800;border-radius:999px;padding:5px 10px;background:#5b2428;color:#ffdada}
@@ -100,6 +101,7 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 .admin-accordion details.card>form{margin-bottom:14px}
 .coffee-order{border:1px solid var(--line);border-left:5px solid #d94a4a;border-radius:13px;margin:8px 0;background:#1a202a;overflow:hidden}
 .coffee-order.done{border-left-color:#2eaa68}
+.coffee-order.stage-new,.member-order.stage-new{border-left-color:#d94a4a}.coffee-order.stage-making,.member-order.stage-making{border-left-color:#e29a32}.coffee-order.stage-done,.member-order.stage-done{border-left-color:#2eaa68}.member-order{padding:12px;border:1px solid var(--line);border-left:6px solid;border-radius:13px;margin:9px 0;background:var(--panel)}.member-order .order-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.member-order.stage-new .status-dot{background:#5b2428;color:#ffdada}.member-order.stage-making .status-dot{background:#765019;color:#fff0cc}.member-order.stage-done .status-dot{background:#174b32;color:#d7ffe7}
 .coffee-member-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px;margin:12px 0}.coffee-stat{background:#111a24;border:1px solid var(--line);border-radius:12px;padding:11px}.coffee-stat strong{display:block}.coffee-stat ul{margin:7px 0 0;padding-left:18px;color:var(--muted);font-size:12px}.coffee-order-wrap{position:relative}.coffee-order-wrap .swipe-delete{display:none;margin:0 0 8px auto}@media(hover:hover){.coffee-order-wrap .swipe-delete{display:inline-flex}}.coffee-order-wrap.swiped .swipe-delete{display:block}.coffee-order-wrap .coffee-order{margin-bottom:5px}
 .coffee-order>summary{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px;cursor:pointer;list-style:none}
 .coffee-order>summary::-webkit-details-marker{display:none}
@@ -112,21 +114,58 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 
 .app-footer{text-align:center;padding:22px 12px 16px;color:var(--muted);font-size:12px}
 .version-note{margin-top:6px;font-size:10px;letter-spacing:.04em;opacity:.72}
+
+/* GarasjeGym 0.3.1 – coffee bar UI */
+.coffee-shop{background:linear-gradient(145deg,#202b38,#111923 72%);border:1px solid #39495b;padding:18px}
+.coffee-shop-hero{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.coffee-shop-icon{width:66px;height:66px;border-radius:20px;display:grid;place-items:center;background:linear-gradient(145deg,#d99a3d,#8b541d);font-size:34px;box-shadow:0 8px 22px #0005}
+.coffee-shop h2{margin:2px 0;font-size:24px}.coffee-shop .subheading{color:#e9b65d;font-size:10px;font-weight:900;letter-spacing:2px}
+.coffee-shop form{display:grid;gap:9px}.coffee-shop input,.coffee-shop select{background:#0e1721;border:1px solid #435367;border-radius:12px;padding:13px;color:#f5f7fa;min-height:48px}
+.coffee-shop label{font-size:12px;color:#b7c4d2;font-weight:800;margin-top:4px}.coffee-shop .coffee-submit{background:linear-gradient(100deg,#e6a63e,#f5bd58);color:#171717;font-weight:900;border:0;border-radius:14px;min-height:54px;font-size:16px;margin-top:8px}
+.coffee-action{min-height:52px;padding:12px 20px;border-radius:14px;font-weight:900;background:#e9a83e;color:#171717;border:0;font-size:15px;touch-action:manipulation}
+.coffee-order.stage-new{border-left:8px solid #e34c55;background:linear-gradient(100deg,#352027,#1a202a 42%)}
+.coffee-order.stage-making{border-left:8px solid #e9a43b;background:linear-gradient(100deg,#3b2d1b,#1a202a 42%)}
+.coffee-order.stage-done{border-left:8px solid #35b879;background:linear-gradient(100deg,#193b2b,#1a202a 42%)}
+.coffee-order.stage-new .status-dot{background:#64272e;color:#ffe1e1}.coffee-order.stage-making .status-dot{background:#765019;color:#fff0cc}.coffee-order.stage-done .status-dot{background:#17633d;color:#ddffeb}
+.coffee-order-wrap{margin:12px 0}.coffee-order>summary{min-height:72px}.coffee-order-details{padding-top:12px}.coffee-order-details p{font-size:14px;line-height:1.45}
+
+
+/* Independent coffee status tile on the home dashboard */
+.coffee-overview{grid-column:span 3;cursor:pointer;min-height:155px;padding:13px;display:flex;flex-direction:column;gap:10px;border:1px solid #465365;background:linear-gradient(145deg,#202b38,#111923 78%);transition:border-color .2s,transform .2s}
+.coffee-overview:active{transform:scale(.99)}
+.coffee-overview-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:900;letter-spacing:1.3px;color:#e8b65f}
+.coffee-state-pill{border-radius:99px;padding:5px 9px;background:#174b32;color:#d7ffe7;letter-spacing:.3px}
+.coffee-state-pill.busy{background:#765019;color:#fff0cc}.coffee-state-pill.attention{background:#64272e;color:#ffe1e1}
+.coffee-overview-title{font-size:16px;font-weight:800;color:#f4f6f8}.coffee-overview-count{font-size:27px;line-height:1;font-weight:900;color:#f2b64f}.coffee-overview-detail{font-weight:800;color:#f4c978;margin-top:auto}.coffee-overview-queue{font-size:12px;color:#c1ccd8;line-height:1.45}
+.coffee-overview.has-new{border-color:#d94a4a}.coffee-overview.has-making{border-color:#e29a32}.coffee-overview.has-done{border-color:#2eaa68}
+@media(max-width:700px){.coffee-overview{grid-column:span 6;min-height:138px;padding:12px}.dashboard-card{grid-column:span 6;min-height:138px;padding:12px}.coffee-overview-count{font-size:25px}.coffee-overview-head{font-size:9px}}
+
+
+/* Floating ready-to-collect coffee notification for the member */
+#coffeeReadyToast{position:fixed;z-index:30;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom));width:max-content;max-width:min(92vw,560px);margin:auto;display:flex;align-items:center;gap:13px;padding:13px 20px 13px 14px;border:2px solid #69d99b;border-radius:22px;background:linear-gradient(110deg,#164b34,#123526);color:#f2fff7;box-shadow:0 12px 38px #0009;cursor:pointer;animation:coffeeGlide 13s ease-in-out infinite alternate;touch-action:manipulation}
+#coffeeReadyToast .ready-cup{font-size:38px;line-height:1;filter:drop-shadow(0 3px 4px #0005)}
+#coffeeReadyToast strong{display:block;font-size:17px;letter-spacing:.2px}#coffeeReadyToast small{display:block;color:#d2f6df;font-size:12px;margin-top:2px}
+#coffeeReadyToast .ready-dismiss{font-size:11px;font-weight:900;background:#d7ffe7;color:#145334;border-radius:99px;padding:6px 9px;white-space:nowrap}
+#coffeeReadyToast:focus-visible{outline:3px solid #fff;outline-offset:4px}
+@keyframes coffeeGlide{0%{transform:translateX(34vw) rotate(3deg)}45%{transform:translateX(0) rotate(-2deg)}100%{transform:translateX(-30vw) rotate(2deg)}}
+@media(prefers-reduced-motion:reduce){#coffeeReadyToast{animation:none}}
+
 </style>
 </head>
 <body>
 <header><div class="logo">GARASJEGYM<small>TRAIN · TRACK · IMPROVE</small></div><div class="header-tools"><label class="sr-only" for="activeProfile">Test brukarprofil</label><select id="activeProfile" aria-label="Byt brukarprofil"><option value="owner">Trond Inge · Admin</option><option value="vip">Kona · VIP-manager</option><option value="friend1">Kompis 1 · Medlem</option><option value="friend2">Kompis 2 · Medlem</option><option value="friend3">Kompis 3 · Medlem</option><option value="friend4">Kompis 4 · Medlem</option><option value="friend5">Kompis 5 · Medlem</option></select><span id="roleBadge" class="pill gold">ADMIN</span><span class="hint">Rollevising · ikkje innlogging</span></div></header>
 <main>
-<div class="notice">GARASJEGYM 0.2 · Treningsapp for den private garasjeklubben. Rollebasert grensesnittdemo. Profilveljaren testar rollene – han er ikkje sikker innlogging. Data blir lagra lokalt i denne nettlesaren, ikkje synkronisert mellom einingar. Nye-time-varsel er interne i denne appinstallasjonen – ikkje pushvarsel til andre telefonar.</div><div class="role-banner"><div><strong id="welcomeRole">Velkomen til GARASJEGYM</strong><br><small id="roleDescription">Vel brukarprofil for å sjå rett grensesnitt.</small></div><span id="roleHint" class="pill">DEMO-PROFIL</span></div>
+<div class="notice">GARASJEGYM 0.3 TEST · Lokal fleirbrukardemo. Byt profil i toppmenyen for å simulere medlem og admin. Alle profilar deler same data i denne nettlesaren. Ikkje ekte innlogging eller synkronisering mellom einingar. Treningsapp for den private garasjeklubben. Rollebasert grensesnittdemo. Profilveljaren testar rollene – han er ikkje sikker innlogging. Data blir lagra lokalt i denne nettlesaren, ikkje synkronisert mellom einingar. Nye-time-varsel er interne i denne appinstallasjonen – ikkje pushvarsel til andre telefonar.</div><div class="role-banner"><div><strong id="welcomeRole">Velkomen til GARASJEGYM</strong><br><small id="roleDescription">Vel brukarprofil for å sjå rett grensesnitt.</small></div><span id="roleHint" class="pill">DEMO-PROFIL</span></div>
 <nav id="nav">
 <button class="active" data-tab="home">Oversikt</button><button class="secondary" data-tab="wods">WOD</button><button class="secondary" data-tab="classes">Gruppetimar</button><button class="secondary" data-tab="calendar">Kalender</button><button class="secondary" data-tab="library">Øvingar</button><button class="secondary" data-tab="prs">PR</button><button class="secondary" data-tab="profile">Profil & maks</button><button class="secondary" data-tab="log">Treningslogg</button><button class="secondary" data-tab="barista">Barista</button><button class="secondary" data-tab="coach">WOD-coach</button><button class="secondary" data-tab="manager" data-roles="manager">Manager</button><button class="secondary" data-tab="admin" data-roles="admin">Admin</button>
 </nav>
 <section id="home" class="tab">
 <div class="row"><div><h1>Velkomen til garasjen.</h1><div class="muted">Trening for dykk – heilt gratis.</div></div><div class="row"><button class="secondary" onclick="showTab('barista')">☕ Bestill kaffi</button><button data-roles="admin,manager" onclick="showTab('wods')">+ Ny WOD</button></div></div>
 <div class="grid" style="margin-top:16px">
-<button type="button" class="card span-4 dashboard-card" onclick="showTab('wods')" aria-label="Opne publiserte WOD-ar"><span class="muted">Publiserte WOD-ar</span><span class="metric" id="mWod">0</span><span class="dashboard-link">Sjå WOD-ar <span aria-hidden="true">→</span></span></button>
-<button type="button" class="card span-4 dashboard-card" onclick="showTab('classes')" aria-label="Opne gruppetimar"><span class="muted">Gruppetimar</span><span class="metric" id="mClass">0</span><span class="dashboard-link">Sjå gruppetimar <span aria-hidden="true">→</span></span></button>
-<button type="button" class="card span-4 dashboard-card" onclick="showTab('prs')" aria-label="Opne personlege rekordar"><span class="muted">Registrerte PR-ar</span><span class="metric" id="mPr">0</span><span class="dashboard-link">Sjå rekordar <span aria-hidden="true">→</span></span></button>
+<button type="button" class="card span-3 dashboard-card" onclick="showTab('wods')" aria-label="Opne publiserte WOD-ar"><span class="muted">Publiserte WOD-ar</span><span class="metric" id="mWod">0</span><span class="dashboard-link">Sjå WOD-ar <span aria-hidden="true">→</span></span></button>
+<button type="button" class="card span-3 dashboard-card" onclick="showTab('classes')" aria-label="Opne gruppetimar"><span class="muted">Gruppetimar</span><span class="metric" id="mClass">0</span><span class="dashboard-link">Sjå gruppetimar <span aria-hidden="true">→</span></span></button>
+<button type="button" class="card span-3 dashboard-card" onclick="showTab('prs')" aria-label="Opne personlege rekordar"><span class="muted">Registrerte PR-ar</span><span class="metric" id="mPr">0</span><span class="dashboard-link">Sjå rekordar <span aria-hidden="true">→</span></span></button>
+<div class="card span-3 coffee-overview" id="coffeeDashboardCard" role="button" tabindex="0" onclick="showTab(currentRole()==='admin'?'admin':'barista')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showTab(currentRole()==='admin'?'admin':'barista')}"><div class="coffee-overview-head"><span>☕ COFFEE CORNER</span><span id="coffeeOverviewState" class="coffee-state-pill">OPEN</span></div><div id="coffeeDashboardTitle" class="coffee-overview-title">Kaffibar</div><div id="coffeeDashboardCount" class="coffee-overview-count">0</div><div id="coffeeDashboardLink" class="coffee-overview-detail">Sjå kaffistatus →</div><div id="coffeeOverviewQueue" class="coffee-overview-queue"></div></div>
 <div class="card span-6"><h2>Neste gruppetimar</h2><div id="nextClasses"></div></div><div class="card span-12" id="memberAlertPanel"><h2>Varsel til deg</h2><div id="memberNotifications"></div></div>
 <div class="card span-6"><h2>Siste WOD-ar</h2><div id="latestWods"></div></div>
 <div class="card span-12"><h2>Snøggmeny</h2><div class="row"><button onclick="showTab('barista')">☕ Bestill kaffi</button><button data-roles="admin,manager" onclick="showTab('wods')">Opprett WOD</button><button class="secondary" data-roles="admin,manager" onclick="showTab('classes')">Opprett gruppetime</button><button class="secondary" onclick="showTab('prs')">Registrer PR</button><button class="secondary" onclick="showTab('log')">Logg trening</button></div></div>
@@ -135,16 +174,15 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 <div class="section-head"><div><div class="subheading">Etter økta</div><h1>Barista corner</h1><div class="muted">God trening. Endå betre kaffi.</div></div><span class="pill gold">GARASJE-BARISTA</span></div>
 <div class="notice">Vel kaffi frå menyen, vel vanleg eller koffeinfri, og send bestillinga. Admin kan laste opp menyen frå ei CSV-fil.</div>
 <div class="grid" style="margin-top:14px">
-<div class="card span-12" id="coffeeOrderPanel"><h2>Bestilling</h2>
-<p class="hint">Vel kaffidrikk i nedtrekksmenyen og send bestillinga.</p><form id="coffeeOrderForm">
+<div class="card span-12 coffee-shop" id="coffeeOrderPanel"><div class="coffee-shop-hero"><div class="coffee-shop-icon">☕</div><div><div class="subheading">GARASJE COFFEE CLUB</div><h2>Bestill noko godt.</h2><p class="hint">Vel favoritten din. Me tek oss av resten.</p></div></div><form id="coffeeOrderForm">
 <label>Namn</label><input name="person" required placeholder="Kven bestiller?">
 <label>Vel kaffidrikk</label><select name="drink" id="coffeeDrink" required></select>
 <label>Kaffitype</label><select name="bean"><option>Vanleg</option><option>Decaf – koffeinfri</option></select>
 <label>Mjølk</label><select name="milk"><option>Vanleg mjølk</option><option>Havremjølk</option><option>Utan mjølk</option></select>
 <label>Sirup / smak</label><select name="syrup"><option>Ingen</option><option>Vanilje</option><option>Karamell</option><option>Sjokolade</option></select>
 <label>Storleik / kommentar</label><input name="note" placeholder="Til dømes dobbel espresso">
-<button>Send kaffibestilling</button>
-</form><div id="coffeeOrderFeedback" class="hint" style="margin-top:10px"></div></div>
+<button class="coffee-submit">☕ Bestill kaffi</button>
+</form><div id="coffeeGeoStatus" class="notice" style="margin-top:12px">📍 Kaffibestilling er berre mogleg innan 250 meter frå GarasjeGym.</div><div id="coffeeOrderFeedback" class="hint" style="margin-top:10px"></div></div>
 <div class="card span-12"><h2>Varsel og bestillingsstatus</h2><div id="coffeeMemberNotifications"></div><h2 style="margin-top:16px">Dine siste bestillingar</h2><div id="coffeeRecent"></div></div>
 </div></section>
 <section id="coach" class="tab hidden"><h1>WOD-coach</h1>
@@ -200,6 +238,7 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
  <details class="card"><summary>PT-førespurnader <span class="hint">Godkjenning</span></summary><div id="adminPTRequests"></div></details>
  <details class="card"><summary>Gruppetimar og PT <span class="hint">Planlegging</span></summary><div id="adminClasses"></div></details>
  <details class="card"><summary>WOD-ar <span class="hint">Rediger og slett</span></summary><div id="adminWods"></div></details>
+ <details class="card"><summary>Kaffigeofence <span class="hint">250 meter frå Sandvenhagen 49</span></summary><p class="hint">Stå ved Sandvenhagen 49 og trykk knappen for å registrere klubbadressa med GPS. Dette blir lagra som fast referanse for kaffibestilling.</p><div id="coffeeGeoAdminStatus" class="notice">Ikkje konfigurert enno.</div><button type="button" onclick="setCoffeeHomeLocation()">📍 Set klubbadresse frå mi plassering</button><button type="button" class="secondary" onclick="clearCoffeeHomeLocation()">Nullstill stad</button></details>
  <details class="card"><summary>Kaffimeny <span class="hint">Legg til / importer</span></summary>
   <p class="hint">Last opp CSV med kolonnane name, description, eller legg til drikk manuelt.</p>
   <form id="coffeeMenuForm"><div class="two"><div><label>Namn på kaffidrikk</label><input name="name" required placeholder="Flat white"></div><div><label>Skildring</label><input name="description" placeholder="Dobbel espresso med mjølk"></div></div><button>Legg til kaffidrikk</button></form>
@@ -214,7 +253,7 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 </div>
 </section>
 <footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben
-<div class="version-note">GarasjeGym 0.2 · Feilrettingar og medlemsfunksjonar · Under utvikling</div>
+<div class="version-note">GarasjeGym 0.4.3 TEST · Coffee Corner, lokal synk og 250 m bestillingssone</div>
 </footer>
 </main>
 <script>
@@ -419,7 +458,38 @@ function renderMemberNotifications(){
  const el=$('#memberNotifications');if(!el)return;
  el.innerHTML=rows.length?rows.map(n=>item(n.title,n.detail+' · '+fmt(n.when),'<span class="pill gold">NY TIME</span>',`<button class="secondary" onclick="markNotification(${JSON.stringify(n.id)})">Lest</button>`)).join(''):'<div class="empty">Ingen nye varsel.</div>';
 }
-function renderHome(){$('#mWod').textContent=db.wods.length;$('#mClass').textContent=db.classes.length;$('#mPr').textContent=db.prs.length;let upcoming=db.classes.filter(c=>new Date(c.when)>=new Date()).sort((a,b)=>a.when.localeCompare(b.when)).slice(0,4);$('#nextClasses').innerHTML=upcoming.length?upcoming.map(c=>item(c.title,`${fmt(c.when)} · ${c.attendees.length}/${c.capacity} påmelde`,`<span class="pill">${c.type}</span>`)).join(''):'<div class="empty">Ingen komande timar.</div>';$('#latestWods').innerHTML=db.wods.slice(0,4).map(w=>item(w.name,`${w.format} · ${w.duration||'–'} min`,'<span class="pill gold">WOD</span>')).join('')||'<div class="empty">Ingen WOD-ar enno.</div>'}
+function renderHome(){
+ $('#mWod').textContent=db.wods.length;$('#mClass').textContent=db.classes.length;$('#mPr').textContent=db.prs.length;
+ renderCoffeeDashboard();
+ let upcoming=db.classes.filter(c=>new Date(c.when)>=new Date()).sort((a,b)=>a.when.localeCompare(b.when)).slice(0,4);
+ $('#nextClasses').innerHTML=upcoming.length?upcoming.map(c=>item(c.title,`${fmt(c.when)} · ${c.attendees.length}/${c.capacity} påmelde`,`<span class="pill">${c.type}</span>`)).join(''):'<div class="empty">Ingen komande timar.</div>';
+ $('#latestWods').innerHTML=db.wods.slice(0,4).map(w=>item(w.name,`${w.format} · ${w.duration||'–'} min`,'<span class="pill gold">WOD</span>')).join('')||'<div class="empty">Ingen WOD-ar enno.</div>';
+}
+function renderCoffeeDashboard(){
+ const co=db.coffeeOrders||[], active=co.filter(o=>!o.cancelled&&coffeeStage(o.status).key!=='Ferdig');
+ const making=active.find(o=>coffeeStage(o.status).key==='I produksjon');
+ const fresh=active.filter(o=>['Bestilt','Motteken'].includes(coffeeStage(o.status).key));
+ const done=co.filter(o=>!o.cancelled&&coffeeStage(o.status).key==='Ferdig');
+ const isAdmin=currentRole()==='admin', card=$('#coffeeDashboardCard'),state=$('#coffeeOverviewState'),queue=$('#coffeeOverviewQueue');
+ card.classList.remove('has-new','has-making','has-done');
+ if(isAdmin){
+  $('#coffeeDashboardTitle').textContent='Kaffibar · Ordrekø';$('#coffeeDashboardCount').textContent=active.length+' aktive';
+  $('#coffeeDashboardLink').textContent='Opne kaffikontroll →';
+  state.textContent=making?'I PRODUKSJON':fresh.length?'NYE BESTILLINGAR':'OPEN';state.className='coffee-state-pill'+(making?' busy':fresh.length?' attention':'');
+  if(making)card.classList.add('has-making');else if(fresh.length)card.classList.add('has-new');else if(done.length)card.classList.add('has-done');
+  queue.textContent=(making?'No: '+making.person+' · '+making.drink+'. ':'')+(fresh.length?fresh.length+' ventar på behandling. ':'')+(done.length?done.length+' ferdige totalt.':'Ingen aktive bestillingar.');
+ }else{
+  const mine=active.filter(o=>o.memberId===currentMember().id||o.person===currentName()).sort((a,b)=>String(a.when).localeCompare(String(b.when)));
+  const latest=mine[0], allQueue=active.slice().sort((a,b)=>String(a.when).localeCompare(String(b.when)));
+  $('#coffeeDashboardTitle').textContent='Mi kaffibestilling';
+  $('#coffeeDashboardCount').textContent=latest?coffeeStage(latest.status).label:'0 aktive';
+  $('#coffeeDashboardLink').textContent=latest?'Sjå bestillinga mi →':'Bestill ein kaffi →';
+  state.textContent=latest?(coffeeStage(latest.status).key==='I produksjon'?'LAGAR KAFFI':coffeeStage(latest.status).key==='Motteken'?'MOTTEKEN':'I KØ'):'OPEN';
+  state.className='coffee-state-pill'+(latest?(coffeeStage(latest.status).key==='I produksjon'?' busy':' attention'):'');
+  if(latest){const pos=allQueue.findIndex(o=>String(o.id)===String(latest.id))+1;queue.textContent=latest.person+' · '+latest.drink+(coffeeStage(latest.status).key==='I produksjon'?' blir laga no.': ' · Plass '+pos+' i køen.');card.classList.add(coffeeStage(latest.status).key==='I produksjon'?'has-making':'has-new');}
+  else{queue.textContent='Du har inga aktiv bestilling. Køen er open for deg.';if(done.length)card.classList.add('has-done');}
+ }
+}
 
 function adminEditWod(id){if(!isOwner()){alert('Berre eigar kan redigere WOD-ar.');return;}
  const w=db.wods.find(x=>x.id===id);if(!w)return;
@@ -443,21 +513,59 @@ function adminEditExercise(index){if(!isOwner()){alert('Berre eigar kan endre ø
  x.name=name.trim()||x.name;x.description=description;x.video=video;save();
 }
 
+function getBrowserPosition(){
+ return new Promise((resolve,reject)=>{
+  if(!navigator.geolocation){reject(new Error('Denne nettlesaren støttar ikkje posisjonstenester.'));return;}
+  navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+ });
+}
+function distanceMeters(a,b){const rad=x=>x*Math.PI/180,R=6371000,dLat=rad(b.lat-a.lat),dLon=rad(b.lon-a.lon),lat1=rad(a.lat),lat2=rad(b.lat);const h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
+async function setCoffeeHomeLocation(){
+ if(!isOwner()){alert('Berre admin kan setje klubbadressa.');return;}
+ const box=$('#coffeeGeoAdminStatus');box.textContent='Hentar GPS-posisjon …';
+ try{const p=await getBrowserPosition();db.coffeeGeofence={lat:p.coords.latitude,lon:p.coords.longitude,radius:250,label:'Sandvenhagen 49',setAt:new Date().toISOString()};save();alert('Klubbadressa er registrert. Kaffibestilling er no avgrensa til 250 meter frå denne posisjonen.');}
+ catch(err){box.textContent='Fekk ikkje GPS-posisjon. Tillat posisjonstilgang i nettlesaren og prøv igjen. ('+err.message+')';}
+}
+function clearCoffeeHomeLocation(){if(!isOwner())return;if(confirm('Vil du fjerne den geografiske avgrensinga?')){delete db.coffeeGeofence;save();}}
+async function checkCoffeeGeofence(){
+ const fence=db.coffeeGeofence;
+ if(!fence)return {ok:false,message:'Kaffibestilling er ikkje aktivert enno. Admin må først registrere klubbadressa frå Sandvenhagen 49.'};
+ try{const p=await getBrowserPosition(),d=distanceMeters({lat:fence.lat,lon:fence.lon},{lat:p.coords.latitude,lon:p.coords.longitude});
+  if(d>fence.radius)return {ok:false,message:`Du er om lag ${Math.round(d)} meter frå kaffibaren. Bestilling er berre mogleg innan ${fence.radius} meter.`};
+  return {ok:true,distance:Math.round(d)};
+ }catch(err){return {ok:false,message:'Me får ikkje stadfesta plasseringa di. Slå på posisjonstenester og tillat tilgang for nettlesaren før du bestiller.'};}
+}
+function renderCoffeeGeoStatus(){
+ const f=db.coffeeGeofence,member=$('#coffeeGeoStatus'),admin=$('#coffeeGeoAdminStatus');
+ if(member)member.textContent=f?`📍 Geografisk bestillingssone aktiv: ${f.radius} meter frå klubbadressa. Nettlesaren spør om posisjon når du bestiller.`:'📍 Kaffibestilling krev at admin først registrerer klubbadressa.';
+ if(admin)admin.textContent=f?`Aktiv: ${f.label||'Klubbadressa'} · radius ${f.radius} m · GPS registrert ${new Date(f.setAt).toLocaleString('nn-NO')}`:'Ikkje konfigurert enno. Stå ved Sandvenhagen 49 og registrer posisjonen.';
+}
 function renderCoffee(){
  const menu=db.coffeeMenu||[];
+ renderCoffeeGeoStatus();
  $('#coffeeDrink').innerHTML=menu.length?menu.map(m=>`<option value="${esc(m.name)}">${esc(m.name)}</option>`).join(''):'<option value="">Ingen kaffidrikkar i menyen</option>';
  $('#coffeeDrink').disabled=!menu.length;
- const orders=(db.coffeeOrders||[]).filter(o=>o.person===currentName());
- $('#coffeeRecent').innerHTML=orders.slice(0,8).map(o=>item(o.drink,`${o.bean} · ${o.milk||'Vanleg mjølk'} · ${o.syrup||'Ingen sirup'} · ${fmt(o.when)} · ${o.note||''}`,`<span class="pill ${['Levert','Klar'].includes(o.status)?'gold':''}">${esc(o.status||'Ny')}</span>`)).join('')||'<div class="empty">Ingen bestillingar enno.</div>';
+ const orders=(db.coffeeOrders||[]).filter(o=>(o.memberId===currentMember().id||o.person===currentName())&&!o.cancelled).sort((a,b)=>String(b.when).localeCompare(String(a.when)));
+ const activeMine=orders.find(o=>coffeeStage(o.status).key!=='Ferdig');
+ const allActive=(db.coffeeOrders||[]).filter(o=>!o.cancelled&&coffeeStage(o.status).key!=='Ferdig').sort((a,b)=>String(a.when).localeCompare(String(b.when)));
+ const queuePos=activeMine?allActive.findIndex(o=>String(o.id)===String(activeMine.id))+1:0;
+ const making=allActive.find(o=>coffeeStage(o.status).key==='I produksjon');
+ const queueNote=activeMine?(making&&making.id!==activeMine.id?`<div class="notice">${esc(making.person)} får kaffien sin først. Du har plass ${queuePos} i køen – me seier frå når det er din tur.</div>`:queuePos>1?`<div class="notice">Du har plass ${queuePos} i køen. Me lagar kaffien til dei framfor deg først.</div>`:'<div class="notice">Du er først i køen. Baristaen startar snart!</div>'):'';
+ $('#coffeeRecent').innerHTML=queueNote+(orders.slice(0,8).map(o=>{const st=coffeeStage(o.status);const canCancel=st.key==='Bestilt'||st.key==='Motteken';return `<div class="coffee-order member-order ${st.css}"><div class="order-head"><strong>${esc(o.drink)}</strong><span class="status-dot">${st.icon} ${st.label}</span></div><small>${fmt(o.when)}</small><p class="hint">${esc(o.bean||'Vanleg')} · ${esc(o.milk||'Vanleg mjølk')} · ${esc(o.syrup||'Ingen')}</p>${canCancel?`<button type="button" class="danger" onclick="cancelMyCoffee(${JSON.stringify(o.id)})">Avbestill</button>`:''}</div>`}).join(''))||'<div class="empty">Ingen bestillingar enno.</div>';
  const mine=(db.notifications||[]).filter(n=>n.recipient===currentName()&&!n.read);
  $('#coffeeMemberNotifications').innerHTML=mine.map(n=>item(n.title,n.detail+' · '+fmt(n.when),'<span class="pill gold">ULest</span>',`<button class="secondary" onclick="markNotification(${JSON.stringify(n.id)})">Les</button>`)).join('')||'<div class="empty">Ingen nye varsel.</div>';
+ renderCoffeeReadyToast(orders);
 }
-$('#coffeeOrderForm').addEventListener('submit',e=>{
- e.preventDefault();if(currentRole()==='admin'){alert('Adminprofilen kan ikkje bestille kaffi.');return;}const f=new FormData(e.target);
- const order={id:Date.now(),person:String(f.get('person')).trim(),drink:f.get('drink'),bean:f.get('bean'),milk:f.get('milk'),syrup:f.get('syrup'),note:f.get('note'),when:new Date().toISOString(),status:'Bestilt'};
+$('#coffeeOrderForm').addEventListener('submit',async e=>{
+ e.preventDefault();if(currentRole()==='admin'){alert('Adminprofilen kan ikkje bestille kaffi.');return;}
+ const geo=await checkCoffeeGeofence();if(!geo.ok){$('#coffeeOrderFeedback').textContent=geo.message;alert(geo.message);return;}
+ const existing=(db.coffeeOrders||[]).find(o=>(o.memberId===currentMember().id||o.person===currentName())&&coffeeStage(o.status).key!=='Ferdig'&&!o.cancelled);
+ if(existing){$('#coffeeOrderFeedback').textContent='Du har allereie ei aktiv bestilling. Vent til ho er ferdig eller avbestill henne.';alert('Du har allereie ei aktiv kaffibestilling.');return;}
+ const f=new FormData(e.target);
+ const order={id:Date.now()+Math.random(),memberId:currentMember().id,person:String(f.get('person')).trim(),drink:f.get('drink'),bean:f.get('bean'),milk:f.get('milk'),syrup:f.get('syrup'),note:f.get('note'),when:new Date().toISOString(),status:'Bestilt'};
  db.coffeeOrders.unshift(order);
  notifyAdmin('coffee','Ny kaffibestilling',order.person+' bestilte '+order.drink+' · '+order.bean+' · '+order.milk+' · '+order.syrup+(order.note?' · '+order.note:''));
- db.notifications.unshift({id:Date.now()+Math.random(),type:'coffee_confirmation',title:'☕ Bestillinga er registrert',detail:'Du har bestilt '+order.drink+'. Me gir beskjed her når kaffien er klar.',recipient:order.person,when:new Date().toISOString(),read:false});
+ db.notifications.unshift({id:Date.now()+Math.random(),type:'coffee_confirmation',title:'☕ Bestillinga er registrert',detail:'Du har bestilt '+order.drink+'. Følg statusen under «Dine siste bestillingar».',orderId:order.id,recipient:order.person,when:new Date().toISOString(),read:false});
  e.target.reset();save();$('#coffeeOrderForm [name="person"]').value=currentName();$('#coffeeOrderFeedback').textContent='Bestillinga er registrert. God økt og god kaffi!';
 });
 $('#coffeeMenuForm').addEventListener('submit',e=>{
@@ -471,15 +579,34 @@ $('#coffeeMenuUpload').addEventListener('change',e=>{
  save();alert(added+' kaffidrikk(ar) importerte.');e.target.value='';
  };reader.readAsText(file,'UTF-8');
 });
+function coffeeStage(status){
+ const v=String(status||'Bestilt').toLowerCase();
+ if(['ferdig','levert','klar'].includes(v))return {key:'Ferdig',label:'FERDIG',icon:'☕',css:'stage-done'};
+ if(['i produksjon','produksjon'].includes(v))return {key:'I produksjon',label:'I PRODUKSJON',icon:'◷',css:'stage-making'};
+ if(['motteken','mottatt','bestilt','ny'].includes(v))return {key:v==='Bestilt'||v==='ny'?'Bestilt':'Motteken',label:v==='Bestilt'||v==='ny'?'BESTILT':'MOTTEKEN',icon:'●',css:'stage-new'};
+ return {key:'Bestilt',label:'BESTILT',icon:'●',css:'stage-new'};
+}
+function renderCoffeeReadyToast(memberOrders){
+ const old=document.getElementById('coffeeReadyToast');if(old)old.remove();
+ if(currentRole()==='admin')return;
+ const ready=(memberOrders||[]).find(o=>coffeeStage(o.status).key==='Ferdig'&&o.readyToastEligible&&!o.readyAcknowledged);
+ if(!ready)return;
+ const toast=document.createElement('button');toast.type='button';toast.id='coffeeReadyToast';toast.setAttribute('aria-label','Kaffien din er klar. Trykk for å stadfeste og fjerne varselet.');
+ toast.innerHTML=`<span class="ready-cup" aria-hidden="true">☕</span><span><strong>${esc(ready.drink)} er klar!</strong><small>${esc(ready.person)} – kaffien ventar på deg</small></span><span class="ready-dismiss">TRYKK HER</span>`;
+ toast.addEventListener('click',()=>{const order=(db.coffeeOrders||[]).find(x=>String(x.id)===String(ready.id));if(order){order.readyAcknowledged=true;order.readyAcknowledgedAt=new Date().toISOString();}const notice=(db.notifications||[]).find(n=>String(n.orderId)===String(ready.id)&&n.type==='coffee_ferdig'&&n.recipient===currentName());if(notice)notice.read=true;save();});
+ document.body.appendChild(toast);
+}
+
 function renderAdminCoffee(){
  $('#adminCoffeeMenu').innerHTML=(db.coffeeMenu||[]).map(m=>item(m.name,m.description,'<span class="pill">MENY</span>',`<button class="danger" onclick="db.coffeeMenu=db.coffeeMenu.filter(x=>x.id!==${m.id});save()">Fjern</button>`)).join('')||'<div class="empty">Tom kaffimeny.</div>';
- const orders=db.coffeeOrders||[],pending=orders.filter(o=>!['Levert','Klar'].includes(o.status)).length,done=orders.length-pending;
+ const orders=(db.coffeeOrders||[]).filter(o=>!o.cancelled).slice().sort((a,b)=>String(a.when).localeCompare(String(b.when))),fresh=orders.filter(o=>coffeeStage(o.status).key==='Bestilt'||coffeeStage(o.status).key==='Motteken').length,making=orders.filter(o=>coffeeStage(o.status).key==='I produksjon').length,done=orders.filter(o=>coffeeStage(o.status).key==='Ferdig').length;
  const byPerson={};orders.forEach(o=>{const k=o.person||'Ukjend';byPerson[k]??={total:0,drinks:{}};byPerson[k].total++;byPerson[k].drinks[o.drink]=(byPerson[k].drinks[o.drink]||0)+1;});
  $('#coffeeMemberStats').innerHTML=Object.keys(byPerson).length?`<h3 style="grid-column:1/-1;margin:4px 0">Kaffistatistikk per medlem</h3>`+Object.entries(byPerson).sort((a,b)=>b[1].total-a[1].total).map(([person,v])=>`<div class="coffee-stat"><strong>${esc(person)} · ${v.total} bestillingar</strong><ul>${Object.entries(v.drinks).sort((a,b)=>b[1]-a[1]).map(([drink,n])=>`<li>${esc(drink)}: ${n}</li>`).join('')}</ul></div>`).join(''):'<div class="empty">Ingen bestillingar å vise statistikk for.</div>';
- $('#adminCoffeeOrderCounts').innerHTML=`<span class="status-dot" style="background:#5b2428;color:#ffdada">Nye: ${pending}</span> <span class="status-dot" style="background:#174b32;color:#d7ffe7">Leverte: ${done}</span>`;
+ $('#adminCoffeeOrderCounts').innerHTML=`<span class="status-dot" style="background:#5b2428;color:#ffdada">Nye: ${fresh}</span> <span class="status-dot" style="background:#9a641d;color:#fff0cc">I produksjon: ${making}</span> <span class="status-dot" style="background:#174b32;color:#d7ffe7">Ferdige: ${done}</span>`;
  $('#adminCoffeeOrders').innerHTML=orders.length?orders.map(o=>{
-  const delivered=['Levert','Klar'].includes(o.status);
-  return `<div class="coffee-order-wrap" data-order-id="${o.id}"><details class="coffee-order ${delivered?'done':''}"><summary><span><strong>${esc(o.person)} · ${esc(o.drink)}</strong><small>${fmt(o.when)}</small></span><span class="status-dot">${delivered?'LEVERT':'BESTILT'}</span></summary><div class="coffee-order-details"><p><strong>Kaffi:</strong> ${esc(o.bean||'Vanleg')}</p><p><strong>Mjølk:</strong> ${esc(o.milk||'Vanleg mjølk')}</p><p><strong>Sirup:</strong> ${esc(o.syrup||'Ingen sirup')}</p><p><strong>Kommentar:</strong> ${esc(o.note||'Ingen')}</p><p><strong>Bestillar:</strong> ${esc(o.person)}</p><div class="order-actions">${delivered?'<span class="hint">Bestillinga er markert levert.</span>':`<button type="button" onclick="event.preventDefault();setCoffeeStatus(${o.id},'Levert')">Marker levert</button>`}</div></div></details><button type="button" class="danger swipe-delete" onclick="deleteCoffeeOrder(${o.id})">Slett bestilling</button></div>`;
+  const st=coffeeStage(o.status),next=st.key==='Bestilt'?'Motteken':st.key==='Motteken'?'I produksjon':st.key==='I produksjon'?'Ferdig':null;
+  const action=next?`<button type="button" class="coffee-action" data-coffee-action="${esc(next)}" data-order-id="${esc(o.id)}">${next==='Motteken'?'✓ Bekreft motteken':next==='I produksjon'?'▶ Start produksjon':'☕ Marker ferdig'}</button>`:'<span class="hint">Bestilling fullført</span>';
+  return `<div class="coffee-order-wrap" data-order-id="${o.id}"><details class="coffee-order ${st.css}"><summary><span><strong>${esc(o.person)} · ${esc(o.drink)}</strong><small>${fmt(o.when)}</small></span><span class="status-dot">${st.icon} ${st.label}</span></summary><div class="coffee-order-details"><p><strong>Kaffi:</strong> ${esc(o.bean||'Vanleg')}</p><p><strong>Mjølk:</strong> ${esc(o.milk||'Vanleg mjølk')}</p><p><strong>Sirup:</strong> ${esc(o.syrup||'Ingen sirup')}</p><p><strong>Kommentar:</strong> ${esc(o.note||'Ingen')}</p><p><strong>Bestillar:</strong> ${esc(o.person)}</p><div class="order-actions">${action}</div></div></details><button type="button" class="danger swipe-delete" onclick="deleteCoffeeOrder(${JSON.stringify(o.id)})">Slett bestilling</button></div>`;
  }).join(''):'<div class="empty">Ingen kaffibestillingar.</div>';
  $('#adminNotifications').innerHTML=(db.notifications||[]).map(n=>item(n.title,n.detail+' · '+fmt(n.when),'<span class="pill gold">'+esc(n.type)+'</span>',`<button class="secondary" onclick="markNotification(${JSON.stringify(n.id)})">Lest</button>`)).join('')||'<div class="empty">Ingen nye varslingar.</div>';
 }
@@ -493,12 +620,48 @@ let coffeeTouchStart=null;
 document.addEventListener('touchstart',e=>{const wrap=e.target.closest('.coffee-order-wrap');if(wrap)coffeeTouchStart={id:wrap.dataset.orderId,x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY};},{passive:true});
 document.addEventListener('touchend',e=>{if(!coffeeTouchStart)return;const dx=e.changedTouches[0].clientX-coffeeTouchStart.x,dy=e.changedTouches[0].clientY-coffeeTouchStart.y;const wrap=document.querySelector(`.coffee-order-wrap[data-order-id="${coffeeTouchStart.id}"]`);if(wrap&&dx< -65&&Math.abs(dx)>Math.abs(dy))wrap.classList.add('swiped');coffeeTouchStart=null;},{passive:true});
 function setCoffeeStatus(id,status){
- const o=db.coffeeOrders.find(x=>x.id===id);if(!o)return;
- if(['Levert','Klar'].includes(o.status))return;
- o.status='Levert';
- db.notifications.unshift({id:Date.now()+Math.random(),type:'coffee_ready',title:'☕ Kaffien din er klar!',detail:o.drink+' er ferdig og levert/klart til henting.',recipient:o.person,orderId:o.id,when:new Date().toISOString(),read:false});
+ if(!isOwner()){alert('Berre admin kan endre kaffistatus.');return;}
+ const o=db.coffeeOrders.find(x=>String(x.id)===String(id));if(!o)return;
+ const allowed=['Motteken','I produksjon','Ferdig'];if(!allowed.includes(status))return;
+ if(status==='I produksjon'){
+  const active=(db.coffeeOrders||[]).filter(x=>!x.cancelled&&coffeeStage(x.status).key!=='Ferdig').sort((a,b)=>String(a.when).localeCompare(String(b.when)));
+  const alreadyMaking=active.find(x=>coffeeStage(x.status).key==='I produksjon');
+  if(alreadyMaking&&String(alreadyMaking.id)!==String(o.id)){alert(alreadyMaking.person+' får kaffien sin først.');return;}
+  const firstWaiting=active.find(x=>coffeeStage(x.status).key!=='I produksjon');
+  if(firstWaiting&&String(firstWaiting.id)!==String(o.id)){alert('Følg kørekkjefølgja. '+firstWaiting.person+' står først.');return;}
+ }
+ o.status=status;o.updatedAt=new Date().toISOString();if(status==='Ferdig'){o.readyToastEligible=true;o.readyAcknowledged=false;}
+ const msg=status==='Motteken'?'Bestillinga er motteken av baristaen.':status==='I produksjon'?'Kaffien din er under produksjon.':'Kaffien din er ferdig og klar til henting.';
+ db.notifications.unshift({id:Date.now()+Math.random(),type:'coffee_'+status.toLowerCase().replaceAll(' ','_'),title:status==='Ferdig'?'☕ Kaffien er klar!':status==='I produksjon'?'☕ Kaffien blir laga':'☕ Bestilling motteken',detail:msg,recipient:o.person,orderId:o.id,when:new Date().toISOString(),read:false});
+ if(status==='Ferdig'){
+  const next=(db.coffeeOrders||[]).filter(x=>!x.cancelled&&coffeeStage(x.status).key!=='Ferdig'&&String(x.id)!==String(o.id)).sort((a,b)=>String(a.when).localeCompare(String(b.when)))[0];
+  if(next)db.notifications.unshift({id:Date.now()+Math.random(),type:'coffee_next',title:'☕ Du er neste i kaffikøen!',detail:o.person+' sin kaffi er ferdig. '+next.person+', du står først no – baristaen startar snart.',recipient:next.person,orderId:next.id,when:new Date().toISOString(),read:false});
+ }
  save();
 }
+// Robust event delegation for coffee workflow buttons (works on mobile browsers too).
+document.addEventListener('click',function(e){
+ const btn=e.target.closest('[data-coffee-action]');
+ if(!btn)return;
+ e.preventDefault();e.stopPropagation();
+ const id=btn.getAttribute('data-order-id');
+ const status=btn.getAttribute('data-coffee-action');
+ if(!id||!status)return;
+ btn.disabled=true;
+ try{setCoffeeStatus(id,status);}catch(err){console.error('Coffee status update failed',err);alert('Kunne ikkje oppdatere bestillinga. Prøv igjen.');btn.disabled=false;}
+},true);
+function cancelMyCoffee(id){
+ const o=(db.coffeeOrders||[]).find(x=>String(x.id)===String(id));if(!o)return;
+ if(o.memberId!==currentMember().id&&o.person!==currentName()){alert('Du kan berre avbestille di eiga bestilling.');return;}
+ if(!['Bestilt','Motteken'].includes(coffeeStage(o.status).key)){alert('Kaffien er sett i produksjon og kan ikkje avbestillast no.');return;}
+ if(!confirm('Avbestille kaffibestillinga?'))return;
+ o.cancelled=true;o.cancelledAt=new Date().toISOString();
+ db.notifications.unshift({id:Date.now()+Math.random(),type:'coffee_cancelled',title:'Bestilling avbestilt',detail:currentName()+' har avbestilt '+o.drink+'.',recipient:'Trond Inge',orderId:o.id,when:new Date().toISOString(),read:false});
+ save();
+}
+// Keep open tabs on the same browser origin in sync when another profile changes shared local data.
+window.addEventListener('storage',e=>{if(e.key===KEY&&e.newValue){try{db=JSON.parse(e.newValue);renderAll();}catch(err){console.warn('Could not sync local demo data',err);}}});
+window.addEventListener('focus',()=>{try{const latest=localStorage.getItem(KEY);if(latest){const parsed=JSON.parse(latest);if(JSON.stringify(parsed)!==JSON.stringify(db)){db=parsed;renderAll();}}}catch(err){console.warn('Could not refresh local demo data',err);}});
 function markNotification(id){const n=db.notifications.find(x=>x.id===id);if(n)n.read=true;save();}
 
 function approvePT(requestId,approved){
