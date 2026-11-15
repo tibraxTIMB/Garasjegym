@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#11151b">
-<title>GARASJEGYM 1.2.5 · PT-studio mobilretting</title>
+<title>GARASJEGYM 1.2.6 · Sikkerheitskopi</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -401,6 +401,10 @@ nav button{font-size:12px;padding:9px 13px;min-height:38px}
 
 <section id="manager" class="tab hidden"><div class="section-head"><div><div class="subheading">Klubbdrift</div><h1>Managerpanel</h1><div class="muted">WOD-ar, gruppetimar og klubbaktivitet.</div></div><span class="pill gold">VIP MANAGER</span></div><div class="grid"><div class="card span-6"><h2>Snøggvegar</h2><div class="stack"><button onclick="showTab('wods')">Opprett / foreslå WOD</button><button class="secondary" data-roles="admin,manager" onclick="showTab('classes')">Opprett gruppetime</button><button class="secondary" onclick="showTab('calendar')">Sjå kalender</button></div></div><div class="card span-6"><h2>PT-førespurnader</h2><p class="hint">Manager kan sjå førespurnader, men berre eigar kan godkjenne PT-bookingar.</p><div id="managerPTRequests"></div></div><div class="card span-12"><h2>Komande gruppetimar</h2><div id="managerClasses"></div></div></div></section><section id="admin" data-roles="admin" class="tab hidden">
 <div class="admin-top"><div><div class="subheading">GARASJEGYM</div><h1>Admin</h1><p class="hint">Kort oversikt – det viktigaste først.</p></div><div class="admin-top-actions"><button type="button" onclick="showTab('classes')">+ Gruppetime</button><button type="button" class="secondary" onclick="showTab('wods')">+ WOD</button></div></div>
+<div class="card" style="margin:14px 0;border-color:var(--accent)">
+ <div class="row"><div><h2 style="margin:0 0 5px">Sikkerheitskopi</h2><p class="hint" style="margin:0">Last ned alle lokale Garasjegym-data før me koplar til Supabase.</p></div><button type="button" onclick="exportGarasjegymBackup()">Last ned sikkerheitskopi</button></div>
+ <div id="backupStatus" class="hint" style="margin-top:8px">Eksporterer medlemmer, WOD-ar, timar, treningslogg, PR, PT, sosialt og kaffibar.</div>
+</div>
 <div class="admin-summary-strip" id="adminSummary"></div>
 <div class="card admin-coffee-main" id="adminCoffeeOrderPanel">
  <div class="admin-coffee-head"><div><h2>☕ Kaffibestillingar</h2><p class="hint">Trykk på ei bestilling for detaljar og levering.</p></div><div id="adminCoffeeOrderCounts"></div></div>
@@ -431,7 +435,7 @@ nav button{font-size:12px;padding:9px 13px;min-height:38px}
 </div>
 </section>
 <footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben
-<div class="version-note">GarasjeGym 1.2.5 · PT-studio med mobiltilpassa layout</div>
+<div class="version-note">GarasjeGym 1.2.6 · Sikkerheitskopi og dataeksport</div>
 </footer>
 </main>
 <div id="editorModal" class="editor-backdrop" role="dialog" aria-modal="true" aria-labelledby="editorTitle" onclick="if(event.target===this)closeEditor()"><div class="editor-panel"><div class="row"><h2 id="editorTitle">Rediger</h2><button type="button" class="secondary" onclick="closeEditor()" aria-label="Lukk">✕</button></div><form id="editorForm"></form></div></div>
@@ -451,6 +455,21 @@ db.ptSessions=db.ptSessions||[];db.ptMessages=db.ptMessages||[];db.activeProfile
 
 let selectedExercises=new Set();
 function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function exportGarasjegymBackup(){
+ try{
+  const raw=localStorage.getItem(KEY);
+  if(!raw)throw new Error('Fann ingen lagra Garasjegym-data i denne nettlesaren.');
+  const parsed=JSON.parse(raw);
+  const payload={app:'GarasjeGym',backupVersion:1,appVersion:'1.2.6',exportedAt:new Date().toISOString(),storageKey:KEY,data:parsed};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
+  a.href=url;a.download='GarasjeGym-sikkerheitskopi-'+stamp+'.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+  const status=document.getElementById('backupStatus');
+  if(status)status.textContent='Sikkerheitskopien er laga. Kontroller at JSON-fila ligg i Nedlastingar før du går vidare.';
+ }catch(err){alert('Kunne ikkje lage sikkerheitskopi: '+(err.message||'Ukjend feil'));}
+}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function currentMember(){return db.members.find(m=>m.id===db.activeProfile)||db.members[0];}
 function currentRole(){return currentMember().role;}
