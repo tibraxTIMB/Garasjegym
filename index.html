@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#11151b">
-<title>GARASJEGYM 1.2.6 · Sikkerheitskopi</title>
+<title>GARASJEGYM 1.3.0 · Supabase innlogging</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -277,9 +277,39 @@ nav button{font-size:12px;padding:9px 13px;min-height:38px}
  #pt .grid>.span-7{grid-column:span 6}
 }
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body.auth-locked>header,body.auth-locked>main{display:none!important}
+    #authGate{display:none;min-height:100vh;align-items:center;justify-content:center;padding:22px;background:radial-gradient(ellipse at 50% -20%,#1c2a38 0,#0b1016 65%)}
+    body.auth-locked #authGate{display:flex}
+    .auth-card{width:min(440px,100%);background:#151e28;border:1px solid #344658;border-radius:20px;padding:24px;box-shadow:0 18px 60px #0008}
+    .auth-card h1{margin:0 0 6px}.auth-card .muted{margin-bottom:18px}
+    .auth-card form{gap:8px}.auth-card button{width:100%;margin-top:8px}
+    .auth-message{min-height:22px;margin-top:12px;color:#ffd18b;font-size:13px;line-height:1.45}
+    .auth-secondary{background:#202c39!important;color:#f5f7fa!important;border:1px solid #344658!important}
+  </style>
 </head>
-<body>
-<header><div class="logo">GARASJEGYM<small>TRAIN · TRACK · IMPROVE</small></div><div class="header-tools"><label class="sr-only" for="activeProfile">Test brukarprofil</label><select id="activeProfile" aria-label="Byt brukarprofil"><option value="owner">Trond Inge · Admin</option><option value="vip">Kona · VIP-manager</option><option value="friend1">Kompis 1 · Medlem</option><option value="friend2">Kompis 2 · Medlem</option><option value="friend3">Kompis 3 · Medlem</option><option value="friend4">Kompis 4 · Medlem</option><option value="friend5">Kompis 5 · Medlem</option></select><span id="roleBadge" class="pill gold">ADMIN</span><span class="hint">Rollevising · ikkje innlogging</span></div></header>
+<body class="auth-locked">
+
+<section id="authGate" aria-label="Innlogging">
+ <div class="auth-card">
+  <div class="logo">GARASJEGYM<small>TRAIN · TRACK · IMPROVE</small></div>
+  <h1 id="authTitle" style="margin-top:22px">Logg inn</h1>
+  <p class="muted">Bruk kontoen din for å opne GarasjeGym.</p>
+  <form id="authForm">
+   <label for="authEmail">E-post</label>
+   <input id="authEmail" type="email" autocomplete="email" required placeholder="namn@epost.no">
+   <label for="authPassword">Passord</label>
+   <input id="authPassword" type="password" autocomplete="current-password" minlength="8" required placeholder="Minst 8 teikn">
+   <button id="authSubmit" type="submit">Logg inn</button>
+  </form>
+  <button id="authModeBtn" type="button" class="auth-secondary">Opprett ny konto</button>
+  <div id="authMessage" class="auth-message" role="status" aria-live="polite"></div>
+  <p class="hint">Første gong? Opprett konto med e-post og passord. Dersom e-poststadfesting er slått på i Supabase, må du stadfeste e-posten før innlogging.</p>
+ </div>
+</section>
+
+<header><div class="logo">GARASJEGYM<small>TRAIN · TRACK · IMPROVE</small></div><div class="header-tools"><span id="signedInName" class="hint"></span><span id="roleBadge" class="pill gold">MEDLEM</span><button id="signOutBtn" type="button" class="secondary">Logg ut</button></div></header>
 <main>
 <div id="quickBar" class="quick-bar" aria-label="Snøggtilgang">
  <button type="button" class="quick-bell" onclick="openNotificationCenter()" aria-label="Opne varsel"><span class="quick-icon" aria-hidden="true">♧</span><span class="quick-count" id="quickUnreadCount" hidden>0</span></button>
@@ -292,7 +322,7 @@ nav button{font-size:12px;padding:9px 13px;min-height:38px}
   <button type="button" class="coffee-action" data-roles="member,manager" onclick="openCoffeeModal()">☕ Kaffi</button>
  </div>
 </div>
-<div class="notice">GARASJEGYM 1.2.0 · PT-studio med klientplanar, førebudde økter og meldingar. Lokal sosial demo. Byt profil i toppmenyen for å simulere medlem og admin. Alle profilar deler same data i denne nettlesaren. Ikkje ekte innlogging eller synkronisering mellom einingar. Treningsapp for den private garasjeklubben. Rollebasert grensesnittdemo. Profilveljaren testar rollene – han er ikkje sikker innlogging. Data blir lagra lokalt i denne nettlesaren, ikkje synkronisert mellom einingar. Nye-time-varsel er interne i denne appinstallasjonen – ikkje pushvarsel til andre telefonar.</div><div class="role-banner"><div><strong id="welcomeRole">Velkomen til GARASJEGYM</strong><br><small id="roleDescription">Vel brukarprofil for å sjå rett grensesnitt.</small></div><span id="roleHint" class="pill">DEMO-PROFIL</span></div>
+<div class="notice">GARASJEGYM 1.3.0 · Ekte innlogging og medlemsprofil via Supabase. Andre funksjonar blir kopla til databasen i neste steg. 1.3.0: Ekte innlogging og medlemsprofil via Supabase. WOD-ar, trening, timar og dei andre modulane blir kopla til databasen stegvis. Inntil vidare blir desse funksjonane framleis lagra lokalt i nettlesaren.</div><div class="role-banner"><div><strong id="welcomeRole">Velkomen til GARASJEGYM</strong><br><small id="roleDescription">Vel brukarprofil for å sjå rett grensesnitt.</small></div><span id="roleHint" class="pill">DEMO-PROFIL</span></div>
 <nav id="nav">
 <button class="active" data-tab="home">Oversikt</button><button class="secondary" data-tab="wods">WOD</button><button class="secondary" data-tab="classes">Gruppetimar</button><button class="secondary" data-tab="pt">PT-studio</button><button class="secondary" data-tab="social">Garasjeprat</button><button class="secondary" data-tab="calendar">Kalender</button><button class="secondary" data-tab="library">Øvingar</button><button class="secondary" data-tab="prs">PR</button><button class="secondary" data-tab="profile">Profil & maks</button><button class="secondary" data-tab="log">Treningslogg</button><button class="secondary" data-tab="coach">WOD-verkstad</button><button class="secondary" data-tab="manager" data-roles="manager">Manager</button><button class="secondary" data-tab="admin" data-roles="admin">Admin</button>
 </nav>
@@ -481,8 +511,7 @@ function normaliseLines(v){return String(v||'').replace(/\\r/g,'\n').replace(/\\
 function switchProfile(id){const target=db.members.find(m=>m.id===id&&m.active!==false);if(!target){alert('Denne medlemsprofilen er ikkje aktiv.');renderRoleUI();return;}db.activeProfile=id;save();showTab('home');}
 function renderRoleUI(){
  const m=currentMember(),role=m.role;
- const profileSelect=$('#activeProfile');profileSelect.innerHTML=db.members.filter(x=>x.active!==false).map(x=>`<option value="${esc(x.id)}">${esc(x.name)} · ${x.role==='admin'?'Admin':x.role==='manager'?'VIP-manager':'Medlem'}</option>`).join('');profileSelect.value=m.id;
- $('#roleBadge').textContent=role==='admin'?'ADMIN':role==='manager'?'VIP MANAGER':'MEDLEM';
+ $('#roleBadge').textContent=role==='admin'?'ADMIN':role==='manager'?'MANAGER':'MEDLEM';
  $('#welcomeRole').textContent=role==='admin'?'Velkomen, gymeigar.':role==='manager'?'Velkomen, klubbmanager.':'Velkomen, '+m.name+'.';
  $('#roleDescription').textContent=role==='admin'?'Du har full kontroll over GARASJEGYM.':role==='manager'?'Du kan drive aktivitetar, WOD-ar og gruppetimar.':'Her finn du trening, timar og resultat.';
  $('#roleHint').textContent=role==='admin'?'EIGAR':role==='manager'?'VIP-MANAGER':'MEDLEM';
@@ -497,7 +526,7 @@ function renderRoleUI(){
  const canOrder=role!=='admin';if($('#coffeeOrderPanel'))$('#coffeeOrderPanel').classList.toggle('hidden',!canOrder);$$('button[onclick*="showTab(\'barista\')"]').forEach(b=>b.classList.toggle('role-hidden',!canOrder));
  if($('#profilePerson')){const sel=$('#profilePerson');sel.innerHTML=`<option value="${esc(m.name)}">${esc(m.name)}</option>`;sel.value=m.name;}
  $$('form#prForm select[name="person"],form#logForm select[name="person"]').forEach(sel=>{sel.value=m.name;sel.disabled=true;});
- renderRoleAdmin();
+ // Medlemsadministrasjon blir kopla til ekte Auth-invitasjonar i ein seinare versjon.
 }
 function renderRoleAdmin(){
  const el=$('#adminMembers');if(!el)return;
@@ -1124,7 +1153,7 @@ function renderAdmin(){
  $('#adminExercises').innerHTML=db.customExercises.length?db.customExercises.map((x,i)=>item(x.name,`${x.category} · ${x.equipment||'Uspesifisert utstyr'}`,'<span class="pill">EIGA ØVING</span>',`<button class="secondary" onclick="adminEditExercise(${i})">Rediger</button> <button class="danger" onclick="if(confirm('Slette øvinga?')){db.customExercises.splice(${i},1);save()}">Slett</button>`)).join(''):'<div class="empty">Ingen eigne øvingar lagde til enno.</div>';
  const requests=db.pendingPT.filter(r=>r.status==='Ventar på godkjenning');
  $('#adminPTRequests').innerHTML=requests.length?requests.map(r=>{const c=db.classes.find(x=>x.id===r.classId);return item(r.name,c?`${c.title} · ${fmt(c.when)}`:'Time sletta','<span class="pill gold">VENTAR</span>',`<button onclick="approvePT(${r.id},true)">Godkjenn</button> <button class="danger" onclick="approvePT(${r.id},false)">Avslå</button>`)}).join(''):'<div class="empty">Ingen PT-førespurnader ventar.</div>';
- renderRoleAdmin();
+ // Medlemsadministrasjon blir kopla til ekte Auth-invitasjonar i ein seinare versjon.
 }
 $('#adminExerciseForm').addEventListener('submit',e=>{
  e.preventDefault();if(!isOwner()){alert('Berre eigar kan leggje til øvingar.');return;}const f=new FormData(e.target);
@@ -1233,7 +1262,82 @@ $('#socialPostForm')?.addEventListener('submit',e=>{e.preventDefault();const f=n
 $('#buddyForm')?.addEventListener('submit',e=>{e.preventDefault();const body=String(new FormData(e.target).get('body')||'').trim();if(!body)return;socialPost(body,'Treningsmakker','buddy');e.target.reset();$('#buddyComposer').classList.add('hidden')});
 $('#socialFilter')?.addEventListener('change',renderSocial);
 function renderAll(){renderSocial();renderWods();renderClassWodOptions();renderClasses();renderMemberNotifications();renderPrs();renderLogs();renderHome();renderExercises();renderAdmin();renderCoffee();renderPT();if(document.getElementById("activeProfile"))renderRoleUI();if(document.getElementById("profilePerson"))renderProfile();if(document.getElementById("managerClasses"))renderManager()}
-$('#activeProfile').addEventListener('change',e=>switchProfile(e.target.value));
+
 $('#exerciseSearch').addEventListener('input',renderExercises);$('#exerciseCat').addEventListener('change',renderExercises);
-renderAll();
+
+const SUPABASE_URL='https://kultdmklwmilhoytrrig.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_DsQ4F5ApJeTsBKpK71Ox4Q_GBOsSLTG';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+let authUser=null;
+let authProfile=null;
+let authCreateMode=false;
+
+function showAuthMessage(message,isError=false){
+ const el=$('#authMessage'); if(el){el.textContent=message;el.style.color=isError?'#ff9a9f':'#ffd18b';}
+}
+function setAuthMode(create){
+ authCreateMode=create;
+ $('#authTitle').textContent=create?'Opprett konto':'Logg inn';
+ $('#authSubmit').textContent=create?'Opprett konto':'Logg inn';
+ $('#authModeBtn').textContent=create?'Har du konto frå før? Logg inn':'Opprett ny konto';
+ $('#authPassword').autocomplete=create?'new-password':'current-password';
+ showAuthMessage('');
+}
+$('#authModeBtn').addEventListener('click',()=>setAuthMode(!authCreateMode));
+
+async function loadSignedInProfile(user){
+ const {data,error}=await supabaseClient.from('profiles')
+  .select('id,display_name,role,active,avatar_url').eq('id',user.id).single();
+ if(error) throw new Error('Kunne ikkje hente medlemsprofilen: '+error.message);
+ if(!data.active) throw new Error('Medlemsprofilen er deaktivert. Kontakt administrator.');
+ authUser=user;
+ authProfile={id:data.id,name:data.display_name||user.email||'Medlem',role:data.role||'member',active:data.active,avatar_url:data.avatar_url};
+ db.members=[{id:authProfile.id,name:authProfile.name,role:authProfile.role,active:authProfile.active}];
+ db.activeProfile=authProfile.id;
+ $('#signedInName').textContent=authProfile.name;
+ document.body.classList.remove('auth-locked');
+ renderAll();
+ // Profile roles are authoritative in Supabase; remove the old demo role selector entirely.
+ $('#roleBadge').textContent=authProfile.role==='admin'?'ADMIN':authProfile.role==='manager'?'MANAGER':'MEDLEM';
+}
+async function startAuth(){
+ const {data:{session},error}=await supabaseClient.auth.getSession();
+ if(error) throw error;
+ if(session?.user){await loadSignedInProfile(session.user);}
+ else{document.body.classList.add('auth-locked');}
+}
+$('#authForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const email=$('#authEmail').value.trim(),password=$('#authPassword').value;
+ $('#authSubmit').disabled=true;showAuthMessage(authCreateMode?'Opprettar konto …':'Loggar inn …');
+ try{
+  if(authCreateMode){
+   const {data,error}=await supabaseClient.auth.signUp({email,password});
+   if(error)throw error;
+   if(data.session){await loadSignedInProfile(data.user);showAuthMessage('Konto oppretta.');}
+   else{showAuthMessage('Konto oppretta. Sjekk e-posten din for stadfesting før du loggar inn.');}
+  }else{
+   const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+   if(error)throw error;
+   await loadSignedInProfile(data.user);
+  }
+ }catch(err){showAuthMessage(err.message||'Noko gjekk gale.',true);}
+ finally{$('#authSubmit').disabled=false;}
+});
+$('#signOutBtn').addEventListener('click',async()=>{
+ const {error}=await supabaseClient.auth.signOut();
+ if(error){alert('Kunne ikkje logga ut: '+error.message);return;}
+ authUser=null;authProfile=null;document.body.classList.add('auth-locked');
+});
+supabaseClient.auth.onAuthStateChange(async(event,session)=>{
+ if(event==='SIGNED_OUT'){document.body.classList.add('auth-locked');return;}
+ if(event==='SIGNED_IN'&&session?.user&&!authProfile){
+  try{await loadSignedInProfile(session.user);}catch(err){showAuthMessage(err.message,true);await supabaseClient.auth.signOut();}
+ }
+});
+async function bootGarasjeGym(){
+ try{await startAuth();}
+ catch(err){document.body.classList.add('auth-locked');showAuthMessage(err.message||'Kunne ikkje starte innlogginga.',true);}
+}
+bootGarasjeGym();
 </script></body></html>
