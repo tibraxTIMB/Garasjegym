@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#11151b">
-<title>GarasjeGym BETA 2.7</title>
+<title>GarasjeGym BETA 2.8</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -21,7 +21,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 h1{font-size:26px;margin:4px 0 8px}h2{font-size:18px;margin:0 0 14px}h3{margin:0 0 6px;font-size:16px}.muted,.hint{color:var(--muted)}.hint{font-size:12px;line-height:1.5}.metric{font-size:30px;font-weight:850;color:var(--accent)}.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.stack{display:grid;gap:10px}
 label{display:block;color:var(--muted);font-size:12px;margin:10px 0 5px}input,select,textarea{width:100%;background:#10151c;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:11px;font:inherit}textarea{min-height:75px;resize:vertical}
 form{display:grid;gap:3px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.item{padding:12px 0;border-top:1px solid var(--line)}.pill{display:inline-block;border-radius:99px;background:#303c49;color:#dbe5ef;padding:4px 9px;font-size:11px;margin:2px}.pill.gold{background:#594321;color:#ffcf7d}.empty{padding:22px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
-.hidden{display:none!important}.tabs{display:none}.notice{border-left:3px solid var(--accent);padding:10px 12px;background:#28251f;border-radius:5px;color:#f4dfbd;font-size:13px}
+.hidden{display:none!important}.role-hidden{display:none!important}.tabs{display:none}.notice{border-left:3px solid var(--accent);padding:10px 12px;background:#28251f;border-radius:5px;color:#f4dfbd;font-size:13px}
 footer{color:var(--muted);font-size:11px;text-align:center;padding:24px 0}
 @media(max-width:700px){header{padding:16px}.span-8,.span-6,.span-4{grid-column:span 12}main{padding:14px 12px 90px}nav{top:66px}.two{grid-template-columns:1fr}}
 .exercise-card{display:flex;flex-direction:column;gap:8px}.exercise-head{display:flex;gap:9px;align-items:flex-start}.exercise-head input{width:20px;flex:0 0 20px;margin:2px 0}.exercise-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.45}.exercise-card a{color:#ffcf7d;font-size:13px;font-weight:700}
@@ -80,6 +80,33 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 .coffee-order details{margin-top:8px}
 .coffee-order summary{cursor:pointer;color:var(--muted);font-weight:700}
 .coffee-order .order-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+.admin-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.admin-top h1{margin:0}.admin-top-actions{display:flex;gap:8px;flex-wrap:wrap}
+.admin-summary-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:10px 0 14px}
+.admin-summary-strip span{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center;font-size:12px;color:var(--muted)}
+.admin-summary-strip strong{display:block;color:var(--accent);font-size:20px}
+.admin-coffee-main{margin-bottom:12px;padding:14px}
+.admin-coffee-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.admin-coffee-head h2{margin:0}.admin-coffee-head .hint{margin:3px 0 0}
+.admin-accordion{display:grid;gap:9px}
+.admin-accordion details.card{padding:0;overflow:hidden}
+.admin-accordion details.card>summary{cursor:pointer;list-style:none;padding:15px;font-weight:800;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.admin-accordion details.card>summary::-webkit-details-marker{display:none}
+.admin-accordion details.card>summary:after{content:'＋';color:var(--accent);font-size:18px}
+.admin-accordion details.card[open]>summary:after{content:'−'}
+.admin-accordion details.card>form,.admin-accordion details.card>p,.admin-accordion details.card>label,.admin-accordion details.card>input,.admin-accordion details.card>#adminCoffeeMenu,.admin-accordion details.card>#adminExercises,.admin-accordion details.card>#adminMembers,.admin-accordion details.card>#adminSummaryDetail,.admin-accordion details.card>#adminNotifications,.admin-accordion details.card>#adminWods,.admin-accordion details.card>#adminClasses,.admin-accordion details.card>#adminPTRequests{margin-left:14px;margin-right:14px}
+.admin-accordion details.card>form{margin-bottom:14px}
+.coffee-order{border:1px solid var(--line);border-left:5px solid #d94a4a;border-radius:13px;margin:8px 0;background:#1a202a;overflow:hidden}
+.coffee-order.done{border-left-color:#2eaa68}
+.coffee-order>summary{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px;cursor:pointer;list-style:none}
+.coffee-order>summary::-webkit-details-marker{display:none}
+.coffee-order>summary small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.coffee-order .status-dot{white-space:nowrap;font-size:10px;font-weight:900;border-radius:999px;padding:5px 8px;background:#5b2428;color:#ffdada}
+.coffee-order.done .status-dot{background:#174b32;color:#d7ffe7}
+.coffee-order-details{padding:0 12px 12px;border-top:1px solid var(--line);font-size:13px}
+.coffee-order-details p{margin:7px 0}
+@media(max-width:700px){.admin-summary-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-top-actions button{min-height:36px;padding:8px 11px}}
 </style>
 </head>
 <body>
@@ -156,31 +183,30 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 <section id="prs" class="tab hidden"><h1>Personlege rekordar og progresjon</h1><p class="hint">Vel øving frå same bibliotek som WOD-studioet. Kvar registrering blir lagra som historikk, slik at du kan følgje utviklinga over tid.</p><div class="grid"><div class="card span-4"><h2>Registrer resultat</h2><form id="prForm"><label>Øving frå øvingsbiblioteket</label><select name="exercise" id="prExercise" required></select><label>Resultat</label><input name="result" required placeholder="Til dømes 100 eller 7:24"><div class="two"><div><label>Eining</label><select name="unit"><option value="kg">kg</option><option value="reps">repetisjonar</option><option value="tid">tid</option><option value="m">meter</option><option value="kcal">kcal</option><option value="sek">sekund</option><option value="watt">watt</option></select></div><div><label>Dato</label><input name="date" type="date"></div></div><label>Notat (valfritt)</label><input name="note" placeholder="T.d. strict, med strikk, drag factor ..."><button>Lagre resultat</button></form></div><div class="card span-8"><h2>Rekordar og historikk</h2><div id="prList"></div></div></div></section>
 <section id="log" class="tab hidden"><h1>Treningslogg</h1><div class="grid"><div class="card span-4"><h2>Logg økt</h2><form id="logForm"><label>Utøvar</label><select name="person"><option>Trond Inge</option><option>Kona</option><option>Kompis 1</option><option>Kompis 2</option><option>Kompis 3</option><option>Kompis 4</option><option>Kompis 5</option></select><label>Økt</label><input required name="title" placeholder="Styrke / roing / WOD"><label>Dato</label><input name="date" type="date"><label>Resultat / notat</label><textarea name="result" placeholder="Vekt, tid, distanse, kjensle ..."></textarea><button>Lagre trening</button></form></div><div class="card span-8"><h2>Treningshistorikk</h2><div id="logList"></div></div></div></section>
 
-<section id="manager" class="tab hidden"><div class="section-head"><div><div class="subheading">Klubbdrift</div><h1>Managerpanel</h1><div class="muted">WOD-ar, gruppetimar og klubbaktivitet.</div></div><span class="pill gold">VIP MANAGER</span></div><div class="grid"><div class="card span-6"><h2>Snøggvegar</h2><div class="stack"><button onclick="showTab('wods')">Opprett / foreslå WOD</button><button class="secondary" data-roles="admin,manager" onclick="showTab('classes')">Opprett gruppetime</button><button class="secondary" onclick="showTab('calendar')">Sjå kalender</button></div></div><div class="card span-6"><h2>PT-førespurnader</h2><p class="hint">Manager kan sjå førespurnader, men berre eigar kan godkjenne PT-bookingar.</p><div id="managerPTRequests"></div></div><div class="card span-12"><h2>Komande gruppetimar</h2><div id="managerClasses"></div></div></div></section><section id="admin" data-roles="admin" class="tab hidden"><h1>Administrator</h1>
-<div class="notice"><strong>Administratorpanel – BETA 2.7. Rolleveljaren er berre for demonstrasjon. Dette panelet er ikkje sikra med innlogging eller database-tilgangsreglar enno.</div>
-<div class="grid" style="margin-top:14px">
-<div class="card span-6" data-roles="admin"><h2>Legg til øving</h2><form id="adminExerciseForm">
-<label>Namn</label><input name="name" required placeholder="Til dømes Turkish get-up">
-<label>Kategori</label><select name="category"><option>Styrke</option><option>Vektløfting</option><option>Kroppsvekt</option><option>Kondisjon</option><option>Kjerne</option><option>Mobilitet</option></select>
-<label>Utstyr</label><input name="equipment" placeholder="Kettlebell">
-<label>Forklaring</label><textarea name="description" placeholder="Kort teknikkforklaring"></textarea>
-<label>Videolenke (valfri)</label><input name="video" type="url" placeholder="https://...">
-<button>Legg til i øvingsbiblioteket</button></form></div>
-<div class="card span-6"><h2>Klubbverktøy</h2>
-<p class="hint">Rediger eller fjern publiserte WOD-ar og gruppetimar. For å opprette nye brukar du dei vanlege WOD- og gruppetime-sidene.</p>
-<div id="adminSummary"></div>
+<section id="manager" class="tab hidden"><div class="section-head"><div><div class="subheading">Klubbdrift</div><h1>Managerpanel</h1><div class="muted">WOD-ar, gruppetimar og klubbaktivitet.</div></div><span class="pill gold">VIP MANAGER</span></div><div class="grid"><div class="card span-6"><h2>Snøggvegar</h2><div class="stack"><button onclick="showTab('wods')">Opprett / foreslå WOD</button><button class="secondary" data-roles="admin,manager" onclick="showTab('classes')">Opprett gruppetime</button><button class="secondary" onclick="showTab('calendar')">Sjå kalender</button></div></div><div class="card span-6"><h2>PT-førespurnader</h2><p class="hint">Manager kan sjå førespurnader, men berre eigar kan godkjenne PT-bookingar.</p><div id="managerPTRequests"></div></div><div class="card span-12"><h2>Komande gruppetimar</h2><div id="managerClasses"></div></div></div></section><section id="admin" data-roles="admin" class="tab hidden">
+<div class="admin-top"><div><div class="subheading">GARASJEGYM</div><h1>Admin</h1><p class="hint">Kort oversikt – det viktigaste først.</p></div><div class="admin-top-actions"><button type="button" onclick="showTab('classes')">+ Gruppetime</button><button type="button" class="secondary" onclick="showTab('wods')">+ WOD</button></div></div>
+<div class="admin-summary-strip" id="adminSummary"></div>
+<div class="card admin-coffee-main" id="adminCoffeeOrderPanel">
+ <div class="admin-coffee-head"><div><h2>☕ Kaffibestillingar</h2><p class="hint">Trykk på ei bestilling for detaljar og levering.</p></div><div id="adminCoffeeOrderCounts"></div></div>
+ <div id="adminCoffeeOrders"></div>
 </div>
-<div class="card span-12"><h2>Medlemsroller</h2><div id="adminMembers"></div></div><div class="card span-12"><h2>Administrer WOD-ar</h2><div id="adminWods"></div></div>
-<div class="card span-12"><h2>PT-førespurnader · godkjenning</h2><div id="adminPTRequests"></div></div><div class="card span-12"><h2>Administrer gruppetimar og PT</h2><div id="adminClasses"></div></div>
-<div class="card span-12"><h2>Barista – kaffimeny</h2>
-<p class="hint">Last opp CSV med kolonnane: name, description. Eller legg til drikk manuelt. Bruk ei rad per drikk.</p>
-<form id="coffeeMenuForm"><div class="two"><div><label>Namn på kaffidrikk</label><input name="name" required placeholder="Flat white"></div><div><label>Skildring</label><input name="description" placeholder="Dobbel espresso med mjølk"></div></div><button>Legg til kaffidrikk</button></form>
-<label>Last opp kaffimeny (CSV)</label><input type="file" id="coffeeMenuUpload" accept=".csv,text/csv">
-<div id="adminCoffeeMenu"></div></div>
-<div class="card span-12" id="adminCoffeeOrderPanel"><div class="row"><div><h2>Kaffibestillingar</h2><p class="hint">Opne ei bestilling for å sjå detaljane og markere ho som levert.</p></div><div id="adminCoffeeOrderCounts"></div></div><div id="adminCoffeeOrders"></div></div>
-<div class="card span-12"><h2>Varslingar</h2><p class="hint">Nye påmeldingar, PT-bestillingar og kaffibestillingar kjem her i denne prototypen.</p><div id="adminNotifications"></div></div>
-<div class="card span-12"><h2>Administrer eigne øvingar</h2><div id="adminExercises"></div></div>
-</div></section>
+<div class="admin-accordion">
+ <details class="card"><summary>PT-førespurnader <span class="hint">Godkjenning</span></summary><div id="adminPTRequests"></div></details>
+ <details class="card"><summary>Gruppetimar og PT <span class="hint">Planlegging</span></summary><div id="adminClasses"></div></details>
+ <details class="card"><summary>WOD-ar <span class="hint">Rediger og slett</span></summary><div id="adminWods"></div></details>
+ <details class="card"><summary>Kaffimeny <span class="hint">Legg til / importer</span></summary>
+  <p class="hint">Last opp CSV med kolonnane name, description, eller legg til drikk manuelt.</p>
+  <form id="coffeeMenuForm"><div class="two"><div><label>Namn på kaffidrikk</label><input name="name" required placeholder="Flat white"></div><div><label>Skildring</label><input name="description" placeholder="Dobbel espresso med mjølk"></div></div><button>Legg til kaffidrikk</button></form>
+  <label>Last opp kaffimeny (CSV)</label><input type="file" id="coffeeMenuUpload" accept=".csv,text/csv"><div id="adminCoffeeMenu"></div>
+ </details>
+ <details class="card"><summary>Varslingar <span class="hint">Påmeldingar og bestillingar</span></summary><div id="adminNotifications"></div></details>
+ <details class="card"><summary>Øvingsbibliotek <span class="hint">Legg til øving</span></summary>
+  <form id="adminExerciseForm"><label>Namn</label><input name="name" required placeholder="Til dømes Turkish get-up"><label>Kategori</label><select name="category"><option>Styrke</option><option>Vektløfting</option><option>Kroppsvekt</option><option>Kondisjon</option><option>Kjerne</option><option>Mobilitet</option><option>Gymnastics</option></select><label>Utstyr</label><input name="equipment" placeholder="Kettlebell"><label>Forklaring</label><textarea name="description" placeholder="Kort teknikkforklaring"></textarea><label>Videolenke (valfri)</label><input name="video" type="url" placeholder="https://..."><button>Legg til i øvingsbiblioteket</button></form><div id="adminExercises"></div>
+ </details>
+ <details class="card"><summary>Medlemsroller <span class="hint">Medlemmer og tilgang</span></summary><div id="adminMembers"></div></details>
+ <details class="card"><summary>Klubbverktøy <span class="hint">Status</span></summary><div id="adminSummaryDetail"></div></details>
+</div>
+</section>
 <footer>GARASJEGYM · Gratis trening · Bygd for den private treningsklubben</footer>
 </main>
 <script>
@@ -212,7 +238,11 @@ function renderRoleUI(){
  $('#welcomeRole').textContent=role==='admin'?'Velkomen, gymeigar.':role==='manager'?'Velkomen, klubbmanager.':'Velkomen, '+m.name+'.';
  $('#roleDescription').textContent=role==='admin'?'Du har full kontroll over GARASJEGYM.':role==='manager'?'Du kan drive aktivitetar, WOD-ar og gruppetimar.':'Her finn du trening, timar, resultat og kaffibar.';
  $('#roleHint').textContent=role==='admin'?'EIGAR':role==='manager'?'VIP-MANAGER':'MEDLEM';
- $$('[data-roles]').forEach(el=>{const allowed=el.dataset.roles.split(',').map(x=>x.trim());el.classList.toggle('hidden',!allowed.includes(role));});
+ $$('[data-roles]').forEach(el=>{
+  if(el.classList.contains('tab'))return;
+  const allowed=el.dataset.roles.split(',').map(x=>x.trim());
+  el.classList.toggle('role-hidden',!allowed.includes(role));
+ });
  $$('nav [data-tab="admin"]').forEach(el=>el.classList.toggle('hidden',role!=='admin'));
  $$('nav [data-tab="manager"]').forEach(el=>el.classList.toggle('hidden',role!=='manager'));
  if($('#coffeeOrderForm [name="person"]')){$('#coffeeOrderForm [name="person"]').value=m.name;$('#coffeeOrderForm [name="person"]').readOnly=true;}
@@ -431,8 +461,8 @@ function renderAdminCoffee(){
  const orders=db.coffeeOrders||[],pending=orders.filter(o=>!['Levert','Klar'].includes(o.status)).length,done=orders.length-pending;
  $('#adminCoffeeOrderCounts').innerHTML=`<span class="status-dot" style="background:#5b2428;color:#ffdada">Nye: ${pending}</span> <span class="status-dot" style="background:#174b32;color:#d7ffe7">Leverte: ${done}</span>`;
  $('#adminCoffeeOrders').innerHTML=orders.length?orders.map(o=>{
-  const delivered=['Levert','Klar'].includes(o.status),status=delivered?'Levert':'Bestilt';
-  return `<div class="coffee-order ${delivered?'done':''}"><div class="order-head"><strong>${esc(o.person)} · ${esc(o.drink)}</strong><span class="status-dot">${delivered?'LEVERT':'BESTILT'}</span></div><details><summary>Sjå bestilling · ${fmt(o.when)}</summary><p>${esc(o.bean||'Vanleg')} · ${esc(o.milk||'Vanleg mjølk')} · ${esc(o.syrup||'Ingen sirup')}</p><p>${esc(o.note||'Ingen kommentar')}</p><p>Bestillar: ${esc(o.person)}</p><div class="order-actions">${delivered?'<span class="hint">Bestillinga er levert.</span>':`<button type="button" onclick="setCoffeeStatus(${o.id},'Levert')">Marker levert</button>`}</div></details></div>`;
+  const delivered=['Levert','Klar'].includes(o.status);
+  return `<details class="coffee-order ${delivered?'done':''}"><summary><span><strong>${esc(o.person)} · ${esc(o.drink)}</strong><small>${fmt(o.when)}</small></span><span class="status-dot">${delivered?'LEVERT':'BESTILT'}</span></summary><div class="coffee-order-details"><p><strong>Kaffi:</strong> ${esc(o.bean||'Vanleg')}</p><p><strong>Mjølk:</strong> ${esc(o.milk||'Vanleg mjølk')}</p><p><strong>Sirup:</strong> ${esc(o.syrup||'Ingen sirup')}</p><p><strong>Kommentar:</strong> ${esc(o.note||'Ingen')}</p><p><strong>Bestillar:</strong> ${esc(o.person)}</p><div class="order-actions">${delivered?'<span class="hint">Bestillinga er markert levert.</span>':`<button type="button" onclick="event.preventDefault();setCoffeeStatus(${o.id},'Levert')">Marker levert</button>`}</div></div></details>`;
  }).join(''):'<div class="empty">Ingen kaffibestillingar.</div>';
  $('#adminNotifications').innerHTML=(db.notifications||[]).map(n=>item(n.title,n.detail+' · '+fmt(n.when),'<span class="pill gold">'+esc(n.type)+'</span>',`<button class="secondary" onclick="markNotification(${JSON.stringify(n.id)})">Lest</button>`)).join('')||'<div class="empty">Ingen nye varslingar.</div>';
 }
@@ -459,7 +489,7 @@ function renderManager(){
 }
 function renderAdmin(){
  renderAdminCoffee();
- $('#adminSummary').innerHTML='<p><strong>'+db.wods.length+'</strong> WOD-ar · <strong>'+db.classes.length+'</strong> timar · <strong>'+db.customExercises.length+'</strong> eigne øvingar · <strong>'+db.notifications.filter(n=>!n.read).length+'</strong> uleste varsel</p>';
+ const summary=`<span><strong>${db.wods.length}</strong> WOD-ar</span><span><strong>${db.classes.length}</strong> timar</span><span><strong>${db.customExercises.length}</strong> eigne øvingar</span><span><strong>${db.notifications.filter(n=>!n.read).length}</strong> uleste varsel</span>`;$('#adminSummary').innerHTML=summary;if($('#adminSummaryDetail'))$('#adminSummaryDetail').innerHTML=summary;
  $('#adminWods').innerHTML=db.wods.length?db.wods.map(w=>item(w.name,`${w.format} · ${w.duration||'–'} min · ${w.audience}`,'<span class="pill gold">WOD</span>',`<button class="secondary" onclick="adminEditWod(${w.id})">Rediger</button> <button class="danger" onclick="del('wods',${w.id})">Slett</button>`)).join(''):'<div class="empty">Ingen WOD-ar å administrere.</div>';
  $('#adminClasses').innerHTML=db.classes.length?db.classes.map(c=>item(c.title,`${fmt(c.when)} · ${c.type} · ${c.attendees.length}/${c.capacity} påmelde`,'<span class="pill">TIME</span>',`<button class="secondary" onclick="adminEditClass(${c.id})">Rediger</button> <button class="danger" onclick="del('classes',${c.id})">Slett</button>`)).join(''):'<div class="empty">Ingen timar å administrere.</div>';
  $('#adminExercises').innerHTML=db.customExercises.length?db.customExercises.map((x,i)=>item(x.name,`${x.category} · ${x.equipment||'Uspesifisert utstyr'}`,'<span class="pill">EIGA ØVING</span>',`<button class="secondary" onclick="adminEditExercise(${i})">Rediger</button> <button class="danger" onclick="if(confirm('Slette øvinga?')){db.customExercises.splice(${i},1);save()}">Slett</button>`)).join(''):'<div class="empty">Ingen eigne øvingar lagde til enno.</div>';
