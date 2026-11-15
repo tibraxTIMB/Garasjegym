@@ -223,12 +223,29 @@ nav button{font-size:12px;padding:9px 13px;min-height:38px}
 /* Garasjeprat social module */
 .social-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(240px,.85fr);gap:14px;align-items:start}.social-main{min-width:0}.social-compose textarea{min-height:95px}.social-compose form .row{margin-top:8px}.social-compose form select{max-width:180px}.social-share-row{justify-content:flex-start;margin-top:10px}.social-feed-head{margin:18px 0 8px}.social-feed-head h2{margin:0}.social-feed-head select{width:auto;max-width:190px}.social-post{background:linear-gradient(145deg,#182431,#121a23);border:1px solid #344456;border-radius:16px;padding:14px}.social-post-head{display:flex;align-items:center;gap:9px;margin-bottom:10px}.social-avatar{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:#34495e;color:#fff;font-weight:900;flex:0 0 38px}.social-post-body{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.55;margin:8px 0 12px}.social-image{display:block;width:100%;max-height:420px;object-fit:contain;background:#080d14;border-radius:12px;margin:8px 0 12px}.social-upload{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}.social-upload input{max-width:100%;font-size:13px}.social-preview{max-width:100%;max-height:220px;border-radius:12px;display:block;margin-top:9px}.social-upload-note{font-size:11px;color:var(--muted)}.social-post-meta{font-size:11px;color:var(--muted)}.social-actions{display:flex;gap:7px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}.social-actions button{font-size:12px;padding:8px 10px;min-height:34px}.social-actions .reacted{border-color:var(--accent);color:#ffd18b}.social-comments{border-top:1px solid var(--line);margin-top:10px;padding-top:9px}.social-comment{font-size:13px;padding:5px 0;overflow-wrap:anywhere}.social-comment-form{display:flex;gap:7px;margin-top:8px}.social-comment-form input{min-width:0}.social-comment-form button{white-space:nowrap}.social-kudos{font-size:13px;line-height:2}.social-post .pill{margin:0}.social-side{position:sticky;top:130px}.favorite-button{min-width:40px;padding:6px 10px;font-size:20px;line-height:1}.favorite-button.is-favorite{color:#ffbd55;border-color:#b87927;background:#2a1b0b}.wod-actions{display:flex;flex-wrap:wrap;gap:7px}.wod-actions button{flex:1 1 auto}.social-feed-head{align-items:center}@media(max-width:760px){.social-layout{grid-template-columns:1fr}.social-side{position:static;grid-row:1}.social-feed-head select{max-width:145px}.social-comment-form button{padding:8px}}
 
+
+/* 1.1.7: fast tilgang og tydeleg varselsenter */
+.quick-bar{position:sticky;top:62px;z-index:5;display:flex;align-items:center;gap:7px;overflow-x:auto;white-space:nowrap;padding:8px 0 10px;margin:0 0 8px;background:rgba(8,13,20,.97);backdrop-filter:blur(12px);scrollbar-width:none}
+.quick-bar::-webkit-scrollbar{display:none}.quick-bar button{flex:0 0 auto;min-height:40px;padding:8px 12px;font-size:12px;border-radius:12px}
+.quick-bar .quick-bell{display:flex;align-items:center;gap:7px;background:#39240d;border:1px solid #a96518;color:#ffe0b5;font-weight:800}
+.quick-icon{font-size:18px;line-height:1}.quick-count{display:inline-grid;place-items:center;min-width:21px;height:21px;padding:0 5px;border-radius:20px;background:#c52e3c;color:white;font-size:11px;font-weight:900}.quick-count[hidden]{display:none}
+#memberAlertPanel{scroll-margin-top:125px;transition:border-color .25s,box-shadow .25s}.notification-highlight{border-color:#d58a2b!important;box-shadow:0 0 0 3px #d58a2b33}#memberNotifications .item{border-bottom:1px solid var(--line)}
+@media(max-width:600px){.quick-bar{top:230px;margin-left:-10px;margin-right:-10px;padding:8px 10px 10px}.quick-bar button{min-height:42px;font-size:12px;padding:8px 11px}nav{top:282px}#memberAlertPanel{scroll-margin-top:170px}}
+
 </style>
 </head>
 <body>
 <header><div class="logo">GARASJEGYM<small>TRAIN · TRACK · IMPROVE</small></div><div class="header-tools"><label class="sr-only" for="activeProfile">Test brukarprofil</label><select id="activeProfile" aria-label="Byt brukarprofil"><option value="owner">Trond Inge · Admin</option><option value="vip">Kona · VIP-manager</option><option value="friend1">Kompis 1 · Medlem</option><option value="friend2">Kompis 2 · Medlem</option><option value="friend3">Kompis 3 · Medlem</option><option value="friend4">Kompis 4 · Medlem</option><option value="friend5">Kompis 5 · Medlem</option></select><span id="roleBadge" class="pill gold">ADMIN</span><span class="hint">Rollevising · ikkje innlogging</span></div></header>
 <main>
-<div class="notice">GARASJEGYM 1.1 · Lokal sosial demo. Byt profil i toppmenyen for å simulere medlem og admin. Alle profilar deler same data i denne nettlesaren. Ikkje ekte innlogging eller synkronisering mellom einingar. Treningsapp for den private garasjeklubben. Rollebasert grensesnittdemo. Profilveljaren testar rollene – han er ikkje sikker innlogging. Data blir lagra lokalt i denne nettlesaren, ikkje synkronisert mellom einingar. Nye-time-varsel er interne i denne appinstallasjonen – ikkje pushvarsel til andre telefonar.</div><div class="role-banner"><div><strong id="welcomeRole">Velkomen til GARASJEGYM</strong><br><small id="roleDescription">Vel brukarprofil for å sjå rett grensesnitt.</small></div><span id="roleHint" class="pill">DEMO-PROFIL</span></div>
+<div id="quickBar" class="quick-bar" aria-label="Snøggtilgang">
+ <button type="button" class="quick-bell" onclick="openNotificationCenter()" aria-label="Opne varsel"><span class="quick-icon">♢</span><span>Varsel</span><span id="quickUnreadCount" class="quick-count" hidden>0</span></button>
+ <button type="button" class="secondary" onclick="showTab('log')">＋ Logg økt</button>
+ <button type="button" class="secondary" data-roles="admin,manager" onclick="showTab('classes')">＋ Gruppetime</button>
+ <button type="button" class="secondary" data-roles="admin,manager" onclick="showTab('wods')">＋ WOD</button>
+ <button type="button" class="secondary" onclick="showTab('social')">Garasjeprat</button>
+ <button type="button" class="coffee-action" data-roles="member,manager" onclick="openCoffeeModal()">☕ Kaﬃ</button>
+</div>
+<div class="notice">GARASJEGYM 1.1.7 · Snøggtilgang og varselsenter. Lokal sosial demo. Byt profil i toppmenyen for å simulere medlem og admin. Alle profilar deler same data i denne nettlesaren. Ikkje ekte innlogging eller synkronisering mellom einingar. Treningsapp for den private garasjeklubben. Rollebasert grensesnittdemo. Profilveljaren testar rollene – han er ikkje sikker innlogging. Data blir lagra lokalt i denne nettlesaren, ikkje synkronisert mellom einingar. Nye-time-varsel er interne i denne appinstallasjonen – ikkje pushvarsel til andre telefonar.</div><div class="role-banner"><div><strong id="welcomeRole">Velkomen til GARASJEGYM</strong><br><small id="roleDescription">Vel brukarprofil for å sjå rett grensesnitt.</small></div><span id="roleHint" class="pill">DEMO-PROFIL</span></div>
 <nav id="nav">
 <button class="active" data-tab="home">Oversikt</button><button class="secondary" data-tab="wods">WOD</button><button class="secondary" data-tab="classes">Gruppetimar</button><button class="secondary" data-tab="social">Garasjeprat</button><button class="secondary" data-tab="calendar">Kalender</button><button class="secondary" data-tab="library">Øvingar</button><button class="secondary" data-tab="prs">PR</button><button class="secondary" data-tab="profile">Profil & maks</button><button class="secondary" data-tab="log">Treningslogg</button><button class="secondary" data-tab="coach">WOD-verkstad</button><button class="secondary" data-tab="manager" data-roles="manager">Manager</button><button class="secondary" data-tab="admin" data-roles="admin">Admin</button>
 </nav>
@@ -680,10 +697,25 @@ function renderPrs(){
  }).join('');
 }
 function renderLogs(){const rows=isOwner()?db.logs:db.logs.filter(l=>l.person===currentName());$('#logList').innerHTML=rows.length?rows.map(l=>{const details=(l.exercises||[]).map(e=>`${esc(e.name)}: ${(e.sets||[]).map((s,i)=>(s.time?`Forsøk ${i+1}: ${esc(s.time)}`:`S${i+1} ${s.reps??'–'} reps${s.kg!==null&&s.kg!==undefined?' · '+s.kg+' kg':''}`)).join(', ')}`).join('<br>');return item(l.title,`${esc(l.person)} · ${esc(l.date)}${l.format==='AMRAP'?` · AMRAP: ${Number(l.scoreRounds)||0} rundar + ${Number(l.scoreReps)||0} reps`:l.rounds&&l.rounds>1?' · '+esc(l.rounds)+' rundar':''}${details?'<br>'+details:''}${l.note?'<br><span class="hint">'+esc(l.note)+'</span>':''}${l.result?'<br>'+esc(l.result):''}`,'<span class="pill">LOGG</span>',`<button class="danger" onclick="del('logs',${l.id})">Slett</button>`)}).join(''):'<div class="empty">Ingen treningar logga enno.</div>'}
+function getVisibleNotifications(){
+ const name=currentName(),admin=currentRole()==='admin';
+ return (db.notifications||[]).filter(n=>(n.recipient===name||(admin&&!n.recipient))&&!n.dismissed).sort((a,b)=>String(b.when||'').localeCompare(String(a.when||'')));
+}
+function renderQuickBar(){
+ const unread=getVisibleNotifications().filter(n=>!n.read).length;
+ const badge=$('#quickUnreadCount');if(badge){badge.textContent=unread>99?'99+':String(unread);badge.hidden=unread===0;}
+ const bell=$('.quick-bell');if(bell){bell.setAttribute('aria-label',unread?`Opne ${unread} uleste varsel`:'Opne varsel');bell.classList.toggle('has-unread',unread>0);}
+}
+function openNotificationCenter(){
+ showTab('home');
+ setTimeout(()=>{const panel=$('#memberAlertPanel');if(panel){panel.scrollIntoView({behavior:'smooth',block:'start'});panel.classList.add('notification-highlight');setTimeout(()=>panel.classList.remove('notification-highlight'),1200);}},40);
+}
+function markAllNotificationsRead(){getVisibleNotifications().forEach(n=>n.read=true);save();}
 function renderMemberNotifications(){
- const rows=(db.notifications||[]).filter(n=>n.recipient===currentName()&&!n.read&&n.type==='new_class');
+ const rows=getVisibleNotifications();
  const el=$('#memberNotifications');if(!el)return;
- el.innerHTML=rows.length?rows.map(n=>item(n.title,n.detail+' · '+fmt(n.when),'<span class="pill gold">NY TIME</span>',`<button class="secondary" onclick="markNotification(${JSON.stringify(n.id)})">Lest</button>`)).join(''):'<div class="empty">Ingen nye varsel.</div>';
+ el.innerHTML=rows.length?`<div class="row" style="justify-content:space-between;margin-bottom:8px"><span class="hint">${rows.filter(n=>!n.read).length} uleste av ${rows.length}</span><button type="button" class="secondary" onclick="markAllNotificationsRead()">Merk alle som lesne</button></div>`+rows.map(n=>item(n.title,n.detail+' · '+fmt(n.when),`<span class="pill ${n.read?'':'gold'}">${n.read?'LEST':esc(n.type||'VARSEL')}</span>`,n.read?'':`<button class="secondary" onclick="markNotification(${JSON.stringify(n.id)})">Les</button>`)).join(''):'<div class="empty">Du har ingen varsel akkurat no.</div>';
+ renderQuickBar();
 }
 function renderHome(){
  $('#mWod').textContent=db.wods.length;$('#mClass').textContent=db.classes.length;$('#mPr').textContent=db.prs.length;
