@@ -31,7 +31,7 @@ body{background:radial-gradient(ellipse at 50% -20%,#1c2a38 0,#0b1016 55%);line-
 header{background:rgba(12,18,25,.94);backdrop-filter:blur(14px);border-bottom-color:#293746}
 .logo{font-size:22px;letter-spacing:2.3px}.logo small{font-size:9px}
 main{max-width:1120px}
-nav{gap:7px;padding:12px 0 15px;background:rgba(11,16,22,.96);backdrop-filter:blur(10px)}
+nav{gap:7px;padding:12px 0 15px;background:rgba(11,16,22,.96);backdrop-filter:blur(10px);overflow-x:auto;white-space:nowrap;scrollbar-width:thin;flex-wrap:nowrap}nav button{flex:0 0 auto}
 nav button{border-radius:999px;padding:10px 15px;font-size:13px}
 button,.btn{border-radius:12px;min-height:42px;transition:transform .15s,filter .15s}
 button:active{transform:scale(.98)}
@@ -69,21 +69,21 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 <button class="active" data-tab="home">Oversikt</button><button class="secondary" data-tab="wods">WOD</button><button class="secondary" data-tab="classes">Gruppetimar</button><button class="secondary" data-tab="calendar">Kalender</button><button class="secondary" data-tab="library">Øvingar</button><button class="secondary" data-tab="prs">PR</button><button class="secondary" data-tab="profile">Profil & maks</button><button class="secondary" data-tab="log">Treningslogg</button><button class="secondary" data-tab="barista">Barista</button><button class="secondary" data-tab="coach">WOD-coach</button><button class="secondary" data-tab="admin">Admin</button>
 </nav>
 <section id="home" class="tab">
-<div class="row"><div><h1>Velkomen til garasjen.</h1><div class="muted">Trening for dykk – heilt gratis.</div></div><button onclick="showTab('wods')">+ Ny WOD</button></div>
+<div class="row"><div><h1>Velkomen til garasjen.</h1><div class="muted">Trening for dykk – heilt gratis.</div></div><div class="row"><button class="secondary" onclick="showTab('barista')">☕ Bestill kaffi</button><button onclick="showTab('wods')">+ Ny WOD</button></div></div>
 <div class="grid" style="margin-top:16px">
 <div class="card span-4"><div class="muted">Publiserte WOD-ar</div><div class="metric" id="mWod">0</div></div>
 <div class="card span-4"><div class="muted">Gruppetimar</div><div class="metric" id="mClass">0</div></div>
 <div class="card span-4"><div class="muted">Registrerte PR-ar</div><div class="metric" id="mPr">0</div></div>
 <div class="card span-6"><h2>Neste gruppetimar</h2><div id="nextClasses"></div></div>
 <div class="card span-6"><h2>Siste WOD-ar</h2><div id="latestWods"></div></div>
-<div class="card span-12"><h2>Snøggmeny</h2><div class="row"><button onclick="showTab('wods')">Opprett WOD</button><button class="secondary" onclick="showTab('classes')">Opprett gruppetime</button><button class="secondary" onclick="showTab('prs')">Registrer PR</button><button class="secondary" onclick="showTab('log')">Logg trening</button></div></div>
+<div class="card span-12"><h2>Snøggmeny</h2><div class="row"><button onclick="showTab('barista')">☕ Bestill kaffi</button><button onclick="showTab('wods')">Opprett WOD</button><button class="secondary" onclick="showTab('classes')">Opprett gruppetime</button><button class="secondary" onclick="showTab('prs')">Registrer PR</button><button class="secondary" onclick="showTab('log')">Logg trening</button></div></div>
 </div></section>
 <section id="barista" class="tab hidden">
 <div class="section-head"><div><div class="subheading">Etter økta</div><h1>Barista corner</h1><div class="muted">God trening. Endå betre kaffi.</div></div><span class="pill gold">GARASJE-BARISTA</span></div>
 <div class="notice">Vel kaffi frå menyen, vel vanleg eller koffeinfri, og send bestillinga. Admin kan laste opp menyen frå ei CSV-fil.</div>
 <div class="grid" style="margin-top:14px">
-<div class="card span-8"><h2>Kaffimeny</h2><div id="coffeeMenu" class="grid"></div></div>
-<div class="card span-4"><h2>Bestilling</h2><form id="coffeeOrderForm">
+<div class="card span-8"><h2>Vel kaffi</h2><p class="hint">Vel ein drikk i lista, og fullfør bestillinga i skjemaet.</p><div id="coffeeMenu" class="grid"></div></div>
+<div class="card span-4" id="coffeeOrderPanel"><h2>Bestilling</h2><form id="coffeeOrderForm">
 <label>Namn</label><input name="person" required placeholder="Kven bestiller?">
 <label>Vel kaffidrikk</label><select name="drink" id="coffeeDrink" required></select>
 <label>Kaffitype</label><select name="bean"><option>Vanleg</option><option>Decaf – koffeinfri</option></select>
@@ -104,7 +104,7 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 <button type="button" onclick="generateCoachWod()">Lag WOD-forslag</button></div>
 <div class="card span-8"><h2>Forslaget ditt</h2><div id="coachOutput" class="empty">Vel innstillingar og trykk «Lag WOD-forslag».</div></div></div></section>
 <section id="wods" class="tab hidden">
-<div class="section-head"><div><div class="subheading">Dagens trening</div><h1>WOD-bibliotek</h1><div class="muted">Finn økta. Sjå innhaldet. Logg resultatet.</div></div><button onclick="toggleWodCreator()">+ Opprett WOD</button></div>
+<div class="section-head"><div><div class="subheading">Dagens trening</div><h1>WOD-bibliotek</h1><div class="muted">Finn økta. Sjå innhaldet. Logg resultatet.</div></div><div class="row"><button class="secondary" onclick="showTab('barista')">☕ Bestill kaffi</button><button onclick="toggleWodCreator()">+ Opprett WOD</button></div></div>
 <div class="wod-toolbar"><input id="wodSearch" placeholder="Søk etter WOD eller øving …"><select id="wodFilter" style="max-width:190px"><option value="">Alle format</option><option>AMRAP</option><option>EMOM</option><option>For Time</option><option>Tabata</option><option>Intervall</option><option>Styrke</option><option>Eigen økt</option></select></div>
 <div id="wodList" class="grid"></div>
 <details id="wodCreator" class="card" style="margin-top:16px"><summary><strong>WOD-studio · Opprett eller publiser økt</strong></summary>
@@ -185,7 +185,7 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function showTab(id){$$('.tab').forEach(x=>x.classList.toggle('hidden',x.id!==id));$$('#nav button').forEach(b=>{b.classList.toggle('active',b.dataset.tab===id);b.classList.toggle('secondary',b.dataset.tab!==id)});window.scrollTo({top:0,behavior:'smooth'});if(id==='calendar')renderCalendar();if(id==='profile')renderProfile();if(id==='wods')renderWods();if(id==='barista')renderCoffee()}
 $$('#nav button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 function item(title,sub,tag,actions=''){return `<div class="item"><div class="row"><div><strong>${esc(title)}</strong><div class="hint">${esc(sub)}</div></div><div>${tag||''} ${actions}</div></div></div>`}
-$('#wodForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);db.wods.unshift({id:Date.now(),name:f.get('name'),format:f.get('format'),duration:f.get('duration'),movements:f.get('movements'),notes:f.get('notes'),audience:f.get('audience'),date:new Date().toISOString()});e.target.reset();$('#wodCreator').open=false;save()});
+$('#wodForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);const cleanMovements=String(f.get('movements')||'').replace(/\\n/g,'\n').replace(/\\r/g,'\n');db.wods.unshift({id:Date.now(),name:f.get('name'),format:f.get('format'),duration:f.get('duration'),movements:cleanMovements,notes:f.get('notes'),audience:f.get('audience'),date:new Date().toISOString()});e.target.reset();$('#wodCreator').open=false;save()});
 $('#classForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);db.classes.push({id:Date.now(),title:f.get('title'),type:f.get('type'),capacity:+f.get('capacity'),when:f.get('when'),duration:f.get('duration'),description:f.get('description'),attendees:[]});e.target.reset();save()});
 $('#prForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);db.prs.unshift({id:Date.now(),person:f.get('person'),exercise:f.get('exercise'),result:f.get('result'),date:f.get('date')||new Date().toISOString().slice(0,10),kind:f.get('kind')});e.target.reset();save()});
 $('#logForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);db.logs.unshift({id:Date.now(),person:f.get('person'),title:f.get('title'),date:f.get('date')||new Date().toISOString().slice(0,10),result:f.get('result')});e.target.reset();save()});
@@ -232,7 +232,8 @@ function toggleExercise(name,checked){if(checked)selectedExercises.add(name);els
 function addSelectedToWod(){
  if(!selectedExercises.size){alert('Kryss av minst éi øving først.');return;}
  const area=$('#wodMovements');
- area.value=(area.value.trim()?area.value.trim().replace(/\\\\n/g,'\n')+'\n':'')+[...selectedExercises].map(name=>'10 '+name).join('\n');
+ const existing=String(area.value||'').replace(/\\n/g,'\n').replace(/\\r/g,'\n');
+ area.value=(existing.trim()?existing.trim()+'\n':'')+[...selectedExercises].map(name=>'10 '+name).join('\n');
  selectedExercises.clear();renderExercises();showTab('wods');area.focus();
 }
 function generateCoachWod(){
@@ -288,7 +289,7 @@ function adminEditExercise(index){
 
 function renderCoffee(){
  const menu=db.coffeeMenu||[];
- $('#coffeeMenu').innerHTML=menu.length?menu.map(m=>`<div class="card span-6"><div class="row"><strong>${esc(m.name)}</strong><span class="pill gold">KAFFI</span></div><p class="hint">${esc(m.description||'')}</p><button class="secondary" onclick="$('#coffeeDrink').value=${JSON.stringify(m.name)};$('#coffeeOrderForm [name=person]').focus()">Vel denne</button></div>`).join(''):'<div class="empty">Kaffimen yen er ikkje lagt inn enno.</div>';
+ $('#coffeeMenu').innerHTML=menu.length?menu.map(m=>`<div class="card span-6"><div class="row"><strong>${esc(m.name)}</strong><span class="pill gold">KAFFI</span></div><p class="hint">${esc(m.description||'')}</p><button class="secondary" onclick="$('#coffeeDrink').value=${JSON.stringify(m.name)};$('#coffeeOrderPanel').scrollIntoView({behavior:'smooth',block:'center'});$('#coffeeOrderForm [name=person]').focus()">Vel denne</button></div>`).join(''):'<div class="empty">Kaffimen yen er ikkje lagt inn enno.</div>';
  $('#coffeeDrink').innerHTML=menu.map(m=>`<option>${esc(m.name)}</option>`).join('');
  const orders=db.coffeeOrders||[];
  $('#coffeeRecent').innerHTML=orders.slice(0,5).map(o=>item(o.drink,`${o.person} · ${o.bean} · ${o.milk||'Vanleg mjølk'} · ${o.syrup||'Ingen sirup'} · ${fmt(o.when)} · ${o.note||''}`,'<span class="pill">BESTILT</span>')).join('')||'<div class="empty">Ingen bestillingar enno.</div>';
