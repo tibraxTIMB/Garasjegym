@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#11151b">
-<title>GARASJEGYM 1.1 · Garasjeprat</title>
+<title>GARASJEGYM 1.2.5 · PT-studio mobilretting</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -244,6 +244,38 @@ nav button{font-size:12px;padding:9px 13px;min-height:38px}
 .achievement-admin-grid{display:grid;grid-template-columns:1fr;gap:5px;margin:8px 0}.achievement-section .item{box-shadow:none}.achievement-section details summary{cursor:pointer;padding:8px 0}
 .achievement-admin-item{padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
 .achievement-admin-item .meta{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* GARASJEGYM 1.2.5 – PT-studio layout repair */
+.grid>.span-5{grid-column:span 5;min-width:0}
+.grid>.span-7{grid-column:span 7;min-width:0}
+#pt .grid{align-items:start;grid-auto-flow:row;min-width:0}
+#pt .card{min-width:0;overflow:hidden}
+#pt form,#pt form>*{min-width:0;max-width:100%}
+#pt input,#pt select,#pt textarea{min-width:0;max-width:100%}
+#pt .row{min-width:0;flex-wrap:wrap}
+#ptClientOverview .item{min-width:0;padding:12px 0}
+#ptClientOverview .item .row{align-items:flex-start;gap:8px}
+#ptClientOverview .item .row>div{flex:1 1 150px;min-width:0}
+#ptClientOverview .item .pill{white-space:normal;max-width:100%;text-align:left}
+#ptSessionList .item,#ptMessages .item{min-width:0;overflow-wrap:anywhere}
+#ptWodSelect{min-height:125px}
+@media(max-width:700px){
+ #pt .grid{grid-template-columns:minmax(0,1fr);gap:11px}
+ #pt .grid>.span-5,#pt .grid>.span-7,#pt .grid>.span-12{grid-column:1/-1;width:100%;min-width:0}
+ #pt .card{width:100%;padding:14px}
+ #pt .section-head{align-items:flex-start}
+ #pt .section-head>div{min-width:0}
+ #pt .section-head h1{font-size:clamp(25px,7vw,32px)}
+ #pt .two{grid-template-columns:minmax(0,1fr)}
+ #pt .row>*{max-width:100%}
+ #ptMessageForm .two{grid-template-columns:minmax(0,1fr)}
+ #ptClientOverview .item .row{display:flex;flex-direction:column;align-items:flex-start}
+ #ptClientOverview .item .pill{align-self:flex-start}
+}
+@media(min-width:701px) and (max-width:900px){
+ #pt .grid>.span-5{grid-column:span 6}
+ #pt .grid>.span-7{grid-column:span 6}
+}
 </style>
 </head>
 <body>
@@ -399,7 +431,7 @@ nav button{font-size:12px;padding:9px 13px;min-height:38px}
 </div>
 </section>
 <footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben
-<div class="version-note">GarasjeGym 1.2.4 · Smart WOD-import og kompakt achievement-oversikt</div>
+<div class="version-note">GarasjeGym 1.2.5 · PT-studio med mobiltilpassa layout</div>
 </footer>
 </main>
 <div id="editorModal" class="editor-backdrop" role="dialog" aria-modal="true" aria-labelledby="editorTitle" onclick="if(event.target===this)closeEditor()"><div class="editor-panel"><div class="row"><h2 id="editorTitle">Rediger</h2><button type="button" class="secondary" onclick="closeEditor()" aria-label="Lukk">✕</button></div><form id="editorForm"></form></div></div>
