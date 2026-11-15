@@ -74,6 +74,7 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 
 .coffee-order{border:1px solid var(--line);border-left:6px solid #d94a4a;border-radius:14px;padding:12px;margin:10px 0;background:var(--panel)}
 .coffee-order.done{border-left-color:#2eaa68}
+.coffee-member-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px;margin:12px 0}.coffee-stat{background:#111a24;border:1px solid var(--line);border-radius:12px;padding:11px}.coffee-stat strong{display:block}.coffee-stat ul{margin:7px 0 0;padding-left:18px;color:var(--muted);font-size:12px}.coffee-order-wrap{position:relative}.coffee-order-wrap .swipe-delete{display:none;margin:0 0 8px auto}@media(hover:hover){.coffee-order-wrap .swipe-delete{display:inline-flex}}.coffee-order-wrap.swiped .swipe-delete{display:block}.coffee-order-wrap .coffee-order{margin-bottom:5px}
 .coffee-order .order-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .coffee-order .status-dot{font-size:12px;font-weight:800;border-radius:999px;padding:5px 10px;background:#5b2428;color:#ffdada}
 .coffee-order.done .status-dot{background:#174b32;color:#d7ffe7}
@@ -99,6 +100,7 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 .admin-accordion details.card>form{margin-bottom:14px}
 .coffee-order{border:1px solid var(--line);border-left:5px solid #d94a4a;border-radius:13px;margin:8px 0;background:#1a202a;overflow:hidden}
 .coffee-order.done{border-left-color:#2eaa68}
+.coffee-member-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px;margin:12px 0}.coffee-stat{background:#111a24;border:1px solid var(--line);border-radius:12px;padding:11px}.coffee-stat strong{display:block}.coffee-stat ul{margin:7px 0 0;padding-left:18px;color:var(--muted);font-size:12px}.coffee-order-wrap{position:relative}.coffee-order-wrap .swipe-delete{display:none;margin:0 0 8px auto}@media(hover:hover){.coffee-order-wrap .swipe-delete{display:inline-flex}}.coffee-order-wrap.swiped .swipe-delete{display:block}.coffee-order-wrap .coffee-order{margin-bottom:5px}
 .coffee-order>summary{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px;cursor:pointer;list-style:none}
 .coffee-order>summary::-webkit-details-marker{display:none}
 .coffee-order>summary small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
@@ -115,7 +117,7 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 <body>
 <header><div class="logo">GARASJEGYM<small>TRAIN · TRACK · IMPROVE</small></div><div class="header-tools"><label class="sr-only" for="activeProfile">Test brukarprofil</label><select id="activeProfile" aria-label="Byt brukarprofil"><option value="owner">Trond Inge · Admin</option><option value="vip">Kona · VIP-manager</option><option value="friend1">Kompis 1 · Medlem</option><option value="friend2">Kompis 2 · Medlem</option><option value="friend3">Kompis 3 · Medlem</option><option value="friend4">Kompis 4 · Medlem</option><option value="friend5">Kompis 5 · Medlem</option></select><span id="roleBadge" class="pill gold">ADMIN</span><span class="hint">Rollevising · ikkje innlogging</span></div></header>
 <main>
-<div class="notice">GARASJEGYM 0.1 · Treningsapp for den private garasjeklubben. Rollebasert grensesnittdemo. Profilveljaren testar rollene – han er ikkje sikker innlogging. Data blir lagra lokalt i denne nettlesaren, ikkje synkronisert mellom einingar.</div><div class="role-banner"><div><strong id="welcomeRole">Velkomen til GARASJEGYM</strong><br><small id="roleDescription">Vel brukarprofil for å sjå rett grensesnitt.</small></div><span id="roleHint" class="pill">DEMO-PROFIL</span></div>
+<div class="notice">GARASJEGYM 0.2 · Treningsapp for den private garasjeklubben. Rollebasert grensesnittdemo. Profilveljaren testar rollene – han er ikkje sikker innlogging. Data blir lagra lokalt i denne nettlesaren, ikkje synkronisert mellom einingar. Nye-time-varsel er interne i denne appinstallasjonen – ikkje pushvarsel til andre telefonar.</div><div class="role-banner"><div><strong id="welcomeRole">Velkomen til GARASJEGYM</strong><br><small id="roleDescription">Vel brukarprofil for å sjå rett grensesnitt.</small></div><span id="roleHint" class="pill">DEMO-PROFIL</span></div>
 <nav id="nav">
 <button class="active" data-tab="home">Oversikt</button><button class="secondary" data-tab="wods">WOD</button><button class="secondary" data-tab="classes">Gruppetimar</button><button class="secondary" data-tab="calendar">Kalender</button><button class="secondary" data-tab="library">Øvingar</button><button class="secondary" data-tab="prs">PR</button><button class="secondary" data-tab="profile">Profil & maks</button><button class="secondary" data-tab="log">Treningslogg</button><button class="secondary" data-tab="barista">Barista</button><button class="secondary" data-tab="coach">WOD-coach</button><button class="secondary" data-tab="manager" data-roles="manager">Manager</button><button class="secondary" data-tab="admin" data-roles="admin">Admin</button>
 </nav>
@@ -125,7 +127,7 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 <button type="button" class="card span-4 dashboard-card" onclick="showTab('wods')" aria-label="Opne publiserte WOD-ar"><span class="muted">Publiserte WOD-ar</span><span class="metric" id="mWod">0</span><span class="dashboard-link">Sjå WOD-ar <span aria-hidden="true">→</span></span></button>
 <button type="button" class="card span-4 dashboard-card" onclick="showTab('classes')" aria-label="Opne gruppetimar"><span class="muted">Gruppetimar</span><span class="metric" id="mClass">0</span><span class="dashboard-link">Sjå gruppetimar <span aria-hidden="true">→</span></span></button>
 <button type="button" class="card span-4 dashboard-card" onclick="showTab('prs')" aria-label="Opne personlege rekordar"><span class="muted">Registrerte PR-ar</span><span class="metric" id="mPr">0</span><span class="dashboard-link">Sjå rekordar <span aria-hidden="true">→</span></span></button>
-<div class="card span-6"><h2>Neste gruppetimar</h2><div id="nextClasses"></div></div>
+<div class="card span-6"><h2>Neste gruppetimar</h2><div id="nextClasses"></div></div><div class="card span-12" id="memberAlertPanel"><h2>Varsel til deg</h2><div id="memberNotifications"></div></div>
 <div class="card span-6"><h2>Siste WOD-ar</h2><div id="latestWods"></div></div>
 <div class="card span-12"><h2>Snøggmeny</h2><div class="row"><button onclick="showTab('barista')">☕ Bestill kaffi</button><button data-roles="admin,manager" onclick="showTab('wods')">Opprett WOD</button><button class="secondary" data-roles="admin,manager" onclick="showTab('classes')">Opprett gruppetime</button><button class="secondary" onclick="showTab('prs')">Registrer PR</button><button class="secondary" onclick="showTab('log')">Logg trening</button></div></div>
 </div></section>
@@ -191,6 +193,7 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 <div class="admin-summary-strip" id="adminSummary"></div>
 <div class="card admin-coffee-main" id="adminCoffeeOrderPanel">
  <div class="admin-coffee-head"><div><h2>☕ Kaffibestillingar</h2><p class="hint">Trykk på ei bestilling for detaljar og levering.</p></div><div id="adminCoffeeOrderCounts"></div></div>
+ <div id="coffeeMemberStats" class="coffee-member-stats"></div>
  <div id="adminCoffeeOrders"></div>
 </div>
 <div class="admin-accordion">
@@ -211,7 +214,7 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 </div>
 </section>
 <footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben
-<div class="version-note">GarasjeGym 0.1 · Første testversjon · Under utvikling</div>
+<div class="version-note">GarasjeGym 0.2 · Feilrettingar og medlemsfunksjonar · Under utvikling</div>
 </footer>
 </main>
 <script>
@@ -249,22 +252,23 @@ function renderRoleUI(){
   el.classList.toggle('role-hidden',!allowed.includes(role));
  });
  $$('nav [data-tab="admin"]').forEach(el=>el.classList.toggle('hidden',role!=='admin'));
- $$('nav [data-tab="manager"]').forEach(el=>el.classList.toggle('hidden',role!=='manager'));
+ $$('nav [data-tab="manager"]').forEach(el=>el.classList.toggle('hidden',role!=='manager'));$$('nav [data-tab="barista"]').forEach(el=>el.classList.toggle('hidden',role==='admin'));
  if($('#coffeeOrderForm [name="person"]')){$('#coffeeOrderForm [name="person"]').value=m.name;$('#coffeeOrderForm [name="person"]').readOnly=true;}
+ const canOrder=role!=='admin';if($('#coffeeOrderPanel'))$('#coffeeOrderPanel').classList.toggle('hidden',!canOrder);$$('button[onclick*="showTab(\'barista\')"]').forEach(b=>b.classList.toggle('role-hidden',!canOrder));
  if($('#profilePerson')){const sel=$('#profilePerson');sel.innerHTML=`<option value="${esc(m.name)}">${esc(m.name)}</option>`;sel.value=m.name;}
  $$('form#prForm select[name="person"],form#logForm select[name="person"]').forEach(sel=>{sel.value=m.name;sel.disabled=true;});
  renderRoleAdmin();
 }
 function renderRoleAdmin(){if($('#adminMembers'))$('#adminMembers').innerHTML=db.members.map(m=>item(m.name,m.role==='admin'?'Eigar':m.role==='manager'?'VIP-manager':'Vanleg medlem',`<span class="pill">${m.role}</span>`)).join('');}
 function showTab(id){
- const role=currentRole();if(id==='admin'&&role!=='admin')id=role==='manager'?'manager':'home';if(id==='manager'&&role!=='manager')id=role==='admin'?'admin':'home';
+ const role=currentRole();if(id==='barista'&&role==='admin')id='admin';if(id==='admin'&&role!=='admin')id=role==='manager'?'manager':'home';if(id==='manager'&&role!=='manager')id=role==='admin'?'admin':'home';
  $$('.tab').forEach(x=>x.classList.toggle('hidden',x.id!==id));$$('#nav button').forEach(b=>{b.classList.toggle('active',b.dataset.tab===id);b.classList.toggle('secondary',b.dataset.tab!==id)});window.scrollTo({top:0,behavior:'smooth'});
- if(id==='calendar')renderCalendar();if(id==='profile')renderProfile();if(id==='wods')renderWods();if(id==='barista')renderCoffee();if(id==='manager')renderManager();
+ if(id==='calendar')renderCalendar();if(id==='profile')renderProfile();if(id==='wods')renderWods();if(id==='classes')renderClassWodOptions();if(id==='barista')renderCoffee();if(id==='manager')renderManager();
 }
 $$('#nav button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 function item(title,sub,tag,actions=''){return `<div class="item"><div class="row"><div><strong>${esc(title)}</strong><div class="hint">${esc(sub)}</div></div><div>${tag||''} ${actions}</div></div></div>`}
 $('#wodForm').addEventListener('submit',e=>{e.preventDefault();if(!canCreateWod()){alert('Berre admin og VIP-manager kan opprette WOD.');return;}let f=new FormData(e.target);const cleanMovements=normaliseLines(f.get('movements'));db.wods.unshift({id:Date.now(),name:f.get('name'),format:f.get('format'),duration:f.get('duration'),movements:cleanMovements,notes:f.get('notes'),audience:f.get('audience'),date:new Date().toISOString(),createdBy:currentName()});e.target.reset();$('#wodCreator').open=false;notifyAdmin('wod','Ny WOD',currentName()+' oppretta '+f.get('name'));save()});
-$('#classForm').addEventListener('submit',e=>{e.preventDefault();if(!canManageClasses()){alert('Berre admin og VIP-manager kan opprette timar.');return;}let f=new FormData(e.target);const selectedWod=db.wods.find(w=>String(w.id)===String(f.get('wodId')||''));db.classes.push({id:Date.now(),title:f.get('title'),type:f.get('type'),capacity:+f.get('capacity'),when:f.get('when'),duration:f.get('duration'),description:f.get('description'),wodId:selectedWod?.id||null,wodTitle:selectedWod?.name||'',attendees:[],pendingBookings:[],createdBy:currentName()});const title=f.get('title');e.target.reset();notifyAdmin('class','Ny time oppretta',currentName()+' la ut '+title);save()});
+$('#classForm').addEventListener('submit',e=>{e.preventDefault();if(!canManageClasses()){alert('Berre admin og VIP-manager kan opprette timar.');return;}let f=new FormData(e.target);const selectedWod=db.wods.find(w=>String(w.id)===String(f.get('wodId')||''));db.classes.push({id:Date.now(),title:f.get('title'),type:f.get('type'),capacity:+f.get('capacity'),when:f.get('when'),duration:f.get('duration'),description:f.get('description'),wodId:selectedWod?.id||null,wodTitle:selectedWod?.name||'',attendees:[],pendingBookings:[],createdBy:currentName()});const title=f.get('title');e.target.reset();notifyAdmin('class','Ny time oppretta',currentName()+' la ut '+title);db.members.filter(m=>m.role!=='admin'&&m.id!==currentMember().id).forEach(m=>db.notifications.unshift({id:Date.now()+Math.random(),type:'new_class',title:'Ny gruppetime: '+title,detail:'Ei ny gruppetime er lagd ut. Sjekk Gruppetimar for tidspunkt og påmelding.',recipient:m.name,when:new Date().toISOString(),read:false}));save()});
 $('#prForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);if(!f.get('exercise')){alert('Vel ei øving frå biblioteket.');return;}db.prs.unshift({id:Date.now(),person:currentName(),exercise:f.get('exercise'),result:String(f.get('result')).trim(),unit:f.get('unit')||'kg',note:String(f.get('note')||'').trim(),date:f.get('date')||new Date().toISOString().slice(0,10)});e.target.reset();renderPrs();save()});
 $('#logForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);db.logs.unshift({id:Date.now(),person:currentName(),title:f.get('title'),date:f.get('date')||new Date().toISOString().slice(0,10),result:f.get('result')});e.target.reset();save()});
 function del(type,id){if(confirm('Vil du sletta denne oppføringa?')){db[type]=db[type].filter(x=>x.id!==id);save()}}
@@ -313,15 +317,16 @@ $('#classWodSelect')?.addEventListener('change',e=>{
  if(desc)desc.value=[w.name,w.format+' · '+(w.duration||'')+' min',w.movements||'',w.notes||''].filter(Boolean).join('\\n');
 });
 function renderClasses(){
- let arr=[...db.classes].sort((a,b)=>a.when.localeCompare(b.when));
+ const arr=[...db.classes].sort((a,b)=>a.when.localeCompare(b.when));
  $('#classList').innerHTML=arr.length?arr.map(c=>{
-  c.pendingBookings=c.pendingBookings||[];const attendees=c.attendees||[];const isPT=c.type==='PT-time';
-  const mine=attendees.includes(currentName()),pendingMine=c.pendingBookings.some(x=>x.name===currentName());
-  const linkedWod=c.wodTitle?`<br><strong>WOD:</strong> ${esc(c.wodTitle)}`:'';const details=`${fmt(c.when)} · ${c.type} · ${c.duration} min${linkedWod}<br>${esc(c.description||'')}<br><strong>Påmelde: ${attendees.length}/${c.capacity}</strong>${attendees.length?'<br>'+attendees.map(esc).join(', '):'<br>Ingen påmelde enno.'}${isPT?'<br>PT-førespurnader: '+c.pendingBookings.length:''}`;
-  const action=isPT?`<button onclick="book(${c.id})" ${mine||pendingMine?'disabled':''}>${pendingMine?'Førespurnad sendt':'Be om PT-time'}</button>`:`<button onclick="book(${c.id})" ${mine?'disabled':''}>${mine?'Påmeld':'Meld på'}</button> ${mine?`<button class="secondary" onclick="cancelBooking(${c.id})">Meld av</button>`:''}`;
+  c.pendingBookings=c.pendingBookings||[];c.attendees=c.attendees||[];
+  const attendees=c.attendees, isPT=c.type==='PT-time', mine=attendees.includes(currentName()), pendingMine=c.pendingBookings.some(x=>x.name===currentName());
+  const linkedWod=c.wodTitle?`<div class="hint"><strong>WOD:</strong> ${esc(c.wodTitle)}</div>`:'';
+  const names=attendees.length?attendees.map(n=>`<span class="pill">${esc(n)}</span>`).join(' '):'<span class="hint">Ingen påmelde enno.</span>';
+  const actions=currentRole()==='admin'?'':(isPT?`<button onclick="book(${c.id})" ${mine||pendingMine?'disabled':''}>${pendingMine?'Førespurnad sendt':'Be om PT-time'}</button>`:`<button onclick="book(${c.id})" ${mine?'disabled':''}>${mine?'Påmeld':'Meld på'}</button> ${mine?`<button class="secondary" onclick="cancelBooking(${c.id})">Meld av</button>`:''}`);
   const manage=canManageClasses()?` <button class="secondary" onclick="adminEditClass(${c.id})">Rediger</button>`:'';
   const remove=isOwner()?` <button class="danger" onclick="del('classes',${c.id})">Slett</button>`:'';
-  return item(c.title,details,`<span class="pill">${esc(c.type)}</span>`,action+manage+remove);
+  return `<div class="item class-item"><div class="row"><div><strong>${esc(c.title)}</strong><div class="hint">${fmt(c.when)} · ${esc(c.type)} · ${esc(c.duration)} min</div></div><span class="pill">${attendees.length}/${c.capacity}</span></div>${linkedWod}<p>${esc(c.description||'')}</p><div><strong>Påmelde (${attendees.length}/${c.capacity})</strong><div style="margin-top:6px">${names}</div></div>${isPT&&c.pendingBookings.length?`<div class="hint">PT-førespurnader: ${c.pendingBookings.map(x=>esc(x.name)).join(', ')}</div>`:''}<div class="row" style="margin-top:10px">${actions}${manage}${remove}</div></div>`;
  }).join(''):'<div class="empty">Ingen timar er lagde ut.</div>';
 }
 function renderCalendar(){let all=[...db.classes.map(c=>({date:c.when,title:c.title,type:c.type,detail:`${c.attendees.length}/${c.capacity} påmelde`})),...db.wods.map(w=>({date:w.date,title:w.name,type:'Publisert WOD',detail:w.format}))].sort((a,b)=>a.date.localeCompare(b.date));$('#calendarList').innerHTML=all.length?all.map(x=>item(x.title,`${fmt(x.date)} · ${x.detail}`,`<span class="pill">${x.type}</span>`)).join(''):'<div class="empty">Kalenderen er tom.</div>'}
@@ -409,6 +414,11 @@ function renderPrs(){
  }).join('');
 }
 function renderLogs(){const rows=isOwner()?db.logs:db.logs.filter(l=>l.person===currentName());$('#logList').innerHTML=rows.length?rows.map(l=>item(l.title,`${l.person} · ${l.date}<br>${esc(l.result)}`,'<span class="pill">LOGG</span>',`<button class="danger" onclick="del('logs',${l.id})">Slett</button>`)).join(''):'<div class="empty">Ingen treningar logga enno.</div>'}
+function renderMemberNotifications(){
+ const rows=(db.notifications||[]).filter(n=>n.recipient===currentName()&&!n.read&&n.type==='new_class');
+ const el=$('#memberNotifications');if(!el)return;
+ el.innerHTML=rows.length?rows.map(n=>item(n.title,n.detail+' · '+fmt(n.when),'<span class="pill gold">NY TIME</span>',`<button class="secondary" onclick="markNotification(${JSON.stringify(n.id)})">Lest</button>`)).join(''):'<div class="empty">Ingen nye varsel.</div>';
+}
 function renderHome(){$('#mWod').textContent=db.wods.length;$('#mClass').textContent=db.classes.length;$('#mPr').textContent=db.prs.length;let upcoming=db.classes.filter(c=>new Date(c.when)>=new Date()).sort((a,b)=>a.when.localeCompare(b.when)).slice(0,4);$('#nextClasses').innerHTML=upcoming.length?upcoming.map(c=>item(c.title,`${fmt(c.when)} · ${c.attendees.length}/${c.capacity} påmelde`,`<span class="pill">${c.type}</span>`)).join(''):'<div class="empty">Ingen komande timar.</div>';$('#latestWods').innerHTML=db.wods.slice(0,4).map(w=>item(w.name,`${w.format} · ${w.duration||'–'} min`,'<span class="pill gold">WOD</span>')).join('')||'<div class="empty">Ingen WOD-ar enno.</div>'}
 
 function adminEditWod(id){if(!isOwner()){alert('Berre eigar kan redigere WOD-ar.');return;}
@@ -443,12 +453,12 @@ function renderCoffee(){
  $('#coffeeMemberNotifications').innerHTML=mine.map(n=>item(n.title,n.detail+' · '+fmt(n.when),'<span class="pill gold">ULest</span>',`<button class="secondary" onclick="markNotification(${JSON.stringify(n.id)})">Les</button>`)).join('')||'<div class="empty">Ingen nye varsel.</div>';
 }
 $('#coffeeOrderForm').addEventListener('submit',e=>{
- e.preventDefault();const f=new FormData(e.target);
+ e.preventDefault();if(currentRole()==='admin'){alert('Adminprofilen kan ikkje bestille kaffi.');return;}const f=new FormData(e.target);
  const order={id:Date.now(),person:String(f.get('person')).trim(),drink:f.get('drink'),bean:f.get('bean'),milk:f.get('milk'),syrup:f.get('syrup'),note:f.get('note'),when:new Date().toISOString(),status:'Bestilt'};
  db.coffeeOrders.unshift(order);
  notifyAdmin('coffee','Ny kaffibestilling',order.person+' bestilte '+order.drink+' · '+order.bean+' · '+order.milk+' · '+order.syrup+(order.note?' · '+order.note:''));
  db.notifications.unshift({id:Date.now()+Math.random(),type:'coffee_confirmation',title:'☕ Bestillinga er registrert',detail:'Du har bestilt '+order.drink+'. Me gir beskjed her når kaffien er klar.',recipient:order.person,when:new Date().toISOString(),read:false});
- e.target.reset();save();$('#coffeeOrderFeedback').textContent='Bestillinga er registrert. God økt og god kaffi!';
+ e.target.reset();save();$('#coffeeOrderForm [name="person"]').value=currentName();$('#coffeeOrderFeedback').textContent='Bestillinga er registrert. God økt og god kaffi!';
 });
 $('#coffeeMenuForm').addEventListener('submit',e=>{
  e.preventDefault();const f=new FormData(e.target);db.coffeeMenu.push({id:Date.now(),name:String(f.get('name')).trim(),description:f.get('description')});e.target.reset();save();
@@ -464,13 +474,24 @@ $('#coffeeMenuUpload').addEventListener('change',e=>{
 function renderAdminCoffee(){
  $('#adminCoffeeMenu').innerHTML=(db.coffeeMenu||[]).map(m=>item(m.name,m.description,'<span class="pill">MENY</span>',`<button class="danger" onclick="db.coffeeMenu=db.coffeeMenu.filter(x=>x.id!==${m.id});save()">Fjern</button>`)).join('')||'<div class="empty">Tom kaffimeny.</div>';
  const orders=db.coffeeOrders||[],pending=orders.filter(o=>!['Levert','Klar'].includes(o.status)).length,done=orders.length-pending;
+ const byPerson={};orders.forEach(o=>{const k=o.person||'Ukjend';byPerson[k]??={total:0,drinks:{}};byPerson[k].total++;byPerson[k].drinks[o.drink]=(byPerson[k].drinks[o.drink]||0)+1;});
+ $('#coffeeMemberStats').innerHTML=Object.keys(byPerson).length?`<h3 style="grid-column:1/-1;margin:4px 0">Kaffistatistikk per medlem</h3>`+Object.entries(byPerson).sort((a,b)=>b[1].total-a[1].total).map(([person,v])=>`<div class="coffee-stat"><strong>${esc(person)} · ${v.total} bestillingar</strong><ul>${Object.entries(v.drinks).sort((a,b)=>b[1]-a[1]).map(([drink,n])=>`<li>${esc(drink)}: ${n}</li>`).join('')}</ul></div>`).join(''):'<div class="empty">Ingen bestillingar å vise statistikk for.</div>';
  $('#adminCoffeeOrderCounts').innerHTML=`<span class="status-dot" style="background:#5b2428;color:#ffdada">Nye: ${pending}</span> <span class="status-dot" style="background:#174b32;color:#d7ffe7">Leverte: ${done}</span>`;
  $('#adminCoffeeOrders').innerHTML=orders.length?orders.map(o=>{
   const delivered=['Levert','Klar'].includes(o.status);
-  return `<details class="coffee-order ${delivered?'done':''}"><summary><span><strong>${esc(o.person)} · ${esc(o.drink)}</strong><small>${fmt(o.when)}</small></span><span class="status-dot">${delivered?'LEVERT':'BESTILT'}</span></summary><div class="coffee-order-details"><p><strong>Kaffi:</strong> ${esc(o.bean||'Vanleg')}</p><p><strong>Mjølk:</strong> ${esc(o.milk||'Vanleg mjølk')}</p><p><strong>Sirup:</strong> ${esc(o.syrup||'Ingen sirup')}</p><p><strong>Kommentar:</strong> ${esc(o.note||'Ingen')}</p><p><strong>Bestillar:</strong> ${esc(o.person)}</p><div class="order-actions">${delivered?'<span class="hint">Bestillinga er markert levert.</span>':`<button type="button" onclick="event.preventDefault();setCoffeeStatus(${o.id},'Levert')">Marker levert</button>`}</div></div></details>`;
+  return `<div class="coffee-order-wrap" data-order-id="${o.id}"><details class="coffee-order ${delivered?'done':''}"><summary><span><strong>${esc(o.person)} · ${esc(o.drink)}</strong><small>${fmt(o.when)}</small></span><span class="status-dot">${delivered?'LEVERT':'BESTILT'}</span></summary><div class="coffee-order-details"><p><strong>Kaffi:</strong> ${esc(o.bean||'Vanleg')}</p><p><strong>Mjølk:</strong> ${esc(o.milk||'Vanleg mjølk')}</p><p><strong>Sirup:</strong> ${esc(o.syrup||'Ingen sirup')}</p><p><strong>Kommentar:</strong> ${esc(o.note||'Ingen')}</p><p><strong>Bestillar:</strong> ${esc(o.person)}</p><div class="order-actions">${delivered?'<span class="hint">Bestillinga er markert levert.</span>':`<button type="button" onclick="event.preventDefault();setCoffeeStatus(${o.id},'Levert')">Marker levert</button>`}</div></div></details><button type="button" class="danger swipe-delete" onclick="deleteCoffeeOrder(${o.id})">Slett bestilling</button></div>`;
  }).join(''):'<div class="empty">Ingen kaffibestillingar.</div>';
  $('#adminNotifications').innerHTML=(db.notifications||[]).map(n=>item(n.title,n.detail+' · '+fmt(n.when),'<span class="pill gold">'+esc(n.type)+'</span>',`<button class="secondary" onclick="markNotification(${JSON.stringify(n.id)})">Lest</button>`)).join('')||'<div class="empty">Ingen nye varslingar.</div>';
 }
+function deleteCoffeeOrder(id){
+ if(!isOwner()){alert('Berre admin kan slette kaffibestillingar.');return;}
+ if(!confirm('Slette denne kaffibestillinga permanent?'))return;
+ db.coffeeOrders=(db.coffeeOrders||[]).filter(o=>String(o.id)!==String(id));
+ db.notifications=(db.notifications||[]).filter(n=>String(n.orderId)!==String(id));save();
+}
+let coffeeTouchStart=null;
+document.addEventListener('touchstart',e=>{const wrap=e.target.closest('.coffee-order-wrap');if(wrap)coffeeTouchStart={id:wrap.dataset.orderId,x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY};},{passive:true});
+document.addEventListener('touchend',e=>{if(!coffeeTouchStart)return;const dx=e.changedTouches[0].clientX-coffeeTouchStart.x,dy=e.changedTouches[0].clientY-coffeeTouchStart.y;const wrap=document.querySelector(`.coffee-order-wrap[data-order-id="${coffeeTouchStart.id}"]`);if(wrap&&dx< -65&&Math.abs(dx)>Math.abs(dy))wrap.classList.add('swiped');coffeeTouchStart=null;},{passive:true});
 function setCoffeeStatus(id,status){
  const o=db.coffeeOrders.find(x=>x.id===id);if(!o)return;
  if(['Levert','Klar'].includes(o.status))return;
@@ -524,7 +545,7 @@ $('#profilePerson').addEventListener('change',renderProfile);
 
 $('#wodSearch').addEventListener('input',renderWods);$('#wodFilter').addEventListener('change',renderWods);
 
-function renderAll(){renderWods();renderClasses();renderPrs();renderLogs();renderHome();renderExercises();renderAdmin();renderCoffee();if(document.getElementById("activeProfile"))renderRoleUI();if(document.getElementById("profilePerson"))renderProfile();if(document.getElementById("managerClasses"))renderManager()}
+function renderAll(){renderWods();renderClassWodOptions();renderClasses();renderMemberNotifications();renderPrs();renderLogs();renderHome();renderExercises();renderAdmin();renderCoffee();if(document.getElementById("activeProfile"))renderRoleUI();if(document.getElementById("profilePerson"))renderProfile();if(document.getElementById("managerClasses"))renderManager()}
 $('#activeProfile').addEventListener('change',e=>switchProfile(e.target.value));
 $('#exerciseSearch').addEventListener('input',renderExercises);$('#exerciseCat').addEventListener('change',renderExercises);
 renderAll();
