@@ -361,18 +361,46 @@ function renderWods(){
 }
 function logWod(id){
  const wod=db.wods.find(w=>w.id===id); if(!wod)return;
- const movements=String(wod.movements||'').split(/\n+/).map(x=>x.trim()).filter(Boolean).map(x=>x.replace(/^[-•*]\s*/, '').replace(/^\d+\s*[x×.]\s*/, '').trim());
- activeWorkout={title:wod.name,date:new Date().toISOString().slice(0,10),sourceWodId:wod.id,exercises:movements.map(name=>({name,sets:[newWorkoutSet()]})),note:''};
+ const parsed=parseWodMovements(wod.movements);activeWorkout={title:wod.name,date:new Date().toISOString().slice(0,10),sourceWodId:wod.id,rounds:parsed.rounds,exercises:parsed.exercises,note:''};
  showTab('log');renderWorkoutEditor();
 }
 function loadWorkoutFromLibrary(){
  const id=$('#workoutWodPicker')?.value;const wod=db.wods.find(w=>String(w.id)===String(id));if(!wod){alert('Vel ei økt frå biblioteket først.');return;}
  if(activeWorkout.exercises.some(e=>e.name||e.sets.some(st=>st.reps!==''||st.kg!==''))&&!confirm('Henta økt vil erstatta øvingane du har registrert i dette skjemaet. Vil du halda fram?'))return;
- const movements=String(wod.movements||'').split(/\n+/).map(x=>x.trim()).filter(Boolean).map(x=>x.replace(/^[-•*]\s*/, '').replace(/^\d+\s*[x×.]\s*/, '').trim());
- activeWorkout.title=wod.name;activeWorkout.sourceWodId=wod.id;activeWorkout.exercises=movements.map(name=>({name,sets:[newWorkoutSet()]}));renderWorkoutEditor();
+ const parsed=parseWodMovements(wod.movements);
+ activeWorkout.title=wod.name;activeWorkout.sourceWodId=wod.id;activeWorkout.rounds=parsed.rounds;activeWorkout.exercises=parsed.exercises;renderWorkoutEditor();
 }
-function newWorkoutSet(){return {reps:'',kg:'',done:false};}
-function startEmptyWorkout(){activeWorkout={title:'',date:new Date().toISOString().slice(0,10),exercises:[{name:'',sets:[newWorkoutSet()]}],note:''};renderWorkoutEditor();}
+function newWorkoutSet(reps='',kg=''){return {reps,kg,done:false};}
+function allExerciseRecords(){return [...initialExercises,...db.customExercises.map(x=>[x.name,x.category,x.equipment,x.description,x.video||''])];}
+function exerciseKey(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();}
+function parseWodMovements(raw){
+ const records=allExerciseRecords(), names=records.map(x=>x[0]).sort((a,b)=>b.length-a.length), lines=String(raw||'').replace(/\r/g,'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
+ let rounds=1, found=[];
+ for(const original of lines){
+  const line=original.replace(/^[-•*]\s*/,'').trim();
+  const roundMatch=line.match(/^(\d+)\s*(?:rounds?|rundar|runder)\b/i);
+  if(roundMatch){rounds=Math.max(1,Number(roundMatch[1]));continue;}
+  if(/^(?:for time|amrap|emom|every minute|intervall|warm.?up|oppvarming|cool.?down|nedtrapping)\b/i.test(line))continue;
+  const clean=line;
+  const matchText=clean.replace(/^(\d+)\s*m\s+(row|run|bike)\b/i,'$2 $1 m');
+  const key=exerciseKey(matchText);let match=names.find(n=>key===exerciseKey(n)||key.startsWith(exerciseKey(n)+' ')||key.endsWith(' '+exerciseKey(n))||key.includes(' '+exerciseKey(n)+' '));
+  if(!match){
+   // Match common WOD spelling where distance precedes the movement name.
+   match=names.find(n=>exerciseKey(matchText).includes(exerciseKey(n))||exerciseKey(line).includes(exerciseKey(n)));
+  }
+  const before=match?matchText.slice(0,Math.max(0,matchText.toLowerCase().indexOf(match.toLowerCase()))).trim():'';
+  const isDistance=/^\d+\s*m\s+(?:row|run|bike)\b/i.test(clean);
+  const repsMatch=isDistance?null:(before+' '+line).match(/(?:^|\s)(\d+)\s*(?:reps?|repetisjonar?)?(?:\s|$)/i);
+  const after=match?matchText.slice(Math.max(0,matchText.toLowerCase().indexOf(match.toLowerCase())+match.length)):'';
+  const kgMatch=after.match(/@\s*(\d+(?:[.,]\d+)?)\s*kg|(?:^|\s)(\d+(?:[.,]\d+)?)\s*kg/i);
+  const reps=repsMatch?repsMatch[1]:'';const kg=kgMatch?(kgMatch[1]||kgMatch[2]).replace(',','.'):'';
+  const existing=match?found.find(x=>x.name===match):null;
+  if(existing){if(reps&&!existing.sets[0].reps)existing.sets[0].reps=reps;}
+  else found.push({name:match||'',sourceText:match?'':line,sets:[newWorkoutSet(reps,kg)]});
+ }
+ return {rounds,exercises:found.length?found:[{name:'',sets:[newWorkoutSet()]}]};
+}
+function startEmptyWorkout(){activeWorkout={title:'',date:new Date().toISOString().slice(0,10),rounds:1,exercises:[{name:'',sets:[newWorkoutSet()]}],note:''};renderWorkoutEditor();}
 function addWorkoutExercise(){if(!activeWorkout)return;activeWorkout.exercises.push({name:'',sets:[newWorkoutSet()]});renderWorkoutEditor();}
 function addWorkoutSet(i){activeWorkout.exercises[i].sets.push(newWorkoutSet());renderWorkoutEditor();}
 function removeWorkoutSet(i,j){activeWorkout.exercises[i].sets.splice(j,1);if(!activeWorkout.exercises[i].sets.length)activeWorkout.exercises[i].sets.push(newWorkoutSet());renderWorkoutEditor();}
@@ -382,11 +410,14 @@ function updateExerciseName(i,value){activeWorkout.exercises[i].name=value;}
 function updateSetField(i,j,key,value){activeWorkout.exercises[i].sets[j][key]=value;}
 function renderWorkoutEditor(){
  const host=$('#workoutEditor');if(!host)return;if(!activeWorkout){host.innerHTML='<div class="empty">Vel «Logg resultat» på ein WOD, eller start ei ny treningsøkt.</div>';return;}
- host.innerHTML=`<div class="card" style="margin-bottom:14px;padding:12px"><label for="workoutWodPicker">Hent ei økt frå WOD-biblioteket</label><div class="row"><select id="workoutWodPicker" style="flex:1;min-width:0"><option value="">Vel økt frå biblioteket …</option>${db.wods.map(w=>`<option value="${w.id}">${esc(w.name)} · ${esc(w.format)}</option>`).join('')}</select><button type="button" class="secondary" onclick="loadWorkoutFromLibrary()">Hent økt</button></div><div class="hint">Øvingane blir lagde inn automatisk. Du kan redigera, leggja til eller fjerna øvingar før du lagrar.</div></div><div class="two"><div><label>Namn på økta</label><input value="${esc(activeWorkout.title)}" oninput="updateWorkoutMeta('title',this.value)" placeholder="T.d. Styrke A"></div><div><label>Dato</label><input type="date" value="${esc(activeWorkout.date)}" oninput="updateWorkoutMeta('date',this.value)"></div></div>
- <div class="workout-exercises">${activeWorkout.exercises.map((ex,i)=>`<div class="item workout-exercise"><div class="row"><strong>Øving ${i+1}</strong><button class="danger" type="button" onclick="removeWorkoutExercise(${i})">Fjern øving</button></div><label>Øving</label><input value="${esc(ex.name)}" oninput="updateExerciseName(${i},this.value)" placeholder="Namn på øving"><div class="set-head"><span>Sett</span><span>Reps</span><span>Kg / belastning</span><span></span></div>${ex.sets.map((st,j)=>`<div class="set-row"><span class="set-number">${j+1}</span><input type="number" min="0" step="1" inputmode="numeric" aria-label="Repetisjonar" placeholder="Reps" value="${esc(st.reps)}" oninput="updateSetField(${i},${j},'reps',this.value)"><input type="number" min="0" step="0.5" inputmode="decimal" aria-label="Belastning i kg" placeholder="Kg" value="${esc(st.kg)}" oninput="updateSetField(${i},${j},'kg',this.value)"><button type="button" class="danger" onclick="removeWorkoutSet(${i},${j})">×</button></div>`).join('')}<button type="button" class="secondary add-set" onclick="addWorkoutSet(${i})">+ Legg til sett</button></div>`).join('')}</div>
+ const exerciseOptions=allExerciseRecords().map(x=>`<option value="${esc(x[0])}">${esc(x[0])} · ${esc(x[1])}</option>`).join('');
+ host.innerHTML=`<div class="card" style="margin-bottom:14px;padding:12px"><label for="workoutWodPicker">Hent ei økt frå WOD-biblioteket</label><div class="row"><select id="workoutWodPicker" style="flex:1;min-width:0"><option value="">Vel økt frå biblioteket …</option>${db.wods.map(w=>`<option value="${w.id}">${esc(w.name)} · ${esc(w.format)}</option>`).join('')}</select><button type="button" class="secondary" onclick="loadWorkoutFromLibrary()">Hent økt</button></div><div class="hint">Når du vel ein WOD, blir øvingane slått opp i øvingsbiblioteket og doseringa fylt inn automatisk.</div></div><div class="two"><div><label>Namn på økta</label><input value="${esc(activeWorkout.title)}" oninput="updateWorkoutMeta('title',this.value)" placeholder="T.d. Styrke A"></div><div><label>Dato</label><input type="date" value="${esc(activeWorkout.date)}" oninput="updateWorkoutMeta('date',this.value)"></div></div><div style="max-width:220px;margin-top:10px"><label>Rundar</label><input type="number" min="1" step="1" value="${esc(activeWorkout.rounds||1)}" oninput="updateWorkoutMeta('rounds',this.value)"></div>
+ <div class="workout-exercises">${activeWorkout.exercises.map((ex,i)=>`<div class="item workout-exercise"><div class="row"><strong>Øving ${i+1}</strong><button class="danger" type="button" onclick="removeWorkoutExercise(${i})">Fjern øving</button></div><label>Vel øving frå øvingsbiblioteket</label>${ex.sourceText?`<div class="hint">WOD-tekst: ${esc(ex.sourceText)} · Vel tilsvarande øving frå biblioteket.</div>`:''}<select onchange="updateExerciseName(${i},this.value)"><option value="">Vel øving …</option>${exerciseOptions}</select><div class="set-head"><span>Sett</span><span>Reps</span><span>Kg / belastning</span><span></span></div>${ex.sets.map((st,j)=>`<div class="set-row"><span class="set-number">${j+1}</span><input type="number" min="0" step="1" inputmode="numeric" aria-label="Repetisjonar" placeholder="Reps" value="${esc(st.reps)}" oninput="updateSetField(${i},${j},'reps',this.value)"><input type="number" min="0" step="0.5" inputmode="decimal" aria-label="Belastning i kg" placeholder="Kg" value="${esc(st.kg)}" oninput="updateSetField(${i},${j},'kg',this.value)"><button type="button" class="danger" onclick="removeWorkoutSet(${i},${j})">×</button></div>`).join('')}<button type="button" class="secondary add-set" onclick="addWorkoutSet(${i})">+ Legg til sett</button></div>`).join('')}</div>
  <button type="button" class="secondary" onclick="addWorkoutExercise()">+ Legg til øving</button><label>Notat til økta (valfritt)</label><textarea id="workoutNote" placeholder="Form, tid, distanse, kjensle ...">${esc(activeWorkout.note||'')}</textarea><div class="row" style="margin-top:12px"><button type="button" onclick="saveWorkout()">Lagre treningsøkt</button><button type="button" class="secondary" onclick="activeWorkout=null;renderWorkoutEditor()">Avbryt</button></div>`;
+ // Restore each exercise selection after rendering.
+ host.querySelectorAll('.workout-exercise select').forEach((sel,i)=>{sel.value=activeWorkout.exercises[i].name||'';});
 }
-function saveWorkout(){if(!activeWorkout)return;activeWorkout.title=String(activeWorkout.title||'').trim();if(!activeWorkout.title){alert('Gi økta eit namn før du lagrar.');return;}activeWorkout.note=$('#workoutNote')?.value||'';const exercises=activeWorkout.exercises.map(e=>({name:String(e.name||'').trim(),sets:e.sets.filter(s=>s.reps!==''||s.kg!=='').map(s=>({reps:s.reps===''?null:Number(s.reps),kg:s.kg===''?null:Number(s.kg)}))})).filter(e=>e.name&&e.sets.length);if(!exercises.length){alert('Registrer minst éi øving med eitt sett og reps eller belastning.');return;}db.logs.unshift({id:Date.now(),person:currentName(),title:activeWorkout.title,date:activeWorkout.date||new Date().toISOString().slice(0,10),sourceWodId:activeWorkout.sourceWodId||null,exercises,note:activeWorkout.note});activeWorkout=null;save();showTab('log');renderWorkoutEditor();alert('Treningsøkta er lagra.');}
+function saveWorkout(){if(!activeWorkout)return;activeWorkout.title=String(activeWorkout.title||'').trim();if(!activeWorkout.title){alert('Gi økta eit namn før du lagrar.');return;}activeWorkout.note=$('#workoutNote')?.value||'';const exercises=activeWorkout.exercises.map(e=>({name:String(e.name||'').trim(),sets:e.sets.filter(s=>s.reps!==''||s.kg!=='').map(s=>({reps:s.reps===''?null:Number(s.reps),kg:s.kg===''?null:Number(s.kg)}))})).filter(e=>e.name&&e.sets.length);if(!exercises.length){alert('Registrer minst éi øving med eitt sett og reps eller belastning.');return;}db.logs.unshift({id:Date.now(),person:currentName(),title:activeWorkout.title,date:activeWorkout.date||new Date().toISOString().slice(0,10),sourceWodId:activeWorkout.sourceWodId||null,rounds:Number(activeWorkout.rounds)||1,exercises,note:activeWorkout.note});activeWorkout=null;save();showTab('log');renderWorkoutEditor();alert('Treningsøkta er lagra.');}
 
 function toggleWodCreator(){if(!canCreateWod()){alert('Berre admin og VIP-manager kan opprette WOD.');return;}const d=$('#wodCreator');d.open=!d.open;if(d.open)d.scrollIntoView({behavior:'smooth',block:'start'});}
 function weightRecommendations(movements){
@@ -499,7 +530,7 @@ function renderPrs(){
   return `<div class="item"><div class="row"><div><strong>${esc(exercise)}</strong><div class="hint">Beste: ${esc(best?.result||'–')} ${esc(unit)} · ${history.length} registrering(ar)</div></div><span class="pill gold">PROGRESJON</span></div><details><summary>Vis historikk</summary>${history.map(p=>`<div class="row" style="border-top:1px solid var(--line);padding:8px 0"><span>${esc(p.date||'')} · ${esc(p.result)} ${esc(p.unit||'kg')}${p.note?' · '+esc(p.note):''}</span><button class="danger" onclick="del('prs',${p.id})">Slett</button></div>`).join('')}</details></div>`;
  }).join('');
 }
-function renderLogs(){const rows=isOwner()?db.logs:db.logs.filter(l=>l.person===currentName());$('#logList').innerHTML=rows.length?rows.map(l=>{const details=(l.exercises||[]).map(e=>`${esc(e.name)}: ${(e.sets||[]).map((s,i)=>`S${i+1} ${s.reps??'–'} reps${s.kg!==null&&s.kg!==undefined?' · '+s.kg+' kg':''}`).join(', ')}`).join('<br>');return item(l.title,`${esc(l.person)} · ${esc(l.date)}${details?'<br>'+details:''}${l.note?'<br><span class="hint">'+esc(l.note)+'</span>':''}${l.result?'<br>'+esc(l.result):''}`,'<span class="pill">LOGG</span>',`<button class="danger" onclick="del('logs',${l.id})">Slett</button>`)}).join(''):'<div class="empty">Ingen treningar logga enno.</div>'}
+function renderLogs(){const rows=isOwner()?db.logs:db.logs.filter(l=>l.person===currentName());$('#logList').innerHTML=rows.length?rows.map(l=>{const details=(l.exercises||[]).map(e=>`${esc(e.name)}: ${(e.sets||[]).map((s,i)=>`S${i+1} ${s.reps??'–'} reps${s.kg!==null&&s.kg!==undefined?' · '+s.kg+' kg':''}`).join(', ')}`).join('<br>');return item(l.title,`${esc(l.person)} · ${esc(l.date)}${l.rounds&&l.rounds>1?' · '+esc(l.rounds)+' rundar':''}${details?'<br>'+details:''}${l.note?'<br><span class="hint">'+esc(l.note)+'</span>':''}${l.result?'<br>'+esc(l.result):''}`,'<span class="pill">LOGG</span>',`<button class="danger" onclick="del('logs',${l.id})">Slett</button>`)}).join(''):'<div class="empty">Ingen treningar logga enno.</div>'}
 function renderMemberNotifications(){
  const rows=(db.notifications||[]).filter(n=>n.recipient===currentName()&&!n.read&&n.type==='new_class');
  const el=$('#memberNotifications');if(!el)return;
