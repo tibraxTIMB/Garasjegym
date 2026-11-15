@@ -241,7 +241,7 @@ nav button{font-size:12px;padding:9px 13px;min-height:38px}
 .achievement-badge .achievement-icon{font-size:17px;line-height:1}
 .achievement-badge small{font-size:10px;color:var(--muted);font-weight:700}
 .achievement-section{margin-top:14px}
-.achievement-admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin:12px 0}
+.achievement-admin-grid{display:grid;grid-template-columns:1fr;gap:5px;margin:8px 0}.achievement-section .item{box-shadow:none}.achievement-section details summary{cursor:pointer;padding:8px 0}
 .achievement-admin-item{padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
 .achievement-admin-item .meta{font-size:11px;color:var(--muted);margin-top:4px}
 </style>
@@ -321,7 +321,7 @@ nav button{font-size:12px;padding:9px 13px;min-height:38px}
 <div class="grid" style="margin-top:14px"><div class="card span-12" style="box-shadow:none"><form id="wodForm">
 <div class="card" style="box-shadow:none;border:1px solid var(--accent);margin-bottom:14px">
 <h3>📄 Importer økt frå fil</h3>
-<p class="hint">Last opp TXT eller bilete (JPG/PNG/WEBP). Tekst blir tolka automatisk, bilete blir lese med OCR. Dette er førebels ikkje KI-tolking. Kontroller alt før lagring.</p>
+<p class="hint">Last opp TXT eller bilete (JPG/PNG/WEBP). OCR les bilete, og øvingane blir kopla mot namna i biblioteket. Treff kan rettast, veljast bort eller forkastast. Ekte KI-tolking krev sikker backend og er ikkje aktivert enno.</p>
 <div class="row"><input id="wodImportFile" type="file" accept=".txt,text/plain,image/png,image/jpeg,image/webp" style="max-width:100%"><button type="button" class="secondary" id="wodImportClear">Nullstill import</button></div>
 <div id="wodImportStatus" class="hint" role="status" aria-live="polite">Vel ei fil for å starte.</div>
 <div id="wodImportPreview" class="hidden" style="margin-top:10px"></div>
@@ -399,7 +399,7 @@ nav button{font-size:12px;padding:9px 13px;min-height:38px}
 </div>
 </section>
 <footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben
-<div class="version-note">GarasjeGym 1.2.3 · Filimport til WOD (TXT og bilete)</div>
+<div class="version-note">GarasjeGym 1.2.4 · Smart WOD-import og kompakt achievement-oversikt</div>
 </footer>
 </main>
 <div id="editorModal" class="editor-backdrop" role="dialog" aria-modal="true" aria-labelledby="editorTitle" onclick="if(event.target===this)closeEditor()"><div class="editor-panel"><div class="row"><h2 id="editorTitle">Rediger</h2><button type="button" class="secondary" onclick="closeEditor()" aria-label="Lukk">✕</button></div><form id="editorForm"></form></div></div>
@@ -481,55 +481,67 @@ function showTab(id){
 $$('#nav button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 function item(title,sub,tag,actions=''){return `<div class="item"><div class="row"><div><strong>${esc(title)}</strong><div class="hint">${esc(sub)}</div></div><div>${tag||''} ${actions}</div></div></div>`}
 
-// Filimport til WOD: konservativ lokal tolking. Bilete blir OCR-lesne i nettlesaren.
+// Smart WOD-import: OCR/tekst + matching mot dei faktiske namna i øvingsbiblioteket.
+function normExerciseName(v){return String(v||'').toLocaleLowerCase('nn-NO').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();}
+function matchExerciseName(raw){
+ const names=[...new Set(exerciseLibrary().map(x=>String(x[0]||'').trim()).filter(Boolean))];
+ const key=normExerciseName(raw);if(!key)return null;
+ let exact=names.find(n=>normExerciseName(n)===key);if(exact)return {name:exact,confidence:1};
+ let contained=names.filter(n=>{const k=normExerciseName(n);return key===k||key.includes(k)||k.includes(key)}).sort((a,b)=>Math.abs(normExerciseName(a).length-key.length)-Math.abs(normExerciseName(b).length-key.length));
+ if(contained.length)return {name:contained[0],confidence:.82};
+ const tokens=key.split(' ').filter(t=>t.length>2);let best=null,score=0;
+ names.forEach(n=>{const nt=normExerciseName(n).split(' ');const hit=tokens.filter(t=>nt.some(x=>x===t||x.startsWith(t)||t.startsWith(x))).length;const sc=hit/Math.max(tokens.length,nt.length);if(sc>score){score=sc;best=n;}});
+ return score>=.55?{name:best,confidence:score}:null;
+}
 function parseImportedWod(raw){
- const lines=String(raw||'').replace(/\r/g,'').split('\n').map(x=>x.trim()).filter(Boolean);
- const full=lines.join('\n');
+ const lines=String(raw||'').replace(/\r/g,'').split('\n').map(x=>x.trim()).filter(Boolean),full=lines.join('\n');
  const titleLine=lines.find(x=>/^(namn|økt|workout|wod|title)\s*[:\-]/i.test(x));
  const title=titleLine?titleLine.replace(/^(namn|økt|workout|wod|title)\s*[:\-]\s*/i,'').trim():'';
- const formatMatch=full.match(/\b(AMRAP|EMOM|TABATA|FOR\s+TIME|INTERVALL|STYRKE)\b/i);
- const durationMatch=full.match(/\b(\d{1,3})\s*(?:min(?:utt(?:ar)?)?|minutes?)\b/i);
- const exerciseLines=[], uncertain=[];
+ const formatMatch=full.match(/\b(AMRAP|EMOM|TABATA|FOR\s+TIME|INTERVALL|STYRKE)\b/i),durationMatch=full.match(/\b(\d{1,3})\s*(?:min(?:utt(?:ar)?)?|minutes?)\b/i);
+ const rows=[],uncertain=[];
  const meta=/^(namn|økt|workout|wod|title|format|varigheit|varighet|duration|instruksjon|instructions|oppvarming|warm.?up|notat|notes)\s*[:\-]/i;
- const dose=/(\d+\s*(?:x|×)\s*\d+)|(\d+\s*(?:reps?|repetisjonar?|repetitions?|sek(?:und)?|s|min(?:utt)?|m|km|cal|kcal|rounds?|rundar?))|(@\s*\d+%?)|(\d+\s*-\s*\d+\s*(?:reps?|reps))|(\bAMRAP\b|\bEMOM\b)/i;
- for(const line of lines){
-  if(meta.test(line)||/^(AMRAP|EMOM|TABATA|FOR\s+TIME|INTERVALL|STYRKE)\b/i.test(line)||/^\d+\s*(?:rounds?|rundar?)$/i.test(line)) continue;
-  if(dose.test(line)) exerciseLines.push(line);
-  else if(/[a-zæøå]{3}/i.test(line)&&!/^\d+$/.test(line)) uncertain.push(line);
- }
- const clean=exerciseLines.filter((v,i,a)=>a.indexOf(v)===i);
- return {title,format:formatMatch?(formatMatch[1].toUpperCase().replace(/\s+/g,' ')==='FOR TIME'?'For Time':formatMatch[1].toUpperCase()):'Eigen økt',duration:durationMatch?durationMatch[1]:'',movements:clean.join('\n'),uncertain,lines:lines.length};
+ lines.forEach((line,index)=>{
+  if(meta.test(line)||/^(AMRAP|EMOM|TABATA|FOR\s+TIME|INTERVALL|STYRKE)\b/i.test(line)||/^\d+\s*(?:rounds?|rundar?)$/i.test(line))return;
+  // Støttar til dømes «10 Back squat», «Back squat – 3 x 8», «Row 500 m».
+  let dose='',namePart=line;
+  let m=line.match(/^((?:\d+\s*(?:x|×)\s*\d+)|(?:\d+(?:[.,]\d+)?\s*(?:reps?|repetisjonar?|repetitions?|sek(?:und)?|s|min(?:utt)?|m|km|cal|kcal|rundar?))|(?:\d+\s*[-–]\s*\d+)|(?:\d+))\s*(?:[-:·]\s*)?(.*)$/i);
+  if(m){dose=m[1].replace(/\s+/g,' ');namePart=m[2]||'';}
+  else {m=line.match(/^(.*?)\s*[-–:]?\s*((?:\d+\s*(?:x|×)\s*\d+)|(?:\d+\s*[-–]\s*\d+\s*(?:reps?|repetisjonar?|rolige)? )|(?:\d+\s*(?:reps?|repetisjonar?|sek(?:und)?|s|min(?:utt)?|m|km|cal|kcal)))$/i);if(m){namePart=m[1];dose=m[2].trim();}}
+  if(!dose){uncertain.push({line,index});return;}
+  // Dosering kan vere del av øvingsnamnet (Row 500 m), så match heile linja først.
+  let match=matchExerciseName(line);
+  if(!match)match=matchExerciseName(namePart);
+  if(match)rows.push({id:'imp_'+index,raw:line,dose,name:match.name,confidence:match.confidence,keep:true});
+  else uncertain.push({line,index,dose,name:namePart});
+ });
+ const fmt=formatMatch?(formatMatch[1].toUpperCase().replace(/\s+/g,' ')==='FOR TIME'?'For Time':formatMatch[1].toUpperCase()):'Eigen økt';
+ return {title,format:fmt,duration:durationMatch?durationMatch[1]:'',rows,uncertain,lines:lines.length};
 }
 function showWodImportResult(parsed,filename,source){
  const box=$('#wodImportPreview');box.classList.remove('hidden');
- const issues=[];if(!parsed.movements)issues.push('Fann ingen sikre øvingslinjer med dosering.');
- if(parsed.uncertain.length)issues.push('Desse linjene kunne ikkje tolkast sikkert: '+parsed.uncertain.join(' · '));
- box.innerHTML='<strong>Førehandsvising – '+esc(filename)+'</strong><p class="hint">'+(source==='ocr'?'Bilettekst lesen med OCR.':'Tekstfil lesen.')+' '+parsed.lines+' tekstlinjer funne.</p>'+(parsed.movements?'<pre style="white-space:pre-wrap">'+esc(parsed.movements)+'</pre>':'<p class="hint">Ingen øvingar vart identifiserte.</p>')+(issues.length?'<div class="hint" style="color:#ffcc80">⚠ '+issues.map(esc).join('<br>⚠ ')+'</div>':'<div class="hint">Ingen openberre tolkingstvil funne. Kontroller likevel oppsettet.</div>')+'<button type="button" id="wodImportApply" '+(!parsed.movements?'disabled':'')+'>Bruk som WOD-utkast</button>';
+ const rowHtml=parsed.rows.map((r,i)=>`<div class="item" style="padding:9px;margin:7px 0"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-import-keep="${i}" checked> <strong>${esc(r.name)}</strong></label><div class="hint">Frå: ${esc(r.raw)} · Dosering <input aria-label="Dosering" data-import-dose="${i}" value="${esc(r.dose)}" style="width:105px;display:inline-block;padding:5px"> <span class="pill">${Math.round(r.confidence*100)}% treff</span></div></div>`).join('');
+ const uncertainHtml=parsed.uncertain.map((u,i)=>`<div class="item" style="padding:9px;margin:7px 0"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-import-uncertain="${i}"> Ta med som manuell linje</label><div>${esc(u.line)}</div><div class="hint">Fann ikkje sikkert øvingsnamn i biblioteket. Du kan forkaste linja eller ta henne med for manuell redigering.</div></div>`).join('');
+ box.innerHTML=`<strong>Kontroller importen · ${esc(filename)}</strong><p class="hint">${source==='ocr'?'Bilettekst lesen med OCR.':'Tekstfil lesen.'} ${parsed.lines} tekstlinjer · ${parsed.rows.length} øvingar kopla til biblioteket · ${parsed.uncertain.length} linjer treng vurdering.</p><h4>Gjenkjende øvingar</h4>${rowHtml||'<p class="hint">Ingen sikre treff.</p>'}${parsed.uncertain.length?'<h4>Uavklarte linjer</h4>'+uncertainHtml:''}<div class="row"><button type="button" id="wodImportApply" ${!parsed.rows.length&&!parsed.uncertain.length?'disabled':''}>Bruk valde øvingar</button><button type="button" class="secondary" id="wodImportReject">Forkast heile importen</button></div>`;
  $('#wodImportApply')?.addEventListener('click',()=>{
-  if(parsed.title)$('#wodForm [name=name]').value=parsed.title;
-  else if(!$('#wodForm [name=name]').value)$('#wodForm [name=name]').value=filename.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ');
-  const fmt=parsed.format==='FOR TIME'?'For Time':parsed.format;
-  const select=$('#wodForm [name=format]');select.value=[...select.options].some(o=>o.value===fmt)?fmt:'Eigen økt';
-  $('#wodForm [name=duration]').value=parsed.duration;$('#wodMovements').value=parsed.movements;
-  if(parsed.uncertain.length){const notes=$('#wodForm [name=notes]');notes.value=(notes.value?notes.value+'\n\n':'')+'Må kontrollerast frå import:\n'+parsed.uncertain.join('\n');}
-  $('#wodImportStatus').textContent='Utkastet er fylt inn. Kontroller namn, format, dosering og notat før du lagrar.';$('#wodMovements').focus();
+  const movements=[];
+  parsed.rows.forEach((r,i)=>{if(box.querySelector(`[data-import-keep="${i}"]`)?.checked){const dose=box.querySelector(`[data-import-dose="${i}"]`)?.value.trim();if(dose)movements.push(`${dose} ${r.name}`);}});
+  parsed.uncertain.forEach((u,i)=>{if(box.querySelector(`[data-import-uncertain="${i}"]`)?.checked)movements.push(u.line);});
+  if(!movements.length){$('#wodImportStatus').textContent='Ingen øvingar valde. Importen er ikkje sett inn.';return;}
+  if(parsed.title)$('#wodForm [name=name]').value=parsed.title;else if(!$('#wodForm [name=name]').value)$('#wodForm [name=name]').value=filename.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ');
+  const fmt=parsed.format==='FOR TIME'?'For Time':parsed.format,select=$('#wodForm [name=format]');select.value=[...select.options].some(o=>o.value===fmt)?fmt:'Eigen økt';
+  $('#wodForm [name=duration]').value=parsed.duration;$('#wodMovements').value=movements.join('\n');
+  $('#wodImportStatus').textContent=movements.length+' linjer sette inn. Kontroller dosering og rekkjefølgje før lagring.';$('#wodMovements').focus();
  });
+ $('#wodImportReject')?.addEventListener('click',()=>{$('#wodImportFile').value='';box.classList.add('hidden');$('#wodImportStatus').textContent='Importen er forkasta. Ingen endringar vart gjorde i WOD-en.';});
 }
-async function loadTesseract(){
- if(window.Tesseract)return window.Tesseract;
- await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';sc.onload=resolve;sc.onerror=()=>reject(new Error('Klarte ikkje å laste OCR-biblioteket. Kontroller nettilgangen.'));document.head.appendChild(sc);});return window.Tesseract;
-}
+async function loadTesseract(){if(window.Tesseract)return window.Tesseract;await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';sc.onload=resolve;sc.onerror=()=>reject(new Error('Klarte ikkje å laste OCR-biblioteket. Kontroller nettilgangen.'));document.head.appendChild(sc);});return window.Tesseract;}
 $('#wodImportFile')?.addEventListener('change',async e=>{
  const file=e.target.files?.[0];if(!file)return;const status=$('#wodImportStatus');$('#wodImportPreview').classList.add('hidden');
- const ext=file.name.split('.').pop().toLowerCase();
- try{
-  if(file.size>8*1024*1024)throw new Error('Fila er større enn 8 MB. Vel ei mindre fil.');
-  let content='',source='text';
+ try{if(file.size>8*1024*1024)throw new Error('Fila er større enn 8 MB. Vel ei mindre fil.');let content='',source='text';const ext=file.name.split('.').pop().toLowerCase();
   if(ext==='txt'||file.type==='text/plain'){content=await file.text();if(!content.trim())throw new Error('Tekstfila er tom.');}
-  else if(['jpg','jpeg','png','webp'].includes(ext)||file.type.startsWith('image/')){status.textContent='Les bilete … Dette kan ta litt tid.';const T=await loadTesseract();const result=await T.recognize(file,'nor+eng');content=result.data.text||'';source='ocr';if(!content.trim()||(result.data.confidence||0)<25)throw new Error('Klarte ikkje å lese teksten tydeleg nok frå biletet. Prøv eit skarpare bilete eller TXT-fil.');}
+  else if(['jpg','jpeg','png','webp'].includes(ext)||file.type.startsWith('image/')){status.textContent='Les bilete … Dette kan ta litt tid.';const T=await loadTesseract();const result=await T.recognize(file,'nor+eng');content=result.data.text||'';source='ocr';if(!content.trim()||(result.data.confidence||0)<25)throw new Error('Klarte ikkje å lese teksten tydeleg nok frå biletet.');}
   else throw new Error('Filtypen blir ikkje støtta. Bruk TXT, JPG, PNG eller WEBP.');
-  const parsed=parseImportedWod(content);if(!parsed.movements)throw new Error('Fila kunne lesast, men eg fann ingen sikre øvingar med dosering. Kontroller at instruksjonane inneheld øvingar og mengder.');
-  showWodImportResult(parsed,file.name,source);status.textContent='Fila er lesen. Sjå gjennom tolkinga under.';
+  const parsed=parseImportedWod(content);if(!parsed.rows.length&&!parsed.uncertain.length)throw new Error('Fila kunne lesast, men ingen treningslinjer vart funne.');showWodImportResult(parsed,file.name,source);status.textContent='Fila er lesen. Vel kva øvingar som skal brukast, og forkast resten.';
  }catch(err){status.textContent='Feil ved import: '+(err.message||'Ukjend feil');$('#wodImportPreview').classList.add('hidden');}
 });
 $('#wodImportClear')?.addEventListener('click',()=>{$('#wodImportFile').value='';$('#wodImportStatus').textContent='Vel ei fil for å starte.';$('#wodImportPreview').classList.add('hidden');});
@@ -1074,10 +1086,10 @@ $('#adminExerciseForm').addEventListener('submit',e=>{
 
 // Achievement catalogue and evaluator. Members see earned badges only; the full catalogue is admin-only.
 const ACHIEVEMENTS=[
- {id:'first_workout',icon:'🏆',title:'Første steg',en:'First Rep',de:'Der Anfang',desc:'Logg di første treningsøkt.',test:c=>c.logs.length>=1},
- {id:'workouts_2',icon:'🌱',title:'Godt i gang',en:'Getting Started',de:'Gut dabei',desc:'Logg 2 treningsøkter.',test:c=>c.logs.length>=2},
- {id:'workouts_3',icon:'🔥',title:'No rullar det',en:'Finding Your Rhythm',de:'Im Rhythmus',desc:'Logg 3 treningsøkter.',test:c=>c.logs.length>=3},
- {id:'workouts_5',icon:'🏅',title:'På gli',en:'Getting Serious',de:'Fünfmal Fleiß',desc:'Logg 5 treningsøkter.',test:c=>c.logs.length>=5},
+ {id:'first_workout',icon:'🏆',title:'Første steg',en:'First Rep',de:'Los, du Hantel-Held!',desc:'Logg di første treningsøkt.',test:c=>c.logs.length>=1},
+ {id:'workouts_2',icon:'🌱',title:'Getting Started',en:'Two Down, More to Go',de:'Zwei Mal, du Kraftknödel!',desc:'Logg 2 treningsøkter.',test:c=>c.logs.length>=2},
+ {id:'workouts_3',icon:'🔥',title:'No rullar det',en:'Finding Your Rhythm',de:'Taktgefühl mit Bizeps',desc:'Logg 3 treningsøkter.',test:c=>c.logs.length>=3},
+ {id:'workouts_5',icon:'🏅',title:'Auf geht’s!',en:'Getting Serious',de:'Fünfmal scharf wie Sau',desc:'Logg 5 treningsøkter.',test:c=>c.logs.length>=5},
  {id:'workouts_10',icon:'🏆',title:'Ti på tavla',en:'Double Digits',de:'Zehnmal stark',desc:'Logg 10 treningsøkter.',test:c=>c.logs.length>=10},
  {id:'workouts_25',icon:'🥇',title:'Hardhaus',en:'Iron Regular',de:'Eisen Stammgast',desc:'Logg 25 treningsøkter.',test:c=>c.logs.length>=25},
  {id:'workouts_50',icon:'🏆',title:'Legende i garasjen',en:'Garage Legend',de:'Legende der Halle',desc:'Logg 50 treningsøkter.',test:c=>c.logs.length>=50},
@@ -1087,7 +1099,7 @@ const ACHIEVEMENTS=[
  {id:'first_pr',icon:'🥇',title:'På rekordjakt',en:'Record Breaker',de:'Rekordjäger',desc:'Registrer ein personleg rekord.',test:c=>c.prs.length>0},
  {id:'first_exercise',icon:'✨',title:'Ny rørsle',en:'First Encounter',de:'Premiere',desc:'Første gong du loggar ei øving – eit eige lite merke blir vist for kvar ny øving.',dynamic:true},
  {id:'coffee_first',icon:'☕',title:'Første kaffikopp',en:'First Coffee',de:'Der erste Kaffee',desc:'Legg inn di første kaffibestilling.',test:c=>c.coffees.length>=1},
- {id:'coffee_5',icon:'☕',title:'Fast inventar',en:'Regular Customer',de:'Stammgast',desc:'Bestill kaffi 5 gonger.',test:c=>c.coffees.length>=5},
+ {id:'coffee_5',icon:'☕',title:'Fast inventar',en:'Regular Customer',de:'Kaffee-Krawall',desc:'Bestill kaffi 5 gonger.',test:c=>c.coffees.length>=5},
  {id:'coffee_10',icon:'🏆',title:'Caffè ten',en:'Espresso Yourself',de:'Espresso-Meister',desc:'Bestill kaffi 10 gonger.',test:c=>c.coffees.length>=10},
  {id:'coffee_25',icon:'☕',title:'Mamma mia, 25!',en:'The Daily Grind',de:'Kaffee-Kommando',desc:'Bestill kaffi 25 gonger.',test:c=>c.coffees.length>=25},
  {id:'coffee_50',icon:'👑',title:'Il Capo del Caffè',en:'Coffee Boss',de:'Kaffee-Kaiser',desc:'Bestill kaffi 50 gonger.',test:c=>c.coffees.length>=50},
@@ -1100,9 +1112,9 @@ function achievementSlug(name){return String(name||'').toLocaleLowerCase('nn-NO'
 function exerciseAchievementCatalogue(){
  const names=[...new Set([...exerciseLibrary().map(x=>String(x[0]||'').trim()),...(db.logs||[]).flatMap(l=>(l.exercises||[]).map(e=>String(e.name||'').trim()))].filter(Boolean))];
  const milestones=[
-  {n:1,icon:'✨',title:name=>'Første møte: '+name,en:name=>'First Date: '+name,de:name=>'Das erste Mal: '+name,desc:name=>'Logg øvinga éin gong. Første steg tel!'},
-  {n:3,icon:'🥉',title:name=>'På lag med '+name,en:name=>'Getting the Hang of '+name,de:name=>'Drei Runden mit '+name,desc:name=>'Gjennomfør '+name+' i 3 ulike treningsøkter.'},
-  {n:5,icon:'🏅',title:name=>name+'-gjengangar',en:name=>name+' Regular',de:name=>name+' Stammgast',desc:name=>'Gjennomfør '+name+' i 5 ulike treningsøkter.'}
+  {n:1,icon:'✨',title:name=>'Første møte: '+name,en:name=>'First Date: '+name,de:name=>'Erstes Mal, volle Kanne: '+name,desc:name=>'Logg øvinga éin gong. Første steg tel!'},
+  {n:3,icon:'🥉',title:name=>'Auf geht’s, '+name+'!',en:name=>'Getting the Hang of '+name,de:name=>'Drei Runden, du Gerät! '+name,desc:name=>'Gjennomfør '+name+' i 3 ulike treningsøkter.'},
+  {n:5,icon:'🏅',title:name=>name+'-gjengangar',en:name=>name+' Regular',de:name=>name+' – Muskel-Maus Deluxe',desc:name=>'Gjennomfør '+name+' i 5 ulike treningsøkter.'}
  ];
  return names.flatMap(name=>milestones.map(m=>({id:'exercise_'+achievementSlug(name)+'_'+m.n,icon:m.icon,title:m.title(name),en:m.en(name),de:m.de(name),desc:m.desc(name),exercise:name,milestone:m.n,dynamic:true})));
 }
@@ -1124,7 +1136,13 @@ function earnedAchievements(person){
  return {earned,context:c};
 }
 function renderAchievements(person){const {earned}=earnedAchievements(person);const el=$('#myAchievements');if(!el)return;$('#achievementCount').textContent=earned.length+' oppnådde';el.innerHTML=earned.length?earned.map(a=>`<span class="achievement-badge" title="${esc(a.desc)} · ${esc(a.en)} · ${esc(a.de)}"><span class="achievement-icon">${a.icon}</span><span>${esc(a.title)}</span></span>`).join(''):'<div class="empty">Pokalar og kaffikoppar dukkar opp her etter kvart – berre oppnådde merke blir viste.</div>';}
-function renderAchievementAdmin(){const el=$('#achievementAdmin');if(!el)return;const people=db.members||[];const catalogue=[...ACHIEVEMENTS,...exerciseAchievementCatalogue()];const rows=catalogue.map(a=>{const count=people.filter(m=>earnedAchievements(m.name).earned.some(x=>x.id===a.id)).length;return `<div class="achievement-admin-item"><div><strong>${a.icon} ${esc(a.title)}</strong></div><div class="meta">${esc(a.en)} · ${esc(a.de)}</div><div class="meta">${esc(a.desc)}</div><div class="meta"><strong>${a.dynamic?'Dynamisk per øving':count+' av '+people.length+' medlemer oppnådd'}</strong></div></div>`}).join('');el.innerHTML=`<div class="hint">${ACHIEVEMENTS.length} felles merke + ${exerciseAchievementCatalogue().length} øvingsspesifikke merke. Alle øvingar i biblioteket har tre låge milepålar.</div><div class="achievement-admin-grid">${rows}</div>`;}
+function renderAchievementAdmin(){
+ const el=$('#achievementAdmin');if(!el)return;const people=db.members||[];
+ const memberRows=people.map(m=>{const earned=earnedAchievements(m.name).earned;return `<div class="item" style="padding:9px;margin:6px 0"><div class="row"><strong>${esc(m.name)}</strong><span class="pill gold">${earned.length} merke</span></div><div class="achievement-strip">${earned.length?earned.map(a=>`<span class="achievement-badge" title="${esc(a.desc)}">${a.icon} ${esc(a.title)}</span>`).join(''):'<span class="hint">Ingen oppnådde merke enno</span>'}</div></div>`;}).join('');
+ const catalogue=[...ACHIEVEMENTS,...exerciseAchievementCatalogue()];
+ const catalogRows=catalogue.map(a=>{const holders=people.filter(m=>earnedAchievements(m.name).earned.some(x=>x.id===a.id)).map(m=>m.name);return `<div class="row" style="padding:7px 2px;border-bottom:1px solid var(--line);gap:8px"><span style="min-width:0;flex:1"><strong>${a.icon} ${esc(a.title)}</strong><span class="hint"> · ${esc(a.desc)}</span></span><span class="pill">${holders.length}</span><span class="hint" style="max-width:180px">${esc(holders.join(', ')||'Ingen enno')}</span></div>`;}).join('');
+ el.innerHTML=`<div class="hint">${people.length} medlemer · ${catalogue.length} moglege merke. Oversikta viser kven som har fått kva.</div><h4>Medlemsoversikt</h4>${memberRows||'<div class="empty">Ingen medlemer.</div>'}<details style="margin-top:12px"><summary><strong>Heile merkekatalogen</strong> <span class="hint">${catalogue.length} merke · tal viser kor mange som har fått merket</span></summary><div style="margin-top:8px">${catalogRows}</div></details>`;
+}
 
 function renderProfile(){
  const person=$('#profilePerson').value||currentName();
