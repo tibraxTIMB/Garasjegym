@@ -10,8 +10,8 @@ export default function Admin({profile}){
  const [memberSearch,setMemberSearch]=useState(''),[memberFilter,setMemberFilter]=useState('all')
  const filteredMembers=members.filter(m=>{const q=memberSearch.trim().toLowerCase();const matches=!q||(m.display_name||'').toLowerCase().includes(q)||m.role.toLowerCase().includes(q);return matches&&(memberFilter==='all'||(memberFilter==='active'?m.active:!m.active))})
  const isAdmin=profile.role==='admin'
- async function load(){
-  setLoading(true);setError('')
+ async function load(silent=false){
+  if(!silent)setLoading(true);setError('')
   const [m,e]=await Promise.all([
    supabase.from('profiles').select('id,display_name,role,active,created_at').order('created_at',{ascending:false}),
    supabase.from('exercises').select('id,name,category,equipment,is_active').order('name')
@@ -26,7 +26,7 @@ export default function Admin({profile}){
   if(e.error)setError(e.error.message);else setExercises(e.data||[])
   setLoading(false)
  }
- useEffect(()=>{load()},[])
+ useEffect(()=>{load();const refresh=setInterval(()=>load(true),60000);return()=>clearInterval(refresh)},[])
  async function addWod(event){
   event.preventDefault();setBusy('wod');setError('')
   try{
