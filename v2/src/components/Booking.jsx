@@ -48,8 +48,8 @@ export default function Booking({ profile, onLogResult }) {
   const [clockNow,setClockNow]=useState(Date.now())
   const staff=isStaff(profile)
 
-  async function load(){
-    setLoading(true);setError('')
+  async function load(silent=false){
+    if(!silent)setLoading(true);setError('')
     const [{data:userData,error:userError}]=await Promise.all([supabase.auth.getUser()])
     if(userError||!userData.user){setError('Logg inn på nytt.');setLoading(false);return}
     const [c,b,a,live]=await Promise.all([
@@ -71,7 +71,7 @@ export default function Booking({ profile, onLogResult }) {
 
     setLoading(false)
   }
-  useEffect(()=>{load()},[])
+  useEffect(()=>{load();const refresh=setInterval(()=>load(true),30000);return()=>clearInterval(refresh)},[])
   const liveSessionIds=liveSessions.map(s=>s.id).sort().join(',')
   useEffect(()=>{
     if(!staff||!liveSessionIds){setSessionResults({});return}
@@ -89,7 +89,7 @@ export default function Booking({ profile, onLogResult }) {
     const refresh=setInterval(loadResults,5000)
     return()=>{cancelled=true;clearInterval(refresh)}
   },[staff,liveSessionIds])
-  useEffect(()=>{const timer=setInterval(async()=>{setClockNow(Date.now());const {data,error:e}=await fetchLiveSessions();if(!e)setLiveSessions(data||[])},1000);return()=>clearInterval(timer)},[])
+  useEffect(()=>{const clock=setInterval(()=>setClockNow(Date.now()),1000);const refresh=setInterval(async()=>{const {data,error:e}=await fetchLiveSessions();if(!e)setLiveSessions(data||[])},5000);return()=>{clearInterval(clock);clearInterval(refresh)}},[])
 
   async function book(item){
     setBusy(item.id);setError('');setNotice('')
