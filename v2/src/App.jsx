@@ -180,7 +180,7 @@ export default function App() {
   }, [session?.user?.id])
 
   if (!isSupabaseConfigured) {
-    return <LoadingScreen text="Supabase er ikkje konfigurert. Legg inn VITE_SUPABASE_URL og VITE_SUPABASE_ANON_KEY i v2/.env.local." />
+    return <LoadingScreen text="Supabase er ikkje konfigurert. Legg inn VITE_SUPABASE_URL og VITE_SUPABASE_PUBLISHABLE_KEY i v2/.env.local." />
   }
   if (!authReady) return <LoadingScreen text="Koplar til GarasjeGym …" />
   if (passwordRecovery) return <AuthScreen recovery onRecoveryComplete={() => setPasswordRecovery(false)} />
