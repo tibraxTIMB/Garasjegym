@@ -8,8 +8,8 @@ export default function CoffeeBar({profile}){
  const [products,setProducts]=useState([]),[orders,setOrders]=useState([]),[cart,setCart]=useState({})
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [note,setNote]=useState(''),[newName,setNewName]=useState(''),[newPrice,setNewPrice]=useState(''),[newDesc,setNewDesc]=useState('')
- async function load(){
-  setLoading(true);setError('')
+ async function load(silent=false){
+  if(!silent)setLoading(true);setError('')
   const [p,o]=await Promise.all([
    supabase.from('coffee_products').select('id,name,description,price,is_active,sort_order').order('sort_order').order('name'),
    supabase.from('coffee_orders').select('id,member_id,status,total,note,created_at,coffee_order_items(id,product_name,unit_price,quantity)').order('created_at',{ascending:false}).limit(50)
@@ -18,7 +18,7 @@ export default function CoffeeBar({profile}){
   if(o.error)setError(o.error.message);else setOrders(o.data||[])
   setLoading(false)
  }
- useEffect(()=>{load()},[])
+ useEffect(()=>{load();const refresh=setInterval(()=>load(true),30000);return()=>clearInterval(refresh)},[])
  const cartItems=useMemo(()=>products.filter(p=>cart[p.id]>0).map(p=>({product_id:p.id,quantity:cart[p.id],price:Number(p.price)})),[products,cart])
  const total=cartItems.reduce((sum,item)=>sum+item.price*item.quantity,0)
  function change(id,delta){setCart(v=>({...v,[id]:Math.max(0,Math.min(20,(v[id]||0)+delta))}))}
