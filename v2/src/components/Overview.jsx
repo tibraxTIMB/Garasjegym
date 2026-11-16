@@ -6,28 +6,30 @@ const rankForCount = count => { const n=Math.max(0,Number(count)||0); if(n>=600)
 import {supabase} from '../lib/supabase.js'
 
 export default function Overview({profile,onNavigate}){
- const [logs,setLogs]=useState([]),[prs,setPrs]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState('')
+ const [logs,setLogs]=useState([]),[prs,setPrs]=useState([]),[totalCount,setTotalCount]=useState(0),[loading,setLoading]=useState(true),[error,setError]=useState('')
  useEffect(()=>{let live=true;(async()=>{
-  const [l,p]=await Promise.all([
+  const [l,p,count]=await Promise.all([
    supabase.from('workout_logs').select('id,title,workout_date,format,score_rounds,score_reps').order('workout_date',{ascending:false}).limit(100),
-   supabase.from('personal_records').select('id,exercise_name,result,unit,record_date').order('record_date',{ascending:false}).limit(5)
+   supabase.from('personal_records').select('id,exercise_name,result,unit,record_date').order('record_date',{ascending:false}),
+   supabase.from('workout_logs').select('id',{count:'exact',head:true})
   ])
   if(!live)return
   if(l.error)setError(l.error.message);else setLogs(l.data||[])
   if(p.error)setError(p.error.message);else setPrs(p.data||[])
+  if(count.error)setError(count.error.message);else setTotalCount(count.count||0)
   setLoading(false)
  })();return()=>{live=false}},[])
  const today=new Date(),monday=new Date(today);monday.setHours(0,0,0,0);monday.setDate(monday.getDate()-(monday.getDay()+6)%7)
  const week=logs.filter(x=>new Date(x.workout_date+'T12:00:00')>=monday)
  const month=logs.filter(x=>{const d=new Date(x.workout_date+'T12:00:00');return d.getMonth()===today.getMonth()&&d.getFullYear()===today.getFullYear()})
- const rank=rankForCount(logs.length)
+ const rank=rankForCount(totalCount)
  const bestLifts=['Back squat','Front squat','Deadlift','Bench press','Strict press','Clean','Snatch','Thruster'].map(name=>{const best=prs.filter(p=>p.exercise_name.toLowerCase()===name.toLowerCase()&&p.unit==='kg').reduce((max,p)=>Math.max(max,Number(p.result)||0),0);return {name,best}}).filter(x=>x.best>0)
  if(loading)return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar treningsstatus …</div>
  return <div className="overview-module">
   <div className="training-heading"><div><div className="section-kicker">MEDLEMSOVERSIKT</div><h3>Velkomen, {profile.display_name||'medlem'}</h3></div><span className="count-pill">NIVÅ {rank.level}</span></div>
   {error&&<div className="auth-error" role="alert">{error}</div>}
-  <div className="overview-stats"><div><Activity size={18}/><strong>{week.length}</strong><span>Økter denne veka</span></div><div><Dumbbell size={18}/><strong>{month.length}</strong><span>Økter denne månaden</span></div><div><Trophy size={18}/><strong>{prs.length}</strong><span>Nylege rekordar</span></div></div>
-  <section className="rank-card"><div className="rank-card-top"><span>GARASJEKADETT · NIVÅ {rank.level}</span>{rank.gold&&<b>GULL FOR EVIG</b>}</div><strong>{rank.title}</strong><div className="rank-stars">{'★'.repeat(rank.gold?3:rank.stars)}{'☆'.repeat(rank.gold?0:3-rank.stars)}</div><div className="rank-progress"><span style={{width:(rank.gold?100:(rank.stars/3)*100)+'%'}}/></div><small>{logs.length} fullførte økter · {rank.gold?'Livsvarig ærestittel':Math.max(0,rank.next-logs.length)+' økter til neste grad'}</small></section>
+  <div className="overview-stats"><div><Activity size={18}/><strong>{week.length}</strong><span>Økter denne veka</span></div><div><Dumbbell size={18}/><strong>{totalCount}</strong><span>Økter totalt</span></div><div><Trophy size={18}/><strong>{prs.length}</strong><span>Nylege rekordar</span></div></div>
+  <section className="rank-card"><div className="rank-card-top"><span>GARASJEKADETT · NIVÅ {rank.level}</span>{rank.gold&&<b>GULL FOR EVIG</b>}</div><strong>{rank.title}</strong><div className="rank-stars">{'★'.repeat(rank.gold?3:rank.stars)}{'☆'.repeat(rank.gold?0:3-rank.stars)}</div><div className="rank-progress"><span style={{width:(rank.gold?100:(rank.stars/3)*100)+'%'}}/></div><small>{totalCount} fullførte økter · {rank.gold?'Livsvarig ærestittel':Math.max(0,rank.next-logs.length)+' økter til neste grad'}</small></section>
   <section className="engine-section"><div className="training-heading"><div><div className="section-kicker">SISTE AKTIVITET</div><h3>Treningsloggen</h3></div><button className="secondary-button" onClick={()=>onNavigate('trening')}>Opne trening</button></div>
    {logs.length?logs.slice(0,6).map(log=><article className="history-card" key={log.id}><div className="history-card-top"><strong>{log.title}</strong><span>{new Date(log.workout_date+'T12:00:00').toLocaleDateString('nn-NO')}</span></div><small>{log.format}{log.score_rounds!=null?' · '+log.score_rounds+' rundar':''}{log.score_reps!=null?' + '+log.score_reps+' reps':''}</small></article>):<div className="empty-state">Du har ikkje registrert ei økt enno. Start med ei fri økt eller ein WOD.</div>}
   </section>
