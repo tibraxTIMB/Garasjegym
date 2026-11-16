@@ -55,6 +55,9 @@ Arbeid:
 - Påmelding, avmelding, venteliste og varsling.
 - Sikra kapasitet mot samtidige bookingar.
 - Felles gruppetime med synkronisert start, pause, gjenopptaking og avslutting.
+- Instruktør kan velja ein publisert WOD ved start; WOD-format og timer blir viste for deltakarane.
+- Felles timer nyttar serverlagra starttid og akkumulert tid, slik at deltakarane ser same klokke ved polling på tvers av einingar.
+- Deltakar kan opna den same WOD-en direkte i treningsmotoren og registrera eige resultat.
 - Individuelle resultat frå kvar deltakar via treningsmotoren.
 - PT-kalender, PT-booking, førespurnader og kapasitet.
 - PT-dialog/meldingar, notat og øvingsopplegg.
