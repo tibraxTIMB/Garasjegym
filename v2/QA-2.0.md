@@ -98,6 +98,7 @@ Dette dokumentet er ein testplan, ikkje dokumentasjon på at testane er køyrde.
 
 - Køyr Supabase Security Advisor og rett opp ERROR før lansering.
 - Gå gjennom SECURITY DEFINER-funksjonar, search_path, EXECUTE-grants og tilgang frå anon.
+- Kontroller at migrering 011 fjernar anon-tilgang utan å bryta legitime authenticated-kall.
 - Kontroller RLS med medlem, manager, admin og anonym brukar.
 - Kontroller at PT-notat, meldingar, treningslogg og bookingdata ikkje kan lesast på tvers av medlemmar.
 - Gå gjennom framandnøklar, indeksar og RLS initplan-advarslane.
@@ -106,4 +107,4 @@ Dette dokumentet er ein testplan, ikkje dokumentasjon på at testane er køyrde.
 
 ## 10. Status
 
-Ingen ende-til-ende-testar er stadfesta køyrde i denne arbeidsøkta. SQL-migreringane 001–010 er staged i GitHub, ikkje installerte i aktiv Supabase-database. Siste React/Vite-bygg er ikkje stadfesta etter dei nyaste endringane.
+Ingen ende-til-ende-testar er stadfesta køyrde i denne arbeidsøkta. SQL-migreringane 001–011 er staged i GitHub, ikkje installerte i aktiv Supabase-database. Siste React/Vite-bygg er ikkje stadfesta etter dei nyaste endringane.
