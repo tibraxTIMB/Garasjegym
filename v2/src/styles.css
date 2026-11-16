@@ -445,3 +445,25 @@ footer {
 .pr-result { margin:8px 0 3px; color:var(--orange); font-size:24px; font-weight:950; }
 @media(max-width:760px) { .pr-form { grid-template-columns:1fr 1fr; } .pr-form button { grid-column:1/-1; } }
 @media(max-width:430px) { .timer-settings-inline { grid-template-columns:1fr 1fr 1fr; } .timer-actions .secondary-button { font-size:11px; padding:0 8px; } }
+
+
+/* Class booking module */
+.booking-module { display:grid; gap:16px; }
+.booking-create { display:grid; gap:12px; padding:18px; background:#171b1d; border:1px solid var(--line); border-radius:12px; }
+.booking-create h4 { margin:0 0 3px; }
+.booking-create label { display:grid; gap:6px; color:#d8d9d5; font-size:12px; font-weight:800; }
+.booking-create input,.booking-create select,.booking-create textarea { width:100%; min-width:0; padding:11px; color:#f2f1ed; background:#111416; border:1px solid #3a4143; border-radius:8px; font:inherit; }
+.class-list { display:grid; gap:10px; }
+.class-card { display:grid; grid-template-columns:62px minmax(0,1fr) auto; gap:14px; align-items:center; padding:15px; background:#171b1d; border:1px solid var(--line); border-radius:11px; }
+.class-date { display:grid; justify-items:center; padding:9px 5px; background:#30271d; border-radius:9px; color:var(--orange); }
+.class-date strong { font-size:23px; line-height:1.1; }
+.class-date span { font-size:11px; text-transform:uppercase; }
+.class-info { min-width:0; }
+.class-card-top { display:flex; flex-wrap:wrap; gap:12px; color:var(--orange); font-size:10px; font-weight:900; text-transform:uppercase; }
+.class-card-top span:last-child,.class-info small { display:flex; align-items:center; gap:5px; color:var(--muted); }
+.class-info h4 { margin:6px 0; font-size:16px; }
+.class-info p { margin:0 0 7px; color:var(--muted); font-size:12px; }
+.class-action { display:grid; justify-items:end; gap:8px; }
+.class-action .secondary-button { margin:0; }
+.booking-confirmed { color:#9ad5ad; font-size:11px; font-weight:900; }
+@media(max-width:620px) { .class-card { grid-template-columns:52px minmax(0,1fr); } .class-action { grid-column:2; display:flex; justify-content:flex-start; justify-items:start; } .class-date strong { font-size:20px; } }
