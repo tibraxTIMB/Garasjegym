@@ -3,8 +3,8 @@
 <html lang="nn">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#11151b">
-<title>GARASJEGYM 1.7 · SturmGeiler</title>
+<meta name="theme-color" content="#11151b"><meta name="application-name" content="GarasjeGym 1.7 – SturmGeiler">
+<title>GARASJEGYM 1.7 · STURMGEILER</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -654,6 +654,7 @@ body.wod-dashboard-mode.training-layout-edit #trainingConsole .gg-module-picker{
 <header><div class="logo">GARASJEGYM</div><div class="header-tools"><button id="signedInName" class="header-user-link" type="button" onclick="showTab('profile')" aria-label="Opna Mi side"></button><span id="roleBadge" class="pill gold">MEDLEM</span><div id="headerRank" class="header-rank" aria-live="polite"></div><button id="wallModeToggle" type="button" class="secondary" onclick="toggleWallMode()">🏋️ Treningsmodus</button><button id="signOutBtn" type="button" class="secondary">Logg ut</button></div></header>
 <div id="floatingTimerPanel" class="floating-timer-panel hidden" role="dialog" aria-label="Timer"><div class="floating-timer-head"><strong>⏱ Timer</strong><div><button type="button" class="secondary" onclick="toggleFloatingTimerSize()" aria-label="Endra storleik">⤢</button><button type="button" class="secondary" onclick="closeFloatingTimer()" aria-label="Lukk timer">×</button></div></div><div id="floatingTimerContent"></div></div>
 <main>
+<div id="ggReleaseStamp" class="hint" style="text-align:center;padding:12px 0;font-weight:900;letter-spacing:.08em">GARASJEGYM 1.7 · STURMGEILER</div>
 <div id="quickBar" class="quick-bar" aria-label="Snøggtilgang">
  <button type="button" class="quick-bell" onclick="openNotificationCenter()" aria-label="Opne varsel"><span class="quick-icon" aria-hidden="true">♧</span><span class="quick-count" id="quickUnreadCount" hidden>0</span></button>
  <button type="button" class="quick-toggle" id="quickToggle" onclick="toggleQuickLinks()" aria-expanded="false" aria-controls="quickLinks" aria-label="Vis snarvegar">＋</button>
@@ -2112,7 +2113,11 @@ function toggleWallMode(){document.body.classList.toggle('wall-mode');const on=d
 function ggClock(){const d=new Date();$('#wallTime').textContent=d.toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'});$('#wallDate').textContent=d.toLocaleDateString('nn-NO',{weekday:'long',day:'numeric',month:'long'});}
 const ggAchievements=['🪖 SOLDATKOPF: Oppmøte før hjernen har vakna.','💦 SHNELL WASSER KAIZER: Hydrert som ein meister.','🦌 GAZELLE-MASCHIN: Lett på tå, tung i stanga.','🦵 KNEEBEUGEN-KAISER: Djupare enn sjølvtilliten din.','🏋️ DEADLIFT-DOKTOR: Ryggen har sendt takkebrev.','🎖️ SILIKONTATTEN-GENERAL: Brystøkta har fått eige kommandosenter.','⚡ THRUSTER-TERROR: Opp og ned med militær presisjon.','🧱 PLANK-PANZER: Kjerne av stål, humor av papp.','☕ KAFFEE-KOMMANDANT: Først espresso, så eksistens.','🐐 GAZELLE-MACHIN: Tyngdekrafta klagar til leiinga.'];
 function ggRenderTicker(){const a=[...ggAchievements,...ggAchievements];$('#achievementTrack').innerHTML=a.map(x=>`<span class="achievement-float">${x}</span>`).join('');}
-if(localStorage.getItem('gg_wall_mode')==='1'){document.body.classList.add('wall-mode');$('#wallModeToggle').textContent='✕ Avslutt treningsmodus';}
+// Always start in the normal overview after opening/reloading or signing in.
+localStorage.removeItem('gg_wall_mode');
+document.body.classList.remove('wall-mode','wod-dashboard-mode');
+const wallModeButton=$('#wallModeToggle');
+if(wallModeButton)wallModeButton.textContent='🏋️ Treningsmodus';
 
 function enhanceNativeDateTimePickers(){
  document.querySelectorAll('input[type="date"],input[type="datetime-local"],input[type="time"]').forEach(input=>{
