@@ -58,6 +58,7 @@ create unique index if not exists class_bookings_one_active_per_member
 
 -- Attach the guard to the booking table. Defining the function alone does not
 -- enforce capacity; this trigger serializes concurrent inserts/updates by class.
+drop trigger if exists class_booking_capacity_check on public.class_bookings;
 drop trigger if exists class_bookings_capacity_guard on public.class_bookings;
 create trigger class_bookings_capacity_guard
 before insert or update of class_id, status
