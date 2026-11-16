@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react'
-import {CheckCircle2,LoaderCircle,MessageCircle,Send,Trash2} from 'lucide-react'
+import {CheckCircle2,LoaderCircle,MessageCircle,Send,Trash2,ThumbsUp,Heart,Flame,Dumbbell} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import {isStaff} from '../lib/auth.js'
 
@@ -11,7 +11,7 @@ export default function Community({profile}){
  async function load(silent=false){
   if(!silent)setLoading(true);setError('')
   const [p,c]=await Promise.all([
-   supabase.from('social_posts').select('id,author_id,author_name,body,topic,kind,created_at').order('created_at',{ascending:false}).limit(60),
+   supabase.from('social_posts').select('id,author_id,author_name,body,topic,kind,reactions,image_data,created_at').order('created_at',{ascending:false}).limit(60),
    supabase.from('social_comments').select('id,post_id,author_id,author_name,body,created_at').order('created_at',{ascending:true}).limit(200)
   ])
   if(p.error)setError(p.error.message);else setPosts(p.data||[])
@@ -63,6 +63,23 @@ export default function Community({profile}){
   }catch(e){setError(e.message||'Kunne ikkje publisera.')}
   finally{setBusy('')}
  }
+ const reactionOptions=[
+  {key:'like',label:'Likar',emoji:'👍',Icon:ThumbsUp},
+  {key:'fire',label:'Sterkt',emoji:'🔥',Icon:Flame},
+  {key:'muscle',label:'Sterk',emoji:'💪',Icon:Dumbbell},
+  {key:'heart',label:'Hjarte',emoji:'❤️',Icon:Heart},
+ ]
+ async function toggleReaction(post,key){
+  setBusy('reaction-'+post.id+'-'+key);setError('')
+  try{
+   const {data,error:e}=await supabase.rpc('toggle_social_reaction',{p_post_id:post.id,p_reaction:key})
+   if(e)throw e
+   setPosts(v=>v.map(row=>row.id===post.id?{...row,reactions:data||{}}:row))
+  }catch(e){
+   const message=e.message||'Kunne ikkje lagra reaksjonen.'
+   setError(message.includes('toggle_social_reaction')?'Reaksjonar krev migrering 009 (social_reactions). '+message:message)
+  }finally{setBusy('')}
+ }
  async function removePost(post){
   if(!window.confirm('Sletta dette innlegget og alle kommentarane?'))return
   setBusy('delete-'+post.id);setError('');setNotice('')
@@ -101,6 +118,6 @@ export default function Community({profile}){
   <div className="training-heading"><div><div className="section-kicker">GARASJEGYM · FELLESSKAP</div><h3>Garasjeprat</h3></div><span className="count-pill">{posts.length} innlegg</span></div>
   {error&&<div className="auth-error" role="alert">{error}</div>}{notice&&<div className="auth-message" role="status"><CheckCircle2 size={15}/>{notice}</div>}
   <form className="community-compose" onSubmit={publish}><label>Del noko med gjengen<textarea value={body} onChange={e=>setBody(e.target.value)} rows="3" maxLength="3000" placeholder="Treningsglede, spørsmål, resultat eller ein liten siger …" required/></label><div className="community-compose-foot"><select value={topic} onChange={e=>setTopic(e.target.value)}><option>Treningsprat</option><option>Resultat</option><option>Spørsmål</option><option>Sosialt</option></select><label className="secondary-button">Legg ved bilete<input type="file" accept="image/*" onChange={chooseImage} hidden/></label><button className="primary-button" disabled={busy==='post'}><Send size={15}/>{busy==='post'?'Publiserer …':'Publiser innlegg'}</button></div>{imageData&&<div className="community-image-preview"><img src={imageData} alt="Førehandsvising av vedlagt bilete"/><button type="button" className="secondary-button" onClick={()=>setImageData('')}>Fjern bilete</button></div>}</form>
-  {posts.length?posts.map(post=><article className="community-post" key={post.id}><div className="community-post-head"><div className="avatar-mark">{(post.author_name||'?').slice(0,1).toUpperCase()}</div><div><strong>{post.author_name}</strong><small>{post.topic} · {new Date(post.created_at).toLocaleString('nn-NO')}</small></div>{(post.author_id===profile.id||staff)&&<button type="button" className="icon-button" aria-label="Slett innlegg" title="Slett innlegg" disabled={busy==='delete-'+post.id} onClick={()=>removePost(post)}><Trash2 size={15}/></button>}</div><p>{post.body}</p>{post.image_data&&<img className="community-post-image" src={post.image_data} alt="Bilete ved innlegget"/>}<div className="community-comments"><div className="community-comment-title"><MessageCircle size={14}/> {comments.filter(c=>c.post_id===post.id).length} kommentarar</div>{comments.filter(c=>c.post_id===post.id).map(c=><div className="community-comment" key={c.id}><strong>{c.author_name}</strong><span>{c.body}</span>{(c.author_id===profile.id||staff)&&<button type="button" className="icon-button" aria-label="Slett kommentar" title="Slett kommentar" disabled={busy==='comment-delete-'+c.id} onClick={()=>removeComment(c)}><Trash2 size={13}/></button>}</div>)}<form className="community-reply" onSubmit={e=>{e.preventDefault();comment(post)}}><input value={drafts[post.id]||''} onChange={e=>setDrafts(v=>({...v,[post.id]:e.target.value}))} placeholder="Skriv ein kommentar …"/><button className="secondary-button" disabled={busy===post.id}>Send</button></form></div></article>):<div className="empty-state">Det er stille i Garasjeprat enno. Start samtalen!</div>}
+  {posts.length?posts.map(post=><article className="community-post" key={post.id}><div className="community-post-head"><div className="avatar-mark">{(post.author_name||'?').slice(0,1).toUpperCase()}</div><div><strong>{post.author_name}</strong><small>{post.topic} · {new Date(post.created_at).toLocaleString('nn-NO')}</small></div>{(post.author_id===profile.id||staff)&&<button type="button" className="icon-button" aria-label="Slett innlegg" title="Slett innlegg" disabled={busy==='delete-'+post.id} onClick={()=>removePost(post)}><Trash2 size={15}/></button>}</div><p>{post.body}</p>{post.image_data&&<img className="community-post-image" src={post.image_data} alt="Bilete ved innlegget"/>}<div className="community-reactions">{reactionOptions.map(({key,label,emoji})=>{const users=Array.isArray(post.reactions?.[key])?post.reactions[key]:[];const selected=users.includes(profile.id);return <button type="button" key={key} className={selected?'secondary-button active':'secondary-button'} disabled={busy==='reaction-'+post.id+'-'+key} onClick={()=>toggleReaction(post,key)} aria-pressed={selected}>{emoji} {users.length||''} <span>{label}</span></button>})}</div><div className="community-comments"><div className="community-comment-title"><MessageCircle size={14}/> {comments.filter(c=>c.post_id===post.id).length} kommentarar</div>{comments.filter(c=>c.post_id===post.id).map(c=><div className="community-comment" key={c.id}><strong>{c.author_name}</strong><span>{c.body}</span>{(c.author_id===profile.id||staff)&&<button type="button" className="icon-button" aria-label="Slett kommentar" title="Slett kommentar" disabled={busy==='comment-delete-'+c.id} onClick={()=>removeComment(c)}><Trash2 size={13}/></button>}</div>)}<form className="community-reply" onSubmit={e=>{e.preventDefault();comment(post)}}><input value={drafts[post.id]||''} onChange={e=>setDrafts(v=>({...v,[post.id]:e.target.value}))} placeholder="Skriv ein kommentar …"/><button className="secondary-button" disabled={busy===post.id}>Send</button></form></div></article>):<div className="empty-state">Det er stille i Garasjeprat enno. Start samtalen!</div>}
  </div>
 }
