@@ -20,7 +20,7 @@ begin
     raise exception 'Aktiv medlemskonto krevst for å reagera.';
   end if;
 
-  if p_reaction not in ('like', 'fire', 'muscle', 'heart') then
+  if p_reaction is null or p_reaction not in ('like', 'fire', 'muscle', 'heart') then
     raise exception 'Ugyldig reaksjon.';
   end if;
 
