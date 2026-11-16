@@ -38,7 +38,7 @@ revoke execute on function public.check_class_booking_capacity() from public, an
 
 -- Reject duplicate active bookings for the same member and class.
 -- The preflight stops safely instead of deleting or merging existing user data.
-do $
+do $$
 begin
   if exists (
     select 1
