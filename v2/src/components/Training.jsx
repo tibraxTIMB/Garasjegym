@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { Activity, CheckCircle2, Clock3, Dumbbell, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 
-const FORMATS = ['Fri trening', 'EMOM', 'AMRAP', 'For Time', 'Tabata', 'Intervall', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
+const FORMATS = ['Fri trening', 'EMOM', 'AMRAP', 'For Time', 'Tabata', 'Intervall', 'Death By', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '' }] })
 const pad = (n) => String(n).padStart(2, '0')
-const clock = (seconds) => `${pad(Math.floor(seconds / 60))}:${pad(seconds % 60)}`
+const clock = (seconds) => `${pad(Math.floor(Math.max(0, seconds) / 60))}:${pad(Math.max(0, seconds) % 60)}`
 
-function Timer({ format, minutes }) {
+function Timer({ format, minutes, activeExercise = '' }) {
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [round, setRound] = useState(1)
@@ -16,21 +16,45 @@ function Timer({ format, minutes }) {
   const [rounds, setRounds] = useState(format === 'Tabata' ? 8 : 5)
   const [focused, setFocused] = useState(false)
   const [phase, setPhase] = useState('Klar')
+  const [laps, setLaps] = useState([])
+  const [soundOn, setSoundOn] = useState(true)
   const target = Math.max(1, Number(minutes) || 10) * 60
-  const isTimedInterval = format === 'Tabata' || format === 'Intervall'
+  const isTimedInterval = ['Tabata', 'Intervall'].includes(format)
+  const isCountdown = ['AMRAP', 'Nedteljing'].includes(format)
+  const isEMOM = format === 'EMOM'
+  const isDeathBy = format === 'Death By'
   const cycle = Math.max(1, Number(workSeconds)) + Math.max(0, Number(restSeconds))
-  const cycleRound = isTimedInterval ? Math.floor(elapsed / cycle) + 1 : Math.floor(elapsed / 60) + 1
+  const roundLength = isTimedInterval ? cycle : 60
+  const currentRound = isTimedInterval || isDeathBy ? Math.floor(elapsed / roundLength) + 1 : Math.floor(elapsed / 60) + 1
   const phaseElapsed = isTimedInterval ? elapsed % cycle : elapsed % 60
-  const currentPhase = isTimedInterval ? (phaseElapsed < Number(workSeconds) ? 'ARBEID' : 'KVILE') : (format === 'EMOM' ? 'NYTT MINUTT' : 'PÅGÅR')
+  const currentPhase = isTimedInterval ? (phaseElapsed < Number(workSeconds) ? 'ARBEID' : 'KVILE') : (isEMOM ? 'NYTT MINUTT' : isDeathBy ? 'NY RUNDE' : 'PÅGÅR')
   const intervalRemaining = isTimedInterval
     ? Math.max(0, (phaseElapsed < Number(workSeconds) ? Number(workSeconds) : cycle) - phaseElapsed)
     : Math.max(0, 60 - phaseElapsed)
-  const isCountdown = ['AMRAP', 'Nedteljing'].includes(format)
   const display = isCountdown ? Math.max(0, target - elapsed)
-    : format === 'EMOM' || isTimedInterval ? intervalRemaining : elapsed
+    : isEMOM || isTimedInterval || isDeathBy ? intervalRemaining : elapsed
+
+  function cue(frequency = 880, duration = 0.16) {
+    if (!soundOn) return
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext
+      if (!AudioContextClass) return
+      const context = new AudioContextClass()
+      const oscillator = context.createOscillator()
+      const gain = context.createGain()
+      oscillator.frequency.value = frequency
+      oscillator.type = 'sine'
+      gain.gain.setValueAtTime(0.0001, context.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.18, context.currentTime + 0.015)
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration)
+      oscillator.connect(gain); gain.connect(context.destination)
+      oscillator.start(); oscillator.stop(context.currentTime + duration)
+      oscillator.onended = () => context.close()
+    } catch { /* Lyd er valfri og avhengig av nettlesaren. */ }
+  }
 
   useEffect(() => {
-    setElapsed(0); setRunning(false); setRound(1); setPhase('Klar')
+    setElapsed(0); setRunning(false); setRound(1); setPhase('Klar'); setLaps([])
     setWorkSeconds(format === 'Tabata' ? 20 : 60)
     setRestSeconds(format === 'Tabata' ? 10 : 60)
     setRounds(format === 'Tabata' ? 8 : 5)
@@ -43,10 +67,12 @@ function Timer({ format, minutes }) {
   }, [running])
 
   useEffect(() => {
-    if (isCountdown && elapsed >= target) { setRunning(false); setPhase('FERDIG') }
-    if (isTimedInterval && elapsed >= cycle * Math.max(1, Number(rounds))) { setRunning(false); setPhase('FERDIG') }
-    if (format === 'EMOM' && elapsed >= target) { setRunning(false); setPhase('FERDIG') }
-  }, [elapsed, target, isCountdown, isTimedInterval, cycle, rounds, format])
+    if (!running) return
+    if (isCountdown && elapsed >= target) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
+    if (isTimedInterval && elapsed >= cycle * Math.max(1, Number(rounds))) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
+    if (isEMOM && elapsed >= target) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
+    if ((isTimedInterval && elapsed % cycle === 0) || (isTimedInterval && elapsed % cycle === Number(workSeconds)) || ((isEMOM || isDeathBy) && elapsed % 60 === 0)) cue(elapsed % 60 === 0 ? 1040 : 660, 0.12)
+  }, [elapsed, running, target, isCountdown, isTimedInterval, cycle, rounds, isEMOM, isDeathBy, workSeconds])
 
   useEffect(() => {
     if (running) setPhase(currentPhase)
@@ -54,20 +80,21 @@ function Timer({ format, minutes }) {
 
   async function toggleFocus() {
     if (!focused) {
-      try { await document.documentElement.requestFullscreen?.() } catch { /* Fullscreen is optional on some mobile browsers. */ }
+      try { await document.documentElement.requestFullscreen?.() } catch { /* Fullscreen er valfri. */ }
       setFocused(true)
     } else {
-      try { if (document.fullscreenElement) await document.exitFullscreen?.() } catch { /* Ignore unsupported exit. */ }
+      try { if (document.fullscreenElement) await document.exitFullscreen?.() } catch { /* Ignorer. */ }
       setFocused(false)
     }
   }
 
-  const roundsShown = isTimedInterval ? Math.min(cycleRound, Number(rounds)) : Math.min(cycleRound, Math.ceil(target / 60))
+  const roundsShown = isTimedInterval ? Math.min(currentRound, Number(rounds)) : currentRound
   return <div className={focused ? 'engine-timer timer-focused' : 'engine-timer'}>
     <div className="timer-caption"><Clock3 size={15}/> {format.toUpperCase()}</div>
     <div className="timer-phase">{phase}</div>
     <strong>{clock(display)}</strong>
-    {(format === 'EMOM' || isTimedInterval) && <div className="timer-round-label">RUNDE {roundsShown} / {isTimedInterval ? rounds : Math.ceil(target / 60)}</div>}
+    {activeExercise && <div className="timer-round-label">NO: {activeExercise}</div>}
+    {(isEMOM || isTimedInterval || isDeathBy) && <div className="timer-round-label">RUNDE {roundsShown}{isTimedInterval ? ` / ${rounds}` : ''}</div>}
     {isTimedInterval && !running && elapsed === 0 && <div className="timer-settings-inline">
       <label>Arbeid sek.<input type="number" min="1" max="600" value={workSeconds} onChange={e => setWorkSeconds(Math.max(1, Number(e.target.value) || 1))}/></label>
       <label>Kvile sek.<input type="number" min="0" max="600" value={restSeconds} onChange={e => setRestSeconds(Math.max(0, Number(e.target.value) || 0))}/></label>
@@ -75,12 +102,15 @@ function Timer({ format, minutes }) {
     </div>}
     {format === 'AMRAP' && <div className="timer-round-label">RUNDAR FULLFØRT: {round}</div>}
     <div className="timer-actions">
-      <button type="button" className="secondary-button" onClick={() => { if (!running) setPhase('PÅGÅR'); setRunning(v => !v) }} disabled={phase === 'FERDIG'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
-      <button type="button" className="secondary-button" onClick={() => { setRunning(false); setElapsed(0); setRound(1); setPhase('Klar') }}><RotateCcw size={14}/> Nullstill</button>
+      <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) setPhase('PÅGÅR'); setRunning(v => !v) }} disabled={phase === 'FERDIG'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
+      <button type="button" className="secondary-button" onClick={() => { setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar') }}><RotateCcw size={14}/> Nullstill</button>
       {format === 'AMRAP' && <button type="button" className="secondary-button" onClick={() => setRound(r => r + 1)}>+ Runde</button>}
+      {['Stoppeklokke','For Time','Tilpassa'].includes(format) && <button type="button" className="secondary-button" onClick={() => setLaps(v => [...v, elapsed])}>Mellomtid</button>}
+      <button type="button" className="secondary-button" onClick={() => setSoundOn(v => !v)}>{soundOn ? 'Lyd på' : 'Lyd av'}</button>
       <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
     </div>
-    <small>{isTimedInterval ? 'Arbeid / kvile-intervall' : isCountdown ? 'Nedtelling' : format === 'EMOM' ? 'Eitt minutt per runde' : format === 'For Time' ? 'Stoppar når du sjølv avsluttar eller tidsgrensa er nådd' : 'Stoppeklokke'}</small>
+    {laps.length > 0 && <div className="timer-round-label">MELLOMTIDER: {laps.map((lap, i) => `${i + 1}: ${clock(lap)}`).join(' · ')}</div>}
+    <small>{isTimedInterval ? 'Arbeid / kvile-intervall' : isCountdown ? 'Nedtelling' : isEMOM ? 'Eitt minutt per runde' : isDeathBy ? 'Aukande arbeid for kvar minutt' : format === 'For Time' ? 'Stoppeklokke – registrer sluttid når du er ferdig' : 'Stoppeklokke'}</small>
   </div>
 }
 
@@ -262,7 +292,7 @@ export default function Training() {
         <label>Treningsformat<select value={format} onChange={e => setFormat(e.target.value)}>{FORMATS.map(x => <option key={x}>{x}</option>)}</select></label>
         <label>Varigheit / timer (min)<input type="number" min="1" max="240" value={duration} onChange={e => setDuration(e.target.value)}/></label>
       </div>
-      <Timer format={format} minutes={duration}/>
+      <Timer format={format} minutes={duration} activeExercise={items[0]?.exercise_name || ''}/>
       <section className="engine-section">
         <div className="engine-section-title"><h4>Øvingar og sett</h4><span>Legg inn resultat per sett</span></div>
         <div className="exercise-search"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Søk i øvingsbiblioteket …"/></div>
