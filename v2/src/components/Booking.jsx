@@ -20,7 +20,7 @@ async function fetchLiveSessions() {
       .in('status', ['active', 'paused'])
       .order('started_at', { ascending: false })
   }
-  if (result.error && /class_live_sessions|relation .* does not exist/i.test(result.error.message || '')) {
+  if (result.error && /could not find the table|relation .* does not exist|PGRST205/i.test(result.error.message || '')) {
     return { data: [], error: null }
   }
   return result
