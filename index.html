@@ -1,10 +1,10 @@
 <!doctype html>
-<!-- GarasjeGym 1.3.3 – Du Hast Muskelkater -->
+<!-- GarasjeGym 1.3.8 – Zufallsmusik -->
 <html lang="nn">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#11151b">
-<title>GARASJEGYM 1.3.6 · Bass im Blut</title>
+<title>GARASJEGYM 1.3.8 · Zufallsmusik</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -278,7 +278,7 @@ nav button{font-size:12px;padding:9px 13px;min-height:38px}
  #pt .grid>.span-7{grid-column:span 6}
 }
 
-/* GarasjeGym 1.3.6 – Bass im Blut: refined Spotify player */
+/* GarasjeGym 1.3.8 – Zufallsmusik: refined Spotify player */
 .achievement-ticker{overflow:hidden;border:1px solid #354556;border-radius:12px;background:#111a24;margin:5px 0 10px;padding:8px 0;white-space:nowrap}
 .achievement-track{display:inline-flex;gap:34px;min-width:max-content;animation:ggTicker 72s linear infinite;padding-left:100vw}
 .achievement-ticker:hover .achievement-track{animation-play-state:paused}
@@ -290,6 +290,10 @@ nav button{font-size:12px;padding:9px 13px;min-height:38px}
 body.wall-mode main{max-width:1600px;padding:16px 22px 30px}body.wall-mode header{position:relative}body.wall-mode .wall-clock{display:block}body.wall-mode nav{position:relative;top:auto;flex-wrap:wrap}body.wall-mode nav button{font-size:16px;padding:13px 18px;min-height:54px}body.wall-mode .dashboard-card{min-height:190px}body.wall-mode .card{padding:20px}body.wall-mode .spotify-panel{font-size:17px}body.wall-mode .spotify-controls button{min-width:64px;min-height:58px;font-size:20px}body.wall-mode .spotify-player img{width:90px;height:90px}body.wall-mode .role-banner{display:none}body.wall-mode #quickBar{display:none}body.wall-mode .achievement-ticker{padding:13px 0}body.wall-mode .achievement-float{font-size:16px}
 @media(max-width:700px){.spotify-bottom{align-items:stretch}.spotify-bottom button{flex:1}.spotify-head{align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){.achievement-track{animation:none;padding-left:0}}
+
+/* 1.3.8 Spotify search and one-tap radio presets */
+.spotify-search{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}.spotify-search input{flex:1;min-width:220px}.spotify-presets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}.spotify-presets button{min-height:64px;text-align:left;white-space:normal}.spotify-presets button strong{display:block;font-size:14px}.spotify-presets button small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.spotify-results{margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.spotify-results select{flex:1;min-width:220px}@media(max-width:760px){.spotify-presets{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -348,6 +352,9 @@ body.wall-mode main{max-width:1600px;padding:16px 22px 30px}body.wall-mode heade
  <div class="spotify-head"><div><div class="subheading">GARASJEGYM RADIO</div><h2>Spotify</h2><div id="spotifyStatus" class="hint">Kopla til Spotify Premium for å starte.</div></div><button type="button" id="spotifyLogin" onclick="spotifyLogin()">Kopla til Spotify</button></div>
  <div class="spotify-player"><img id="spotifyCover" alt="Albumomslag" src="" hidden><div class="spotify-track"><span class="spotify-now">Speler no</span><strong id="spotifyTrack">Ingen låt vald</strong><span id="spotifyArtist" class="hint">Logg inn og start ei speleliste</span><div class="spotify-progress"><span id="spotifyProgressFill"></span></div><div class="spotify-time"><span id="spotifyElapsed">0:00</span><span id="spotifyDuration">0:00</span></div></div></div>
  <div class="spotify-controls"><button class="secondary" id="spotifyPrev" type="button" onclick="spotifyPrevious()" aria-label="Førre låt" disabled>⏮</button><button type="button" id="spotifyPlay" onclick="spotifyTogglePlay()" aria-label="Spel eller pause" disabled>▶</button><button class="secondary" id="spotifyNext" type="button" onclick="spotifyNext()" aria-label="Neste låt" disabled>⏭</button><label class="spotify-volume">Volum <input id="spotifyVolume" type="range" min="0" max="100" value="65" oninput="spotifySetVolume(this.value)"></label></div>
+ <div class="spotify-search"><input id="spotifyArtistSearch" type="search" placeholder="Søk etter artist …" aria-label="Søk etter artist" onkeydown="if(event.key==='Enter')spotifySearchArtist()"><button type="button" onclick="spotifySearchArtist()">Søk artist</button></div>
+ <div class="spotify-results" id="spotifySearchResults" hidden><select id="spotifySearchTracks" aria-label="Vel låt frå søk"><option value="">Vel låt</option></select><button type="button" class="secondary" onclick="spotifyPlaySearchTrack()">Spel vald låt</button></div>
+ <div class="spotify-presets" aria-label="Snøggval musikk"><button type="button" class="secondary" onclick="spotifyRandomPreset('rock')"><strong>🎸 Hard melodisk rock</strong><small>Til tunge løft</small></button><button type="button" class="secondary" onclick="spotifyRandomPreset('balkan')"><strong>🪗 Turbo Balkan</strong><small>Full gass</small></button><button type="button" class="secondary" onclick="spotifyRandomPreset('dance')"><strong>🪩 90s dance & trance</strong><small>Høg puls</small></button><button type="button" class="secondary" onclick="spotifyRandomPreset('relax')"><strong>🌙 Relax</strong><small>Ro ned</small></button></div>
  <div class="spotify-bottom"><select id="spotifyPlaylist" aria-label="Vel speleliste"><option value="">Vel speleliste</option></select><button type="button" class="secondary" onclick="spotifyPlayPlaylist()">Spel speleliste</button><button type="button" class="secondary" id="spotifyDisconnect" onclick="spotifyDisconnect()">Kopla frå</button></div>
 </div>
 <div class="grid" style="margin-top:16px">
@@ -479,7 +486,7 @@ body.wall-mode main{max-width:1600px;padding:16px 22px 30px}body.wall-mode heade
  <details class="card"><summary>Klubbverktøy <span class="hint">Status</span></summary><div id="adminSummaryDetail"></div></details>
 </div>
 </section>
-<footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.3.6 · Bass im Blut</strong></footer>
+<footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.3.8 · Zufallsmusik</strong></footer>
 </main>
 <div id="editorModal" class="editor-backdrop" role="dialog" aria-modal="true" aria-labelledby="editorTitle" onclick="if(event.target===this)closeEditor()"><div class="editor-panel"><div class="row"><h2 id="editorTitle">Rediger</h2><button type="button" class="secondary" onclick="closeEditor()" aria-label="Lukk">✕</button></div><form id="editorForm"></form></div></div>
 <script>
@@ -1312,7 +1319,7 @@ async function bootGarasjeGym(){
  catch(err){document.body.classList.add('auth-locked');showAuthMessage(err.message||'Kunne ikkje starte innlogginga.',true);}
 }
 
-// GARASJEGYM 1.3.6 – Spotify PKCE and wall dashboard
+// GARASJEGYM 1.3.8 – Spotify PKCE and SDK loader
 const GG_SPOTIFY_CLIENT_ID='82eb64ec22074235a0a29ffc937d9053';
 const GG_SPOTIFY_REDIRECT='https://tibraxtimb.github.io/Garasjegym/';
 const GG_SPOTIFY_SCOPES=['streaming','user-read-email','user-read-private','user-read-playback-state','user-modify-playback-state','playlist-read-private','playlist-read-collaborative'];
@@ -1320,17 +1327,86 @@ let ggSpotifyToken=null,ggSpotifyPlayer=null,ggSpotifyDevice=null,ggSpotifyState
 const ggB64=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 async function ggSha256(s){return await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));}
 async function spotifyLogin(){try{const verifier=ggB64(crypto.getRandomValues(new Uint8Array(64)));const challenge=ggB64(await ggSha256(verifier));const state=ggB64(crypto.getRandomValues(new Uint8Array(24)));sessionStorage.setItem('gg_spotify_verifier',verifier);sessionStorage.setItem('gg_spotify_state',state);const q=new URLSearchParams({client_id:GG_SPOTIFY_CLIENT_ID,response_type:'code',redirect_uri:GG_SPOTIFY_REDIRECT,code_challenge_method:'S256',code_challenge:challenge,state,scope:GG_SPOTIFY_SCOPES.join(' ')});location.href='https://accounts.spotify.com/authorize?'+q.toString();}catch(e){alert('Kunne ikkje starte Spotify-innlogging: '+e.message)}}
+let ggSpotifySDKPromise=null;
+function ggEnsureSpotifySDK(){
+ if(window.Spotify)return Promise.resolve();
+ if(ggSpotifySDKPromise)return ggSpotifySDKPromise;
+ ggSpotifySDKPromise=new Promise((resolve,reject)=>{
+  let settled=false;
+  const finish=(err)=>{if(settled)return;settled=true;err?reject(err):resolve();};
+  window.onSpotifyWebPlaybackSDKReady=()=>finish();
+  let script=document.querySelector('script[data-gg-spotify-sdk]');
+  if(!script){script=document.createElement('script');script.src='https://sdk.scdn.co/spotify-player.js';script.async=true;script.dataset.ggSpotifySdk='1';script.onerror=()=>finish(new Error('Kunne ikkje lasta Spotify-spelaren. Kontroller nettverk eller innhaldsblokkering.'));document.head.appendChild(script);}
+  else script.addEventListener('error',()=>finish(new Error('Kunne ikkje lasta Spotify-spelaren.')),{once:true});
+  setTimeout(()=>finish(new Error('Spotify-spelaren svara ikkje. Last sida på nytt og prøv igjen.')),15000);
+ });
+ return ggSpotifySDKPromise;
+}
 async function ggSpotifyInit(){const params=new URLSearchParams(location.search);const code=params.get('code');if(code){const state=params.get('state'),saved=sessionStorage.getItem('gg_spotify_state'),verifier=sessionStorage.getItem('gg_spotify_verifier');if(!state||state!==saved||!verifier){$('#spotifyStatus').textContent='Spotify-innlogginga kunne ikkje stadfestast. Prøv igjen.';return;}try{const body=new URLSearchParams({client_id:GG_SPOTIFY_CLIENT_ID,grant_type:'authorization_code',code,redirect_uri:GG_SPOTIFY_REDIRECT,code_verifier:verifier});const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});const data=await r.json();if(!r.ok)throw new Error(data.error_description||data.error||'Token-feil');ggSpotifyToken=data.access_token;sessionStorage.setItem('gg_spotify_token',ggSpotifyToken);sessionStorage.setItem('gg_spotify_expiry',String(Date.now()+data.expires_in*1000));sessionStorage.removeItem('gg_spotify_verifier');sessionStorage.removeItem('gg_spotify_state');history.replaceState({},document.title,GG_SPOTIFY_REDIRECT); }catch(e){$('#spotifyStatus').textContent='Spotify-feil: '+e.message;return;}}
 if(!ggSpotifyToken){const exp=Number(sessionStorage.getItem('gg_spotify_expiry')||0);if(exp>Date.now()+60000)ggSpotifyToken=sessionStorage.getItem('gg_spotify_token');}
-if(!ggSpotifyToken){$('#spotifyStatus').textContent='Kopla til Spotify Premium for å styre musikken.';return;}$('#spotifyStatus').textContent='Spotify er tilkopla. Start avspeling på nettbrettet.';$('#spotifyLogin').textContent='Spotify tilkopla';$('#spotifyLogin').disabled=true;ggLoadPlaylists();if(window.Spotify){ggCreatePlayer();}}
+if(!ggSpotifyToken){$('#spotifyStatus').textContent='Kopla til Spotify Premium for å styre musikken.';return;}
+$('#spotifyStatus').textContent='Spotify er tilkopla. Lastar spelaren …';$('#spotifyLogin').textContent='Spotify tilkopla';$('#spotifyLogin').disabled=true;ggLoadPlaylists();
+try{await ggEnsureSpotifySDK();ggCreatePlayer();}catch(e){$('#spotifyStatus').textContent=e.message;$('#spotifyLogin').disabled=false;$('#spotifyLogin').textContent='Prøv Spotify på nytt';}
+}
 window.onSpotifyWebPlaybackSDKReady=()=>{if(ggSpotifyToken)ggCreatePlayer();};
-function ggCreatePlayer(){if(ggSpotifyPlayer||!ggSpotifyToken)return;ggSpotifyPlayer=new Spotify.Player({name:'GarasjeGym – veggpanel',getOAuthToken:cb=>cb(ggSpotifyToken),volume:.65});ggSpotifyPlayer.addListener('ready',({device_id})=>{ggSpotifyDevice=device_id;$('#spotifyStatus').textContent='Klar – vel GarasjeGym som avspelingseining.';});ggSpotifyPlayer.addListener('not_ready',()=>{$('#spotifyStatus').textContent='Spotify-spelaren er mellombels fråkopla.'});ggSpotifyPlayer.addListener('player_state_changed',st=>{ggSpotifyState=st;if(!st)return;const t=st.track_window?.current_track;if(!t)return;$('#spotifyTrack').textContent=t.name;$('#spotifyArtist').textContent=t.artists.map(a=>a.name).join(', ');const cover=t.album.images?.[0]?.url;if(cover){$('#spotifyCover').src=cover;$('#spotifyCover').hidden=false;}$('#spotifyPlay').textContent=st.paused?'▶':'Ⅱ';['spotifyPrev','spotifyPlay','spotifyNext'].forEach(id=>$('#'+id).disabled=false);const duration=st.duration||0,pos=st.position||0;const fmt=n=>Math.floor(n/60000)+':'+String(Math.floor(n/1000)%60).padStart(2,'0');$('#spotifyElapsed').textContent=fmt(pos);$('#spotifyDuration').textContent=fmt(duration);$('#spotifyProgressFill').style.width=(duration?Math.min(100,pos/duration*100):0)+'%';});ggSpotifyPlayer.connect().then(ok=>{if(!ok)$('#spotifyStatus').textContent='Fann ikkje kontakt med Spotify-spelaren.';});}
+function ggCreatePlayer(){if(ggSpotifyPlayer||!ggSpotifyToken)return;ggSpotifyPlayer=new Spotify.Player({name:'GarasjeGym – veggpanel',getOAuthToken:cb=>cb(ggSpotifyToken),volume:.65});ggSpotifyPlayer.addListener('ready',({device_id})=>{ggSpotifyDevice=device_id;$('#spotifyStatus').textContent='Klar – vel GarasjeGym som avspelingseining.';});ggSpotifyPlayer.addListener('not_ready',()=>{$('#spotifyStatus').textContent='Spotify-spelaren er mellombels fråkopla.'});ggSpotifyPlayer.addListener('player_state_changed',st=>{ggSpotifyState=st;if(!st)return;const t=st.track_window?.current_track;if(!t)return;$('#spotifyTrack').textContent=t.name;$('#spotifyArtist').textContent=t.artists.map(a=>a.name).join(', ');const cover=t.album.images?.[0]?.url;if(cover){$('#spotifyCover').src=cover;$('#spotifyCover').hidden=false;}$('#spotifyPlay').textContent=st.paused?'▶':'Ⅱ';['spotifyPrev','spotifyPlay','spotifyNext'].forEach(id=>$('#'+id).disabled=false);const duration=st.duration||0,pos=st.position||0;const fmt=n=>Math.floor(n/60000)+':'+String(Math.floor(n/1000)%60).padStart(2,'0');$('#spotifyElapsed').textContent=fmt(pos);$('#spotifyDuration').textContent=fmt(duration);$('#spotifyProgressFill').style.width=(duration?Math.min(100,pos/duration*100):0)+'%';});ggSpotifyPlayer.connect().then(ok=>{if(!ok)$('#spotifyStatus').textContent='Fann ikkje kontakt med Spotify-spelaren. Prøv å lasta sida på nytt.';}).catch(e=>{$('#spotifyStatus').textContent='Spotify kunne ikkje starta: '+(e.message||'ukjend feil');});}
 async function ggSpotifyApi(path,method='GET',body=null){if(!ggSpotifyToken)throw new Error('Logg inn på Spotify først.');const r=await fetch('https://api.spotify.com/v1/'+path,{method,headers:{Authorization:'Bearer '+ggSpotifyToken,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});if(r.status===401){sessionStorage.removeItem('gg_spotify_token');ggSpotifyToken=null;throw new Error('Spotify-økta er utløpt. Kopla til på nytt.');}if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.error?.message||'Spotify API-feil '+r.status);}return r.status===204?null:r.json();}
 async function ggLoadPlaylists(){try{const d=await ggSpotifyApi('me/playlists?limit=50');$('#spotifyPlaylist').innerHTML='<option value="">Vel speleliste</option>'+d.items.map(x=>`<option value="${x.uri}">${x.name.replace(/[<>&]/g,'')}</option>`).join('');}catch(e){$('#spotifyStatus').textContent=e.message;}}
 async function spotifyTogglePlay(){try{if(!ggSpotifyPlayer){ggCreatePlayer();await ggSpotifyPlayer?.activateElement?.();}await ggSpotifyPlayer?.togglePlay();}catch(e){$('#spotifyStatus').textContent=e.message;}}
 async function spotifyNext(){try{if(!ggSpotifyPlayer)throw new Error('Kopla til Spotify og vent til spelaren er klar.');await ggSpotifyPlayer.nextTrack()}catch(e){$('#spotifyStatus').textContent=e.message}}
 async function spotifyPrevious(){try{if(!ggSpotifyPlayer)throw new Error('Kopla til Spotify og vent til spelaren er klar.');await ggSpotifyPlayer.previousTrack()}catch(e){$('#spotifyStatus').textContent=e.message}}
 async function spotifySetVolume(v){try{await ggSpotifyPlayer?.setVolume(Number(v)/100)}catch(e){}}
+
+const ggSpotifyPresets={
+ rock:'hard melodic rock',
+ balkan:'turbo folk balkan brass',
+ dance:'90s dance trance eurodance',
+ relax:'chillout ambient relax acoustic'
+};
+async function ggSpotifySearchTracks(query){
+ const data=await ggSpotifyApi('search?type=track&limit=50&q='+encodeURIComponent(query));
+ return data.tracks?.items||[];
+}
+function ggSpotifyTrackLabel(t){return `${t.name} — ${t.artists.map(a=>a.name).join(', ')}`;}
+async function spotifySearchArtist(){
+ try{
+  const q=$('#spotifyArtistSearch').value.trim();if(!q)throw new Error('Skriv inn eit artistnamn først.');
+  if(!ggSpotifyToken)throw new Error('Kopla til Spotify først.');
+  $('#spotifyStatus').textContent='Søkjer etter '+q+' …';
+  const tracks=await ggSpotifySearchTracks('artist:'+q);
+  const sel=$('#spotifySearchTracks');sel.innerHTML='';
+  tracks.forEach(t=>{const o=document.createElement('option');o.value=t.uri;o.textContent=ggSpotifyTrackLabel(t);sel.appendChild(o);});
+  $('#spotifySearchResults').hidden=!tracks.length;
+  if(!tracks.length)throw new Error('Fann ingen låtar. Prøv eit anna artistnamn.');
+  $('#spotifyStatus').textContent=`Fann ${tracks.length} låtar. Vel ein og trykk Spel vald låt.`;
+ }catch(e){$('#spotifyStatus').textContent=e.message||'Søket feila.';}
+}
+async function ggSpotifyStartUris(uris,statusText){
+ if(!ggSpotifyToken)throw new Error('Kopla til Spotify først.');
+ if(!ggSpotifyDevice)throw new Error('Spotify-spelaren er ikkje klar enno. Vent til han er tilkopla.');
+ if(!uris?.length)throw new Error('Fann ingen spelbare låtar.');
+ await ggSpotifyPlayer?.activateElement?.();
+ await ggSpotifyApi('me/player/play?device_id='+encodeURIComponent(ggSpotifyDevice),'PUT',{uris});
+ $('#spotifyStatus').textContent=statusText;
+}
+async function spotifyPlaySearchTrack(){
+ try{const uri=$('#spotifySearchTracks').value;if(!uri)throw new Error('Vel ein låt frå søket først.');await ggSpotifyStartUris([uri],'Startar vald låt …');}
+ catch(e){$('#spotifyStatus').textContent=e.message;}
+}
+async function spotifyRandomPreset(key){
+ try{
+  if(!ggSpotifyToken)throw new Error('Kopla til Spotify først.');
+  if(!ggSpotifyDevice)throw new Error('Vent til Spotify-spelaren er klar.');
+  const queries={rock:'hard melodic rock',balkan:'turbo folk balkan brass',dance:'90s dance trance eurodance',relax:'chillout ambient relax acoustic'};
+  $('#spotifyStatus').textContent='Finn tilfeldig musikk …';
+  const tracks=await ggSpotifySearchTracks(queries[key]||'rock');
+  if(!tracks.length)throw new Error('Spotify fann ingen låtar for dette snøggvalet.');
+  const playable=tracks.filter(t=>t.is_playable!==false);
+  const pool=playable.length?playable:tracks;
+  const chosen=pool[Math.floor(Math.random()*pool.length)];
+  await ggSpotifyStartUris([chosen.uri],`Tilfeldig val: ${ggSpotifyTrackLabel(chosen)}`);
+ }catch(e){$('#spotifyStatus').textContent=e.message||'Kunne ikkje starta tilfeldig musikk.';}
+}
 async function spotifyPlayPlaylist(){try{const uri=$('#spotifyPlaylist').value;if(!uri)throw new Error('Vel ei speleliste først.');if(!ggSpotifyDevice)throw new Error('Vent til Spotify-spelaren er klar.');await ggSpotifyApi('me/player/play?device_id='+encodeURIComponent(ggSpotifyDevice),'PUT',{context_uri:uri});$('#spotifyStatus').textContent='Speleliste starta.';}catch(e){$('#spotifyStatus').textContent=e.message;}}
 function spotifyDisconnect(){ggSpotifyPlayer?.disconnect();ggSpotifyPlayer=null;ggSpotifyDevice=null;ggSpotifyToken=null;sessionStorage.removeItem('gg_spotify_token');sessionStorage.removeItem('gg_spotify_expiry');$('#spotifyStatus').textContent='Spotify fråkopla.';$('#spotifyLogin').disabled=false;$('#spotifyLogin').textContent='Kopla til Spotify';$('#spotifyTrack').textContent='Ingen låt vald';$('#spotifyArtist').textContent='Logg inn for å starte';$('#spotifyCover').hidden=true;$('#spotifyTrack').textContent='Ingen låt vald';$('#spotifyArtist').textContent='Logg inn og start ei speleliste';$('#spotifyProgressFill').style.width='0%';$('#spotifyElapsed').textContent='0:00';$('#spotifyDuration').textContent='0:00';['spotifyPrev','spotifyPlay','spotifyNext'].forEach(id=>$('#'+id).disabled=true);}
 function toggleWallMode(){document.body.classList.toggle('wall-mode');const on=document.body.classList.contains('wall-mode');$('#wallModeToggle').textContent=on?'✕ Avslutt veggmodus':'🖥 Veggmodus';localStorage.setItem('gg_wall_mode',on?'1':'0');}
