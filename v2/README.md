@@ -33,7 +33,8 @@ Bruk aldri service_role eller ein secret key i nettlesarkode. Ikkje legg .env.lo
 - Garasjeprat med innlegg, kommentarar, bilete, reaksjonar og sletting av eigne innlegg/kommentarar.
 - Utfordringar med påmelding, mål og individuell framgang.
 - Kaffibar med produkt, handlekorg, bestilling og ordrestatus for staff.
-- Admin med medlemsroller/aktiv status, WOD-studio og øvingsbibliotek.
+- Admin med medlemsroller/aktiv status, WOD-studio og øvingsbibliotek med redigering.
+- Kaffibaradministrasjon med oppretting, redigering og publisering/skjuling av menyprodukt.
 
 ## Database-migreringar
 SQL-filene ligg i supabase/migrations/. Dei er staged i GitHub og er ikkje automatisk køyrde mot Supabase. Supabase sin aktive migreringslogg må kontrollerast før kvar utrulling. Prosjektbudsjettet er 0 kroner: ikkje opprett betalte databasegreiner, oppgrader abonnement eller utløyse andre kostnader. Ingen migrering skal køyrast mot produksjon utan trygg gjennomgang og uttrykkeleg godkjenning.
