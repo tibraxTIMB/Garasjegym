@@ -34,3 +34,13 @@ begin
 end;
 $$;
 revoke execute on function public.check_class_booking_capacity() from public, anon, authenticated;
+
+
+-- Attach the guard to the booking table. Defining the function alone does not
+-- enforce capacity; this trigger serializes concurrent inserts/updates by class.
+drop trigger if exists class_bookings_capacity_guard on public.class_bookings;
+create trigger class_bookings_capacity_guard
+before insert or update of class_id, status
+on public.class_bookings
+for each row
+execute function public.check_class_booking_capacity();
