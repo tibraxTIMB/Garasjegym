@@ -101,50 +101,48 @@ export default function Training() {
   async function saveWorkout(event) {
     event.preventDefault()
     if (!title.trim()) { setError('Gi økta eit namn før du lagrar.'); return }
-    if (!items.length) { setError('Legg til minst éi øving før du lagrar.'); return }
-    setSaving(true); setError(''); setNotice('')
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) { setError('Innlogginga er utgått. Logg inn på nytt.'); setSaving(false); return }
-    const { data: log, error: logError } = await supabase.from('workout_logs').insert({
-      member_id: user.id, source_wod_id: source?.id || null, title: title.trim(),
-      workout_date: new Date().toLocaleDateString('en-CA'), format,
-      rounds: Math.max(1, Number(scoreRounds) || 1),
-      score_rounds: scoreRounds === '' ? null : Number(scoreRounds),
-      score_reps: scoreReps === '' ? null : Number(scoreReps),
-      note: [note.trim(), scoreTime ? 'Tid: ' + scoreTime : ''].filter(Boolean).join('\n'),
-    }).select('id').single()
-    if (logError) { setError(logError.message); setSaving(false); return }
-
-    let failed = null
-    for (let i = 0; i < items.length && !failed; i++) {
-      const item = items[i]
-      const { data: row, error: exError } = await supabase.from('workout_exercises').insert({
-        workout_log_id: log.id, exercise_id: item.exercise_id || null,
-        exercise_name: item.exercise_name.trim(), sort_order: i,
-      }).select('id').single()
-      if (exError) { failed = exError; break }
-      const sets = item.sets.map((s, index) => ({
-        workout_exercise_id: row.id, set_number: index + 1,
-        reps: s.reps === '' ? null : Number(s.reps),
-        load_kg: s.load_kg === '' ? null : Number(s.load_kg),
-        time_text: s.time_text.trim() || null,
-        time_seconds: s.time_seconds === '' ? null : Number(s.time_seconds),
-      })).filter(s => s.reps !== null || s.load_kg !== null || s.time_text !== null || s.time_seconds !== null)
-      if (sets.length) {
-        const { error: setError } = await supabase.from('workout_sets').insert(sets)
-        if (setError) failed = setError
-      }
+    if (!items.length || items.some(item => !item.exercise_name.trim())) {
+      setError('Alle øvingane må ha namn.'); return
     }
-    if (failed) {
-      // Best-effort cleanup so a failed multi-step save does not leave a partial workout.
-      await supabase.from('workout_logs').delete().eq('id', log.id).eq('member_id', user.id)
-      setError('Økta vart ikkje lagra fullstendig. Systemet prøvde å rydde opp att. Detalj: ' + failed.message)
-    } else {
-      setNotice('Økta og øvingane er lagra i treningsloggen.')
+    setSaving(true); setError(''); setNotice('')
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) throw new Error('Innlogginga er utgått. Logg inn på nytt.')
+      const payload = {
+        title: title.trim(),
+        source_wod_id: source?.id || null,
+        workout_date: new Date().toLocaleDateString('en-CA'),
+        format,
+        rounds: Math.max(1, Number(scoreRounds) || 1),
+        score_rounds: scoreRounds === '' ? null : Number(scoreRounds),
+        score_reps: scoreReps === '' ? null : Number(scoreReps),
+        note: [note.trim(), scoreTime ? 'Tid: ' + scoreTime : ''].filter(Boolean).join('\\n'),
+        exercises: items.map(item => ({
+          exercise_id: item.exercise_id || null,
+          exercise_name: item.exercise_name.trim(),
+          sets: item.sets.map(s => ({
+            reps: s.reps === '' ? null : Number(s.reps),
+            load_kg: s.load_kg === '' ? null : Number(s.load_kg),
+            time_text: s.time_text.trim() || null,
+            time_seconds: s.time_seconds === '' ? null : Number(s.time_seconds),
+          })),
+        })),
+      }
+      const { data, error: saveError } = await supabase.rpc('save_workout_atomic', { p_workout: payload })
+      if (saveError) {
+        if (saveError.message?.includes('save_workout_atomic')) {
+          throw new Error('Den atomiske lagringsfunksjonen er ikkje installert i databasen enno. Økta er ikkje lagra. Sjå migreringa i v2/supabase/migrations.')
+        }
+        throw saveError
+      }
+      setNotice('Økta og alle setta er lagra samla i treningsloggen.')
       setMode('home')
       await loadAll()
+    } catch (err) {
+      setError(err.message || 'Kunne ikkje lagra økta.')
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   if (loading) return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar treningsdata …</div>
