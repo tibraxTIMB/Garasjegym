@@ -35,12 +35,14 @@ Arbeid:
 - Definera felles datamodell for økt, deltakar, øving, sett, resultat og historikk.
 - Øvingsbibliotek med søk, kategoriar, utstyr, instruksjonar og favorittar.
 - Støtta fri økt, planlagd WOD, gruppetime og PT-økt gjennom same motor.
-- Timer: EMOM, AMRAP, For Time, Tabata, intervall, stoppeklokke og nedteljing.
+- Timer: EMOM, AMRAP, For Time, Tabata, intervall, Death By, stoppeklokke, nedteljing og tilpassa modus. Arbeid/kvile/rundar, lydsignal, manuelle mellomtider og fullskjerm.
+- WOD-studio skal lagra timeroppsett saman med WOD. Når medlem startar WOD, skal format, varigheit og timerinnstillingar følgja med automatisk.
 - Registrera repetisjonar, belastning, tid, rundar og kommentarar.
 - Lagra øktresultat og sett på ein robust måte med transaksjon/atomisk lagring der det trengst.
 - Treningslogg, personlege rekordar, progresjon og historikk.
 - Garasjekadett, poeng/stjerner og andre progresjonsmekanismar frå eksisterande app.
-- Fullskjerms Training Mode og tydeleg status under aktiv økt.
+- Fullskjerms Training Mode med stor klokke, aktiv øving, WOD-oversikt, lydsignal og manuelle mellomtider.
+- WOD-timerinnstillingar blir lagra i `wods.timer_settings` gjennom migrering 006. Kode er under utvikling; migreringa er ikkje køyrd i Supabase.
 
 **Godkjenningskrav:** Same økt kan startast frå dei ulike inngangane, registrerast individuelt, lagrast korrekt og visast att i personleg historikk. Timer og resultat skal fungera på mobil.
 
