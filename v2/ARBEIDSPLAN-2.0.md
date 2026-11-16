@@ -120,12 +120,18 @@ Arbeidsfelt 5 er eit gjennomgåande kvalitetssikringsspor, ikkje berre siste fas
 - Treningsklienten kallar allereie `save_workout_atomic` for å lagra økt, øvingar og sett i éin transaksjon. RPC-en er definert i staged migrering 001 og utvida i migrering 008, men er ikkje installert i den aktive Supabase-databasen.
 - GitHub-greina inneheld ti staged migreringar (`202611160001`–`202611160010`). Den aktive Supabase-migreringsloggen viser berre tre tryggleiksmigreringar; funksjonsmigreringane er ikkje registrerte der.
 - `wods.timer_settings` er definert i staged migrering 006, men kolonnen finst ikkje i aktivt skjema per kontrollen.
-- Gruppetimar, PT, sosial feed, kaffibar og grunnleggjande admin har første klientversjon. Synkronisert live gruppetrening, PT-meldingar/notat, kaffibar-geofence, varsling og full admin står att. Garasjeprat har no bilete, sletting av eigne innlegg/kommentarar og reaksjonar via staged migrering 009.
+- Gruppetimar har klientflyt for oppretting, booking, avmelding og felles live-økt; synkronisert klokke krev migrering 005–008. Kapasitetsvern og vern mot doble påmeldingar er lagt inn i migrering 004.
+- PT-studio har klientflyt for booking, førespurnader, program, meldingar og private notat; full ende-til-ende- og tilgangstest står att.
+- Garasjeprat har innlegg, kommentarar, komprimerte bilete, sletting av eigne innlegg/kommentarar og reaksjonar via migrering 009.
+- Utfordringar har eigen modul med oppretting, påmelding og individuell framgang via migrering 010.
+- Kaffibaren har produkt, handlekorg, bestilling, ordrestatus og synleg/skjult produktstyring; funksjonen krev migrering 002.
+- Admin har medlemsroller/aktiv status, WOD-studio og øvingsbibliotek. Full drift for booking, PT, kaffibar, varsling og innstillingar står att.
 - Supabase-utviklingsgrein blir ikkje oppretta: prosjektbudsjettet er 0 kroner, og ingen kostnadsutløysande handlingar er godkjende. Vidare arbeid skal skje i GitHub-greina og gjennom gratis, ikkje-destruktive kontrollar. Migreringane skal ikkje køyrast mot produksjonsdatabasen før gratis og trygg teststrategi er avklart.
 - 16.11.2026: Bookingmodulen har fått fallback når `wods.timer_settings` manglar, slik at WOD-lista framleis kan hentast før timer-migreringa. Appen viser no rett miljøvariabel (`VITE_SUPABASE_PUBLISHABLE_KEY`) i konfigurasjonsmeldinga. Endringane er avgrensa til 2.0-greina.
 - 16.11.2026: Booking har fallback mellom live-session-migrering 005 og timerutviding 007. Kapasitetsmigrering 004 har no både faktisk trigger og unik indeks som hindrar doble aktive påmeldingar. Desse SQL-endringane er staged, ikkje køyrde i produksjon.
 - 16.11.2026: Garasjeprat støttar komprimerte bilete, sletting av eigne innlegg/kommentarar, reaksjonar og automatisk oppfrisking. Reaksjonar krev migrering 009.
 - 16.11.2026: Utfordringsmodulen er lagd til med oppretting for staff, medlems-påmelding, mål og individuell framgang. Krev staged migrering 010.
+- 16.11.2026: Kaffibar har fått produktstyring for å skjula og publisera menyvarer. Utfordringsmodulen er kopla inn i hovudnavigasjonen.
 - 16.11.2026: Booking, PT, kaffibar, fellesskap, treningslogg og admin oppdaterer data jamleg for betre synkronisering mellom einingar. Bookingklokka hentar serverstatus kvart femte sekund, medan visingsklokka går lokalt kvart sekund.
 - Supabase Security Advisor viser éin ERROR for view `public.pt_session_capacity` (SECURITY DEFINER) og åtvaringar for SECURITY DEFINER-RPC-ar som framleis kan kallast av `anon`/`authenticated`, mellom anna `book_pt_session`, `is_admin` og `is_admin_or_manager`. Dette må gjennomgåast før migreringspakken blir installert eller appen produksjonssett.
 - Supabase Performance Advisor viser òg manglande indeksar på fleire framandnøklar og RLS-policyar som kan optimaliserast. Dette er oppfølgingspunkt, ikkje grunnlag for å endra produksjonsskjema utan kontroll.
