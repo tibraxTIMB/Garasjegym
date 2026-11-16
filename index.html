@@ -1,10 +1,10 @@
 <!doctype html>
-<!-- GarasjeGym 1.5.0 – Feuer Gazelle -->
+<!-- GarasjeGym 1.5.0 – Freitext statt Zwang -->
 <html lang="nn">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#11151b">
-<title>GARASJEGYM 1.5.0 · FEUER GAZELLE</title>
+<title>GARASJEGYM 1.4.3 · PT ist offen</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -327,6 +327,49 @@ body.wall-mode .timer-clock{font-size:clamp(72px,9vw,120px)}
 @media(max-width:760px){.training-console-grid{grid-template-columns:1fr}.timer-settings{grid-template-columns:repeat(2,minmax(0,1fr))}.training-console{padding:11px}}
 @media(max-width:900px) and (orientation:landscape){.training-console-grid{grid-template-columns:1fr 1fr}.timer-clock{font-size:clamp(52px,8vw,78px)}}
 
+
+/* Baum Kadett – WOD dashboard */
+.timer-workout{display:flex;flex-direction:column;min-height:0}.timer-wod-image{margin:8px 0;border-radius:12px;overflow:hidden;max-height:180px;background:#080e15}.timer-wod-image img{display:block;width:100%;height:170px;object-fit:cover}.timer-score-entry{margin-top:auto;padding:10px;background:#0c141d;border:1px solid #354657;border-radius:12px}.timer-score-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:8px 0}.timer-score-entry label{display:block;font-size:11px;color:var(--muted);margin:6px 0}.timer-score-entry input{width:100%;min-width:0}
+body.wod-dashboard-mode{overflow:hidden}body.wod-dashboard-mode #trainingConsole{position:fixed;inset:0;z-index:99999;margin:0;border:0;border-radius:0;padding:10px;background:#0b1118;overflow:hidden;display:flex;flex-direction:column}body.wod-dashboard-mode header,body.wod-dashboard-mode nav,body.wod-dashboard-mode #quickBar,body.wod-dashboard-mode .role-banner,body.wod-dashboard-mode .achievement-ticker{display:none!important}body.wod-dashboard-mode #trainingConsole .training-console-grid{flex:1;min-height:0;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:10px;margin-top:8px}body.wod-dashboard-mode #trainingConsole .training-console-grid>div{min-height:0;overflow:hidden;display:flex;flex-direction:column}body.wod-dashboard-mode #trainingConsole .timer-face{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center}body.wod-dashboard-mode #trainingConsole .timer-clock{font-size:clamp(64px,12vh,150px)}body.wod-dashboard-mode #trainingConsole .timer-shortcuts{flex:0 0 auto;margin:6px 0}body.wod-dashboard-mode #trainingConsole .timer-settings{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:5px}body.wod-dashboard-mode #trainingConsole .timer-settings label{font-size:10px}body.wod-dashboard-mode #trainingConsole .timer-settings input,body.wod-dashboard-mode #trainingConsole .timer-settings select{padding:7px;font-size:12px}body.wod-dashboard-mode #trainingConsole .timer-workout-text{flex:1;min-height:0;overflow:auto;font-size:clamp(15px,2.1vh,22px)}body.wod-dashboard-mode #trainingConsole .timer-wod-image img{height:clamp(80px,14vh,160px)}body.wod-dashboard-mode #trainingConsole .timer-controls button{min-height:54px;font-size:18px}@media(max-width:800px){body.wod-dashboard-mode #trainingConsole .timer-settings{grid-template-columns:repeat(2,minmax(0,1fr))}.timer-score-grid{grid-template-columns:1fr 1fr}}
+
+/* Spotify quick presets: icon + name only */
+.spotify-presets button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:12px 14px}
+.spotify-presets button small{display:none!important}
+
+
+/* Baum Kadett – ryddigare hovudnavigasjon */
+#nav{display:flex;align-items:stretch;justify-content:space-between;gap:12px;flex-wrap:wrap;overflow:visible;padding:12px 0 16px;top:73px}
+#nav .nav-main{display:flex;align-items:center;gap:8px;flex:1 1 760px;flex-wrap:wrap;min-width:0}
+#nav .nav-group{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+#nav .nav-start{padding-right:9px;border-right:1px solid var(--line)}
+#nav .nav-training{padding:0 9px;border-right:1px solid var(--line)}
+#nav .nav-progress{padding-left:1px}
+#nav button{white-space:nowrap;min-height:46px}
+#nav .nav-account{display:flex;align-items:center;gap:8px;margin-left:auto;padding-left:12px;border-left:1px solid var(--line)}
+#nav .nav-profile-button{display:flex;align-items:center;gap:10px;text-align:left;background:linear-gradient(135deg,#28394b,#1d2936);border:1px solid #60758b;border-radius:14px;padding:7px 14px;min-height:48px}
+#nav .nav-profile-icon{font-size:23px;line-height:1}
+#nav .nav-profile-button strong{display:block;font-size:14px}
+#nav .nav-profile-button small{display:block;font-size:10px;color:#c2d0dd;font-weight:500}
+#nav .nav-profile-button.active{background:var(--accent);color:#17191d;border-color:var(--accent)}
+#nav .nav-profile-button.active small{color:#38332b}
+#nav .nav-admin-group{display:flex;gap:6px}
+.date-time-picker-row{display:flex;align-items:stretch;gap:7px;width:100%;margin:4px 0 10px}
+.date-time-picker-row>input{flex:1;min-width:0}
+.date-time-picker-trigger{flex:0 0 auto;min-width:46px;padding:8px 12px!important;border-radius:10px!important;font-size:18px!important}
+input[type="date"],input[type="datetime-local"]{min-height:46px;cursor:pointer;color-scheme:dark}
+@media(max-width:900px){
+ #nav{top:0;gap:8px}
+ #nav .nav-main{flex-basis:100%}
+ #nav .nav-start,#nav .nav-training{border-right:0;padding-right:0}
+ #nav .nav-account{margin-left:0;border-left:0;padding-left:0;width:100%;justify-content:flex-start}
+}
+@media(max-width:560px){
+ #nav .nav-main{gap:6px}
+ #nav .nav-group{gap:6px}
+ #nav button{min-height:42px;padding:9px 11px;font-size:13px}
+ #nav .nav-profile-button{min-height:44px}
+}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -378,8 +421,32 @@ body.wall-mode .timer-clock{font-size:clamp(72px,9vw,120px)}
 
 <div id="wallClock" class="wall-clock"><span id="wallDate"></span><strong id="wallTime">--:--</strong></div>
 <div class="role-banner"><div><strong id="welcomeRole">Velkomen til GARASJEGYM</strong><br><small id="roleDescription">Vel brukarprofil for å sjå rett grensesnitt.</small></div><span id="roleHint" class="pill">DEMO-PROFIL</span><p id="loginMotivation" class="hint" hidden style="flex-basis:100%;margin:5px 0 0;color:#ffd18b;font-weight:750"></p></div>
-<nav id="nav">
-<button class="active" data-tab="home">Oversikt</button><button class="secondary" data-tab="wods">WOD</button><button class="secondary" data-tab="classes">Gruppetimar</button><button class="secondary" data-tab="pt">PT-studio</button><button class="secondary" data-tab="social">Garasjeprat</button><button class="secondary" data-tab="calendar">Kalender</button><button class="secondary" data-tab="library">Øvingar</button><button class="secondary" data-tab="prs">PR</button><button class="secondary" data-tab="profile">Mi side</button><button class="secondary" data-tab="log">Treningslogg</button><button class="secondary" data-tab="coach">WOD-verkstad</button><button class="secondary" data-tab="manager" data-roles="manager">Manager</button><button class="secondary" data-tab="admin" data-roles="admin">Admin</button>
+<nav id="nav" aria-label="Hovudmeny">
+ <div class="nav-main">
+  <div class="nav-group nav-start">
+   <button class="active" data-tab="home">Oversikt</button>
+   <button class="secondary" data-tab="wods">WOD</button>
+   <button class="secondary" data-tab="coach">WOD-verkstad</button>
+  </div>
+  <div class="nav-group nav-training">
+   <button class="secondary" data-tab="classes">Gruppetimar</button>
+   <button class="secondary" data-tab="pt">PT-studio</button>
+   <button class="secondary" data-tab="social">Garasjeprat</button>
+   <button class="secondary" data-tab="calendar">Kalender</button>
+  </div>
+  <div class="nav-group nav-progress">
+   <button class="secondary" data-tab="library">Øvingar</button>
+   <button class="secondary" data-tab="prs">PR</button>
+   <button class="secondary" data-tab="log">Treningslogg</button>
+  </div>
+ </div>
+ <div class="nav-account">
+  <button class="secondary nav-profile-button" data-tab="profile"><span class="nav-profile-icon">👤</span><span><strong>Mi side</strong><small>Profil og innstillingar</small></span></button>
+  <div class="nav-admin-group">
+   <button class="secondary" data-tab="manager" data-roles="manager">Manager</button>
+   <button class="secondary" data-tab="admin" data-roles="admin">Admin</button>
+  </div>
+ </div>
 </nav>
 <section id="home" class="tab">
 <div class="row"><div><h1>Velkomen til garasjen.</h1></div><div class="row"><button data-roles="admin,manager" onclick="showTab('wods')">+ Ny WOD</button></div></div>
@@ -389,12 +456,12 @@ body.wall-mode .timer-clock{font-size:clamp(72px,9vw,120px)}
  <div class="spotify-controls"><button class="secondary" id="spotifyPrev" type="button" onclick="spotifyPrevious()" aria-label="Førre låt" disabled>⏮</button><button type="button" id="spotifyPlay" onclick="spotifyTogglePlay()" aria-label="Spel eller pause" disabled>▶</button><button class="secondary" id="spotifyNext" type="button" onclick="spotifyNext()" aria-label="Neste låt" disabled>⏭</button><label class="spotify-volume">Volum <input id="spotifyVolume" type="range" min="0" max="100" value="65" oninput="spotifySetVolume(this.value)"></label></div>
  <div class="spotify-search"><input id="spotifyArtistSearch" type="search" placeholder="Søk etter artist …" aria-label="Søk etter artist" onkeydown="if(event.key==='Enter')spotifySearchArtist()"><button type="button" onclick="spotifySearchArtist()">Søk artist</button></div>
  <div class="spotify-results" id="spotifySearchResults" hidden><select id="spotifySearchTracks" aria-label="Vel låt frå søk"><option value="">Vel låt</option></select><button type="button" class="secondary" onclick="spotifyPlaySearchTrack()">Spel vald låt</button></div>
- <div class="spotify-presets" aria-label="Snøggval musikk"><button type="button" class="secondary" onclick="spotifyRandomPreset('rock')"><strong>🎸 Hard melodisk rock</strong><small>Til tunge løft</small></button><button type="button" class="secondary" onclick="spotifyRandomPreset('balkan')"><strong>🪗 Turbo Balkan</strong><small>Full gass</small></button><button type="button" class="secondary" onclick="spotifyRandomPreset('dance')"><strong>🪩 90s dance & trance</strong><small>Høg puls</small></button><button type="button" class="secondary" onclick="spotifyRandomPreset('relax')"><strong>🌙 Relax</strong><small>Ro ned</small></button></div>
+ <div class="spotify-presets" aria-label="Snøggval musikk"><button type="button" class="secondary" onclick="spotifyRandomPreset('rock')"><strong>🎸 Tung rock</strong></button><button type="button" class="secondary" onclick="spotifyRandomPreset('balkan')"><strong>🪗 Turbo Balkan</strong></button><button type="button" class="secondary" onclick="spotifyRandomPreset('indie90')"><strong>🎧 90s indie</strong></button><button type="button" class="secondary" onclick="spotifyRandomPreset('dance')"><strong>🪩 90s dance & trance</strong></button><button type="button" class="secondary" onclick="spotifyRandomPreset('relax')"><strong>🌙 Relax</strong></button></div>
  <div class="spotify-bottom"><select id="spotifyPlaylist" aria-label="Vel speleliste"><option value="">Vel speleliste</option></select><button type="button" class="secondary" onclick="spotifyPlayPlaylist()">Spel speleliste</button><button type="button" class="secondary" id="spotifyDisconnect" onclick="spotifyDisconnect()">Kopla frå</button></div>
 
 </div>
 <section class="training-console" id="trainingConsole">
- <div class="training-console-head"><div><div class="subheading">GARASJEGYM LIVE</div><h2 style="margin:3px 0">Treningsmodus</h2><div class="hint">Timer, musikk og økt samla på éin skjerm</div></div><button type="button" class="secondary" onclick="toggleTrainingFullscreen()">⛶ Fullskjerm</button></div>
+ <div class="training-console-head"><div><div class="subheading">GARASJEGYM LIVE</div><h2 style="margin:3px 0">WOD-dashbord</h2><div class="hint">Timer, musikk og økt samla på éi flate</div></div><button type="button" class="secondary" onclick="toggleTrainingFullscreen()">⛶ WOD-dashbord</button></div>
  <div class="training-console-grid">
   <div>
    <div class="timer-face">
@@ -406,20 +473,24 @@ body.wall-mode .timer-clock{font-size:clamp(72px,9vw,120px)}
    </div>
    <div class="timer-shortcuts"><button type="button" class="secondary" onclick="timerPreset('emom')">EMOM</button><button type="button" class="secondary" onclick="timerPreset('amrap')">AMRAP</button><button type="button" class="secondary" onclick="timerPreset('fortime')">For Time</button><button type="button" class="secondary" onclick="timerPreset('tabata')">Tabata</button><button type="button" class="secondary" onclick="timerPreset('interval')">Intervall</button></div>
    <div class="timer-settings">
-    <label>Format<select id="timerMode" onchange="timerConfigure()"><option value="emom">EMOM</option><option value="amrap">AMRAP</option><option value="fortime">For Time</option><option value="tabata">Tabata</option><option value="interval">Intervall</option><option value="custom">Custom</option></select></label>
-    <label>Arbeid / total (sek)<input id="timerWork" type="number" min="1" max="7200" value="60"></label>
-    <label>Pause (sek)<input id="timerRest" type="number" min="0" max="3600" value="0"></label>
-    <label>Rundar<input id="timerRounds" type="number" min="1" max="999" value="10"></label>
-    <label>Startforsinking (sek)<input id="timerDelay" type="number" min="0" max="30" value="3"></label>
+    <label>Klokketype<select id="timerMode" onchange="timerConfigure()"><option value="emom">EMOM</option><option value="amrap">AMRAP</option><option value="fortime">For Time</option><option value="tabata">Tabata</option><option value="interval">Intervall</option><option value="custom">Custom</option><option value="stopwatch">Stoppeklokke</option><option value="countdown">Vanleg nedtelling</option></select></label>
+    <label>Minutt<input id="timerWorkMin" type="number" min="0" max="999" value="1" oninput="timerInputsChanged()"></label>
+    <label>Sekund<input id="timerWorkSec" type="number" min="0" max="59" value="0" oninput="timerInputsChanged()"></label>
+    <label>Pause minutt<input id="timerRestMin" type="number" min="0" max="999" value="0" oninput="timerInputsChanged()"></label>
+    <label>Pause sekund<input id="timerRestSec" type="number" min="0" max="59" value="0" oninput="timerInputsChanged()"></label>
+    <label>Rundar<input id="timerRounds" type="number" min="1" max="999" value="10" oninput="timerInputsChanged()"></label>
+    <label>Startforsinking (sek)<input id="timerDelay" type="number" min="0" max="30" value="3" oninput="timerInputsChanged()"></label>
     <label style="grid-column:span 2;display:flex;align-items:center;gap:10px"><input id="timerSound" type="checkbox" checked style="width:22px;height:22px"> Lydsignal på</label>
    </div>
    <div class="hint" id="timerHelp" style="margin-top:8px">EMOM: eitt arbeidsintervall per minutt.</div><div class="hint" style="margin-top:6px">Lyd går via nettbrettet sin valde medieutgang. Kople til Bluetooth-høgtalaren og vel han som lydutgang på Android.</div>
   </div>
   <div class="timer-workout">
    <div class="row" style="justify-content:space-between"><strong>DAGENS ØKT</strong><span class="pill gold">WOD</span></div>
-   <select id="timerWodSelect" onchange="timerShowWod()"><option value="">Vel ei økt frå biblioteket</option></select>
+   <div class="row"><button type="button" class="secondary" onclick="timerWodStep(-1)">‹ Førre</button><select id="timerWodSelect" onchange="timerShowWod()" style="flex:1"><option value="">Vel ei økt frå biblioteket</option></select><button type="button" class="secondary" onclick="timerWodStep(1)">Neste ›</button></div>
+   <div id="timerWodImage" class="timer-wod-image" hidden></div>
    <div id="timerWodText" class="timer-workout-text">Vel ein WOD for å visa øvingane her. Timeren kan brukast uavhengig av WOD-biblioteket.</div>
-   <div class="hint" style="margin-top:12px">Musikkstyringa ligg i Spotify-panelet rett ovanfor. Bruk fullskjerm for treningsrommet.</div>
+   <div class="timer-score-entry"><strong>Registrer resultat</strong><div class="timer-score-grid"><label>Rundar<input id="timerScoreRounds" type="number" min="0" step="1" value="0"></label><label>Ekstra reps<input id="timerScoreReps" type="number" min="0" step="1" value="0"></label><label>Tid (mm:ss)<input id="timerScoreTime" type="text" placeholder="t.d. 12:34"></label></div><label>Notat<input id="timerScoreNote" type="text" placeholder="Valfritt notat"></label><button type="button" onclick="timerSaveWodResult()">Lagre resultat</button></div>
+   <div class="hint" style="margin-top:8px">Spotify-panelet ligg ovanfor. Bruk WOD-dashbord i fullskjerm for treningsrommet.</div>
   </div>
  </div>
 </section>
@@ -1288,37 +1359,61 @@ $('#adminExerciseForm').addEventListener('submit',e=>{
 
 // Achievement catalogue and evaluator. Members see earned badges only; the full catalogue is admin-only.
 const ACHIEVEMENTS=[
- {id:'first_workout',icon:'🏆',title:'Første steg',en:'First Rep',de:'Los, du Hantel-Held!',desc:'Logg di første treningsøkt.',test:c=>c.logs.length>=1},
- {id:'workouts_2',icon:'🌱',title:'Getting Started',en:'Two Down, More to Go',de:'Zwei Mal, du Kraftknödel!',desc:'Logg 2 treningsøkter.',test:c=>c.logs.length>=2},
- {id:'workouts_3',icon:'🔥',title:'No rullar det',en:'Finding Your Rhythm',de:'Taktgefühl mit Bizeps',desc:'Logg 3 treningsøkter.',test:c=>c.logs.length>=3},
- {id:'workouts_5',icon:'🏅',title:'Auf geht’s!',en:'Getting Serious',de:'Fünfmal scharf wie Sau',desc:'Logg 5 treningsøkter.',test:c=>c.logs.length>=5},
- {id:'workouts_10',icon:'🏆',title:'Ti på tavla',en:'Double Digits',de:'Zehnmal stark',desc:'Logg 10 treningsøkter.',test:c=>c.logs.length>=10},
- {id:'workouts_25',icon:'🥇',title:'Hardhaus',en:'Iron Regular',de:'Eisen Stammgast',desc:'Logg 25 treningsøkter.',test:c=>c.logs.length>=25},
- {id:'workouts_50',icon:'🏆',title:'Legende i garasjen',en:'Garage Legend',de:'Legende der Halle',desc:'Logg 50 treningsøkter.',test:c=>c.logs.length>=50},
- {id:'workouts_100',icon:'👑',title:'Hundre og hæla i taket',en:'Century Club',de:'Hundert-Prozent-Härte',desc:'Logg 100 treningsøkter.',test:c=>c.logs.length>=100},
- {id:'variety_5',icon:'🎖️',title:'Allroundmaskin',en:'Jack of All Trades',de:'Vielseitigkeits-Viech',desc:'Gjennomfør 5 ulike øvingar.',test:c=>c.exerciseNames.length>=5},
- {id:'variety_15',icon:'🏆',title:'Øvingssamlaren',en:'Move Collector',de:'Bewegungs-Sammler',desc:'Gjennomfør 15 ulike øvingar.',test:c=>c.exerciseNames.length>=15},
- {id:'first_pr',icon:'🥇',title:'På rekordjakt',en:'Record Breaker',de:'Rekordjäger',desc:'Registrer ein personleg rekord.',test:c=>c.prs.length>0},
- {id:'first_exercise',icon:'✨',title:'Ny rørsle',en:'First Encounter',de:'Premiere',desc:'Første gong du loggar ei øving – eit eige lite merke blir vist for kvar ny øving.',dynamic:true},
- {id:'coffee_first',icon:'☕',title:'Første kaffikopp',en:'First Coffee',de:'Der erste Kaffee',desc:'Legg inn di første kaffibestilling.',test:c=>c.coffees.length>=1},
- {id:'coffee_5',icon:'☕',title:'Fast inventar',en:'Regular Customer',de:'Kaffee-Krawall',desc:'Bestill kaffi 5 gonger.',test:c=>c.coffees.length>=5},
- {id:'coffee_10',icon:'🏆',title:'Caffè ten',en:'Espresso Yourself',de:'Espresso-Meister',desc:'Bestill kaffi 10 gonger.',test:c=>c.coffees.length>=10},
- {id:'coffee_25',icon:'☕',title:'Mamma mia, 25!',en:'The Daily Grind',de:'Kaffee-Kommando',desc:'Bestill kaffi 25 gonger.',test:c=>c.coffees.length>=25},
- {id:'coffee_50',icon:'👑',title:'Il Capo del Caffè',en:'Coffee Boss',de:'Kaffee-Kaiser',desc:'Bestill kaffi 50 gonger.',test:c=>c.coffees.length>=50},
- {id:'cappuccino_5',icon:'🥛',title:'Cappuccino-kadett',en:'Foam Fighter',de:'Schaum-Soldat',desc:'Bestill 5 cappuccino / cappuccino-liknande drikkar.',test:c=>c.coffees.filter(o=>/cappuccino/i.test(o.drink||'')).length>=5},
- {id:'espresso_5',icon:'☕',title:'Doppio trouble',en:'Double Trouble',de:'Doppelter Ärger',desc:'Bestill 5 espresso eller doppio.',test:c=>c.coffees.filter(o=>/espresso|doppio/i.test(o.drink||'')).length>=5},
- {id:'coffee_variety_4',icon:'🎩',title:'Kaffi-sommelier',en:'Coffee Connoisseur',de:'Kaffee-Kenner',desc:'Prøv 4 ulike kaffidrikkar.',test:c=>new Set(c.coffees.map(o=>String(o.drink||'').toLowerCase())).size>=4},
- {id:'coffee_decaf_3',icon:'😴',title:'Decaf, ma non troppo',en:'Low-Octane Legend',de:'Entkoffeinierter Draufgänger',desc:'Bestill 3 koffeinfrie kaffiar.',test:c=>c.coffees.filter(o=>/decaf|koffeinfri/i.test([o.bean,o.drink,o.note].join(' '))).length>=3}
+ {id:'first_workout',icon:'🏆',title:'Erste Hantel – Rekrut',en:'First Rep',de:'Los, du Hantel-Held!',desc:'Logg di første treningsøkt.',test:c=>c.logs.length>=1},
+ {id:'workouts_2',icon:'🌱',title:'Doppel-Døgn Soldatkopf',en:'Two Down, More to Go',de:'Zwei Mal, du Kraftknödel!',desc:'Logg 2 treningsøkter.',test:c=>c.logs.length>=2},
+ {id:'workouts_3',icon:'🔥',title:'Gazelle im Anmarsch',en:'Finding Your Rhythm',de:'Taktgefühl mit Bizeps',desc:'Logg 3 treningsøkter.',test:c=>c.logs.length>=3},
+ {id:'workouts_5',icon:'🏅',title:'Shnell Wasser Kaizer',en:'Getting Serious',de:'Fünfmal scharf wie Sau',desc:'Logg 5 treningsøkter.',test:c=>c.logs.length>=5},
+ {id:'workouts_10',icon:'🏆',title:'Zehnmal Zerstörer',en:'Double Digits',de:'Zehnmal stark',desc:'Logg 10 treningsøkter.',test:c=>c.logs.length>=10},
+ {id:'workouts_25',icon:'🥇',title:'Stahlarsch-Kommandant',en:'Iron Regular',de:'Eisen Stammgast',desc:'Logg 25 treningsøkter.',test:c=>c.logs.length>=25},
+ {id:'workouts_50',icon:'🏆',title:'Garasje-General der Gewichte',en:'Garage Legend',de:'Legende der Halle',desc:'Logg 50 treningsøkter.',test:c=>c.logs.length>=50},
+ {id:'workouts_100',icon:'👑',title:'Hundertprosent Muskelmaschine',en:'Century Club',de:'Hundert-Prozent-Härte',desc:'Logg 100 treningsøkter.',test:c=>c.logs.length>=100},
+ {id:'variety_5',icon:'🎖️',title:'Universal-Panzer',en:'Jack of All Trades',de:'Vielseitigkeits-Viech',desc:'Gjennomfør 5 ulike øvingar.',test:c=>c.exerciseNames.length>=5},
+ {id:'variety_15',icon:'🏆',title:'Bewegungs-Berserker',en:'Move Collector',de:'Bewegungs-Sammler',desc:'Gjennomfør 15 ulike øvingar.',test:c=>c.exerciseNames.length>=15},
+ {id:'first_pr',icon:'🥇',title:'Rekord-Raketenmann',en:'Record Breaker',de:'Rekordjäger',desc:'Registrer ein personleg rekord.',test:c=>c.prs.length>0},
+ {id:'first_exercise',icon:'✨',title:'Erste Bewegung, kleiner Muskelwolf',en:'First Encounter',de:'Premiere',desc:'Første gong du loggar ei øving – eit eige lite merke blir vist for kvar ny øving.',dynamic:true},
+ {id:'coffee_first',icon:'☕',title:'Kaffee-Kadett',en:'First Coffee',de:'Der erste Kaffee',desc:'Legg inn di første kaffibestilling.',test:c=>c.coffees.length>=1},
+ {id:'coffee_5',icon:'☕',title:'Kaffee-Kaiser auf Dienstreise',en:'Regular Customer',de:'Kaffee-Krawall',desc:'Bestill kaffi 5 gonger.',test:c=>c.coffees.length>=5},
+ {id:'coffee_10',icon:'🏆',title:'Espresso-Einsatzleiter',en:'Espresso Yourself',de:'Espresso-Meister',desc:'Bestill kaffi 10 gonger.',test:c=>c.coffees.length>=10},
+ {id:'coffee_25',icon:'☕',title:'Doppio-Dampfmaschine',en:'The Daily Grind',de:'Kaffee-Kommando',desc:'Bestill kaffi 25 gonger.',test:c=>c.coffees.length>=25},
+ {id:'coffee_50',icon:'👑',title:'Koffein-König der Garage',en:'Coffee Boss',de:'Kaffee-Kaiser',desc:'Bestill kaffi 50 gonger.',test:c=>c.coffees.length>=50},
+ {id:'cappuccino_5',icon:'🥛',title:'Schaum-Soldatkopf',en:'Foam Fighter',de:'Schaum-Soldat',desc:'Bestill 5 cappuccino / cappuccino-liknande drikkar.',test:c=>c.coffees.filter(o=>/cappuccino/i.test(o.drink||'')).length>=5},
+ {id:'espresso_5',icon:'☕',title:'Doppio-Doppelagent',en:'Double Trouble',de:'Doppelter Ärger',desc:'Bestill 5 espresso eller doppio.',test:c=>c.coffees.filter(o=>/espresso|doppio/i.test(o.drink||'')).length>=5},
+ {id:'coffee_variety_4',icon:'🎩',title:'Bohnen-Berserker',en:'Coffee Connoisseur',de:'Kaffee-Kenner',desc:'Prøv 4 ulike kaffidrikkar.',test:c=>new Set(c.coffees.map(o=>String(o.drink||'').toLowerCase())).size>=4},
+ {id:'coffee_decaf_3',icon:'😴',title:'Shnell Wasser Kaizer',en:'Low-Octane Legend',de:'Entkoffeinierter Draufgänger',desc:'Bestill 3 koffeinfrie kaffiar.',test:c=>c.coffees.filter(o=>/decaf|koffeinfri/i.test([o.bean,o.drink,o.note].join(' '))).length>=3}
 ];
 function achievementSlug(name){return String(name||'').toLocaleLowerCase('nn-NO').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');}
 function exerciseAchievementCatalogue(){
  const names=[...new Set([...exerciseLibrary().map(x=>String(x[0]||'').trim()),...(db.logs||[]).flatMap(l=>(l.exercises||[]).map(e=>String(e.name||'').trim()))].filter(Boolean))];
  const milestones=[
-  {n:1,icon:'✨',title:name=>'Første møte: '+name,en:name=>'First Date: '+name,de:name=>'Erstes Mal, volle Kanne: '+name,desc:name=>'Logg øvinga éin gong. Første steg tel!'},
-  {n:3,icon:'🥉',title:name=>'Auf geht’s, '+name+'!',en:name=>'Getting the Hang of '+name,de:name=>'Drei Runden, du Gerät! '+name,desc:name=>'Gjennomfør '+name+' i 3 ulike treningsøkter.'},
-  {n:5,icon:'🏅',title:name=>name+'-gjengangar',en:name=>name+' Regular',de:name=>name+' – Muskel-Maus Deluxe',desc:name=>'Gjennomfør '+name+' i 5 ulike treningsøkter.'}
+  {n:1,icon:'🪖',title:name=>'Rekrut: '+name,en:name=>'First Rep: '+name,de:name=>'Erste Runde, du Gerät: '+name,desc:name=>'Logg øvinga éin gong.'},
+  {n:3,icon:'🥉',title:name=>/(squat|kne|front squat|back squat)/i.test(name)?'Kneebeugen-Meister · Bronze':/(bench|press|push.?up|chest|bryst)/i.test(name)?'Silikontatten-Kadett · Bronze':'Gazelle-Maschine · Bronze',en:name=>'Bronze level: '+name,de:name=>'Bronze-Kraftpaket: '+name,desc:name=>'Gjennomfør '+name+' i 3 ulike treningsøkter.'},
+  {n:5,icon:'🥈',title:name=>/(squat|kne|front squat|back squat)/i.test(name)?'Kneebeugen-Meister · Sølv':/(bench|press|push.?up|chest|bryst)/i.test(name)?'Silikontatten-Offizier · Sølv':'Gazelle-Maschine · Sølv',en:name=>'Silver level: '+name,de:name=>'Silber-Kraftpaket: '+name,desc:name=>'Gjennomfør '+name+' i 5 ulike treningsøkter.'}
  ];
  return names.flatMap(name=>milestones.map(m=>({id:'exercise_'+achievementSlug(name)+'_'+m.n,icon:m.icon,title:m.title(name),en:m.en(name),de:m.de(name),desc:m.desc(name),exercise:name,milestone:m.n,dynamic:true})));
+}
+
+function extendedAchievementCatalogue(){
+ const base=[...ACHIEVEMENTS,...exerciseAchievementCatalogue()];
+ const bonus=[];
+ const add=(group,limit,metric,icon,word)=>{for(let n=1;n<=limit;n++){bonus.push({
+  id:'bonus_'+group+'_'+n,icon,title:word(n),en:word(n),de:word(n),
+  desc:'Nivå '+n+' · '+group+'.',test:c=>metric(c)>=n
+ });}};
+ add('workout_campaign',100,c=>c.logs.length,'🏋️',n=>['Soldatkopf','Gazelle im Galopp','Stahlbein-Staffel','WOD-Wüterich','Panzer-Protokoll'][n%5]+' · '+n);
+ add('personal_records',75,c=>c.prs.length,'🏆',n=>['Rekord-Rakete','Hantel-Hauptmann','Muskel-Marschall','PR-Panzer'][n%4]+' · '+n);
+ add('movement_variety',50,c=>c.exerciseNames.length,'🦵',n=>['Bewegungs-Berserker','Kneebeugen-Kaiser','Turnhallen-Tornado','Gazelle-Maschine'][n%4]+' · '+n);
+ add('coffee_missions',24,c=>c.coffees.length,'☕',n=>['Kaffee-Kaiser','Espresso-Einsatzleiter','Bohnen-Bataillon'][n%3]+' · '+n);
+ // Keep the catalogue at exactly 750 entries, even when the user's custom exercise list changes.
+ const combined=[...base,...bonus];
+ if(combined.length>750)return combined.slice(0,750);
+ let n=1;
+ while(combined.length<750){
+  const metric=n%3===0?c=>c.logs.length:n%3===1?c=>c.exerciseNames.length:c=>c.prs.length;
+  const threshold=Math.ceil(n/3);
+  combined.push({id:'bonus_reserve_'+n,icon:['🪖','🐐','🏅'][n%3],title:['Soldatkopf Reserve','Gazelle-Machin','Shnell Wasser Kaizer'][n%3]+' · '+String(threshold).padStart(2,'0'),en:'Garage Elite · '+n,de:'Garage Elite · '+n,desc:'Bonusmerke nivå '+threshold+'.',test:c=>metric(c)>=threshold});
+  n++;
+ }
+ return combined;
 }
 function achievementContext(person){
  const logs=(db.logs||[]).filter(l=>l.person===person);
@@ -1333,17 +1428,19 @@ function achievementContext(person){
 }
 function earnedAchievements(person){
  const c=achievementContext(person),earned=[];
- ACHIEVEMENTS.filter(a=>!a.dynamic&&a.test(c)).forEach(a=>earned.push(a));
- exerciseAchievementCatalogue().forEach(a=>{if((c.exerciseCounts[a.exercise]||0)>=a.milestone)earned.push(a);});
+ extendedAchievementCatalogue().filter(a=>{
+   if(a.exercise)return (c.exerciseCounts[a.exercise]||0)>=a.milestone;
+   return typeof a.test==='function'&&a.test(c);
+ }).forEach(a=>earned.push(a));
  return {earned,context:c};
 }
 function renderAchievements(person){const {earned}=earnedAchievements(person);const el=$('#myAchievements');if(!el)return;$('#achievementCount').textContent=earned.length+' oppnådde';el.innerHTML=earned.length?earned.map(a=>`<span class="achievement-badge" title="${esc(a.desc)} · ${esc(a.en)} · ${esc(a.de)}"><span class="achievement-icon">${a.icon}</span><span>${esc(a.title)}</span></span>`).join(''):'<div class="empty">Pokalar og kaffikoppar dukkar opp her etter kvart – berre oppnådde merke blir viste.</div>';}
 function renderAchievementAdmin(){
  const el=$('#achievementAdmin');if(!el)return;const people=db.members||[];
  const memberRows=people.map(m=>{const earned=earnedAchievements(m.name).earned;return `<div class="item" style="padding:9px;margin:6px 0"><div class="row"><strong>${esc(m.name)}</strong><span class="pill gold">${earned.length} merke</span></div><div class="achievement-strip">${earned.length?earned.map(a=>`<span class="achievement-badge" title="${esc(a.desc)}">${a.icon} ${esc(a.title)}</span>`).join(''):'<span class="hint">Ingen oppnådde merke enno</span>'}</div></div>`;}).join('');
- const catalogue=[...ACHIEVEMENTS,...exerciseAchievementCatalogue()];
+ const catalogue=extendedAchievementCatalogue();
  const catalogRows=catalogue.map(a=>{const holders=people.filter(m=>earnedAchievements(m.name).earned.some(x=>x.id===a.id)).map(m=>m.name);return `<div class="row" style="padding:7px 2px;border-bottom:1px solid var(--line);gap:8px"><span style="min-width:0;flex:1"><strong>${a.icon} ${esc(a.title)}</strong><span class="hint"> · ${esc(a.desc)}</span></span><span class="pill">${holders.length}</span><span class="hint" style="max-width:180px">${esc(holders.join(', ')||'Ingen enno')}</span></div>`;}).join('');
- el.innerHTML=`<div class="hint">${people.length} medlemer · ${catalogue.length} moglege merke. Oversikta viser kven som har fått kva.</div><h4>Medlemsoversikt</h4>${memberRows||'<div class="empty">Ingen medlemer.</div>'}<details style="margin-top:12px"><summary><strong>Heile merkekatalogen</strong> <span class="hint">${catalogue.length} merke · tal viser kor mange som har fått merket</span></summary><div style="margin-top:8px">${catalogRows}</div></details>`;
+ el.innerHTML=`<div class="hint">${people.length} medlemer · ${catalogue.length} moglege merke. Oversikta viser kven som har fått kva. Katalogen er delt i progresjonsnivå.</div><h4>Medlemsoversikt</h4>${memberRows||'<div class="empty">Ingen medlemer.</div>'}<details style="margin-top:12px"><summary><strong>Heile merkekatalogen</strong> <span class="hint">${catalogue.length} merke · tal viser kor mange som har fått merket</span></summary><div style="margin-top:8px">${catalogRows}</div></details>`;
 }
 
 function renderProfile(){
@@ -1508,41 +1605,29 @@ async function bootGarasjeGym(){
 }
 
 
-// GarasjeGym 1.5.0 – CrossFit-inspirert, konfigurerbar timer
-const ggTimer={running:false,remaining:60,round:0,phase:'work',endAt:0,interval:null,elapsed:0,config:{mode:'emom',work:60,rest:0,rounds:10,delay:3}};
-function timerFmt(s){s=Math.max(0,Math.ceil(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
-function timerConfigure(){
- const mode=$('#timerMode').value,work=Math.max(1,Number($('#timerWork').value)||60),rest=Math.max(0,Number($('#timerRest').value)||0),rounds=Math.max(1,Number($('#timerRounds').value)||1),delay=Math.max(0,Number($('#timerDelay').value)||0);
- ggTimer.config={mode,work,rest,rounds,delay};timerReset();
- const help={emom:'EMOM: arbeidsintervall per minutt. Vel arbeidstid og tal rundar.',amrap:'AMRAP: tel ned total tid. Registrer rundar manuelt med + Runde.',fortime:'For Time: tel opp frå start. Registrer rundar manuelt. Stoppar ved målrundar dersom dei er sette.',tabata:'Tabata: vekslar mellom arbeid og pause.',interval:'Intervall: vekslar mellom arbeid og pause med valt tal rundar.',custom:'Custom: konfigurer arbeid, pause og rundar fritt.'};
- $('#timerHelp').textContent=help[mode];$('#timerModeLabel').textContent=mode.toUpperCase()+' · KLAR';
-}
-function timerPreset(mode){$('#timerMode').value=mode;const p={emom:[60,0,10],amrap:[720,0,1],fortime:[0,0,1],tabata:[20,10,8],interval:[40,20,10]};const v=p[mode]||[60,0,10];$('#timerWork').value=v[0]||60;$('#timerRest').value=v[1];$('#timerRounds').value=v[2];timerConfigure();}
-let ggTimerAudio=null;
-async function timerAudioUnlock(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;if(!ggTimerAudio)ggTimerAudio=new C();if(ggTimerAudio.state==='suspended')await ggTimerAudio.resume();return ggTimerAudio;}catch(e){console.warn('Timerlyd kunne ikkje startast',e);return null;}}
-function timerBeep(kind='transition'){
- const enabled=$('#timerSound')?.checked!==false;if(!enabled)return;
- timerAudioUnlock().then(c=>{if(!c)return;const now=c.currentTime;
-  // Mjuk, kort dobbelklokke – tydeleg utan skarp alarmtone.
-  const patterns={countdown:[{f:660,t:0,d:.11,a:.055}],start:[{f:660,t:0,d:.13,a:.065},{f:880,t:.15,d:.18,a:.07}],transition:[{f:740,t:0,d:.16,a:.065},{f:988,t:.18,d:.19,a:.07}],finish:[{f:523,t:0,d:.2,a:.07},{f:659,t:.22,d:.2,a:.07},{f:784,t:.44,d:.32,a:.07}]};
-  (patterns[kind]||patterns.transition).forEach(n=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(n.f,now+n.t);g.gain.setValueAtTime(.0001,now+n.t);g.gain.exponentialRampToValueAtTime(n.a,now+n.t+.018);g.gain.exponentialRampToValueAtTime(.0001,now+n.t+n.d);o.connect(g);g.connect(c.destination);o.start(now+n.t);o.stop(now+n.t+n.d+.02);});
- });
-}
-function timerPaint(){const t=ggTimer;$('#timerClock').textContent=timerFmt(t.remaining);$('#timerRound').textContent='RUNDE '+t.round+' / '+(t.config.mode==='amrap'||t.config.mode==='fortime'?'∞':t.config.rounds);$('#timerState').textContent=t.running?(t.phase==='rest'?'PAUSE':t.phase==='delay'?'GJER DEG KLAR':'ARBEID'):t.phase==='done'?'FERDIG':'KLAR';$('#timerStart').textContent=t.running?'Ⅱ Pause':'▶ Start';$('#timerModeLabel').textContent=t.config.mode.toUpperCase()+' · '+(t.running?'AKTIV':'KLAR');}
-function timerStop(){ggTimer.running=false;if(ggTimer.interval)clearInterval(ggTimer.interval);ggTimer.interval=null;timerPaint();}
-function timerReset(){timerStop();const t=ggTimer;t.round=0;t.phase='work';t.elapsed=0;t.remaining=t.config.mode==='fortime'?0:t.config.mode==='amrap'?t.config.work:t.config.mode==='emom'?t.config.work:t.config.delay||t.config.work;timerPaint();}
-function timerStartPause(){const t=ggTimer;if(t.running){timerStop();return;}timerAudioUnlock();if(t.phase==='done')timerReset();if(t.config.mode==='fortime'&&!t.round){t.round=1;t.startAt=Date.now();t.phase='work';}if(!t.round&&t.config.delay>0&&t.config.mode!=='fortime'&&t.config.mode!=='amrap'){t.phase='delay';t.remaining=t.config.delay;}else if(t.phase==='work'&&!t.round)t.round=1;t.running=true;t.endAt=Date.now()+t.remaining*1000;if(t.config.mode==='fortime')t.startAt=Date.now();timerBeep('start');timerPaint();t.lastCountdown=null;t.interval=setInterval(timerTick,100);}
-function timerTick(){const t=ggTimer;if(!t.running)return;const now=Date.now();if(t.config.mode==='fortime'){t.elapsed=Math.floor((now-(t.startAt||now))/1000);t.remaining=t.elapsed;$('#timerClock').textContent=timerFmt(t.elapsed);return;}t.remaining=Math.max(0,Math.ceil((t.endAt-now)/1000));if(t.remaining<=3&&t.remaining>0&&t.remaining!==t.lastCountdown&&t.phase!=='rest'){t.lastCountdown=t.remaining;timerBeep('countdown');}timerPaint();if(t.remaining<=0)timerAdvance();}
-function timerAdvance(){const t=ggTimer;timerBeep('transition');if(t.phase==='delay'){t.phase='work';t.round=1;t.remaining=t.config.mode==='amrap'?t.config.work:t.config.work;t.endAt=Date.now()+t.remaining*1000;timerPaint();return;}
- if(t.config.mode==='amrap'){t.phase='done';timerStop();timerBeep('finish');return;}
- if(t.config.mode==='emom'){t.round++;if(t.round>t.config.rounds){t.phase='done';timerStop();return;}t.remaining=60-(t.config.work%60||0);if(t.remaining===60)t.remaining=60;t.endAt=Date.now()+t.remaining*1000;t.phase='work';timerPaint();return;}
- if(t.phase==='work'&&t.config.rest>0){t.phase='rest';t.remaining=t.config.rest;t.endAt=Date.now()+t.remaining*1000;timerPaint();return;}
- if(t.phase==='rest'||t.phase==='work'){if(t.round>=t.config.rounds){t.phase='done';timerStop();timerBeep('finish');return;}t.round++;t.phase='work';t.remaining=t.config.work;t.endAt=Date.now()+t.remaining*1000;timerPaint();}
-}
-function timerLap(){ggTimer.round++;timerPaint();timerBeep('transition')}
-function timerShowWod(){const id=$('#timerWodSelect').value,w=db.wods.find(w=>String(w.id)===String(id));$('#timerWodText').textContent=w?(w.name+'\\n\\n'+(w.movements||'')+(w.notes?'\\n\\n'+w.notes:'')):'Vel ein WOD for å visa øvingane her.';}
-function timerRefreshWods(){const s=$('#timerWodSelect');if(!s)return;const old=s.value;s.innerHTML='<option value="">Vel ei økt frå biblioteket</option>'+db.wods.map(w=>`<option value="${String(w.id).replace(/"/g,'&quot;')}">${esc(w.name)}</option>`).join('');if(old)s.value=old;timerShowWod();}
-async function toggleTrainingFullscreen(){const el=$('#trainingConsole');try{if(!document.fullscreenElement)await el.requestFullscreen();else await document.exitFullscreen()}catch(e){alert('Fullskjerm er ikkje tilgjengeleg i denne nettlesaren.');}}
+// GarasjeGym 1.5.0 – Baum Kadett: presis CrossFit-timer
+const ggTimer={running:false,remaining:60,round:0,phase:'work',endAt:0,interval:null,elapsed:0,startAt:0,lastCountdown:null,config:{mode:'emom',work:60,rest:0,rounds:10,delay:3}};
+function timerFmt(s){s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function timerFmtHundredths(ms){return timerFmt(Math.floor(Math.max(0,ms)/1000))+'.'+String(Math.floor((ms%1000)/10)).padStart(2,'0')}
+function timerInputSeconds(prefix){return Math.max(0,Number($('#'+prefix+'Min')?.value||0))*60+Math.max(0,Math.min(59,Number($('#'+prefix+'Sec')?.value||0)))}
+function timerInputsChanged(){if(!ggTimer.running)timerConfigure()}
+function timerConfigure(){const mode=$('#timerMode').value,work=timerInputSeconds('timerWork'),rest=timerInputSeconds('timerRest'),rounds=Math.max(1,Number($('#timerRounds').value)||1),delay=Math.max(0,Number($('#timerDelay').value)||0);ggTimer.config={mode,work:Math.max(1,work),rest,rounds,delay};timerReset();const help={emom:'EMOM: arbeidsintervall per minutt.',amrap:'AMRAP: tel ned total tid. Bruk + Runde for rundeteljing.',fortime:'For Time: tel opp frå start. Bruk + Runde.',tabata:'Tabata: vekslar mellom arbeid og pause.',interval:'Intervall: vekslar mellom arbeid og pause.',custom:'Custom: konfigurer arbeid, pause og rundar fritt.',stopwatch:'Stoppeklokke: tel opp med hundredelar.',countdown:'Vanleg nedtelling frå valt minutt og sekund.'};$('#timerHelp').textContent=help[mode];$('#timerModeLabel').textContent=mode.toUpperCase()+' · KLAR'}
+function timerPreset(mode){$('#timerMode').value=mode;const p={emom:[1,0,0,10],amrap:[12,0,0,1],fortime:[0,0,0,1],tabata:[0,20,0,8],interval:[0,40,0,10],stopwatch:[0,0,0,1],countdown:[1,0,0,1]},v=p[mode]||[1,0,0,10];$('#timerWorkMin').value=v[0];$('#timerWorkSec').value=v[1];$('#timerRestMin').value=v[2];$('#timerRestSec').value=mode==='tabata'?10:mode==='interval'?20:0;$('#timerRounds').value=v[3];timerConfigure()}
+let ggTimerAudio=null;async function timerAudioUnlock(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;if(!ggTimerAudio)ggTimerAudio=new C();if(ggTimerAudio.state==='suspended')await ggTimerAudio.resume();return ggTimerAudio}catch(e){return null}}
+function timerBeep(kind='transition'){if(!$('#timerSound')?.checked)return;timerAudioUnlock().then(c=>{if(!c)return;const now=c.currentTime,patterns={countdown:[{f:660,t:0,d:.12,a:.05}],start:[{f:660,t:0,d:.13,a:.06},{f:880,t:.16,d:.18,a:.06}],transition:[{f:740,t:0,d:.15,a:.06},{f:988,t:.18,d:.18,a:.06}],finish:[{f:523,t:0,d:.2,a:.06},{f:659,t:.22,d:.2,a:.06},{f:784,t:.44,d:.3,a:.06}]};(patterns[kind]||patterns.transition).forEach(n=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(n.f,now+n.t);g.gain.setValueAtTime(.0001,now+n.t);g.gain.exponentialRampToValueAtTime(n.a,now+n.t+.02);g.gain.exponentialRampToValueAtTime(.0001,now+n.t+n.d);o.connect(g);g.connect(c.destination);o.start(now+n.t);o.stop(now+n.t+n.d+.02)})})}
+function timerPaint(){const t=ggTimer,up=['fortime','stopwatch'].includes(t.config.mode);$('#timerClock').textContent=up?timerFmtHundredths(t.elapsed*1000+(t.subMs||0)):timerFmt(t.remaining);$('#timerRound').textContent='RUNDE '+t.round+' / '+(['amrap','fortime','stopwatch','countdown'].includes(t.config.mode)?'∞':t.config.rounds);$('#timerState').textContent=t.running?(t.phase==='rest'?'PAUSE':t.phase==='delay'?'GJER DEG KLAR':'ARBEID'):t.phase==='done'?'FERDIG':'KLAR';$('#timerStart').textContent=t.running?'Ⅱ Pause':'▶ Start';$('#timerModeLabel').textContent=t.config.mode.toUpperCase()+' · '+(t.running?'AKTIV':'KLAR')}
+function timerStop(){const t=ggTimer;if(t.interval)clearInterval(t.interval);t.interval=null;t.running=false;timerPaint()}
+function timerReset(){timerStop();const t=ggTimer;t.round=0;t.phase='work';t.elapsed=0;t.subMs=0;t.startAt=0;t.lastCountdown=null;t.remaining=t.config.work||60;timerPaint()}
+function timerStartPause(){const t=ggTimer;if(t.running){timerStop();return}timerAudioUnlock();if(t.phase==='done')timerReset();const now=performance.now();if(['stopwatch','fortime'].includes(t.config.mode)){if(!t.startAt)t.startAt=now-(t.elapsed*1000+(t.subMs||0));t.round=Math.max(1,t.round);t.phase='work'}else{if(!t.round&&t.config.delay>0&&!['amrap','countdown'].includes(t.config.mode)){t.phase='delay';t.remaining=t.config.delay}else if(!t.round)t.round=1;t.endAt=now+t.remaining*1000}t.running=true;timerBeep('start');timerPaint();t.interval=setInterval(timerTick,20)}
+function timerTick(){const t=ggTimer,now=performance.now();if(!t.running)return;if(['stopwatch','fortime'].includes(t.config.mode)){const ms=now-t.startAt;t.elapsed=Math.floor(ms/1000);t.subMs=ms%1000;timerPaint();return}t.remaining=Math.max(0,Math.ceil((t.endAt-now)/1000));if(t.remaining<=3&&t.remaining>0&&t.remaining!==t.lastCountdown&&t.phase!=='rest'){t.lastCountdown=t.remaining;timerBeep('countdown')}timerPaint();if(t.remaining<=0)timerAdvance()}
+function timerAdvance(){const t=ggTimer,m=t.config.mode;timerBeep('transition');if(t.phase==='delay'){t.phase='work';t.round=1;t.remaining=t.config.work;t.endAt=performance.now()+t.remaining*1000;timerPaint();return}if(['amrap','countdown'].includes(m)){t.phase='done';timerStop();timerBeep('finish');return}if(m==='emom'){t.round++;if(t.round>t.config.rounds){t.phase='done';timerStop();timerBeep('finish');return}t.remaining=Math.max(1,60-(t.config.work%60||60));t.endAt=performance.now()+t.remaining*1000;t.phase='work';timerPaint();return}if(t.phase==='work'&&t.config.rest>0){t.phase='rest';t.remaining=t.config.rest;t.endAt=performance.now()+t.remaining*1000;timerPaint();return}if(t.round>=t.config.rounds){t.phase='done';timerStop();timerBeep('finish');return}t.round++;t.phase='work';t.remaining=t.config.work;t.endAt=performance.now()+t.remaining*1000;timerPaint()}
+function timerLap(){ggTimer.round++;timerBeep('transition');timerPaint()}
+function timerShowWod(){const id=$('#timerWodSelect').value,w=db.wods.find(x=>String(x.id)===String(id)),txt=$('#timerWodText'),im=$('#timerWodImage');if(!w){txt.textContent='Vel ei økt for å visa øvingane her.';im.hidden=true;im.innerHTML='';return}txt.textContent=w.name+'\n\n'+(w.movements||'')+(w.notes?'\n\n'+w.notes:'');const url=w.image_url||w.imageUrl||w.image||w.photo_url||'';if(url&&/^https?:\/\//i.test(url)){im.innerHTML=`<img src="${url.replace(/"/g,'&quot;')}" alt="${esc(w.name)}">`;im.hidden=false}else{im.hidden=true;im.innerHTML=''}$('#timerScoreRounds').value='0';$('#timerScoreReps').value='0';$('#timerScoreTime').value='';$('#timerScoreNote').value=''}
+function timerRefreshWods(){const s=$('#timerWodSelect');if(!s)return;const old=s.value;s.innerHTML='<option value="">Vel ei økt frå biblioteket</option>'+db.wods.map(w=>`<option value="${String(w.id).replace(/"/g,'&quot;')}">${esc(w.name)}</option>`).join('');if(old)s.value=old;timerShowWod()}
+function timerWodStep(d){const s=$('#timerWodSelect');if(!s)return;s.selectedIndex=Math.max(0,Math.min(s.options.length-1,s.selectedIndex+d));timerShowWod()}
+async function timerSaveWodResult(){const w=db.wods.find(x=>String(x.id)===$('#timerWodSelect').value);if(!w)return alert('Vel ein WOD først.');if(!authUser)return alert('Du må vera innlogga for å lagra resultat.');const rounds=Math.max(0,Number($('#timerScoreRounds').value)||0),reps=Math.max(0,Number($('#timerScoreReps').value)||0),time=String($('#timerScoreTime').value||'').trim(),note=String($('#timerScoreNote').value||'').trim();try{const payload={member_id:authUser.id,source_wod_id:w.id,title:w.name,workout_date:new Date().toISOString().slice(0,10),format:w.format||'WOD',rounds:Math.max(1,rounds||1),score_rounds:rounds,score_reps:reps,note:[time?'Tid: '+time:'',note].filter(Boolean).join('\n')};const {data,error}=await supabaseClient.from('workout_logs').insert(payload).select('*').single();if(error)throw error;db.logs.unshift({id:String(data.id),person:currentName(),memberId:authUser.id,title:w.name,date:payload.workout_date,sourceWodId:w.id,format:payload.format,rounds:payload.rounds,scoreRounds:rounds,scoreReps:reps,exercises:[],note:payload.note});save();alert('Resultatet er lagra.')}catch(e){alert('Resultatet kunne ikkje lagrast: '+(e.message||e))}}
+async function toggleTrainingFullscreen(){const el=$('#trainingConsole');try{if(!document.fullscreenElement){document.body.classList.add('wod-dashboard-mode');await el.requestFullscreen()}else{await document.exitFullscreen();document.body.classList.remove('wod-dashboard-mode')}}catch(e){document.body.classList.toggle('wod-dashboard-mode')}}
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)document.body.classList.remove('wod-dashboard-mode')});
 
 // GARASJEGYM 1.3.9 – Spotify PKCE and SDK loader
 const GG_SPOTIFY_CLIENT_ID='82eb64ec22074235a0a29ffc937d9053';
@@ -1583,8 +1668,9 @@ async function spotifyPrevious(){try{if(!ggSpotifyPlayer)throw new Error('Kopla 
 async function spotifySetVolume(v){try{await ggSpotifyPlayer?.setVolume(Number(v)/100)}catch(e){}}
 
 const ggSpotifyPresets={
- rock:'hard melodic rock',
- balkan:'turbo folk balkan brass',
+ rock:'Rammstein System of a Down Disturbed Scorpions hard rock metal',
+ balkan:'Ceca turbo folk Balkan pop-folk',
+ indie90:'90s indie rock Britpop alternative rock',
  dance:'90s dance trance eurodance',
  relax:'chillout ambient relax acoustic'
 };
@@ -1622,7 +1708,7 @@ async function spotifyRandomPreset(key){
  try{
   if(!ggSpotifyToken)throw new Error('Kopla til Spotify først.');
   if(!ggSpotifyDevice)throw new Error('Vent til Spotify-spelaren er klar.');
-  const queries={rock:'hard melodic rock',balkan:'turbo folk balkan brass',dance:'90s dance trance eurodance',relax:'chillout ambient relax acoustic'};
+  const queries=ggSpotifyPresets;
   $('#spotifyStatus').textContent='Finn tilfeldig musikk …';
   const tracks=await ggSpotifySearchTracks(queries[key]||'rock');
   if(!tracks.length)throw new Error('Spotify fann ingen låtar for dette snøggvalet.');
@@ -1636,8 +1722,25 @@ async function spotifyPlayPlaylist(){try{const uri=$('#spotifyPlaylist').value;i
 function spotifyDisconnect(){ggSpotifyPlayer?.disconnect();ggSpotifyPlayer=null;ggSpotifyDevice=null;ggSpotifyToken=null;sessionStorage.removeItem('gg_spotify_token');sessionStorage.removeItem('gg_spotify_expiry');$('#spotifyStatus').textContent='Spotify fråkopla.';$('#spotifyLogin').disabled=false;$('#spotifyLogin').textContent='Kopla til Spotify';$('#spotifyTrack').textContent='Ingen låt vald';$('#spotifyArtist').textContent='Logg inn for å starte';$('#spotifyCover').hidden=true;$('#spotifyTrack').textContent='Ingen låt vald';$('#spotifyArtist').textContent='Logg inn og start ei speleliste';$('#spotifyProgressFill').style.width='0%';$('#spotifyElapsed').textContent='0:00';$('#spotifyDuration').textContent='0:00';['spotifyPrev','spotifyPlay','spotifyNext'].forEach(id=>$('#'+id).disabled=true);}
 function toggleWallMode(){document.body.classList.toggle('wall-mode');const on=document.body.classList.contains('wall-mode');$('#wallModeToggle').textContent=on?'✕ Avslutt veggmodus':'🖥 Veggmodus';localStorage.setItem('gg_wall_mode',on?'1':'0');}
 function ggClock(){const d=new Date();$('#wallTime').textContent=d.toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'});$('#wallDate').textContent=d.toLocaleDateString('nn-NO',{weekday:'long',day:'numeric',month:'long'});}
-const ggAchievements=['🏋️ KNEBØY-KAISER: Djupare enn sjølvtilliten din.','💀 DEADLIFT DOKTOR: Ryggen har sendt takkebrev.','🚀 BENKPRESS-BRUTAL: Brystkassa krev eige postnummer.','🦍 BURPEE-BARON: Opp og ned som ein tysk heis.','⚡ THRUSTER-TERROR: Du løfta deg sjølv inn i morgondagen.','🥨 ROING-REICH: 500 meter med bratwurst i blikket.','🧱 PLANK-PANZER: Kjerne av stål, humor av papp.','🍺 CURL-KOMMANDANT: Biceps med Führerschein.','🔥 WALL BALL WUNDER: Ballen flyg, verdigheita landar.','🫡 PULL-UP-PROFESSOR: Tyngdekrafta klagar til leiinga.'];
+const ggAchievements=['🪖 SOLDATKOPF: Oppmøte før hjernen har vakna.','💦 SHNELL WASSER KAIZER: Hydrert som ein meister.','🦌 GAZELLE-MASCHIN: Lett på tå, tung i stanga.','🦵 KNEEBEUGEN-KAISER: Djupare enn sjølvtilliten din.','🏋️ DEADLIFT-DOKTOR: Ryggen har sendt takkebrev.','🎖️ SILIKONTATTEN-GENERAL: Brystøkta har fått eige kommandosenter.','⚡ THRUSTER-TERROR: Opp og ned med militær presisjon.','🧱 PLANK-PANZER: Kjerne av stål, humor av papp.','☕ KAFFEE-KOMMANDANT: Først espresso, så eksistens.','🐐 GAZELLE-MACHIN: Tyngdekrafta klagar til leiinga.'];
 function ggRenderTicker(){const a=[...ggAchievements,...ggAchievements];$('#achievementTrack').innerHTML=a.map(x=>`<span class="achievement-float">${x}</span>`).join('');}
 if(localStorage.getItem('gg_wall_mode')==='1'){document.body.classList.add('wall-mode');$('#wallModeToggle').textContent='✕ Avslutt veggmodus';}
+
+function enhanceNativeDateTimePickers(){
+ document.querySelectorAll('input[type="date"],input[type="datetime-local"],input[type="time"]').forEach(input=>{
+  if(input.dataset.pickerEnhanced==='1')return;
+  input.dataset.pickerEnhanced='1';
+  const wrap=document.createElement('div');wrap.className='date-time-picker-row';
+  input.parentNode.insertBefore(wrap,input);wrap.appendChild(input);
+  const btn=document.createElement('button');btn.type='button';btn.className='secondary date-time-picker-trigger';
+  btn.textContent=input.type==='date'?'📅':input.type==='time'?'🕒':'📅 🕒';
+  btn.title=input.type==='date'?'Vel dato':input.type==='time'?'Vel klokkeslett':'Vel dato og klokkeslett';
+  btn.setAttribute('aria-label',btn.title);
+  btn.addEventListener('click',()=>{try{if(typeof input.showPicker==='function')input.showPicker();else{input.focus();input.click();}}catch(e){input.focus();}});
+  wrap.appendChild(btn);
+ });
+}
+document.addEventListener('DOMContentLoaded',enhanceNativeDateTimePickers);
+
 ggClock();setInterval(ggClock,1000);timerConfigure();timerRefreshWods();ggSpotifyInit();
 bootGarasjeGym(); </script></body></html>
