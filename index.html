@@ -3,8 +3,8 @@
 <html lang="nn">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#11151b"><meta name="application-name" content="GarasjeGym 1.8.12 – KAIZERSTURM">
-<title>GARASJEGYM 1.8.12 · KAIZERSTURM</title>
+<meta name="theme-color" content="#11151b"><meta name="application-name" content="GarasjeGym 1.8.13 – KAIZERSTURM">
+<title>GARASJEGYM 1.8.13 · KAIZERSTURM</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -618,7 +618,7 @@ body.wod-dashboard-mode.training-layout-edit #trainingConsole .gg-module-picker{
 }
 
 
-/* GarasjeGym 1.8.12 – KAIZERSTURM · WOD og timerintegrasjon */
+/* GarasjeGym 1.8.13 – KAIZERSTURM · WOD og timerintegrasjon */
 #trainingConsole .timer-face{gap:7px}
 #trainingConsole .timer-state{font-size:clamp(16px,2vw,24px);letter-spacing:.12em;font-weight:900}
 #trainingConsole #timerDetails{font-size:11px;letter-spacing:.04em;opacity:.86}
@@ -1224,7 +1224,7 @@ body.gg-app-fullscreen main{padding-top:8px!important}
 <header><div class="logo">GARASJEGYM</div><div class="header-tools"><button id="signedInName" class="header-user-link" type="button" onclick="showTab('profile')" aria-label="Opna Mi side"></button><span id="roleBadge" class="pill gold">MEDLEM</span><div id="headerRank" class="header-rank" aria-live="polite"></div><button id="wallModeToggle" type="button" class="secondary" onclick="toggleWallMode()">🏋️ Treningsmodus</button><button id="appFullscreenToggle" type="button" class="secondary" onclick="toggleAppFullscreen()">⛶ Fullskjerm</button><button id="signOutBtn" type="button" class="secondary">Logg ut</button></div></header>
 <div id="floatingTimerPanel" class="floating-timer-panel hidden" role="dialog" aria-label="Timer"><div class="floating-timer-head"><strong>⏱ Timer</strong><div><button type="button" class="secondary" onclick="toggleFloatingTimerSize()" aria-label="Endra storleik">⤢</button><button type="button" class="secondary" onclick="closeFloatingTimer()" aria-label="Lukk timer">×</button></div></div><div id="floatingTimerContent"></div></div>
 <main>
-<div id="ggReleaseStamp" class="hint" style="text-align:center;padding:12px 0;font-weight:900;letter-spacing:.08em">GARASJEGYM 1.8.12 · KAIZERSTURM</div>
+<div id="ggReleaseStamp" class="hint" style="text-align:center;padding:12px 0;font-weight:900;letter-spacing:.08em">GARASJEGYM 1.8.13 · KAIZERSTURM</div>
 <div id="quickBar" class="quick-bar" aria-label="Snøggtilgang">
  <button type="button" class="quick-bell" onclick="openNotificationCenter()" aria-label="Opne varsel"><span class="quick-icon" aria-hidden="true">♧</span><span class="quick-count" id="quickUnreadCount" hidden>0</span></button>
  <button type="button" class="quick-toggle" id="quickToggle" onclick="toggleQuickLinks()" aria-expanded="false" aria-controls="quickLinks" aria-label="Vis snarvegar">＋</button>
@@ -1453,8 +1453,8 @@ body.gg-app-fullscreen main{padding-top:8px!important}
  <details class="card"><summary>Klubbverktøy <span class="hint">Status</span></summary><div id="adminSummaryDetail"></div></details>
 </div>
 </section>
-<footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.8.12 · KAIZERSTURM</strong></footer>
-<div class="hint" style="text-align:center;padding:12px 0">GARASJEGYM 1.8.12 · KAIZERSTURM</div>
+<footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.8.13 · KAIZERSTURM</strong></footer>
+<div class="hint" style="text-align:center;padding:12px 0">GARASJEGYM 1.8.13 · KAIZERSTURM</div>
 </main>
 <div id="editorModal" class="editor-backdrop" role="dialog" aria-modal="true" aria-labelledby="editorTitle" onclick="if(event.target===this)closeEditor()"><div class="editor-panel"><div class="row"><h2 id="editorTitle">Rediger</h2><button type="button" class="secondary" onclick="closeEditor()" aria-label="Lukk">✕</button></div><form id="editorForm"></form></div></div>
 <script>
@@ -1605,6 +1605,62 @@ $('#prForm').addEventListener('submit',async e=>{e.preventDefault();const form=e
 
 async function del(type,id){if(!confirm('Vil du sletta denne oppføringa?'))return;if(type==='classes'){try{const {error}=await supabaseClient.from('classes').delete().eq('id',String(id));if(error)throw error;await loadClassesFromSupabase();renderAll();}catch(err){alert('Gruppetimen blei ikkje sletta: '+(err.message||err));}return;}if(type==='logs'){try{const {error}=await supabaseClient.from('workout_logs').delete().eq('id',String(id));if(error)throw error;db.logs=db.logs.filter(x=>String(x.id)!==String(id));save();}catch(err){alert('Treningsloggen blei ikkje sletta i Supabase: '+err.message);}return;}if(type==='prs'){const record=db.prs.find(x=>String(x.id)===String(id));if(!record)return;try{if(record.supabase){const {error}=await supabaseClient.from('personal_records').delete().eq('id',String(id));if(error)throw error;}db.prs=db.prs.filter(x=>String(x.id)!==String(id));renderPrs();renderHome();}catch(err){alert('PR-en blei ikkje sletta: '+(err.message||err));}return;}db[type]=db[type].filter(x=>x.id!==id);save()}
 function notifyAdmin(type,title,detail){db.notifications.unshift({id:Date.now()+Math.random(),type,title,detail,when:new Date().toISOString(),read:false});}
+
+// Admin alert for new group-class bookings. Polls Supabase because realtime subscriptions
+// are not configured in this app; first read establishes a baseline and never sounds old bookings.
+let ggAdminBookingSeen=null, ggAdminBookingPollBusy=false;
+function ggPlayAdminBookingSound(){
+ if(!ggCoffeeAudioUnlocked||!ggCoffeeAudioContext)return;
+ try{
+  const ctx=ggCoffeeAudioContext;
+  if(ctx.state==='suspended')ctx.resume();
+  const now=ctx.currentTime;
+  // Two warm, clear notes with a soft confirmation tone.
+  [587.33,783.99,987.77].forEach((freq,i)=>{
+   const t=now+i*.16,osc=ctx.createOscillator(),gain=ctx.createGain();
+   osc.type='sine';osc.frequency.setValueAtTime(freq,t);
+   gain.gain.setValueAtTime(.0001,t);
+   gain.gain.exponentialRampToValueAtTime(i===2?.095:.075,t+.025);
+   gain.gain.exponentialRampToValueAtTime(.0001,t+.24);
+   osc.connect(gain);gain.connect(ctx.destination);osc.start(t);osc.stop(t+.26);
+  });
+ }catch(e){console.debug('Admin booking sound unavailable',e);}
+}
+function ggShowAdminBookingToast(title,detail){
+ const old=document.getElementById('ggAdminBookingToast');if(old)old.remove();
+ const el=document.createElement('div');el.id='ggAdminBookingToast';el.setAttribute('role','status');
+ el.innerHTML='<strong>Ny påmelding</strong><span></span>';
+ el.querySelector('span').textContent=title+' · '+detail;
+ el.style.cssText='position:fixed;right:18px;top:18px;z-index:1000006;max-width:min(420px,calc(100vw - 36px));padding:15px 18px;border:1px solid #d99a3d;border-radius:15px;background:#182532;color:#fff;box-shadow:0 10px 34px #0009;font:600 14px system-ui;line-height:1.45';
+ document.body.appendChild(el);window.setTimeout(()=>el.remove(),6500);
+}
+async function ggPollAdminBookings(){
+ if(!authUser||!authProfile||authProfile.role!=='admin'||ggAdminBookingPollBusy)return;
+ ggAdminBookingPollBusy=true;
+ try{
+  const {data,error}=await supabaseClient.from('class_bookings').select('*');
+  if(error)throw error;
+  const rows=data||[];
+  const active=rows.filter(b=>b.status==='confirmed');
+  const ids=new Set(active.map(b=>String(b.id)));
+  if(ggAdminBookingSeen===null){ggAdminBookingSeen=ids;return;}
+  const fresh=active.filter(b=>!ggAdminBookingSeen.has(String(b.id)));
+  ggAdminBookingSeen=ids;
+  for(const booking of fresh){
+   const cls=db.classes.find(c=>String(c.id)===String(booking.class_id));
+   if(!cls||cls.type==='PT-time')continue;
+   const member=db.members.find(m=>String(m.id)===String(booking.member_id));
+   const who=member?.name||'Eit medlem';
+   ggPlayAdminBookingSound();
+   ggShowAdminBookingToast(cls.title,who+' har meldt seg på');
+   notifyAdmin('booking','Ny påmelding',who+' melde seg på '+cls.title);
+  }
+  if(fresh.length){await loadClassesFromSupabase();renderClasses();renderHome();renderAdmin();}
+ }catch(err){console.debug('Kunne ikkje kontrollere nye gruppetimepåmeldingar:',err.message||err);}
+ finally{ggAdminBookingPollBusy=false;}
+}
+setInterval(ggPollAdminBookings,12000);
+
 async function book(id){const c=db.classes.find(x=>String(x.id)===String(id));if(!c||!authUser)return;const mine=(db.classBookings||[]).find(b=>String(b.classId)===String(c.id)&&String(b.memberId)===String(authUser.id)&&['confirmed','pending'].includes(b.status));if(mine){alert('Du er allereie påmeld eller har ei førespurnad inne.');return;}if(c.attendees.length+(c.pendingBookings||[]).length>=c.capacity){alert('Denne gruppetimen er full.');return;}const status=c.type==='PT-time'?'pending':'confirmed';try{const {data,error}=await supabaseClient.from('class_bookings').insert({class_id:String(c.id),member_id:authUser.id,status}).select('*').single();if(error)throw error;await loadClassesFromSupabase();renderAll();alert(status==='pending'?'PT-førespurnaden er sendt til godkjenning.':'Du er no påmeld gruppetimen.');}catch(err){alert('Påmeldinga blei ikkje lagra: '+(err.message||err));}} 
 async function cancelBooking(id){const c=db.classes.find(x=>String(x.id)===String(id));if(!c||!authUser)return;const booking=(db.classBookings||[]).find(b=>String(b.classId)===String(c.id)&&String(b.memberId)===String(authUser.id)&&['confirmed','pending'].includes(b.status));if(!booking){alert('Fann inga aktiv påmelding.');return;}try{const {error}=await supabaseClient.from('class_bookings').update({status:'cancelled'}).eq('id',booking.id);if(error)throw error;await loadClassesFromSupabase();renderAll();alert('Du er meldt av.');}catch(err){alert('Avmeldinga blei ikkje lagra: '+(err.message||err));}}
 function cancelBooking(id){let c=db.classes.find(x=>x.id===id);if(!c)return;const who=currentName();if(!c.attendees.includes(who)){alert('Du er ikkje påmeld denne timen.');return;}c.attendees=c.attendees.filter(x=>x!==who);notifyAdmin('booking','Avmelding',who+' melde seg av '+c.title);save();}
