@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#11151b"><meta name="application-name" content="GarasjeGym 1.7 – SturmGeiler">
-<title>GARASJEGYM 1.8.4 · STURMGEILER</title>
+<title>GARASJEGYM 1.8.6 · STURMGEILER</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -1096,6 +1096,102 @@ body.gg-app-fullscreen main{padding-top:8px!important}
 }
 </style>
 
+
+<style id="gg-185-spotify-landscape-wod-portrait">
+/* 1.8.5: Spotify is a compact, single-row dock in landscape training mode */
+@media(orientation:landscape) and (min-width:650px){
+ body.gg-simple-training #trainingConsole .training-console-grid{
+  grid-template-rows:minmax(0,1fr) 68px!important;
+ }
+ body.gg-simple-training #trainingConsole .training-console-grid>.training-module[data-module="music"],
+ body.gg-simple-training #trainingConsole #spotifyPanel{
+  height:68px!important;min-height:68px!important;max-height:68px!important;
+  padding:6px 10px!important;display:flex!important;flex-direction:row!important;
+  align-items:center!important;justify-content:space-between!important;gap:10px!important;
+  overflow:hidden!important;box-sizing:border-box!important
+ }
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-head{
+  flex:0 0 auto!important;min-width:0!important;max-width:150px!important;
+  display:flex!important;align-items:center!important;gap:5px!important;margin:0!important
+ }
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-head>div:first-child{min-width:0!important}
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-head h2{
+  font-size:12px!important;white-space:nowrap!important;margin:0!important
+ }
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-head .subheading,
+ body.gg-simple-training #trainingConsole #spotifyPanel #spotifyStatus,
+ body.gg-simple-training #trainingConsole #spotifyPanel #spotifyLogin,
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-expand{display:none!important}
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-player{
+  flex:1 1 auto!important;min-width:0!important;display:flex!important;flex-direction:row!important;
+  align-items:center!important;gap:7px!important;margin:0!important;min-height:0!important
+ }
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-player img{
+  width:42px!important;height:42px!important;flex:0 0 42px!important;border-radius:6px!important
+ }
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-track{
+  display:grid!important;grid-template-columns:1fr!important;gap:2px!important;min-width:0!important
+ }
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-now{display:none!important}
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-track strong{
+  font-size:12px!important;line-height:1.2!important;white-space:nowrap!important;
+  overflow:hidden!important;text-overflow:ellipsis!important
+ }
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-track .hint{
+  display:block!important;font-size:10px!important;white-space:nowrap!important;
+  overflow:hidden!important;text-overflow:ellipsis!important
+ }
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-progress,
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-time{display:none!important}
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-controls{
+  flex:0 0 auto!important;display:flex!important;flex-direction:row!important;align-items:center!important;
+  gap:4px!important;margin:0!important;padding:0!important;border:0!important;flex-wrap:nowrap!important
+ }
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-controls button{
+  width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important;
+  padding:3px!important;font-size:12px!important
+ }
+ body.gg-simple-training #trainingConsole #spotifyPanel .spotify-controls .spotify-volume{display:none!important}
+}
+/* Portrait: make the WOD module naturally tall; the whole training column scrolls */
+@media(orientation:portrait){
+ body.gg-simple-training #trainingConsole .training-console-grid{
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  overflow-y:auto!important;overflow-x:hidden!important;touch-action:pan-y!important;
+  -webkit-overflow-scrolling:touch!important;overscroll-behavior-y:contain!important;
+  min-height:0!important;padding-bottom:36px!important
+ }
+ body.gg-simple-training #trainingConsole .training-console-grid>.training-module{
+  flex:0 0 auto!important;height:auto!important;min-height:0!important;overflow:visible!important
+ }
+ body.gg-simple-training #trainingConsole .training-console-grid>.training-module[data-module="workout"]{
+  display:flex!important;flex-direction:column!important;overflow:visible!important;
+  min-height:max-content!important
+ }
+ body.gg-simple-training #trainingConsole .training-console-grid>.training-module[data-module="workout"] .timer-workout{
+  display:flex!important;flex:0 0 auto!important;min-height:0!important;height:auto!important;
+  overflow:visible!important
+ }
+ body.gg-simple-training #trainingConsole .training-console-grid>.training-module[data-module="workout"] .timer-workout-text{
+  flex:0 0 auto!important;max-height:none!important;height:auto!important;min-height:0!important;
+  overflow:visible!important;white-space:pre-wrap!important;line-height:1.45!important
+ }
+ body.gg-simple-training #trainingConsole .training-console-grid>.training-module[data-module="workout"] .timer-score-entry{
+  flex:0 0 auto!important;margin-top:10px!important;overflow:visible!important
+ }
+ body.gg-simple-training #trainingConsole .training-console-grid>.training-module[data-module="workout"] .timer-wod-image{
+  max-height:none!important;overflow:visible!important
+ }
+ body.gg-simple-training #trainingConsole .training-console-grid>.training-module[data-module="workout"] .timer-wod-image img{
+  max-height:180px!important;height:auto!important;object-fit:contain!important
+ }
+ body.gg-simple-training #trainingConsole #spotifyPanel{
+  position:relative!important;flex:0 0 auto!important;width:100%!important;height:auto!important;
+  max-height:none!important;overflow:visible!important
+ }
+}
+</style>
+
 </head>
 <body class="auth-locked"><div id="welcomeToast" class="welcome-toast" role="status" aria-live="polite"></div>
 
@@ -1121,7 +1217,7 @@ body.gg-app-fullscreen main{padding-top:8px!important}
 <header><div class="logo">GARASJEGYM</div><div class="header-tools"><button id="signedInName" class="header-user-link" type="button" onclick="showTab('profile')" aria-label="Opna Mi side"></button><span id="roleBadge" class="pill gold">MEDLEM</span><div id="headerRank" class="header-rank" aria-live="polite"></div><button id="wallModeToggle" type="button" class="secondary" onclick="toggleWallMode()">🏋️ Treningsmodus</button><button id="appFullscreenToggle" type="button" class="secondary" onclick="toggleAppFullscreen()">⛶ Fullskjerm</button><button id="signOutBtn" type="button" class="secondary">Logg ut</button></div></header>
 <div id="floatingTimerPanel" class="floating-timer-panel hidden" role="dialog" aria-label="Timer"><div class="floating-timer-head"><strong>⏱ Timer</strong><div><button type="button" class="secondary" onclick="toggleFloatingTimerSize()" aria-label="Endra storleik">⤢</button><button type="button" class="secondary" onclick="closeFloatingTimer()" aria-label="Lukk timer">×</button></div></div><div id="floatingTimerContent"></div></div>
 <main>
-<div id="ggReleaseStamp" class="hint" style="text-align:center;padding:12px 0;font-weight:900;letter-spacing:.08em">GARASJEGYM 1.8.4 · STURMGEILER</div>
+<div id="ggReleaseStamp" class="hint" style="text-align:center;padding:12px 0;font-weight:900;letter-spacing:.08em">GARASJEGYM 1.8.6 · STURMGEILER</div>
 <div id="quickBar" class="quick-bar" aria-label="Snøggtilgang">
  <button type="button" class="quick-bell" onclick="openNotificationCenter()" aria-label="Opne varsel"><span class="quick-icon" aria-hidden="true">♧</span><span class="quick-count" id="quickUnreadCount" hidden>0</span></button>
  <button type="button" class="quick-toggle" id="quickToggle" onclick="toggleQuickLinks()" aria-expanded="false" aria-controls="quickLinks" aria-label="Vis snarvegar">＋</button>
@@ -1350,7 +1446,7 @@ body.gg-app-fullscreen main{padding-top:8px!important}
 </div>
 </section>
 <footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.69 · KadettenSonne</strong></footer>
-<div class="hint" style="text-align:center;padding:12px 0">GARASJEGYM 1.8.4 · STURMGEILER</div>
+<div class="hint" style="text-align:center;padding:12px 0">GARASJEGYM 1.8.6 · STURMGEILER</div>
 </main>
 <div id="editorModal" class="editor-backdrop" role="dialog" aria-modal="true" aria-labelledby="editorTitle" onclick="if(event.target===this)closeEditor()"><div class="editor-panel"><div class="row"><h2 id="editorTitle">Rediger</h2><button type="button" class="secondary" onclick="closeEditor()" aria-label="Lukk">✕</button></div><form id="editorForm"></form></div></div>
 <script>
@@ -2016,11 +2112,55 @@ function coffeeStage(status){
  if(['motteken','mottatt','bestilt','ny'].includes(v))return {key:v==='Bestilt'||v==='ny'?'Bestilt':'Motteken',label:v==='Bestilt'||v==='ny'?'BESTILT':'MOTTEKEN',icon:'●',css:'stage-new'};
  return {key:'Bestilt',label:'BESTILT',icon:'●',css:'stage-new'};
 }
+// Original, short Neapolitan-tarantella-inspired coffee chime (Web Audio; no external audio file).
+let ggCoffeeAudioContext=null,ggCoffeeAudioUnlocked=false,ggCoffeeKnownReady=null;
+function ggUnlockCoffeeAudio(){
+ try{
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  if(!ggCoffeeAudioContext)ggCoffeeAudioContext=new AC();
+  if(ggCoffeeAudioContext.state==='suspended')ggCoffeeAudioContext.resume();
+  ggCoffeeAudioUnlocked=true;
+ }catch(e){console.debug('Coffee chime unavailable',e);}
+}
+['pointerdown','touchstart','keydown'].forEach(ev=>document.addEventListener(ev,ggUnlockCoffeeAudio,{once:true,passive:true}));
+function ggPlayCoffeeTarantella(){
+ if(!ggCoffeeAudioUnlocked)return;
+ try{
+  const ctx=ggCoffeeAudioContext;if(!ctx)return;
+  if(ctx.state==='suspended')ctx.resume();
+  const now=ctx.currentTime;
+  // Bright, playful original folk-dance phrase in a quick 6/8 feel.
+  const notes=[659.25,783.99,880,783.99,659.25,587.33,659.25,783.99,1046.5];
+  notes.forEach((freq,i)=>{
+   const t=now+i*.105,osc=ctx.createOscillator(),gain=ctx.createGain();
+   osc.type='triangle';osc.frequency.setValueAtTime(freq,t);
+   gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(.12,t+.012);
+   gain.gain.exponentialRampToValueAtTime(.0001,t+.19);
+   osc.connect(gain);gain.connect(ctx.destination);osc.start(t);osc.stop(t+.2);
+  });
+  // Soft pizzicato/percussive accents to suggest tambourine and hand-claps.
+  [0,.315,.63,.945].forEach((offset)=>{
+   const t=now+offset,osc=ctx.createOscillator(),gain=ctx.createGain();
+   osc.type='square';osc.frequency.setValueAtTime(1450,t);
+   gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(.035,t+.004);
+   gain.gain.exponentialRampToValueAtTime(.0001,t+.045);
+   osc.connect(gain);gain.connect(ctx.destination);osc.start(t);osc.stop(t+.05);
+  });
+ }catch(e){console.debug('Coffee chime failed',e);}
+}
 function renderCoffeeReadyToast(memberOrders){
+ const readyOrders=(memberOrders||[]).filter(o=>coffeeStage(o.status).key==='Ferdig'&&o.readyToastEligible&&!o.readyAcknowledged);
+ const ready=readyOrders[0];
+ // Prime the list on first render so existing ready orders do not sound on page load.
+ const readyIds=new Set(readyOrders.map(o=>String(o.id)));
+ if(ggCoffeeKnownReady===null)ggCoffeeKnownReady=readyIds;
+ else{
+  const newlyReady=readyOrders.some(o=>!ggCoffeeKnownReady.has(String(o.id)));
+  if(newlyReady)ggPlayCoffeeTarantella();
+  ggCoffeeKnownReady=readyIds;
+ }
  const old=document.getElementById('coffeeReadyToast');if(old)old.remove();
- if(currentRole()==='admin')return;
- const ready=(memberOrders||[]).find(o=>coffeeStage(o.status).key==='Ferdig'&&o.readyToastEligible&&!o.readyAcknowledged);
- if(!ready)return;
+ if(currentRole()==='admin'||!ready)return;
  const toast=document.createElement('button');toast.type='button';toast.id='coffeeReadyToast';toast.setAttribute('aria-label','Kaffien din er klar. Trykk for å stadfeste og fjerne varselet.');
  toast.innerHTML=`<span class="ready-cup" aria-hidden="true">☕</span><span><strong>${esc(ready.drink)} er klar!</strong><small>${esc(ready.person)} – kaffien ventar på deg</small></span><span class="ready-dismiss">TRYKK HER</span>`;
  toast.addEventListener('click',()=>{const order=(db.coffeeOrders||[]).find(x=>String(x.id)===String(ready.id));if(order){order.readyAcknowledged=true;order.readyAcknowledgedAt=new Date().toISOString();}const notice=(db.notifications||[]).find(n=>String(n.orderId)===String(ready.id)&&n.type==='coffee_ferdig'&&n.recipient===currentName());if(notice)notice.read=true;save();});
