@@ -1,10 +1,10 @@
 <!doctype html>
-<!-- GarasjeGym 1.3.9 – Mitglieder marschieren -->
+<!-- GarasjeGym 1.4.0 – Keine Banner, nur Eisen -->
 <html lang="nn">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#11151b">
-<title>GARASJEGYM 1.3.9 · Mitglieder marschieren</title>
+<title>GARASJEGYM 1.4.0 · Keine Banner, nur Eisen</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -278,8 +278,8 @@ nav button{font-size:12px;padding:9px 13px;min-height:38px}
  #pt .grid>.span-7{grid-column:span 6}
 }
 
-/* GarasjeGym 1.3.9 – Mitglieder marschieren: refined Spotify player */
-.achievement-ticker{overflow:hidden;border:1px solid #354556;border-radius:12px;background:#111a24;margin:5px 0 10px;padding:8px 0;white-space:nowrap}
+/* GarasjeGym 1.4.0 – Keine Banner, nur Eisen: refined Spotify player */
+.achievement-ticker{display:none!important;overflow:hidden;border:1px solid #354556;border-radius:12px;background:#111a24;margin:5px 0 10px;padding:8px 0;white-space:nowrap}
 .achievement-track{display:inline-flex;gap:34px;min-width:max-content;animation:ggTicker 72s linear infinite;padding-left:100vw}
 .achievement-ticker:hover .achievement-track{animation-play-state:paused}
 .achievement-float{font-size:12px;color:#ffd18b;font-weight:800}
@@ -341,9 +341,9 @@ body.wall-mode main{max-width:1600px;padding:16px 22px 30px}body.wall-mode heade
   <button type="button" class="coffee-action" data-roles="member,manager" onclick="openCoffeeModal()">☕ Kaffi</button>
  </div>
 </div>
-<div id="achievementTicker" class="achievement-ticker" aria-label="GarasjeGym-prestasjonar"><div class="achievement-track" id="achievementTrack"></div></div>
+
 <div id="wallClock" class="wall-clock"><span id="wallDate"></span><strong id="wallTime">--:--</strong></div>
-<div class="role-banner"><div><strong id="welcomeRole">Velkomen til GARASJEGYM</strong><br><small id="roleDescription">Vel brukarprofil for å sjå rett grensesnitt.</small></div><span id="roleHint" class="pill">DEMO-PROFIL</span></div>
+<div class="role-banner"><div><strong id="welcomeRole">Velkomen til GARASJEGYM</strong><br><small id="roleDescription">Vel brukarprofil for å sjå rett grensesnitt.</small></div><span id="roleHint" class="pill">DEMO-PROFIL</span><p id="loginMotivation" class="hint" hidden style="flex-basis:100%;margin:5px 0 0;color:#ffd18b;font-weight:750"></p></div>
 <nav id="nav">
 <button class="active" data-tab="home">Oversikt</button><button class="secondary" data-tab="wods">WOD</button><button class="secondary" data-tab="classes">Gruppetimar</button><button class="secondary" data-tab="pt">PT-studio</button><button class="secondary" data-tab="social">Garasjeprat</button><button class="secondary" data-tab="calendar">Kalender</button><button class="secondary" data-tab="library">Øvingar</button><button class="secondary" data-tab="prs">PR</button><button class="secondary" data-tab="profile">Profil & maks</button><button class="secondary" data-tab="log">Treningslogg</button><button class="secondary" data-tab="coach">WOD-verkstad</button><button class="secondary" data-tab="manager" data-roles="manager">Manager</button><button class="secondary" data-tab="admin" data-roles="admin">Admin</button>
 </nav>
@@ -418,7 +418,7 @@ body.wall-mode main{max-width:1600px;padding:16px 22px 30px}body.wall-mode heade
 <button type="button" class="secondary" onclick="showTab('library')">Vel øvingar frå biblioteket</button>
 <label>Instruksjon / skalering</label><textarea name="notes" placeholder="Oppvarming, nivå, alternativ og teknikk ..."></textarea>
 <label>Publiser til</label><select name="audience"><option>Alle medlemmar</option><option>Privat / eigen økt</option></select>
-<button>Lagre og publiser i WOD-biblioteket</button><div class="hint">Når du lagrar, blir WOD-en lagra i biblioteket og kan veljast i treningsloggen og gruppetimar.</div></form></div></div></details>
+<div class="row"><button type="submit">Lagre og publiser i WOD-biblioteket</button><button type="button" class="secondary" onclick="discardWodDraft()">Forkast WOD</button></div><div class="hint">Når du lagrar, blir WOD-en lagra i biblioteket og kan veljast i treningsloggen og gruppetimar.</div></form></div></div></details>
 </section>
 <section id="classes" class="tab hidden"><h1>Gruppetimar og PT-booking</h1><div class="grid"><div class="card span-4" data-roles="admin,manager"><h2>Opprett time</h2><form id="classForm"><label>Tittel</label><input required name="title" placeholder="Saturday WOD"><div class="two"><div><label>Type</label><select name="type"><option>Gruppetime</option><option>PT-time</option><option>Open Gym</option></select></div><div><label>Maks deltakarar</label><input name="capacity" type="number" min="1" value="6"></div></div><label>Dato og tid</label><input required name="when" type="datetime-local"><label>Varigheit (min)</label><input name="duration" type="number" value="60"><label>Legg til WOD-ar (valfritt – vel fleire)</label><select name="wodIds" id="classWodSelect" multiple size="5" style="min-height:120px"><option value="">Ingen WOD-ar oppretta</option></select><div class="hint">Hald inne Ctrl (PC) eller trykk fleire val på mobil. Alle valde WOD-ar blir knytte til gruppetimen.</div><label>Beskriving / praktisk info</label><textarea name="description" placeholder="Innhald, nivå og praktisk info"></textarea><div class="row"><button type="button" class="secondary" id="previewClassButton" onclick="previewClassDraft()">👁 Førehandsvis time</button><button id="classSubmitButton">Legg ut time</button><button type="button" id="cancelClassEdit" class="secondary hidden" onclick="cancelClassEdit()">Avbryt redigering</button></div><div id="classPreview" class="card hidden" aria-live="polite" style="margin-top:12px;border-color:var(--accent)"></div></form></div><div class="card span-8"><h2>Planlagde timar</h2><div id="classList"></div></div></div></section>
 <section id="pt" class="tab hidden"><div class="section-head"><div><div class="subheading">Personleg oppfølging</div><h1>PT-studio</h1><div class="muted">Planlegg timar, bygg økter frå WOD-biblioteket og følg opp klientar.</div></div><span class="pill gold">PT</span></div>
@@ -487,7 +487,7 @@ body.wall-mode main{max-width:1600px;padding:16px 22px 30px}body.wall-mode heade
  <details class="card"><summary>Klubbverktøy <span class="hint">Status</span></summary><div id="adminSummaryDetail"></div></details>
 </div>
 </section>
-<footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.3.9 · Mitglieder marschieren</strong></footer>
+<footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.4.0 · Keine Banner, nur Eisen</strong></footer>
 </main>
 <div id="editorModal" class="editor-backdrop" role="dialog" aria-modal="true" aria-labelledby="editorTitle" onclick="if(event.target===this)closeEditor()"><div class="editor-panel"><div class="row"><h2 id="editorTitle">Rediger</h2><button type="button" class="secondary" onclick="closeEditor()" aria-label="Lukk">✕</button></div><form id="editorForm"></form></div></div>
 <script>
@@ -511,7 +511,7 @@ function exportGarasjegymBackup(){
   const raw=localStorage.getItem(KEY);
   if(!raw)throw new Error('Fann ingen lagra Garasjegym-data i denne nettlesaren.');
   const parsed=JSON.parse(raw);
-  const payload={app:'GarasjeGym',backupVersion:1,appVersion:'1.3.9',exportedAt:new Date().toISOString(),storageKey:KEY,data:parsed};
+  const payload={app:'GarasjeGym',backupVersion:1,appVersion:'1.4.0',exportedAt:new Date().toISOString(),storageKey:KEY,data:parsed};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');
   const stamp=new Date().toISOString().replace(/[:.]/g,'-');
@@ -783,6 +783,17 @@ function renderExercises(){
  <p>${esc(x[3])}</p><a href="${x[4] ? esc(x[4]) : 'https://www.youtube.com/results?search_query='+encodeURIComponent(x[0]+' exercise tutorial')}" target="_blank" rel="noopener">Sjå videodøme ↗</a></div>`}).join('')||'<div class="empty span-12">Ingen treff.</div>';
 }
 function toggleExercise(name,checked){if(checked)selectedExercises.add(name);else selectedExercises.delete(name);$('#selectedCount').textContent=selectedExercises.size+' øvingar valde';}
+function discardWodDraft(){
+ const form=$('#wodForm');if(!form)return;
+ if(!confirm('Forkasta denne WOD-en utan å lagra?'))return;
+ form.reset();$('#wodCreator').open=false;$('#classPreview')?.classList.add('hidden');
+ window.lastCoachWod=null;showTab('wods');
+}
+function discardCoachWod(){
+ if(!window.lastCoachWod)return;
+ if(!confirm('Forkasta WOD-forslaget? Det blir ikkje lagra.'))return;
+ window.lastCoachWod=null;const out=$('#coachOutput');if(out){out.className='item muted';out.textContent='WOD-forslaget er forkasta.';}
+}
 function openWodEditor(){
  showTab('wods');
  const creator=$('#wodCreator');
@@ -839,7 +850,7 @@ function generateCoachWod(){
  const title=nextGeneratedWodName();
  const desc=format+' · '+mins+' min\n\n'+items.map(x=>x[1]+' '+x[0]).join('\n')+'\n\nSkalering: reduser repetisjonar eller belastning. Vel eit rørsleutslag du meistrar, og hald teknikken jamn.';
  $('#coachOutput').className='item';
- $('#coachOutput').innerHTML='<h3>'+title+'</h3><p class="hint">'+esc(desc).replace(/\n/g,'<br>')+'</p><div class="row"><button type="button" onclick="saveCoachWodToLibrary()">Lagre i WOD-biblioteket</button><button type="button" class="secondary" onclick="useCoachWod()">Rediger først</button><span class="pill gold">Forslag</span></div>';
+ $('#coachOutput').innerHTML='<h3>'+title+'</h3><p class="hint">'+esc(desc).replace(/\n/g,'<br>')+'</p><div class="row"><button type="button" onclick="saveCoachWodToLibrary()">Lagre i WOD-biblioteket</button><button type="button" class="secondary" onclick="useCoachWod()">Rediger først</button><button type="button" class="danger" onclick="discardCoachWod()">Forkast forslag</button><span class="pill gold">Forslag</span></div>';
  window.lastCoachWod={title,format,mins,desc};
 }
 function useCoachWod(){if(!window.lastCoachWod)return;const w=window.lastCoachWod;$('#wodForm [name=name]').value=w.title;$('#wodForm [name=format]').value=w.format;$('#wodForm [name=duration]').value=w.mins;$('#wodMovements').value=w.desc;openWodEditor();}
@@ -1303,6 +1314,13 @@ async function loadWodsFromSupabase(){
  localStorage.setItem(KEY,JSON.stringify(db));
 }
 
+function showLoginMotivation(){
+ const el=$('#loginMotivation');if(!el)return;
+ const lines=['Sterkare saman. Ein økt om gongen.','Møt opp. Gjer jobben. Gå heim litt sterkare.','God teknikk. Jamn innsats. Sterk garasje.','I dag tel òg. Kom i gang.'];
+ el.textContent=lines[Math.floor(Math.random()*lines.length)];el.hidden=false;
+ window.clearTimeout(window.ggMotivationTimer);
+ window.ggMotivationTimer=window.setTimeout(()=>{el.hidden=true;el.textContent='';},15000);
+}
 async function loadSignedInProfile(user){
  const {data,error}=await supabaseClient.from('profiles')
   .select('id,display_name,role,active,avatar_url').eq('id',user.id).single();
@@ -1314,7 +1332,7 @@ async function loadSignedInProfile(user){
  await loadMemberProfiles();
  $('#signedInName').textContent=authProfile.name;
  document.body.classList.remove('auth-locked');
- renderAll();
+ renderAll();showLoginMotivation();
  // Profile roles are authoritative in Supabase; remove the old demo role selector entirely.
  $('#roleBadge').textContent=authProfile.role==='admin'?'ADMIN':authProfile.role==='manager'?'MANAGER':'MEDLEM';
 }
@@ -1455,5 +1473,5 @@ function ggClock(){const d=new Date();$('#wallTime').textContent=d.toLocaleTimeS
 const ggAchievements=['🏋️ KNEBØY-KAISER: Djupare enn sjølvtilliten din.','💀 DEADLIFT DOKTOR: Ryggen har sendt takkebrev.','🚀 BENKPRESS-BRUTAL: Brystkassa krev eige postnummer.','🦍 BURPEE-BARON: Opp og ned som ein tysk heis.','⚡ THRUSTER-TERROR: Du løfta deg sjølv inn i morgondagen.','🥨 ROING-REICH: 500 meter med bratwurst i blikket.','🧱 PLANK-PANZER: Kjerne av stål, humor av papp.','🍺 CURL-KOMMANDANT: Biceps med Führerschein.','🔥 WALL BALL WUNDER: Ballen flyg, verdigheita landar.','🫡 PULL-UP-PROFESSOR: Tyngdekrafta klagar til leiinga.'];
 function ggRenderTicker(){const a=[...ggAchievements,...ggAchievements];$('#achievementTrack').innerHTML=a.map(x=>`<span class="achievement-float">${x}</span>`).join('');}
 if(localStorage.getItem('gg_wall_mode')==='1'){document.body.classList.add('wall-mode');$('#wallModeToggle').textContent='✕ Avslutt veggmodus';}
-ggRenderTicker();ggClock();setInterval(ggClock,1000);ggSpotifyInit();
+ggClock();setInterval(ggClock,1000);ggSpotifyInit();
 bootGarasjeGym(); </script></body></html>
