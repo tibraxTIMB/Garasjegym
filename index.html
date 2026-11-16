@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#11151b"><meta name="application-name" content="GarasjeGym 1.7 – SturmGeiler">
-<title>GARASJEGYM 1.8.3 · STURMGEILER</title>
+<title>GARASJEGYM 1.8.4 · STURMGEILER</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -1032,6 +1032,70 @@ body.gg-simple-training #trainingConsole .spotify-time{display:none!important}
 }
 </style>
 
+
+<style id="gg-184-training-scroll-and-app-fullscreen">
+/* 1.8.4: keep training modules in a known order and always allow scrolling */
+#trainingConsole .training-console-grid{min-width:0!important;min-height:0!important}
+body.gg-simple-training #trainingConsole .training-console-grid{
+ min-height:0!important;overscroll-behavior:contain!important;touch-action:pan-y!important;
+ scrollbar-width:thin!important;
+}
+body.gg-simple-training #trainingConsole .training-console-grid>.training-module{min-width:0!important;max-width:100%!important}
+body.gg-simple-training #trainingConsole .training-console-grid>.training-module[data-module="timer"]{order:1!important}
+body.gg-simple-training #trainingConsole .training-console-grid>.training-module[data-module="workout"]{order:2!important}
+body.gg-simple-training #trainingConsole .training-console-grid>.training-module[data-module="music"]{order:3!important;display:flex!important;visibility:visible!important;opacity:1!important}
+body.gg-simple-training #trainingConsole #spotifyPanel{
+ display:flex!important;visibility:visible!important;opacity:1!important;flex-direction:column!important;
+ position:relative!important;inset:auto!important;flex:0 0 auto!important;width:100%!important;
+ min-width:0!important;max-width:100%!important;max-height:none!important;height:auto!important;
+ overflow:visible!important;z-index:2!important
+}
+body.gg-simple-training #trainingConsole #spotifyPanel .spotify-head{display:flex!important}
+body.gg-simple-training #trainingConsole #spotifyPanel .spotify-player{display:flex!important}
+body.gg-simple-training #trainingConsole #spotifyPanel .spotify-controls{display:flex!important}
+body.gg-simple-training #trainingConsole #spotifyPanel .spotify-search,
+body.gg-simple-training #trainingConsole #spotifyPanel .spotify-presets,
+body.gg-simple-training #trainingConsole #spotifyPanel .spotify-results,
+body.gg-simple-training #trainingConsole #spotifyPanel .spotify-volume{display:none!important}
+body.gg-simple-training #trainingConsole #spotifyPanel .spotify-track{min-width:0!important;overflow:hidden!important}
+body.gg-simple-training #trainingConsole #spotifyPanel .spotify-track strong,
+body.gg-simple-training #trainingConsole #spotifyPanel .spotify-track .hint{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+body.gg-simple-training #trainingConsole .training-console-grid>.training-module[data-module="timer"]{scroll-margin-top:8px!important}
+@media(orientation:portrait){
+ body.gg-simple-training #trainingConsole .training-console-grid{
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  overflow-y:auto!important;overflow-x:hidden!important;flex:1 1 auto!important;
+  min-height:0!important;padding-bottom:24px!important
+ }
+ body.gg-simple-training #trainingConsole .training-console-grid>.training-module{flex:0 0 auto!important}
+ body.gg-simple-training #trainingConsole #spotifyPanel{position:relative!important;bottom:auto!important}
+}
+@media(orientation:landscape) and (min-width:650px){
+ body.gg-simple-training #trainingConsole .training-console-grid{
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-rows:minmax(0,1fr) auto!important;overflow:hidden!important;min-height:0!important
+ }
+ body.gg-simple-training #trainingConsole .training-console-grid>.training-module[data-module="timer"]{
+  grid-column:1!important;grid-row:1!important;overflow-y:auto!important;min-height:0!important
+ }
+ body.gg-simple-training #trainingConsole .training-console-grid>.training-module[data-module="workout"]{
+  grid-column:2!important;grid-row:1!important;overflow-y:auto!important;min-height:0!important
+ }
+ body.gg-simple-training #trainingConsole .training-console-grid>.training-module[data-module="music"]{
+  grid-column:1/-1!important;grid-row:2!important;max-height:88px!important;overflow:hidden!important
+ }
+ body.gg-simple-training #trainingConsole #spotifyPanel{max-height:88px!important;overflow:hidden!important}
+}
+/* Normal app full-screen mode: use the entire display while retaining page scrolling */
+body.gg-app-fullscreen{min-height:100vh!important;min-height:100dvh!important}
+body.gg-app-fullscreen header{position:sticky!important;top:0!important;z-index:1000!important}
+body.gg-app-fullscreen main{padding-top:8px!important}
+#appFullscreenToggle{white-space:nowrap!important}
+@media(max-width:760px){
+ #appFullscreenToggle{font-size:11px!important;padding:6px 8px!important;min-height:32px!important}
+}
+</style>
+
 </head>
 <body class="auth-locked"><div id="welcomeToast" class="welcome-toast" role="status" aria-live="polite"></div>
 
@@ -1054,10 +1118,10 @@ body.gg-simple-training #trainingConsole .spotify-time{display:none!important}
  </div>
 </section>
 
-<header><div class="logo">GARASJEGYM</div><div class="header-tools"><button id="signedInName" class="header-user-link" type="button" onclick="showTab('profile')" aria-label="Opna Mi side"></button><span id="roleBadge" class="pill gold">MEDLEM</span><div id="headerRank" class="header-rank" aria-live="polite"></div><button id="wallModeToggle" type="button" class="secondary" onclick="toggleWallMode()">🏋️ Treningsmodus</button><button id="signOutBtn" type="button" class="secondary">Logg ut</button></div></header>
+<header><div class="logo">GARASJEGYM</div><div class="header-tools"><button id="signedInName" class="header-user-link" type="button" onclick="showTab('profile')" aria-label="Opna Mi side"></button><span id="roleBadge" class="pill gold">MEDLEM</span><div id="headerRank" class="header-rank" aria-live="polite"></div><button id="wallModeToggle" type="button" class="secondary" onclick="toggleWallMode()">🏋️ Treningsmodus</button><button id="appFullscreenToggle" type="button" class="secondary" onclick="toggleAppFullscreen()">⛶ Fullskjerm</button><button id="signOutBtn" type="button" class="secondary">Logg ut</button></div></header>
 <div id="floatingTimerPanel" class="floating-timer-panel hidden" role="dialog" aria-label="Timer"><div class="floating-timer-head"><strong>⏱ Timer</strong><div><button type="button" class="secondary" onclick="toggleFloatingTimerSize()" aria-label="Endra storleik">⤢</button><button type="button" class="secondary" onclick="closeFloatingTimer()" aria-label="Lukk timer">×</button></div></div><div id="floatingTimerContent"></div></div>
 <main>
-<div id="ggReleaseStamp" class="hint" style="text-align:center;padding:12px 0;font-weight:900;letter-spacing:.08em">GARASJEGYM 1.8.3 · STURMGEILER</div>
+<div id="ggReleaseStamp" class="hint" style="text-align:center;padding:12px 0;font-weight:900;letter-spacing:.08em">GARASJEGYM 1.8.4 · STURMGEILER</div>
 <div id="quickBar" class="quick-bar" aria-label="Snøggtilgang">
  <button type="button" class="quick-bell" onclick="openNotificationCenter()" aria-label="Opne varsel"><span class="quick-icon" aria-hidden="true">♧</span><span class="quick-count" id="quickUnreadCount" hidden>0</span></button>
  <button type="button" class="quick-toggle" id="quickToggle" onclick="toggleQuickLinks()" aria-expanded="false" aria-controls="quickLinks" aria-label="Vis snarvegar">＋</button>
@@ -1286,7 +1350,7 @@ body.gg-simple-training #trainingConsole .spotify-time{display:none!important}
 </div>
 </section>
 <footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.69 · KadettenSonne</strong></footer>
-<div class="hint" style="text-align:center;padding:12px 0">GARASJEGYM 1.8.3 · STURMGEILER</div>
+<div class="hint" style="text-align:center;padding:12px 0">GARASJEGYM 1.8.4 · STURMGEILER</div>
 </main>
 <div id="editorModal" class="editor-backdrop" role="dialog" aria-modal="true" aria-labelledby="editorTitle" onclick="if(event.target===this)closeEditor()"><div class="editor-panel"><div class="row"><h2 id="editorTitle">Rediger</h2><button type="button" class="secondary" onclick="closeEditor()" aria-label="Lukk">✕</button></div><form id="editorForm"></form></div></div>
 <script>
@@ -2617,4 +2681,95 @@ bootGarasjeGym(); </script><script>document.addEventListener('DOMContentLoaded',
   document.addEventListener('DOMContentLoaded',clean);
 })();
 </script>
+
+<script id="gg-184-behaviour">
+(function(){
+ let trainingActive=false;
+ let spotifyHomeParent=null,spotifyHomeNext=null;
+ function grid(){return document.querySelector('#trainingConsole .training-console-grid')}
+ function forceTrainingOrder(){
+  const g=grid(),panel=document.querySelector('#spotifyPanel');if(!g)return;
+  const timer=g.querySelector('[data-module="timer"]')||g.children[0];
+  const workout=g.querySelector('[data-module="workout"]')||g.children[1];
+  if(timer){timer.dataset.module='timer';timer.classList.add('training-module');}
+  if(workout){workout.dataset.module='workout';workout.classList.add('training-module');}
+  if(panel){
+   if(panel.parentElement!==g){
+    if(!spotifyHomeParent){spotifyHomeParent=panel.parentElement;spotifyHomeNext=panel.nextSibling;}
+    panel.dataset.module='music';panel.classList.add('training-module');
+    g.appendChild(panel);
+   }
+   panel.hidden=false;panel.classList.remove('hidden');
+   panel.style.removeProperty('display');
+  }
+  [timer,workout,panel].filter(Boolean).forEach((el,i)=>{
+   el.style.removeProperty('transform');el.style.removeProperty('left');el.style.removeProperty('top');
+   el.style.removeProperty('width');el.style.removeProperty('height');
+   el.style.removeProperty('z-index');el.style.removeProperty('--gg-module-span');
+   el.dataset.module=['timer','workout','music'][i];
+   el.querySelectorAll('.module-grip,.gg-panel-resize').forEach(n=>n.remove());
+  });
+  // Explicit DOM order prevents old saved drag-order settings from pushing the timer below the fold.
+  [timer,workout,panel].filter(Boolean).forEach(el=>g.appendChild(el));
+ }
+ function restoreSpotify(){
+  const panel=document.querySelector('#spotifyPanel');
+  if(panel&&spotifyHomeParent&&panel.parentElement!==spotifyHomeParent){
+   spotifyHomeParent.insertBefore(panel,spotifyHomeNext&&spotifyHomeNext.parentElement===spotifyHomeParent?spotifyHomeNext:null);
+  }
+ }
+ window.ggMoveSpotifyIntoTraining=forceTrainingOrder;
+ window.ggRestoreSpotifyHome=restoreSpotify;
+ window.toggleTrainingFullscreen=async function(){
+  const body=document.body,panel=document.querySelector('#trainingConsole');
+  if(trainingActive){
+   trainingActive=false;body.classList.remove('gg-simple-training','wod-dashboard-mode','wall-mode','training-layout-edit');
+   restoreSpotify();
+   try{if(document.fullscreenElement)await document.exitFullscreen()}catch(e){}
+   const b=document.querySelector('#wallModeToggle');if(b)b.textContent='🏋️ Treningsmodus';
+   return;
+  }
+  if(typeof window.closeFloatingTimer==='function')window.closeFloatingTimer();
+  forceTrainingOrder();trainingActive=true;
+  body.classList.add('gg-simple-training','wod-dashboard-mode');
+  try{if(panel&&panel.requestFullscreen)await panel.requestFullscreen()}catch(e){}
+  forceTrainingOrder();
+  const b=document.querySelector('#wallModeToggle');if(b)b.textContent='✕ Avslutt treningsmodus';
+ };
+ window.toggleWallMode=function(){window.toggleTrainingFullscreen()};
+ document.addEventListener('fullscreenchange',()=>{
+  if(trainingActive&&!document.fullscreenElement){
+   trainingActive=false;document.body.classList.remove('gg-simple-training','wod-dashboard-mode','wall-mode','training-layout-edit');
+   restoreSpotify();const b=document.querySelector('#wallModeToggle');if(b)b.textContent='🏋️ Treningsmodus';
+  }
+ });
+ window.toggleAppFullscreen=async function(){
+  const btn=document.querySelector('#appFullscreenToggle');
+  if(document.fullscreenElement){
+   // Do not exit training fullscreen via the ordinary app control.
+   if(document.body.classList.contains('gg-simple-training'))return;
+   try{await document.exitFullscreen()}catch(e){}
+   return;
+  }
+  try{
+   await document.documentElement.requestFullscreen();
+   document.body.classList.add('gg-app-fullscreen');
+   if(btn)btn.textContent='⤢ Avslutt fullskjerm';
+  }catch(e){
+   if(btn)btn.textContent='Fullskjerm ikkje støtta';
+   setTimeout(()=>{if(btn)btn.textContent='⛶ Fullskjerm'},1800);
+  }
+ };
+ document.addEventListener('fullscreenchange',()=>{
+  if(!document.fullscreenElement&&!trainingActive){
+   document.body.classList.remove('gg-app-fullscreen');
+   const btn=document.querySelector('#appFullscreenToggle');if(btn)btn.textContent='⛶ Fullskjerm';
+  }
+ });
+ document.addEventListener('DOMContentLoaded',()=>{
+  const g=grid();if(g){g.querySelectorAll('.training-module').forEach(el=>el.dataset.module=el.dataset.module||'');}
+ });
+})();
+</script>
+
 </body></html>
