@@ -117,9 +117,11 @@ Arbeidsfelt 5 er eit gjennomgåande kvalitetssikringsspor, ikkje berre siste fas
 - GitHub Actions-produksjonsbygg har bestått ein køyring.
 - Supabase-skjema og RLS for `workout_logs`, `workout_exercises` og `workout_sets` er no kontrollert. Sjå `v2/ARBEID-02-TRENINGSMOTOR.md`.
 - Eksisterande policies krev eigarskap via `auth.uid()` og aktiv medlemsprofil; underliggjande øvings- og settrader blir autoriserte via foreldreøkta.
-- Atomisk lagring av treningsøkter er neste tekniske leveranse. Ho skal byggjast og testast i isolert utviklingsmiljø; ingen ny DDL er køyrd mot delt database.
-- Timerinnstillingar i `wods.timer_settings` er ikkje tilgjengelege i databasen enno. Migrering 006 er ikkje registrert i Supabase.
+- Treningsklienten kallar allereie `save_workout_atomic` for å lagra økt, øvingar og sett i éin transaksjon. RPC-en er definert i staged migrering 001 og utvida i migrering 008, men er ikkje installert i den aktive Supabase-databasen.
+- GitHub-greina inneheld åtte staged migreringar (`202611160001`–`202611160008`). Den aktive Supabase-migreringsloggen viser berre tre tryggleiksmigreringar; funksjonsmigreringane er ikkje registrerte der.
+- `wods.timer_settings` er definert i staged migrering 006, men kolonnen finst ikkje i aktivt skjema per kontrollen.
 - Gruppetimar, PT, sosial feed, kaffibar og grunnleggjande admin har første klientversjon. Synkronisert live gruppetrening, PT-meldingar/notat, kaffibar-geofence, reaksjonar/bilete, varsling og full admin står att.
+- Neste steg er å oppretta ei isolert Supabase-utviklingsgrein, kontrollera og testa dei åtte staged migreringane i rett rekkjefølgje, og deretter verifisera treningsflyten. Oppretting av databasegrein krev kostnadsgodkjenning.
 - Databasetryggleik og samsvar mellom 1.8.16 og Supabase krev vidare gjennomgang.
 - Ingen produksjonssetting av 2.0 er godkjend.
 
