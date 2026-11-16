@@ -7,13 +7,13 @@ const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exerci
 const pad = (n) => String(n).padStart(2, '0')
 const clock = (seconds) => `${pad(Math.floor(Math.max(0, seconds) / 60))}:${pad(Math.max(0, seconds) % 60)}`
 
-function Timer({ format, minutes, activeExercise = '' }) {
+function Timer({ format, minutes, activeExercise = '', timerSettings = null }) {
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [round, setRound] = useState(1)
-  const [workSeconds, setWorkSeconds] = useState(format === 'Tabata' ? 20 : 60)
-  const [restSeconds, setRestSeconds] = useState(format === 'Tabata' ? 10 : 60)
-  const [rounds, setRounds] = useState(format === 'Tabata' ? 8 : 5)
+  const [workSeconds, setWorkSeconds] = useState(timerSettings?.work_seconds ?? (format === 'Tabata' ? 20 : 60))
+  const [restSeconds, setRestSeconds] = useState(timerSettings?.rest_seconds ?? (format === 'Tabata' ? 10 : 60))
+  const [rounds, setRounds] = useState(timerSettings?.rounds ?? (format === 'Tabata' ? 8 : 5))
   const [focused, setFocused] = useState(false)
   const [phase, setPhase] = useState('Klar')
   const [laps, setLaps] = useState([])
@@ -55,10 +55,10 @@ function Timer({ format, minutes, activeExercise = '' }) {
 
   useEffect(() => {
     setElapsed(0); setRunning(false); setRound(1); setPhase('Klar'); setLaps([])
-    setWorkSeconds(format === 'Tabata' ? 20 : 60)
-    setRestSeconds(format === 'Tabata' ? 10 : 60)
-    setRounds(format === 'Tabata' ? 8 : 5)
-  }, [format, minutes])
+    setWorkSeconds(timerSettings?.work_seconds ?? (format === 'Tabata' ? 20 : 60))
+    setRestSeconds(timerSettings?.rest_seconds ?? (format === 'Tabata' ? 10 : 60))
+    setRounds(timerSettings?.rounds ?? (format === 'Tabata' ? 8 : 5))
+  }, [format, minutes, timerSettings?.work_seconds, timerSettings?.rest_seconds, timerSettings?.rounds])
 
   useEffect(() => {
     if (!running) return undefined
@@ -292,7 +292,7 @@ export default function Training() {
         <label>Treningsformat<select value={format} onChange={e => setFormat(e.target.value)}>{FORMATS.map(x => <option key={x}>{x}</option>)}</select></label>
         <label>Varigheit / timer (min)<input type="number" min="1" max="240" value={duration} onChange={e => setDuration(e.target.value)}/></label>
       </div>
-      <Timer format={format} minutes={duration} activeExercise={items[0]?.exercise_name || ''}/>
+      <Timer format={format} minutes={duration} activeExercise={items[0]?.exercise_name || ''} timerSettings={source?.timer_settings || null}/>
       <section className="engine-section">
         <div className="engine-section-title"><h4>Øvingar og sett</h4><span>Legg inn resultat per sett</span></div>
         <div className="exercise-search"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Søk i øvingsbiblioteket …"/></div>
