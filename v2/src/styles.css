@@ -584,3 +584,11 @@ footer {
 .pt-module .engine-section .admin-create-form{margin-top:10px}
 .pt-module .engine-section .history-card{margin-top:9px}
 .pt-module .engine-section .history-card p{white-space:pre-wrap;overflow-wrap:anywhere}
+
+
+/* Live group-session status */
+.live-session-banner{grid-column:1/-1;display:flex;align-items:center;gap:9px;padding:10px 12px;margin-top:10px;border:1px solid #6a5630;border-radius:9px;background:#2a2114;color:#f1d39a;font-size:12px}
+.live-session-banner svg{flex:0 0 auto}
+.class-action{flex-wrap:wrap}
+.class-action .booking-confirmed{display:inline-flex;align-items:center;gap:5px}
+@media(max-width:680px){.class-action{justify-content:flex-start}.live-session-banner{font-size:11px}}
