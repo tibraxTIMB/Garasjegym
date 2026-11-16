@@ -6,6 +6,10 @@ const FORMATS = ['Fri trening', 'EMOM', 'AMRAP', 'For Time', 'Tabata', 'Interval
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '' }] })
 const pad = (n) => String(n).padStart(2, '0')
 const clock = (seconds) => `${pad(Math.floor(Math.max(0, seconds) / 60))}:${pad(Math.max(0, seconds) % 60)}`
+const localDateISO = (date = new Date()) => {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+  return local.toISOString().slice(0, 10)
+}
 
 function Timer({ format, minutes, activeExercise = '', timerSettings = null, onSnapshot = () => {} }) {
   const [elapsed, setElapsed] = useState(0)
@@ -254,12 +258,12 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         title: title.trim(),
         source_wod_id: source?.id || null,
         class_live_session_id: classSessionId || null,
-        workout_date: new Date().toLocaleDateString('en-CA'),
+        workout_date: localDateISO(),
         format,
         rounds: Math.max(1, Number(scoreRounds) || 1),
         score_rounds: scoreRounds === '' ? null : Number(scoreRounds),
         score_reps: scoreReps === '' ? null : Number(scoreReps),
-        note: [note.trim(), scoreTime ? 'Tid: ' + scoreTime : '', `Timer: ${format} · ${clock(timerSnapshot.elapsed)} · ${timerSnapshot.phase}`, timerSnapshot.laps.length ? 'Mellomtider: ' + timerSnapshot.laps.map((lap, i) => `${i + 1}: ${clock(lap)}`).join(', ') : ''].filter(Boolean).join('\\n'),
+        note: [note.trim(), scoreTime ? 'Tid: ' + scoreTime : '', `Timer: ${format} · ${clock(timerSnapshot.elapsed)} · ${timerSnapshot.phase}`, timerSnapshot.laps.length ? 'Mellomtider: ' + timerSnapshot.laps.map((lap, i) => `${i + 1}: ${clock(lap)}`).join(', ') : ''].filter(Boolean).join('\n'),
         exercises: items.map(item => ({
           exercise_id: item.exercise_id || null,
           exercise_name: item.exercise_name.trim(),
