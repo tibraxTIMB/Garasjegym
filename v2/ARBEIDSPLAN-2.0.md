@@ -131,7 +131,7 @@ Arbeidsfelt 5 er eit gjennomgåande kvalitetssikringsspor, ikkje berre siste fas
 - 16.11.2026: Booking har fallback mellom live-session-migrering 005 og timerutviding 007. Kapasitetsmigrering 004 har no både faktisk trigger og unik indeks som hindrar doble aktive påmeldingar. Desse SQL-endringane er staged, ikkje køyrde i produksjon.
 - 16.11.2026: Garasjeprat støttar komprimerte bilete, sletting av eigne innlegg/kommentarar, reaksjonar og automatisk oppfrisking. Reaksjonar krev migrering 009.
 - 16.11.2026: Utfordringsmodulen er lagd til med oppretting for staff, medlems-påmelding, mål og individuell framgang. Krev staged migrering 010.
-- 16.11.2026: Kaffibar har fått produktstyring for å skjula og publisera menyvarer. Utfordringsmodulen er kopla inn i hovudnavigasjonen.
+- 16.11.2026: Kaffibar har fått produktstyring for å redigera, skjula og publisera menyvarer. Admin kan redigera øvingar i biblioteket. Utfordringsmodulen er kopla inn i hovudnavigasjonen.
 - 16.11.2026: Migrering 011 avgrensar EXECUTE-rettar for rollefunksjonar og PT-booking frå anon til authenticated. Ho er staged og ikkje køyrd i produksjon.
 - 16.11.2026: Booking, PT, kaffibar, fellesskap, treningslogg og admin oppdaterer data jamleg for betre synkronisering mellom einingar. Bookingklokka hentar serverstatus kvart femte sekund, medan visingsklokka går lokalt kvart sekund.
 - Supabase Security Advisor viste éin ERROR for view `public.pt_session_capacity` (SECURITY DEFINER) og åtvaringar for SECURITY DEFINER-RPC-ar. Migrering 011 fjernar EXECUTE-tilgang frå anon for rollefunksjonane og PT-booking, men view-feilen og attverande authenticated SECURITY DEFINER-varsling må vurderast før produksjonssetting.
