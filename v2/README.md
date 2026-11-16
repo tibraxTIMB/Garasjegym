@@ -25,7 +25,7 @@ Bruk aldri service_role eller ein secret key i nettlesarkode. Ikkje legg .env.lo
 - E-post/passord-innlogging, registrering og passordlenkje.
 - Medlemsprofil og rollebasert navigasjon.
 - Oversikt med treningsaktivitet, Garasjekadett-rangering og styrkeprosentar.
-- Felles treningsmotor for fri økt og WOD: øvingsliste, sett, reps, kg, tid, notat og historikk.
+- Felles treningsmotor for fri økt og WOD: øvingsliste, favorittar, sett, reps, kg, tid, notat og historikk.
 - Timer for EMOM, AMRAP, For Time, Tabata, intervall, stoppeklokke og nedteljing.
 - Registrering og vising av personlege rekordar.
 - Gruppetimar med oppretting for staff og på-/avmelding for medlem.
@@ -47,7 +47,7 @@ Køyr aldri desse filene på produksjonsdatabasen utan å kontrollera prosjekt, 
 - Timerlogikken må testast på faktiske telefonar, særleg når skjermen går i dvale eller nettlesaren blir minimert.
 - Gruppetimane manglar synkronisert live-økt mellom instruktør og deltakarar.
 - PT-planar, meldingar og klientnotat må få eigne fullverdige skjermar.
-- Favorittmigreringa er førebels databasestøtte; favorittvising i klienten står att.
+- Favorittfunksjonen krev at favorittmigreringa er installert i databasen.
 - Kaffibar-geofence, lyd/varsel og eventuelle betalingar er ikkje implementerte.
 - Sosiale bilete, reaksjonar, utfordringar og varsling står att.
 - Admin manglar full drift for booking, PT, kaffibar, varsling og innstillingar.
