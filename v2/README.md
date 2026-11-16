@@ -31,6 +31,7 @@ Bruk aldri service_role eller ein secret key i nettlesarkode. Ikkje legg .env.lo
 - Gruppetimar med oppretting for staff og på-/avmelding for medlem.
 - PT-studio med publiserte timar, booking via database-RPC og førespurnad.
 - Garasjeprat med innlegg, kommentarar, bilete, reaksjonar og sletting av eigne innlegg/kommentarar.
+- Utfordringar med påmelding, mål og individuell framgang.
 - Kaffibar med produkt, handlekorg, bestilling og ordrestatus for staff.
 - Admin med medlemsroller/aktiv status, WOD-studio og øvingsbibliotek.
 
@@ -46,6 +47,7 @@ SQL-filene ligg i supabase/migrations/. Dei er staged i GitHub og er ikkje autom
 7. 202611160007_group_session_wod_timer.sql – delt WOD- og timeroppsett for gruppetime.
 8. 202611160008_class_workout_results.sql – kopling av personlege treningsresultat til live gruppetime og oppdatert atomisk lagrings-RPC.
 9. 202611160009_social_reactions.sql – atomisk reaksjonshandtering for Garasjeprat med kontrollert reaksjonsliste.
+10. 202611160010_challenges.sql – utfordringar, deltaking, mål og individuell framgang med RLS.
 
 Migrering 008 byggjer vidare på 001 og krev at 005 har oppretta `class_live_sessions`. Migrering 009 er uavhengig av dei andre funksjonsmigreringane. Kontroller heile SQL-pakken og funksjonstryggleiken før installasjon. Ikkje køyr migreringane direkte mot produksjonsdatabasen utan backup, gjennomgang og uttrykkeleg godkjenning. Klientfunksjonar som nyttar nye tabellar, kolonnar eller RPC-ar vil ikkje fungera før tilhøyrande migrering er installert. Treningsklienten har fallback dersom `wods.timer_settings` enno ikkje finst, slik at WOD-biblioteket framleis kan lastast.
 
