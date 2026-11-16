@@ -573,3 +573,14 @@ footer {
 .favorite-filter.active { color:#f4d27b; background:#30271d; }
 .favorite-star { display:grid; place-items:center; width:34px; height:34px; margin-left:auto; color:var(--muted); background:transparent; border:1px solid transparent; border-radius:7px; }
 .favorite-star.selected { color:var(--orange); border-color:#61451f; background:#30271d; }
+
+
+/* PT conversation and private coaching notes */
+.pt-message-list{display:grid;gap:8px;max-height:340px;overflow:auto;margin:12px 0}
+.pt-message-list .history-card{margin:0}
+.pt-message-list .history-card p{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0 0}
+.pt-module .engine-section>label{display:grid;gap:6px;margin:10px 0}
+.pt-module .engine-section>label select{width:100%}
+.pt-module .engine-section .admin-create-form{margin-top:10px}
+.pt-module .engine-section .history-card{margin-top:9px}
+.pt-module .engine-section .history-card p{white-space:pre-wrap;overflow-wrap:anywhere}
