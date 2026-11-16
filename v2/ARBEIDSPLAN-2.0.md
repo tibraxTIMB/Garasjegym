@@ -106,6 +106,8 @@ Arbeidsfelt 5 er eit gjennomgåande kvalitetssikringsspor, ikkje berre siste fas
 
 ## Status ved oppretting av planen
 
+- Arbeidsfelt 1 er meldt fullført av brukar 16.11.2026. Dette er brukarstadfesta status, ikkje ei ny uavhengig tryggleiksrevisjon.
+
 - React/Vite-grunnstruktur og mørkt design er etablert.
 - Supabase-klient, innlogging/registrering og profiloppslag er implementert i kode, men ikkje fullstendig testa i nettlesar.
 - Enkel WOD-vising, øvingsliste og registrering av eit grunnleggjande WOD-resultat er implementert.
