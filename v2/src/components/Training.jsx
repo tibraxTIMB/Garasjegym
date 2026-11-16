@@ -19,7 +19,7 @@ function Timer({ format, minutes, activeExercise = '', timerSettings = null }) {
   const [laps, setLaps] = useState([])
   const [soundOn, setSoundOn] = useState(true)
   const target = Math.max(1, Number(minutes) || 10) * 60
-  const isTimedInterval = ['Tabata', 'Intervall'].includes(format)
+  const isTimedInterval = ['Tabata', 'Intervall', 'Tilpassa'].includes(format)
   const isCountdown = ['AMRAP', 'Nedteljing'].includes(format)
   const isEMOM = format === 'EMOM'
   const isDeathBy = format === 'Death By'
@@ -70,7 +70,7 @@ function Timer({ format, minutes, activeExercise = '', timerSettings = null }) {
     if (!running) return
     if (isCountdown && elapsed >= target) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
     if (isTimedInterval && elapsed >= cycle * Math.max(1, Number(rounds))) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
-    if (isEMOM && elapsed >= target) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
+    if ((isEMOM || isDeathBy) && elapsed >= target) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
     if ((isTimedInterval && elapsed % cycle === 0) || (isTimedInterval && elapsed % cycle === Number(workSeconds)) || ((isEMOM || isDeathBy) && elapsed % 60 === 0)) cue(elapsed % 60 === 0 ? 1040 : 660, 0.12)
   }, [elapsed, running, target, isCountdown, isTimedInterval, cycle, rounds, isEMOM, isDeathBy, workSeconds])
 
@@ -110,7 +110,7 @@ function Timer({ format, minutes, activeExercise = '', timerSettings = null }) {
       <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
     </div>
     {laps.length > 0 && <div className="timer-round-label">MELLOMTIDER: {laps.map((lap, i) => `${i + 1}: ${clock(lap)}`).join(' · ')}</div>}
-    <small>{isTimedInterval ? 'Arbeid / kvile-intervall' : isCountdown ? 'Nedtelling' : isEMOM ? 'Eitt minutt per runde' : isDeathBy ? 'Aukande arbeid for kvar minutt' : format === 'For Time' ? 'Stoppeklokke – registrer sluttid når du er ferdig' : 'Stoppeklokke'}</small>
+    <small>{isTimedInterval ? 'Arbeid / kvile-intervall' : isCountdown ? 'Nedtelling' : isEMOM ? 'Eitt minutt per runde' : isDeathBy ? 'Aukande arbeid for kvar minutt · tidsgrense frå varigheita' : format === 'For Time' ? 'Stoppeklokke – registrer sluttid når du er ferdig' : 'Stoppeklokke'}</small>
   </div>
 }
 
