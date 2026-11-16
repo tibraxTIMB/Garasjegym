@@ -382,3 +382,49 @@ footer {
 .spin { animation: gg-spin 1.2s linear infinite; }
 @keyframes gg-spin { to { transform: rotate(360deg); } }
 @media (max-width: 650px) { .wod-list { grid-template-columns: 1fr; } .training-heading h3 { font-size: 19px; } }
+
+
+/* Unified training engine */
+.engine-form { display:grid; gap:20px; }
+.engine-fields { display:grid; grid-template-columns:2fr 1fr 1fr; gap:12px; }
+.engine-fields.three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.engine-fields label,.engine-note { display:grid; gap:7px; color:#d8d9d5; font-size:12px; font-weight:800; }
+.engine-fields input,.engine-fields select,.engine-note textarea,.engine-exercise input,.exercise-search input { width:100%; min-width:0; min-height:42px; padding:10px 12px; color:#f2f1ed; background:#111416; border:1px solid #3a4143; border-radius:8px; font:inherit; }
+.engine-fields select { color-scheme:dark; }
+.engine-timer { display:grid; justify-items:center; gap:9px; padding:20px; background:linear-gradient(145deg,#27251f,#171b1d); border:1px solid #594326; border-radius:12px; }
+.timer-caption { display:flex; align-items:center; gap:7px; color:var(--orange); font-size:10px; font-weight:900; letter-spacing:1.5px; }
+.engine-timer > strong { font-size:clamp(42px,8vw,64px); font-variant-numeric:tabular-nums; letter-spacing:2px; }
+.timer-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; }
+.timer-actions .secondary-button { display:flex; align-items:center; gap:6px; margin:0; }
+.engine-timer small { color:var(--muted); }
+.engine-section { display:grid; gap:13px; padding-top:18px; border-top:1px solid var(--line); }
+.engine-section h4 { margin:0; font-size:16px; }
+.engine-section-title { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.engine-section-title span { color:var(--muted); font-size:11px; }
+.exercise-search { display:flex; align-items:center; gap:9px; padding:0 12px; color:var(--muted); background:#111416; border:1px solid #3a4143; border-radius:8px; }
+.exercise-search input { border:0; padding-left:0; outline:none; }
+.exercise-pick-list { display:grid; max-height:220px; overflow:auto; border:1px solid var(--line); border-radius:8px; }
+.exercise-pick-list button { display:flex; align-items:center; gap:10px; padding:11px; color:var(--orange); background:#171b1d; border:0; border-bottom:1px solid var(--line); text-align:left; }
+.exercise-pick-list button span { color:#f2f1ed; font-weight:700; }
+.exercise-pick-list button small { margin-left:auto; color:var(--muted); }
+.engine-exercise { display:grid; gap:10px; padding:14px; background:#171b1d; border:1px solid var(--line); border-radius:10px; }
+.engine-exercise-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.danger-icon { display:grid; place-items:center; width:32px; height:32px; color:#df8177; background:transparent; border:1px solid #573431; border-radius:7px; }
+.set-grid { display:grid; grid-template-columns:58px repeat(3,minmax(0,1fr)); align-items:center; gap:7px; }
+.set-grid > span { color:var(--muted); font-size:11px; }
+.set-grid input { min-height:38px; padding:8px; font-size:12px; }
+.add-set { display:flex; align-items:center; gap:6px; justify-self:start; margin:0; }
+.engine-note textarea { resize:vertical; }
+.save-workout { display:flex; justify-content:center; align-items:center; gap:9px; }
+.engine-entry-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-bottom:24px; }
+.engine-entry-grid button { display:grid; justify-items:start; gap:9px; min-height:130px; padding:18px; color:var(--orange); background:#171b1d; border:1px solid var(--line); border-radius:12px; text-align:left; }
+.engine-entry-grid button strong { color:#f2f1ed; font-size:15px; }
+.engine-entry-grid button small { color:var(--muted); font-size:12px; }
+.history-list { display:grid; gap:10px; }
+.history-card { padding:15px; background:#171b1d; border:1px solid var(--line); border-radius:10px; }
+.history-card-top { display:flex; justify-content:space-between; gap:10px; }
+.history-card-top span,.history-card > small,.history-exercise span { color:var(--muted); font-size:11px; }
+.history-exercise { display:grid; gap:3px; padding:9px 0; border-top:1px solid #2c3234; margin-top:8px; }
+.history-exercise b { font-size:12px; }
+.history-card p { white-space:pre-line; font-size:12px; }
+@media(max-width:650px) { .engine-fields,.engine-fields.three { grid-template-columns:1fr; } .engine-entry-grid { grid-template-columns:1fr 1fr; } .engine-entry-grid button { min-height:115px; padding:13px; } .set-grid { grid-template-columns:48px repeat(3,minmax(0,1fr)); gap:5px; } .set-grid input { font-size:11px; padding:7px 5px; } }
