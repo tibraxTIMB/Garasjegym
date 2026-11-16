@@ -78,6 +78,13 @@ using (public.is_active_user() and (member_id = (select auth.uid()) or public.is
 with check (
   public.is_active_user()
   and (member_id = (select auth.uid()) or public.is_admin_or_manager())
+  and (
+    public.is_admin_or_manager()
+    or exists (
+      select 1 from public.challenges c
+      where c.id = challenge_id and c.is_active and c.ends_on >= current_date
+    )
+  )
 );
 
 drop policy if exists challenge_participants_delete_own_or_staff on public.challenge_participants;
