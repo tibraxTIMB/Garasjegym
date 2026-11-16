@@ -62,3 +62,5 @@ Køyr aldri desse filene på produksjonsdatabasen utan å kontrollera prosjekt, 
 ### Nye staged migreringar (ikkje køyrde)
 
 - `202611160005_class_live_sessions.sql` opprettar delt tilstand for aktive gruppetimar, med RLS for instruktørar og påmelde deltakarar. Migreringa er berre lagra i utviklingsgreina og er ikkje køyrd mot Supabase.
+
+- Booking-klienten viser no delt live-status for gruppetimar og gir stab start/pause/gjenoppta/avslutt. Krev `202611160005_class_live_sessions.sql` før funksjonen kan brukast.
