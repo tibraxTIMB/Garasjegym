@@ -121,7 +121,8 @@ export default function Training() {
     if (w.error) setError(w.error.message); else setWods(w.data || [])
     if (e.error && !w.error) setError('Øvingsbibliotek: ' + e.error.message); else setExercises(e.data || [])
     if (h.error && !w.error && !e.error) setError('Treningslogg: ' + h.error.message); else setHistory(h.data || [])
-    if (pr.error && !w.error && !e.error && !h.error) setError('Personlege rekordar: ' + pr.error.message); else setRecords(pr.data || [])\n    setLoading(false)
+    if (pr.error && !w.error && !e.error && !h.error) setError('Personlege rekordar: ' + pr.error.message); else setRecords(pr.data || [])
+    setLoading(false)
   }
   useEffect(() => { loadAll() }, [])
 
