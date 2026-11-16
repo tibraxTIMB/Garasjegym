@@ -110,7 +110,7 @@ Arbeidsfelt 5 er eit gjennomgåande kvalitetssikringsspor, ikkje berre siste fas
 
 - React/Vite-grunnstruktur og mørkt design er etablert.
 - Supabase-klient, innlogging/registrering og profiloppslag er implementert i kode, men ikkje fullstendig testa i nettlesar.
-- Enkel WOD-vising, øvingsliste og registrering av eit grunnleggjande WOD-resultat er implementert.
+- Treningsmotor v2 er under utvikling: fri økt/WOD-inngang, øvings- og settregistrering, timerkontroll og treningshistorikk er lagt inn i klientkoden. Ikkje ferdig testa eller godkjend.
 - GitHub Actions-produksjonsbygg har bestått ein køyring.
 - Full treningsmotor, booking, PT, fellesskap, kaffibar, varsling og full admin er ikkje ferdig.
 - Databasetryggleik og samsvar mellom 1.8.16 og Supabase krev vidare gjennomgang.
