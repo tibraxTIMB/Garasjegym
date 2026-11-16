@@ -11,43 +11,34 @@ Desse er ulike inngangar og rammer rundt økta. Dei skal ikkje ha kvar sin separ
 
 ## Status ved første kodegjennomgang
 
-Den noverande `Training.jsx` er ein enkel WOD-visar:
+Den første `Training.jsx`-gjennomgangen viste ein enkel WOD-visar:
 - Hentar publiserte WOD-ar frå `wods`.
 - Hentar aktive øvingar frå `exercises`.
 - Let medlem velja ein WOD.
 - Lagrar eit enkelt resultat i `workout_logs`.
 
-Dette er ein fungerande start, men ikkje ein felles treningsmotor. Mellom anna manglar:
-- Oppbygging av ei økt med fleire øvingar.
-- Lagring av øvingsrader i `workout_exercises`.
-- Lagring av sett i `workout_sets`.
-- Fri trening utan ein førehandsdefinert WOD.
-- Støtte for fleire resultattypar og timerformat.
-- Historikk, PR-kopling og progresjonsvising.
-- Trygg, samla lagring av økt og underliggjande øvingar/sett.
+Dette var startpunktet. Den seinare første klientversjonen har no øktbyggjar, fri trening, settregistrering og historikk, men krev framleis endeleg kontroll mot skjema og trygg lagring.
 
-## Datamodell – eksisterande tabellar som utgangspunkt
+## Datamodell – eksisterande tabellar
 
-| Tabell | Føreslått ansvar i motoren |
+| Tabell | Ansvar i motoren |
 |---|---|
-| `workout_logs` | Ei fullført eller lagra treningsøkt, eigar, dato, kjelde og overordna resultat |
-| `workout_exercises` | Øvingane som høyrer til økta, med rekkjefølgje og namn slik dei var då økta blei utført |
+| `workout_logs` | Ei treningsøkt, eigar, dato, kjelde og overordna resultat |
+| `workout_exercises` | Øvingane i økta, rekkjefølgje og namn ved utføring |
 | `workout_sets` | Sett/resultat per øving: repetisjonar, belastning og tid |
 | `exercises` | Felles øvingsbibliotek |
 | `wods` | Førehandsdefinerte økter og WOD-oppsett |
-| `personal_records` | Personlege rekordar, etter kontroll av faktisk kolonnedefinisjon og reglar |
-
-Tabellane og kolonnane må kontrollerast mot faktisk Supabase-skjema før motoren skriv meir treningsdata. Ikkje legg til eller endra kolonnar utan eigen gjennomgang.
+| `personal_records` | Personlege rekordar; må kartleggjast før kopling |
 
 ## Felles øktflyt
 
 1. Vel inngang: fri trening, WOD, gruppetime eller PT.
-2. Opprett ei øktøkt i klienttilstand med kjelde, dato og øvingsliste.
+2. Opprett ei økt i klienttilstand med kjelde, dato og øvingsliste.
 3. Legg til, fjern eller flytt øvingar.
-4. Registrer sett med reps, kg, tid eller annan relevant måling.
+4. Registrer sett med reps, kg og tid.
 5. Køyr eventuell timer uavhengig av lagringslogikken.
 6. Vis ei oppsummering før lagring.
-7. Lagre økt, øvingar og sett samla – helst gjennom éin server-side transaksjon/RPC når datamodell og tryggleik er avklara.
+7. Lagre økt, øvingar og sett samla gjennom éin server-side transaksjon/RPC.
 8. Hent økta att frå treningsloggen og vis same resultat på andre einingar.
 
 ## Timerformat som skal støttast
@@ -63,16 +54,16 @@ Tabellane og kolonnane må kontrollerast mot faktisk Supabase-skjema før motore
 
 Timeren skal vera ein eigen komponent/teneste som kan brukast av alle inngangane. Timeren skal ikkje vera ansvarleg for å lagra treningsdata.
 
-## Første implementeringsrekkjefølgje
+## Implementeringsrekkjefølgje
 
-1. Kontroller faktiske kolonnar, null-reglar, foreign keys, RLS og policies for dei seks tabellane over.
-2. Definer felles øktmodell og validering i klienten.
-3. Bygg øvingsredigering og settregistrering.
-4. Bygg felles øktoppsummering.
-5. Implementer samla lagring etter at trygg server-side strategi er bestemt.
-6. Legg på timerformata.
-7. Kople treningslogg og PR.
-8. Kople WOD, gruppetime og PT som inngangar til same motor.
+1. Kontrollera faktiske kolonnar, null-reglar, foreign keys, RLS og policies.
+2. Definera felles øktmodell og validering i klienten.
+3. Byggja øvingsredigering og settregistrering.
+4. Byggja felles øktoppsummering.
+5. Implementera samla lagring etter at trygg server-side strategi er bestemt.
+6. Leggja på timerformata.
+7. Kopla treningslogg og PR.
+8. Kopla WOD, gruppetime og PT som inngangar til same motor.
 
 ## Tryggleiks- og datakrav
 
@@ -94,9 +85,35 @@ Timeren skal vera ein eigen komponent/teneste som kan brukast av alle inngangane
 - Lagring mot eksisterande `workout_logs`, `workout_exercises` og `workout_sets`.
 - Treningshistorikk med øvingar og sett.
 
+## Supabase-skjema- og RLS-kontroll (16.11.2026)
+
+Kontrollert direkte mot Supabase-prosjektet Garasjegym, utan å endra databasen:
+
+- `workout_logs`: `id`, `member_id`, `source_wod_id`, `title`, `workout_date`, `format`, `rounds`, `score_rounds`, `score_reps`, `note`, `created_at`, `updated_at`.
+- `workout_exercises`: `id`, `workout_log_id`, `exercise_id`, `exercise_name`, `source_text`, `sort_order`, `created_at`.
+- `workout_sets`: `id`, `workout_exercise_id`, `set_number`, `reps`, `load_kg`, `time_text`, `time_seconds`, `created_at`.
+- Fremmednøklar koplar sett til øving og øving til økt. Sletting av ei økt cascader til øvingar og sett.
+- `workout_sets` har unik kombinasjon av `workout_exercise_id` og `set_number`.
+- RLS er aktivert på alle tre tabellane.
+- `workout_logs` har eigne policies for SELECT, INSERT, UPDATE og DELETE. INSERT krev at `member_id = auth.uid()` for aktive medlemmar, med staff-unntak.
+- `workout_exercises` og `workout_sets` har policies som kontrollerer eigarskap via foreldreøkta.
+- Ingen eksisterande workout-RPC blei funnen i kontrollen.
+- Supabase-migreringsloggen inneheld tre tryggleiksmigreringar frå 16.11.2026. Den omtalte migreringa 006 er ikkje registrert, og `wods.timer_settings` finst ikkje i noverande skjema.
+
+## Neste tekniske steg
+
+Bygg ein atomisk lagringsfunksjon som:
+1. Hentar eigar frå `auth.uid()` – klienten får ikkje velja `member_id`.
+2. Validerer tittel, dato, format, øvingsliste og sett.
+3. Opprettar `workout_logs`, alle `workout_exercises` og alle `workout_sets` i same Postgres-transaksjon.
+4. Brukar vanleg invoker-rettskontekst og dei eksisterande RLS-policyane; ikkje innfører `SECURITY DEFINER` for å omgå tilgangskontroll.
+5. Returnerer ID-en til den lagra økta. Ved feil skal heile transaksjonen rullast tilbake.
+
+Funksjonen skal først utviklast og testast på ei isolert utviklingsdatabase. Ikkje køyr DDL eller migreringar mot delt produksjonsdatabase som del av dette steget. Lag migreringsfila med Supabase CLI sin `supabase migration new` i Codespace når isolert testmiljø er klart.
+
 ## Viktige avgrensingar før feltet kan godkjennast
 
-- Lagring går førebels som fleire klientkall. Ved feil blir det gjort eit forsøk på opprydding, men dette er ikkje like sikkert som éin database-transaksjon. Ein RPC-funksjon med transaksjon må byggjast og tryggleikstestast før produksjonsbruk.
+- Lagring går førebels som fleire klientkall. Ved feil blir det gjort eit forsøk på opprydding, men dette er ikkje like sikkert som éin database-transaksjon. RPC må byggjast og tryggleikstestast før produksjonsbruk.
 - Gruppetime og PT er ikkje kopla som inngangar til motoren enno.
 - Full funksjonalitet for EMOM, AMRAP, For Time, Tabata, intervall, nedteljing og tilpassa timer er ikkje ferdig.
 - PR-registrering, progresjonsvising, Garasjekadett og fullskjerms Training Mode er ikkje ferdig.
@@ -105,4 +122,4 @@ Timeren skal vera ein eigen komponent/teneste som kan brukast av alle inngangane
 
 ## Avgrensing
 
-Dette dokumentet er ei teknisk arbeidsplan, ikkje godkjenning for databaseskjemaendringar. Første kodegjennomgang viser at noverande WOD-registrering berre lagrar overordna resultat. Neste steg er å verifisera faktisk skjema og tilgangsreglar før me implementerer skriving av øvingar og sett.
+Dette dokumentet er ei teknisk arbeidsplan, ikkje godkjenning for databaseskjemaendringar. Skjemakontrollen er no utført. Neste steg er å byggja og testa atomisk lagring i eit isolert utviklingsmiljø før klienten blir kopla til funksjonen.
