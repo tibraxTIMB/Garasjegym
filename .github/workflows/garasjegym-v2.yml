@@ -27,5 +27,7 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm install
+      - name: Check SQL migration delimiters
+        run: npm run check:migrations
       - name: Build production bundle
         run: npm run build
