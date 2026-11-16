@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from './lib/supabase.js'
 import { fetchMemberProfile, isStaff } from './lib/auth.js'
+import Training from './components/Training.jsx'
 
 const sections = [
   { id: 'oversikt', label: 'Oversikt', icon: LayoutDashboard, note: 'Dashboard og treningsstatus' },
@@ -212,7 +213,7 @@ export default function App() {
           <h1>Bygd for å <em>prestera.</em></h1>
           <p>Ein felles plattform for trening, booking og fellesskap.</p>
         </section>
-        <section className="content-card">
+        {active === 'trening' ? <section className="content-card training-content"><Training /></section> : <section className="content-card">
           <div className="section-icon"><Icon size={22} /></div>
           <div className="section-kicker">MODUL · {active.toUpperCase()}</div>
           <h2>{current.label}</h2>
@@ -221,7 +222,7 @@ export default function App() {
             <strong>Innlogging og medlemsroller er kopla til.</strong>
             <span>Dette er første funksjonelle steg i 2.0. Modulane blir bygde ut stegvis. Eksisterande 1.8.16 og produksjonsdata er ikkje endra.</span>
           </div>
-        </section>
+        </section>}
         <footer>GARASJEGYM 2.0 · STURMKOPF <span>UTVIKLINGSVERSJON</span></footer>
       </main>
     </div>
