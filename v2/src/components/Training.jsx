@@ -182,6 +182,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   }
 
   function startWorkout(wod = null) {
+    setClassSessionId(null)
     setSource(wod)
     setTitle(wod?.name || '')
     setFormat(wod?.format || 'Fri trening')
