@@ -134,6 +134,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [saving, setSaving] = useState(false)
   const [mode, setMode] = useState('home')
   const [source, setSource] = useState(null)
+  const [classSessionId, setClassSessionId] = useState(null)
   const [title, setTitle] = useState('')
   const [format, setFormat] = useState('Fri trening')
   const [duration, setDuration] = useState('10')
@@ -169,14 +170,14 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   useEffect(() => {
     if (!launchWodId || loading) return
     const wod = wods.find(item => item.id === launchWodId)
-    if (wod) { startWorkout(wod); onLaunchConsumed?.() }
+    if (wod) { startWorkout(wod); setClassSessionId(launchClassSessionId || null); onLaunchConsumed?.() }
   }, [launchWodId, loading, wods])
 
   const filteredExercises = useMemo(() => exercises.filter(e => e.name.toLowerCase().includes(query.toLowerCase()) || (e.category || '').toLowerCase().includes(query.toLowerCase())), [exercises, query])
 
   function leaveWorkout() {
     if (window.confirm('Vil du avslutta økta? Resultata som ikkje er lagra, går tapt.')) {
-      setMode('home'); setSource(null); setItems([])
+      setMode('home'); setSource(null); setClassSessionId(null); setItems([])
     }
   }
 
@@ -243,7 +244,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       const payload = {
         title: title.trim(),
         source_wod_id: source?.id || null,
-        class_live_session_id: launchClassSessionId || null,
+        class_live_session_id: classSessionId || null,
         workout_date: new Date().toLocaleDateString('en-CA'),
         format,
         rounds: Math.max(1, Number(scoreRounds) || 1),
