@@ -370,6 +370,43 @@ input[type="date"],input[type="datetime-local"]{min-height:46px;cursor:pointer;c
  #nav .nav-profile-button{min-height:44px}
 }
 
+
+.timer-score-entry{max-height:42vh;overflow:auto}
+.timer-exercise-inputs{display:grid;gap:9px;margin:9px 0}
+.timer-exercise-card{padding:9px;background:#121d28;border:1px solid #33485a;border-radius:10px}
+.timer-exercise-card strong{display:block;margin-bottom:6px}
+.timer-round-inputs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.timer-round-inputs label{font-size:10px;min-width:0}
+.timer-round-inputs input{padding:8px 6px;min-width:0;font-size:13px}
+@media(max-width:700px){.timer-round-inputs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Treningshistorikk og WOD-arkiv */
+.wod-history-archive{margin:0 0 18px;padding:14px;background:#111c27;border:1px solid #42566a;border-radius:14px}
+.wod-history-archive h3{margin:0 0 4px}
+.wod-history-group{background:#0d151e;border:1px solid #304253;border-radius:10px;padding:10px;margin-top:8px}
+.wod-history-group summary{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer}
+.wod-history-attempts{display:grid;gap:6px;margin:10px 0}
+.wod-history-attempt{display:flex;justify-content:space-between;gap:10px;padding:8px;background:#172432;border-radius:8px}
+.log-history-list{display:grid;gap:12px}
+.log-card{padding:15px;border:1px solid #34485a;border-radius:14px;background:#111b26}
+.log-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.log-card h3{margin:0 0 3px}
+.log-score{font-size:18px;font-weight:800;margin:12px 0}
+.log-details{border-top:1px solid #304253;padding-top:10px}
+.log-details summary{cursor:pointer;font-weight:700}
+.log-wod-source{white-space:pre-line;background:#0b131c;border-radius:10px;padding:10px;margin:10px 0}
+.log-wod-source p{white-space:pre-line;margin:6px 0}
+.log-exercises{display:grid;gap:9px;margin-top:10px}
+.log-exercise{padding:10px;background:#172432;border-radius:10px}
+.log-set-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:6px;margin-top:6px}
+.log-set{display:flex;justify-content:space-between;gap:5px;background:#0d151e;padding:7px;border-radius:7px;font-size:12px}
+.log-card-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.log-note{white-space:pre-wrap;color:var(--muted)}
+
+
+.welcome-toast{position:fixed;top:18px;right:18px;z-index:20000;max-width:min(360px,calc(100vw - 36px));padding:12px 18px;background:rgba(24,39,53,.96);border:1px solid #526a7f;border-radius:13px;color:#f4f7fb;box-shadow:0 10px 30px rgba(0,0,0,.28);font-weight:650;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .28s ease,transform .28s ease}
+.welcome-toast.visible{opacity:1;transform:translateY(0)}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -383,11 +420,11 @@ input[type="date"],input[type="datetime-local"]{min-height:46px;cursor:pointer;c
     .auth-secondary{background:#202c39!important;color:#f5f7fa!important;border:1px solid #344658!important}
   </style>
 </head>
-<body class="auth-locked">
+<body class="auth-locked"><div id="welcomeToast" class="welcome-toast" role="status" aria-live="polite"></div>
 
 <section id="authGate" aria-label="Innlogging">
  <div class="auth-card">
-  <div class="logo">GARASJEGYM<small>TRAIN · TRACK · IMPROVE</small></div>
+  <div class="logo">GARASJEGYM</div>
   <h1 id="authTitle" style="margin-top:22px">Logg inn</h1>
   <p class="muted">Bruk kontoen din for å opne GarasjeGym.</p>
   <form id="authForm">
@@ -404,7 +441,7 @@ input[type="date"],input[type="datetime-local"]{min-height:46px;cursor:pointer;c
  </div>
 </section>
 
-<header><div class="logo">GARASJEGYM<small>TRAIN · TRACK · IMPROVE</small></div><div class="header-tools"><span id="signedInName" class="hint"></span><span id="roleBadge" class="pill gold">MEDLEM</span><button id="wallModeToggle" type="button" class="secondary" onclick="toggleWallMode()">🖥 Veggmodus</button><button id="signOutBtn" type="button" class="secondary">Logg ut</button></div></header>
+<header><div class="logo">GARASJEGYM</div><div class="header-tools"><span id="signedInName" class="hint"></span><span id="roleBadge" class="pill gold">MEDLEM</span><button id="wallModeToggle" type="button" class="secondary" onclick="toggleWallMode()">🖥 Veggmodus</button><button id="signOutBtn" type="button" class="secondary">Logg ut</button></div></header>
 <main>
 <div id="quickBar" class="quick-bar" aria-label="Snøggtilgang">
  <button type="button" class="quick-bell" onclick="openNotificationCenter()" aria-label="Opne varsel"><span class="quick-icon" aria-hidden="true">♧</span><span class="quick-count" id="quickUnreadCount" hidden>0</span></button>
@@ -489,7 +526,7 @@ input[type="date"],input[type="datetime-local"]{min-height:46px;cursor:pointer;c
    <div class="row"><button type="button" class="secondary" onclick="timerWodStep(-1)">‹ Førre</button><select id="timerWodSelect" onchange="timerShowWod()" style="flex:1"><option value="">Vel ei økt frå biblioteket</option></select><button type="button" class="secondary" onclick="timerWodStep(1)">Neste ›</button></div>
    <div id="timerWodImage" class="timer-wod-image" hidden></div>
    <div id="timerWodText" class="timer-workout-text">Vel ein WOD for å visa øvingane her. Timeren kan brukast uavhengig av WOD-biblioteket.</div>
-   <div class="timer-score-entry"><strong>Registrer resultat</strong><div class="timer-score-grid"><label>Rundar<input id="timerScoreRounds" type="number" min="0" step="1" value="0"></label><label>Ekstra reps<input id="timerScoreReps" type="number" min="0" step="1" value="0"></label><label>Tid (mm:ss)<input id="timerScoreTime" type="text" placeholder="t.d. 12:34"></label></div><label>Notat<input id="timerScoreNote" type="text" placeholder="Valfritt notat"></label><button type="button" onclick="timerSaveWodResult()">Lagre resultat</button></div>
+   <div class="timer-score-entry"><strong>Registrer resultat</strong><div class="timer-score-grid"><label>Gjennomførte rundar<input id="timerScoreRounds" type="number" min="1" max="50" step="1" value="4" onchange="timerRenderExerciseInputs()"></label><label>Ekstra reps<input id="timerScoreReps" type="number" min="0" step="1" value="0"></label><label>Tid (mm:ss)<input id="timerScoreTime" type="text" placeholder="t.d. 12:34"></label></div><div class="hint">Fyll inn kg per runde og øving. Vekt er valfri. Registreringane går inn i treningsloggen og kan gi automatisk PR.</div><div id="timerExerciseInputs" class="timer-exercise-inputs"><div class="hint">Vel ein WOD for å få ferdig utfylte øvingar.</div></div><label>Notat<input id="timerScoreNote" type="text" placeholder="Valfritt notat"></label><button type="button" onclick="timerSaveWodResult()">Lagre resultat</button></div>
    <div class="hint" style="margin-top:8px">Spotify-panelet ligg ovanfor. Bruk WOD-dashbord i fullskjerm for treningsrommet.</div>
   </div>
  </div>
@@ -1092,7 +1129,23 @@ function renderPrs(){
   return `<div class="item"><div class="row"><div><strong>${esc(exercise)}</strong><div class="hint">Rekord: ${bestText} · ${history.length} registrering(ar)</div>${best?`<div class="hint">${esc(best.date||'')} · ${best.source==='log'?'Henta frå treningslogg':'Manuelt registrert'}${best.note?' · '+esc(best.note):''}</div>`:''}</div><span class="pill gold">${best&&best.source==='log'?'AUTO-PR':'PR'}</span></div><details><summary>Vis historikk</summary>${history.map(p=>`<div class="row" style="border-top:1px solid var(--line);padding:8px 0"><span>${esc(p.date||'')} · ${esc(p.result)} ${esc(p.unit||'kg')}${p.kg!==undefined&&p.kg!==null?' · '+esc(p.kg)+' kg':''}${p.note?' · '+esc(p.note):''}</span>${p.source==='manual'?`<button class="danger" onclick="del('prs',${p.id})">Slett</button>`:'<span class="hint">Frå logg</span>'}</div>`).join('')}</details></div>`;
  }).join('');
 }
-function renderLogs(){const rows=isOwner()?db.logs:db.logs.filter(l=>l.person===currentName());$('#logList').innerHTML=rows.length?rows.map(l=>{const details=(l.exercises||[]).map(e=>`${esc(e.name)}: ${(e.sets||[]).map((s,i)=>(s.time?`Forsøk ${i+1}: ${esc(s.time)}`:`S${i+1} ${s.reps??'–'} reps${s.kg!==null&&s.kg!==undefined?' · '+s.kg+' kg':''}`)).join(', ')}`).join('<br>');return item(l.title,`${esc(l.person)} · ${esc(l.date)}${l.format==='AMRAP'?` · AMRAP: ${Number(l.scoreRounds)||0} rundar + ${Number(l.scoreReps)||0} reps`:l.rounds&&l.rounds>1?' · '+esc(l.rounds)+' rundar':''}${details?'<br>'+details:''}${l.note?'<br><span class="hint">'+esc(l.note)+'</span>':''}${l.result?'<br>'+esc(l.result):''}`,'<span class="pill">LOGG</span>',`<button class="danger" onclick="del('logs','${l.id}')">Slett</button>`)}).join(''):'<div class="empty">Ingen treningar logga enno.</div>'}
+function renderLogs(){
+ const rows=(isOwner()?db.logs:db.logs.filter(l=>l.person===currentName())).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+ if(!rows.length){$('#logList').innerHTML='<div class="empty">Ingen treningar logga enno.</div>';return;}
+ const scoreText=l=>l.format==='AMRAP'?`AMRAP · ${Number(l.scoreRounds)||0} rundar + ${Number(l.scoreReps)||0} reps`:l.format==='For Time'||/for time/i.test(l.format||'')?`For Time · ${esc(l.result||l.note||'Tid ikkje registrert')}`:`${esc(l.format||'WOD')} · ${Number(l.rounds)||1} rundar`;
+ const groups={};
+ rows.forEach(l=>{const key=l.sourceWodId?`wod_${l.sourceWodId}`:`title_${String(l.title||'').toLowerCase().trim()}`;(groups[key]||(groups[key]=[])).push(l);});
+ const repeated=Object.entries(groups).filter(([,items])=>items.length>1).sort((a,b)=>(b[1][0].date||'').localeCompare(a[1][0].date||''));
+ const archive=repeated.length?`<section class="wod-history-archive"><h3>WOD-arkiv · samanlikn eigne resultat</h3><p class="hint">Når du tek same WOD fleire gonger, blir resultata samla her.</p>${repeated.map(([key,items])=>{const w=db.wods.find(x=>String(x.id)===String(items[0].sourceWodId));return `<details class="wod-history-group"><summary><strong>${esc(items[0].title)}</strong><span class="pill">${items.length} gjennomføringar</span></summary><div class="wod-history-attempts">${items.map(l=>`<div class="wod-history-attempt"><span>${esc(l.date||'')}</span><strong>${scoreText(l)}</strong></div>`).join('')}</div>${w?`<div class="hint">WOD frå biblioteket: ${esc(w.format||'')} · ${esc(w.duration||'')} min</div>`:''}</details>`}).join('')}</section>`:'';
+ const cards=rows.map(l=>{
+  const w=db.wods.find(x=>String(x.id)===String(l.sourceWodId));
+  const exHtml=(l.exercises||[]).map(ex=>`<div class="log-exercise"><strong>${esc(ex.name)}</strong><div class="log-set-grid">${(ex.sets||[]).map((st,i)=>`<div class="log-set"><span>Sett ${i+1}</span><strong>${st.time?esc(st.time):st.kg!==''&&st.kg!==null&&st.kg!==undefined?`${esc(st.kg)} kg`:''}${st.reps!==''&&st.reps!==null&&st.reps!==undefined?` · ${esc(st.reps)} reps`:''}</strong></div>`).join('')}</div></div>`).join('');
+  const wodText=w?`<div class="log-wod-source"><strong>WOD frå biblioteket</strong><p>${esc(w.movements||'')}</p>${w.notes?`<p class="hint">${esc(w.notes)}</p>`:''}</div>`:'';
+  return `<article class="log-card"><div class="log-card-head"><div><h3>${esc(l.title)}</h3><div class="hint">${esc(l.person)} · ${esc(l.date||'')}</div></div><span class="pill gold">${esc(l.format||'LOGG')}</span></div><div class="log-score">${scoreText(l)}</div><details class="log-details"><summary>Vis WOD og øvingsresultat</summary>${wodText}<div class="log-exercises">${exHtml||'<p class="hint">Ingen øvingssett er registrert på denne økta.</p>'}</div>${l.note?`<p class="log-note">${esc(l.note)}</p>`:''}</details><div class="log-card-actions"><button class="secondary" type="button" onclick="this.closest('.log-card').querySelector('.log-details').open=true">Opne WOD</button><button class="danger" type="button" onclick="del('logs','${String(l.id).replace(/'/g,'')}')">Slett</button></div></article>`;
+ }).join('');
+ $('#logList').innerHTML=archive+`<div class="log-history-list">${cards}</div>`;
+}
+
 function getVisibleNotifications(){
  const name=currentName(),admin=currentRole()==='admin';
  return (db.notifications||[]).filter(n=>(n.recipient===name||(admin&&!n.recipient))&&!n.dismissed).sort((a,b)=>String(b.when||'').localeCompare(String(a.when||'')));
@@ -1527,7 +1580,7 @@ async function loadWorkoutLogsFromSupabase(){
  const {data:logs,error}=await supabaseClient.from('workout_logs').select('*').order('workout_date',{ascending:false}).order('created_at',{ascending:false});
  if(error)throw new Error('Kunne ikkje hente treningsloggar: '+error.message);
  const ids=(logs||[]).map(x=>x.id);let exRows=[],setRows=[];
- if(ids.length){const {data,error:exError}=await supabaseClient.from('workout_exercises').select('*').in('workout_log_id',ids).order('sort_order',{ascending:true});if(exError)throw new Error('Kunne ikkje hente øvingane i treningsloggane: '+exError.message);exRows=ex||[];const exIds=exRows.map(x=>x.id);if(exIds.length){const {data,error:setError}=await supabaseClient.from('workout_sets').select('*').in('workout_exercise_id',exIds).order('set_number',{ascending:true});if(setError)throw new Error('Kunne ikkje hente setta i treningsloggane: '+setError.message);setRows=set||[];}}
+ if(ids.length){const {data:exerciseRows,error:exError}=await supabaseClient.from('workout_exercises').select('*').in('workout_log_id',ids).order('sort_order',{ascending:true});if(exError)throw new Error('Kunne ikkje hente øvingane i treningsloggane: '+exError.message);exRows=exerciseRows||[];const exIds=exRows.map(x=>x.id);if(exIds.length){const {data:loadedSetRows,error:setError}=await supabaseClient.from('workout_sets').select('*').in('workout_exercise_id',exIds).order('set_number',{ascending:true});if(setError)throw new Error('Kunne ikkje hente setta i treningsloggane: '+setError.message);setRows=loadedSetRows||[];}}
  db.logs=(logs||[]).map(row=>({id:String(row.id),memberId:String(row.member_id),person:db.members.find(m=>String(m.id)===String(row.member_id))?.name||'Medlem',title:row.title,date:row.workout_date,sourceWodId:row.source_wod_id?String(row.source_wod_id):null,format:row.format,rounds:row.rounds,scoreRounds:row.score_rounds,scoreReps:row.score_reps,note:row.note||'',exercises:exRows.filter(ex=>String(ex.workout_log_id)===String(row.id)).map(ex=>({name:ex.exercise_name,sets:setRows.filter(st=>String(st.workout_exercise_id)===String(ex.id)).map(st=>({reps:st.reps===null?'':Number(st.reps),kg:st.load_kg===null?'':Number(st.load_kg),time:st.time_text||'',timeSeconds:st.time_seconds===null?null:Number(st.time_seconds)}))})),ptSessionId:null}));
 }
 async function loadPTFromSupabase(){
@@ -1545,6 +1598,13 @@ function showLoginMotivation(){
  window.ggMotivationTimer=window.setTimeout(()=>{el.hidden=true;el.textContent='';},15000);
 }
 async function loadExerciseFavoritesFromSupabase(){if(!authUser)return;try{const {data,error}=await supabaseClient.from('exercise_favorites').select('exercise_name').eq('user_id',authUser.id);if(error)throw error;db.favorites.exercises[String(currentMember().id)]=(data||[]).map(x=>String(x.exercise_name));save();}catch(err){console.warn('Favorittar frå Supabase kunne ikkje hentast:',err.message);}}
+function showWelcomeToast(name){
+ const el=$('#welcomeToast');if(!el)return;
+ el.textContent='Velkomen tilbake, '+(name||'til GarasjeGym')+' 👋';
+ el.classList.add('visible');
+ clearTimeout(window.ggWelcomeToastTimer);
+ window.ggWelcomeToastTimer=setTimeout(()=>el.classList.remove('visible'),3800);
+}
 async function loadSignedInProfile(user){
  const {data,error}=await supabaseClient.from('profiles')
   .select('id,display_name,role,active,avatar_url').eq('id',user.id).single();
@@ -1558,7 +1618,7 @@ async function loadSignedInProfile(user){
  await loadPTFromSupabase();
  $('#signedInName').textContent=authProfile.name;
  document.body.classList.remove('auth-locked');
- renderAll();showLoginMotivation();
+ renderAll();showLoginMotivation();showWelcomeToast(authProfile.name);
  // Profile roles are authoritative in Supabase; remove the old demo role selector entirely.
  $('#roleBadge').textContent=authProfile.role==='admin'?'ADMIN':authProfile.role==='manager'?'MANAGER':'MEDLEM';
 }
@@ -1614,7 +1674,7 @@ function timerInputsChanged(){if(!ggTimer.running)timerConfigure()}
 function timerConfigure(){const mode=$('#timerMode').value,work=timerInputSeconds('timerWork'),rest=timerInputSeconds('timerRest'),rounds=Math.max(1,Number($('#timerRounds').value)||1),delay=Math.max(0,Number($('#timerDelay').value)||0);ggTimer.config={mode,work:Math.max(1,work),rest,rounds,delay};timerReset();const help={emom:'EMOM: arbeidsintervall per minutt.',amrap:'AMRAP: tel ned total tid. Bruk + Runde for rundeteljing.',fortime:'For Time: tel opp frå start. Bruk + Runde.',tabata:'Tabata: vekslar mellom arbeid og pause.',interval:'Intervall: vekslar mellom arbeid og pause.',custom:'Custom: konfigurer arbeid, pause og rundar fritt.',stopwatch:'Stoppeklokke: tel opp med hundredelar.',countdown:'Vanleg nedtelling frå valt minutt og sekund.'};$('#timerHelp').textContent=help[mode];$('#timerModeLabel').textContent=mode.toUpperCase()+' · KLAR'}
 function timerPreset(mode){$('#timerMode').value=mode;const p={emom:[1,0,0,10],amrap:[12,0,0,1],fortime:[0,0,0,1],tabata:[0,20,0,8],interval:[0,40,0,10],stopwatch:[0,0,0,1],countdown:[1,0,0,1]},v=p[mode]||[1,0,0,10];$('#timerWorkMin').value=v[0];$('#timerWorkSec').value=v[1];$('#timerRestMin').value=v[2];$('#timerRestSec').value=mode==='tabata'?10:mode==='interval'?20:0;$('#timerRounds').value=v[3];timerConfigure()}
 let ggTimerAudio=null;async function timerAudioUnlock(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;if(!ggTimerAudio)ggTimerAudio=new C();if(ggTimerAudio.state==='suspended')await ggTimerAudio.resume();return ggTimerAudio}catch(e){return null}}
-function timerBeep(kind='transition'){if(!$('#timerSound')?.checked)return;timerAudioUnlock().then(c=>{if(!c)return;const now=c.currentTime,patterns={countdown:[{f:660,t:0,d:.12,a:.05}],start:[{f:660,t:0,d:.13,a:.06},{f:880,t:.16,d:.18,a:.06}],transition:[{f:740,t:0,d:.15,a:.06},{f:988,t:.18,d:.18,a:.06}],finish:[{f:523,t:0,d:.2,a:.06},{f:659,t:.22,d:.2,a:.06},{f:784,t:.44,d:.3,a:.06}]};(patterns[kind]||patterns.transition).forEach(n=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(n.f,now+n.t);g.gain.setValueAtTime(.0001,now+n.t);g.gain.exponentialRampToValueAtTime(n.a,now+n.t+.02);g.gain.exponentialRampToValueAtTime(.0001,now+n.t+n.d);o.connect(g);g.connect(c.destination);o.start(now+n.t);o.stop(now+n.t+n.d+.02)})})}
+function timerBeep(kind='transition'){if(!$('#timerSound')?.checked)return;timerAudioUnlock().then(c=>{if(!c)return;const now=c.currentTime,patterns={countdown:[{f:740,t:0,d:.18,a:.17},{f:988,t:.02,d:.14,a:.07}],start:[{f:587,t:0,d:.2,a:.16},{f:784,t:.2,d:.24,a:.18}],transition:[{f:659,t:0,d:.2,a:.16},{f:880,t:.2,d:.24,a:.18}],finish:[{f:523,t:0,d:.28,a:.17},{f:659,t:.25,d:.28,a:.17},{f:784,t:.5,d:.42,a:.2}]};(patterns[kind]||patterns.transition).forEach(n=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(n.f,now+n.t);g.gain.setValueAtTime(.0001,now+n.t);g.gain.exponentialRampToValueAtTime(n.a,now+n.t+.025);g.gain.setValueAtTime(n.a,now+n.t+Math.max(.04,n.d-.06));g.gain.exponentialRampToValueAtTime(.0001,now+n.t+n.d);o.connect(g);g.connect(c.destination);o.start(now+n.t);o.stop(now+n.t+n.d+.02)})})}
 function timerPaint(){const t=ggTimer,up=['fortime','stopwatch'].includes(t.config.mode);$('#timerClock').textContent=up?timerFmtHundredths(t.elapsed*1000+(t.subMs||0)):timerFmt(t.remaining);$('#timerRound').textContent='RUNDE '+t.round+' / '+(['amrap','fortime','stopwatch','countdown'].includes(t.config.mode)?'∞':t.config.rounds);$('#timerState').textContent=t.running?(t.phase==='rest'?'PAUSE':t.phase==='delay'?'GJER DEG KLAR':'ARBEID'):t.phase==='done'?'FERDIG':'KLAR';$('#timerStart').textContent=t.running?'Ⅱ Pause':'▶ Start';$('#timerModeLabel').textContent=t.config.mode.toUpperCase()+' · '+(t.running?'AKTIV':'KLAR')}
 function timerStop(){const t=ggTimer;if(t.interval)clearInterval(t.interval);t.interval=null;t.running=false;timerPaint()}
 function timerReset(){timerStop();const t=ggTimer;t.round=0;t.phase='work';t.elapsed=0;t.subMs=0;t.startAt=0;t.lastCountdown=null;t.remaining=t.config.work||60;timerPaint()}
@@ -1622,10 +1682,12 @@ function timerStartPause(){const t=ggTimer;if(t.running){timerStop();return}time
 function timerTick(){const t=ggTimer,now=performance.now();if(!t.running)return;if(['stopwatch','fortime'].includes(t.config.mode)){const ms=now-t.startAt;t.elapsed=Math.floor(ms/1000);t.subMs=ms%1000;timerPaint();return}t.remaining=Math.max(0,Math.ceil((t.endAt-now)/1000));if(t.remaining<=3&&t.remaining>0&&t.remaining!==t.lastCountdown&&t.phase!=='rest'){t.lastCountdown=t.remaining;timerBeep('countdown')}timerPaint();if(t.remaining<=0)timerAdvance()}
 function timerAdvance(){const t=ggTimer,m=t.config.mode;timerBeep('transition');if(t.phase==='delay'){t.phase='work';t.round=1;t.remaining=t.config.work;t.endAt=performance.now()+t.remaining*1000;timerPaint();return}if(['amrap','countdown'].includes(m)){t.phase='done';timerStop();timerBeep('finish');return}if(m==='emom'){t.round++;if(t.round>t.config.rounds){t.phase='done';timerStop();timerBeep('finish');return}t.remaining=Math.max(1,60-(t.config.work%60||60));t.endAt=performance.now()+t.remaining*1000;t.phase='work';timerPaint();return}if(t.phase==='work'&&t.config.rest>0){t.phase='rest';t.remaining=t.config.rest;t.endAt=performance.now()+t.remaining*1000;timerPaint();return}if(t.round>=t.config.rounds){t.phase='done';timerStop();timerBeep('finish');return}t.round++;t.phase='work';t.remaining=t.config.work;t.endAt=performance.now()+t.remaining*1000;timerPaint()}
 function timerLap(){ggTimer.round++;timerBeep('transition');timerPaint()}
-function timerShowWod(){const id=$('#timerWodSelect').value,w=db.wods.find(x=>String(x.id)===String(id)),txt=$('#timerWodText'),im=$('#timerWodImage');if(!w){txt.textContent='Vel ei økt for å visa øvingane her.';im.hidden=true;im.innerHTML='';return}txt.textContent=w.name+'\n\n'+(w.movements||'')+(w.notes?'\n\n'+w.notes:'');const url=w.image_url||w.imageUrl||w.image||w.photo_url||'';if(url&&/^https?:\/\//i.test(url)){im.innerHTML=`<img src="${url.replace(/"/g,'&quot;')}" alt="${esc(w.name)}">`;im.hidden=false}else{im.hidden=true;im.innerHTML=''}$('#timerScoreRounds').value='0';$('#timerScoreReps').value='0';$('#timerScoreTime').value='';$('#timerScoreNote').value=''}
+function timerParseWodExercises(w){const raw=String(w.movements||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),ignored=/^(amrap|emom|for time|tabata|rounds?|time cap|rest|warm.?up|cool.?down)/i;return raw.filter(line=>!ignored.test(line)).map(line=>{const clean=line.replace(/^\s*(?:[-•*]|\d+[.)])\s*/,'').trim(),m=clean.match(/^(\d+)\s*[x×]\s*(.+)$/i)||clean.match(/^(\d+)\s+(.+)$/);return{name:(m?m[2]:clean).replace(/\s*[-–:].*$/,'').trim(),reps:m?Number(m[1]):null}}).filter(x=>x.name)}
+function timerRenderExerciseInputs(){const w=db.wods.find(x=>String(x.id)===$('#timerWodSelect').value),host=$('#timerExerciseInputs');if(!host)return;if(!w){host.innerHTML='<div class="hint">Vel ein WOD for å få ferdig utfylte øvingar.</div>';return;}const rounds=Math.max(1,Math.min(50,Number($('#timerScoreRounds').value)||1)),exercises=timerParseWodExercises(w);if(!exercises.length){host.innerHTML='<div class="hint">Fann ingen øvingslinjer i WOD-en.</div>';return;}host.innerHTML=exercises.map((ex,i)=>`<div class="timer-exercise-card"><strong>${esc(ex.name)}</strong><div class="timer-round-inputs">${Array.from({length:rounds},(_,r)=>`<label>Runde ${r+1}<input class="kg-input" data-ex="${i}" data-round="${r+1}" data-field="kg" type="number" min="0" step="0.5" placeholder="kg"><input data-ex="${i}" data-round="${r+1}" data-field="reps" type="number" min="0" step="1" placeholder="${ex.reps===null?'reps':ex.reps+' reps'}" value="${ex.reps===null?'':ex.reps}"></label>`).join('')}</div></div>`).join('')}
+function timerShowWod(){const id=$('#timerWodSelect').value,w=db.wods.find(x=>String(x.id)===String(id)),txt=$('#timerWodText'),im=$('#timerWodImage');if(!w){txt.textContent='Vel ei økt for å visa øvingane her.';im.hidden=true;im.innerHTML='';timerRenderExerciseInputs();return;}txt.textContent=w.name+'\n\n'+(w.movements||'')+(w.notes?'\n\n'+w.notes:'');const url=w.image_url||w.imageUrl||w.image||w.photo_url||'';if(url&&/^https?:\/\//i.test(url)){im.innerHTML=`<img src="${url.replace(/"/g,'&quot;')}" alt="${esc(w.name)}">`;im.hidden=false}else{im.hidden=true;im.innerHTML=''}$('#timerScoreRounds').value='4';$('#timerScoreReps').value='0';$('#timerScoreTime').value='';$('#timerScoreNote').value='';timerRenderExerciseInputs()}
 function timerRefreshWods(){const s=$('#timerWodSelect');if(!s)return;const old=s.value;s.innerHTML='<option value="">Vel ei økt frå biblioteket</option>'+db.wods.map(w=>`<option value="${String(w.id).replace(/"/g,'&quot;')}">${esc(w.name)}</option>`).join('');if(old)s.value=old;timerShowWod()}
 function timerWodStep(d){const s=$('#timerWodSelect');if(!s)return;s.selectedIndex=Math.max(0,Math.min(s.options.length-1,s.selectedIndex+d));timerShowWod()}
-async function timerSaveWodResult(){const w=db.wods.find(x=>String(x.id)===$('#timerWodSelect').value);if(!w)return alert('Vel ein WOD først.');if(!authUser)return alert('Du må vera innlogga for å lagra resultat.');const rounds=Math.max(0,Number($('#timerScoreRounds').value)||0),reps=Math.max(0,Number($('#timerScoreReps').value)||0),time=String($('#timerScoreTime').value||'').trim(),note=String($('#timerScoreNote').value||'').trim();try{const payload={member_id:authUser.id,source_wod_id:w.id,title:w.name,workout_date:new Date().toISOString().slice(0,10),format:w.format||'WOD',rounds:Math.max(1,rounds||1),score_rounds:rounds,score_reps:reps,note:[time?'Tid: '+time:'',note].filter(Boolean).join('\n')};const {data,error}=await supabaseClient.from('workout_logs').insert(payload).select('*').single();if(error)throw error;db.logs.unshift({id:String(data.id),person:currentName(),memberId:authUser.id,title:w.name,date:payload.workout_date,sourceWodId:w.id,format:payload.format,rounds:payload.rounds,scoreRounds:rounds,scoreReps:reps,exercises:[],note:payload.note});save();alert('Resultatet er lagra.')}catch(e){alert('Resultatet kunne ikkje lagrast: '+(e.message||e))}}
+async function timerSaveWodResult(){const w=db.wods.find(x=>String(x.id)===$('#timerWodSelect').value);if(!w)return alert('Vel ein WOD først.');if(!authUser)return alert('Du må vera innlogga for å lagra resultat.');const rounds=Math.max(1,Number($('#timerScoreRounds').value)||1),reps=Math.max(0,Number($('#timerScoreReps').value)||0),time=String($('#timerScoreTime').value||'').trim(),note=String($('#timerScoreNote').value||'').trim(),exercises=timerParseWodExercises(w).map((ex,i)=>{const sets=[];for(let r=1;r<=rounds;r++){const kgInput=document.querySelector(`#timerExerciseInputs [data-ex="${i}"][data-round="${r}"][data-field="kg"]`),repsInput=document.querySelector(`#timerExerciseInputs [data-ex="${i}"][data-round="${r}"][data-field="reps"]`),kg=kgInput&&kgInput.value!==''?Number(kgInput.value):null,setReps=repsInput&&repsInput.value!==''?Number(repsInput.value):null;if(kg!==null||setReps!==null)sets.push({reps:setReps,kg,time:null,timeSeconds:null})}return{name:ex.name,sets}}).filter(ex=>ex.sets.length);let parentId=null;try{const payload={member_id:authUser.id,source_wod_id:w.id,title:w.name,workout_date:new Date().toISOString().slice(0,10),format:w.format||'WOD',rounds,score_rounds:rounds,score_reps:reps,note:[time?'Tid: '+time:'',note].filter(Boolean).join('\n')},{data:parent,error:parentError}=await supabaseClient.from('workout_logs').insert(payload).select('*').single();if(parentError)throw parentError;parentId=parent.id;if(exercises.length){const exPayload=exercises.map((ex,i)=>({workout_log_id:parentId,exercise_name:ex.name,source_text:null,sort_order:i})),{data:remoteExercises,error:exError}=await supabaseClient.from('workout_exercises').insert(exPayload).select('*');if(exError)throw exError;const setPayload=[];exercises.forEach((ex,i)=>ex.sets.forEach((set,j)=>setPayload.push({workout_exercise_id:remoteExercises[i].id,set_number:j+1,reps:set.reps,load_kg:set.kg,time_text:null,time_seconds:null})));if(setPayload.length){const{error:setError}=await supabaseClient.from('workout_sets').insert(setPayload);if(setError)throw setError}}const savedLog={id:String(parentId),person:currentName(),memberId:authUser.id,title:w.name,date:payload.workout_date,sourceWodId:w.id,format:payload.format,rounds,scoreRounds:rounds,scoreReps:reps,exercises,note:payload.note};db.logs.unshift(savedLog);localStorage.setItem(KEY,JSON.stringify(db));renderAll();alert('Resultatet er lagra. Vekt og repetisjonar per runde er med i treningsloggen og PR-oversikta.')}catch(e){if(parentId)await supabaseClient.from('workout_logs').delete().eq('id',String(parentId));alert('Resultatet kunne ikkje lagrast: '+(e.message||e))}}
 async function toggleTrainingFullscreen(){const el=$('#trainingConsole');try{if(!document.fullscreenElement){document.body.classList.add('wod-dashboard-mode');await el.requestFullscreen()}else{await document.exitFullscreen();document.body.classList.remove('wod-dashboard-mode')}}catch(e){document.body.classList.toggle('wod-dashboard-mode')}}
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)document.body.classList.remove('wod-dashboard-mode')});
 
