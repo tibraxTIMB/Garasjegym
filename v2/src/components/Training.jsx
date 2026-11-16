@@ -116,7 +116,7 @@ function Timer({ format, minutes, activeExercise = '', timerSettings = null, onS
   </div>
 }
 
-export default function Training({ launchWodId = null, onLaunchConsumed }) {
+export default function Training({ launchWodId = null, launchClassSessionId = null, onLaunchConsumed }) {
   const [wods, setWods] = useState([])
   const [exercises, setExercises] = useState([])
   const [favoriteNames, setFavoriteNames] = useState([])
@@ -243,6 +243,7 @@ export default function Training({ launchWodId = null, onLaunchConsumed }) {
       const payload = {
         title: title.trim(),
         source_wod_id: source?.id || null,
+        class_live_session_id: launchClassSessionId || null,
         workout_date: new Date().toLocaleDateString('en-CA'),
         format,
         rounds: Math.max(1, Number(scoreRounds) || 1),
