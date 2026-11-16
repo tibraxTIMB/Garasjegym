@@ -29,18 +29,23 @@ export default function Booking({ profile, onLogResult }) {
     setLoading(true);setError('')
     const [{data:userData,error:userError}]=await Promise.all([supabase.auth.getUser()])
     if(userError||!userData.user){setError('Logg inn på nytt.');setLoading(false);return}
-    const [c,b,a,live,w]=await Promise.all([
+    const [c,b,a,live]=await Promise.all([
       supabase.from('classes').select('id,title,type,capacity,starts_at,duration_minutes,description,workout_text,wod_ids').gte('starts_at',new Date(Date.now()-86400000).toISOString()).order('starts_at').limit(50),
       supabase.from('class_bookings').select('id,class_id,status,created_at').eq('member_id',userData.user.id),
       supabase.from('class_bookings').select('class_id').eq('status','confirmed'),
-      supabase.from('class_live_sessions').select('id,class_id,status,started_at,session_title,wod_id,timer_format,timer_duration_seconds,timer_settings,timer_started_at,timer_elapsed_seconds,timer_status').in('status',['active','paused']).order('started_at',{ascending:false}),
-      supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings').eq('is_published',true).order('name')
+      supabase.from('class_live_sessions').select('id,class_id,status,started_at,session_title,wod_id,timer_format,timer_duration_seconds,timer_settings,timer_started_at,timer_elapsed_seconds,timer_status').in('status',['active','paused']).order('started_at',{ascending:false})
     ])
+    // The base booking calendar must remain usable before optional live-session migrations are installed.
     if(c.error)setError(c.error.message);else setClasses(c.data||[])
     if(b.error)setError(b.error.message);else setMine(b.data||[])
     if(a.error)setError(a.error.message);else setAttendance(a.data||[])
-    if(live.error && !live.error.message?.includes('class_live_sessions'))setError(live.error.message);else setLiveSessions(live.data||[])
+    if(live.error && !/class_live_sessions|timer_settings|column .* does not exist/i.test(live.error.message||''))setError(live.error.message);else setLiveSessions(live.data||[])
+    let w=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings').eq('is_published',true).order('name')
+    if(w.error && /timer_settings|column .* does not exist/i.test(w.error.message||'')){
+      w=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes').eq('is_published',true).order('name')
+    }
     if(!w.error)setWods(w.data||[])
+
     setLoading(false)
   }
   useEffect(()=>{load()},[])
