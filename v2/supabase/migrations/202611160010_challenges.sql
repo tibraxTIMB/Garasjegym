@@ -82,7 +82,10 @@ with check (
     public.is_admin_or_manager()
     or exists (
       select 1 from public.challenges c
-      where c.id = challenge_id and c.is_active and c.ends_on >= current_date
+      where c.id = challenge_id
+        and c.is_active
+        and c.starts_on <= current_date
+        and c.ends_on >= current_date
     )
   )
 );
