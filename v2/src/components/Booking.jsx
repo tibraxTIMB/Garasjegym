@@ -58,7 +58,8 @@ export default function Booking({ profile, onLogResult }) {
       if(memberIds.length){const {data:profiles}=await supabase.from('profiles').select('id,display_name').in('id',memberIds);if(!cancelled)setMemberNames(Object.fromEntries((profiles||[]).map(p=>[p.id,p.display_name||'Medlem'])))}
     }
     loadResults()
-    return()=>{cancelled=true}
+    const refresh=setInterval(loadResults,5000)
+    return()=>{cancelled=true;clearInterval(refresh)}
   },[staff,liveSessionIds])
   useEffect(()=>{const timer=setInterval(async()=>{setClockNow(Date.now());const {data,error:e}=await supabase.from('class_live_sessions').select('id,class_id,status,started_at,session_title,wod_id,timer_format,timer_duration_seconds,timer_started_at,timer_elapsed_seconds,timer_status').in('status',['active','paused']).order('started_at',{ascending:false});if(!e)setLiveSessions(data||[])},1000);return()=>clearInterval(timer)},[])
 
