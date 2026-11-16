@@ -8,27 +8,79 @@ const pad = (n) => String(n).padStart(2, '0')
 const clock = (seconds) => `${pad(Math.floor(seconds / 60))}:${pad(seconds % 60)}`
 
 function Timer({ format, minutes }) {
-  const [seconds, setSeconds] = useState(0)
+  const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [round, setRound] = useState(1)
+  const [workSeconds, setWorkSeconds] = useState(format === 'Tabata' ? 20 : 60)
+  const [restSeconds, setRestSeconds] = useState(format === 'Tabata' ? 10 : 60)
+  const [rounds, setRounds] = useState(format === 'Tabata' ? 8 : 5)
+  const [focused, setFocused] = useState(false)
+  const [phase, setPhase] = useState('Klar')
+  const target = Math.max(1, Number(minutes) || 10) * 60
+  const isTimedInterval = format === 'Tabata' || format === 'Intervall'
+  const cycle = Math.max(1, Number(workSeconds)) + Math.max(0, Number(restSeconds))
+  const cycleRound = isTimedInterval ? Math.floor(elapsed / cycle) + 1 : Math.floor(elapsed / 60) + 1
+  const phaseElapsed = isTimedInterval ? elapsed % cycle : elapsed % 60
+  const currentPhase = isTimedInterval ? (phaseElapsed < Number(workSeconds) ? 'ARBEID' : 'KVILE') : (format === 'EMOM' ? 'NYTT MINUTT' : 'PÅGÅR')
+  const intervalRemaining = isTimedInterval
+    ? Math.max(0, (phaseElapsed < Number(workSeconds) ? Number(workSeconds) : cycle) - phaseElapsed)
+    : Math.max(0, 60 - phaseElapsed)
+  const isCountdown = ['AMRAP', 'Nedteljing'].includes(format)
+  const display = isCountdown ? Math.max(0, target - elapsed)
+    : format === 'EMOM' || isTimedInterval ? intervalRemaining : elapsed
+
+  useEffect(() => {
+    setElapsed(0); setRunning(false); setRound(1); setPhase('Klar')
+    setWorkSeconds(format === 'Tabata' ? 20 : 60)
+    setRestSeconds(format === 'Tabata' ? 10 : 60)
+    setRounds(format === 'Tabata' ? 8 : 5)
+  }, [format, minutes])
+
   useEffect(() => {
     if (!running) return undefined
-    const id = window.setInterval(() => setSeconds(s => s + 1), 1000)
+    const id = window.setInterval(() => setElapsed(s => s + 1), 1000)
     return () => window.clearInterval(id)
   }, [running])
-  useEffect(() => { setSeconds(0); setRunning(false); setRound(1) }, [format, minutes])
-  const target = Math.max(1, Number(minutes) || 10) * 60
-  const display = format === 'Nedteljing' ? Math.max(0, target - seconds) : seconds
-  useEffect(() => { if (format === 'Nedteljing' && seconds >= target) setRunning(false) }, [seconds, target, format])
-  return <div className="engine-timer">
-    <div className="timer-caption"><Clock3 size={15}/> {format === 'Fri trening' ? 'STOPPEKLOKKE' : format.toUpperCase()}</div>
+
+  useEffect(() => {
+    if (isCountdown && elapsed >= target) { setRunning(false); setPhase('FERDIG') }
+    if (isTimedInterval && elapsed >= cycle * Math.max(1, Number(rounds))) { setRunning(false); setPhase('FERDIG') }
+    if (format === 'EMOM' && elapsed >= target) { setRunning(false); setPhase('FERDIG') }
+  }, [elapsed, target, isCountdown, isTimedInterval, cycle, rounds, format])
+
+  useEffect(() => {
+    if (running) setPhase(currentPhase)
+  }, [elapsed, running, currentPhase])
+
+  async function toggleFocus() {
+    if (!focused) {
+      try { await document.documentElement.requestFullscreen?.() } catch { /* Fullscreen is optional on some mobile browsers. */ }
+      setFocused(true)
+    } else {
+      try { if (document.fullscreenElement) await document.exitFullscreen?.() } catch { /* Ignore unsupported exit. */ }
+      setFocused(false)
+    }
+  }
+
+  const roundsShown = isTimedInterval ? Math.min(cycleRound, Number(rounds)) : Math.min(cycleRound, Math.ceil(target / 60))
+  return <div className={focused ? 'engine-timer timer-focused' : 'engine-timer'}>
+    <div className="timer-caption"><Clock3 size={15}/> {format.toUpperCase()}</div>
+    <div className="timer-phase">{phase}</div>
     <strong>{clock(display)}</strong>
+    {(format === 'EMOM' || isTimedInterval) && <div className="timer-round-label">RUNDE {roundsShown} / {isTimedInterval ? rounds : Math.ceil(target / 60)}</div>}
+    {isTimedInterval && !running && elapsed === 0 && <div className="timer-settings-inline">
+      <label>Arbeid sek.<input type="number" min="1" max="600" value={workSeconds} onChange={e => setWorkSeconds(Math.max(1, Number(e.target.value) || 1))}/></label>
+      <label>Kvile sek.<input type="number" min="0" max="600" value={restSeconds} onChange={e => setRestSeconds(Math.max(0, Number(e.target.value) || 0))}/></label>
+      <label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e => setRounds(Math.max(1, Number(e.target.value) || 1))}/></label>
+    </div>}
+    {format === 'AMRAP' && <div className="timer-round-label">RUNDAR FULLFØRT: {round}</div>}
     <div className="timer-actions">
-      <button type="button" className="secondary-button" onClick={() => setRunning(v => !v)}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
-      <button type="button" className="secondary-button" onClick={() => { setRunning(false); setSeconds(0); setRound(1) }}><RotateCcw size={14}/> Nullstill</button>
-      {format === 'EMOM' && <button type="button" className="secondary-button" onClick={() => setRound(r => r + 1)}>Runde {round} +</button>}
+      <button type="button" className="secondary-button" onClick={() => { if (!running) setPhase('PÅGÅR'); setRunning(v => !v) }} disabled={phase === 'FERDIG'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
+      <button type="button" className="secondary-button" onClick={() => { setRunning(false); setElapsed(0); setRound(1); setPhase('Klar') }}><RotateCcw size={14}/> Nullstill</button>
+      {format === 'AMRAP' && <button type="button" className="secondary-button" onClick={() => setRound(r => r + 1)}>+ Runde</button>}
+      <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
     </div>
-    {format === 'Nedteljing' && <small>{seconds >= target ? 'Tida er ute' : `Mål: ${clock(target)}`}</small>}
+    <small>{isTimedInterval ? 'Arbeid / kvile-intervall' : isCountdown ? 'Nedtelling' : format === 'EMOM' ? 'Eitt minutt per runde' : format === 'For Time' ? 'Stoppar når du sjølv avsluttar eller tidsgrensa er nådd' : 'Stoppeklokke'}</small>
   </div>
 }
 
