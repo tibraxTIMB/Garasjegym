@@ -50,7 +50,7 @@ begin
     raise exception 'Duplikate i aktive gruppetimepåmeldingar må ryddast før kapasitetsmigreringa kan køyrast.';
   end if;
 end;
-$;
+$$;
 
 create unique index if not exists class_bookings_one_active_per_member
   on public.class_bookings(class_id, member_id)
