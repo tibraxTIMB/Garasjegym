@@ -83,6 +83,26 @@ Timeren skal vera ein eigen komponent/teneste som kan brukast av alle inngangane
 - Dato og tid skal handterast konsekvent med lokal treningsdato og lagra tidsstempel.
 - PR skal ikkje reknast ut frå ufullstendige eller ugyldige resultat.
 
+## Implementert første klientversjon (16.11.2026)
+
+- Ny treningsoversikt med inngang til fri trening og publiserte WOD-ar.
+- Felles øktbyggjar med tittel, format, varigheit, øvingsliste og fleire sett per øving.
+- Søk i øvingsbibliotek og moglegheit for å leggja inn ei eiga øving.
+- Registrering av repetisjonar, kg og tekstleg tid per sett.
+- Timerkontroll med start, pause og nullstilling. EMOM har enkel rundeteljing; dei ulike timerformata treng framleis eigne reglar og full testing.
+- Registrering av rundar, ekstra repetisjonar, sluttid og notat.
+- Lagring mot eksisterande `workout_logs`, `workout_exercises` og `workout_sets`.
+- Treningshistorikk med øvingar og sett.
+
+## Viktige avgrensingar før feltet kan godkjennast
+
+- Lagring går førebels som fleire klientkall. Ved feil blir det gjort eit forsøk på opprydding, men dette er ikkje like sikkert som éin database-transaksjon. Ein RPC-funksjon med transaksjon må byggjast og tryggleikstestast før produksjonsbruk.
+- Gruppetime og PT er ikkje kopla som inngangar til motoren enno.
+- Full funksjonalitet for EMOM, AMRAP, For Time, Tabata, intervall, nedteljing og tilpassa timer er ikkje ferdig.
+- PR-registrering, progresjonsvising, Garasjekadett og fullskjerms Training Mode er ikkje ferdig.
+- Nettlesartesting med reelle medlem, fleire einingar og feiltilstandar er ikkje utført.
+- Koden er ikkje produksjonssett; 1.8.16 og produksjonsdata er urørte.
+
 ## Avgrensing
 
 Dette dokumentet er ei teknisk arbeidsplan, ikkje godkjenning for databaseskjemaendringar. Første kodegjennomgang viser at noverande WOD-registrering berre lagrar overordna resultat. Neste steg er å verifisera faktisk skjema og tilgangsreglar før me implementerer skriving av øvingar og sett.
