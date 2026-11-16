@@ -122,6 +122,8 @@ Arbeidsfelt 5 er eit gjennomgåande kvalitetssikringsspor, ikkje berre siste fas
 - `wods.timer_settings` er definert i staged migrering 006, men kolonnen finst ikkje i aktivt skjema per kontrollen.
 - Gruppetimar, PT, sosial feed, kaffibar og grunnleggjande admin har første klientversjon. Synkronisert live gruppetrening, PT-meldingar/notat, kaffibar-geofence, reaksjonar/bilete, varsling og full admin står att.
 - Neste steg er å oppretta ei isolert Supabase-utviklingsgrein, kontrollera og testa dei åtte staged migreringane i rett rekkjefølgje, og deretter verifisera treningsflyten. Oppretting av databasegrein krev kostnadsgodkjenning.
+- Supabase Security Advisor viser éin ERROR for view `public.pt_session_capacity` (SECURITY DEFINER) og åtvaringar for SECURITY DEFINER-RPC-ar som framleis kan kallast av `anon`/`authenticated`, mellom anna `book_pt_session`, `is_admin` og `is_admin_or_manager`. Dette må gjennomgåast før migreringspakken blir installert eller appen produksjonssett.
+- Supabase Performance Advisor viser òg manglande indeksar på fleire framandnøklar og RLS-policyar som kan optimaliserast. Dette er oppfølgingspunkt, ikkje grunnlag for å endra produksjonsskjema utan kontroll.
 - Databasetryggleik og samsvar mellom 1.8.16 og Supabase krev vidare gjennomgang.
 - Ingen produksjonssetting av 2.0 er godkjend.
 
