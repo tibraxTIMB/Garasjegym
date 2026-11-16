@@ -61,6 +61,7 @@ Arbeid:
 - Individuelle resultat frå kvar deltakar via treningsmotoren.
 - PT-kalender, PT-booking, førespurnader og kapasitet.
 - PT-dialog/meldingar, notat og øvingsopplegg.
+- Personal kan oppretta ein konkret PT-time direkte frå ei førespurnad. Timen blir knytt til medlemmet og vist som ein tildelt PT-time, utan open booking for andre.
 - Medlemsvising av eigne bookingar og historikk.
 
 **Godkjenningskrav:** To eller fleire brukarar kan booka same time utan overbooking. Instruktør kan starta ei fellesøkt, medan kvar deltakar får sitt eige treningsresultat.
