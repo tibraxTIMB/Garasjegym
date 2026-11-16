@@ -604,3 +604,8 @@ footer {
 .community-comment strong,.community-comment span { grid-column:1; }
 .community-comment .icon-button { grid-column:2; grid-row:1 / span 2; width:28px; height:28px; }
 @media(max-width:480px){ .community-compose-foot label { width:100%; justify-content:center; } }
+
+.community-reactions { display:flex; flex-wrap:wrap; gap:7px; margin:10px 0 14px; }
+.community-reactions .secondary-button { display:inline-flex; align-items:center; gap:5px; margin:0; min-height:32px; padding:0 10px; }
+.community-reactions .secondary-button.active { color:#f4d27b; background:#30271d; border-color:#8a642e; }
+.community-reactions .secondary-button span { font-size:10px; }
