@@ -39,7 +39,7 @@ export default function Community({profile}){
     element.onerror=()=>reject(new Error('Biletet kunne ikkje opnast.'))
     element.src=dataUrl
    })
-   const scale=Math.min(1,1200/Math.max(image.width,image.height))
+   const scale=Math.min(1,900/Math.max(image.width,image.height))
    const canvas=document.createElement('canvas')
    canvas.width=Math.max(1,Math.round(image.width*scale))
    canvas.height=Math.max(1,Math.round(image.height*scale))
@@ -47,8 +47,8 @@ export default function Community({profile}){
    if(!context)throw new Error('Nettlesaren kan ikkje handsama biletet.')
    context.fillStyle='#ffffff';context.fillRect(0,0,canvas.width,canvas.height)
    context.drawImage(image,0,0,canvas.width,canvas.height)
-   const compressed=canvas.toDataURL('image/jpeg',0.72)
-   if(compressed.length>1500000)throw new Error('Biletet er framleis for stort etter komprimering.')
+   const compressed=canvas.toDataURL('image/jpeg',0.66)
+   if(compressed.length>450000)throw new Error('Biletet er for stort etter komprimering. Prøv eit mindre bilete.')
    setImageData(compressed)
   }catch(err){setError(err.message||'Kunne ikkje klargjera biletet.')}
  }
