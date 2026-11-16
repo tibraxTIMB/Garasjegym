@@ -151,8 +151,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(0)
   const [timerSnapshot, setTimerSnapshot] = useState({ elapsed: 0, laps: [], phase: 'Klar', running: false })
 
-  async function loadAll() {
-    setLoading(true); setError('')
+  async function loadAll(silent=false) {
+    if (!silent) setLoading(true); setError('')
     let w = await supabase.from('wods')
       .select('id,name,format,duration_minutes,movements,notes,audience,is_published,created_at,timer_settings')
       .eq('is_published', true).order('created_at', { ascending: false })
@@ -178,7 +178,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     }
     setLoading(false)
   }
-  useEffect(() => { loadAll() }, [])
+  useEffect(() => { loadAll(); const refresh=setInterval(()=>loadAll(true),60000); return()=>clearInterval(refresh) }, [])
   useEffect(() => {
     if (!launchWodId || loading) return
     const wod = wods.find(item => item.id === launchWodId)
