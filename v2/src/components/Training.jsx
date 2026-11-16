@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Activity, CheckCircle2, Clock3, Dumbbell, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Trash2 } from 'lucide-react'
+import { Activity, CheckCircle2, Clock3, Dumbbell, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 
 const FORMATS = ['Fri trening', 'EMOM', 'AMRAP', 'For Time', 'Tabata', 'Intervall', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
@@ -87,6 +87,8 @@ function Timer({ format, minutes }) {
 export default function Training() {
   const [wods, setWods] = useState([])
   const [exercises, setExercises] = useState([])
+  const [favoriteNames, setFavoriteNames] = useState([])
+  const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [history, setHistory] = useState([])
   const [records, setRecords] = useState([])
   const [prName, setPrName] = useState('')
@@ -122,6 +124,11 @@ export default function Training() {
     if (e.error && !w.error) setError('Øvingsbibliotek: ' + e.error.message); else setExercises(e.data || [])
     if (h.error && !w.error && !e.error) setError('Treningslogg: ' + h.error.message); else setHistory(h.data || [])
     if (pr.error && !w.error && !e.error && !h.error) setError('Personlege rekordar: ' + pr.error.message); else setRecords(pr.data || [])
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const fav = await supabase.from('exercise_favorites').select('exercise_name').eq('user_id', user.id)
+      if (!fav.error) setFavoriteNames((fav.data || []).map(x => x.exercise_name))
+    }
     setLoading(false)
   }
   useEffect(() => { loadAll() }, [])
@@ -142,6 +149,24 @@ export default function Training() {
     }
     setMode('active')
     setError(''); setNotice('')
+  }
+
+  async function toggleFavorite(exercise) {
+    const exists = favoriteNames.includes(exercise.name)
+    setError('')
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Logg inn på nytt.')
+      if (exists) {
+        const { error: e } = await supabase.from('exercise_favorites').delete().eq('user_id', user.id).eq('exercise_name', exercise.name)
+        if (e) throw e
+        setFavoriteNames(current => current.filter(name => name !== exercise.name))
+      } else {
+        const { error: e } = await supabase.from('exercise_favorites').upsert({ user_id: user.id, exercise_name: exercise.name }, { onConflict: 'user_id,exercise_name' })
+        if (e) throw e
+        setFavoriteNames(current => [...current, exercise.name])
+      }
+    } catch (err) { setError(err.message || 'Favoritten kunne ikkje lagrast. Køyr favorittmigreringa først.') }
   }
 
   function addExercise(exercise) {
@@ -290,7 +315,7 @@ export default function Training() {
       </section>
       <section className="engine-section">
         <div className="training-heading"><div><div className="section-kicker">BIBLIOTEK</div><h3>Øvingsbibliotek</h3></div><span className="count-pill">{exercises.length} øvingar</span></div>
-        {exercises.length ? <div className="exercise-list">{exercises.map(ex => <div className="exercise-row" key={ex.id}><Dumbbell size={16}/><div><strong>{ex.name}</strong><span>{[ex.category,ex.equipment].filter(Boolean).join(' · ')}</span></div></div>)}</div> : <div className="empty-state">Øvingsbiblioteket er tomt. Øvingar kan leggjast inn av admin/manager.</div>}
+        {exercises.length ? <><button type="button" className={favoritesOnly ? 'secondary-button favorite-filter active' : 'secondary-button favorite-filter'} onClick={() => setFavoritesOnly(v => !v)}><Star size={14}/>{favoritesOnly ? 'Vis alle øvingar' : 'Vis berre favorittar'}</button><div className="exercise-list">{exercises.filter(ex => !favoritesOnly || favoriteNames.includes(ex.name)).map(ex => <div className="exercise-row" key={ex.id}><Dumbbell size={16}/><div><strong>{ex.name}</strong><span>{[ex.category,ex.equipment].filter(Boolean).join(' · ')}</span></div><button type="button" className={favoriteNames.includes(ex.name) ? 'favorite-star selected' : 'favorite-star'} onClick={() => toggleFavorite(ex)} aria-label={favoriteNames.includes(ex.name) ? 'Fjern favoritt' : 'Legg til favoritt'}><Star size={17} fill={favoriteNames.includes(ex.name) ? 'currentColor' : 'none'}/></button></div>)}{favoritesOnly && !exercises.some(ex => favoriteNames.includes(ex.name)) && <div className="empty-state">Du har ikkje merkt øvingar som favoritt enno.</div>}</div></> : <div className="empty-state">Øvingsbiblioteket er tomt. Øvingar kan leggjast inn av admin/manager.</div>}
       </section>
     </>}
   </div>
