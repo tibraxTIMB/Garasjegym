@@ -23,7 +23,7 @@ export default function Admin({profile}){
  useEffect(()=>{load()},[])
  async function addWod(event){
   event.preventDefault();setBusy('wod');setError('')
-  try{const {data:{user}}=await supabase.auth.getUser();const values={name:wodName.trim(),format:wodFormat,duration_minutes:Number(wodMinutes)||null,movements:wodMoves.trim(),notes:wodNotes.trim(),timer_settings:{work_seconds:Number(wodWork),rest_seconds:Number(wodRest),rounds:Number(wodRounds)},created_by:user.id};const {error:e}=editingWod?await supabase.from('wods').update(values).eq('id',editingWod.id):await supabase.from('wods').insert({...values,is_published:true});if(e)throw e;setWodName('');setWodMoves('');setWodNotes('');setEditingWod(null);setNotice(editingWod?'WOD oppdatert.':'WOD publisert med timeroppsett.');await load()}
+  try{const {data:{user}}=await supabase.auth.getUser();const values={name:wodName.trim(),format:wodFormat,duration_minutes:Number(wodMinutes)||null,movements:wodMoves.trim(),notes:wodNotes.trim(),timer_settings:{work_seconds:Number(wodWork),rest_seconds:Number(wodRest),rounds:Number(wodRounds)}};const {error:e}=editingWod?await supabase.from('wods').update(values).eq('id',editingWod.id):await supabase.from('wods').insert({...values,is_published:true,created_by:user.id});if(e)throw e;setWodName('');setWodMoves('');setWodNotes('');setEditingWod(null);setNotice(editingWod?'WOD oppdatert.':'WOD publisert med timeroppsett.');await load()}
   catch(e){setError(e.message||'Kunne ikkje publisera WOD.')}finally{setBusy('')}
  }
  async function addExercise(event){
