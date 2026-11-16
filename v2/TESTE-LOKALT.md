@@ -7,6 +7,14 @@ Dette er ei mellombels testutgåve. Ho brukar eit eige Supabase-testprosjekt, al
 - Node.js 20 eller nyare: https://nodejs.org/
 - Internett for å installera npm-pakkar og kople til testdatabasen
 
+## Supabase-testprosjekt
+- Prosjekt: `garasjegym-2-test`
+- Prosjekt-ID: `izwzwvlexqxqewzijhhd`
+- URL: `https://izwzwvlexqxqewzijhhd.supabase.co`
+- Bruk berre publishable key frå prosjektet. Ikkje bruk produksjonsnøklar.
+
+Før registrering: opne Supabase Dashboard → Authentication → URL Configuration. Set Site URL til `http://localhost:5173` og legg til `http://localhost:5173/**` under Redirect URLs. Dette er berre testprosjektet.
+
 ## Start
 1. Last ned ZIP frå utviklingsgreina: https://github.com/tibraxTIMB/Garasjegym/archive/refs/heads/garasjegym-2.0-sturm%C2%ADkopf.zip
 2. Pakk ut ZIP-fila.
@@ -14,10 +22,11 @@ Dette er ei mellombels testutgåve. Ho brukar eit eige Supabase-testprosjekt, al
 4. Dobbeltklikk `START-GARASJEGYM-2.0.bat`.
 5. Første gong blir `.env.local` oppretta og opna i Notisblokk. Fyll inn URL og publishable key frå det dedikerte testprosjektet i Supabase. Lagre.
 6. Start BAT-fila på nytt. Appen opnar på http://localhost:5173.
+7. Vel «Registrer deg» og opprett ein testkonto. Nye kontoar får medlemsrolle. Administratorrettar blir tildelte separat etter at testkontoen er oppretta.
 
 ## Viktig
 - Ikkje bruk URL eller nøkkel frå produksjonsprosjektet.
-- Bruk berre testkontoar og testdata.
+- Bruk berre testkontoar og testdata. Testprosjektet inneheld demoøvingar, ein demo-WOD, kaffiprodukt og ei testgruppeøkt.
 - Ikkje legg `.env.local` i Git eller del innhaldet offentleg.
 - Stopp serveren med Ctrl+C i terminalvindauget.
 - Appen er ikkje produksjonsklar berre fordi ho kan opnast. Testplanen ligg i `QA-2.0.md`.
