@@ -1,0 +1,31 @@
+name: GarasjeGym 2.0 checks
+
+on:
+  push:
+    branches:
+      - "garasjegym-2.0-sturm­kopf"
+    paths:
+      - "v2/**"
+      - ".github/workflows/garasjegym-v2.yml"
+  pull_request:
+    paths:
+      - "v2/**"
+      - ".github/workflows/garasjegym-v2.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install
+      - name: Build production bundle
+        run: npm run build
