@@ -61,6 +61,9 @@ Migrering 008 byggjer vidare på 001 og krev at 005 har oppretta `class_live_ses
 - Admin manglar full drift for booking, PT, kaffibar, varsling og innstillingar.
 - Jamleg oppfrisking er lagt til for sentrale moduldata. Full ende-til-ende-testing med medlem, manager, admin og fleire einingar er ikkje utført.
 
+## Kvalitetssikring
+Testplanen ligg i QA-2.0.md. Han skil mellom planlagde testar og testar som faktisk er stadfesta køyrde.
+
 ## Tryggleik og lansering
 - Supabase RLS er den endelege tilgangskontrollen.
 - Rollene admin og manager blir lesne frå profiles; dei kan ikkje veljast i registreringsskjemaet.
