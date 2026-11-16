@@ -52,6 +52,7 @@ SQL-filene ligg i supabase/migrations/. Dei er staged i GitHub. I eit separat Su
 11. 202611160011_harden_rpc_grants.sql – avgrensar EXECUTE-rettar for sensitive SECURITY DEFINER-hjelpefunksjonar og PT-booking til authenticated.
 12. 202611160012_restrict_trigger_rpc.sql – stengjer direkte RPC-kall til triggerfunksjonar.
 13. 202611160013_test_seed_data.sql – demoøvingar, WOD, kaffiprodukt og gruppetime for isolert testprosjekt; skal ikkje brukast i produksjon.
+14. 202611160014_index_foreign_keys.sql – legg til manglande FK-indeksar og fjernar duplikat indeks for gruppetimepåmelding.
 
 Migrering 008 byggjer vidare på 001 og krev at 005 har oppretta `class_live_sessions`. Migrering 009 er uavhengig av dei andre funksjonsmigreringane. Kontroller heile SQL-pakken og funksjonstryggleiken før installasjon. Ikkje køyr migreringane direkte mot produksjonsdatabasen utan backup, gjennomgang og uttrykkeleg godkjenning. Klientfunksjonar som nyttar nye tabellar, kolonnar eller RPC-ar vil ikkje fungera før tilhøyrande migrering er installert. Treningsklienten har fallback dersom `wods.timer_settings` enno ikkje finst, slik at WOD-biblioteket framleis kan lastast.
 
