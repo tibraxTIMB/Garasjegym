@@ -35,13 +35,18 @@ Bruk aldri service_role eller ein secret key i nettlesarkode. Ikkje legg .env.lo
 - Admin med medlemsroller/aktiv status, WOD-studio og øvingsbibliotek.
 
 ## Database-migreringar
-SQL-filene ligg i supabase/migrations/. Dei er ikkje automatisk køyrde mot Supabase. Les gjennom og køyr dei i rett rekkjefølgje i Supabase SQL Editor før du testar funksjonane som krev dei:
-1. 202611160001_save_workout_atomic.sql – atomisk lagring av økt, øvingar og sett.
-2. 202611160002_coffee_bar.sql – kaffiprodukt, ordre, ordrelinjer, RLS og trygg bestillings-RPC.
-3. 202611160003_exercise_favorites.sql – medlemsfavorittar for øvingar.
-4. 202611160004_lock_class_capacity.sql – låsing av gruppetime ved kapasitetssjekk for å unngå overbooking ved samtidige påmeldingar.
+SQL-filene ligg i supabase/migrations/. Dei er staged i GitHub og er ikkje automatisk køyrde mot Supabase. Supabase sin aktive migreringslogg må kontrollerast før kvar utrulling. Migreringane skal testast på ei isolert utviklingsgrein i denne rekkjefølgja:
 
-Køyr aldri desse filene på produksjonsdatabasen utan å kontrollera prosjekt, ta backup og godkjenna migreringa først. Klientfunksjonar som nyttar ein ny tabell eller RPC vil ikkje fungera før den tilhøyrande migreringa er installert.
+1. 202611160001_save_workout_atomic.sql – atomisk lagring av økt, øvingar og sett.
+2. 202611160002_coffee_bar.sql – kaffiprodukt, ordre, ordrelinjer, RLS og bestillings-RPC.
+3. 202611160003_exercise_favorites.sql – medlemsfavorittar for øvingar.
+4. 202611160004_lock_class_capacity.sql – låsing av gruppetime ved kapasitetssjekk.
+5. 202611160005_class_live_sessions.sql – delt live-tilstand for gruppetimar.
+6. 202611160006_wod_timer_settings.sql – timerinnstillingar på WOD.
+7. 202611160007_group_session_wod_timer.sql – delt WOD- og timeroppsett for gruppetime.
+8. 202611160008_class_workout_results.sql – kopling av personlege treningsresultat til live gruppetime og oppdatert atomisk lagrings-RPC.
+
+Migrering 008 byggjer vidare på 001 og krev at 005 har oppretta `class_live_sessions`. Kontroller heile SQL-pakken og funksjonstryggleiken før installasjon. Ikkje køyr migreringane direkte mot produksjonsdatabasen utan backup, gjennomgang og uttrykkeleg godkjenning. Klientfunksjonar som nyttar nye tabellar, kolonnar eller RPC-ar vil ikkje fungera før tilhøyrande migrering er installert. Treningsklienten har fallback dersom `wods.timer_settings` enno ikkje finst, slik at WOD-biblioteket framleis kan lastast.
 
 ## Kjende avgrensingar / vidare arbeid
 - Timerlogikken må testast på faktiske telefonar, særleg når skjermen går i dvale eller nettlesaren blir minimert.
