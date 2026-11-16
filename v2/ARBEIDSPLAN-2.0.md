@@ -140,4 +140,4 @@ Arbeidsfelt 5 er eit gjennomgåande kvalitetssikringsspor, ikkje berre siste fas
 - Førebels framdriftsestimat etter arbeidsøkta: om lag 75 % av planlagt funksjonalitet har no ein første implementasjon i klient eller staged databasekode. Dette er ikkje 75 % produksjonsklar app: ende-til-ende-testar, databaseinstallasjon og tryggleiksrevisjon står att.
 - Siste endringar er ikkje stadfesta med ein ny CI-byggjekøyring. Ei tidlegare byggjekøyring har bestått, men kan ikkje brukast som bevis for dei siste commitane.
 - Ingen produksjonssetting av 2.0 er godkjend.
-
+- 16.11.2026: Ved ny SQL-gjennomgang vart det funne og retta feil i både opnings- og avslutningsdelimiteren til `DO`-blokka i migrering 004. QA-planen er utvida med testar for duplikatkontroll, samtidige bookingar og SQL-syntaks. Migreringa er framleis berre staged; ho er ikkje køyrd mot Supabase.
