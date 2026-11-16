@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase.js'
 import { isStaff } from '../lib/auth.js'
 
 export default function Booking({ profile }) {
-  const [classes,setClasses]=useState([])
+  const [classes,setClasses]=useState([]),[attendance,setAttendance]=useState([])
   const [mine,setMine]=useState([])
   const [loading,setLoading]=useState(true)
   const [busy,setBusy]=useState('')
@@ -23,12 +23,14 @@ export default function Booking({ profile }) {
     setLoading(true);setError('')
     const [{data:userData,error:userError}]=await Promise.all([supabase.auth.getUser()])
     if(userError||!userData.user){setError('Logg inn på nytt.');setLoading(false);return}
-    const [c,b]=await Promise.all([
+    const [c,b,a]=await Promise.all([
       supabase.from('classes').select('id,title,type,capacity,starts_at,duration_minutes,description,workout_text,wod_ids').gte('starts_at',new Date(Date.now()-86400000).toISOString()).order('starts_at').limit(50),
-      supabase.from('class_bookings').select('id,class_id,status,created_at').eq('member_id',userData.user.id)
+      supabase.from('class_bookings').select('id,class_id,status,created_at').eq('member_id',userData.user.id),
+      supabase.from('class_bookings').select('class_id').eq('status','confirmed')
     ])
     if(c.error)setError(c.error.message);else setClasses(c.data||[])
     if(b.error)setError(b.error.message);else setMine(b.data||[])
+    if(a.error)setError(a.error.message);else setAttendance(a.data||[])
     setLoading(false)
   }
   useEffect(()=>{load()},[])
@@ -88,11 +90,13 @@ export default function Booking({ profile }) {
     </form>}
     {classes.length===0?<div className="empty-state">Ingen komande gruppetimar er publiserte.</div>:<div className="class-list">{classes.map(item=>{
       const booking=mine.find(b=>b.class_id===item.id&&b.status!=='cancelled')
+      const attendeeCount=attendance.filter(b=>b.class_id===item.id).length
+      const full=attendeeCount>=item.capacity
       const date=new Date(item.starts_at)
       return <article className="class-card" key={item.id}>
         <div className="class-date"><strong>{date.toLocaleDateString('nn-NO',{day:'2-digit'})}</strong><span>{date.toLocaleDateString('nn-NO',{month:'short'})}</span></div>
-        <div className="class-info"><div className="class-card-top"><span>{item.type}</span><span><Clock3 size={13}/> {date.toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'})}</span></div><h4>{item.title}</h4><p>{item.description||'Gruppetime i GarasjeGym'}</p><small><Users size={13}/> Kapasitet {item.capacity} · {item.duration_minutes} min</small></div>
-        <div className="class-action">{booking?<><span className="booking-confirmed">Påmeld</span><button className="secondary-button" disabled={busy===item.id} onClick={()=>cancel(item)}>Avmeld</button></>:<button className="primary-button" disabled={busy===item.id||date<new Date()} onClick={()=>book(item)}>{busy===item.id?'Vent …':'Meld på'}</button>}</div>
+        <div className="class-info"><div className="class-card-top"><span>{item.type}</span><span><Clock3 size={13}/> {date.toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'})}</span></div><h4>{item.title}</h4><p>{item.description||'Gruppetime i GarasjeGym'}</p><small><Users size={13}/> {attendeeCount}/{item.capacity} påmelde · {item.duration_minutes} min</small></div>
+        <div className="class-action">{booking?<><span className="booking-confirmed">Påmeld</span><button className="secondary-button" disabled={busy===item.id} onClick={()=>cancel(item)}>Avmeld</button></>:<button className="primary-button" disabled={busy===item.id||date<new Date()||full} onClick={()=>book(item)}>{busy===item.id?'Vent …':full?'Fullt':'Meld på'}</button>}</div>
       </article>
     })}</div>}
   </div>
