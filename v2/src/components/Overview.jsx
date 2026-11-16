@@ -7,18 +7,24 @@ import {supabase} from '../lib/supabase.js'
 
 export default function Overview({profile,onNavigate}){
  const [logs,setLogs]=useState([]),[prs,setPrs]=useState([]),[totalCount,setTotalCount]=useState(0),[loading,setLoading]=useState(true),[error,setError]=useState('')
- useEffect(()=>{let live=true;(async()=>{
-  const [l,p,count]=await Promise.all([
-   supabase.from('workout_logs').select('id,title,workout_date,format,score_rounds,score_reps').order('workout_date',{ascending:false}).limit(100),
-   supabase.from('personal_records').select('id,exercise_name,result,unit,record_date').order('record_date',{ascending:false}),
-   supabase.from('workout_logs').select('id',{count:'exact',head:true})
-  ])
-  if(!live)return
-  if(l.error)setError(l.error.message);else setLogs(l.data||[])
-  if(p.error)setError(p.error.message);else setPrs(p.data||[])
-  if(count.error)setError(count.error.message);else setTotalCount(count.count||0)
-  setLoading(false)
- })();return()=>{live=false}},[])
+ useEffect(()=>{
+  let live=true
+  async function refresh(){
+   const [l,p,count]=await Promise.all([
+    supabase.from('workout_logs').select('id,title,workout_date,format,score_rounds,score_reps').order('workout_date',{ascending:false}).limit(100),
+    supabase.from('personal_records').select('id,exercise_name,result,unit,record_date').order('record_date',{ascending:false}),
+    supabase.from('workout_logs').select('id',{count:'exact',head:true})
+   ])
+   if(!live)return
+   if(l.error)setError(l.error.message);else setLogs(l.data||[])
+   if(p.error)setError(p.error.message);else setPrs(p.data||[])
+   if(count.error)setError(count.error.message);else setTotalCount(count.count||0)
+   setLoading(false)
+  }
+  refresh()
+  const timer=setInterval(refresh,60000)
+  return()=>{live=false;clearInterval(timer)}
+ },[])
  const today=new Date(),monday=new Date(today);monday.setHours(0,0,0,0);monday.setDate(monday.getDate()-(monday.getDay()+6)%7)
  const week=logs.filter(x=>new Date(x.workout_date+'T12:00:00')>=monday)
  const month=logs.filter(x=>{const d=new Date(x.workout_date+'T12:00:00');return d.getMonth()===today.getMonth()&&d.getFullYear()===today.getFullYear()})
