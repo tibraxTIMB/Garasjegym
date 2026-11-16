@@ -88,6 +88,12 @@ export default function Training() {
   const [wods, setWods] = useState([])
   const [exercises, setExercises] = useState([])
   const [history, setHistory] = useState([])
+  const [records, setRecords] = useState([])
+  const [prName, setPrName] = useState('')
+  const [prResult, setPrResult] = useState('')
+  const [prUnit, setPrUnit] = useState('kg')
+  const [prNote, setPrNote] = useState('')
+  const [prSaving, setPrSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -106,15 +112,16 @@ export default function Training() {
 
   async function loadAll() {
     setLoading(true); setError('')
-    const [w, e, h] = await Promise.all([
+    const [w, e, h, pr] = await Promise.all([
       supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,audience,is_published,created_at').eq('is_published', true).order('created_at', { ascending: false }),
       supabase.from('exercises').select('id,name,category,equipment,description,video_url').eq('is_active', true).order('name'),
       supabase.from('workout_logs').select('id,title,workout_date,format,rounds,score_rounds,score_reps,note,created_at,workout_exercises(id,exercise_name,sort_order,workout_sets(id,set_number,reps,load_kg,time_text,time_seconds))').order('workout_date', { ascending: false }).limit(30),
+      supabase.from('personal_records').select('id,exercise_name,result,unit,note,record_date').order('record_date', { ascending: false }).limit(50),
     ])
     if (w.error) setError(w.error.message); else setWods(w.data || [])
     if (e.error && !w.error) setError('Øvingsbibliotek: ' + e.error.message); else setExercises(e.data || [])
     if (h.error && !w.error && !e.error) setError('Treningslogg: ' + h.error.message); else setHistory(h.data || [])
-    setLoading(false)
+    if (pr.error && !w.error && !e.error && !h.error) setError('Personlege rekordar: ' + pr.error.message); else setRecords(pr.data || [])\n    setLoading(false)
   }
   useEffect(() => { loadAll() }, [])
 
@@ -196,6 +203,25 @@ export default function Training() {
       setSaving(false)
     }
   }
+  async function savePersonalRecord(event) {
+    event.preventDefault()
+    if (!prName.trim() || !prResult.trim()) return
+    setPrSaving(true); setError(''); setNotice('')
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) throw new Error('Logg inn på nytt før du lagrar.')
+      const { error: insertError } = await supabase.from('personal_records').insert({
+        member_id: user.id, exercise_name: prName.trim(), result: prResult.trim(),
+        unit: prUnit, note: prNote.trim() || null,
+      })
+      if (insertError) throw insertError
+      setPrName(''); setPrResult(''); setPrNote('')
+      setNotice('Personleg rekord er lagra.')
+      await loadAll()
+    } catch (err) { setError(err.message || 'Kunne ikkje lagra rekorden.') }
+    finally { setPrSaving(false) }
+  }
+
 
   if (loading) return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar treningsdata …</div>
 
@@ -249,6 +275,17 @@ export default function Training() {
       <section className="engine-section">
         <div className="training-heading"><div><div className="section-kicker">HISTORIKK</div><h3>Siste økter</h3></div><span className="count-pill">{history.length} økter</span></div>
         {history.length ? <div className="history-list">{history.map(log => <article className="history-card" key={log.id}><div className="history-card-top"><strong>{log.title}</strong><span>{log.workout_date}</span></div><small>{log.format} · {log.workout_exercises?.length || 0} øvingar</small>{log.workout_exercises?.sort((a,b)=>a.sort_order-b.sort_order).map(ex => <div className="history-exercise" key={ex.id}><b>{ex.exercise_name}</b><span>{(ex.workout_sets || []).map(s => [s.reps ? s.reps+' reps' : '', s.load_kg ? s.load_kg+' kg' : '', s.time_text || ''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ') || 'Ingen sett registrert'}</span></div>)}{log.note && <p>{log.note}</p>}</article>)}</div> : <div className="empty-state">Du har ikkje lagra økter enno.</div>}
+      </section>
+      <section className="engine-section">
+        <div className="training-heading"><div><div className="section-kicker">PROGRESJON</div><h3>Personlege rekordar</h3></div><span className="count-pill">{records.length} PR</span></div>
+        <form className="pr-form" onSubmit={savePersonalRecord}>
+          <input value={prName} onChange={e => setPrName(e.target.value)} placeholder="Øving, t.d. Markløft" required/>
+          <input value={prResult} onChange={e => setPrResult(e.target.value)} placeholder="Resultat, t.d. 120" required/>
+          <select value={prUnit} onChange={e => setPrUnit(e.target.value)}><option value="kg">kg</option><option value="reps">reps</option><option value="sek">sek</option><option value="min">min</option><option value="meter">meter</option><option value="watt">watt</option></select>
+          <input value={prNote} onChange={e => setPrNote(e.target.value)} placeholder="Notat (valfritt)"/>
+          <button className="secondary-button" type="submit" disabled={prSaving}>{prSaving ? 'Lagrar …' : 'Registrer PR'}</button>
+        </form>
+        {records.length ? <div className="history-list">{records.map(record => <article className="history-card" key={record.id}><div className="history-card-top"><strong>{record.exercise_name}</strong><span>{record.record_date}</span></div><div className="pr-result">{record.result} {record.unit}</div>{record.note && <small>{record.note}</small>}</article>)}</div> : <div className="empty-state">Ingen personlege rekordar registrerte enno.</div>}
       </section>
       <section className="engine-section">
         <div className="training-heading"><div><div className="section-kicker">BIBLIOTEK</div><h3>Øvingsbibliotek</h3></div><span className="count-pill">{exercises.length} øvingar</span></div>
