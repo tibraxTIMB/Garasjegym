@@ -7,7 +7,7 @@ const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exerci
 const pad = (n) => String(n).padStart(2, '0')
 const clock = (seconds) => `${pad(Math.floor(Math.max(0, seconds) / 60))}:${pad(Math.max(0, seconds) % 60)}`
 
-function Timer({ format, minutes, activeExercise = '', timerSettings = null }) {
+function Timer({ format, minutes, activeExercise = '', timerSettings = null, onSnapshot = () => {} }) {
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [round, setRound] = useState(1)
@@ -65,6 +65,8 @@ function Timer({ format, minutes, activeExercise = '', timerSettings = null }) {
     const id = window.setInterval(() => setElapsed(s => s + 1), 1000)
     return () => window.clearInterval(id)
   }, [running])
+
+  useEffect(() => { onSnapshot({ elapsed, laps, phase, running }) }, [elapsed, laps, phase, running, onSnapshot])
 
   useEffect(() => {
     if (!running) return
@@ -141,6 +143,8 @@ export default function Training() {
   const [scoreRounds, setScoreRounds] = useState('')
   const [scoreReps, setScoreReps] = useState('')
   const [scoreTime, setScoreTime] = useState('')
+  const [activeExerciseIndex, setActiveExerciseIndex] = useState(0)
+  const [timerSnapshot, setTimerSnapshot] = useState({ elapsed: 0, laps: [], phase: 'Klar', running: false })
 
   async function loadAll() {
     setLoading(true); setError('')
@@ -178,6 +182,8 @@ export default function Training() {
     setDuration(String(wod?.duration_minutes || 10))
     setNote(wod?.notes || '')
     setItems([])
+    setActiveExerciseIndex(0)
+    setTimerSnapshot({ elapsed: 0, laps: [], phase: 'Klar', running: false })
     setScoreRounds(''); setScoreReps(''); setScoreTime('')
     if (wod?.movements) {
       const names = wod.movements.split(/\n|,/).map(x => x.trim()).filter(Boolean)
@@ -237,7 +243,7 @@ export default function Training() {
         rounds: Math.max(1, Number(scoreRounds) || 1),
         score_rounds: scoreRounds === '' ? null : Number(scoreRounds),
         score_reps: scoreReps === '' ? null : Number(scoreReps),
-        note: [note.trim(), scoreTime ? 'Tid: ' + scoreTime : ''].filter(Boolean).join('\\n'),
+        note: [note.trim(), scoreTime ? 'Tid: ' + scoreTime : '', `Timer: ${format} · ${clock(timerSnapshot.elapsed)} · ${timerSnapshot.phase}`, timerSnapshot.laps.length ? 'Mellomtider: ' + timerSnapshot.laps.map((lap, i) => `${i + 1}: ${clock(lap)}`).join(', ') : ''].filter(Boolean).join('\\n'),
         exercises: items.map(item => ({
           exercise_id: item.exercise_id || null,
           exercise_name: item.exercise_name.trim(),
@@ -298,7 +304,11 @@ export default function Training() {
         <label>Treningsformat<select value={format} onChange={e => setFormat(e.target.value)}>{FORMATS.map(x => <option key={x}>{x}</option>)}</select></label>
         <label>Varigheit / timer (min)<input type="number" min="1" max="240" value={duration} onChange={e => setDuration(e.target.value)}/></label>
       </div>
-      <Timer format={format} minutes={duration} activeExercise={items[0]?.exercise_name || ''} timerSettings={source?.timer_settings || null}/>
+      <Timer format={format} minutes={duration} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot}/>
+      {items.length > 0 && <section className="engine-section">
+        <div className="engine-section-title"><h4>WOD / øvingsrekkjefølgje</h4><span>Vel øvinga du arbeider med</span></div>
+        <div className="wod-list">{items.map((item, index) => <button type="button" key={item.key} className={index === activeExerciseIndex ? 'secondary-button active' : 'secondary-button'} onClick={() => setActiveExerciseIndex(index)}>{index + 1}. {item.exercise_name || 'Ny øving'}</button>)}</div>
+      </section>}
       <section className="engine-section">
         <div className="engine-section-title"><h4>Øvingar og sett</h4><span>Legg inn resultat per sett</span></div>
         <div className="exercise-search"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Søk i øvingsbiblioteket …"/></div>
