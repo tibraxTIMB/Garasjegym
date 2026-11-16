@@ -1,6 +1,6 @@
 # GarasjeGym 2.0 – STURMKOPF
 
-Dette er ein separat utviklingsversjon. GarasjeGym 1.8.16 og produksjonsdatabasen blir ikkje endra av arbeidet i denne mappa.
+Dette er ei separat utviklingsutgåve. GarasjeGym 1.8.16 og produksjonsdata skal vera urørte fram til 2.0 er testa og uttrykkeleg godkjend.
 
 ## Teknologi
 - React 18
@@ -18,30 +18,43 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Fyll inn desse verdiane i `.env.local`:
-- `VITE_SUPABASE_URL`: Project URL frå Supabase.
-- `VITE_SUPABASE_PUBLISHABLE_KEY`: publishable key som byrjar med `sb_publishable_`.
+Fyll inn VITE_SUPABASE_URL (Project URL) og VITE_SUPABASE_PUBLISHABLE_KEY (publishable key som byrjar med sb_publishable_).
+Bruk aldri service_role eller ein secret key i nettlesarkode. Ikkje legg .env.local i Git.
 
-Bruk aldri `service_role` eller ein secret key i nettlesarkode. Ikkje legg `.env.local` i Git.
+## Funksjonar som er bygde i klienten
+- E-post/passord-innlogging, registrering og passordlenkje.
+- Medlemsprofil og rollebasert navigasjon.
+- Oversikt med treningsaktivitet, Garasjekadett-rangering og styrkeprosentar.
+- Felles treningsmotor for fri økt og WOD: øvingsliste, sett, reps, kg, tid, notat og historikk.
+- Timer for EMOM, AMRAP, For Time, Tabata, intervall, stoppeklokke og nedteljing.
+- Registrering og vising av personlege rekordar.
+- Gruppetimar med oppretting for staff og på-/avmelding for medlem.
+- PT-studio med publiserte timar, booking via database-RPC og førespurnad.
+- Garasjeprat med innlegg og kommentarar.
+- Kaffibar med produkt, handlekorg, bestilling og ordrestatus for staff.
+- Admin med medlemsroller/aktiv status, WOD-studio og øvingsbibliotek.
 
-## Innlogging og medlemsroller
-- Medlemmer kan logga inn med e-post og passord.
-- Registrering opprettar ein Auth-brukar. Databasetriggeren `handle_new_auth_user` opprettar medlemsprofil med rolla `member`.
-- Rollene `admin` og `manager` blir lesne frå `profiles`; dei kan ikkje veljast i registreringsskjemaet.
-- Inaktive profilar får ikkje tilgang til appen.
-- Supabase RLS er framleis den endelege tilgangskontrollen; skjuling av menyval i klienten er ikkje tryggleik åleine.
+## Database-migreringar
+SQL-filene ligg i supabase/migrations/. Dei er ikkje automatisk køyrde mot Supabase. Les gjennom og køyr dei i rett rekkjefølgje i Supabase SQL Editor før du testar funksjonane som krev dei:
+1. 202611160001_save_workout_atomic.sql – atomisk lagring av økt, øvingar og sett.
+2. 202611160002_coffee_bar.sql – kaffiprodukt, ordre, ordrelinjer, RLS og trygg bestillings-RPC.
+3. 202611160003_exercise_favorites.sql – medlemsfavorittar for øvingar.
+4. 202611160004_lock_class_capacity.sql – låsing av gruppetime ved kapasitetssjekk for å unngå overbooking ved samtidige påmeldingar.
 
-## Status
-Første funksjonelle grunnmur:
-- Supabase-klient med vedvarande nettlesarsesjon
-- Innlogging og registrering
-- Henting av medlemsprofil og rolle
-- Tilgangsstyrt adminmeny
-- Responsivt mørkt STURMKOPF-design
+Køyr aldri desse filene på produksjonsdatabasen utan å kontrollera prosjekt, ta backup og godkjenna migreringa først. Klientfunksjonar som nyttar ein ny tabell eller RPC vil ikkje fungera før den tilhøyrande migreringa er installert.
 
-Treningsmotor, booking, PT, sosialt, kaffibar, varsling og full datasynkronisering er ikkje implementerte enno.
+## Kjende avgrensingar / vidare arbeid
+- Timerlogikken må testast på faktiske telefonar, særleg når skjermen går i dvale eller nettlesaren blir minimert.
+- Gruppetimane manglar synkronisert live-økt mellom instruktør og deltakarar.
+- PT-planar, meldingar og klientnotat må få eigne fullverdige skjermar.
+- Favorittmigreringa er førebels databasestøtte; favorittvising i klienten står att.
+- Kaffibar-geofence, lyd/varsel og eventuelle betalingar er ikkje implementerte.
+- Sosiale bilete, reaksjonar, utfordringar og varsling står att.
+- Admin manglar full drift for booking, PT, kaffibar, varsling og innstillingar.
+- Full ende-til-ende-testing med medlem, manager, admin og fleire einingar er ikkje utført.
 
-## Migrering og tryggleik
-- 1.8.16 skal liggja urørt fram til 2.0 er testa og godkjend.
-- Ingen produksjonstabellar, RLS-policyar eller data skal endrast utan separat gjennomgang og godkjenning.
-- Før vidare funksjonsmigrering skal alle eksisterande tabellar, policies, triggarar og funksjonar kartleggjast.
+## Tryggleik og lansering
+- Supabase RLS er den endelege tilgangskontrollen.
+- Rollene admin og manager blir lesne frå profiles; dei kan ikkje veljast i registreringsskjemaet.
+- Nye Auth-brukarar skal få medlemsprofil gjennom handle_new_auth_user.
+- Ingen produksjonssetting eller endring av 1.8.16 er godkjend.
