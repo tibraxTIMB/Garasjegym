@@ -137,7 +137,7 @@ Arbeidsfelt 5 er eit gjennomgåande kvalitetssikringsspor, ikkje berre siste fas
 - Supabase Security Advisor viste éin ERROR for view `public.pt_session_capacity` (SECURITY DEFINER) og åtvaringar for SECURITY DEFINER-RPC-ar. Migrering 011 fjernar EXECUTE-tilgang frå anon for rollefunksjonane og PT-booking, men view-feilen og attverande authenticated SECURITY DEFINER-varsling må vurderast før produksjonssetting.
 - Supabase Performance Advisor viser òg manglande indeksar på fleire framandnøklar og RLS-policyar som kan optimaliserast. Dette er oppfølgingspunkt, ikkje grunnlag for å endra produksjonsskjema utan kontroll.
 - Databasetryggleik og samsvar mellom 1.8.16 og Supabase krev vidare gjennomgang.
-- Førebels framdriftsestimat etter arbeidsøkta: om lag 70 % av funksjonsarbeidet er implementert. Dette er ikkje ein byggje- eller lanseringsstatus; ende-til-ende-testar, databaseinstallasjon og tryggleiksrevisjon står att.
+- Førebels framdriftsestimat etter arbeidsøkta: om lag 75 % av planlagt funksjonalitet har no ein første implementasjon i klient eller staged databasekode. Dette er ikkje 75 % produksjonsklar app: ende-til-ende-testar, databaseinstallasjon og tryggleiksrevisjon står att.
 - Siste endringar er ikkje stadfesta med ein ny CI-byggjekøyring. Ei tidlegare byggjekøyring har bestått, men kan ikkje brukast som bevis for dei siste commitane.
 - Ingen produksjonssetting av 2.0 er godkjend.
 
