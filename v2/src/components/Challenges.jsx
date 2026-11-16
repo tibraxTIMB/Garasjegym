@@ -117,7 +117,7 @@ export default function Challenges({profile}){
    return <article className="challenge-card" key={challenge.id}>
     <div className="challenge-card-head"><div className="challenge-icon"><Flag size={19}/></div><div className="challenge-title"><strong>{challenge.title}</strong><small>{challenge.starts_on} – {challenge.ends_on} · {ended?'Avslutta':started?'Pågår':'Startar snart'}</small></div>{staff&&<button className="secondary-button" disabled={busy==='active-'+challenge.id} onClick={()=>toggleActive(challenge)}>{challenge.is_active?'Arkiver':'Aktiver'}</button>}</div>
     {challenge.description&&<p>{challenge.description}</p>}
-    <div className="challenge-goal"><span><Target size={15}/> Mål: {challenge.goal} {metricInfo.unit}</span><span>{team.length} deltakar{team.length===1?'':'ar'}</span></div>
+    <div className="challenge-goal"><span><Target size={15}/> Mål: {challenge.goal} {metricInfo.unit}</span><span>{staff?`${team.length} deltakar${team.length===1?'':'ar'}`:entry?'Du deltek':'Bli med'}</span></div>
     {entry?<div className="challenge-progress">
      <div className="challenge-progress-top"><strong>Din framgang</strong><b>{entry.progress} / {challenge.goal} {metricInfo.unit}</b></div>
      <div className="challenge-progress-track"><span style={{width:pct+'%'}}/></div>
