@@ -18,6 +18,7 @@ import Training from './components/Training.jsx'
 import Booking from './components/Booking.jsx'
 import PT from './components/PT.jsx'
 import Community from './components/Community.jsx'
+import CoffeeBar from './components/CoffeeBar.jsx'
 
 const sections = [
   { id: 'oversikt', label: 'Oversikt', icon: LayoutDashboard, note: 'Dashboard og treningsstatus' },
@@ -218,7 +219,7 @@ export default function App() {
           <h1>Bygd for å <em>prestera.</em></h1>
           <p>Ein felles plattform for trening, booking og fellesskap.</p>
         </section>
-        {active === 'trening' ? <section className="content-card training-content"><Training /></section> : active === 'booking' ? <section className="content-card training-content"><Booking profile={profile} /></section> : active === 'pt' ? <section className="content-card training-content"><PT profile={profile} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community profile={profile} /></section> : <section className="content-card">
+        {active === 'trening' ? <section className="content-card training-content"><Training /></section> : active === 'booking' ? <section className="content-card training-content"><Booking profile={profile} /></section> : active === 'pt' ? <section className="content-card training-content"><PT profile={profile} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community profile={profile} /></section> : active === 'kaffi' ? <section className="content-card training-content"><CoffeeBar profile={profile} /></section> : <section className="content-card">
           <div className="section-icon"><Icon size={22} /></div>
           <div className="section-kicker">MODUL · {active.toUpperCase()}</div>
           <h2>{current.label}</h2>
