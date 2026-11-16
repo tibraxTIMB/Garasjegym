@@ -6,8 +6,8 @@ export default function Community({profile}){
  const [posts,setPosts]=useState([]),[comments,setComments]=useState([])
  const [body,setBody]=useState(''),[topic,setTopic]=useState('Treningsprat'),[drafts,setDrafts]=useState({})
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
- async function load(){
-  setLoading(true);setError('')
+ async function load(silent=false){
+  if(!silent)setLoading(true);setError('')
   const [p,c]=await Promise.all([
    supabase.from('social_posts').select('id,author_id,author_name,body,topic,kind,created_at').order('created_at',{ascending:false}).limit(60),
    supabase.from('social_comments').select('id,post_id,author_id,author_name,body,created_at').order('created_at',{ascending:true}).limit(200)
@@ -16,7 +16,7 @@ export default function Community({profile}){
   if(c.error)setError(c.error.message);else setComments(c.data||[])
   setLoading(false)
  }
- useEffect(()=>{load()},[])
+ useEffect(()=>{load();const refresh=setInterval(()=>load(true),30000);return()=>clearInterval(refresh)},[])
  async function publish(e){
   e.preventDefault();if(!body.trim())return
   setBusy('post');setError('');setNotice('')
