@@ -13,8 +13,8 @@ export default function PT({profile}){
  const [members,setMembers]=useState([]),[messages,setMessages]=useState([]),[notes,setNotes]=useState([]),[plans,setPlans]=useState({}),[exerciseLibrary,setExerciseLibrary]=useState([]),[planDrafts,setPlanDrafts]=useState({})
  const [messageClient,setMessageClient]=useState(''),[messageText,setMessageText]=useState('')
  const [noteClient,setNoteClient]=useState(''),[noteGoals,setNoteGoals]=useState(''),[noteText,setNoteText]=useState(''),[followUp,setFollowUp]=useState(''),[requestDrafts,setRequestDrafts]=useState({})
- async function load(){
-  setLoading(true);setError('')
+ async function load(silent=false){
+  if(!silent)setLoading(true);setError('')
   const {data:{user},error:authError}=await supabase.auth.getUser()
   if(authError||!user){setError('Logg inn på nytt.');setLoading(false);return}
   const [s,b,r,m,p,n,pe,ex]=await Promise.all([
@@ -37,7 +37,7 @@ export default function PT({profile}){
   if(ex.error)setError(ex.error.message);else setExerciseLibrary(ex.data||[])
   setLoading(false)
  }
- useEffect(()=>{load()},[])
+ useEffect(()=>{load();const refresh=setInterval(()=>load(true),60000);return()=>clearInterval(refresh)},[])
  async function addPlanExercise(event,session){
   event.preventDefault();const draft=planDrafts[session.id]||{};const exercise=exerciseLibrary.find(x=>x.id===draft.exerciseId)
   if(!exercise){setError('Vel ei øving frå biblioteket.');return}
