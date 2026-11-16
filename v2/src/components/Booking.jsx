@@ -3,6 +3,29 @@ import { CalendarDays, CheckCircle2, Clock3, LoaderCircle, Plus, Users, Radio, P
 import { supabase } from '../lib/supabase.js'
 import { isStaff } from '../lib/auth.js'
 
+const LIVE_SESSION_FIELDS = 'id,class_id,status,started_at,session_title,wod_id,timer_format,timer_duration_seconds,timer_settings,timer_started_at,timer_elapsed_seconds,timer_status'
+const LIVE_SESSION_BASE_FIELDS = 'id,class_id,status,started_at,session_title,wod_id'
+
+async function fetchLiveSessions() {
+  let result = await supabase.from('class_live_sessions')
+    .select(LIVE_SESSION_FIELDS)
+    .in('status', ['active', 'paused'])
+    .order('started_at', { ascending: false })
+
+  // Migration 005 creates live sessions; migration 007 adds the shared timer columns.
+  // Keep the live session visible during the short interval between those migrations.
+  if (result.error && /timer_settings|timer_started_at|timer_elapsed_seconds|timer_status|timer_format|timer_duration_seconds|column .* does not exist/i.test(result.error.message || '')) {
+    result = await supabase.from('class_live_sessions')
+      .select(LIVE_SESSION_BASE_FIELDS)
+      .in('status', ['active', 'paused'])
+      .order('started_at', { ascending: false })
+  }
+  if (result.error && /class_live_sessions|relation .* does not exist/i.test(result.error.message || '')) {
+    return { data: [], error: null }
+  }
+  return result
+}
+
 export default function Booking({ profile, onLogResult }) {
   const [classes,setClasses]=useState([]),[attendance,setAttendance]=useState([])
   const [mine,setMine]=useState([])
@@ -33,13 +56,13 @@ export default function Booking({ profile, onLogResult }) {
       supabase.from('classes').select('id,title,type,capacity,starts_at,duration_minutes,description,workout_text,wod_ids').gte('starts_at',new Date(Date.now()-86400000).toISOString()).order('starts_at').limit(50),
       supabase.from('class_bookings').select('id,class_id,status,created_at').eq('member_id',userData.user.id),
       supabase.from('class_bookings').select('class_id').eq('status','confirmed'),
-      supabase.from('class_live_sessions').select('id,class_id,status,started_at,session_title,wod_id,timer_format,timer_duration_seconds,timer_settings,timer_started_at,timer_elapsed_seconds,timer_status').in('status',['active','paused']).order('started_at',{ascending:false})
+      fetchLiveSessions()
     ])
     // The base booking calendar must remain usable before optional live-session migrations are installed.
     if(c.error)setError(c.error.message);else setClasses(c.data||[])
     if(b.error)setError(b.error.message);else setMine(b.data||[])
     if(a.error)setError(a.error.message);else setAttendance(a.data||[])
-    if(live.error && !/class_live_sessions|timer_settings|column .* does not exist/i.test(live.error.message||''))setError(live.error.message);else setLiveSessions(live.data||[])
+    if(live.error)setError(live.error.message);else setLiveSessions(live.data||[])
     let w=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings').eq('is_published',true).order('name')
     if(w.error && /timer_settings|column .* does not exist/i.test(w.error.message||'')){
       w=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes').eq('is_published',true).order('name')
@@ -66,7 +89,7 @@ export default function Booking({ profile, onLogResult }) {
     const refresh=setInterval(loadResults,5000)
     return()=>{cancelled=true;clearInterval(refresh)}
   },[staff,liveSessionIds])
-  useEffect(()=>{const timer=setInterval(async()=>{setClockNow(Date.now());const {data,error:e}=await supabase.from('class_live_sessions').select('id,class_id,status,started_at,session_title,wod_id,timer_format,timer_duration_seconds,timer_started_at,timer_elapsed_seconds,timer_status').in('status',['active','paused']).order('started_at',{ascending:false});if(!e)setLiveSessions(data||[])},1000);return()=>clearInterval(timer)},[])
+  useEffect(()=>{const timer=setInterval(async()=>{setClockNow(Date.now());const {data,error:e}=await fetchLiveSessions();if(!e)setLiveSessions(data||[])},1000);return()=>clearInterval(timer)},[])
 
   async function book(item){
     setBusy(item.id);setError('');setNotice('')
