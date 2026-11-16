@@ -58,3 +58,7 @@ Køyr aldri desse filene på produksjonsdatabasen utan å kontrollera prosjekt, 
 - Rollene admin og manager blir lesne frå profiles; dei kan ikkje veljast i registreringsskjemaet.
 - Nye Auth-brukarar skal få medlemsprofil gjennom handle_new_auth_user.
 - Ingen produksjonssetting eller endring av 1.8.16 er godkjend.
+
+### Nye staged migreringar (ikkje køyrde)
+
+- `202611160005_class_live_sessions.sql` opprettar delt tilstand for aktive gruppetimar, med RLS for instruktørar og påmelde deltakarar. Migreringa er berre lagra i utviklingsgreina og er ikkje køyrd mot Supabase.
