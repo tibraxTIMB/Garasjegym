@@ -1,0 +1,309 @@
+
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #f2f1ed;
+  background: #111315;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --bg: #111315;
+  --panel: #1b1e20;
+  --panel2: #24282a;
+  --line: #34393b;
+  --muted: #9ba2a3;
+  --orange: #f0a33a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--bg);
+}
+
+button {
+  font: inherit;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 258px 1fr;
+}
+
+.sidebar {
+  background: #181b1d;
+  border-right: 1px solid var(--line);
+  padding: 26px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 10px 34px;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  background: var(--orange);
+  color: #171819;
+  border-radius: 11px;
+}
+
+.brand strong {
+  display: block;
+  font-size: 15px;
+  letter-spacing: 1.5px;
+}
+
+.brand span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+.side-label,
+.section-kicker,
+.eyebrow {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+}
+
+.side-label {
+  padding: 0 12px 12px;
+}
+
+.sidebar nav {
+  display: grid;
+  gap: 6px;
+}
+
+.nav-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  color: #b9bdbd;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  background: var(--panel2);
+  color: white;
+}
+
+.nav-item.selected {
+  background: #30271d;
+  border-color: #61451f;
+  color: var(--orange);
+}
+
+.sidebar-foot {
+  margin-top: auto;
+  padding: 18px 10px 0;
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--orange);
+}
+
+.main {
+  min-width: 0;
+  padding: 0 5vw;
+}
+
+.topbar {
+  height: 76px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+}
+
+.top-meta {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 1.3px;
+}
+
+.mobile-brand {
+  display: none;
+}
+
+.welcome {
+  padding: 70px 0 44px;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--orange);
+}
+
+h1 {
+  margin: 18px 0 8px;
+  font-size: clamp(38px, 6vw, 68px);
+  letter-spacing: -2.5px;
+  line-height: 1;
+}
+
+h1 em {
+  color: var(--orange);
+  font-style: normal;
+}
+
+.welcome p,
+.content-card p {
+  color: var(--muted);
+}
+
+.content-card {
+  max-width: 780px;
+  padding: 28px;
+  background: linear-gradient(145deg, #202426, #191c1e);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.section-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 22px;
+  border-radius: 12px;
+  color: var(--orange);
+  background: #30271d;
+}
+
+h2 {
+  margin: 9px 0 4px;
+  font-size: 28px;
+}
+
+.notice {
+  display: grid;
+  gap: 7px;
+  margin-top: 28px;
+  padding: 17px;
+  border-left: 3px solid var(--orange);
+  background: #252729;
+  border-radius: 0 9px 9px 0;
+}
+
+.notice strong {
+  font-size: 13px;
+}
+
+.notice span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  max-width: 780px;
+  padding: 26px 0;
+  margin-top: 40px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: 1.2px;
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    padding: 10px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .brand,
+  .side-label,
+  .sidebar-foot {
+    display: none;
+  }
+
+  .sidebar nav {
+    display: flex;
+    overflow-x: auto;
+    gap: 5px;
+  }
+
+  .nav-item {
+    flex: 0 0 auto;
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .nav-item svg {
+    display: none;
+  }
+
+  .main {
+    padding: 0 20px;
+  }
+
+  .topbar {
+    height: 52px;
+    justify-content: space-between;
+  }
+
+  .mobile-brand {
+    display: block;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 1px;
+  }
+
+  .mobile-brand span {
+    color: var(--orange);
+  }
+
+  .top-meta {
+    font-size: 8px;
+  }
+
+  .welcome {
+    padding: 45px 0 28px;
+  }
+
+  .content-card {
+    padding: 21px;
+  }
+}
