@@ -165,6 +165,12 @@ export default function Training() {
 
   const filteredExercises = useMemo(() => exercises.filter(e => e.name.toLowerCase().includes(query.toLowerCase()) || (e.category || '').toLowerCase().includes(query.toLowerCase())), [exercises, query])
 
+  function leaveWorkout() {
+    if (window.confirm('Vil du avslutta økta? Resultata som ikkje er lagra, går tapt.')) {
+      setMode('home'); setSource(null); setItems([])
+    }
+  }
+
   function startWorkout(wod = null) {
     setSource(wod)
     setTitle(wod?.name || '')
@@ -285,7 +291,7 @@ export default function Training() {
     {error && <div className="auth-error" role="alert">{error}</div>}
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16}/> {notice}</div>}
     {mode === 'active' ? <form className="engine-form" onSubmit={saveWorkout}>
-      <button type="button" className="text-button" onClick={() => setMode('home')}>← Til treningsoversikta</button>
+      <button type="button" className="text-button" onClick={leaveWorkout}>← Avslutt økta</button>
       <div className="training-heading"><div><div className="section-kicker">TRENING · AKTIV ØKT</div><h3>Bygg økta di</h3></div><span className="count-pill">{items.length} øvingar</span></div>
       <div className="engine-fields">
         <label>Namn på økta<input value={title} onChange={e => setTitle(e.target.value)} placeholder="Til dømes Styrke A" required/></label>
