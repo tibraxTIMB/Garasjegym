@@ -149,8 +149,16 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
 
   async function loadAll() {
     setLoading(true); setError('')
-    const [w, e, h, pr] = await Promise.all([
-      supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,audience,is_published,created_at,timer_settings').eq('is_published', true).order('created_at', { ascending: false }),
+    let w = await supabase.from('wods')
+      .select('id,name,format,duration_minutes,movements,notes,audience,is_published,created_at,timer_settings')
+      .eq('is_published', true).order('created_at', { ascending: false })
+    // Keep the WOD library usable while the optional timer-settings migration is staged.
+    if (w.error && /timer_settings|column .* does not exist/i.test(w.error.message || '')) {
+      w = await supabase.from('wods')
+        .select('id,name,format,duration_minutes,movements,notes,audience,is_published,created_at')
+        .eq('is_published', true).order('created_at', { ascending: false })
+    }
+    const [e, h, pr] = await Promise.all([
       supabase.from('exercises').select('id,name,category,equipment,description,video_url').eq('is_active', true).order('name'),
       supabase.from('workout_logs').select('id,title,workout_date,format,rounds,score_rounds,score_reps,note,created_at,workout_exercises(id,exercise_name,sort_order,workout_sets(id,set_number,reps,load_kg,time_text,time_seconds))').order('workout_date', { ascending: false }).limit(30),
       supabase.from('personal_records').select('id,exercise_name,result,unit,note,record_date').order('record_date', { ascending: false }).limit(50),
