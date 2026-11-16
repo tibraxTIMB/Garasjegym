@@ -31,8 +31,8 @@ const sections = [
   { id: 'kaffi', label: 'Barista', icon: Coffee, note: 'Meny og bestillingar' },
 ]
 
-function AuthScreen() {
-  const [mode, setMode] = useState('login')
+function AuthScreen({ recovery = false }) {
+  const [mode, setMode] = useState(recovery ? 'update' : 'login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
@@ -46,7 +46,14 @@ function AuthScreen() {
     setError('')
     setMessage('')
     try {
-      if (mode === 'reset') {
+      if (mode === 'update') {
+        const { error: updateError } = await supabase.auth.updateUser({ password })
+        if (updateError) throw updateError
+        setMessage('Passordet er oppdatert. Du kan no logga inn med det nye passordet.')
+        setMode('login')
+        setPassword('')
+        await supabase.auth.signOut()
+      } else if (mode === 'reset') {
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin })
         if (resetError) throw resetError
         setMessage('Dersom e-postadressa er registrert, får du ei lenkje for å velja nytt passord.')
@@ -85,8 +92,8 @@ function AuthScreen() {
           <div><strong>GARASJEGYM</strong><span>STURMKOPF · 2.0</span></div>
         </div>
         <div className="eyebrow"><ShieldCheck size={14} /> MEDLEMSOMRÅDE</div>
-        <h1>{mode === 'login' ? <>Velkomen <em>tilbake.</em></> : mode === 'reset' ? <>Nytt <em>passord.</em></> : <>Bli ein <em>del av laget.</em></>}</h1>
-        <p className="auth-intro">{mode === 'reset' ? 'Skriv inn e-postadressa di, så sender me ei lenkje for å nullstilla passordet.' : 'Logg inn med GarasjeGym-kontoen din, eller registrer ein ny medlemskonto.'}</p>
+        <h1>{mode === 'login' ? <>Velkomen <em>tilbake.</em></> : mode === 'reset' || mode === 'update' ? <>Nytt <em>passord.</em></> : <>Bli ein <em>del av laget.</em></>}</h1>
+        <p className="auth-intro">{mode === 'reset' ? 'Skriv inn e-postadressa di, så sender me ei lenkje for å nullstilla passordet.' : mode === 'update' ? 'Vel eit nytt passord for GarasjeGym-kontoen din.' : 'Logg inn med GarasjeGym-kontoen din, eller registrer ein ny medlemskonto.'}</p>
         <form className="auth-form" onSubmit={submit}>
           {mode === 'signup' && (
             <label>
@@ -94,10 +101,10 @@ function AuthScreen() {
               <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} autoComplete="name" required placeholder="Namnet ditt" />
             </label>
           )}
-          <label>
+          {mode !== 'update' && <label>
             E-post
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required placeholder="namn@epost.no" />
-          </label>
+          </label>}
           {mode !== 'reset' && <label>
             Passord
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={6} placeholder="Passord" />
@@ -105,7 +112,7 @@ function AuthScreen() {
           {error && <div className="auth-error" role="alert">{error}</div>}
           {message && <div className="auth-message" role="status">{message}</div>}
           <button className="primary-button" type="submit" disabled={busy}>
-            {busy ? 'Arbeider …' : mode === 'login' ? 'Logg inn' : mode === 'reset' ? 'Send lenkje' : 'Opprett medlemskonto'}
+            {busy ? 'Arbeider …' : mode === 'login' ? 'Logg inn' : mode === 'reset' ? 'Send lenkje' : mode === 'update' ? 'Lagra nytt passord' : 'Opprett medlemskonto'}
           </button>
         </form>
         <div className="auth-switch">
@@ -127,6 +134,7 @@ function LoadingScreen({ text }) {
 
 export default function App() {
   const [session, setSession] = useState(null)
+  const [passwordRecovery, setPasswordRecovery] = useState(false)
   const [authReady, setAuthReady] = useState(false)
   const [profile, setProfile] = useState(null)
   const [profileReady, setProfileReady] = useState(false)
@@ -135,7 +143,8 @@ export default function App() {
 
   useEffect(() => {
     if (!supabase) return
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true)
       setSession(nextSession)
       setAuthReady(true)
     })
@@ -171,6 +180,7 @@ export default function App() {
     return <LoadingScreen text="Supabase er ikkje konfigurert. Legg inn VITE_SUPABASE_URL og VITE_SUPABASE_ANON_KEY i v2/.env.local." />
   }
   if (!authReady) return <LoadingScreen text="Koplar til GarasjeGym …" />
+  if (passwordRecovery) return <AuthScreen recovery />
   if (!session) return <AuthScreen />
   if (!profileReady) return <LoadingScreen text="Hentar medlemsprofil …" />
 
