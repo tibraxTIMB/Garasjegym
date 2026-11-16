@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from 'react'
+import {useEffect,useState} from 'react'
 import {CheckCircle2,Flag,LoaderCircle,Plus,Target,Trophy} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import {isStaff} from '../lib/auth.js'
@@ -47,8 +47,6 @@ export default function Challenges({profile}){
   setLoading(false)
  }
  useEffect(()=>{load();const refresh=setInterval(()=>load(true),60000);return()=>clearInterval(refresh)},[])
-
- const myEntries=useMemo(()=>participants.filter(p=>p.member_id===profile.id),[participants,profile.id])
  async function create(event){
   event.preventDefault();setBusy('create');setError('');setNotice('')
   try{
@@ -121,7 +119,7 @@ export default function Challenges({profile}){
     {entry?<div className="challenge-progress">
      <div className="challenge-progress-top"><strong>Din framgang</strong><b>{entry.progress} / {challenge.goal} {metricInfo.unit}</b></div>
      <div className="challenge-progress-track"><span style={{width:pct+'%'}}/></div>
-     {!ended&&<div className="challenge-progress-form"><label>Registrer framgang<input type="number" min="0" step="0.01" value={drafts[entry.id]?.progress??entry.progress} onChange={e=>setDrafts(v=>({...v,[entry.id]:{...v[entry.id],progress:e.target.value}}))}/></label><label>Notat<input value={drafts[entry.id]?.note??entry.note??''} onChange={e=>setDrafts(v=>({...v,[entry.id]:{...v[entry.id],note:e.target.value}}))} placeholder="Valfritt"/></label><button className="secondary-button" disabled={busy==='progress-'+entry.id} onClick={()=>saveProgress(entry)}>Lagra</button></div>}
+     {!ended&&started&&<div className="challenge-progress-form"><label>Registrer framgang<input type="number" min="0" step="0.01" value={drafts[entry.id]?.progress??entry.progress} onChange={e=>setDrafts(v=>({...v,[entry.id]:{...v[entry.id],progress:e.target.value}}))}/></label><label>Notat<input value={drafts[entry.id]?.note??entry.note??''} onChange={e=>setDrafts(v=>({...v,[entry.id]:{...v[entry.id],note:e.target.value}}))} placeholder="Valfritt"/></label><button className="secondary-button" disabled={busy==='progress-'+entry.id} onClick={()=>saveProgress(entry)}>Lagra</button></div>}
      {entry.note&&<small>{entry.note}</small>}
     </div>:<div className="challenge-join">{ended?'Utfordringa er avslutta.':challenge.is_active?<button className="primary-button" disabled={busy==='join-'+challenge.id||!started&&challenge.starts_on<now} onClick={()=>join(challenge)}>{busy==='join-'+challenge.id?'Meldar på …':'Bli med'}</button>:<span>Utfordringa er ikkje aktiv.</span>}</div>}
     {staff&&team.length>0&&<div className="challenge-team"><strong><Trophy size={14}/> Deltakaroversikt</strong>{team.map(person=><div key={person.id}><span>{members.find(m=>m.id===person.member_id)?.display_name||'Medlem'}</span><b>{person.progress} {metricInfo.unit}</b></div>)}</div>}
