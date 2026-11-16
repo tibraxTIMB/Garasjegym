@@ -42,7 +42,7 @@ Arbeid:
 - Treningslogg, personlege rekordar, progresjon og historikk.
 - Garasjekadett, poeng/stjerner og andre progresjonsmekanismar frå eksisterande app.
 - Fullskjerms Training Mode med stor klokke, aktiv øving, WOD-oversikt, lydsignal og manuelle mellomtider.
-- WOD-timerinnstillingar blir lagra i `wods.timer_settings` gjennom migrering 006. Kode er under utvikling; migreringa er ikkje køyrd i Supabase.
+- WOD-timerinnstillingar skal lagrast i `wods.timer_settings` etter at migrering er oppretta og testa i isolert utviklingsmiljø.
 
 **Godkjenningskrav:** Same økt kan startast frå dei ulike inngangane, registrerast individuelt, lagrast korrekt og visast att i personleg historikk. Timer og resultat skal fungera på mobil.
 
@@ -110,14 +110,15 @@ Arbeid:
 
 Arbeidsfelt 5 er eit gjennomgåande kvalitetssikringsspor, ikkje berre siste fase. Design, tilgangskontroll, dokumentasjon og testing skal følgja alle dei andre felta.
 
-## Status ved oppretting av planen
+## Status 16.11.2026
 
-- Arbeidsfelt 1 er meldt fullført av brukar 16.11.2026. Dette er brukarstadfesta status, ikkje ei ny uavhengig tryggleiksrevisjon.
-
-- React/Vite-grunnstruktur og mørkt design er etablert.
-- Supabase-klient, innlogging/registrering og profiloppslag er implementert i kode, men ikkje fullstendig testa i nettlesar.
-- Klientmodular er no kopla for oversikt, trening, gruppetimebooking, PT, fellesskap, kaffibar og admin. Treningsmotoren har øktbyggjar, timer, historikk, PR og Garasjekadett. Dette er framleis utviklingskode; databasmigreringar og full funksjonstesting står att.
+- Arbeidsfelt 1 er meldt fullført av brukar. Dette er brukarstadfesta status, ikkje ei ny uavhengig tryggleiksrevisjon.
+- React/Vite-grunnstruktur, mørkt design, Supabase-klient og dei første klientmodulane er etablerte på eiga 2.0-grein.
 - GitHub Actions-produksjonsbygg har bestått ein køyring.
+- Supabase-skjema og RLS for `workout_logs`, `workout_exercises` og `workout_sets` er no kontrollert. Sjå `v2/ARBEID-02-TRENINGSMOTOR.md`.
+- Eksisterande policies krev eigarskap via `auth.uid()` og aktiv medlemsprofil; underliggjande øvings- og settrader blir autoriserte via foreldreøkta.
+- Atomisk lagring av treningsøkter er neste tekniske leveranse. Ho skal byggjast og testast i isolert utviklingsmiljø; ingen ny DDL er køyrd mot delt database.
+- Timerinnstillingar i `wods.timer_settings` er ikkje tilgjengelege i databasen enno. Migrering 006 er ikkje registrert i Supabase.
 - Gruppetimar, PT, sosial feed, kaffibar og grunnleggjande admin har første klientversjon. Synkronisert live gruppetrening, PT-meldingar/notat, kaffibar-geofence, reaksjonar/bilete, varsling og full admin står att.
 - Databasetryggleik og samsvar mellom 1.8.16 og Supabase krev vidare gjennomgang.
 - Ingen produksjonssetting av 2.0 er godkjend.
