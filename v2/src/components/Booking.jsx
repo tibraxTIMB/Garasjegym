@@ -55,7 +55,7 @@ export default function Booking({ profile, onLogResult }) {
       const rows=data||[]
       setSessionResults(rows.reduce((acc,row)=>{(acc[row.class_live_session_id] ||= []).push(row);return acc},{}))
       const memberIds=[...new Set(rows.map(row=>row.member_id))]
-      if(memberIds.length){const {data:profiles}=await supabase.from('profiles').select('id,display_name').in('id',memberIds);if(!cancelled)setMemberNames(Object.fromEntries((profiles||[]).map(p=>[p.id,p.display_name||'Medlem']))}
+      if(memberIds.length){const {data:profiles}=await supabase.from('profiles').select('id,display_name').in('id',memberIds);if(!cancelled)setMemberNames(Object.fromEntries((profiles||[]).map(p=>[p.id,p.display_name||'Medlem'])))}
     }
     loadResults()
     return()=>{cancelled=true}
