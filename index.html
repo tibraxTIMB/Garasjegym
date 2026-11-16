@@ -3,8 +3,8 @@
 <html lang="nn">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#11151b"><meta name="application-name" content="GarasjeGym 1.7 – SturmGeiler">
-<title>GARASJEGYM 1.8.6 · STURMGEILER</title>
+<meta name="theme-color" content="#11151b"><meta name="application-name" content="GarasjeGym 1.8.11 – KAIZERSTURM">
+<title>GARASJEGYM 1.8.11 · KAIZERSTURM</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -618,7 +618,7 @@ body.wod-dashboard-mode.training-layout-edit #trainingConsole .gg-module-picker{
 }
 
 
-/* GarasjeGym 1.8.7 – timerløft */
+/* GarasjeGym 1.8.11 – KAIZERSTURM · WOD og timerintegrasjon */
 #trainingConsole .timer-face{gap:7px}
 #trainingConsole .timer-state{font-size:clamp(16px,2vw,24px);letter-spacing:.12em;font-weight:900}
 #trainingConsole #timerDetails{font-size:11px;letter-spacing:.04em;opacity:.86}
@@ -1224,7 +1224,7 @@ body.gg-app-fullscreen main{padding-top:8px!important}
 <header><div class="logo">GARASJEGYM</div><div class="header-tools"><button id="signedInName" class="header-user-link" type="button" onclick="showTab('profile')" aria-label="Opna Mi side"></button><span id="roleBadge" class="pill gold">MEDLEM</span><div id="headerRank" class="header-rank" aria-live="polite"></div><button id="wallModeToggle" type="button" class="secondary" onclick="toggleWallMode()">🏋️ Treningsmodus</button><button id="appFullscreenToggle" type="button" class="secondary" onclick="toggleAppFullscreen()">⛶ Fullskjerm</button><button id="signOutBtn" type="button" class="secondary">Logg ut</button></div></header>
 <div id="floatingTimerPanel" class="floating-timer-panel hidden" role="dialog" aria-label="Timer"><div class="floating-timer-head"><strong>⏱ Timer</strong><div><button type="button" class="secondary" onclick="toggleFloatingTimerSize()" aria-label="Endra storleik">⤢</button><button type="button" class="secondary" onclick="closeFloatingTimer()" aria-label="Lukk timer">×</button></div></div><div id="floatingTimerContent"></div></div>
 <main>
-<div id="ggReleaseStamp" class="hint" style="text-align:center;padding:12px 0;font-weight:900;letter-spacing:.08em">GARASJEGYM 1.8.6 · STURMGEILER</div>
+<div id="ggReleaseStamp" class="hint" style="text-align:center;padding:12px 0;font-weight:900;letter-spacing:.08em">GARASJEGYM 1.8.11 · KAIZERSTURM</div>
 <div id="quickBar" class="quick-bar" aria-label="Snøggtilgang">
  <button type="button" class="quick-bell" onclick="openNotificationCenter()" aria-label="Opne varsel"><span class="quick-icon" aria-hidden="true">♧</span><span class="quick-count" id="quickUnreadCount" hidden>0</span></button>
  <button type="button" class="quick-toggle" id="quickToggle" onclick="toggleQuickLinks()" aria-expanded="false" aria-controls="quickLinks" aria-label="Vis snarvegar">＋</button>
@@ -1287,7 +1287,7 @@ body.gg-app-fullscreen main{padding-top:8px!important}
 <div class="training-console-grid">
   <div>
    <div class="timer-face">
-    <div class="hint" id="timerModeLabel">EMOM · KLAR</div>
+    <div class="row" style="justify-content:space-between;align-items:center"><div class="hint" id="timerModeLabel">EMOM · KLAR</div><button type="button" class="secondary" id="timerFocusToggle" onclick="toggleTimerFocus()" aria-pressed="false">⛶ Stor klokke</button></div>
     <div class="timer-clock" id="timerClock">01:00</div>
     <div class="timer-state" id="timerState">KLAR</div>
     <div class="timer-round" id="timerRound">RUNDE 0 / 10</div>
@@ -1308,7 +1308,7 @@ body.gg-app-fullscreen main{padding-top:8px!important}
    <div class="hint" id="timerHelp" style="margin-top:8px">EMOM: eitt arbeidsintervall per minutt.</div><div class="hint" style="margin-top:6px">Lyd går via nettbrettet sin valde medieutgang. Kople til Bluetooth-høgtalaren og vel han som lydutgang på Android.</div>
   </div>
   <div class="timer-workout">
-   <div class="row" style="justify-content:space-between"><strong>DAGENS ØKT</strong><span class="pill gold">WOD</span></div>
+   <div class="row" style="justify-content:space-between"><strong>DAGENS ØKT</strong><span class="pill gold">WOD</span></div><button type="button" class="secondary" onclick="timerStartSelectedWod()">▶ Start WOD + timer</button>
    <div class="row"><button type="button" class="secondary" onclick="timerWodStep(-1)">‹ Førre</button><select id="timerWodSelect" onchange="timerShowWod()" style="flex:1"><option value="">Vel ei økt frå biblioteket</option></select><button type="button" class="secondary" onclick="timerWodStep(1)">Neste ›</button></div>
    <div id="timerWodImage" class="timer-wod-image" hidden></div>
    <div id="timerWodText" class="timer-workout-text">Vel ein WOD for å visa øvingane her. Timeren kan brukast uavhengig av WOD-biblioteket.</div>
@@ -1371,7 +1371,7 @@ body.gg-app-fullscreen main{padding-top:8px!important}
 <details id="wodCreator" data-roles="admin,manager" class="card" style="margin-top:16px"><summary><strong>WOD-studio · Opprett eller publiser økt</strong></summary>
 <div class="grid" style="margin-top:14px"><div class="card span-12" style="box-shadow:none"><form id="wodForm">
 <label>Namn på økta</label><input required name="name" placeholder="Til dømes Garage Grind">
-<div class="two"><div><label>Format</label><select name="format"><option>AMRAP</option><option>EMOM</option><option>For Time</option><option>Tabata</option><option>Intervall</option><option>Styrke</option><option>Eigen økt</option></select></div><div><label>Varigheit (min)</label><input name="duration" type="number" min="1" placeholder="20"></div></div>
+<div class="two"><div><label>Format</label><select name="format"><option>AMRAP</option><option>EMOM</option><option>For Time</option><option>Tabata</option><option>Intervall</option><option>Styrke</option><option>Eigen økt</option></select></div><div><label>Varigheit (min)</label><input name="duration" type="number" min="1" placeholder="20"></div></div><details class="wod-timer-settings"><summary><strong>Timerinnstillingar for WOD-en</strong></summary><div class="two"><label>Timertype<select name="timerMode"><option value="">Standard frå format</option><option value="emom">EMOM</option><option value="amrap">AMRAP</option><option value="fortime">For Time</option><option value="tabata">Tabata</option><option value="interval">Intervall</option><option value="custom">Custom</option><option value="countdown">Nedtelling</option><option value="stopwatch">Stoppeklokke</option></select></label><label>Arbeid / intervall (sek)<input name="timerWork" type="number" min="1" value="60"></label><label>Kvile (sek)<input name="timerRest" type="number" min="0" value="0"></label><label>Rundar<input name="timerRounds" type="number" min="1" value="10"></label><label>Startforsinking (sek)<input name="timerDelay" type="number" min="0" max="30" value="3"></label></div><p class="hint">Timeren brukar desse innstillingane når du startar WOD-en.</p></details>
 <label>Øvingar og dosering</label><textarea id="wodMovements" name="movements" required placeholder="5 rundar&#10;10 Back squat @70%&#10;12 burpees&#10;250 m roing"></textarea>
 <div class="hint">Tips: Skriv til dømes «Back squat @70%» for å vise personleg vektforslag basert på brukarens registrerte maksløft.</div>
 <button type="button" class="secondary" onclick="showTab('library')">Vel øvingar frå biblioteket</button>
@@ -1418,8 +1418,8 @@ body.gg-app-fullscreen main{padding-top:8px!important}
 <section id="prs" class="tab hidden"><h1>PR · Personlege rekordar</h1><p class="hint">Rekordar blir automatisk henta frå loggførte økter, sett for sett. Du kan òg registrera resultat manuelt. Beste belastning og flest repetisjonar blir viste per øving.</p><div class="grid"><div class="card span-4"><h2>Registrer resultat</h2><form id="prForm"><label>Øving frå øvingsbiblioteket</label><select name="exercise" id="prExercise" required></select><label>Resultat</label><input name="result" required placeholder="Til dømes 100 eller 7:24"><div class="two"><div><label>Eining</label><select name="unit"><option value="kg">kg</option><option value="reps">repetisjonar</option><option value="tid">tid</option><option value="m">meter</option><option value="kcal">kcal</option><option value="sek">sekund</option><option value="watt">watt</option></select></div><div><label>Dato</label><input name="date" type="date"></div></div><label>Notat (valfritt)</label><input name="note" placeholder="T.d. strict, med strikk, drag factor ..."><button>Lagre resultat</button></form></div><div class="card span-8"><h2>Rekordar og historikk</h2><div id="prList"></div></div></div></section>
 <section id="log" class="tab hidden"><h1>Treningslogg</h1><div class="grid"><div class="card span-12"><div class="row"><div><h2>Registrer trening</h2><p class="hint">Logg kvart sett med eigne repetisjonar og belastning. Du kan lagra ei økt sjølv om du ikkje fullfører alle øvingane.</p></div><button type="button" class="secondary" onclick="startEmptyWorkout()">+ Ny treningsøkt</button></div><div id="workoutEditor"><div class="empty">Vel «Logg resultat» på ein WOD, eller start ei ny treningsøkt.</div></div></div><div class="card span-12"><h2>Treningshistorikk</h2><div id="logList"></div></div></div></section>
 
-<section id="manager" class="tab hidden"><div class="section-head"><div><div class="subheading">Klubbdrift</div><h1>Managerpanel</h1><div class="muted">WOD-ar, gruppetimar og klubbaktivitet.</div></div><span class="pill gold">VIP MANAGER</span></div><div class="grid"><div class="card span-6"><h2>Snøggvegar</h2><div class="stack"><button onclick="showTab('wods')">Opprett / foreslå WOD</button><button class="secondary" data-roles="admin,manager" onclick="showTab('classes')">Opprett gruppetime</button><button class="secondary" onclick="showTab('calendar')">Sjå kalender</button></div></div><div class="card span-6"><h2>PT-førespurnader</h2><p class="hint">Manager kan sjå førespurnader, men berre eigar kan godkjenne PT-bookingar.</p><div id="managerPTRequests"></div></div><div class="card span-12"><h2>Komande gruppetimar</h2><div id="managerClasses"></div></div></div></section><section id="admin" data-roles="admin" class="tab hidden">
-<div class="admin-top"><div><div class="subheading">GARASJEGYM</div><h1>Admin</h1><p class="hint">Kort oversikt – det viktigaste først.</p></div><div class="admin-top-actions"><button type="button" onclick="showTab('classes')">+ Gruppetime</button><button type="button" class="secondary" onclick="showTab('wods')">+ WOD</button></div></div>
+<section id="manager" class="tab hidden"><div class="section-head"><div><div class="subheading">Klubbdrift</div><h1>Managerpanel</h1><div class="muted">WOD-ar, gruppetimar og klubbaktivitet.</div></div><div class="row"><span class="pill gold">VIP MANAGER</span><button type="button" class="secondary" onclick="showTab('home')">← Til oversikt</button></div></div><div class="grid"><div class="card span-6"><h2>Snøggvegar</h2><div class="stack"><button onclick="showTab('wods')">Opprett / foreslå WOD</button><button class="secondary" data-roles="admin,manager" onclick="showTab('classes')">Opprett gruppetime</button><button class="secondary" onclick="showTab('calendar')">Sjå kalender</button></div></div><div class="card span-6"><h2>PT-førespurnader</h2><p class="hint">Manager kan sjå førespurnader, men berre eigar kan godkjenne PT-bookingar.</p><div id="managerPTRequests"></div></div><div class="card span-12"><h2>Komande gruppetimar</h2><div id="managerClasses"></div></div></div></section><section id="admin" data-roles="admin" class="tab hidden">
+<div class="admin-top"><div><div class="subheading">GARASJEGYM</div><h1>Admin</h1><p class="hint">Kort oversikt – det viktigaste først.</p></div><div class="admin-top-actions"><button type="button" class="secondary" onclick="showTab('home')">← Til oversikt</button><button type="button" onclick="showTab('classes')">+ Gruppetime</button><button type="button" class="secondary" onclick="showTab('wods')">+ WOD</button></div></div>
 <div class="card" style="margin:14px 0;border-color:var(--accent)">
  <div class="row"><div><h2 style="margin:0 0 5px">Sikkerheitskopi</h2><p class="hint" style="margin:0">Last ned alle lokale Garasjegym-data før me koplar til Supabase.</p></div><button type="button" onclick="exportGarasjegymBackup()">Last ned sikkerheitskopi</button></div>
  <div id="backupStatus" class="hint" style="margin-top:8px">Eksporterer medlemmer, WOD-ar, timar, treningslogg, PR, PT, sosialt og kaffibar.</div>
@@ -1453,8 +1453,8 @@ body.gg-app-fullscreen main{padding-top:8px!important}
  <details class="card"><summary>Klubbverktøy <span class="hint">Status</span></summary><div id="adminSummaryDetail"></div></details>
 </div>
 </section>
-<footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.69 · KadettenSonne</strong></footer>
-<div class="hint" style="text-align:center;padding:12px 0">GARASJEGYM 1.8.6 · STURMGEILER</div>
+<footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.8.11 · KAIZERSTURM</strong></footer>
+<div class="hint" style="text-align:center;padding:12px 0">GARASJEGYM 1.8.11 · KAIZERSTURM</div>
 </main>
 <div id="editorModal" class="editor-backdrop" role="dialog" aria-modal="true" aria-labelledby="editorTitle" onclick="if(event.target===this)closeEditor()"><div class="editor-panel"><div class="row"><h2 id="editorTitle">Rediger</h2><button type="button" class="secondary" onclick="closeEditor()" aria-label="Lukk">✕</button></div><form id="editorForm"></form></div></div>
 <script>
@@ -1472,7 +1472,7 @@ db.members.forEach(m=>{if(!m.role)m.role='member';if(m.active===undefined)m.acti
 db.ptSessions=db.ptSessions||[];db.ptBookings=db.ptBookings||[];db.ptSlotStats=db.ptSlotStats||[];db.ptMessages=db.ptMessages||[];db.activeProfile=db.activeProfile||'owner';db.pendingPT=db.pendingPT||[];db.classes.forEach(c=>{c.pendingBookings=c.pendingBookings||[];c.attendees=c.attendees||[];});
 
 let selectedExercises=new Set();
-function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));try{renderAll()}catch(err){console.error('Data er lagra, men ei vising kunne ikkje oppdaterast:',err);}}
 function exportGarasjegymBackup(){
  try{
   const raw=localStorage.getItem(KEY);
@@ -1543,15 +1543,16 @@ async function loadMemberProfiles(){
  db.members=(data||[]).map(row=>({id:String(row.id),name:row.display_name||'Medlem',role:row.role||'member',active:row.active!==false,avatar_url:row.avatar_url||null}));
  db.activeProfile=String(authUser.id);
  const own=db.members.find(m=>m.id===String(authUser.id));
- if(own){authProfile={...authProfile,name:own.name,role:own.role,active:own.active};$('#signedInName').textContent=own.name;}
+ if(own){authProfile={...authProfile,name:own.name,role:own.role,active:own.active};const signedInNameEl=$('#signedInName');if(signedInNameEl)signedInNameEl.textContent=own.name;}
 }
 function openEditor(title,fields,onSave){
  const modal=$('#editorModal'),form=$('#editorForm');$('#editorTitle').textContent=title;
- form.innerHTML=fields+`<div class="editor-actions"><button type="button" class="secondary" onclick="closeEditor()">Avbryt</button><button type="submit">Lagre endringar</button></div>`;
- form.onsubmit=async e=>{e.preventDefault();const submit=form.querySelector('button[type=submit]');if(submit)submit.disabled=true;try{const data=new FormData(form);const result=await onSave(data);if(result!==false){closeEditor();save();}}catch(err){alert('Kunne ikkje lagre endringane: '+(err.message||err));}finally{if(submit)submit.disabled=false;}};
+ form.innerHTML=fields+`<div class="editor-actions"><button type="button" class="secondary" onclick="discardEditorChanges()">Forkast endringar</button><button type="submit">Lagre endringar</button></div>`;
+ form.onsubmit=async e=>{e.preventDefault();const submit=form.querySelector('button[type=submit]');if(submit)submit.disabled=true;try{const data=new FormData(form);const result=await onSave(data);if(result!==false){closeEditor();save();if(title==='Rediger WOD'){showTab('wods');$('#wodList')?.scrollIntoView({behavior:'smooth',block:'start'});}}}catch(err){alert('Kunne ikkje lagre endringane: '+(err.message||err));}finally{if(submit)submit.disabled=false;}};
  modal.classList.add('open');document.body.style.overflow='hidden';const first=form.querySelector('input,select,textarea');if(first)first.focus();
 }
 function closeEditor(){$('#editorModal').classList.remove('open');document.body.style.overflow='';$('#editorForm').onsubmit=null;}
+function discardEditorChanges(){if(confirm('Forkasta endringane? Ingenting blir lagra.'))closeEditor();}
 function editMember(id){
  if(!isOwner()){alert('Berre admin kan administrera medlemer.');return;}
  const m=db.members.find(x=>String(x.id)===String(id));if(!m)return;
@@ -1587,8 +1588,8 @@ function showTab(id){
 $$('#nav button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 function item(title,sub,tag,actions=''){return `<div class="item"><div class="row"><div><strong>${esc(title)}</strong><div class="hint">${esc(sub)}</div></div><div>${tag||''} ${actions}</div></div></div>`}
 
-$('#wodForm').addEventListener('submit',async e=>{e.preventDefault();if(!canCreateWod()){alert('Berre admin og VIP-manager kan opprette WOD.');return;}const form=e.target,button=form.querySelector('button[type=submit],button:not([type])');let f=new FormData(form);const name=String(f.get('name')||'').trim();const cleanMovements=normaliseLines(f.get('movements'));if(!name||!cleanMovements){alert('WOD-en må ha namn og minst éi øving.');return;}if(!authUser){alert('Du må vere innlogga for å lagre WOD.');return;}if(button)button.disabled=true;try{const payload={name,format:String(f.get('format')||'Eigen økt'),duration_minutes:f.get('duration')?Number(f.get('duration')):null,movements:cleanMovements,notes:String(f.get('notes')||''),audience:String(f.get('audience')||'Alle medlemmar'),is_published:true,created_by:authUser.id};const {data,error}=await supabaseClient.from('wods').insert(payload).select('*').single();if(error)throw error;db.wods.unshift(mapSupabaseWod(data));form.reset();$('#wodCreator').open=false;notifyAdmin('wod','Ny WOD i biblioteket',currentName()+' oppretta '+name);save();showTab('wods');toast('WOD-en er lagra og klar for medlemmene.');}catch(err){console.error('WOD insert failed',err);alert('WOD-en blei ikkje lagra. '+(err.message||'Kontroller tilgang og internett.'));}finally{if(button)button.disabled=false;}});
-$('#classForm').addEventListener('submit',async e=>{e.preventDefault();if(!canManageClasses()){alert('Berre admin og VIP-manager kan opprette timar.');return;}if(!authUser){alert('Du må vera innlogga.');return;}const form=e.target,button=form.querySelector('#classSubmitButton');const f=new FormData(form);const selectedWodIds=f.getAll('wodIds').filter(Boolean).map(String);const selectedWods=db.wods.filter(w=>selectedWodIds.includes(String(w.id)));const title=String(f.get('title')||'').trim();const when=String(f.get('when')||'');const payload={title,type:String(f.get('type')||'Gruppetime'),capacity:Math.max(1,Number(f.get('capacity'))||1),starts_at:new Date(when).toISOString(),duration_minutes:Math.max(1,Number(f.get('duration'))||60),description:normaliseLines(f.get('description'))||null,workout_text:normaliseLines(f.get('workoutText'))||null,wod_ids:selectedWods.map(w=>String(w.id)),created_by:authUser.id};if(!title||!when||Number.isNaN(new Date(when).getTime())){alert('Kontroller tittel og tidspunkt.');return;}if(button)button.disabled=true;try{let result;if(editingClassId!==null){result=await supabaseClient.from('classes').update(payload).eq('id',String(editingClassId)).select('*').single();}else{result=await supabaseClient.from('classes').insert(payload).select('*').single();}if(result.error)throw result.error;const wasEditing=editingClassId!==null;await loadClassesFromSupabase();cancelClassEdit(false);form.reset();renderWodPicker('class');renderAll();alert(wasEditing?'Gruppetimen er oppdatert i Supabase.':'Gruppetimen er publisert og synleg for medlemmene.');editingClassId=null;}catch(err){console.error('Class save failed',err);alert('Gruppetimen blei ikkje lagra: '+(err.message||err));}finally{if(button)button.disabled=false;}});
+$('#wodForm').addEventListener('submit',async e=>{e.preventDefault();if(!canCreateWod()){alert('Berre admin og VIP-manager kan opprette WOD.');return;}const form=e.target,button=form.querySelector('button[type=submit],button:not([type])');let f=new FormData(form);const name=String(f.get('name')||'').trim();const cleanMovements=normaliseLines(f.get('movements'));if(!name||!cleanMovements){alert('WOD-en må ha namn og minst éi øving.');return;}if(!authUser){alert('Du må vere innlogga for å lagre WOD.');return;}if(button)button.disabled=true;try{const payload={name,format:String(f.get('format')||'Eigen økt'),duration_minutes:f.get('duration')?Number(f.get('duration')):null,movements:cleanMovements,notes:encodeWodNotes(String(f.get('notes')||''),f.get('timerMode')?{mode:String(f.get('timerMode')),work:Math.max(1,Number(f.get('timerWork'))||60),rest:Math.max(0,Number(f.get('timerRest'))||0),rounds:Math.max(1,Number(f.get('timerRounds'))||1),delay:Math.max(0,Number(f.get('timerDelay'))||0)}:null),audience:String(f.get('audience')||'Alle medlemmar'),is_published:true,created_by:authUser.id};const {data,error}=await supabaseClient.from('wods').insert(payload).select('*').single();if(error)throw error;db.wods.unshift(mapSupabaseWod(data));form.reset();$('#wodCreator').open=false;notifyAdmin('wod','Ny WOD i biblioteket',currentName()+' oppretta '+name);save();showTab('wods');toast('WOD-en er lagra og klar for medlemmene.');}catch(err){console.error('WOD insert failed',err);alert('WOD-en blei ikkje lagra. '+(err.message||'Kontroller tilgang og internett.'));}finally{if(button)button.disabled=false;}});
+$('#classForm').addEventListener('submit',async e=>{e.preventDefault();if(!canManageClasses()){alert('Berre admin og VIP-manager kan opprette timar.');return;}if(!authUser){alert('Du må vera innlogga.');return;}const form=e.target,button=form.querySelector('#classSubmitButton');const f=new FormData(form);const selectedWodIds=f.getAll('wodIds').filter(Boolean).map(String);const selectedWods=db.wods.filter(w=>selectedWodIds.includes(String(w.id)));const title=String(f.get('title')||'').trim();const when=String(f.get('when')||'');const payload={title,type:String(f.get('type')||'Gruppetime'),capacity:Math.max(1,Number(f.get('capacity'))||1),starts_at:new Date(when).toISOString(),duration_minutes:Math.max(1,Number(f.get('duration'))||60),description:normaliseLines(f.get('description'))||null,workout_text:normaliseLines(f.get('workoutText'))||null,wod_ids:selectedWods.map(w=>String(w.id)),created_by:authUser.id};if(!title||!when||Number.isNaN(new Date(when).getTime())){alert('Kontroller tittel og tidspunkt.');return;}if(button)button.disabled=true;try{let result;if(editingClassId!==null){result=await supabaseClient.from('classes').update(payload).eq('id',String(editingClassId)).select('*').single();}else{result=await supabaseClient.from('classes').insert(payload).select('*').single();}if(result.error)throw result.error;const wasEditing=editingClassId!==null;await loadClassesFromSupabase();cancelClassEdit(false);form.reset();renderWodPicker('class');renderAll();editingClassId=null;showTab('classes');$('#classList')?.scrollIntoView({behavior:'smooth',block:'start'});alert(wasEditing?'Gruppetimen er oppdatert i Supabase.':'Gruppetimen er publisert og synleg for medlemmene.');}catch(err){console.error('Class save failed',err);alert('Gruppetimen blei ikkje lagra: '+(err.message||err));}finally{if(button)button.disabled=false;}});
 $('#prForm').addEventListener('submit',async e=>{e.preventDefault();const form=e.target,button=form.querySelector('button[type=submit],button:not([type])'),f=new FormData(form);if(!f.get('exercise')){alert('Vel ei øving frå biblioteket.');return;}if(!authUser){alert('Du må vera innlogga for å lagra PR.');return;}const payload={member_id:authUser.id,exercise_name:String(f.get('exercise')),result:String(f.get('result')||'').trim(),unit:String(f.get('unit')||'kg'),note:String(f.get('note')||'').trim()||null,record_date:String(f.get('date')||new Date().toISOString().slice(0,10))};if(!payload.result){alert('Skriv inn eit resultat.');return;}if(button)button.disabled=true;try{const {data,error}=await supabaseClient.from('personal_records').insert(payload).select('*').single();if(error)throw error;db.prs.unshift({id:String(data.id),memberId:String(data.member_id),person:currentName(),exercise:data.exercise_name,result:data.result,unit:data.unit||'kg',note:data.note||'',date:data.record_date,supabase:true});form.reset();renderPrs();renderHome();toast('Personleg rekord registrert.');}catch(err){console.error('PR insert failed',err);alert('PR-en blei ikkje lagra: '+(err.message||err));}finally{if(button)button.disabled=false;}});
 
 async function del(type,id){if(!confirm('Vil du sletta denne oppføringa?'))return;if(type==='classes'){try{const {error}=await supabaseClient.from('classes').delete().eq('id',String(id));if(error)throw error;await loadClassesFromSupabase();renderAll();}catch(err){alert('Gruppetimen blei ikkje sletta: '+(err.message||err));}return;}if(type==='logs'){try{const {error}=await supabaseClient.from('workout_logs').delete().eq('id',String(id));if(error)throw error;db.logs=db.logs.filter(x=>String(x.id)!==String(id));save();}catch(err){alert('Treningsloggen blei ikkje sletta i Supabase: '+err.message);}return;}if(type==='prs'){const record=db.prs.find(x=>String(x.id)===String(id));if(!record)return;try{if(record.supabase){const {error}=await supabaseClient.from('personal_records').delete().eq('id',String(id));if(error)throw error;}db.prs=db.prs.filter(x=>String(x.id)!==String(id));renderPrs();renderHome();}catch(err){alert('PR-en blei ikkje sletta: '+(err.message||err));}return;}db[type]=db[type].filter(x=>x.id!==id);save()}
@@ -1907,7 +1908,7 @@ function allPRRecords(){
  (db.logs||[]).forEach(log=>{
   (log.exercises||[]).forEach(ex=>{
    (ex.sets||[]).forEach((set,index)=>{
-    const common={id:`log_${log.id}_${records.length}`,person:log.person,exercise:ex.name,date:log.date||'',note:`${log.title||'Treningsøkt'} · sett ${index+1}${log.rounds>1?' · '+log.rounds+' rundar':''}`,source:'log',logId:log.id};
+    const common={id:`log_${log.id}_${records.length}`,memberId:log.memberId?String(log.memberId):null,person:log.person,exercise:ex.name,date:log.date||'',note:`${log.title||'Treningsøkt'} · sett ${index+1}${log.rounds>1?' · '+log.rounds+' rundar':''}`,source:'log',logId:log.id};
     if(set.kg!==null&&set.kg!==undefined&&set.kg!==''&&Number.isFinite(Number(set.kg)))records.push({...common,result:String(set.kg),unit:'kg',reps:set.reps??null});
     if(set.reps!==null&&set.reps!==undefined&&set.reps!==''&&Number.isFinite(Number(set.reps)))records.push({...common,result:String(set.reps),unit:'reps',kg:set.kg??null});
     if(set.time)records.push({...common,result:String(set.time),unit:'tid',timeSeconds:set.timeSeconds??timeToSeconds(set.time)});
@@ -1916,8 +1917,8 @@ function allPRRecords(){
  });
  return records;
 }
-function bestPRFor(person,exercise,unit){
- const rows=allPRRecords().filter(p=>p.person===person&&p.exercise===exercise&&(p.unit||'kg')===unit);
+function bestPRFor(person,exercise,unit,sourceRecords=allPRRecords()){
+ const rows=sourceRecords.filter(p=>p.person===person&&p.exercise===exercise&&(p.unit||'kg')===unit);
  if(!rows.length)return null;
  if(unit==='tid')return rows.filter(p=>Number.isFinite(Number(p.timeSeconds))).sort((a,b)=>Number(a.timeSeconds)-Number(b.timeSeconds))[0]||rows[0];
  if(unit==='kg'||unit==='reps'||unit==='m'||unit==='kcal'||unit==='watt')return rows.filter(p=>numericResult(p)!==null).sort((a,b)=>numericResult(b)-numericResult(a))[0]||rows[0];
@@ -1925,11 +1926,12 @@ function bestPRFor(person,exercise,unit){
 }
 function renderPrs(){
  renderPrExerciseOptions();
- const rows=allPRRecords().filter(p=>p.person===currentName()).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+ const myId=String(authUser?.id||currentMember()?.id||'');
+ const rows=allPRRecords().filter(p=>(p.memberId&&String(p.memberId)===myId)||(!p.memberId&&p.person===currentName())).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
  if(!rows.length){$('#prList').innerHTML='<div class="empty">Ingen resultat frå treningsloggen enno. Loggfør ei økt, så blir rekordane henta inn automatisk. Du kan òg registrera eit resultat manuelt.</div>';return;}
  const grouped={};rows.forEach(p=>{const k=p.exercise+'||'+(p.unit||'kg');(grouped[k]||(grouped[k]=[])).push(p);});
  $('#prList').innerHTML=Object.entries(grouped).map(([key,history])=>{
-  const [exercise,unit]=key.split('||'),best=bestPRFor(currentName(),exercise,unit);
+  const [exercise,unit]=key.split('||'),best=bestPRFor(currentName(),exercise,unit,rows);
   const bestText=best?`${esc(best.result)} ${esc(unit)}`:'–';
   return `<div class="item"><div class="row"><div><strong>${esc(exercise)}</strong><div class="hint">Rekord: ${bestText} · ${history.length} registrering(ar)</div>${best?`<div class="hint">${esc(best.date||'')} · ${best.source==='log'?'Henta frå treningslogg':'Manuelt registrert'}${best.note?' · '+esc(best.note):''}</div>`:''}</div><span class="pill gold">${best&&best.source==='log'?'AUTO-PR':'PR'}</span></div><details><summary>Vis historikk</summary>${history.map(p=>`<div class="row" style="border-top:1px solid var(--line);padding:8px 0"><span>${esc(p.date||'')} · ${esc(p.result)} ${esc(p.unit||'kg')}${p.kg!==undefined&&p.kg!==null?' · '+esc(p.kg)+' kg':''}${p.note?' · '+esc(p.note):''}</span>${p.source==='manual'?`<button class="danger" onclick="del('prs','${esc(String(p.id))}')">Slett</button>`:'<span class="hint">Frå logg</span>'}</div>`).join('')}</details></div>`;
  }).join('');
@@ -1983,7 +1985,9 @@ function renderHome(){
  const mWod=$('#mWod'),mClass=$('#mClass'),mPr=$('#mPr');
  if(mWod)mWod.textContent=db.wods.length;
  if(mClass)mClass.textContent=db.classes.length;
- if(mPr)mPr.textContent=db.prs.length;
+ const myId=String(authUser?.id||currentMember()?.id||'');
+ const myPRCount=(db.prs||[]).filter(p=>(p.memberId&&String(p.memberId)===myId)||(!p.memberId&&p.person===currentName())).length;
+ if(mPr)mPr.textContent=myPRCount;
  const upcoming=db.classes.filter(c=>new Date(c.when)>=new Date()).sort((a,b)=>a.when.localeCompare(b.when)).slice(0,4);
  const nextClasses=$('#nextClasses');
  if(nextClasses)nextClasses.innerHTML=upcoming.length?upcoming.map(c=>item(c.title,`${fmt(c.when)} · ${c.attendees.length}/${c.capacity} påmelde`,`<span class="pill">${c.type}</span>`)).join(''):'<div class="empty">Ingen komande timar.</div>';
@@ -2020,7 +2024,7 @@ function renderCoffeeDashboard(){
 }
 
 function adminEditWod(id){if(!isOwner()){alert('Berre eigar kan redigere WOD-ar.');return;}const w=db.wods.find(x=>String(x.id)===String(id));if(!w)return;
- openEditor('Rediger WOD',`<label>Namn på WOD</label><input name="name" required value="${esc(w.name)}"><label>Øvingar og dosering</label><textarea name="movements" required>${esc(w.movements||'')}</textarea><label>Instruksjon / skalering</label><textarea name="notes">${esc(w.notes||'')}</textarea>`,async data=>{const name=String(data.get('name')||'').trim();const movements=normaliseLines(data.get('movements'));if(!name||!movements){alert('WOD-en må ha namn og minst éi øving.');return false;}const {data:updated,error}=await supabaseClient.from('wods').update({name,movements,notes:String(data.get('notes')||'')}).eq('id',String(id)).select('*').single();if(error)throw error;Object.assign(w,mapSupabaseWod(updated));return true;});
+ const tc=w.timerConfig||{};openEditor('Rediger WOD',`<label>Namn på WOD</label><input name="name" required value="${esc(w.name)}"><label>Format</label><select name="format">${['AMRAP','EMOM','For Time','Tabata','Intervall','Styrke','Eigen økt'].map(x=>`<option ${w.format===x?'selected':''}>${x}</option>`).join('')}</select><label>Øvingar og dosering</label><textarea name="movements" required>${esc(w.movements||'')}</textarea><label>Instruksjon / skalering</label><textarea name="notes">${esc(w.notes||'')}</textarea><details open><summary><strong>Timerinnstillingar</strong></summary><div class="two"><label>Timertype<select name="timerMode">${['','emom','amrap','fortime','tabata','interval','custom','countdown','stopwatch'].map(x=>`<option value="${x}" ${(tc.mode||'')===x?'selected':''}>${x||'Standard frå format'}</option>`).join('')}</select></label><label>Arbeid / intervall (sek)<input name="timerWork" type="number" min="1" value="${Number(tc.work)||60}"></label><label>Kvile (sek)<input name="timerRest" type="number" min="0" value="${Number(tc.rest)||0}"></label><label>Rundar<input name="timerRounds" type="number" min="1" value="${Number(tc.rounds)||10}"></label><label>Startforsinking (sek)<input name="timerDelay" type="number" min="0" max="30" value="${Number(tc.delay)||0}"></label></div></details>`,async data=>{const name=String(data.get('name')||'').trim(),movements=normaliseLines(data.get('movements'));if(!name||!movements){alert('WOD-en må ha namn og minst éi øving.');return false;}const mode=String(data.get('timerMode')||''),cfg=mode?{mode,work:Math.max(1,Number(data.get('timerWork'))||60),rest:Math.max(0,Number(data.get('timerRest'))||0),rounds:Math.max(1,Number(data.get('timerRounds'))||1),delay:Math.max(0,Number(data.get('timerDelay'))||0)}:null;const {data:updated,error}=await supabaseClient.from('wods').update({name,format:String(data.get('format')||w.format),movements,notes:encodeWodNotes(String(data.get('notes')||''),cfg)}).eq('id',String(id)).select('*').single();if(error)throw error;Object.assign(w,mapSupabaseWod(updated));return true;});
 }
 function previewClassDraft(){
  const form=$('#classForm');if(!form)return;
@@ -2040,7 +2044,7 @@ function adminEditClass(id){if(!canManageClasses()){alert('Du har ikkje tilgang 
  $('#classSubmitButton').textContent='Lagre endringar';$('#cancelClassEdit').classList.remove('hidden');$('#classPreview')?.classList.add('hidden');
  form.scrollIntoView({behavior:'smooth',block:'start'});form.elements.title.focus();
 }
-function cancelClassEdit(reset=true){editingClassId=null;const form=$('#classForm');if(reset)form.reset();$('#classPreview')?.classList.add('hidden');$('#classSubmitButton').textContent='Legg ut time';$('#cancelClassEdit').classList.add('hidden');}
+function cancelClassEdit(reset=true){if(editingClassId!==null&&reset&&!confirm('Forkasta endringane i gruppetimen?'))return;editingClassId=null;const form=$('#classForm');if(reset)form.reset();$('#classPreview')?.classList.add('hidden');$('#classSubmitButton').textContent='Legg ut time';$('#cancelClassEdit').classList.add('hidden');$('#classList')?.scrollIntoView({behavior:'smooth',block:'start'});}
 
 function adminEditExercise(index){if(!isOwner()){alert('Berre eigar kan endre øvingsbiblioteket.');return;}const x=db.customExercises[index];if(!x)return;
  const cats=['Styrke','Vektløfting','Kroppsvekt','Kondisjon','Kjerne','Mobilitet','Gymnastics'];
@@ -2432,7 +2436,9 @@ function setAuthMode(create){
 }
 $('#authModeBtn').addEventListener('click',()=>setAuthMode(!authCreateMode));
 
-function mapSupabaseWod(row){return {id:String(row.id),name:row.name,format:row.format||'Eigen økt',duration:row.duration_minutes??'',movements:row.movements||'',notes:row.notes||'',audience:row.audience||'Alle medlemmar',date:row.created_at||row.updated_at||new Date().toISOString(),createdBy:row.created_by||'',generated:false};}
+function splitWodNotes(raw){const text=String(raw||'');const m=text.match(/\[\[GG_TIMER:([A-Za-z0-9+/=]+)\]\]/);let timerConfig=null;if(m){try{timerConfig=JSON.parse(decodeURIComponent(escape(atob(m[1]))));}catch(e){}}return {notes:text.replace(/\n?\[\[GG_TIMER:[^\]]+\]\]/g,'').trim(),timerConfig};}
+function encodeWodNotes(notes,config){const clean=String(notes||'').trim();return config?(clean?clean+'\n\n':'')+'[[GG_TIMER:'+btoa(unescape(encodeURIComponent(JSON.stringify(config))))+']]':clean;}
+function mapSupabaseWod(row){const parsed=splitWodNotes(row.notes);return {id:String(row.id),name:row.name,format:row.format||'Eigen økt',duration:row.duration_minutes??'',movements:row.movements||'',notes:parsed.notes,timerConfig:parsed.timerConfig,audience:row.audience||'Alle medlemmar',date:row.created_at||row.updated_at||new Date().toISOString(),createdBy:row.created_by||'',generated:false};}
 async function loadWodsFromSupabase(){
  if(!authUser)throw new Error('Mangler innlogga brukar.');
  const {data:remote,error}=await supabaseClient.from('wods').select('*').order('created_at',{ascending:false});
@@ -2572,7 +2578,8 @@ function timerAdvance(){const t=ggTimer,m=t.config.mode;if(t.phase==='delay'){t.
 function timerLap(){ggTimer.round++;timerBeep('transition');timerPaint()}
 function timerParseWodExercises(w){const raw=String(w.movements||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),ignored=/^(amrap|emom|for time|tabata|rounds?|time cap|rest|warm.?up|cool.?down)/i;return raw.filter(line=>!ignored.test(line)).map(line=>{const clean=line.replace(/^\s*(?:[-•*]|\d+[.)])\s*/,'').trim(),m=clean.match(/^(\d+)\s*[x×]\s*(.+)$/i)||clean.match(/^(\d+)\s+(.+)$/);return{name:(m?m[2]:clean).replace(/\s*[-–:].*$/,'').trim(),reps:m?Number(m[1]):null}}).filter(x=>x.name)}
 function timerRenderExerciseInputs(){const w=db.wods.find(x=>String(x.id)===$('#timerWodSelect').value),host=$('#timerExerciseInputs');if(!host)return;if(!w){host.innerHTML='<div class="hint">Vel ein WOD for å få ferdig utfylte øvingar.</div>';return;}const rounds=Math.max(1,Math.min(50,Number($('#timerScoreRounds').value)||1)),exercises=timerParseWodExercises(w);if(!exercises.length){host.innerHTML='<div class="hint">Fann ingen øvingslinjer i WOD-en.</div>';return;}host.innerHTML=exercises.map((ex,i)=>`<div class="timer-exercise-card"><strong>${esc(ex.name)}</strong><div class="timer-round-inputs">${Array.from({length:rounds},(_,r)=>`<label>Runde ${r+1}<input class="kg-input" data-ex="${i}" data-round="${r+1}" data-field="kg" type="number" min="0" step="0.5" placeholder="kg"><input data-ex="${i}" data-round="${r+1}" data-field="reps" type="number" min="0" step="1" placeholder="${ex.reps===null?'reps':ex.reps+' reps'}" value="${ex.reps===null?'':ex.reps}"></label>`).join('')}</div></div>`).join('')}
-function timerShowWod(){const id=$('#timerWodSelect').value,w=db.wods.find(x=>String(x.id)===String(id)),txt=$('#timerWodText'),im=$('#timerWodImage');if(!w){txt.textContent='Vel ei økt for å visa øvingane her.';im.hidden=true;im.innerHTML='';timerRenderExerciseInputs();return;}txt.textContent=w.name+'\n\n'+(w.movements||'')+(w.notes?'\n\n'+w.notes:'');const url=w.image_url||w.imageUrl||w.image||w.photo_url||'';if(url&&/^https?:\/\//i.test(url)){im.innerHTML=`<img src="${url.replace(/"/g,'&quot;')}" alt="${esc(w.name)}">`;im.hidden=false}else{im.hidden=true;im.innerHTML=''}$('#timerScoreRounds').value='4';$('#timerScoreReps').value='0';$('#timerScoreTime').value='';$('#timerScoreNote').value='';timerRenderExerciseInputs()}
+function timerShowWod(){const id=$('#timerWodSelect').value,w=db.wods.find(x=>String(x.id)===String(id)),txt=$('#timerWodText'),im=$('#timerWodImage');if(!w){txt.textContent='Vel ei økt for å visa øvingane her.';im.hidden=true;im.innerHTML='';timerRenderExerciseInputs();return;}txt.textContent=w.name+'\n\n'+(w.movements||'')+(w.notes?'\n\n'+w.notes:'');const url=w.image_url||w.imageUrl||w.image||w.photo_url||'';if(url&&/^https?:\/\//i.test(url)){im.innerHTML=`<img src="${url.replace(/"/g,'&quot;')}" alt="${esc(w.name)}">`;im.hidden=false}else{im.hidden=true;im.innerHTML=''}if(w.timerConfig){const c=w.timerConfig;$('#timerMode').value=c.mode||'emom';$('#timerWorkMin').value=Math.floor((Number(c.work)||60)/60);$('#timerWorkSec').value=(Number(c.work)||60)%60;$('#timerRestMin').value=Math.floor((Number(c.rest)||0)/60);$('#timerRestSec').value=(Number(c.rest)||0)%60;$('#timerRounds').value=Number(c.rounds)||10;$('#timerDelay').value=Number(c.delay)||0;timerConfigure()}else{const mm={'Tabata':'tabata','Intervall':'interval','EMOM':'emom','AMRAP':'amrap','For Time':'fortime'},mode=mm[w.format];if(mode){$('#timerMode').value=mode;const mins=Number(w.duration)||20;if(mode==='amrap'){$('#timerWorkMin').value=mins;$('#timerWorkSec').value=0}else if(mode==='emom'){$('#timerWorkMin').value=1;$('#timerWorkSec').value=0;$('#timerRounds').value=mins}else if(mode==='tabata'){$('#timerWorkMin').value=0;$('#timerWorkSec').value=20;$('#timerRestMin').value=0;$('#timerRestSec').value=10;$('#timerRounds').value=8}else if(mode==='interval'){$('#timerWorkMin').value=0;$('#timerWorkSec').value=40;$('#timerRestMin').value=0;$('#timerRestSec').value=20;$('#timerRounds').value=10}else{$('#timerWorkMin').value=mins;$('#timerWorkSec').value=0}timerConfigure()}}$('#timerScoreRounds').value='4';$('#timerScoreReps').value='0';$('#timerScoreTime').value='';$('#timerScoreNote').value='';timerRenderExerciseInputs()}
+function timerStartSelectedWod(){if(!$('#timerWodSelect')?.value){alert('Vel ein WOD først.');return;}timerShowWod();timerReset();timerStartPause()}
 function timerRefreshWods(){const s=$('#timerWodSelect');if(!s)return;const old=s.value;s.innerHTML='<option value="">Vel ei økt frå biblioteket</option>'+db.wods.map(w=>`<option value="${String(w.id).replace(/"/g,'&quot;')}">${esc(w.name)}</option>`).join('');if(old)s.value=old;timerShowWod()}
 function timerWodStep(d){const s=$('#timerWodSelect');if(!s)return;s.selectedIndex=Math.max(0,Math.min(s.options.length-1,s.selectedIndex+d));timerShowWod()}
 async function timerSaveWodResult(){const w=db.wods.find(x=>String(x.id)===$('#timerWodSelect').value);if(!w)return alert('Vel ein WOD først.');if(!authUser)return alert('Du må vera innlogga for å lagra resultat.');const rounds=Math.max(1,Number($('#timerScoreRounds').value)||1),reps=Math.max(0,Number($('#timerScoreReps').value)||0),time=String($('#timerScoreTime').value||'').trim(),note=String($('#timerScoreNote').value||'').trim(),exercises=timerParseWodExercises(w).map((ex,i)=>{const sets=[];for(let r=1;r<=rounds;r++){const kgInput=document.querySelector(`#timerExerciseInputs [data-ex="${i}"][data-round="${r}"][data-field="kg"]`),repsInput=document.querySelector(`#timerExerciseInputs [data-ex="${i}"][data-round="${r}"][data-field="reps"]`),kg=kgInput&&kgInput.value!==''?Number(kgInput.value):null,setReps=repsInput&&repsInput.value!==''?Number(repsInput.value):null;if(kg!==null||setReps!==null)sets.push({reps:setReps,kg,time:null,timeSeconds:null})}return{name:ex.name,sets}}).filter(ex=>ex.sets.length);let parentId=null;try{const payload={member_id:authUser.id,source_wod_id:w.id,title:w.name,workout_date:new Date().toISOString().slice(0,10),format:w.format||'WOD',rounds,score_rounds:rounds,score_reps:reps,note:[time?'Tid: '+time:'',note].filter(Boolean).join('\n')},{data:parent,error:parentError}=await supabaseClient.from('workout_logs').insert(payload).select('*').single();if(parentError)throw parentError;parentId=parent.id;if(exercises.length){const exPayload=exercises.map((ex,i)=>({workout_log_id:parentId,exercise_name:ex.name,source_text:null,sort_order:i})),{data:remoteExercises,error:exError}=await supabaseClient.from('workout_exercises').insert(exPayload).select('*');if(exError)throw exError;const setPayload=[];exercises.forEach((ex,i)=>ex.sets.forEach((set,j)=>setPayload.push({workout_exercise_id:remoteExercises[i].id,set_number:j+1,reps:set.reps,load_kg:set.kg,time_text:null,time_seconds:null})));if(setPayload.length){const{error:setError}=await supabaseClient.from('workout_sets').insert(setPayload);if(setError)throw setError}}const savedLog={id:String(parentId),person:currentName(),memberId:authUser.id,title:w.name,date:payload.workout_date,sourceWodId:w.id,format:payload.format,rounds,scoreRounds:rounds,scoreReps:reps,exercises,note:payload.note};db.logs.unshift(savedLog);localStorage.setItem(KEY,JSON.stringify(db));await loadMemberTrainingRanks();renderAll();alert('Resultatet er lagra. Vekt og repetisjonar per runde er med i treningsloggen og PR-oversikta.')}catch(e){if(parentId)await supabaseClient.from('workout_logs').delete().eq('id',String(parentId));alert('Resultatet kunne ikkje lagrast: '+(e.message||e))}}
@@ -2916,6 +2923,51 @@ bootGarasjeGym(); </script><script>document.addEventListener('DOMContentLoaded',
  });
  document.addEventListener('DOMContentLoaded',()=>{
   const g=grid();if(g){g.querySelectorAll('.training-module').forEach(el=>el.dataset.module=el.dataset.module||'');}
+ });
+})();
+</script>
+
+
+<style id="gg-1810-training-improvements">
+#manager .section-head,#admin .admin-top{align-items:center;gap:12px}
+#manager .section-head .row,#admin .admin-top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#manager .section-head .row button,#admin .admin-top-actions button{white-space:nowrap}
+/* Training scrolls as one vertical page; Spotify has room for controls and track selection */
+body.gg-simple-training{overflow:hidden!important}
+body.gg-simple-training #trainingConsole{overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain!important}
+body.gg-simple-training #trainingConsole .training-console-grid{display:flex!important;flex-direction:column!important;gap:10px!important;overflow:visible!important;height:auto!important;min-height:0!important}
+body.gg-simple-training #trainingConsole .training-console-grid>.training-module,
+body.gg-simple-training #trainingConsole .training-console-grid>div{flex:0 0 auto!important;width:100%!important;min-width:0!important;max-height:none!important;overflow:visible!important}
+body.gg-simple-training #trainingConsole .spotify-panel{display:block!important;height:auto!important;min-height:220px!important;max-height:none!important;overflow:visible!important;padding:12px!important}
+body.gg-simple-training #trainingConsole .spotify-panel .spotify-search,
+body.gg-simple-training #trainingConsole .spotify-panel .spotify-presets,
+body.gg-simple-training #trainingConsole .spotify-panel .spotify-bottom{display:flex!important;flex-wrap:wrap!important;gap:8px!important}
+body.gg-simple-training #trainingConsole .spotify-panel .spotify-search input{flex:1 1 180px!important;min-width:0!important}
+body.gg-simple-training #trainingConsole .spotify-panel .spotify-player img{width:58px!important;height:58px!important}
+body.gg-simple-training #trainingConsole .spotify-panel .spotify-presets button{flex:1 1 130px!important}
+body.gg-simple-training #trainingConsole .spotify-panel .spotify-bottom select{flex:1 1 180px!important;min-width:0!important}
+@media(orientation:landscape) and (min-width:650px){body.gg-simple-training #trainingConsole .spotify-panel{min-height:190px!important}}
+/* In-app clock focus: keeps the training session active */
+body.gg-timer-focus #trainingConsole .timer-face{position:fixed!important;inset:0!important;z-index:1000002!important;width:100vw!important;height:100vh!important;height:100dvh!important;margin:0!important;border:0!important;border-radius:0!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:center!important;padding:24px!important;background:#080d12!important;overflow:auto!important}
+body.gg-timer-focus #trainingConsole .timer-face #timerClock{font-size:clamp(100px,28vw,320px)!important;line-height:1!important}
+body.gg-timer-focus #trainingConsole .timer-face #timerModeLabel{font-size:clamp(14px,3vw,24px)!important}
+body.gg-timer-focus #trainingConsole .timer-face #timerState{font-size:clamp(22px,5vw,42px)!important}
+body.gg-timer-focus #trainingConsole .timer-face #timerRound,
+body.gg-timer-focus #trainingConsole .timer-face #timerDetails{font-size:clamp(16px,3vw,26px)!important}
+body.gg-timer-focus #trainingConsole .timer-face .timer-controls{width:min(720px,100%)}
+body.gg-timer-focus #trainingConsole .timer-face .timer-controls button{min-height:58px!important;font-size:17px!important}
+body.gg-timer-focus #trainingConsole .timer-face #timerFocusToggle{position:absolute!important;top:14px!important;right:14px!important}
+</style>
+<script id="gg-1810-timer-focus">
+(function(){
+ window.toggleTimerFocus=function(){
+  const on=!document.body.classList.contains('gg-timer-focus');
+  document.body.classList.toggle('gg-timer-focus',on);
+  const b=document.getElementById('timerFocusToggle');
+  if(b){b.textContent=on?'✕ Lukk stor klokke':'⛶ Stor klokke';b.setAttribute('aria-pressed',on?'true':'false');}
+ };
+ document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&document.body.classList.contains('gg-timer-focus'))window.toggleTimerFocus();
  });
 })();
 </script>
