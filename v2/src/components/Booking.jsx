@@ -136,10 +136,15 @@ export default function Booking({ profile, onLogResult }) {
     try{
       const {data:{user}}=await supabase.auth.getUser()
       const wod=wods.find(x=>x.id===selectedWod[item.id])||null
-      const {data,error:e}=await supabase.from('class_live_sessions').insert({class_id:item.id,started_by:user.id,status:'active',started_at:new Date().toISOString(),session_title:item.title,wod_id:wod?.id||null,timer_format:wod?.format||null,timer_duration_seconds:wod?.duration_minutes?Number(wod.duration_minutes)*60:null,timer_settings:wod?.timer_settings||null,timer_started_at:wod?new Date().toISOString():null,timer_elapsed_seconds:0,timer_status:wod?'running':'idle'}).select('id,class_id,status,started_at,session_title,wod_id,timer_format,timer_duration_seconds,timer_started_at,timer_elapsed_seconds,timer_status').single()
-      if(e)throw e
-      setLiveSessions(v=>[data,...v.filter(x=>x.class_id!==item.id)])
-      setNotice('Gruppetreninga er starta og synleg for påmelde deltakarar.')
+      const startedAt=new Date().toISOString()
+      let result=await supabase.from('class_live_sessions').insert({class_id:item.id,started_by:user.id,status:'active',started_at:startedAt,session_title:item.title,wod_id:wod?.id||null,timer_format:wod?.format||null,timer_duration_seconds:wod?.duration_minutes?Number(wod.duration_minutes)*60:null,timer_settings:wod?.timer_settings||null,timer_started_at:wod?startedAt:null,timer_elapsed_seconds:0,timer_status:wod?'running':'idle'}).select(LIVE_SESSION_FIELDS).single()
+      if(result.error && /timer_settings|timer_started_at|timer_elapsed_seconds|timer_status|timer_format|timer_duration_seconds|column .* does not exist/i.test(result.error.message||'')){
+        // Migration 005 supports a live session without the timer extension from migration 007.
+        result=await supabase.from('class_live_sessions').insert({class_id:item.id,started_by:user.id,status:'active',started_at:startedAt,session_title:item.title}).select(LIVE_SESSION_BASE_FIELDS).single()
+      }
+      if(result.error)throw result.error
+      setLiveSessions(v=>[result.data,...v.filter(x=>x.class_id!==item.id)])
+      setNotice(wod&&!result.data.timer_format?'Gruppetreninga er starta. WOD-timer krev den siste timer-migreringa.':'Gruppetreninga er starta og synleg for påmelde deltakarar.')
     }catch(e){setError(e.message||'Kunne ikkje starta gruppetreninga.')}
     finally{setBusy('')}
   }
@@ -149,8 +154,12 @@ export default function Booking({ profile, onLogResult }) {
       const now=new Date().toISOString()
       const elapsedNow=(Number(session.timer_elapsed_seconds)||0)+(session.timer_started_at?Math.max(0,Math.floor((Date.now()-new Date(session.timer_started_at).getTime())/1000)):0)
       const patch=status==='finished'?{status,ended_at:now,timer_status:'finished',timer_elapsed_seconds:elapsedNow,timer_started_at:null}:status==='paused'?{status,timer_status:session.timer_status==='running'?'paused':session.timer_status,timer_elapsed_seconds:elapsedNow,timer_started_at:null}:{status,timer_status:session.timer_format?'running':'idle',timer_started_at:session.timer_format?now:null}
-      const {error:e}=await supabase.from('class_live_sessions').update(patch).eq('id',session.id)
-      if(e)throw e
+      let result=await supabase.from('class_live_sessions').update(patch).eq('id',session.id)
+      if(result.error && /timer_settings|timer_started_at|timer_elapsed_seconds|timer_status|column .* does not exist/i.test(result.error.message||'')){
+        const basePatch=status==='finished'?{status,ended_at:now}:{status}
+        result=await supabase.from('class_live_sessions').update(basePatch).eq('id',session.id)
+      }
+      if(result.error)throw result.error
       setLiveSessions(v=>status==='finished'?v.filter(x=>x.id!==session.id):v.map(x=>x.id===session.id?{...x,...patch}:x))
       setNotice(status==='finished'?'Gruppetreninga er avslutta.':status==='paused'?'Gruppetreninga er sett på pause.':'Gruppetreninga er i gang igjen.')
     }catch(e){setError(e.message||'Kunne ikkje oppdatera gruppetreninga.')}
