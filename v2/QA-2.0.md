@@ -111,3 +111,12 @@ Dette dokumentet er ein testplan, ikkje dokumentasjon på at testane er køyrde.
 ## 10. Status
 
 Ingen ende-til-ende-testar er stadfesta køyrde i denne arbeidsøkta. Migrering 004 fekk retta ein syntaksfeil i `DO`-blokka; rettinga er lagra i utviklingsgreina, men er ikkje køyrd mot nokon database. SQL-migreringane 001–011 er staged i GitHub, ikkje installerte i aktiv Supabase-database. Siste React/Vite-bygg er ikkje stadfesta etter dei nyaste endringane.
+
+
+## Testmiljø – 16.11.2026
+- Supabase Free: `garasjegym-2-test` (`izwzwvlexqxqewzijhhd`), ACTIVE_HEALTHY.
+- 14 feature-migreringar installerte etter schema-baseline; 24 offentlege tabellar, alle med RLS aktivert.
+- Demo-data: 7 øvingar, 1 WOD, 4 kaffiprodukt og 1 gruppetime.
+- Auth-profiltrigger kontrollert. Testkonto og innlogging må framleis prøvast manuelt.
+- Tryggleiksråd: ingen anon SECURITY DEFINER-funksjonar; 6 SECURITY DEFINER-funksjonar er medvite tilgjengelege for authenticated (rolleoppslag og handlingar/RPC). Ytterlegare RLS-ytelsesvarsel må vurderast før produksjon.
+- Ytelsesråd etter indeksmigrering: 20 manglande FK-indeksar er retta; att står RLS initplan- og fleire permissive policy-varsel.
