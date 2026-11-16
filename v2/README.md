@@ -9,7 +9,7 @@ Dette er ei separat utviklingsutgåve. GarasjeGym 1.8.16 og produksjonsdata skal
 - Lucide-ikon
 
 ## Lokal utvikling
-Krev Node.js 20 eller nyare.
+Krev Node.js 20 eller nyare. På Windows kan du dobbeltklikka `START-GARASJEGYM-2.0.bat`; sjå `TESTE-LOKALT.md` for trygg oppstart mot eit eige testprosjekt. Ikkje bruk produksjonsprosjektet som testdatabase.
 
 ```bash
 cd v2
@@ -64,7 +64,7 @@ Migrering 008 byggjer vidare på 001 og krev at 005 har oppretta `class_live_ses
 - Jamleg oppfrisking er lagt til for sentrale moduldata. Full ende-til-ende-testing med medlem, manager, admin og fleire einingar er ikkje utført.
 
 ## Kvalitetssikring
-Testplanen ligg i QA-2.0.md. Han skil mellom planlagde testar og testar som faktisk er stadfesta køyrde.
+Testplanen ligg i QA-2.0.md. GitHub Actions køyrer òg `npm run check:migrations`, som kontrollerer migreringsfilnamn og balanserte dollar-quote-delimiterar, før Vite-bygginga. Han skil mellom planlagde testar og testar som faktisk er stadfesta køyrde.
 
 ## Tryggleik og lansering
 - Supabase RLS er den endelege tilgangskontrollen.
