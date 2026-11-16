@@ -3,8 +3,8 @@
 <html lang="nn">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#11151b"><meta name="application-name" content="GarasjeGym 1.8.11 – KAIZERSTURM">
-<title>GARASJEGYM 1.8.11 · KAIZERSTURM</title>
+<meta name="theme-color" content="#11151b"><meta name="application-name" content="GarasjeGym 1.8.12 – KAIZERSTURM">
+<title>GARASJEGYM 1.8.12 · KAIZERSTURM</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -618,7 +618,7 @@ body.wod-dashboard-mode.training-layout-edit #trainingConsole .gg-module-picker{
 }
 
 
-/* GarasjeGym 1.8.11 – KAIZERSTURM · WOD og timerintegrasjon */
+/* GarasjeGym 1.8.12 – KAIZERSTURM · WOD og timerintegrasjon */
 #trainingConsole .timer-face{gap:7px}
 #trainingConsole .timer-state{font-size:clamp(16px,2vw,24px);letter-spacing:.12em;font-weight:900}
 #trainingConsole #timerDetails{font-size:11px;letter-spacing:.04em;opacity:.86}
@@ -1224,7 +1224,7 @@ body.gg-app-fullscreen main{padding-top:8px!important}
 <header><div class="logo">GARASJEGYM</div><div class="header-tools"><button id="signedInName" class="header-user-link" type="button" onclick="showTab('profile')" aria-label="Opna Mi side"></button><span id="roleBadge" class="pill gold">MEDLEM</span><div id="headerRank" class="header-rank" aria-live="polite"></div><button id="wallModeToggle" type="button" class="secondary" onclick="toggleWallMode()">🏋️ Treningsmodus</button><button id="appFullscreenToggle" type="button" class="secondary" onclick="toggleAppFullscreen()">⛶ Fullskjerm</button><button id="signOutBtn" type="button" class="secondary">Logg ut</button></div></header>
 <div id="floatingTimerPanel" class="floating-timer-panel hidden" role="dialog" aria-label="Timer"><div class="floating-timer-head"><strong>⏱ Timer</strong><div><button type="button" class="secondary" onclick="toggleFloatingTimerSize()" aria-label="Endra storleik">⤢</button><button type="button" class="secondary" onclick="closeFloatingTimer()" aria-label="Lukk timer">×</button></div></div><div id="floatingTimerContent"></div></div>
 <main>
-<div id="ggReleaseStamp" class="hint" style="text-align:center;padding:12px 0;font-weight:900;letter-spacing:.08em">GARASJEGYM 1.8.11 · KAIZERSTURM</div>
+<div id="ggReleaseStamp" class="hint" style="text-align:center;padding:12px 0;font-weight:900;letter-spacing:.08em">GARASJEGYM 1.8.12 · KAIZERSTURM</div>
 <div id="quickBar" class="quick-bar" aria-label="Snøggtilgang">
  <button type="button" class="quick-bell" onclick="openNotificationCenter()" aria-label="Opne varsel"><span class="quick-icon" aria-hidden="true">♧</span><span class="quick-count" id="quickUnreadCount" hidden>0</span></button>
  <button type="button" class="quick-toggle" id="quickToggle" onclick="toggleQuickLinks()" aria-expanded="false" aria-controls="quickLinks" aria-label="Vis snarvegar">＋</button>
@@ -1453,8 +1453,8 @@ body.gg-app-fullscreen main{padding-top:8px!important}
  <details class="card"><summary>Klubbverktøy <span class="hint">Status</span></summary><div id="adminSummaryDetail"></div></details>
 </div>
 </section>
-<footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.8.11 · KAIZERSTURM</strong></footer>
-<div class="hint" style="text-align:center;padding:12px 0">GARASJEGYM 1.8.11 · KAIZERSTURM</div>
+<footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.8.12 · KAIZERSTURM</strong></footer>
+<div class="hint" style="text-align:center;padding:12px 0">GARASJEGYM 1.8.12 · KAIZERSTURM</div>
 </main>
 <div id="editorModal" class="editor-backdrop" role="dialog" aria-modal="true" aria-labelledby="editorTitle" onclick="if(event.target===this)closeEditor()"><div class="editor-panel"><div class="row"><h2 id="editorTitle">Rediger</h2><button type="button" class="secondary" onclick="closeEditor()" aria-label="Lukk">✕</button></div><form id="editorForm"></form></div></div>
 <script>
@@ -1488,6 +1488,17 @@ function exportGarasjegymBackup(){
   if(status)status.textContent='Sikkerheitskopien er laga. Kontroller at JSON-fila ligg i Nedlastingar før du går vidare.';
  }catch(err){alert('Kunne ikkje lage sikkerheitskopi: '+(err.message||'Ukjend feil'));}
 }
+
+function toast(message){
+ const el=document.createElement('div');
+ el.className='gg-app-toast';
+ el.setAttribute('role','status');
+ el.textContent=String(message||'');
+ el.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1000005;max-width:min(92vw,520px);padding:12px 18px;border:1px solid #526273;border-radius:14px;background:#202a35;color:#fff;box-shadow:0 8px 30px #0008;font:600 14px system-ui;text-align:center';
+ document.body.appendChild(el);
+ window.setTimeout(()=>el.remove(),3200);
+}
+
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function currentMember(){return db.members.find(m=>m.id===db.activeProfile)||db.members[0];}
 function currentRole(){return currentMember().role;}
@@ -1589,7 +1600,7 @@ $$('#nav button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.ta
 function item(title,sub,tag,actions=''){return `<div class="item"><div class="row"><div><strong>${esc(title)}</strong><div class="hint">${esc(sub)}</div></div><div>${tag||''} ${actions}</div></div></div>`}
 
 $('#wodForm').addEventListener('submit',async e=>{e.preventDefault();if(!canCreateWod()){alert('Berre admin og VIP-manager kan opprette WOD.');return;}const form=e.target,button=form.querySelector('button[type=submit],button:not([type])');let f=new FormData(form);const name=String(f.get('name')||'').trim();const cleanMovements=normaliseLines(f.get('movements'));if(!name||!cleanMovements){alert('WOD-en må ha namn og minst éi øving.');return;}if(!authUser){alert('Du må vere innlogga for å lagre WOD.');return;}if(button)button.disabled=true;try{const payload={name,format:String(f.get('format')||'Eigen økt'),duration_minutes:f.get('duration')?Number(f.get('duration')):null,movements:cleanMovements,notes:encodeWodNotes(String(f.get('notes')||''),f.get('timerMode')?{mode:String(f.get('timerMode')),work:Math.max(1,Number(f.get('timerWork'))||60),rest:Math.max(0,Number(f.get('timerRest'))||0),rounds:Math.max(1,Number(f.get('timerRounds'))||1),delay:Math.max(0,Number(f.get('timerDelay'))||0)}:null),audience:String(f.get('audience')||'Alle medlemmar'),is_published:true,created_by:authUser.id};const {data,error}=await supabaseClient.from('wods').insert(payload).select('*').single();if(error)throw error;db.wods.unshift(mapSupabaseWod(data));form.reset();$('#wodCreator').open=false;notifyAdmin('wod','Ny WOD i biblioteket',currentName()+' oppretta '+name);save();showTab('wods');toast('WOD-en er lagra og klar for medlemmene.');}catch(err){console.error('WOD insert failed',err);alert('WOD-en blei ikkje lagra. '+(err.message||'Kontroller tilgang og internett.'));}finally{if(button)button.disabled=false;}});
-$('#classForm').addEventListener('submit',async e=>{e.preventDefault();if(!canManageClasses()){alert('Berre admin og VIP-manager kan opprette timar.');return;}if(!authUser){alert('Du må vera innlogga.');return;}const form=e.target,button=form.querySelector('#classSubmitButton');const f=new FormData(form);const selectedWodIds=f.getAll('wodIds').filter(Boolean).map(String);const selectedWods=db.wods.filter(w=>selectedWodIds.includes(String(w.id)));const title=String(f.get('title')||'').trim();const when=String(f.get('when')||'');const payload={title,type:String(f.get('type')||'Gruppetime'),capacity:Math.max(1,Number(f.get('capacity'))||1),starts_at:new Date(when).toISOString(),duration_minutes:Math.max(1,Number(f.get('duration'))||60),description:normaliseLines(f.get('description'))||null,workout_text:normaliseLines(f.get('workoutText'))||null,wod_ids:selectedWods.map(w=>String(w.id)),created_by:authUser.id};if(!title||!when||Number.isNaN(new Date(when).getTime())){alert('Kontroller tittel og tidspunkt.');return;}if(button)button.disabled=true;try{let result;if(editingClassId!==null){result=await supabaseClient.from('classes').update(payload).eq('id',String(editingClassId)).select('*').single();}else{result=await supabaseClient.from('classes').insert(payload).select('*').single();}if(result.error)throw result.error;const wasEditing=editingClassId!==null;await loadClassesFromSupabase();cancelClassEdit(false);form.reset();renderWodPicker('class');renderAll();editingClassId=null;showTab('classes');$('#classList')?.scrollIntoView({behavior:'smooth',block:'start'});alert(wasEditing?'Gruppetimen er oppdatert i Supabase.':'Gruppetimen er publisert og synleg for medlemmene.');}catch(err){console.error('Class save failed',err);alert('Gruppetimen blei ikkje lagra: '+(err.message||err));}finally{if(button)button.disabled=false;}});
+$('#classForm').addEventListener('submit',async e=>{e.preventDefault();if(!canManageClasses()){alert('Berre admin og VIP-manager kan opprette timar.');return;}if(!authUser){alert('Du må vera innlogga.');return;}const form=e.target,button=form.querySelector('#classSubmitButton');const f=new FormData(form);const selectedWodIds=f.getAll('wodIds').filter(Boolean).map(String);const selectedWods=db.wods.filter(w=>selectedWodIds.includes(String(w.id)));const title=String(f.get('title')||'').trim();const when=String(f.get('when')||'');const payload={title,type:String(f.get('type')||'Gruppetime'),capacity:Math.max(1,Number(f.get('capacity'))||1),starts_at:new Date(when).toISOString(),duration_minutes:Math.max(1,Number(f.get('duration'))||60),description:normaliseLines(f.get('description'))||null,workout_text:normaliseLines(f.get('workoutText'))||null,wod_ids:selectedWods.map(w=>String(w.id)),created_by:authUser.id};if(!title||!when||Number.isNaN(new Date(when).getTime())){alert('Kontroller tittel og tidspunkt.');return;}if(button)button.disabled=true;try{let result;if(editingClassId!==null){result=await supabaseClient.from('classes').update(payload).eq('id',String(editingClassId)).select('*').single();}else{result=await supabaseClient.from('classes').insert(payload).select('*').single();}if(result.error)throw result.error;const wasEditing=editingClassId!==null;await loadClassesFromSupabase();cancelClassEdit(false);if(form)form.reset();renderWodPicker('class');renderClasses();renderHome();editingClassId=null;showTab('classes');$('#classList')?.scrollIntoView({behavior:'smooth',block:'start'});alert(wasEditing?'Gruppetimen er oppdatert i Supabase.':'Gruppetimen er publisert og synleg for medlemmene.');}catch(err){console.error('Class save failed',err);alert('Gruppetimen blei ikkje lagra: '+(err.message||err));}finally{if(button)button.disabled=false;}});
 $('#prForm').addEventListener('submit',async e=>{e.preventDefault();const form=e.target,button=form.querySelector('button[type=submit],button:not([type])'),f=new FormData(form);if(!f.get('exercise')){alert('Vel ei øving frå biblioteket.');return;}if(!authUser){alert('Du må vera innlogga for å lagra PR.');return;}const payload={member_id:authUser.id,exercise_name:String(f.get('exercise')),result:String(f.get('result')||'').trim(),unit:String(f.get('unit')||'kg'),note:String(f.get('note')||'').trim()||null,record_date:String(f.get('date')||new Date().toISOString().slice(0,10))};if(!payload.result){alert('Skriv inn eit resultat.');return;}if(button)button.disabled=true;try{const {data,error}=await supabaseClient.from('personal_records').insert(payload).select('*').single();if(error)throw error;db.prs.unshift({id:String(data.id),memberId:String(data.member_id),person:currentName(),exercise:data.exercise_name,result:data.result,unit:data.unit||'kg',note:data.note||'',date:data.record_date,supabase:true});form.reset();renderPrs();renderHome();toast('Personleg rekord registrert.');}catch(err){console.error('PR insert failed',err);alert('PR-en blei ikkje lagra: '+(err.message||err));}finally{if(button)button.disabled=false;}});
 
 async function del(type,id){if(!confirm('Vil du sletta denne oppføringa?'))return;if(type==='classes'){try{const {error}=await supabaseClient.from('classes').delete().eq('id',String(id));if(error)throw error;await loadClassesFromSupabase();renderAll();}catch(err){alert('Gruppetimen blei ikkje sletta: '+(err.message||err));}return;}if(type==='logs'){try{const {error}=await supabaseClient.from('workout_logs').delete().eq('id',String(id));if(error)throw error;db.logs=db.logs.filter(x=>String(x.id)!==String(id));save();}catch(err){alert('Treningsloggen blei ikkje sletta i Supabase: '+err.message);}return;}if(type==='prs'){const record=db.prs.find(x=>String(x.id)===String(id));if(!record)return;try{if(record.supabase){const {error}=await supabaseClient.from('personal_records').delete().eq('id',String(id));if(error)throw error;}db.prs=db.prs.filter(x=>String(x.id)!==String(id));renderPrs();renderHome();}catch(err){alert('PR-en blei ikkje sletta: '+(err.message||err));}return;}db[type]=db[type].filter(x=>x.id!==id);save()}
@@ -2044,7 +2055,7 @@ function adminEditClass(id){if(!canManageClasses()){alert('Du har ikkje tilgang 
  $('#classSubmitButton').textContent='Lagre endringar';$('#cancelClassEdit').classList.remove('hidden');$('#classPreview')?.classList.add('hidden');
  form.scrollIntoView({behavior:'smooth',block:'start'});form.elements.title.focus();
 }
-function cancelClassEdit(reset=true){if(editingClassId!==null&&reset&&!confirm('Forkasta endringane i gruppetimen?'))return;editingClassId=null;const form=$('#classForm');if(reset)form.reset();$('#classPreview')?.classList.add('hidden');$('#classSubmitButton').textContent='Legg ut time';$('#cancelClassEdit').classList.add('hidden');$('#classList')?.scrollIntoView({behavior:'smooth',block:'start'});}
+function cancelClassEdit(reset=true){if(editingClassId!==null&&reset&&!confirm('Forkasta endringane i gruppetimen?'))return;editingClassId=null;const form=$('#classForm');if(reset&&form)form.reset();$('#classPreview')?.classList.add('hidden');const submit=$('#classSubmitButton');if(submit)submit.textContent='Legg ut time';const cancel=$('#cancelClassEdit');if(cancel)cancel.classList.add('hidden');$('#classList')?.scrollIntoView({behavior:'smooth',block:'start'});}
 
 function adminEditExercise(index){if(!isOwner()){alert('Berre eigar kan endre øvingsbiblioteket.');return;}const x=db.customExercises[index];if(!x)return;
  const cats=['Styrke','Vektløfting','Kroppsvekt','Kondisjon','Kjerne','Mobilitet','Gymnastics'];
