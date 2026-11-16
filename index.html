@@ -1,10 +1,10 @@
 <!doctype html>
-<!-- GarasjeGym 1.5.3 – Baum Kadett -->
+<!-- GarasjeGym 1.6.0 – Baum Kadett -->
 <html lang="nn">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#11151b">
-<title>GARASJEGYM 1.5.3 · Baum Kadett</title>
+<title>GARASJEGYM 1.6.0 · Baum Kadett</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -286,7 +286,7 @@ nav button{font-size:12px;padding:9px 13px;min-height:38px}
  #pt .grid>.span-7{grid-column:span 6}
 }
 
-/* GarasjeGym 1.5.3 – Baum Kadett: refined Spotify player */
+/* GarasjeGym 1.6.0 – Baum Kadett: refined Spotify player */
 .achievement-ticker{display:none!important;overflow:hidden;border:1px solid #354556;border-radius:12px;background:#111a24;margin:5px 0 10px;padding:8px 0;white-space:nowrap}
 .achievement-track{display:inline-flex;gap:34px;min-width:max-content;animation:ggTicker 72s linear infinite;padding-left:100vw}
 .achievement-ticker:hover .achievement-track{animation-play-state:paused}
@@ -408,7 +408,7 @@ input[type="date"],input[type="datetime-local"]{min-height:46px;cursor:pointer;c
 .welcome-toast.visible{opacity:1;transform:translateY(0)}
 
 
-/* GarasjeGym 1.5.3 – Treningsmodus med flyttbare modular */
+/* GarasjeGym 1.6.0 – Treningsmodus med flyttbare modular */
 .training-head-actions,.spotify-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 #trainingConsole .training-console-grid{align-items:stretch}
 #trainingConsole .training-console-grid>div:first-child,.timer-workout{background:linear-gradient(150deg,#172431,#101820);border:1px solid #34495a;border-radius:17px;padding:13px;min-width:0}
@@ -444,13 +444,104 @@ body.training-layout-edit #trainingConsole .training-module{resize:both;overflow
 body.training-layout-edit #trainingConsole .module-grip{display:flex}
 body.training-layout-edit #trainingConsole .training-console-grid{grid-auto-flow:column;grid-auto-columns:minmax(250px,1fr);overflow:auto}
 #spotifyPanel.spotify-mini{padding:10px;max-width:100%;}
-#spotifyPanel.spotify-mini .spotify-player,#spotifyPanel.spotify-mini .spotify-controls,#spotifyPanel.spotify-mini .spotify-search,#spotifyPanel.spotify-mini .spotify-results,#spotifyPanel.spotify-mini .spotify-presets,#spotifyPanel.spotify-mini .spotify-bottom{display:none!important}
+#spotifyPanel.spotify-mini .spotify-search,#spotifyPanel.spotify-mini .spotify-results,#spotifyPanel.spotify-mini .spotify-presets,#spotifyPanel.spotify-mini .spotify-bottom{display:none!important}
 #spotifyPanel.spotify-mini .spotify-head{align-items:center}
 #spotifyPanel.spotify-mini .spotify-head h2{font-size:15px;margin:0}
 #spotifyPanel.spotify-mini #spotifyStatus{display:none}
 #spotifyPanel .spotify-expand{font-size:20px;min-width:42px;padding:7px 11px;line-height:1}
 @media(max-width:1000px){body.wod-dashboard-mode #trainingConsole .training-console-grid{grid-template-columns:1fr 1fr;overflow:auto}body.wod-dashboard-mode #trainingConsole .spotify-panel{grid-column:1/-1}}
 @media(max-width:700px){body.wod-dashboard-mode #trainingConsole .training-console-grid{grid-template-columns:1fr;overflow:auto}body.wod-dashboard-mode #trainingConsole .spotify-panel{grid-column:auto}}
+
+
+/* GARASJEGYM 1.6.0 – nettbrett først, innhaldsskalerande modular */
+#spotifyPanel.spotify-mini{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;min-height:94px;padding:12px 15px}
+#spotifyPanel.spotify-mini .spotify-head{grid-column:1/-1;margin:0;display:flex;align-items:center;justify-content:space-between}
+#spotifyPanel.spotify-mini .spotify-head>div:first-child{display:flex;align-items:center;gap:9px;min-width:0}
+#spotifyPanel.spotify-mini .spotify-head .subheading{display:none}
+#spotifyPanel.spotify-mini .spotify-head h2{font-size:14px;white-space:nowrap}
+#spotifyPanel.spotify-mini .spotify-player{display:flex!important;min-width:0;gap:9px;margin:0;align-items:center}
+#spotifyPanel.spotify-mini .spotify-player img{display:block!important;width:42px;height:42px;object-fit:cover;border-radius:7px;flex:0 0 auto}
+#spotifyPanel.spotify-mini .spotify-track{min-width:0;display:grid;grid-template-columns:minmax(0,1fr);gap:2px}
+#spotifyPanel.spotify-mini .spotify-track .spotify-now,#spotifyPanel.spotify-mini .spotify-progress,#spotifyPanel.spotify-mini .spotify-time{display:none}
+#spotifyPanel.spotify-mini .spotify-track strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+#spotifyPanel.spotify-mini .spotify-track .hint{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#spotifyPanel.spotify-mini .spotify-controls{display:flex!important;gap:4px;margin:0;align-items:center}
+#spotifyPanel.spotify-mini .spotify-controls button{min-width:38px;min-height:38px;padding:5px}
+#spotifyPanel.spotify-mini .spotify-volume{display:none}
+#spotifyPanel.spotify-mini #spotifyLogin{display:none}
+#spotifyPanel.spotify-mini .spotify-head-actions{margin-left:auto}
+#spotifyPanel.spotify-mini #spotifyStatus{display:none}
+body.wod-dashboard-mode{overflow:hidden!important;height:100dvh;width:100vw}
+body.wod-dashboard-mode #trainingConsole{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;max-height:100dvh!important;z-index:999999!important;margin:0!important;padding:clamp(6px,1vw,14px)!important;border:0!important;border-radius:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;gap:6px!important;box-sizing:border-box!important}
+body.wod-dashboard-mode header,body.wod-dashboard-mode nav,body.wod-dashboard-mode #quickBar,body.wod-dashboard-mode .role-banner,body.wod-dashboard-mode .achievement-ticker{display:none!important}
+body.wod-dashboard-mode #trainingConsole .training-console-head{flex:0 0 auto;min-height:34px;margin:0!important;display:flex;align-items:center;justify-content:space-between;gap:8px}
+body.wod-dashboard-mode #trainingConsole .training-console-head h2{font-size:clamp(15px,2.1vh,22px)!important;margin:0!important}
+body.wod-dashboard-mode #trainingConsole .training-console-head .hint{display:none!important}
+body.wod-dashboard-mode #trainingConsole .training-console-grid{display:grid!important;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) minmax(240px,.85fr)!important;grid-template-rows:minmax(0,1fr)!important;gap:clamp(6px,1vw,12px)!important;flex:1 1 0!important;min-height:0!important;height:0!important;overflow:hidden!important;margin:0!important;align-items:stretch!important}
+body.wod-dashboard-mode #trainingConsole .training-module{min-width:0!important;min-height:0!important;width:auto!important;height:auto!important;max-height:none!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;gap:clamp(4px,.8vh,9px)!important;padding:clamp(7px,.9vw,13px)!important;border:1px solid #40566a!important;border-radius:clamp(9px,1vw,17px)!important;box-sizing:border-box!important;font-size:clamp(11px,1.45vh,16px)!important}
+body.wod-dashboard-mode #trainingConsole .module-grip{display:none!important}
+body.wod-dashboard-mode #trainingConsole .timer-face{flex:1 1 auto!important;min-height:0!important;padding:clamp(5px,.8vw,12px)!important;display:flex!important;flex-direction:column!important;justify-content:center!important;gap:clamp(3px,.6vh,8px)!important}
+body.wod-dashboard-mode #trainingConsole .timer-clock{font-size:clamp(54px,12vh, min(15vw,150px))!important;line-height:.95!important;white-space:nowrap!important}
+body.wod-dashboard-mode #trainingConsole .timer-state,body.wod-dashboard-mode #trainingConsole .timer-round{font-size:clamp(11px,1.7vh,18px)!important}
+body.wod-dashboard-mode #trainingConsole .timer-controls{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important}
+body.wod-dashboard-mode #trainingConsole .timer-controls button{min-width:0!important;min-height:clamp(38px,6vh,58px)!important;padding:5px!important;font-size:clamp(12px,1.8vh,18px)!important}
+body.wod-dashboard-mode #trainingConsole .timer-shortcuts{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important;margin:0!important}
+body.wod-dashboard-mode #trainingConsole .timer-shortcuts button{min-width:0!important;min-height:32px!important;padding:4px!important;font-size:clamp(9px,1.2vh,13px)!important}
+body.wod-dashboard-mode #trainingConsole .timer-settings{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:4px!important;margin:0!important;max-height:none!important;overflow:hidden!important}
+body.wod-dashboard-mode #trainingConsole .timer-settings label{min-width:0!important;font-size:clamp(8px,1.1vh,11px)!important}
+body.wod-dashboard-mode #trainingConsole .timer-settings input,body.wod-dashboard-mode #trainingConsole .timer-settings select{min-width:0!important;padding:4px!important;font-size:clamp(9px,1.2vh,12px)!important}
+body.wod-dashboard-mode #trainingConsole .timer-help,body.wod-dashboard-mode #trainingConsole .timer-workout .hint{font-size:clamp(9px,1.1vh,12px)!important}
+body.wod-dashboard-mode #trainingConsole .timer-workout{min-height:0!important;overflow:hidden!important;gap:5px!important}
+body.wod-dashboard-mode #trainingConsole .timer-workout>strong{flex:0 0 auto}
+body.wod-dashboard-mode #trainingConsole .timer-workout .row{flex:0 0 auto;gap:4px!important}
+body.wod-dashboard-mode #trainingConsole .timer-workout-text{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important;white-space:pre-line!important;font-size:clamp(12px,1.65vh,18px)!important;line-height:1.25!important}
+body.wod-dashboard-mode #trainingConsole .timer-wod-image img{height:clamp(50px,10vh,110px)!important;max-width:100%!important;object-fit:contain!important}
+body.wod-dashboard-mode #trainingConsole .timer-score-entry{flex:0 0 auto!important;max-height:22vh!important;overflow:auto!important;padding:6px!important;margin:0!important}
+body.wod-dashboard-mode #trainingConsole .timer-score-entry label{font-size:clamp(9px,1.1vh,12px)!important;margin:3px 0!important}
+body.wod-dashboard-mode #trainingConsole .timer-score-grid{gap:4px!important;margin:4px 0!important}
+body.wod-dashboard-mode #trainingConsole .timer-score-grid input{padding:5px!important;font-size:12px!important}
+body.wod-dashboard-mode #trainingConsole .spotify-panel{display:flex!important;flex-direction:column!important;min-width:0!important;min-height:0!important;overflow:hidden!important;margin:0!important;padding:clamp(7px,.9vw,13px)!important}
+body.wod-dashboard-mode #trainingConsole .spotify-panel .spotify-head{flex:0 0 auto}
+body.wod-dashboard-mode #trainingConsole .spotify-panel .spotify-player{display:flex!important;flex:0 0 auto!important;min-width:0!important;gap:8px!important;margin:6px 0!important}
+body.wod-dashboard-mode #trainingConsole .spotify-panel .spotify-player img{width:clamp(42px,6vw,82px)!important;height:clamp(42px,6vw,82px)!important;object-fit:cover!important}
+body.wod-dashboard-mode #trainingConsole .spotify-track strong{font-size:clamp(12px,1.6vh,18px)!important;white-space:normal!important;overflow-wrap:anywhere}
+body.wod-dashboard-mode #trainingConsole .spotify-track .hint{font-size:clamp(10px,1.2vh,13px)!important}
+body.wod-dashboard-mode #trainingConsole .spotify-controls{display:flex!important;flex-wrap:wrap!important;gap:4px!important;margin:4px 0!important}
+body.wod-dashboard-mode #trainingConsole .spotify-controls button{min-width:38px!important;min-height:38px!important;padding:5px!important}
+body.wod-dashboard-mode #trainingConsole .spotify-volume{display:none!important}
+body.wod-dashboard-mode #trainingConsole .spotify-presets{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important;margin:4px 0!important}
+body.wod-dashboard-mode #trainingConsole .spotify-presets button{min-width:0!important;min-height:34px!important;padding:4px!important;font-size:clamp(9px,1.1vh,12px)!important}
+body.wod-dashboard-mode #trainingConsole .spotify-search{display:flex!important;gap:4px!important;margin:4px 0!important}
+body.wod-dashboard-mode #trainingConsole .spotify-search input{min-width:0!important;padding:6px!important}
+body.wod-dashboard-mode #trainingConsole .spotify-bottom{display:flex!important;flex-wrap:wrap!important;gap:4px!important;margin-top:auto!important}
+body.wod-dashboard-mode #trainingConsole .spotify-bottom select{min-width:0!important;flex:1 1 100px!important}
+body.wod-dashboard-mode #trainingConsole .spotify-bottom button{min-height:32px!important;padding:4px!important;font-size:11px!important}
+body.wod-dashboard-mode #trainingConsole .spotify-mini .spotify-search,body.wod-dashboard-mode #trainingConsole .spotify-mini .spotify-presets,body.wod-dashboard-mode #trainingConsole .spotify-mini .spotify-bottom{display:none!important}
+body.wod-dashboard-mode #trainingConsole .spotify-mini .spotify-player{display:flex!important}
+body.wod-dashboard-mode #trainingConsole .spotify-mini .spotify-controls{display:flex!important}
+body.wod-dashboard-mode #trainingConsole .spotify-mini .spotify-track strong{font-size:clamp(12px,1.5vh,17px)!important}
+body.wod-dashboard-mode #trainingConsole .spotify-mini .spotify-head .subheading{display:none!important}
+body.wod-dashboard-mode #trainingConsole .spotify-mini .spotify-head h2{font-size:14px!important}
+body.wod-dashboard-mode #trainingConsole .spotify-mini .spotify-player img{width:42px!important;height:42px!important}
+body.wod-dashboard-mode #trainingConsole .spotify-mini .spotify-progress,body.wod-dashboard-mode #trainingConsole .spotify-mini .spotify-time{display:none!important}
+body.training-layout-edit #trainingConsole .training-module{outline:1px dashed #ffb43f;outline-offset:2px}
+body.training-layout-edit #trainingConsole .module-grip{display:flex}
+@media(max-width:900px){body.wod-dashboard-mode #trainingConsole .training-console-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) minmax(0,.7fr)!important}body.wod-dashboard-mode #trainingConsole .spotify-panel{grid-column:1/-1!important}}
+@media(orientation:portrait){body.wod-dashboard-mode #trainingConsole .training-console-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important}body.wod-dashboard-mode #trainingConsole .spotify-panel{grid-column:1/-1!important}}
+/* Modulinnhald skalerer saman med modulbreidda */
+#trainingConsole .training-module{container-type:inline-size}
+#trainingConsole .training-module h2{font-size:clamp(13px,5cqi,22px)}
+#trainingConsole .training-module button{font-size:clamp(10px,3.2cqi,16px)}
+#trainingConsole .training-module input,#trainingConsole .training-module select{font-size:clamp(10px,3cqi,15px)}
+/* Statusrangar og permanent gullramme */
+.gg-rank-card{display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(135deg,#182431,#101820);margin-top:10px}
+.gg-rank-title{font-weight:900;letter-spacing:.035em;font-size:clamp(15px,2vw,21px)}
+.gg-rank-stars{color:#f2c45c;font-size:21px;letter-spacing:3px}
+.gg-rank-progress{height:9px;border-radius:99px;background:#ffffff20;overflow:hidden}
+.gg-rank-progress>span{display:block;height:100%;background:linear-gradient(90deg,#b7791f,#f7d978);border-radius:99px}
+.gg-rank-card.gg-gold-forever{border:3px solid #d7a928;box-shadow:0 0 0 2px #f7d97855,inset 0 0 22px #d7a92822;background:linear-gradient(135deg,#352b16,#111820)}
+.gg-rank-card.gg-gold-forever .gg-rank-title{color:#f5d36c}
+.gg-rank-small{font-size:11px;color:var(--muted)}
 
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -781,7 +872,7 @@ function renderRoleAdmin(){
   const roleLabel=m.role==='admin'?'Admin / eigar':m.role==='manager'?'VIP-manager':'Vanleg medlem';
   const status=m.active===false?'Inaktiv':'Aktiv';const safeId=JSON.stringify(String(m.id));
   const self=String(m.id)===String(authProfile.id);
-  return `<div class="member-admin-row"><div><strong>${esc(m.name)}</strong><div class="member-admin-meta"><span class="pill">${roleLabel}</span><span class="pill ${m.active===false?'':'gold'}">${status}</span>${self?'<span class="pill">Du</span>':''}</div></div><div class="member-admin-actions"><button type="button" class="secondary" onclick='editMember(${safeId})'>Rediger profil</button>${self?'':`<button type="button" class="secondary" onclick='toggleMemberActive(${safeId})'>${m.active===false?'Aktiver':'Deaktiver'}</button>`}</div></div>`;
+  return `<div class="member-admin-row"><div><strong>${esc(m.name)}</strong><div class="member-admin-meta"><span class="pill">${roleLabel}</span><span class="pill ${m.active===false?'':'gold'}">${status}</span>${self?'<span class="pill">Du</span>':''}</div>${ggMemberRankHtml(m)}</div><div class="member-admin-actions"><button type="button" class="secondary" onclick='editMember(${safeId})'>Rediger profil</button>${self?'':`<button type="button" class="secondary" onclick='toggleMemberActive(${safeId})'>${m.active===false?'Aktiver':'Deaktiver'}</button>`}</div></div>`;
  }).join('')||'<p class="hint">Ingen medlemsprofilar funne.</p>';
 }
 async function reloadMemberProfiles(){
@@ -974,7 +1065,7 @@ async function saveWorkout(){
   const savedLog={id:String(parentId),person:currentName(),memberId:authUser.id,title:payload.title,date:payload.workout_date,sourceWodId:payload.source_wod_id,format:payload.format,rounds:payload.rounds,scoreRounds:payload.score_rounds,scoreReps:payload.score_reps,exercises,note:payload.note,ptSessionId:activeWorkout.ptSessionId||null};
   db.logs.unshift(savedLog);
   if(activeWorkout.ptSessionId){const {error:ptError}=await supabaseClient.from('pt_sessions').update({status:'completed',completed_at:new Date().toISOString(),workout_log_id:parentId}).eq('id',String(activeWorkout.ptSessionId));if(ptError)console.warn('PT-status kunne ikkje oppdaterast:',ptError.message);const ps=db.ptSessions.find(x=>String(x.id)===String(activeWorkout.ptSessionId));if(ps){ps.status='Gjennomført';ps.logId=parentId;ps.completedAt=new Date().toISOString();}}
-  activeWorkout=null;localStorage.setItem(KEY,JSON.stringify(db));renderAll();showTab('log');renderWorkoutEditor();alert('Treningsøkta er lagra i Supabase og synkronisert.');
+  activeWorkout=null;localStorage.setItem(KEY,JSON.stringify(db));await loadMemberTrainingRanks();renderAll();showTab('log');renderWorkoutEditor();alert('Treningsøkta er lagra i Supabase og synkronisert.');
  }catch(err){if(parentId){const {error:rollbackError}=await supabaseClient.from('workout_logs').delete().eq('id',String(parentId));if(rollbackError)console.error('Opprydding etter delvis lagring feila:',rollbackError.message);}console.error('Workout save failed',err);alert('Treningsøkta blei ikkje lagra. Dataa ligg framleis i øktredigeringa. '+(err.message||err));}
  finally{if(button){button.disabled=false;button.textContent='Lagre treningsøkt';}}
 }
@@ -1536,9 +1627,16 @@ function renderAchievementAdmin(){
  el.innerHTML=`<div class="hint">${people.length} medlemer · ${catalogue.length} moglege merke. Oversikta viser kven som har fått kva. Katalogen er delt i progresjonsnivå.</div><h4>Medlemsoversikt</h4>${memberRows||'<div class="empty">Ingen medlemer.</div>'}<details style="margin-top:12px"><summary><strong>Heile merkekatalogen</strong> <span class="hint">${catalogue.length} merke · tal viser kor mange som har fått merket</span></summary><div style="margin-top:8px">${catalogRows}</div></details>`;
 }
 
+
+const GG_RANK_TITLES = ["Garasjekadett", "Kraftknøtt", "Schwitzling", "Kneipenkrieger", "Tattenmaester", "Kraftknöchel", "Kraftbengel", "Kraftritter", "Kraftbaron", "Kraftfürst", "Kraftmeister", "Kraftgeneral", "Kraftkaiser", "Kraftkoloss", "Kraftlegende", "Kraftheld", "Kraftkobold", "Kraftochse", "Kraftpanzer", "Kraftorkan", "Kraftmagier", "Kraftmonarch", "Krafttitan", "Kraftüberlord", "Kraftweltmeister", "Muskelknöchel", "Muskelbengel", "Muskelritter", "Muskelbaron", "Muskelfürst", "Muskelmeister", "Muskelgeneral", "Muskelkaiser", "Muskelkoloss", "Muskellegende", "Muskelheld", "Muskelkobold", "Muskelochse", "Muskelpanzer", "Muskelorkan", "Muskelmagier", "Muskelmonarch", "Muskeltitan", "Muskelüberlord", "Muskelweltmeister", "Hantelknöchel", "Hantelbengel", "Hantelritter", "Hantelbaron", "Hantelfürst", "Hantelmeister", "Hantelgeneral", "Hantelkaiser", "Hantelkoloss", "Hantellegende", "Hantelheld", "Hantelkobold", "Hantelochse", "Hantelpanzer", "Hantelorkan", "Hantelmagier", "Hantelmonarch", "Hanteltitan", "Hantelüberlord", "Hantelweltmeister", "Schwitzknöchel", "Schwitzbengel", "Schwitzritter", "Schwitzbaron", "Schwitzfürst", "Schwitzmeister", "Schwitzgeneral", "Schwitzkaiser", "Schwitzkoloss", "Schwitzlegende", "Schwitzheld", "Schwitzkobold", "Schwitzochse", "Schwitzpanzer", "Schwitzorkan", "Schwitzmagier", "Schwitzmonarch", "Schwitztitan", "Schwitzüberlord", "Schwitzweltmeister", "Eisenknöchel", "Eisenbengel", "Eisenritter", "Eisenbaron", "Eisenfürst", "Eisenmeister", "Eisengeneral", "Eisenkaiser", "Eisenkoloss", "Eisenlegende", "Eisenheld", "Eisenkobold", "Eisenochse", "Eisenpanzer", "Eisenorkan", "Eisenmagier", "Eisenmonarch", "Eisentitan", "Eisenüberlord", "Eisenweltmeister", "Pumpenknöchel", "Pumpenbengel", "Pumpenritter", "Pumpenbaron", "Pumpenfürst", "Pumpenmeister", "Pumpengeneral", "Pumpenkaiser", "Pumpenkoloss", "Pumpenlegende", "Pumpenheld", "Pumpenkobold", "Pumpenochse", "Pumpenpanzer", "Pumpenorkan", "Pumpenmagier", "Pumpenmonarch", "Pumpentitan", "Pumpenüberlord", "Pumpenweltmeister", "Bizepsknöchel", "Bizepsbengel", "Bizepsritter", "Bizepsbaron", "Bizepsfürst", "Bizepsmeister", "Bizepsgeneral", "Bizepskaiser", "Bizepskoloss", "Bizepslegende", "Bizepsheld", "Bizepskobold", "Bizepsochse", "Bizepspanzer", "Bizepsorkan", "Bizepsmagier", "Bizepsmonarch", "Bizepstitan", "Bizepsüberlord", "Bizepsweltmeister", "Garagenknöchel", "Garagenbengel", "Garagenritter", "Garagenbaron", "Garagenfürst", "Garagenmeister", "Garagengeneral", "Garagenkaiser", "Garagenkoloss", "Garagenlegende", "Garagenheld", "Garagenkobold", "Garagenochse", "Garagenpanzer", "Garagenorkan", "Garagenmagier", "Garagenmonarch", "Garagentitan", "Garagenüberlord", "Garagenweltmeister", "Schnitzelknöchel", "Schnitzelbengel", "Schnitzelritter", "Schnitzelbaron", "Schnitzelfürst", "Schnitzelmeister", "Schnitzelgeneral", "Schnitzelkaiser", "Schnitzelkoloss", "Schnitzellegende", "Schnitzelheld", "Schnitzelkobold", "Schnitzelochse", "Schnitzelpanzer", "Schnitzelorkan", "Schnitzelmagier", "Schnitzelmonarch", "Schnitzeltitan", "Schnitzelüberlord", "Schnitzelweltmeister", "Knödelknöchel", "Knödelbengel", "Knödelritter", "Knödelbaron", "Knödelfürst", "Knödelmeister", "Knödelgeneral", "Knödelkaiser", "Knödelkoloss", "Knödellegende", "Knödelheld", "Knödelkobold", "Knödelochse", "Knödelpanzer", "Tattenkaiser Supreme"];
+function ggRankForCount(count){const n=Math.max(0,Number(count)||0);if(n>=600)return {level:200,stars:3,title:GG_RANK_TITLES[199],next:600,gold:true};if(n===0)return {level:1,stars:0,title:GG_RANK_TITLES[0],next:1,gold:false};const level=Math.min(200,Math.floor((n-1)/3)+1),stars=((n-1)%3)+1;return {level,stars,title:GG_RANK_TITLES[level-1],next:level*3,gold:false};}
+function ggRankHtml(memberId,count,goldAt){const r=ggRankForCount(count),gold=!!goldAt||r.gold,displayLevel=gold?200:r.level,stars='★'.repeat(r.stars)+'☆'.repeat(3-r.stars),remain=gold?0:Math.max(0,r.next-count),pct=gold?100:(r.stars/3)*100;return `<div class="gg-rank-card ${gold?'gg-gold-forever':''}"><div class="row" style="justify-content:space-between;gap:8px"><span class="hint">STATUS · NIVÅ ${displayLevel}</span>${gold?'<span class="pill gold">GULL FOR EVIG</span>':''}</div><div class="gg-rank-title">${esc(gold?GG_RANK_TITLES[199]:r.title)}</div><div class="gg-rank-stars">${gold?'★★★':stars}</div><div class="gg-rank-progress"><span style="width:${pct}%"></span></div><div class="gg-rank-small">${Number(count)||0} fullførte økter · ${gold?'Livsvarig ærestittel':remain+' økter til neste grad'}</div></div>`;}
+async function loadMemberTrainingRanks(){if(!authUser)return;try{const {data,error}=await supabaseClient.from('member_training_status').select('member_id,completed_sessions,gold_earned_at');if(error)throw error;db.memberRanks={};(data||[]).forEach(r=>{db.memberRanks[String(r.member_id)]={count:Number(r.completed_sessions)||0,goldAt:r.gold_earned_at||null};});}catch(e){console.warn('Statusrangering kunne ikkje hentast frå Supabase:',e.message);db.memberRanks=db.memberRanks||{};}}
+function ggMemberRankHtml(member){const r=db.memberRanks?.[String(member.id)]||{count:0,goldAt:null};return ggRankHtml(member.id,r.count,r.goldAt);}
+
 function renderProfile(){
  const person=currentName(),member=currentMember();
- const card=$('#myProfileCard');if(card)card.innerHTML=`<strong>${esc(person)}</strong><div class="hint">${esc(member.role==='admin'?'Administrator':member.role==='manager'?'Manager':'Medlem')}</div><div class="hint">${esc(authUser?.email||'Innlogga brukar')}</div>`;
+ const card=$('#myProfileCard');if(card)card.innerHTML=`<strong>${esc(person)}</strong><div class="hint">${esc(member.role==='admin'?'Administrator':member.role==='manager'?'Manager':'Medlem')}</div><div class="hint">${esc(authUser?.email||'Innlogga brukar')}</div>${ggMemberRankHtml(member)}`;
  const logs=db.logs.filter(l=>String(l.memberId||'')===String(member.id)||l.person===person).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
  const month=logs.filter(l=>(l.date||'').slice(0,7)===new Date().toISOString().slice(0,7)).length;
  const stats=$('#myTrainingStats');if(stats)stats.innerHTML=`<div><strong>${logs.length}</strong><small>økter totalt</small></div><div><strong>${month}</strong><small>denne månaden</small></div>`;
@@ -1668,6 +1766,7 @@ async function loadSignedInProfile(user){
  await loadClassesFromSupabase();
  await loadPersonalRecordsFromSupabase();
  await loadWorkoutLogsFromSupabase();
+ await loadMemberTrainingRanks();
  await loadPTFromSupabase();
  $('#signedInName').textContent=authProfile.name;
  document.body.classList.remove('auth-locked');
@@ -1740,12 +1839,15 @@ function timerRenderExerciseInputs(){const w=db.wods.find(x=>String(x.id)===$('#
 function timerShowWod(){const id=$('#timerWodSelect').value,w=db.wods.find(x=>String(x.id)===String(id)),txt=$('#timerWodText'),im=$('#timerWodImage');if(!w){txt.textContent='Vel ei økt for å visa øvingane her.';im.hidden=true;im.innerHTML='';timerRenderExerciseInputs();return;}txt.textContent=w.name+'\n\n'+(w.movements||'')+(w.notes?'\n\n'+w.notes:'');const url=w.image_url||w.imageUrl||w.image||w.photo_url||'';if(url&&/^https?:\/\//i.test(url)){im.innerHTML=`<img src="${url.replace(/"/g,'&quot;')}" alt="${esc(w.name)}">`;im.hidden=false}else{im.hidden=true;im.innerHTML=''}$('#timerScoreRounds').value='4';$('#timerScoreReps').value='0';$('#timerScoreTime').value='';$('#timerScoreNote').value='';timerRenderExerciseInputs()}
 function timerRefreshWods(){const s=$('#timerWodSelect');if(!s)return;const old=s.value;s.innerHTML='<option value="">Vel ei økt frå biblioteket</option>'+db.wods.map(w=>`<option value="${String(w.id).replace(/"/g,'&quot;')}">${esc(w.name)}</option>`).join('');if(old)s.value=old;timerShowWod()}
 function timerWodStep(d){const s=$('#timerWodSelect');if(!s)return;s.selectedIndex=Math.max(0,Math.min(s.options.length-1,s.selectedIndex+d));timerShowWod()}
-async function timerSaveWodResult(){const w=db.wods.find(x=>String(x.id)===$('#timerWodSelect').value);if(!w)return alert('Vel ein WOD først.');if(!authUser)return alert('Du må vera innlogga for å lagra resultat.');const rounds=Math.max(1,Number($('#timerScoreRounds').value)||1),reps=Math.max(0,Number($('#timerScoreReps').value)||0),time=String($('#timerScoreTime').value||'').trim(),note=String($('#timerScoreNote').value||'').trim(),exercises=timerParseWodExercises(w).map((ex,i)=>{const sets=[];for(let r=1;r<=rounds;r++){const kgInput=document.querySelector(`#timerExerciseInputs [data-ex="${i}"][data-round="${r}"][data-field="kg"]`),repsInput=document.querySelector(`#timerExerciseInputs [data-ex="${i}"][data-round="${r}"][data-field="reps"]`),kg=kgInput&&kgInput.value!==''?Number(kgInput.value):null,setReps=repsInput&&repsInput.value!==''?Number(repsInput.value):null;if(kg!==null||setReps!==null)sets.push({reps:setReps,kg,time:null,timeSeconds:null})}return{name:ex.name,sets}}).filter(ex=>ex.sets.length);let parentId=null;try{const payload={member_id:authUser.id,source_wod_id:w.id,title:w.name,workout_date:new Date().toISOString().slice(0,10),format:w.format||'WOD',rounds,score_rounds:rounds,score_reps:reps,note:[time?'Tid: '+time:'',note].filter(Boolean).join('\n')},{data:parent,error:parentError}=await supabaseClient.from('workout_logs').insert(payload).select('*').single();if(parentError)throw parentError;parentId=parent.id;if(exercises.length){const exPayload=exercises.map((ex,i)=>({workout_log_id:parentId,exercise_name:ex.name,source_text:null,sort_order:i})),{data:remoteExercises,error:exError}=await supabaseClient.from('workout_exercises').insert(exPayload).select('*');if(exError)throw exError;const setPayload=[];exercises.forEach((ex,i)=>ex.sets.forEach((set,j)=>setPayload.push({workout_exercise_id:remoteExercises[i].id,set_number:j+1,reps:set.reps,load_kg:set.kg,time_text:null,time_seconds:null})));if(setPayload.length){const{error:setError}=await supabaseClient.from('workout_sets').insert(setPayload);if(setError)throw setError}}const savedLog={id:String(parentId),person:currentName(),memberId:authUser.id,title:w.name,date:payload.workout_date,sourceWodId:w.id,format:payload.format,rounds,scoreRounds:rounds,scoreReps:reps,exercises,note:payload.note};db.logs.unshift(savedLog);localStorage.setItem(KEY,JSON.stringify(db));renderAll();alert('Resultatet er lagra. Vekt og repetisjonar per runde er med i treningsloggen og PR-oversikta.')}catch(e){if(parentId)await supabaseClient.from('workout_logs').delete().eq('id',String(parentId));alert('Resultatet kunne ikkje lagrast: '+(e.message||e))}}
+async function timerSaveWodResult(){const w=db.wods.find(x=>String(x.id)===$('#timerWodSelect').value);if(!w)return alert('Vel ein WOD først.');if(!authUser)return alert('Du må vera innlogga for å lagra resultat.');const rounds=Math.max(1,Number($('#timerScoreRounds').value)||1),reps=Math.max(0,Number($('#timerScoreReps').value)||0),time=String($('#timerScoreTime').value||'').trim(),note=String($('#timerScoreNote').value||'').trim(),exercises=timerParseWodExercises(w).map((ex,i)=>{const sets=[];for(let r=1;r<=rounds;r++){const kgInput=document.querySelector(`#timerExerciseInputs [data-ex="${i}"][data-round="${r}"][data-field="kg"]`),repsInput=document.querySelector(`#timerExerciseInputs [data-ex="${i}"][data-round="${r}"][data-field="reps"]`),kg=kgInput&&kgInput.value!==''?Number(kgInput.value):null,setReps=repsInput&&repsInput.value!==''?Number(repsInput.value):null;if(kg!==null||setReps!==null)sets.push({reps:setReps,kg,time:null,timeSeconds:null})}return{name:ex.name,sets}}).filter(ex=>ex.sets.length);let parentId=null;try{const payload={member_id:authUser.id,source_wod_id:w.id,title:w.name,workout_date:new Date().toISOString().slice(0,10),format:w.format||'WOD',rounds,score_rounds:rounds,score_reps:reps,note:[time?'Tid: '+time:'',note].filter(Boolean).join('\n')},{data:parent,error:parentError}=await supabaseClient.from('workout_logs').insert(payload).select('*').single();if(parentError)throw parentError;parentId=parent.id;if(exercises.length){const exPayload=exercises.map((ex,i)=>({workout_log_id:parentId,exercise_name:ex.name,source_text:null,sort_order:i})),{data:remoteExercises,error:exError}=await supabaseClient.from('workout_exercises').insert(exPayload).select('*');if(exError)throw exError;const setPayload=[];exercises.forEach((ex,i)=>ex.sets.forEach((set,j)=>setPayload.push({workout_exercise_id:remoteExercises[i].id,set_number:j+1,reps:set.reps,load_kg:set.kg,time_text:null,time_seconds:null})));if(setPayload.length){const{error:setError}=await supabaseClient.from('workout_sets').insert(setPayload);if(setError)throw setError}}const savedLog={id:String(parentId),person:currentName(),memberId:authUser.id,title:w.name,date:payload.workout_date,sourceWodId:w.id,format:payload.format,rounds,scoreRounds:rounds,scoreReps:reps,exercises,note:payload.note};db.logs.unshift(savedLog);localStorage.setItem(KEY,JSON.stringify(db));await loadMemberTrainingRanks();renderAll();alert('Resultatet er lagra. Vekt og repetisjonar per runde er med i treningsloggen og PR-oversikta.')}catch(e){if(parentId)await supabaseClient.from('workout_logs').delete().eq('id',String(parentId));alert('Resultatet kunne ikkje lagrast: '+(e.message||e))}}
 let ggSpotifyHomeParent=null,ggSpotifyHomeNext=null;
-function ggPrepareTrainingModules(){const grid=$('#trainingConsole .training-console-grid');if(!grid)return;const modules=[...grid.children];modules.forEach((el,i)=>{if(el.dataset.modulePrepared==='1')return;el.dataset.modulePrepared='1';el.classList.add('training-module');if(!el.dataset.module)el.dataset.module=i===0?'timer':i===1?'workout':'music';el.draggable=true;const grip=document.createElement('div');grip.className='module-grip';grip.innerHTML='<span>FLYTT MODUL · '+(el.dataset.module==='timer'?'TIMER':el.dataset.module==='workout'?'DAGENS ØKT':'MUSIKK')+'</span><span>⠿</span>';el.prepend(grip);el.addEventListener('dragstart',e=>{if(!document.body.classList.contains('training-layout-edit')){e.preventDefault();return;}e.dataTransfer.setData('text/plain',el.dataset.module);e.dataTransfer.effectAllowed='move';});el.addEventListener('dragover',e=>{if(document.body.classList.contains('training-layout-edit')){e.preventDefault();e.dataTransfer.dropEffect='move';}});el.addEventListener('drop',e=>{if(!document.body.classList.contains('training-layout-edit'))return;e.preventDefault();const id=e.dataTransfer.getData('text/plain'),source=grid.querySelector('[data-module="'+id+'"]');if(source&&source!==el){const r=el.getBoundingClientRect();grid.insertBefore(source,e.clientY<r.top+r.height/2?el:el.nextSibling);ggSaveTrainingOrder();}});});}
+function ggPrepareTrainingModules(){const grid=$('#trainingConsole .training-console-grid');if(!grid)return;const modules=[...grid.children];modules.forEach((el,i)=>{if(el.dataset.modulePrepared==='1')return;el.dataset.modulePrepared='1';el.classList.add('training-module');if(!el.dataset.module)el.dataset.module=i===0?'timer':i===1?'workout':'music';el.draggable=true;const grip=document.createElement('div');grip.className='module-grip';grip.innerHTML='<span>FLYTT MODUL · '+(el.dataset.module==='timer'?'TIMER':el.dataset.module==='workout'?'DAGENS ØKT':'MUSIKK')+'</span><span>⠿</span>';el.prepend(grip);grip.addEventListener('click',()=>{if(!document.body.classList.contains('training-layout-edit'))return;if(!ggSelectedModule){ggSelectedModule=el.dataset.module;grip.style.color='#ffd27a';}else{ggSwapTrainingModules(ggSelectedModule,el.dataset.module);ggSelectedModule=null;grid.querySelectorAll('.module-grip').forEach(g=>g.style.color='');}});el.addEventListener('dragstart',e=>{if(!document.body.classList.contains('training-layout-edit')){e.preventDefault();return;}e.dataTransfer.setData('text/plain',el.dataset.module);e.dataTransfer.effectAllowed='move';});el.addEventListener('dragover',e=>{if(document.body.classList.contains('training-layout-edit')){e.preventDefault();e.dataTransfer.dropEffect='move';}});el.addEventListener('drop',e=>{if(!document.body.classList.contains('training-layout-edit'))return;e.preventDefault();const id=e.dataTransfer.getData('text/plain'),source=grid.querySelector('[data-module="'+id+'"]');if(source&&source!==el){const r=el.getBoundingClientRect();grid.insertBefore(source,e.clientY<r.top+r.height/2?el:el.nextSibling);ggSaveTrainingOrder();}});});}
 function ggSaveTrainingOrder(){const grid=$('#trainingConsole .training-console-grid');if(grid)localStorage.setItem('gg_training_module_order',[...grid.children].map(x=>x.dataset.module).join(','));}
 function ggRestoreTrainingOrder(){const grid=$('#trainingConsole .training-console-grid'),order=(localStorage.getItem('gg_training_module_order')||'').split(',').filter(Boolean);if(!grid||!order.length)return;order.forEach(id=>{const el=grid.querySelector('[data-module="'+id+'"]');if(el)grid.appendChild(el);});}
-function toggleTrainingLayoutEdit(){ggPrepareTrainingModules();const on=document.body.classList.toggle('training-layout-edit');const b=$('#trainingLayoutEdit');if(b)b.textContent=on?'✓ Ferdig med tilpassing':'✥ Tilpass boksar';}
+let ggSelectedModule=null;
+function toggleTrainingLayoutEdit(){ggPrepareTrainingModules();const on=document.body.classList.toggle('training-layout-edit');const b=$('#trainingLayoutEdit');if(b)b.textContent=on?'✓ Ferdig med tilpassing':'✥ Tilpass boksar';if(on)alert('Tilpassing: Dra modulane for å flytta dei. På nettbrett kan du trykkja på ein modul og deretter ein annan for å byta plass.');}
+function ggSwapTrainingModules(a,b){const grid=$('#trainingConsole .training-console-grid'),x=grid?.querySelector('[data-module="'+a+'"]'),y=grid?.querySelector('[data-module="'+b+'"]');if(!x||!y||x===y)return;const marker=document.createElement('span');grid.insertBefore(marker,x);grid.insertBefore(x,y);grid.insertBefore(y,marker);marker.remove();ggSaveTrainingOrder();}
+
 function ggMoveSpotifyIntoTraining(){const panel=$('#spotifyPanel'),grid=$('#trainingConsole .training-console-grid');if(!panel||!grid||panel.parentElement===grid)return;ggSpotifyHomeParent=panel.parentElement;ggSpotifyHomeNext=panel.nextSibling;panel.dataset.module='music';panel.classList.add('training-module');grid.appendChild(panel);ggPrepareTrainingModules();ggRestoreTrainingOrder();}
 function ggRestoreSpotifyHome(){const panel=$('#spotifyPanel');if(!panel||!ggSpotifyHomeParent||panel.parentElement===ggSpotifyHomeParent)return;ggSpotifyHomeParent.insertBefore(panel,ggSpotifyHomeNext&&ggSpotifyHomeNext.parentElement===ggSpotifyHomeParent?ggSpotifyHomeNext:null);}
 async function toggleTrainingFullscreen(){const el=$('#trainingConsole');ggPrepareTrainingModules();try{if(!document.fullscreenElement){ggMoveSpotifyIntoTraining();document.body.classList.add('wod-dashboard-mode');await el.requestFullscreen()}else{await document.exitFullscreen();document.body.classList.remove('wod-dashboard-mode');ggRestoreSpotifyHome()}}catch(e){document.body.classList.toggle('wod-dashboard-mode');if(!document.body.classList.contains('wod-dashboard-mode'))ggRestoreSpotifyHome()}}
