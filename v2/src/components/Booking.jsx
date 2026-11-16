@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CalendarDays, CheckCircle2, Clock3, LoaderCircle, Plus, Users } from 'lucide-react'
+import { CalendarDays, CheckCircle2, Clock3, LoaderCircle, Plus, Users, Radio, Play, Pause, Square } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { isStaff } from '../lib/auth.js'
 
@@ -17,23 +17,27 @@ export default function Booking({ profile }) {
   const [duration,setDuration]=useState('60')
   const [capacity,setCapacity]=useState('8')
   const [description,setDescription]=useState('')
+  const [liveSessions,setLiveSessions]=useState([])
   const staff=isStaff(profile)
 
   async function load(){
     setLoading(true);setError('')
     const [{data:userData,error:userError}]=await Promise.all([supabase.auth.getUser()])
     if(userError||!userData.user){setError('Logg inn på nytt.');setLoading(false);return}
-    const [c,b,a]=await Promise.all([
+    const [c,b,a,live]=await Promise.all([
       supabase.from('classes').select('id,title,type,capacity,starts_at,duration_minutes,description,workout_text,wod_ids').gte('starts_at',new Date(Date.now()-86400000).toISOString()).order('starts_at').limit(50),
       supabase.from('class_bookings').select('id,class_id,status,created_at').eq('member_id',userData.user.id),
-      supabase.from('class_bookings').select('class_id').eq('status','confirmed')
+      supabase.from('class_bookings').select('class_id').eq('status','confirmed'),
+      supabase.from('class_live_sessions').select('id,class_id,status,started_at,session_title').in('status',['active','paused']).order('started_at',{ascending:false})
     ])
     if(c.error)setError(c.error.message);else setClasses(c.data||[])
     if(b.error)setError(b.error.message);else setMine(b.data||[])
     if(a.error)setError(a.error.message);else setAttendance(a.data||[])
+    if(live.error && !live.error.message?.includes('class_live_sessions'))setError(live.error.message);else setLiveSessions(live.data||[])
     setLoading(false)
   }
   useEffect(()=>{load()},[])
+  useEffect(()=>{const timer=setInterval(async()=>{const {data,error:e}=await supabase.from('class_live_sessions').select('id,class_id,status,started_at,session_title').in('status',['active','paused']).order('started_at',{ascending:false});if(!e)setLiveSessions(data||[])},4000);return()=>clearInterval(timer)},[])
 
   async function book(item){
     setBusy(item.id);setError('');setNotice('')
@@ -75,6 +79,28 @@ export default function Booking({ profile }) {
     }catch(e){setError(e.message||'Kunne ikkje oppretta timen.')}
     finally{setBusy('')}
   }
+  async function startLive(item){
+    setBusy('live-'+item.id);setError('');setNotice('')
+    try{
+      const {data:{user}}=await supabase.auth.getUser()
+      const {data,error:e}=await supabase.from('class_live_sessions').insert({class_id:item.id,started_by:user.id,status:'active',started_at:new Date().toISOString(),session_title:item.title}).select('id,class_id,status,started_at,session_title').single()
+      if(e)throw e
+      setLiveSessions(v=>[data,...v.filter(x=>x.class_id!==item.id)])
+      setNotice('Gruppetreninga er starta og synleg for påmelde deltakarar.')
+    }catch(e){setError(e.message||'Kunne ikkje starta gruppetreninga.')}
+    finally{setBusy('')}
+  }
+  async function setLiveStatus(session,status){
+    setBusy('live-'+session.id);setError('');setNotice('')
+    try{
+      const patch=status==='finished'?{status,ended_at:new Date().toISOString()}:{status}
+      const {error:e}=await supabase.from('class_live_sessions').update(patch).eq('id',session.id)
+      if(e)throw e
+      setLiveSessions(v=>status==='finished'?v.filter(x=>x.id!==session.id):v.map(x=>x.id===session.id?{...x,...patch}:x))
+      setNotice(status==='finished'?'Gruppetreninga er avslutta.':status==='paused'?'Gruppetreninga er sett på pause.':'Gruppetreninga er i gang igjen.')
+    }catch(e){setError(e.message||'Kunne ikkje oppdatera gruppetreninga.')}
+    finally{setBusy('')}
+  }
   if(loading)return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar timeplan …</div>
   return <div className="booking-module">
     <div className="training-heading"><div><div className="section-kicker">GARASJEGYM · TIMEPLAN</div><h3>Gruppetimar</h3></div>{staff&&<button className="secondary-button" onClick={()=>setShowCreate(v=>!v)}><Plus size={15}/> Ny time</button>}</div>
@@ -92,11 +118,13 @@ export default function Booking({ profile }) {
       const booking=mine.find(b=>b.class_id===item.id&&b.status!=='cancelled')
       const attendeeCount=attendance.filter(b=>b.class_id===item.id).length
       const full=attendeeCount>=item.capacity
+      const live=liveSessions.find(s=>s.class_id===item.id)
       const date=new Date(item.starts_at)
       return <article className="class-card" key={item.id}>
         <div className="class-date"><strong>{date.toLocaleDateString('nn-NO',{day:'2-digit'})}</strong><span>{date.toLocaleDateString('nn-NO',{month:'short'})}</span></div>
         <div className="class-info"><div className="class-card-top"><span>{item.type}</span><span><Clock3 size={13}/> {date.toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'})}</span></div><h4>{item.title}</h4><p>{item.description||'Gruppetime i GarasjeGym'}</p><small><Users size={13}/> {attendeeCount}/{item.capacity} påmelde · {item.duration_minutes} min</small></div>
-        <div className="class-action">{booking?<><span className="booking-confirmed">Påmeld</span><button className="secondary-button" disabled={busy===item.id} onClick={()=>cancel(item)}>Avmeld</button></>:<button className="primary-button" disabled={busy===item.id||date<new Date()||full} onClick={()=>book(item)}>{busy===item.id?'Vent …':full?'Fullt':'Meld på'}</button>}</div>
+        <div className="class-action">{live&&<span className="booking-confirmed"><Radio size={13}/> {live.status==='paused'?'Pause':'Live'}</span>}{staff&&!live&&date<=new Date()&&<button className="secondary-button" disabled={busy==='live-'+item.id} onClick={()=>startLive(item)}><Play size={14}/> Start fellesøkt</button>}{staff&&live&&<><button className="secondary-button" disabled={busy==='live-'+live.id} onClick={()=>setLiveStatus(live,live.status==='paused'?'active':'paused')}>{live.status==='paused'?<Play size={14}/>:<Pause size={14}/>} {live.status==='paused'?'Start igjen':'Pause'}</button><button className="secondary-button" disabled={busy==='live-'+live.id} onClick={()=>setLiveStatus(live,'finished')}><Square size={13}/> Avslutt</button></>}{booking?<><span className="booking-confirmed">Påmeld</span><button className="secondary-button" disabled={busy===item.id} onClick={()=>cancel(item)}>Avmeld</button></>:<button className="primary-button" disabled={busy===item.id||date<new Date()||full} onClick={()=>book(item)}>{busy===item.id?'Vent …':full?'Fullt':'Meld på'}</button>}</div>
+        {live&&<div className="live-session-banner"><Radio size={15}/><span><strong>{live.session_title}</strong> · {live.status==='paused'?'Instruktøren har sett økta på pause':'Felles gruppetrening er starta'} · {new Date(live.started_at).toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'})}</span></div>}
       </article>
     })}</div>}
   </div>
