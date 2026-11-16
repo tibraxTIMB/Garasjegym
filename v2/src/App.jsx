@@ -31,7 +31,7 @@ const sections = [
   { id: 'kaffi', label: 'Barista', icon: Coffee, note: 'Meny og bestillingar' },
 ]
 
-function AuthScreen({ recovery = false }) {
+function AuthScreen({ recovery = false, onRecoveryComplete }) {
   const [mode, setMode] = useState(recovery ? 'update' : 'login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -52,6 +52,7 @@ function AuthScreen({ recovery = false }) {
         setMessage('Passordet er oppdatert. Du kan no logga inn med det nye passordet.')
         setMode('login')
         setPassword('')
+        onRecoveryComplete?.()
         await supabase.auth.signOut()
       } else if (mode === 'reset') {
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin })
@@ -117,7 +118,7 @@ function AuthScreen({ recovery = false }) {
         </form>
         <div className="auth-switch">
           {mode === 'login' ? 'Har du ikkje konto?' : mode === 'signup' ? 'Har du allereie konto?' : 'Tilbake til innlogging?'}
-          <button type="button" onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); setMessage('') }}>
+          <button type="button" onClick={() => { if (mode === 'update') onRecoveryComplete?.(); setMode(mode === 'login' ? 'signup' : 'login'); setError(''); setMessage('') }}>
             {mode === 'login' ? 'Registrer deg' : 'Logg inn'}
           </button>
           {mode === 'login' && <button type="button" onClick={() => { setMode('reset'); setError(''); setMessage('') }}>Gløymt passord?</button>}
@@ -180,7 +181,7 @@ export default function App() {
     return <LoadingScreen text="Supabase er ikkje konfigurert. Legg inn VITE_SUPABASE_URL og VITE_SUPABASE_ANON_KEY i v2/.env.local." />
   }
   if (!authReady) return <LoadingScreen text="Koplar til GarasjeGym …" />
-  if (passwordRecovery) return <AuthScreen recovery />
+  if (passwordRecovery) return <AuthScreen recovery onRecoveryComplete={() => setPasswordRecovery(false)} />
   if (!session) return <AuthScreen />
   if (!profileReady) return <LoadingScreen text="Hentar medlemsprofil …" />
 
