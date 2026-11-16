@@ -494,3 +494,31 @@ footer {
 .community-reply { display:flex; gap:8px; margin-top:10px; }
 .community-reply .secondary-button { flex:0 0 auto; margin:0; }
 @media(max-width:480px){ .community-compose-foot { flex-direction:column; } .community-compose-foot select,.community-compose-foot button { width:100%; } }
+
+
+/* Coffee bar */
+.coffee-module { display:grid; gap:16px; }
+.coffee-add-product { display:grid; grid-template-columns:1.2fr .7fr 1.5fr auto; gap:8px; align-items:center; padding:13px; background:#171b1d; border:1px solid var(--line); border-radius:10px; }
+.coffee-add-product strong { grid-column:1/-1; font-size:13px; }
+.coffee-add-product input,.coffee-checkout textarea { min-width:0; width:100%; padding:10px; color:#f2f1ed; background:#111416; border:1px solid #3a4143; border-radius:8px; font:inherit; }
+.coffee-add-product .secondary-button { margin:0; }
+.coffee-product-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.coffee-product { display:flex; align-items:center; gap:12px; padding:14px; background:#171b1d; border:1px solid var(--line); border-radius:10px; min-width:0; }
+.coffee-product-icon { display:grid; place-items:center; flex:0 0 42px; height:42px; color:var(--orange); background:#30271d; border-radius:10px; }
+.coffee-product-info { flex:1; min-width:0; }
+.coffee-product-info strong { font-size:13px; }
+.coffee-product-info p { margin:4px 0; color:var(--muted); font-size:11px; }
+.coffee-product-info b { color:var(--orange); font-size:13px; }
+.coffee-quantity { display:flex; align-items:center; gap:8px; }
+.coffee-quantity button { display:grid; place-items:center; width:29px; height:29px; color:var(--orange); background:#24282a; border:1px solid var(--line); border-radius:7px; }
+.coffee-checkout { display:grid; gap:12px; padding:17px; background:#171b1d; border:1px solid #5b4325; border-radius:12px; }
+.coffee-cart-lines { display:grid; gap:8px; }
+.coffee-cart-lines > div,.coffee-total { display:flex; justify-content:space-between; gap:10px; }
+.coffee-checkout textarea { resize:vertical; }
+.coffee-total { padding-top:9px; border-top:1px solid var(--line); }
+.coffee-total strong { color:var(--orange); font-size:18px; }
+.coffee-status { padding:5px 8px; border:1px solid var(--line); border-radius:20px; font-size:10px; white-space:nowrap; }
+.status-new { color:var(--orange); }.status-ready { color:#9ad5ad; }.status-preparing { color:#f0c878; }
+.coffee-order-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.coffee-order-actions .secondary-button { margin:0; min-height:32px; font-size:10px; padding:0 8px; }
+@media(max-width:680px){ .coffee-product-grid { grid-template-columns:1fr; } .coffee-add-product { grid-template-columns:1fr 1fr; } .coffee-add-product strong { grid-column:1/-1; } .coffee-add-product input:nth-of-type(3) { grid-column:1/-1; } .coffee-add-product button { grid-column:1/-1; } }
