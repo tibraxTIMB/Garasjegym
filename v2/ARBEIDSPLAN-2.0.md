@@ -110,9 +110,9 @@ Arbeidsfelt 5 er eit gjennomgåande kvalitetssikringsspor, ikkje berre siste fas
 
 - React/Vite-grunnstruktur og mørkt design er etablert.
 - Supabase-klient, innlogging/registrering og profiloppslag er implementert i kode, men ikkje fullstendig testa i nettlesar.
-- Treningsmotor v2 er under utvikling: fri økt/WOD-inngang, øvings- og settregistrering, timerkontroll og treningshistorikk er lagt inn i klientkoden. Ikkje ferdig testa eller godkjend.
+- Klientmodular er no kopla for oversikt, trening, gruppetimebooking, PT, fellesskap, kaffibar og admin. Treningsmotoren har øktbyggjar, timer, historikk, PR og Garasjekadett. Dette er framleis utviklingskode; databasmigreringar og full funksjonstesting står att.
 - GitHub Actions-produksjonsbygg har bestått ein køyring.
-- Full treningsmotor, booking, PT, fellesskap, kaffibar, varsling og full admin er ikkje ferdig.
+- Gruppetimar, PT, sosial feed, kaffibar og grunnleggjande admin har første klientversjon. Synkronisert live gruppetrening, PT-meldingar/notat, kaffibar-geofence, reaksjonar/bilete, varsling og full admin står att.
 - Databasetryggleik og samsvar mellom 1.8.16 og Supabase krev vidare gjennomgang.
 - Ingen produksjonssetting av 2.0 er godkjend.
 
