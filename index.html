@@ -3,8 +3,8 @@
 <html lang="nn">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#11151b"><meta name="application-name" content="GarasjeGym 1.8.13 – KAIZERSTURM">
-<title>GARASJEGYM 1.8.13 · KAIZERSTURM</title>
+<meta name="theme-color" content="#11151b"><meta name="application-name" content="GarasjeGym 1.8.15 – KAIZERSTURM">
+<title>GARASJEGYM 1.8.15 · KAIZERSTURM</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -618,7 +618,7 @@ body.wod-dashboard-mode.training-layout-edit #trainingConsole .gg-module-picker{
 }
 
 
-/* GarasjeGym 1.8.13 – KAIZERSTURM · WOD og timerintegrasjon */
+/* GarasjeGym 1.8.15 – KAIZERSTURM · WOD og timerintegrasjon */
 #trainingConsole .timer-face{gap:7px}
 #trainingConsole .timer-state{font-size:clamp(16px,2vw,24px);letter-spacing:.12em;font-weight:900}
 #trainingConsole #timerDetails{font-size:11px;letter-spacing:.04em;opacity:.86}
@@ -1224,7 +1224,7 @@ body.gg-app-fullscreen main{padding-top:8px!important}
 <header><div class="logo">GARASJEGYM</div><div class="header-tools"><button id="signedInName" class="header-user-link" type="button" onclick="showTab('profile')" aria-label="Opna Mi side"></button><span id="roleBadge" class="pill gold">MEDLEM</span><div id="headerRank" class="header-rank" aria-live="polite"></div><button id="wallModeToggle" type="button" class="secondary" onclick="toggleWallMode()">🏋️ Treningsmodus</button><button id="appFullscreenToggle" type="button" class="secondary" onclick="toggleAppFullscreen()">⛶ Fullskjerm</button><button id="signOutBtn" type="button" class="secondary">Logg ut</button></div></header>
 <div id="floatingTimerPanel" class="floating-timer-panel hidden" role="dialog" aria-label="Timer"><div class="floating-timer-head"><strong>⏱ Timer</strong><div><button type="button" class="secondary" onclick="toggleFloatingTimerSize()" aria-label="Endra storleik">⤢</button><button type="button" class="secondary" onclick="closeFloatingTimer()" aria-label="Lukk timer">×</button></div></div><div id="floatingTimerContent"></div></div>
 <main>
-<div id="ggReleaseStamp" class="hint" style="text-align:center;padding:12px 0;font-weight:900;letter-spacing:.08em">GARASJEGYM 1.8.13 · KAIZERSTURM</div>
+<div id="ggReleaseStamp" class="hint" style="text-align:center;padding:12px 0;font-weight:900;letter-spacing:.08em">GARASJEGYM 1.8.15 · KAIZERSTURM</div>
 <div id="quickBar" class="quick-bar" aria-label="Snøggtilgang">
  <button type="button" class="quick-bell" onclick="openNotificationCenter()" aria-label="Opne varsel"><span class="quick-icon" aria-hidden="true">♧</span><span class="quick-count" id="quickUnreadCount" hidden>0</span></button>
  <button type="button" class="quick-toggle" id="quickToggle" onclick="toggleQuickLinks()" aria-expanded="false" aria-controls="quickLinks" aria-label="Vis snarvegar">＋</button>
@@ -1453,8 +1453,8 @@ body.gg-app-fullscreen main{padding-top:8px!important}
  <details class="card"><summary>Klubbverktøy <span class="hint">Status</span></summary><div id="adminSummaryDetail"></div></details>
 </div>
 </section>
-<footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.8.13 · KAIZERSTURM</strong></footer>
-<div class="hint" style="text-align:center;padding:12px 0">GARASJEGYM 1.8.13 · KAIZERSTURM</div>
+<footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.8.15 · KAIZERSTURM</strong></footer>
+<div class="hint" style="text-align:center;padding:12px 0">GARASJEGYM 1.8.15 · KAIZERSTURM</div>
 </main>
 <div id="editorModal" class="editor-backdrop" role="dialog" aria-modal="true" aria-labelledby="editorTitle" onclick="if(event.target===this)closeEditor()"><div class="editor-panel"><div class="row"><h2 id="editorTitle">Rediger</h2><button type="button" class="secondary" onclick="closeEditor()" aria-label="Lukk">✕</button></div><form id="editorForm"></form></div></div>
 <script>
@@ -1553,6 +1553,7 @@ async function loadMemberProfiles(){
  if(error)throw new Error('Kunne ikkje hente medlemsprofilar: '+error.message);
  db.members=(data||[]).map(row=>({id:String(row.id),name:row.display_name||'Medlem',role:row.role||'member',active:row.active!==false,avatar_url:row.avatar_url||null}));
  db.activeProfile=String(authUser.id);
+ if(authProfile.role==='admin'&&$('#adminMembers'))renderRoleAdmin();
  const own=db.members.find(m=>m.id===String(authUser.id));
  if(own){authProfile={...authProfile,name:own.name,role:own.role,active:own.active};const signedInNameEl=$('#signedInName');if(signedInNameEl)signedInNameEl.textContent=own.name;}
 }
@@ -1661,9 +1662,58 @@ async function ggPollAdminBookings(){
 }
 setInterval(ggPollAdminBookings,12000);
 
-async function book(id){const c=db.classes.find(x=>String(x.id)===String(id));if(!c||!authUser)return;const mine=(db.classBookings||[]).find(b=>String(b.classId)===String(c.id)&&String(b.memberId)===String(authUser.id)&&['confirmed','pending'].includes(b.status));if(mine){alert('Du er allereie påmeld eller har ei førespurnad inne.');return;}if(c.attendees.length+(c.pendingBookings||[]).length>=c.capacity){alert('Denne gruppetimen er full.');return;}const status=c.type==='PT-time'?'pending':'confirmed';try{const {data,error}=await supabaseClient.from('class_bookings').insert({class_id:String(c.id),member_id:authUser.id,status}).select('*').single();if(error)throw error;await loadClassesFromSupabase();renderAll();alert(status==='pending'?'PT-førespurnaden er sendt til godkjenning.':'Du er no påmeld gruppetimen.');}catch(err){alert('Påmeldinga blei ikkje lagra: '+(err.message||err));}} 
-async function cancelBooking(id){const c=db.classes.find(x=>String(x.id)===String(id));if(!c||!authUser)return;const booking=(db.classBookings||[]).find(b=>String(b.classId)===String(c.id)&&String(b.memberId)===String(authUser.id)&&['confirmed','pending'].includes(b.status));if(!booking){alert('Fann inga aktiv påmelding.');return;}try{const {error}=await supabaseClient.from('class_bookings').update({status:'cancelled'}).eq('id',booking.id);if(error)throw error;await loadClassesFromSupabase();renderAll();alert('Du er meldt av.');}catch(err){alert('Avmeldinga blei ikkje lagra: '+(err.message||err));}}
-function cancelBooking(id){let c=db.classes.find(x=>x.id===id);if(!c)return;const who=currentName();if(!c.attendees.includes(who)){alert('Du er ikkje påmeld denne timen.');return;}c.attendees=c.attendees.filter(x=>x!==who);notifyAdmin('booking','Avmelding',who+' melde seg av '+c.title);save();}
+async function book(id){
+ const c=db.classes.find(x=>String(x.id)===String(id));
+ if(!c){alert('Fann ikkje gruppetimen. Oppdater sida og prøv igjen.');return;}
+ if(!authUser){alert('Du må vera innlogga for å melda deg på.');return;}
+ if(authProfile?.active===false){alert('Medlemskontoen er deaktivert. Kontakt administrator.');return;}
+ const memberId=String(authUser.id),classId=String(c.id);
+ const activeStatuses=['confirmed','pending'];
+ const existing=(db.classBookings||[]).find(b=>String(b.classId)===classId&&String(b.memberId)===memberId&&activeStatuses.includes(String(b.status||'').toLowerCase()));
+ if(existing){alert(existing.status==='pending'?'Du har allereie ei påmeldingsførespurnad som ventar.':'Du er allereie påmeld denne gruppetimen.');return;}
+ const attendees=Array.isArray(c.attendees)?c.attendees:[];
+ const pending=Array.isArray(c.pendingBookings)?c.pendingBookings:[];
+ if(attendees.length+pending.length>=Number(c.capacity||1)){alert('Denne gruppetimen er full.');return;}
+ const status=c.type==='PT-time'?'pending':'confirmed';
+ const buttons=Array.from(document.querySelectorAll('button[onclick]')).filter(b=>b.getAttribute('onclick').includes(`book('${classId}')`));
+ buttons.forEach(b=>{b.disabled=true;b.dataset.bookingBusy='1';});
+ try{
+  const {data,error}=await supabaseClient.from('class_bookings')
+   .insert({class_id:classId,member_id:memberId,status})
+   .select('id,class_id,member_id,status,created_at').single();
+  if(error){
+   const detail=[error.message,error.details,error.hint,error.code?`Kode: ${error.code}`:null].filter(Boolean).join(' · ');
+   if(error.code==='23505')throw new Error('Du er allereie registrert på denne timen.');
+   if(error.code==='42501')throw new Error('Databasen avviste påmeldinga på grunn av tilgangsreglane (RLS). Administrator må kontrollera INSERT-policy for class_bookings.');
+   throw new Error(detail||'Ukjend databasefeil.');
+  }
+  if(!data)throw new Error('Databasen stadfesta ikkje at påmeldinga blei oppretta.');
+  // The INSERT succeeded. Refresh the booking data separately from rendering.
+  await loadClassesFromSupabase();
+  try{renderClasses();renderHome();if(typeof renderAdmin==='function'&&currentRole()==='admin')renderAdmin();}
+  catch(renderError){console.error('Booking saved, but a view could not refresh:',renderError);}
+  toast(status==='pending'?'PT-førespurnaden er sendt.':'Du er påmeld gruppetimen.');
+ }catch(err){
+  console.error('Group booking failed:',err);
+  alert('Påmeldinga blei ikkje gjennomført: '+(err.message||err));
+ }finally{
+  buttons.forEach(b=>{b.disabled=false;delete b.dataset.bookingBusy;});
+ }
+}
+async function cancelBooking(id){
+ const c=db.classes.find(x=>String(x.id)===String(id));
+ if(!c||!authUser)return;
+ const booking=(db.classBookings||[]).find(b=>String(b.classId)===String(c.id)&&String(b.memberId)===String(authUser.id)&&['confirmed','pending'].includes(String(b.status||'').toLowerCase()));
+ if(!booking){alert('Fann inga aktiv påmelding. Oppdater sida og prøv igjen.');return;}
+ try{
+  const {data,error}=await supabaseClient.from('class_bookings').update({status:'cancelled'}).eq('id',booking.id).eq('member_id',authUser.id).select('id').maybeSingle();
+  if(error)throw error;
+  if(!data)throw new Error('Ingen påmelding blei endra. Kontroller at du har tilgang til å melda deg av.');
+  await loadClassesFromSupabase();
+  try{renderClasses();renderHome();}catch(renderError){console.error('Cancellation saved, but a view could not refresh:',renderError);}
+  toast('Du er meldt av gruppetimen.');
+ }catch(err){console.error('Group booking cancellation failed:',err);alert('Avmeldinga blei ikkje gjennomført: '+(err.message||err));}
+}
 function fmt(s){if(!s)return '';let d=new Date(s);return d.toLocaleString('nn-NO',{dateStyle:'medium',timeStyle:'short'})}
 let wodFavOnly=false,exerciseFavOnly=false;
 function favBucket(kind){const id=String(currentMember().id);db.favorites[kind][id]=db.favorites[kind][id]||[];return db.favorites[kind][id];}
@@ -2322,6 +2372,7 @@ function renderManager(){
 function renderAdmin(){
  renderAdminCoffee();
  renderAchievementAdmin();
+ renderRoleAdmin();
  const summary=`<span><strong>${db.wods.length}</strong> WOD-ar</span><span><strong>${db.classes.length}</strong> timar</span><span><strong>${db.customExercises.length}</strong> eigne øvingar</span><span><strong>${db.notifications.filter(n=>!n.read).length}</strong> uleste varsel</span>`;$('#adminSummary').innerHTML=summary;if($('#adminSummaryDetail'))$('#adminSummaryDetail').innerHTML=summary;
  $('#adminWods').innerHTML=db.wods.length?db.wods.map(w=>item(w.name,`${w.format} · ${w.duration||'–'} min · ${w.audience}`,'<span class="pill gold">WOD</span>',`<button class="secondary" onclick='adminEditWod(${JSON.stringify(String(w.id))})'>Rediger</button> <button class="danger" onclick='deleteWod(${JSON.stringify(String(w.id))})'>Slett</button>`)).join(''):'<div class="empty">Ingen WOD-ar å administrere.</div>';
  $('#adminClasses').innerHTML=db.classes.length?db.classes.map(c=>item(c.title,`${fmt(c.when)} · ${c.type} · ${c.attendees.length}/${c.capacity} påmelde`,'<span class="pill">TIME</span>',`<button class="secondary" onclick="adminEditClass('${c.id}')">Rediger</button> <button class="danger" onclick="del('classes','${c.id}')">Slett</button>`)).join(''):'<div class="empty">Ingen timar å administrere.</div>';
