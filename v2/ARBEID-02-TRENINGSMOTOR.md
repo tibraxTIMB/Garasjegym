@@ -97,23 +97,26 @@ Kontrollert direkte mot Supabase-prosjektet Garasjegym, utan å endra databasen:
 - RLS er aktivert på alle tre tabellane.
 - `workout_logs` har eigne policies for SELECT, INSERT, UPDATE og DELETE. INSERT krev at `member_id = auth.uid()` for aktive medlemmar, med staff-unntak.
 - `workout_exercises` og `workout_sets` har policies som kontrollerer eigarskap via foreldreøkta.
-- Ingen eksisterande workout-RPC blei funnen i kontrollen.
-- Supabase-migreringsloggen inneheld tre tryggleiksmigreringar frå 16.11.2026. Den omtalte migreringa 006 er ikkje registrert, og `wods.timer_settings` finst ikkje i noverande skjema.
+- Ingen `save_workout_atomic`-RPC er installert i den aktive Supabase-databasen.
+- Klienten kallar allereie `supabase.rpc('save_workout_atomic', { p_workout: payload })`; ved manglande funksjon viser han ei forklaring og lagrar ikkje via delvise klientkall.
+- GitHub-greina inneheld åtte staged SQL-migreringar under `v2/supabase/migrations/`, inkludert `202611160001_save_workout_atomic.sql`, `202611160005_class_live_sessions.sql`, `202611160006_wod_timer_settings.sql` og `202611160008_class_workout_results.sql`.
+- Supabase sin aktive migreringslogg viser berre tre tryggleiksmigreringar frå 16.11.2026. Dei åtte funksjonsmigreringane er difor ikkje dokumenterte som installerte der.
+- `wods.timer_settings` finst ikkje i det aktive skjemaet per kontrollen.
 
 ## Neste tekniske steg
 
-Bygg ein atomisk lagringsfunksjon som:
+Installasjon og verifikasjon av den allereie skisserte atomiske lagringsfunksjonen er neste leveranse. Migrering 008 erstattar/utvidar funksjonen frå migrering 001 med kopling til live gruppetime. Kontroller heile migreringsrekkjefølgja før installasjon. Funksjonen skal:
 1. Hentar eigar frå `auth.uid()` – klienten får ikkje velja `member_id`.
 2. Validerer tittel, dato, format, øvingsliste og sett.
 3. Opprettar `workout_logs`, alle `workout_exercises` og alle `workout_sets` i same Postgres-transaksjon.
 4. Brukar vanleg invoker-rettskontekst og dei eksisterande RLS-policyane; ikkje innfører `SECURITY DEFINER` for å omgå tilgangskontroll.
 5. Returnerer ID-en til den lagra økta. Ved feil skal heile transaksjonen rullast tilbake.
 
-Funksjonen skal først utviklast og testast på ei isolert utviklingsdatabase. Ikkje køyr DDL eller migreringar mot delt produksjonsdatabase som del av dette steget. Lag migreringsfila med Supabase CLI sin `supabase migration new` i Codespace når isolert testmiljø er klart.
+Dei eksisterande SQL-filene skal først køyrast og testast på ei isolert utviklingsdatabase, i rett rekkjefølgje. Ikkje køyr DDL eller migreringar mot delt produksjonsdatabase som del av dette steget. Ikkje lag duplikate migreringsfiler når funksjonen allereie ligg i `v2/supabase/migrations/`.
 
 ## Viktige avgrensingar før feltet kan godkjennast
 
-- Lagring går førebels som fleire klientkall. Ved feil blir det gjort eit forsøk på opprydding, men dette er ikkje like sikkert som éin database-transaksjon. RPC må byggjast og tryggleikstestast før produksjonsbruk.
+- Klienten er kopla til atomisk RPC, men lagring vil feila kontrollert fram til funksjonen er installert i den aktuelle databasen. RPC må tryggleikstestast i utviklingsmiljø før produksjonsbruk.
 - Gruppetime og PT er ikkje kopla som inngangar til motoren enno.
 - Full funksjonalitet for EMOM, AMRAP, For Time, Tabata, intervall, nedteljing og tilpassa timer er ikkje ferdig.
 - PR-registrering, progresjonsvising, Garasjekadett og fullskjerms Training Mode er ikkje ferdig.
@@ -122,4 +125,4 @@ Funksjonen skal først utviklast og testast på ei isolert utviklingsdatabase. I
 
 ## Avgrensing
 
-Dette dokumentet er ei teknisk arbeidsplan, ikkje godkjenning for databaseskjemaendringar. Skjemakontrollen er no utført. Neste steg er å byggja og testa atomisk lagring i eit isolert utviklingsmiljø før klienten blir kopla til funksjonen.
+Dette dokumentet er ei teknisk arbeidsplan, ikkje godkjenning for databaseskjemaendringar. Skjemakontrollen er no utført. Neste steg er å installera og testa dei eksisterande migreringane i eit isolert utviklingsmiljø. Klienten er allereie kopla til RPC-grensesnittet.
