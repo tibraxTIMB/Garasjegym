@@ -4,6 +4,7 @@ alter table public.class_live_sessions
   add column if not exists wod_id uuid references public.wods(id) on delete set null,
   add column if not exists timer_format text,
   add column if not exists timer_duration_seconds integer,
+  add column if not exists timer_settings jsonb,
   add column if not exists timer_started_at timestamptz,
   add column if not exists timer_elapsed_seconds integer not null default 0,
   add column if not exists timer_status text not null default 'idle';
@@ -24,3 +25,5 @@ alter table public.class_live_sessions
 comment on column public.class_live_sessions.wod_id is 'Published WOD selected for this shared class session.';
 comment on column public.class_live_sessions.timer_started_at is 'Server timestamp from which clients derive the synchronized elapsed time.';
 comment on column public.class_live_sessions.timer_elapsed_seconds is 'Accumulated elapsed seconds, updated when the shared timer pauses or finishes.';
+
+comment on column public.class_live_sessions.timer_settings is 'Snapshot of the selected WOD timer settings for synchronized group timer display.';
