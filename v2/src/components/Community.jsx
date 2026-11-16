@@ -1,8 +1,10 @@
 import {useEffect,useState} from 'react'
-import {CheckCircle2,LoaderCircle,MessageCircle,Send} from 'lucide-react'
+import {CheckCircle2,LoaderCircle,MessageCircle,Send,Trash2} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
+import {isStaff} from '../lib/auth.js'
 
 export default function Community({profile}){
+ const staff=isStaff(profile)
  const [posts,setPosts]=useState([]),[comments,setComments]=useState([])
  const [body,setBody]=useState(''),[topic,setTopic]=useState('Treningsprat'),[drafts,setDrafts]=useState({})
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
@@ -28,6 +30,28 @@ export default function Community({profile}){
   }catch(e){setError(e.message||'Kunne ikkje publisera.')}
   finally{setBusy('')}
  }
+ async function removePost(post){
+  if(!window.confirm('Sletta dette innlegget og alle kommentarane?'))return
+  setBusy('delete-'+post.id);setError('');setNotice('')
+  try{
+   const {error:e}=await supabase.from('social_posts').delete().eq('id',post.id)
+   if(e)throw e
+   setPosts(v=>v.filter(row=>row.id!==post.id))
+   setComments(v=>v.filter(row=>row.post_id!==post.id))
+   setNotice('Innlegget er sletta.')
+  }catch(e){setError(e.message||'Kunne ikkje sletta innlegget.')}
+  finally{setBusy('')}
+ }
+ async function removeComment(commentRow){
+  if(!window.confirm('Sletta kommentaren?'))return
+  setBusy('comment-delete-'+commentRow.id);setError('')
+  try{
+   const {error:e}=await supabase.from('social_comments').delete().eq('id',commentRow.id)
+   if(e)throw e
+   setComments(v=>v.filter(row=>row.id!==commentRow.id))
+  }catch(e){setError(e.message||'Kunne ikkje sletta kommentaren.')}
+  finally{setBusy('')}
+ }
  async function comment(post){
   const text=(drafts[post.id]||'').trim();if(!text)return
   setBusy(post.id);setError('')
@@ -44,6 +68,6 @@ export default function Community({profile}){
   <div className="training-heading"><div><div className="section-kicker">GARASJEGYM · FELLESSKAP</div><h3>Garasjeprat</h3></div><span className="count-pill">{posts.length} innlegg</span></div>
   {error&&<div className="auth-error" role="alert">{error}</div>}{notice&&<div className="auth-message" role="status"><CheckCircle2 size={15}/>{notice}</div>}
   <form className="community-compose" onSubmit={publish}><label>Del noko med gjengen<textarea value={body} onChange={e=>setBody(e.target.value)} rows="3" maxLength="3000" placeholder="Treningsglede, spørsmål, resultat eller ein liten siger …" required/></label><div className="community-compose-foot"><select value={topic} onChange={e=>setTopic(e.target.value)}><option>Treningsprat</option><option>Resultat</option><option>Spørsmål</option><option>Sosialt</option></select><button className="primary-button" disabled={busy==='post'}><Send size={15}/>{busy==='post'?'Publiserer …':'Publiser innlegg'}</button></div></form>
-  {posts.length?posts.map(post=><article className="community-post" key={post.id}><div className="community-post-head"><div className="avatar-mark">{(post.author_name||'?').slice(0,1).toUpperCase()}</div><div><strong>{post.author_name}</strong><small>{post.topic} · {new Date(post.created_at).toLocaleString('nn-NO')}</small></div></div><p>{post.body}</p><div className="community-comments"><div className="community-comment-title"><MessageCircle size={14}/> {comments.filter(c=>c.post_id===post.id).length} kommentarar</div>{comments.filter(c=>c.post_id===post.id).map(c=><div className="community-comment" key={c.id}><strong>{c.author_name}</strong><span>{c.body}</span></div>)}<form className="community-reply" onSubmit={e=>{e.preventDefault();comment(post)}}><input value={drafts[post.id]||''} onChange={e=>setDrafts(v=>({...v,[post.id]:e.target.value}))} placeholder="Skriv ein kommentar …"/><button className="secondary-button" disabled={busy===post.id}>Send</button></form></div></article>):<div className="empty-state">Det er stille i Garasjeprat enno. Start samtalen!</div>}
+  {posts.length?posts.map(post=><article className="community-post" key={post.id}><div className="community-post-head"><div className="avatar-mark">{(post.author_name||'?').slice(0,1).toUpperCase()}</div><div><strong>{post.author_name}</strong><small>{post.topic} · {new Date(post.created_at).toLocaleString('nn-NO')}</small></div>{(post.author_id===profile.id||staff)&&<button type="button" className="icon-button" aria-label="Slett innlegg" title="Slett innlegg" disabled={busy==='delete-'+post.id} onClick={()=>removePost(post)}><Trash2 size={15}/></button>}</div><p>{post.body}</p><div className="community-comments"><div className="community-comment-title"><MessageCircle size={14}/> {comments.filter(c=>c.post_id===post.id).length} kommentarar</div>{comments.filter(c=>c.post_id===post.id).map(c=><div className="community-comment" key={c.id}><strong>{c.author_name}</strong><span>{c.body}</span>{(c.author_id===profile.id||staff)&&<button type="button" className="icon-button" aria-label="Slett kommentar" title="Slett kommentar" disabled={busy==='comment-delete-'+c.id} onClick={()=>removeComment(c)}><Trash2 size={13}/></button>}</div>)}<form className="community-reply" onSubmit={e=>{e.preventDefault();comment(post)}}><input value={drafts[post.id]||''} onChange={e=>setDrafts(v=>({...v,[post.id]:e.target.value}))} placeholder="Skriv ein kommentar …"/><button className="secondary-button" disabled={busy===post.id}>Send</button></form></div></article>):<div className="empty-state">Det er stille i Garasjeprat enno. Start samtalen!</div>}
  </div>
 }
