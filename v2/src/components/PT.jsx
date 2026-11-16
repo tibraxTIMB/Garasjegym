@@ -12,7 +12,7 @@ export default function PT({profile}){
  const [goal,setGoal]=useState(''),[preferred,setPreferred]=useState(''),[alternative,setAlternative]=useState(''),[availability,setAvailability]=useState('')
  const [members,setMembers]=useState([]),[messages,setMessages]=useState([]),[notes,setNotes]=useState([]),[plans,setPlans]=useState({}),[exerciseLibrary,setExerciseLibrary]=useState([]),[planDrafts,setPlanDrafts]=useState({})
  const [messageClient,setMessageClient]=useState(''),[messageText,setMessageText]=useState('')
- const [noteClient,setNoteClient]=useState(''),[noteGoals,setNoteGoals]=useState(''),[noteText,setNoteText]=useState(''),[followUp,setFollowUp]=useState('')
+ const [noteClient,setNoteClient]=useState(''),[noteGoals,setNoteGoals]=useState(''),[noteText,setNoteText]=useState(''),[followUp,setFollowUp]=useState(''),[requestDrafts,setRequestDrafts]=useState({})
  async function load(){
   setLoading(true);setError('')
   const {data:{user},error:authError}=await supabase.auth.getUser()
@@ -20,7 +20,7 @@ export default function PT({profile}){
   const [s,b,r,m,p,n,pe,ex]=await Promise.all([
    supabase.from('pt_sessions').select('id,title,starts_at,duration_minutes,capacity,price,status,prep,message,custom_workout').in('status',staff?['draft','published','planned','completed']:['published']).gte('starts_at',new Date(Date.now()-86400000).toISOString()).order('starts_at').limit(50),
    supabase.from('pt_bookings').select('id,session_id,status,note').eq('member_id',user.id),
-   supabase.from('pt_requests').select('id,preferred_at,alternative_at,availability_note,goal,status,staff_note,created_at').eq('member_id',user.id).order('created_at',{ascending:false}),
+   supabase.from('pt_requests').select('id,member_id,preferred_at,alternative_at,availability_note,goal,status,staff_note,created_at,handled_at').order('created_at',{ascending:false}).limit(100).then(result=>staff?result:{...result,data:(result.data||[]).filter(row=>row.member_id===user.id)}),
    staff ? supabase.from('profiles').select('id,display_name').eq('active',true).order('display_name') : Promise.resolve({data:[],error:null}),
    supabase.from('pt_messages').select('id,client_id,sender_id,body,created_at').order('created_at',{ascending:true}).limit(200),
    staff ? supabase.from('pt_client_notes').select('id,client_id,coach_id,goals,note,follow_up_at,created_at').order('updated_at',{ascending:false}).limit(100) : Promise.resolve({data:[],error:null}),
@@ -85,6 +85,17 @@ export default function PT({profile}){
   }catch(e){setError(e.message||'Kunne ikkje senda førespurnaden.')}
   finally{setBusy('')}
  }
+ async function updateRequest(request){
+  const draft=requestDrafts[request.id]||{}
+  setBusy('request-'+request.id);setError('');setNotice('')
+  try{
+   const {data:{user}}=await supabase.auth.getUser()
+   const {error:e}=await supabase.from('pt_requests').update({status:draft.status||request.status,staff_note:draft.staffNote??request.staff_note,handled_by:user.id,handled_at:new Date().toISOString()}).eq('id',request.id)
+   if(e)throw e
+   setRequests(v=>v.map(row=>row.id===request.id?{...row,status:draft.status||row.status,staff_note:draft.staffNote??row.staff_note,handled_at:new Date().toISOString()}:row))
+   setNotice('PT-førespurnaden er oppdatert.')
+  }catch(e){setError(e.message||'Kunne ikkje oppdatera førespurnaden.')}finally{setBusy('')}
+ }
  async function sendMessage(event){
   event.preventDefault();setBusy('message');setError('');setNotice('')
   try{
@@ -130,6 +141,6 @@ export default function PT({profile}){
    </form>
    {notes.map(n=><article className="history-card" key={n.id}><strong>{members.find(m=>m.id===n.client_id)?.display_name||'Medlem'}</strong><p><b>Mål:</b> {n.goals}</p><p>{n.note}</p><small>{n.follow_up_at?'Oppfølging: '+new Date(n.follow_up_at).toLocaleString('nn-NO'):'Ingen oppfølgingsdato'}</small></article>)}
   </section>}
-  <section className="engine-section"><h4>Mine førespurnader</h4>{requests.length?requests.map(r=><article className="history-card" key={r.id}><div className="history-card-top"><strong>{r.goal}</strong><span>{r.status}</span></div><small>{r.preferred_at?new Date(r.preferred_at).toLocaleString('nn-NO'):'Tidspunkt ikkje valt'}</small>{r.staff_note&&<p>{r.staff_note}</p>}</article>):<div className="empty-state">Ingen PT-førespurnader sende.</div>}</section>
+  <section className="engine-section"><h4>{staff?'PT-førespurnader':'Mine førespurnader'}</h4>{requests.length?requests.map(r=><article className="history-card" key={r.id}><div className="history-card-top"><strong>{staff?(members.find(m=>m.id===r.member_id)?.display_name||'Medlem')+' · ':''}{r.goal}</strong><span>{r.status}</span></div><small>{r.preferred_at?'Ønskt: '+new Date(r.preferred_at).toLocaleString('nn-NO'):'Tidspunkt ikkje valt'}{r.alternative_at?' · Alternativ: '+new Date(r.alternative_at).toLocaleString('nn-NO'):''}</small>{r.availability_note&&<p>Tilgjenge: {r.availability_note}</p>}{staff?<div className="admin-create-form"><label>Status<select value={requestDrafts[r.id]?.status||r.status} onChange={e=>setRequestDrafts(v=>({...v,[r.id]:{...v[r.id],status:e.target.value}}))}><option value="pending">Ventande</option><option value="approved">Godkjend</option><option value="declined">Avslått</option><option value="cancelled">Avlyst</option></select></label><label>Tilbakemelding / internt notat<textarea rows="2" value={requestDrafts[r.id]?.staffNote??r.staff_note??''} onChange={e=>setRequestDrafts(v=>({...v,[r.id]:{...v[r.id],staffNote:e.target.value}}))}/></label><button className="secondary-button" disabled={busy==='request-'+r.id} onClick={()=>updateRequest(r)}>Lagra svar</button></div>:r.staff_note&&<p>{r.staff_note}</p>}</article>):<div className="empty-state">{staff?'Ingen PT-førespurnader mottatt.':'Ingen PT-førespurnader sende.'}</div>}</section>
  </div>
 }
