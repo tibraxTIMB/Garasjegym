@@ -467,3 +467,30 @@ footer {
 .class-action .secondary-button { margin:0; }
 .booking-confirmed { color:#9ad5ad; font-size:11px; font-weight:900; }
 @media(max-width:620px) { .class-card { grid-template-columns:52px minmax(0,1fr); } .class-action { grid-column:2; display:flex; justify-content:flex-start; justify-items:start; } .class-date strong { font-size:20px; } }
+
+
+/* PT studio */
+.pt-module { display:grid; gap:16px; }
+.pt-actions { display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
+.pt-actions .secondary-button { margin:0; }
+@media(max-width:520px){ .pt-actions { display:grid; } }
+/* Social feed */
+.community-module { display:grid; gap:14px; }
+.community-compose,.community-post { padding:17px; background:#171b1d; border:1px solid var(--line); border-radius:12px; }
+.community-compose label { display:grid; gap:8px; color:#d8d9d5; font-size:12px; font-weight:800; }
+.community-compose textarea,.community-reply input { width:100%; min-width:0; padding:11px; color:#f2f1ed; background:#111416; border:1px solid #3a4143; border-radius:8px; font:inherit; }
+.community-compose-foot { display:flex; justify-content:space-between; gap:10px; margin-top:10px; }
+.community-compose-foot select { min-width:0; padding:9px; color:#f2f1ed; background:#111416; border:1px solid #3a4143; border-radius:8px; }
+.community-compose-foot .primary-button { display:flex; align-items:center; gap:7px; }
+.community-post-head { display:flex; align-items:center; gap:10px; }
+.avatar-mark { display:grid; place-items:center; width:38px; height:38px; border-radius:50%; color:#171819; background:var(--orange); font-weight:950; }
+.community-post-head div:last-child { display:grid; gap:3px; }
+.community-post-head small { color:var(--muted); font-size:10px; }
+.community-post > p { margin:16px 0; color:#e3e5e2; line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere; }
+.community-comments { padding-top:12px; border-top:1px solid var(--line); }
+.community-comment-title { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:11px; font-weight:800; margin-bottom:10px; }
+.community-comment { display:grid; gap:3px; padding:8px 10px; margin:5px 0; background:#202426; border-radius:7px; font-size:12px; }
+.community-comment span { color:#d0d4d1; overflow-wrap:anywhere; }
+.community-reply { display:flex; gap:8px; margin-top:10px; }
+.community-reply .secondary-button { flex:0 0 auto; margin:0; }
+@media(max-width:480px){ .community-compose-foot { flex-direction:column; } .community-compose-foot select,.community-compose-foot button { width:100%; } }
