@@ -1,10 +1,10 @@
 <!doctype html>
-<!-- GarasjeGym 1.3.8 – Zufallsmusik -->
+<!-- GarasjeGym 1.3.9 – Mitglieder marschieren -->
 <html lang="nn">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#11151b">
-<title>GARASJEGYM 1.3.8 · Zufallsmusik</title>
+<title>GARASJEGYM 1.3.9 · Mitglieder marschieren</title>
 <style>
 :root{--bg:#11151b;--panel:#1b222c;--panel2:#252e3a;--line:#354150;--text:#f4f6f8;--muted:#aab4c0;--accent:#f2a93b;--green:#72d6a0;--red:#ff7777}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
@@ -278,7 +278,7 @@ nav button{font-size:12px;padding:9px 13px;min-height:38px}
  #pt .grid>.span-7{grid-column:span 6}
 }
 
-/* GarasjeGym 1.3.8 – Zufallsmusik: refined Spotify player */
+/* GarasjeGym 1.3.9 – Mitglieder marschieren: refined Spotify player */
 .achievement-ticker{overflow:hidden;border:1px solid #354556;border-radius:12px;background:#111a24;margin:5px 0 10px;padding:8px 0;white-space:nowrap}
 .achievement-track{display:inline-flex;gap:34px;min-width:max-content;animation:ggTicker 72s linear infinite;padding-left:100vw}
 .achievement-ticker:hover .achievement-track{animation-play-state:paused}
@@ -291,7 +291,7 @@ body.wall-mode main{max-width:1600px;padding:16px 22px 30px}body.wall-mode heade
 @media(max-width:700px){.spotify-bottom{align-items:stretch}.spotify-bottom button{flex:1}.spotify-head{align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){.achievement-track{animation:none;padding-left:0}}
 
-/* 1.3.8 Spotify search and one-tap radio presets */
+/* 1.3.9 Spotify search and one-tap radio presets */
 .spotify-search{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}.spotify-search input{flex:1;min-width:220px}.spotify-presets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}.spotify-presets button{min-height:64px;text-align:left;white-space:normal}.spotify-presets button strong{display:block;font-size:14px}.spotify-presets button small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.spotify-results{margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.spotify-results select{flex:1;min-width:220px}@media(max-width:760px){.spotify-presets{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 </style>
@@ -315,6 +315,7 @@ body.wall-mode main{max-width:1600px;padding:16px 22px 30px}body.wall-mode heade
   <h1 id="authTitle" style="margin-top:22px">Logg inn</h1>
   <p class="muted">Bruk kontoen din for å opne GarasjeGym.</p>
   <form id="authForm">
+   <div id="authDisplayNameWrap" hidden><label for="authDisplayName">Fullt namn</label><input id="authDisplayName" type="text" maxlength="60" autocomplete="name" placeholder="Namnet ditt"></div>
    <label for="authEmail">E-post</label>
    <input id="authEmail" type="email" autocomplete="email" required placeholder="namn@epost.no">
    <label for="authPassword">Passord</label>
@@ -478,15 +479,15 @@ body.wall-mode main{max-width:1600px;padding:16px 22px 30px}body.wall-mode heade
   <form id="adminExerciseForm"><label>Namn</label><input name="name" required placeholder="Til dømes Turkish get-up"><label>Kategori</label><select name="category"><option>Styrke</option><option>Vektløfting</option><option>Kroppsvekt</option><option>Kondisjon</option><option>Kjerne</option><option>Mobilitet</option><option>Gymnastics</option></select><label>Utstyr</label><input name="equipment" placeholder="Kettlebell"><label>Forklaring</label><textarea name="description" placeholder="Kort teknikkforklaring"></textarea><label>Videolenke (valfri)</label><input name="video" type="url" placeholder="https://..."><button>Legg til i øvingsbiblioteket</button></form><div id="adminExercises"></div>
  </details>
  <details class="card" open><summary>Medlemsadministrasjon <span class="hint">Medlemmer og tilgang</span></summary>
-  <p class="hint">Opprett medlemer, endre namn og rolle, og set medlemskap aktivt eller inaktivt. Dette er lokale profilar i denne nettlesaren – ikkje ekte brukarkontoar.</p>
-  <form id="adminMemberForm"><div class="two"><div><label>Namn på medlem</label><input name="name" required maxlength="60" placeholder="Fullt namn"></div><div><label>Rolle</label><select name="role"><option value="member">Vanleg medlem</option><option value="manager">VIP-manager</option><option value="admin">Admin</option></select></div></div><button type="submit">+ Legg til medlem</button></form>
+  <p class="hint">Medlemer opprettar sin eigen konto med «Opprett ny konto» på innloggingssida. Nye kontoar får automatisk rolla Vanleg medlem. Her kan admin endra namn, rolle og aktiv status på ekte Supabase-profilar. Deaktivering stengjer tilgangen utan å sletta treningshistorikk.</p>
+  <button type="button" class="secondary" onclick="reloadMemberProfiles()">↻ Oppdater medlemslista</button>
   <div id="adminMembers"></div>
  </details>
  <details class="card"><summary>Achievements <span class="hint">Heile katalogen · berre admin</span></summary><p class="hint">Her ser admin alle moglege merke, kriterium og kor mange medlemer som har oppnådd dei. Medlemmene ser berre eigne oppnådde merke på profilsida.</p><div id="achievementAdmin"></div></details>
  <details class="card"><summary>Klubbverktøy <span class="hint">Status</span></summary><div id="adminSummaryDetail"></div></details>
 </div>
 </section>
-<footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.3.8 · Zufallsmusik</strong></footer>
+<footer class="app-footer">GARASJEGYM · Gratis trening · Bygd for den private treningsklubben<br><strong>Versjon 1.3.9 · Mitglieder marschieren</strong></footer>
 </main>
 <div id="editorModal" class="editor-backdrop" role="dialog" aria-modal="true" aria-labelledby="editorTitle" onclick="if(event.target===this)closeEditor()"><div class="editor-panel"><div class="row"><h2 id="editorTitle">Rediger</h2><button type="button" class="secondary" onclick="closeEditor()" aria-label="Lukk">✕</button></div><form id="editorForm"></form></div></div>
 <script>
@@ -510,7 +511,7 @@ function exportGarasjegymBackup(){
   const raw=localStorage.getItem(KEY);
   if(!raw)throw new Error('Fann ingen lagra Garasjegym-data i denne nettlesaren.');
   const parsed=JSON.parse(raw);
-  const payload={app:'GarasjeGym',backupVersion:1,appVersion:'1.3.3',exportedAt:new Date().toISOString(),storageKey:KEY,data:parsed};
+  const payload={app:'GarasjeGym',backupVersion:1,appVersion:'1.3.9',exportedAt:new Date().toISOString(),storageKey:KEY,data:parsed};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');
   const stamp=new Date().toISOString().replace(/[:.]/g,'-');
@@ -546,30 +547,68 @@ function renderRoleUI(){
  const canOrder=role!=='admin';if($('#coffeeOrderPanel'))$('#coffeeOrderPanel').classList.toggle('hidden',!canOrder);$$('button[onclick*="showTab(\'barista\')"]').forEach(b=>b.classList.toggle('role-hidden',!canOrder));
  if($('#profilePerson')){const sel=$('#profilePerson');sel.innerHTML=`<option value="${esc(m.name)}">${esc(m.name)}</option>`;sel.value=m.name;}
  $$('form#prForm select[name="person"],form#logForm select[name="person"]').forEach(sel=>{sel.value=m.name;sel.disabled=true;});
- // Medlemsadministrasjon blir kopla til ekte Auth-invitasjonar i ein seinare versjon.
+ renderRoleAdmin();
 }
 function renderRoleAdmin(){
  const el=$('#adminMembers');if(!el)return;
+ if(!authProfile||authProfile.role!=='admin'){el.innerHTML='<p class="hint">Berre admin kan administrere medlemsprofilar.</p>';return;}
  el.innerHTML=db.members.map(m=>{
   const roleLabel=m.role==='admin'?'Admin / eigar':m.role==='manager'?'VIP-manager':'Vanleg medlem';
-  const status=m.active===false?'Inaktiv':'Aktiv';const safeId=JSON.stringify(m.id);
-  return `<div class="member-admin-row"><div><strong>${esc(m.name)}</strong><div class="member-admin-meta"><span class="pill">${roleLabel}</span><span class="pill ${m.active===false?'':'gold'}">${status}</span></div></div><div class="member-admin-actions"><button type="button" class="secondary" onclick='editMember(${safeId})'>Rediger profil</button><button type="button" class="secondary" onclick='toggleMemberActive(${safeId})'>${m.active===false?'Aktiver':'Deaktiver'}</button>${m.id!=='owner'?`<button type="button" class="danger" onclick='removeMember(${safeId})'>Slett</button>`:''}</div></div>`;
- }).join('')||'<p class="hint">Ingen medlemer registrerte.</p>';
+  const status=m.active===false?'Inaktiv':'Aktiv';const safeId=JSON.stringify(String(m.id));
+  const self=String(m.id)===String(authProfile.id);
+  return `<div class="member-admin-row"><div><strong>${esc(m.name)}</strong><div class="member-admin-meta"><span class="pill">${roleLabel}</span><span class="pill ${m.active===false?'':'gold'}">${status}</span>${self?'<span class="pill">Du</span>':''}</div></div><div class="member-admin-actions"><button type="button" class="secondary" onclick='editMember(${safeId})'>Rediger profil</button>${self?'':`<button type="button" class="secondary" onclick='toggleMemberActive(${safeId})'>${m.active===false?'Aktiver':'Deaktiver'}</button>`}</div></div>`;
+ }).join('')||'<p class="hint">Ingen medlemsprofilar funne.</p>';
+}
+async function reloadMemberProfiles(){
+ if(!authUser||!authProfile||authProfile.role!=='admin'){alert('Berre admin kan hente medlemslista.');return;}
+ const button=$('#adminMembers')?.previousElementSibling;
+ if(button)button.disabled=true;
+ try{await loadMemberProfiles();save();}
+ catch(err){alert('Kunne ikkje oppdatera medlemslista: '+(err.message||err));}
+ finally{if(button)button.disabled=false;}
+}
+async function loadMemberProfiles(){
+ if(!authUser||!authProfile)throw new Error('Du må vera innlogga.');
+ let query=supabaseClient.from('profiles').select('id,display_name,role,active,avatar_url');
+ if(authProfile.role!=='admin'&&authProfile.role!=='manager')query=query.eq('id',authUser.id);
+ const {data,error}=await query.order('display_name',{ascending:true});
+ if(error)throw new Error('Kunne ikkje hente medlemsprofilar: '+error.message);
+ db.members=(data||[]).map(row=>({id:String(row.id),name:row.display_name||'Medlem',role:row.role||'member',active:row.active!==false,avatar_url:row.avatar_url||null}));
+ db.activeProfile=String(authUser.id);
+ const own=db.members.find(m=>m.id===String(authUser.id));
+ if(own){authProfile={...authProfile,name:own.name,role:own.role,active:own.active};$('#signedInName').textContent=own.name;}
 }
 function openEditor(title,fields,onSave){
  const modal=$('#editorModal'),form=$('#editorForm');$('#editorTitle').textContent=title;
  form.innerHTML=fields+`<div class="editor-actions"><button type="button" class="secondary" onclick="closeEditor()">Avbryt</button><button type="submit">Lagre endringar</button></div>`;
  form.onsubmit=async e=>{e.preventDefault();const submit=form.querySelector('button[type=submit]');if(submit)submit.disabled=true;try{const data=new FormData(form);const result=await onSave(data);if(result!==false){closeEditor();save();}}catch(err){alert('Kunne ikkje lagre endringane: '+(err.message||err));}finally{if(submit)submit.disabled=false;}};
- modal.classList.add('open');document.body.style.overflow='hidden';const first=form.querySelector('input,select,textarea');if(first)setTimeout(()=>first.focus(),80);
+ modal.classList.add('open');document.body.style.overflow='hidden';const first=form.querySelector('input,select,textarea');if(first)first.focus();
 }
 function closeEditor(){$('#editorModal').classList.remove('open');document.body.style.overflow='';$('#editorForm').onsubmit=null;}
-function editMember(id){if(!isOwner()){alert('Berre admin kan administrere medlemer.');return;}const m=db.members.find(x=>x.id===id);if(!m)return;
+function editMember(id){
+ if(!isOwner()){alert('Berre admin kan administrera medlemer.');return;}
+ const m=db.members.find(x=>String(x.id)===String(id));if(!m)return;
  const roleOptions=`<option value="member" ${m.role==='member'?'selected':''}>Vanleg medlem</option><option value="manager" ${m.role==='manager'?'selected':''}>VIP-manager</option><option value="admin" ${m.role==='admin'?'selected':''}>Administrator</option>`;
- openEditor('Rediger medlemsprofil',`<label for="editMemberName">Namn</label><input id="editMemberName" name="name" required maxlength="60" value="${esc(m.name)}"><label for="editMemberRole">Medlemsrolle</label><select id="editMemberRole" name="role" ${m.id==='owner'?'disabled':''}>${roleOptions}</select>${m.id==='owner'?'<p class="hint">Hovudadmin må behalda administratorrolla.</p>':''}<label class="hint">Rolla styrer kva funksjonar medlemmen får tilgang til.</label>`,data=>{const name=String(data.get('name')||'').trim();if(!name){alert('Namn kan ikkje vere tomt.');return false;}if(db.members.some(x=>x.id!==id&&x.name.toLowerCase()===name.toLowerCase())){alert('Namnet er allereie i bruk.');return false;}m.name=name;if(m.id!=='owner')m.role=String(data.get('role')||'member');return true;});
+ const isSelf=String(m.id)===String(authProfile.id);
+ openEditor('Rediger medlemsprofil',`<label for="editMemberName">Namn</label><input id="editMemberName" name="name" required maxlength="60" value="${esc(m.name)}"><label for="editMemberRole">Medlemsrolle</label><select id="editMemberRole" name="role" ${isSelf?'disabled':''}>${roleOptions}</select>${isSelf?'<p class="hint">Du kan endra eige namn, men ikkje di eiga administratorrolle her.</p>':''}<label class="hint">Rolla styrer kva funksjonar medlemmen får tilgang til.</label>`,async data=>{
+  const name=String(data.get('name')||'').trim();if(!name){alert('Namn kan ikkje vera tomt.');return false;}
+  const role=isSelf?m.role:String(data.get('role')||'member');
+  const {data:updated,error}=await supabaseClient.from('profiles').update({display_name:name,role}).eq('id',String(m.id)).select('id').maybeSingle();
+  if(error)throw new Error(error.message);if(!updated)throw new Error('Profilen blei ikkje oppdatert. Kontroller tilgangane dine.');
+  await loadMemberProfiles();return true;
+ });
 }
-function toggleMemberActive(id){if(!isOwner()){alert('Berre admin kan administrere medlemer.');return;}const m=db.members.find(x=>x.id===id);if(!m)return;if(m.id===db.activeProfile&&m.active!==false){alert('Byt til ein annan profil før du deaktiverer denne.');return;}m.active=m.active===false?true:false;save();}
-function removeMember(id){if(!isOwner()){alert('Berre admin kan administrere medlemer.');return;}const m=db.members.find(x=>x.id===id);if(!m||m.id==='owner')return;if(m.id===db.activeProfile){alert('Byt til ein annan profil før du slettar denne.');return;}if(!confirm('Slett medlemsprofilen '+m.name+'? Treningshistorikk og gamle påmeldingar blir ikkje sletta.'))return;db.members=db.members.filter(x=>x.id!==id);save();}
-$('#adminMemberForm').addEventListener('submit',e=>{e.preventDefault();if(!isOwner()){alert('Berre admin kan leggje til medlemer.');return;}const f=new FormData(e.target),name=String(f.get('name')||'').trim(),role=String(f.get('role')||'member');if(!name)return;if(db.members.some(m=>m.name.toLowerCase()===name.toLowerCase())){alert('Det finst allereie eit medlem med dette namnet.');return;}db.members.push({id:'m_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7),name,role,active:true,createdAt:new Date().toISOString()});e.target.reset();save();});
+async function toggleMemberActive(id){
+ if(!isOwner()){alert('Berre admin kan administrera medlemer.');return;}
+ const m=db.members.find(x=>String(x.id)===String(id));if(!m)return;
+ if(String(m.id)===String(authProfile.id)){alert('Du kan ikkje deaktivere di eiga konto medan du er innlogga.');return;}
+ const active=m.active===false;
+ const action=active?'aktivere':'deaktivere';
+ if(!confirm(`Vil du ${action} medlemskontoen til ${m.name}?`))return;
+ const {data:updated,error}=await supabaseClient.from('profiles').update({active}).eq('id',String(m.id)).select('id').maybeSingle();
+ if(error||!updated){alert('Kunne ikkje endra medlemsstatus: '+(error?.message||'Ingen profil blei oppdatert.'));return;}
+ try{await loadMemberProfiles();save();}catch(err){alert('Statusen blei endra, men medlemslista kunne ikkje hentast på nytt: '+err.message);}
+}
 function openCoffeeModal(){if(currentRole()==='admin')return;renderCoffee();$('#barista').classList.remove('hidden');$('#barista').setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}
 function closeCoffeeModal(){$('#barista').classList.add('hidden');$('#barista').setAttribute('aria-hidden','true');document.body.style.overflow='';}
 function showTab(id){
@@ -1108,7 +1147,6 @@ function renderAdmin(){
  $('#adminExercises').innerHTML=db.customExercises.length?db.customExercises.map((x,i)=>item(x.name,`${x.category} · ${x.equipment||'Uspesifisert utstyr'}`,'<span class="pill">EIGA ØVING</span>',`<button class="secondary" onclick="adminEditExercise(${i})">Rediger</button> <button class="danger" onclick="if(confirm('Slette øvinga?')){db.customExercises.splice(${i},1);save()}">Slett</button>`)).join(''):'<div class="empty">Ingen eigne øvingar lagde til enno.</div>';
  const requests=db.pendingPT.filter(r=>r.status==='Ventar på godkjenning');
  $('#adminPTRequests').innerHTML=requests.length?requests.map(r=>{const c=db.classes.find(x=>x.id===r.classId);return item(r.name,c?`${c.title} · ${fmt(c.when)}`:'Time sletta','<span class="pill gold">VENTAR</span>',`<button onclick="approvePT(${r.id},true)">Godkjenn</button> <button class="danger" onclick="approvePT(${r.id},false)">Avslå</button>`)}).join(''):'<div class="empty">Ingen PT-førespurnader ventar.</div>';
- // Medlemsadministrasjon blir kopla til ekte Auth-invitasjonar i ein seinare versjon.
 }
 $('#adminExerciseForm').addEventListener('submit',e=>{
  e.preventDefault();if(!isOwner()){alert('Berre eigar kan leggje til øvingar.');return;}const f=new FormData(e.target);
@@ -1236,6 +1274,8 @@ function setAuthMode(create){
  $('#authSubmit').textContent=create?'Opprett konto':'Logg inn';
  $('#authModeBtn').textContent=create?'Har du konto frå før? Logg inn':'Opprett ny konto';
  $('#authPassword').autocomplete=create?'new-password':'current-password';
+ $('#authDisplayNameWrap').hidden=!create;
+ $('#authDisplayName').required=create;
  showAuthMessage('');
 }
 $('#authModeBtn').addEventListener('click',()=>setAuthMode(!authCreateMode));
@@ -1271,8 +1311,7 @@ async function loadSignedInProfile(user){
  authUser=user;
  authProfile={id:data.id,name:data.display_name||user.email||'Medlem',role:data.role||'member',active:data.active,avatar_url:data.avatar_url};
  await loadWodsFromSupabase();
- db.members=[{id:authProfile.id,name:authProfile.name,role:authProfile.role,active:authProfile.active}];
- db.activeProfile=authProfile.id;
+ await loadMemberProfiles();
  $('#signedInName').textContent=authProfile.name;
  document.body.classList.remove('auth-locked');
  renderAll();
@@ -1291,7 +1330,9 @@ $('#authForm').addEventListener('submit',async e=>{
  $('#authSubmit').disabled=true;showAuthMessage(authCreateMode?'Opprettar konto …':'Loggar inn …');
  try{
   if(authCreateMode){
-   const {data,error}=await supabaseClient.auth.signUp({email,password});
+   const displayName=$('#authDisplayName').value.trim();
+   if(!displayName)throw new Error('Skriv inn fullt namn.');
+   const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{display_name:displayName}}});
    if(error)throw error;
    if(data.session){await loadSignedInProfile(data.user);showAuthMessage('Konto oppretta.');}
    else{showAuthMessage('Konto oppretta. Sjekk e-posten din for stadfesting før du loggar inn.');}
@@ -1319,7 +1360,7 @@ async function bootGarasjeGym(){
  catch(err){document.body.classList.add('auth-locked');showAuthMessage(err.message||'Kunne ikkje starte innlogginga.',true);}
 }
 
-// GARASJEGYM 1.3.8 – Spotify PKCE and SDK loader
+// GARASJEGYM 1.3.9 – Spotify PKCE and SDK loader
 const GG_SPOTIFY_CLIENT_ID='82eb64ec22074235a0a29ffc937d9053';
 const GG_SPOTIFY_REDIRECT='https://tibraxtimb.github.io/Garasjegym/';
 const GG_SPOTIFY_SCOPES=['streaming','user-read-email','user-read-private','user-read-playback-state','user-modify-playback-state','playlist-read-private','playlist-read-collaborative'];
