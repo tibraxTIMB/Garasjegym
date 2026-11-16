@@ -141,3 +141,11 @@ Arbeidsfelt 5 er eit gjennomgåande kvalitetssikringsspor, ikkje berre siste fas
 - Siste endringar er ikkje stadfesta med ein ny CI-byggjekøyring. Ei tidlegare byggjekøyring har bestått, men kan ikkje brukast som bevis for dei siste commitane.
 - Ingen produksjonssetting av 2.0 er godkjend.
 - 16.11.2026: Ved ny SQL-gjennomgang vart det funne og retta feil i både opnings- og avslutningsdelimiteren til `DO`-blokka i migrering 004. QA-planen er utvida med testar for duplikatkontroll, samtidige bookingar og SQL-syntaks. Migreringa er framleis berre staged; ho er ikkje køyrd mot Supabase.
+
+
+## Testklar database – 16.11.2026
+- Oppretta separat Supabase Free-prosjekt `garasjegym-2-test` med kostnadsoverslag 0 kr/mnd.
+- Baseline frå produksjonsskjema utan data; 14 feature-migreringar installerte.
+- 24 tabellar med RLS, auth-profiltrigger og demo-data kontrollert.
+- CI: SQL-migreringskontroll og Vite-bygg bestått på commit `a5fe012e` (seinare dokumentasjons- og indeksendringar ventar på siste CI-resultat).
+- Gjenstår før faktisk brukartest: auth URL-innstilling, registrering av testkonto, tildeling av test-adminrolle, og ende-til-ende-test på PC/mobil.
