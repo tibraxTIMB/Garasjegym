@@ -48,6 +48,7 @@ SQL-filene ligg i supabase/migrations/. Dei er staged i GitHub og er ikkje autom
 8. 202611160008_class_workout_results.sql – kopling av personlege treningsresultat til live gruppetime og oppdatert atomisk lagrings-RPC.
 9. 202611160009_social_reactions.sql – atomisk reaksjonshandtering for Garasjeprat med kontrollert reaksjonsliste.
 10. 202611160010_challenges.sql – utfordringar, deltaking, mål og individuell framgang med RLS.
+11. 202611160011_harden_rpc_grants.sql – avgrensar EXECUTE-rettar for sensitive SECURITY DEFINER-hjelpefunksjonar og PT-booking til authenticated.
 
 Migrering 008 byggjer vidare på 001 og krev at 005 har oppretta `class_live_sessions`. Migrering 009 er uavhengig av dei andre funksjonsmigreringane. Kontroller heile SQL-pakken og funksjonstryggleiken før installasjon. Ikkje køyr migreringane direkte mot produksjonsdatabasen utan backup, gjennomgang og uttrykkeleg godkjenning. Klientfunksjonar som nyttar nye tabellar, kolonnar eller RPC-ar vil ikkje fungera før tilhøyrande migrering er installert. Treningsklienten har fallback dersom `wods.timer_settings` enno ikkje finst, slik at WOD-biblioteket framleis kan lastast.
 
