@@ -8,6 +8,7 @@ import {
   LogOut,
   ShieldCheck,
   Users,
+  UserRound,
   Settings,
   Wrench,
 } from 'lucide-react'
@@ -15,11 +16,14 @@ import { supabase, isSupabaseConfigured } from './lib/supabase.js'
 import { fetchMemberProfile, isStaff } from './lib/auth.js'
 import Training from './components/Training.jsx'
 import Booking from './components/Booking.jsx'
+import PT from './components/PT.jsx'
+import Community from './components/Community.jsx'
 
 const sections = [
   { id: 'oversikt', label: 'Oversikt', icon: LayoutDashboard, note: 'Dashboard og treningsstatus' },
   { id: 'trening', label: 'Trening', icon: Dumbbell, note: 'WOD, fri trening, logg og PR' },
-  { id: 'booking', label: 'Booking', icon: CalendarDays, note: 'Gruppetimar og PT' },
+  { id: 'booking', label: 'Booking', icon: CalendarDays, note: 'Gruppetimar' },
+  { id: 'pt', label: 'PT-studio', icon: UserRound, note: 'Personleg trening og PT-førespurnader' },
   { id: 'fellesskap', label: 'Fellesskap', icon: Users, note: 'Garasjeprat og utfordringar' },
   { id: 'kaffi', label: 'Barista', icon: Coffee, note: 'Meny og bestillingar' },
 ]
@@ -214,7 +218,7 @@ export default function App() {
           <h1>Bygd for å <em>prestera.</em></h1>
           <p>Ein felles plattform for trening, booking og fellesskap.</p>
         </section>
-        {active === 'trening' ? <section className="content-card training-content"><Training /></section> : active === 'booking' ? <section className="content-card training-content"><Booking profile={profile} /></section> : <section className="content-card">
+        {active === 'trening' ? <section className="content-card training-content"><Training /></section> : active === 'booking' ? <section className="content-card training-content"><Booking profile={profile} /></section> : active === 'pt' ? <section className="content-card training-content"><PT profile={profile} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community profile={profile} /></section> : <section className="content-card">
           <div className="section-icon"><Icon size={22} /></div>
           <div className="section-kicker">MODUL · {active.toUpperCase()}</div>
           <h2>{current.label}</h2>
