@@ -5,7 +5,7 @@ Dette dokumentet er ein testplan, ikkje dokumentasjon på at testane er køyrde.
 ## 1. Før test
 
 - Bruk berre utviklingsgreina i GitHub og eit uttrykkeleg godkjent, gratis testmiljø.
-- Ikkje køyr migreringar 001–010 mot aktiv produksjonsdatabase som del av denne testen.
+- Ikkje køyr migreringar 001–011 mot aktiv produksjonsdatabase som del av denne testen.
 - Kontroller at VITE_SUPABASE_URL og VITE_SUPABASE_PUBLISHABLE_KEY peikar på rett prosjekt.
 - Kontroller at ingen service_role- eller secret-nøklar ligg i klientkode eller Git.
 - Registrer versjon, commit-SHA, nettlesar, eining og testbrukar for kvar test.
@@ -46,6 +46,9 @@ Dette dokumentet er ein testplan, ikkje dokumentasjon på at testane er køyrde.
 | BOOK-06 | Live-økt utan timerutviding | Grunnleggjande live-status fungerer etter migrering 005 |
 | BOOK-07 | Live-økt med WOD-timer | Alle deltakarar ser same serverbaserte klokke etter migrering 007 |
 | BOOK-08 | Deltakar lagrar resultat frå live-økt | Resultatet blir knytt til rett live-økt etter migrering 008 |
+| BOOK-09 | Køyr migrering 004 i isolert testdatabase med doble aktive påmeldingar | Migreringa stoppar med tydeleg feil utan å sletta eller endra eksisterande rader |
+| BOOK-10 | To samtidige påmeldingar konkurrerer om siste plass | Triggeren låser gruppetimen og slepper gjennom høgst éi aktiv påmelding |
+| BOOK-11 | Kontroller SQL-syntaks i migrering 004 | `DO`-blokka for duplikatkontroll blir køyrd utan syntaksfeil |
 
 ## 5. PT-studio
 
@@ -107,4 +110,4 @@ Dette dokumentet er ein testplan, ikkje dokumentasjon på at testane er køyrde.
 
 ## 10. Status
 
-Ingen ende-til-ende-testar er stadfesta køyrde i denne arbeidsøkta. SQL-migreringane 001–011 er staged i GitHub, ikkje installerte i aktiv Supabase-database. Siste React/Vite-bygg er ikkje stadfesta etter dei nyaste endringane.
+Ingen ende-til-ende-testar er stadfesta køyrde i denne arbeidsøkta. Migrering 004 fekk retta ein syntaksfeil i `DO`-blokka; rettinga er lagra i utviklingsgreina, men er ikkje køyrd mot nokon database. SQL-migreringane 001–011 er staged i GitHub, ikkje installerte i aktiv Supabase-database. Siste React/Vite-bygg er ikkje stadfesta etter dei nyaste endringane.
