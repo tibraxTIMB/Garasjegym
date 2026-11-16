@@ -37,7 +37,7 @@ Bruk aldri service_role eller ein secret key i nettlesarkode. Ikkje legg .env.lo
 - Kaffibaradministrasjon med oppretting, redigering og publisering/skjuling av menyprodukt.
 
 ## Database-migreringar
-SQL-filene ligg i supabase/migrations/. Dei er staged i GitHub og er ikkje automatisk køyrde mot Supabase. Supabase sin aktive migreringslogg må kontrollerast før kvar utrulling. Prosjektbudsjettet er 0 kroner: ikkje opprett betalte databasegreiner, oppgrader abonnement eller utløyse andre kostnader. Ingen migrering skal køyrast mot produksjon utan trygg gjennomgang og uttrykkeleg godkjenning.
+SQL-filene ligg i supabase/migrations/. Dei er staged i GitHub. I eit separat Supabase Free-testprosjekt er ein tom baseline utan produksjonsdata og migreringane 001–013 installerte. Supabase sin aktive migreringslogg må kontrollerast før kvar utrulling. Prosjektbudsjettet er 0 kroner: ikkje opprett betalte databasegreiner, oppgrader abonnement eller utløyse andre kostnader. Ingen migrering skal køyrast mot produksjon utan trygg gjennomgang og uttrykkeleg godkjenning.
 
 1. 202611160001_save_workout_atomic.sql – atomisk lagring av økt, øvingar og sett.
 2. 202611160002_coffee_bar.sql – kaffiprodukt, ordre, ordrelinjer, RLS og bestillings-RPC.
@@ -50,6 +50,8 @@ SQL-filene ligg i supabase/migrations/. Dei er staged i GitHub og er ikkje autom
 9. 202611160009_social_reactions.sql – atomisk reaksjonshandtering for Garasjeprat med kontrollert reaksjonsliste.
 10. 202611160010_challenges.sql – utfordringar, deltaking, mål og individuell framgang med RLS.
 11. 202611160011_harden_rpc_grants.sql – avgrensar EXECUTE-rettar for sensitive SECURITY DEFINER-hjelpefunksjonar og PT-booking til authenticated.
+12. 202611160012_restrict_trigger_rpc.sql – stengjer direkte RPC-kall til triggerfunksjonar.
+13. 202611160013_test_seed_data.sql – demoøvingar, WOD, kaffiprodukt og gruppetime for isolert testprosjekt; skal ikkje brukast i produksjon.
 
 Migrering 008 byggjer vidare på 001 og krev at 005 har oppretta `class_live_sessions`. Migrering 009 er uavhengig av dei andre funksjonsmigreringane. Kontroller heile SQL-pakken og funksjonstryggleiken før installasjon. Ikkje køyr migreringane direkte mot produksjonsdatabasen utan backup, gjennomgang og uttrykkeleg godkjenning. Klientfunksjonar som nyttar nye tabellar, kolonnar eller RPC-ar vil ikkje fungera før tilhøyrande migrering er installert. Treningsklienten har fallback dersom `wods.timer_settings` enno ikkje finst, slik at WOD-biblioteket framleis kan lastast.
 
@@ -70,7 +72,7 @@ Testplanen ligg i QA-2.0.md. GitHub Actions køyrer òg `npm run check:migration
 - Supabase RLS er den endelege tilgangskontrollen.
 - Rollene admin og manager blir lesne frå profiles; dei kan ikkje veljast i registreringsskjemaet.
 - Nye Auth-brukarar skal få medlemsprofil gjennom handle_new_auth_user.
-- Ingen produksjonssetting eller endring av 1.8.16 er godkjend.
+- Ingen produksjonssetting eller endring av 1.8.16 er godkjend. Testprosjektet `garasjegym-2-test` er separat og skal berre brukast med testkontoar og testdata.
 
 ### Nye staged migreringar (ikkje køyrde)
 
