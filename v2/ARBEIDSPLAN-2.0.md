@@ -118,7 +118,7 @@ Arbeidsfelt 5 er eit gjennomgåande kvalitetssikringsspor, ikkje berre siste fas
 - Supabase-skjema og RLS for `workout_logs`, `workout_exercises` og `workout_sets` er no kontrollert. Sjå `v2/ARBEID-02-TRENINGSMOTOR.md`.
 - Eksisterande policies krev eigarskap via `auth.uid()` og aktiv medlemsprofil; underliggjande øvings- og settrader blir autoriserte via foreldreøkta.
 - Treningsklienten kallar allereie `save_workout_atomic` for å lagra økt, øvingar og sett i éin transaksjon. RPC-en er definert i staged migrering 001 og utvida i migrering 008, men er ikkje installert i den aktive Supabase-databasen.
-- GitHub-greina inneheld ti staged migreringar (`202611160001`–`202611160010`). Den aktive Supabase-migreringsloggen viser berre tre tryggleiksmigreringar; funksjonsmigreringane er ikkje registrerte der.
+- GitHub-greina inneheld elleve staged migreringar (`202611160001`–`202611160011`). Den aktive Supabase-migreringsloggen viser berre tre tryggleiksmigreringar; funksjonsmigreringane er ikkje registrerte der.
 - `wods.timer_settings` er definert i staged migrering 006, men kolonnen finst ikkje i aktivt skjema per kontrollen.
 - Gruppetimar har klientflyt for oppretting, booking, avmelding og felles live-økt; synkronisert klokke krev migrering 005–008. Kapasitetsvern og vern mot doble påmeldingar er lagt inn i migrering 004.
 - PT-studio har klientflyt for booking, førespurnader, program, meldingar og private notat; full ende-til-ende- og tilgangstest står att.
@@ -132,8 +132,9 @@ Arbeidsfelt 5 er eit gjennomgåande kvalitetssikringsspor, ikkje berre siste fas
 - 16.11.2026: Garasjeprat støttar komprimerte bilete, sletting av eigne innlegg/kommentarar, reaksjonar og automatisk oppfrisking. Reaksjonar krev migrering 009.
 - 16.11.2026: Utfordringsmodulen er lagd til med oppretting for staff, medlems-påmelding, mål og individuell framgang. Krev staged migrering 010.
 - 16.11.2026: Kaffibar har fått produktstyring for å skjula og publisera menyvarer. Utfordringsmodulen er kopla inn i hovudnavigasjonen.
+- 16.11.2026: Migrering 011 avgrensar EXECUTE-rettar for rollefunksjonar og PT-booking frå anon til authenticated. Ho er staged og ikkje køyrd i produksjon.
 - 16.11.2026: Booking, PT, kaffibar, fellesskap, treningslogg og admin oppdaterer data jamleg for betre synkronisering mellom einingar. Bookingklokka hentar serverstatus kvart femte sekund, medan visingsklokka går lokalt kvart sekund.
-- Supabase Security Advisor viser éin ERROR for view `public.pt_session_capacity` (SECURITY DEFINER) og åtvaringar for SECURITY DEFINER-RPC-ar som framleis kan kallast av `anon`/`authenticated`, mellom anna `book_pt_session`, `is_admin` og `is_admin_or_manager`. Dette må gjennomgåast før migreringspakken blir installert eller appen produksjonssett.
+- Supabase Security Advisor viste éin ERROR for view `public.pt_session_capacity` (SECURITY DEFINER) og åtvaringar for SECURITY DEFINER-RPC-ar. Migrering 011 fjernar EXECUTE-tilgang frå anon for rollefunksjonane og PT-booking, men view-feilen og attverande authenticated SECURITY DEFINER-varsling må vurderast før produksjonssetting.
 - Supabase Performance Advisor viser òg manglande indeksar på fleire framandnøklar og RLS-policyar som kan optimaliserast. Dette er oppfølgingspunkt, ikkje grunnlag for å endra produksjonsskjema utan kontroll.
 - Databasetryggleik og samsvar mellom 1.8.16 og Supabase krev vidare gjennomgang.
 - Førebels framdriftsestimat etter arbeidsøkta: om lag 70 % av funksjonsarbeidet er implementert. Dette er ikkje ein byggje- eller lanseringsstatus; ende-til-ende-testar, databaseinstallasjon og tryggleiksrevisjon står att.
