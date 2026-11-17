@@ -11,6 +11,15 @@ const presets = [
   { id:'relax', label:'Relax', emoji:'🌙', description:'Ambient, chillout og akustisk' },
 ]
 
+const PERSONAL_SPOTIFY_KEY = 'garasjegym:personal-spotify-link'
+const DEFAULT_SPOTIFY_URL = 'https://open.spotify.com/'
+function readSpotifyUrl() {
+  try { return localStorage.getItem(PERSONAL_SPOTIFY_KEY) || DEFAULT_SPOTIFY_URL } catch { return DEFAULT_SPOTIFY_URL }
+}
+function isSpotifyUrl(value) {
+  try { const url = new URL(value); return url.protocol === 'https:' && (url.hostname === 'open.spotify.com' || url.hostname === 'spotify.com') } catch { return false }
+}
+
 export function MusicProvider({ children }) {
   const [nowPlaying, setNowPlaying] = useState(null)
   const [configured, setConfigured] = useState(false)
@@ -52,6 +61,18 @@ export function useMusic() {
 export function Music({ isStaff = false }) {
   const music = useMusic()
   const canControl = isStaff && music?.staff
+  const [spotifyUrl, setSpotifyUrl] = useState(readSpotifyUrl)
+  const [spotifySaved, setSpotifySaved] = useState(false)
+  function saveSpotifyUrl() {
+    if (!isSpotifyUrl(spotifyUrl)) return
+    try { localStorage.setItem(PERSONAL_SPOTIFY_KEY, spotifyUrl.trim()) } catch { /* Lokal lagring kan vere blokkert. */ }
+    setSpotifySaved(true)
+    window.setTimeout(() => setSpotifySaved(false), 2200)
+  }
+  function openSpotify() {
+    const target = isSpotifyUrl(spotifyUrl) ? spotifyUrl.trim() : DEFAULT_SPOTIFY_URL
+    window.open(target, '_blank', 'noopener,noreferrer')
+  }
   return <div className="music-page">
     <div className="music-heading">
       <div className="music-heading-icon"><Headphones size={22}/></div>
@@ -60,6 +81,18 @@ export function Music({ isStaff = false }) {
     <section className="music-connect-card">
       <div><strong>{music?.configured ? 'Soundtrack er kopla til' : 'Soundtrack ventar på oppsett'}</strong><p>{music?.status || 'Hentar status …'}</p></div>
       <button className="secondary-button" onClick={() => music?.refresh()} disabled={music?.loading}><RefreshCw size={15}/> Oppdater</button>
+    </section>
+    <section className="personal-spotify-card">
+      <div className="personal-spotify-top"><div className="personal-spotify-mark"><Music2 size={19}/></div><div><span className="section-kicker">DIN PRIVATE MUSIKK</span><h3>Spotify</h3><p>Opnar Spotify-appen med din eigen konto. GarasjeGym les eller deler ikkje kva du spelar.</p></div></div>
+      <label className="personal-spotify-label">Lenkje til speleliste eller album
+        <input value={spotifyUrl} onChange={event => setSpotifyUrl(event.target.value)} placeholder="https://open.spotify.com/playlist/…" inputMode="url"/>
+      </label>
+      <div className="personal-spotify-actions">
+        <button className="primary-button" type="button" onClick={openSpotify}><Music2 size={15}/> Opna Spotify</button>
+        <button className="secondary-button" type="button" onClick={saveSpotifyUrl} disabled={!isSpotifyUrl(spotifyUrl)}>Lagra lenkje</button>
+        {spotifySaved && <span className="personal-spotify-saved">Lagra på denne eininga</span>}
+      </div>
+      <small className="personal-spotify-note">Dette er ein snarveg til Spotify – ikkje ei kontotilknyting eller ein innebygd spelar. Du styrer avspelinga i Spotify-appen.</small>
     </section>
     <section className="music-player-card">
       <div className="music-cover">{music?.nowPlaying?.imageUrl ? <img src={music.nowPlaying.imageUrl} alt="Albumomslag"/> : <Disc3 size={32}/>}</div>
@@ -83,10 +116,14 @@ export function Music({ isStaff = false }) {
 
 export function MusicMiniPlayer() {
   const music = useMusic()
+  const [spotifyUrl] = useState(readSpotifyUrl)
   if (!music) return null
-  return <div className="music-mini-player">
-    <div className="music-mini-cover">{music.nowPlaying?.imageUrl ? <img src={music.nowPlaying.imageUrl} alt=""/> : <Disc3 size={18}/>}</div>
-    <div className="music-mini-info"><strong>{music.nowPlaying?.name || 'Felles musikk'}</strong><span>{music.nowPlaying?.artists?.join(', ') || music.status}</span></div>
-    <button className="music-mini-refresh" aria-label="Oppdater musikk" onClick={() => music.refresh()} disabled={music.loading}><RefreshCw size={14}/></button>
+  return <div className="timer-music-stack">
+    <div className="music-mini-player">
+      <div className="music-mini-cover">{music.nowPlaying?.imageUrl ? <img src={music.nowPlaying.imageUrl} alt=""/> : <Disc3 size={18}/>}</div>
+      <div className="music-mini-info"><strong>{music.nowPlaying?.name || 'Felles musikk'}</strong><span>{music.nowPlaying?.artists?.join(', ') || music.status}</span></div>
+      <button className="music-mini-refresh" aria-label="Oppdater fellesmusikk" onClick={() => music.refresh()} disabled={music.loading}><RefreshCw size={14}/></button>
+    </div>
+    <button className="timer-spotify-shortcut" type="button" onClick={() => window.open(isSpotifyUrl(spotifyUrl) ? spotifyUrl : DEFAULT_SPOTIFY_URL, '_blank', 'noopener,noreferrer')}><Music2 size={14}/> Opna mi Spotify-speleliste</button>
   </div>
 }
