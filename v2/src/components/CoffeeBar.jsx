@@ -4,7 +4,7 @@ import {supabase} from '../lib/supabase.js'
 import {isStaff} from '../lib/auth.js'
 
 export default function CoffeeBar({profile}){
- const staff=isStaff(profile)
+ const staff=isStaff(profile)&&ordersOnly
  const [products,setProducts]=useState([]),[orders,setOrders]=useState([]),[cart,setCart]=useState({})
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [note,setNote]=useState(''),[newName,setNewName]=useState(''),[newPrice,setNewPrice]=useState(''),[newDesc,setNewDesc]=useState(''),[editingProduct,setEditingProduct]=useState(null)
@@ -12,7 +12,7 @@ export default function CoffeeBar({profile}){
   if(!silent)setLoading(true);setError('')
   const [p,o]=await Promise.all([
    supabase.from('coffee_products').select('id,name,description,price,is_active,sort_order').order('sort_order').order('name'),
-   (staff ? supabase.from('coffee_orders').select('id,member_id,status,total,note,created_at,coffee_order_items(id,product_name,unit_price,quantity),profiles:member_id(display_name)').order('created_at',{ascending:false}).limit(100) : supabase.from('coffee_orders').select('id,member_id,status,total,note,created_at,coffee_order_items(id,product_name,unit_price,quantity)').eq('member_id',(await supabase.auth.getUser()).data.user.id).order('created_at',{ascending:false}).limit(30))
+   (staff ? supabase.from('coffee_orders').select('id,member_id,status,total,note,created_at,coffee_order_items(id,product_name,unit_price,quantity),profiles:profiles!coffee_orders_member_id_fkey(display_name)').order('created_at',{ascending:false}).limit(100) : supabase.from('coffee_orders').select('id,member_id,status,total,note,created_at,coffee_order_items(id,product_name,unit_price,quantity)').eq('member_id',(await supabase.auth.getUser()).data.user.id).order('created_at',{ascending:false}).limit(30))
   ])
   if(p.error)setError(p.error.message);else setProducts(p.data||[])
   if(o.error)setError(o.error.message);else setOrders(o.data||[])
