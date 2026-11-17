@@ -1864,3 +1864,20 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 @media(max-width:390px){.simple-home-grid .simple-home-new-badge{top:7px;right:7px;padding:6px 8px}.simple-home-grid .simple-home-new-badge b{font-size:10px}}
 
 @media(max-width:620px){.simple-result-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* WOD cards: PT overview, daily highlight and member-friendly details. */
+.wod-library-card{display:grid;gap:10px;align-content:start;border:1px solid #455154;border-radius:14px;background:linear-gradient(155deg,#20292b,#171d1f);box-shadow:0 8px 22px rgba(0,0,0,.16)}
+.wod-library-card h4{font-size:17px;line-height:1.25;margin:0;color:#fff}
+.wod-library-card>p{font-size:13px;line-height:1.5;color:#cbd3d1;margin:0}
+.wod-card-exercise-preview{display:flex;flex-wrap:wrap;gap:5px}
+.wod-card-exercise-preview span{padding:5px 8px;border:1px solid #3d494b;border-radius:7px;background:#151b1d;color:#e2e8e5;font-size:10px}
+.wod-card-detail{padding:11px;border:1px solid #465255;border-radius:10px;background:#121819;color:#dce2df;font-size:12px;line-height:1.5}
+.wod-card-detail p{margin:5px 0;white-space:pre-line}
+.wod-card-detail small{color:#aab5b2}
+.wod-library-actions .wod-fav{grid-column:auto}
+.wod-library-actions .wod-fav.active{border-color:#e3ad4e;color:#ffd16a;background:#3a2e20}
+.overview-daily-wod{display:grid;gap:7px;width:100%;margin:12px 0 16px;padding:18px;text-align:left;border:1px solid #b77b2e;border-radius:15px;background:linear-gradient(125deg,#382a1a,#202729);color:#fff;cursor:pointer}
+.overview-daily-wod .section-kicker{color:#ffd16a}
+.overview-daily-wod>strong{font-size:clamp(22px,4vw,30px);line-height:1.15}
+.overview-daily-wod>span:not(.section-kicker){display:flex;align-items:center;gap:7px;color:#f0c98b;font-size:12px;font-weight:800}
+.overview-daily-wod small{color:#d4dcd8;font-size:12px;line-height:1.45}
