@@ -40,15 +40,17 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
   const isDeathBy = format === 'Death By'
     const fallbackDuration = Math.max(1, (Number(minutes) || 10) * 60 + (Number(seconds) || 0))
   const target = Math.max(1, (isCountdown || isForTime) && capDuration ? capDuration : savedDuration || fallbackDuration)
-  const cycle = Math.max(1, Number(workSeconds)) + Math.max(0, Number(restSeconds))
+  const effectiveWorkSeconds = isStationCircuit ? Math.max(1, Number(stationPlan.work_seconds ?? workSeconds)) : Math.max(1, Number(workSeconds))
+  const effectiveRestSeconds = isStationCircuit ? Math.max(0, Number(stationPlan.transition_seconds ?? restSeconds)) : Math.max(0, Number(restSeconds))
+  const cycle = effectiveWorkSeconds + effectiveRestSeconds
   const intervalTotal = cycle * Math.max(1, Number(rounds) || 1)
-  const stationTotal = Math.max(1, Number(stationPlan.work_seconds ?? workSeconds)) * stationSlots + Math.max(0, stationSlots - 1) * Math.max(0, Number(stationPlan.transition_seconds ?? restSeconds))
+  const stationTotal = effectiveWorkSeconds * stationSlots + Math.max(0, stationSlots - 1) * effectiveRestSeconds
   const totalTarget = isStationCircuit ? stationTotal : isTimedInterval ? intervalTotal : target
   const remainingTotal = Math.max(0, totalTarget - elapsed)
   const phaseElapsed = (isTimedInterval || isStationCircuit) ? elapsed % cycle : elapsed % emomCycle
-  const inWorkPhase = phaseElapsed < Number(workSeconds)
+  const inWorkPhase = phaseElapsed < effectiveWorkSeconds
   const phaseRemaining = (isTimedInterval || isStationCircuit)
-    ? Math.max(0, (inWorkPhase ? Number(workSeconds) : cycle) - phaseElapsed)
+    ? Math.max(0, (inWorkPhase ? effectiveWorkSeconds : cycle) - phaseElapsed)
     : Math.max(0, emomCycle - (elapsed % emomCycle || 0))
   const emomNextStart = elapsed % emomCycle === 0 ? 0 : emomCycle - (elapsed % emomCycle)
   const currentRound = isStationCircuit
@@ -90,10 +92,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
 
   useEffect(() => {
     setElapsed(0); setRunning(false); setRound(1); setPhase('Klar'); setLaps([])
-    setWorkSeconds(timerSettings?.work_seconds ?? timerSettings?.workout_schema?.interval?.work_seconds ?? (format === 'Tabata' ? 20 : 60))
-    setRestSeconds(timerSettings?.rest_seconds ?? timerSettings?.workout_schema?.interval?.rest_seconds ?? (format === 'Tabata' ? 10 : 60))
-    setRounds(timerSettings?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
-  }, [format, minutes, seconds, timerSettings?.work_seconds, timerSettings?.rest_seconds, timerSettings?.rounds, timerSettings?.workout_schema?.duration_seconds, timerSettings?.workout_schema?.time_cap_seconds])
+    setWorkSeconds(timerSettings?.work_seconds ?? timerSettings?.workout_schema?.station_circuit?.work_seconds ?? timerSettings?.workout_schema?.interval?.work_seconds ?? (format === 'Tabata' ? 20 : 60))
+    setRestSeconds(timerSettings?.rest_seconds ?? timerSettings?.workout_schema?.station_circuit?.transition_seconds ?? timerSettings?.workout_schema?.interval?.rest_seconds ?? (format === 'Tabata' ? 10 : 60))
+    setRounds(timerSettings?.rounds ?? timerSettings?.workout_schema?.station_circuit?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
+  }, [format, minutes, seconds, timerSettings?.work_seconds, timerSettings?.rest_seconds, timerSettings?.rounds, timerSettings?.workout_schema?.duration_seconds, timerSettings?.workout_schema?.time_cap_seconds, timerSettings?.workout_schema?.station_circuit?.work_seconds, timerSettings?.workout_schema?.station_circuit?.transition_seconds, timerSettings?.workout_schema?.station_circuit?.rounds])
 
   useEffect(() => {
     if (!running) return undefined
@@ -111,10 +113,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
     if (isTimedInterval && elapsed >= intervalTotal) {
       setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return
     }
-    if (((isTimedInterval || isStationCircuit) && (elapsed % cycle === 0 || elapsed % cycle === Number(workSeconds))) ||
+    if (((isTimedInterval || isStationCircuit) && (elapsed % cycle === 0 || elapsed % cycle === effectiveWorkSeconds)) ||
       (isEMOM && elapsed > 0 && elapsed % emomCycle === 0) ||
       (isDeathBy && elapsed > 0 && elapsed % 60 === 0)) cue(1040, 0.12)
-  }, [elapsed, running, target, isCountdown, isEMOM, isDeathBy, isForTime, isTimedInterval, isStationCircuit, intervalTotal, stationTotal, cycle, emomCycle, workSeconds])
+  }, [elapsed, running, target, isCountdown, isEMOM, isDeathBy, isForTime, isTimedInterval, isStationCircuit, intervalTotal, stationTotal, cycle, emomCycle, effectiveWorkSeconds])
 
   useEffect(() => {
     if (running) setPhase(currentPhase)
@@ -144,7 +146,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
         <div className="timer-phase">{phase}</div>
         <strong className="timer-main-clock">{clock(primaryTime)}</strong>
         <div className="timer-round-label">{isStationCircuit ? 'ARBEID / STASJONSBYTE' : isCountdown ? 'GJENSTÅANDE TID' : isEMOM ? 'TIL NESTE ARBEIDSSTART' : isTimedInterval ? 'TID I INTERVALLFASEN' : 'MEDGÅTT TID'}</div>
-        {isStationCircuit ? <div className="timer-station-plan"><div className="timer-station-plan-heading"><span>STASJONANE I SIRKELEN</span><b>{stationPlan.rounds ?? schema?.rounds ?? rounds} rundar</b></div><div className="timer-station-grid">{stationList.map((station,index)=><article className="timer-station-card" key={station.station_number||index}><span>STASJON {station.station_number||index+1}</span><strong>{station.exercise_name||station.name||'Øving'}</strong><small>{station.reps_mode==='amrap'?'AMRAP · maks reps i arbeidsperioden':station.reps!=null&&station.reps!==''?`${station.reps} reps`:'Valfritt tal reps'}{station.load_label?' · '+station.load_label:''}</small>{station.description&&<p>{station.description}</p>}{station.coach_note&&<p>{station.coach_note}</p>}</article>)}</div></div> : isAmrap ? <div className="timer-amrap-exercise-list"><span>ØVINGAR I WOD-EN</span>{exerciseList.length ? <ol>{exerciseList.map((exercise,index)=>{const setReps=(exercise.sets||[]).map(set=>String(set.reps??'').trim()).filter(Boolean);const uniqueReps=[...new Set(setReps)];const repsLabel=uniqueReps.length===1?(setReps.length>1?`${setReps.length} × ${uniqueReps[0]}`:uniqueReps[0]):uniqueReps.length>1?uniqueReps.join(' / '):String(exercise.reps??'').trim();return <li key={exercise.key||index}><b>{index+1}.</b><span>{repsLabel&&<strong className="timer-amrap-reps">{repsLabel} × </strong>}{exercise.exercise_name||'Øving utan namn'}</span></li>})}</ol> : <p>Ingen øvingar er lagde til.</p>}</div> : !isStationCircuit && activeExercise && <div className="timer-active-under-clock"><span>GJELDANDE ØVING</span><b>{activeExercise}</b></div>}
+        {isStationCircuit ? <div className="timer-station-plan"><div className="timer-station-plan-heading"><span>STASJONANE I SIRKELEN</span><b>{stationPlan.rounds ?? schema?.rounds ?? rounds} rundar</b></div><div className="timer-station-grid">{stationList.map((station,index)=><article className="timer-station-card" key={station.station_number||index}><span>STASJON {station.station_number||index+1}</span><strong>{station.exercise_name||station.name||'Øving'}</strong><small>{station.reps_mode==='amrap'?'AMRAP · så mange som mogleg':station.reps!=null&&station.reps!==''?`${station.reps} reps`:'Vel sjølv tal reps'}{station.load_label?' · '+station.load_label:''}</small>{station.description&&<p>{station.description}</p>}{station.coach_note&&<p>{station.coach_note}</p>}</article>)}</div></div> : isAmrap ? <div className="timer-amrap-exercise-list"><span>ØVINGAR I WOD-EN</span>{exerciseList.length ? <ol>{exerciseList.map((exercise,index)=>{const setReps=(exercise.sets||[]).map(set=>String(set.reps??'').trim()).filter(Boolean);const uniqueReps=[...new Set(setReps)];const repsLabel=uniqueReps.length===1?(setReps.length>1?`${setReps.length} × ${uniqueReps[0]}`:uniqueReps[0]):uniqueReps.length>1?uniqueReps.join(' / '):String(exercise.reps??'').trim();return <li key={exercise.key||index}><b>{index+1}.</b><span>{repsLabel&&<strong className="timer-amrap-reps">{repsLabel} × </strong>}{exercise.exercise_name||'Øving utan namn'}</span></li>})}</ol> : <p>Ingen øvingar er lagde til.</p>}</div> : !isStationCircuit && activeExercise && <div className="timer-active-under-clock"><span>GJELDANDE ØVING</span><b>{activeExercise}</b></div>}
         {isAmrap && <div className="timer-round-total"><span>RUNDER FULLFØRT</span><b>{completedRounds}</b></div>}
         <div className="timer-actions">
           <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) setPhase('PÅGÅR'); setRunning(value => !value) }} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
