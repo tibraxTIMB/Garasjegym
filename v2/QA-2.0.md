@@ -139,3 +139,21 @@ Ingen ende-til-ende-testar er stadfesta køyrde i denne arbeidsøkta. Migrering 
 | TIMER-12 | Pause, start og nullstill | Klokka held attende ved pause; nullstill set tid, rundar og mellomtider til start |
 
 Teststatus: Desse testane er lagde til som krav for manuell/ende-til-ende-kontroll. Dei er ikkje stadfesta køyrde berre ved at bygginga passerer.
+
+
+### Timer-vising per treningsformat
+| Format | Stor klokke | Supplerande vising / åtferd |
+|---|---|---|
+| E1MOM / E2MOM / E3MOM | Gjenståande økttid | Medgått tid og tid til neste arbeidsstart |
+| AMRAP / Nedteljing | Gjenståande tid | Medgått tid; AMRAP har manuell rundeteljing |
+| For Time / Chipper | Medgått tid | Gjenståande tid dersom tidsgrense er sett; mellomtid |
+| Couplet / Triplet – For Time | Medgått tid | Gjenståande tid til tidsgrensa |
+| Couplet / Triplet – AMRAP | Gjenståande tid | Medgått tid og rundeteljing |
+| Couplet / Triplet – Open | Medgått tid | Stoppeklokke utan tidsgrense |
+| Tabata / Intervall / Row Intervals / Tilpassa | Gjenståande tid i arbeids-/kvilefasen | Medgått økttid, gjenståande total økttid og runde |
+| Death By | Medgått tid | Gjenståande tid til øktgrensa og tid til neste minutt |
+| Ladder | Medgått tid | Vanleg stoppeklokke; progresjon blir følgd i programmeringa |
+| Fri trening / Stoppeklokke | Medgått tid | Mellomtider |
+| Strength / Pyramid / Superset / Complex / Eigen økt | Medgått tid | Ingen kunstig tidsgrense |
+
+Manuell test må framleis kontrollera synleg klokke, lydsignal, pause/start, nullstilling og bakgrunnsmodus på mobil. Byggbestått er ikkje det same som fysisk ende-til-ende-test.
