@@ -136,6 +136,8 @@ export function MusicProvider({ children, memberId = null }) {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
+    const oauthError=params.get('error')
+    if(oauthError){setSpotifyError(oauthError==='access_denied'?'Du avbraut Spotify-innlogginga.':'Spotify avviste innlogginga: '+oauthError);window.history.replaceState({},document.title,REDIRECT_URI());return}
     const code = params.get('code')
     const state = params.get('state')
     if (!code) return
@@ -168,6 +170,10 @@ export function MusicProvider({ children, memberId = null }) {
   // at medlemmen allereie hadde ein aktiv Spotify-app på telefonen.
   useEffect(() => {
     if (!spotifyToken?.access_token) return undefined
+    const grantedScopes=(spotifyToken.scope||'').split(/\\s+/).filter(Boolean)
+    if (!grantedScopes.includes('streaming')) { setSpotifyError('Spotify-tilgangen manglar streaming-løyvet. Kople frå og til Spotify på nytt, og godkjenn alle tilgangane.'); return undefined }
+    if (spotifyProfile && spotifyProfile.product !== 'premium') { setSpotifyError('Spotify Web Player krev Spotify Premium. Du kan framleis bruke Spotify-appen som avspelings-eining.'); setSpotifyStatus('Premium krevst for innebygd avspeling.'); return undefined }
+    if (!spotifyProfile) return undefined
     let cancelled = false
     let player = null
     ;(async () => {
@@ -201,7 +207,7 @@ export function MusicProvider({ children, memberId = null }) {
       } catch (error) { if (!cancelled) setSpotifyError(error.message || 'Kunne ikkje starta Spotify-spelaren.') }
     })()
     return () => { cancelled = true; if (player) player.disconnect(); setSpotifyPlayer(null); setSpotifyDeviceId('') }
-  }, [spotifyToken?.access_token, memberId])
+  }, [spotifyToken?.access_token, spotifyToken?.scope, spotifyProfile?.product, memberId])
   useEffect(() => {
     if (!spotifyToken?.access_token) return undefined
     const id = window.setInterval(async () => {
