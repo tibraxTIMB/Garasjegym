@@ -12,6 +12,28 @@ const formats=[
  {group:'Anna',items:['Eigen økt']}
 ]
 const allFormats=formats.flatMap(x=>x.items)
+const CLASSIC_WODS=[
+ {name:'Fran',group:'The Girls',format:'For Time',minutes:10,rounds:3,items:[['Thruster','21-15-9'],['Pull-up','21-15-9']],notes:'Original benchmark: 21-15-9 thrusters og pull-ups. RX-vekt: 95/65 lb (ca. 43/30 kg).'},
+ {name:'Cindy',group:'The Girls',format:'AMRAP',minutes:20,items:[['Pull-up','5'],['Push-up','10'],['Air squat','15']],notes:'20 minutt AMRAP: 5 pull-ups, 10 push-ups, 15 air squats.'},
+ {name:'Grace',group:'The Girls',format:'For Time',minutes:10,items:[['Clean and jerk','30']],notes:'30 clean & jerks for time. RX-vekt: 135/95 lb (ca. 61/43 kg).'},
+ {name:'Helen',group:'The Girls',format:'For Time',minutes:20,rounds:3,items:[['Run','400 m'],['Kettlebell swing','21'],['Pull-up','12']],notes:'3 rundar: 400 m løp, 21 kettlebell swings, 12 pull-ups.'},
+ {name:'Diane',group:'The Girls',format:'For Time',minutes:10,rounds:3,items:[['Deadlift','21-15-9'],['Handstand push-up','21-15-9']],notes:'21-15-9 deadlifts og handstand push-ups. RX deadlift: 225/155 lb.'},
+ {name:'Elizabeth',group:'The Girls',format:'For Time',minutes:10,rounds:3,items:[['Clean','21-15-9'],['Ring dip','21-15-9']],notes:'21-15-9 cleans og ring dips. RX clean: 135/95 lb.'},
+ {name:'Annie',group:'The Girls',format:'For Time',minutes:15,items:[['Double-under','50-40-30-20-10'],['Sit-up','50-40-30-20-10']],notes:'50-40-30-20-10 double-unders og sit-ups.'},
+ {name:'Angie',group:'The Girls',format:'For Time',minutes:30,items:[['Pull-up','100'],['Push-up','100'],['Sit-up','100'],['Air squat','100']],notes:'100 pull-ups, 100 push-ups, 100 sit-ups, 100 squats.'},
+ {name:'Barbara',group:'The Girls',format:'For Time',minutes:40,rounds:5,items:[['Pull-up','20'],['Push-up','30'],['Sit-up','40'],['Air squat','50']],notes:'5 rundar. Kvile nøyaktig 3 minutt mellom rundane.'},
+ {name:'Jackie',group:'The Girls',format:'For Time',minutes:15,items:[['Row','1000 m'],['Thruster','50'],['Pull-up','30']],notes:'1000 m roing, 50 thrusters, 30 pull-ups. RX thruster: 45/35 lb.'},
+ {name:'Karen',group:'The Girls',format:'For Time',minutes:15,items:[['Wall ball','150']],notes:'150 wall-ball shots for time.'},
+ {name:'Nancy',group:'The Girls',format:'For Time',minutes:20,rounds:5,items:[['Run','400 m'],['Overhead squat','15']],notes:'5 rundar: 400 m løp og 15 overhead squats.'},
+ {name:'Isabel',group:'The Girls',format:'For Time',minutes:10,items:[['Snatch','30']],notes:'30 snatches for time. RX-vekt: 135/95 lb (ca. 61/43 kg).'},
+ {name:'Murph',group:'Hero WODs',format:'For Time',minutes:60,items:[['Run','1 mile'],['Pull-up','100'],['Push-up','200'],['Air squat','300'],['Run','1 mile']],notes:'Hero WOD til minne om Lt. Michael Murphy. Del gjerne opp pull-ups, push-ups og squats. Vektvest er valfri; RX 20 lb.'},
+ {name:'DT',group:'Hero WODs',format:'For Time',minutes:20,rounds:5,items:[['Deadlift','12'],['Hang power clean','9'],['Push jerk','6']],notes:'5 rundar: 12 deadlifts, 9 hang power cleans, 6 push jerks. RX-vekt: 155/105 lb.'},
+ {name:'Michael',group:'Hero WODs',format:'For Time',minutes:30,rounds:3,items:[['Run','800 m'],['Back extension','50'],['Sit-up','50']],notes:'3 rundar: 800 m løp, 50 back extensions, 50 sit-ups.'},
+ {name:'JT',group:'Hero WODs',format:'For Time',minutes:20,rounds:3,items:[['Handstand push-up','21-15-9'],['Ring dip','21-15-9'],['Push-up','21-15-9']],notes:'21-15-9 handstand push-ups, ring dips og push-ups.'},
+ {name:'Nate',group:'Hero WODs',format:'AMRAP',minutes:20,items:[['Muscle-up','2'],['Handstand push-up','4'],['Kettlebell swing','8']],notes:'20 minutt AMRAP: 2 muscle-ups, 4 handstand push-ups, 8 kettlebell swings.'},
+ {name:'Randy',group:'Hero WODs',format:'For Time',minutes:15,items:[['Power snatch','75']],notes:'75 power snatches for time. RX-vekt: 75/55 lb.'},
+ {name:'Badger',group:'Hero WODs',format:'For Time',minutes:35,rounds:3,items:[['Squat clean','30'],['Pull-up','30'],['Run','800 m']],notes:'3 rundar: 30 squat cleans, 30 pull-ups, 800 m løp. RX clean: 95/65 lb.'}
+]
 const nameAdjectives=['Brutale','Wilde','Geile','Scharfe','Eiserne','Explosive','Böse','Dreckige','Donnernde','Panzerstarke','Stählerne','Brachiale','Knallharte','Furchtlose','Massive','Giftige','Hungrige','Brennende','Wuchtige','Legendäre','Gnadenlose','Kraftvolle','Kompromisslose']
 const nameNouns=['Panzer','Granate','Berserker','Keule','Kampfsau','Eber','Bär','Wolf','Gorilla','Mammut','Kobra','Hammer','Amboss','Donnerfaust','Stahlkoloss','Kraftpaket','Schlachtschiff','Sprengkopf','Dampfwalze','Kommandant','Knochenbrecher','Rammbock','Stahlfaust','Kampfhamster','Muskelmonster']
 const nameNumbers=['1942','1939','69']
@@ -34,7 +56,7 @@ const isRow=x=>x.equipment==='Romaskin'
 
 export default function WodBuilder({assignedClientId=null,onAssigned}){
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område')
- const [selected,setSelected]=useState([]),[name,setName]=useState(()=>randomWodName()),[format,setFormat]=useState('AMRAP'),[libraryWods,setLibraryWods]=useState([]),[builderMode,setBuilderMode]=useState(assignedClientId?'library':'build'),[librarySearch,setLibrarySearch]=useState(''),[selectedLibraryWod,setSelectedLibraryWod]=useState('')
+ const [selected,setSelected]=useState([]),[name,setName]=useState(()=>randomWodName()),[format,setFormat]=useState('AMRAP'),[libraryWods,setLibraryWods]=useState([]),[builderMode,setBuilderMode]=useState(assignedClientId?'library':'build'),[librarySearch,setLibrarySearch]=useState(''),[selectedLibraryWod,setSelectedLibraryWod]=useState(''),[classicChoice,setClassicChoice]=useState('')
  const [minutes,setMinutes]=useState('20'),[notes,setNotes]=useState(''),[stimulus,setStimulus]=useState('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
  const [rounds,setRounds]=useState('5'),[workSeconds,setWorkSeconds]=useState('60'),[restSeconds,setRestSeconds]=useState('10'),[timeCap,setTimeCap]=useState('20')
  const [ladderStart,setLadderStart]=useState('2'),[ladderStep,setLadderStep]=useState('2'),[ladderDirection,setLadderDirection]=useState('up')
@@ -66,6 +88,23 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
  const isTabata=format==='Tabata'
  const isRowIntervals=format==='Row Intervals'
  const isCustom=format==='Eigen økt'
+ function loadClassicWod(){
+  const preset=CLASSIC_WODS.find(x=>x.name===classicChoice)
+  if(!preset)return
+  const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'')
+  const findExercise=name=>{
+   const aliases={'run':['run','running'],'row':['row','rowing','romaskin'],'air squat':['air squat','squat'],'pull-up':['pull up','pullup'],'push-up':['push up','pushup'],'double-under':['double under','doubleunder'],'clean and jerk':['clean and jerk'],'hang power clean':['hang power clean'],'power snatch':['power snatch'],'squat clean':['squat clean'],'handstand push-up':['handstand push up','hspu'],'ring dip':['ring dip'],'wall ball':['wall ball','wallball'],'back extension':['back extension']}
+   const candidates=[name,...(aliases[name]||[])]
+   return exercises.find(ex=>candidates.some(q=>norm(ex.name)===norm(q)))||null
+  }
+  const rows=preset.items.map(([movement,reps])=>{
+   const match=findExercise(movement)
+   const base=blankItem(match||{id:null,name:movement,category:'Kondisjon',equipment:'',body_area:'Fullkropp',video_url:null,description:''})
+   return {...base,reps,rowValue:'',coachNote:'',loadMode:'none'}
+  })
+  setSelected(rows);setName(preset.name);setFormat(preset.format);setMinutes(String(preset.minutes));setTimeCap(String(preset.minutes));setRounds(String(preset.rounds||1));setNotes(preset.notes);setStimulus('Klassisk benchmark WOD · registrer resultat og samanlikn ved seinare gjennomføring.')
+  setPrescription('rx');setClassicChoice('');setNotice(preset.name+' er lasta inn. Kontroller øvingar, RX-belastning og skalering før publisering.');setError('')
+ }
  function add(ex){setSelected(rows=>[...rows,blankItem(ex)])}
  function updateItem(key,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,...patch}:x))}
  function updateSet(key,index,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,sets:x.sets.map((s,i)=>i===index?{...s,...patch}:s)}:x))}
@@ -154,7 +193,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
   {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message">{notice}</div>}
   {assignedClientId&&<div className="pt-wod-mode-switch"><button type="button" className={builderMode==='library'?'selected':''} onClick={()=>setBuilderMode('library')}>Finn WOD i biblioteket</button><button type="button" className={builderMode==='build'?'selected':''} onClick={()=>setBuilderMode('build')}>Bygg ny WOD</button></div>}
   {assignedClientId&&builderMode==='library'?<section className="pt-wod-library-panel"><div className="engine-section-title"><div><h4>Vel frå WOD-biblioteket</h4><p>Bruk same publiserte WOD på fleire kundar utan å laga kopiar.</p></div><span>{libraryWods.length} WOD-ar</span></div><div className="wod-search"><Search size={16}/><input value={librarySearch} onChange={e=>setLibrarySearch(e.target.value)} placeholder="Søk etter namn eller format …"/></div><div className="pt-wod-library-list">{libraryWods.filter(w=>(w.name+' '+w.format).toLowerCase().includes(librarySearch.toLowerCase())).map(w=><button type="button" key={w.id} className={selectedLibraryWod===w.id?'selected':''} onClick={()=>setSelectedLibraryWod(w.id)}><span><strong>{w.name}</strong><small>{w.format} · {w.duration_minutes||'–'} min · {w.movements?.split('\n').filter(Boolean).length||0} øvingar</small></span><span>{selectedLibraryWod===w.id?'Vald':'Vel'}</span></button>)}</div><button type="button" className="primary-button" disabled={!selectedLibraryWod||busy} onClick={assignLibraryWod}><Plus size={15}/>{busy?'Tildeler …':'Tildel vald WOD til kunden'}</button></section>:<div className="pt-wod-builder-form">
-  <div className="wod-studio-tools"><button type="button" className="primary-button" onClick={randomWod}><Dices size={17}/> Generer tilfeldig WOD</button><button type="button" className="secondary-button" onClick={addRowing}><Footprints size={16}/> Legg til romaskin</button><button type="button" className="secondary-button" onClick={reset}><Trash2 size={15}/> Forkast økt</button></div>
+  <div className="wod-classic-picker"><div><strong>Klassiske benchmark-WOD-ar</strong><small>The Girls og Hero WODs · ferdige originaloppsett</small></div><div className="wod-classic-controls"><select value={classicChoice} onChange={e=>setClassicChoice(e.target.value)}><option value="">Vel klassisk WOD …</option><optgroup label="The Girls">{CLASSIC_WODS.filter(x=>x.group==='The Girls').map(x=><option key={x.name} value={x.name}>{x.name}</option>)}</optgroup><optgroup label="Hero WODs">{CLASSIC_WODS.filter(x=>x.group==='Hero WODs').map(x=><option key={x.name} value={x.name}>{x.name}</option>)}</optgroup></select><button type="button" className="secondary-button" disabled={!classicChoice} onClick={loadClassicWod}>Last inn WOD</button></div></div>\n  <div className="wod-studio-tools"><button type="button" className="primary-button" onClick={randomWod}><Dices size={17}/> Generer tilfeldig WOD</button><button type="button" className="secondary-button" onClick={addRowing}><Footprints size={16}/> Legg til romaskin</button><button type="button" className="secondary-button" onClick={reset}><Trash2 size={15}/> Forkast økt</button></div>
   <div className="wod-builder-layout">
    <section className="engine-section wod-library"><div className="engine-section-title"><h4>Øvingsbibliotek</h4><span>{filtered.length} av {exercises.length}</span></div>
     <div className="wod-search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Søk øving, kroppsdel eller utstyr …"/></div>
