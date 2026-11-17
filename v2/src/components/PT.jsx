@@ -151,14 +151,14 @@ export default function PT({profile,focusRequestId,onFocusConsumed,onLaunchWorko
    const {data:{user}}=await supabase.auth.getUser()
    const {data:createdSession,error:e}=await supabase.from('pt_sessions').insert({client_id:request.member_id,title:'Personleg trening',starts_at:new Date(draft.sessionAt).toISOString(),duration_minutes:60,capacity:1,status:'planned',created_by:user.id,message:'Oppretta frå PT-førespurnad'}).select('id').single()
    if(e)throw e
-   const {error:requestError}=await supabase.from('pt_requests').update({status:'approved',handled_by:user.id,handled_at:new Date().toISOString()}).eq('id',request.id)
+   const {error:requestError}=await supabase.from('pt_requests').update({status:'approved',staff_note:draft.staffNote??request.staff_note,handled_by:user.id,handled_at:new Date().toISOString()}).eq('id',request.id)
    if(requestError){
     // Avoid leaving an orphaned PT session if the request cannot be marked as handled.
     const {error:rollbackError}=await supabase.from('pt_sessions').delete().eq('id',createdSession.id)
     if(rollbackError)throw new Error('PT-timen vart oppretta, men førespurnaden kunne ikkje oppdaterast. Kontroller PT-time '+createdSession.id+'.')
     throw requestError
    }
-   setRequests(v=>v.map(row=>row.id===request.id?{...row,status:'approved',handled_at:new Date().toISOString()}:row))
+   setRequests(v=>v.map(row=>row.id===request.id?{...row,status:'approved',staff_note:draft.staffNote??row.staff_note,handled_at:new Date().toISOString()}:row))
    setNotice('PT-time oppretta og knytt til medlemmet.');await load()
   }catch(e){setError(e.message||'Kunne ikkje oppretta PT-time frå førespurnaden.')}
   finally{setBusy('')}
