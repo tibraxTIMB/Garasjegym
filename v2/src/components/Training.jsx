@@ -247,8 +247,12 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     if (pr.error && !w.error && !e.error && !h.error) setError('Personlege rekordar: ' + pr.error.message); else setRecords(pr.data || [])
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      const fav = await supabase.from('exercise_favorites').select('exercise_name').eq('user_id', user.id)
+      const [fav, wodFav] = await Promise.all([
+        supabase.from('exercise_favorites').select('exercise_name').eq('user_id', user.id),
+        supabase.from('wod_favorites').select('wod_id').eq('user_id', user.id)
+      ])
       if (!fav.error) setFavoriteNames((fav.data || []).map(x => x.exercise_name))
+      if (!wodFav.error) setFavoriteWodIds((wodFav.data || []).map(x => x.wod_id))
     }
     setLoading(false)
   }
