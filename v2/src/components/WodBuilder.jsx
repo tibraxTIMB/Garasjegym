@@ -70,7 +70,9 @@ export default function WodBuilder(){
  }
  async function save(event){
   event.preventDefault();setError('');setNotice('')
-  if(!selected.length){setError('Legg minst ei øving til WOD-en.');return}\n  if(format==='Couplet'&&selected.length!==2){setError('Couplet skal ha nøyaktig to øvingar.');return}\n  if(format==='Triplet'&&selected.length!==3){setError('Triplet skal ha nøyaktig tre øvingar.');return}
+  if(!selected.length){setError('Legg minst ei øving til WOD-en.');return}
+  if(format==='Couplet'&&selected.length!==2){setError('Couplet skal ha nøyaktig to øvingar.');return}
+  if(format==='Triplet'&&selected.length!==3){setError('Triplet skal ha nøyaktig tre øvingar.');return}
   if(!name.trim()){setError('Gi WOD-en eit namn.');return}
   if(selected.some(x=>!x.reps&&!x.meters&&!x.calories&&!x.workSeconds)){setError('Alle øvingar må ha reps, distanse, kalorier eller arbeidstid.');return}
   setBusy(true)
