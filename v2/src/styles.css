@@ -949,3 +949,14 @@ footer {
 .pt-plan-form{display:none!important}
 @media(max-width:900px){.pt-inline-wod .wod-builder-layout{grid-template-columns:minmax(0,1fr)}.pt-inline-wod .wod-exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.pt-inline-wod{padding:12px}.pt-inline-wod .wod-exercise-grid{grid-template-columns:minmax(0,1fr);max-height:460px}.pt-wod-mode-switch button{font-size:12px;padding:10px 6px}.pt-wod-library-panel{padding:13px}}
+
+
+/* Classic named benchmark WOD selector */
+.wod-classic-picker{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,1fr);align-items:center;gap:14px;margin:14px 0;padding:15px 16px;border:1px solid #6b4b27;border-radius:12px;background:linear-gradient(110deg,#302719,#202526)}
+.wod-classic-picker>div:first-child{display:grid;gap:5px}
+.wod-classic-picker>div:first-child strong{color:#ffb34e;font-size:14px}
+.wod-classic-picker>div:first-child small{color:var(--muted);font-size:11px}
+.wod-classic-controls{display:flex;gap:8px;min-width:0}
+.wod-classic-controls select{flex:1;min-width:0}
+.wod-classic-controls button{white-space:nowrap}
+@media(max-width:600px){.wod-classic-picker{grid-template-columns:minmax(0,1fr)}.wod-classic-controls{flex-direction:column}.wod-classic-controls button{width:100%}}
