@@ -1744,3 +1744,27 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .class-card-clickable{cursor:pointer;transition:border-color .16s ease,background .16s ease}
 .class-card-clickable:hover,.class-card-clickable:focus-visible{border-color:var(--orange);background:#1b1e20;outline:none}
 .class-card-clickable:focus-visible{box-shadow:0 0 0 2px rgba(226,145,48,.28)}
+
+/* Superenkel modus: færre val, tydelegare startpunkt. */
+.simple-welcome{padding:34px 0 24px}
+.simple-welcome h1{font-size:clamp(32px,5vw,48px);letter-spacing:-1.4px}
+.simple-welcome p{max-width:560px;font-size:16px}
+.simple-home{max-width:620px}
+.simple-home-action{min-height:88px}
+.simple-home-action>span{display:grid;gap:4px;margin-left:0;color:#fff;font-size:inherit}
+.simple-home-action>span strong{font-size:clamp(17px,3vw,21px)}
+.simple-home-action>span small{font-size:13px;font-weight:500;color:#c5cecc}
+.simple-home-action>b{margin-left:auto;color:#ffc15c;font-size:25px}
+.simple-home-foot{padding:12px 2px;color:var(--muted);font-size:12px;line-height:1.5}
+.simple-entry-grid{margin-top:12px}
+.simple-entry-grid button{min-height:145px;padding:20px;border-color:#8a642f;background:linear-gradient(145deg,#29231b,#171b1d)}
+.simple-entry-grid button strong{font-size:clamp(18px,3vw,22px)}
+.simple-entry-grid button small{font-size:13px}
+.simple-mode .simple-hidden-section{display:none}
+@media(max-width:620px){
+ .simple-welcome{padding:25px 0 18px}
+ .simple-home{padding:8px 0}
+ .simple-home-action{min-height:82px;padding:15px}
+ .simple-entry-grid{grid-template-columns:1fr}
+ .simple-entry-grid button{min-height:100px}
+}
