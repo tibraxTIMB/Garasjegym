@@ -294,6 +294,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         ...emptyExercise(),
         exercise_id: item.exercise_id || '',
         exercise_name: item.exercise_name || '',
+        reps_mode: item.reps_mode || 'fixed',
         sets: Array.isArray(item.sets) && item.sets.length ? item.sets.map(set => ({
           reps: set.reps == null ? '' : String(set.reps),
           load_kg: set.load_kg == null ? '' : String(set.load_kg),
@@ -483,7 +484,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         <label>Ekstra sekund<input type="number" min="0" max="59" value={durationSeconds} onChange={e => setDurationSeconds(e.target.value)}/></label>
       </div>
       <Timer format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} exerciseList={items} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot}/>
-      {items.length > 0 && <section className="engine-section">
+      {items.length > 0 && format!=='Stasjonssirkel' && <section className="engine-section">
         <div className="engine-section-title"><h4>{format==='Stasjonssirkel'?'Stasjonane i økta':'WOD / øvingsrekkjefølgje'}</h4><span>{format==='Stasjonssirkel'?'Alle stasjonar – roter etter eiga startplassering':'Vel øvinga du arbeider med'}</span></div>
         <div className={format==='Stasjonssirkel'?'timer-station-grid':'wod-list'}>{items.map((item, index) => format==='Stasjonssirkel' ? <article className="timer-station-card" key={item.key}><span>STASJON {index+1}</span><strong>{item.exercise_name||'Øving'}</strong><small>{item.reps_mode==='amrap'?'AMRAP · maks reps':item.reps?item.reps+' reps':'Valfritt tal reps'}</small></article> : <button type="button" key={item.key} className={index === activeExerciseIndex ? 'secondary-button active' : 'secondary-button'} onClick={() => setActiveExerciseIndex(index)}>{index + 1}. {item.exercise_name || 'Ny øving'}</button>)}</div>
       </section>}
