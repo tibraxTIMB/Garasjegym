@@ -2,7 +2,7 @@ import {useEffect,useMemo,useState} from 'react'
 import {Plus,Search,Trash2,ArrowUp,ArrowDown,Save,LoaderCircle,WandSparkles,Dices,Info,Footprints,Copy} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 
-const categories=['Alle','Styrke','Mobilitet','Kondisjon','Kjerne','Rehab / fysio']
+const categories=['Alle','Styrke','Mobilitet','Kondisjon','Kjerne','Golf','Rehab / fysio']
 const areas=['Alle område','Fullkropp','Bein','Mage','Rygg','Overkropp','Hofte','Skulder','Kne']
 const formats=[
  {group:'Metcon',items:['AMRAP','For Time','Chipper','Couplet','Triplet','Ladder','Death By']},
@@ -12,6 +12,39 @@ const formats=[
  {group:'Anna',items:['Eigen økt']}
 ]
 const allFormats=formats.flatMap(x=>x.items)
+const GOLF_EXERCISES=[
+ ['Golf – Open Book','Mobilitet','Rygg','Matte','Rotasjon i brystrygg. Ligg på sida med knær samla, før øvste arm roleg bakover og følg handa med blikket. 8–10 per side.'],
+ ['Golf – Thread the Needle','Mobilitet','Rygg','Matte','Rotasjon og kontroll i brystrygg på alle fire. Før armen under kroppen og opna opp. 8 per side.'],
+ ['Golf – Half-kneeling Thoracic Rotation','Mobilitet','Rygg','Matte','Halvkneståande rotasjon med hofter stabile. 8 per side.'],
+ ['Golf – Standing Club Rotation','Mobilitet','Rygg','Golfkølle','Kontrollert rotasjon med kølle over skuldrene, utan å tvinga ytterstilling. 10 per side.'],
+ ['Golf – Hip 90/90 Switch','Mobilitet','Hofte','Matte','Aktiv inn- og utrotasjon i hofta frå 90/90-sit. 8–10 skifte.'],
+ ['Golf – Hip Airplane (assistert)','Mobilitet','Hofte','Kroppsvekt','Eittbeins hofterotasjon med støtte. Hald bekkenet kontrollert. 5–6 per side.'],
+ ['Golf – Half-kneeling Hip Flexor Stretch','Mobilitet','Hofte','Matte','Tipp bekkenet lett bakover og flytt hofta fram. 30–40 sekund per side.'],
+ ['Golf – Adductor Rock Back','Mobilitet','Hofte','Matte','På alle fire med eitt bein ut til sida, før hofta roleg bakover. 10 per side.'],
+ ['Golf – Ankle Knee-to-Wall','Mobilitet','Bein','Kroppsvekt','Ankelmobilitet med hælen i golvet. 10–12 per side.'],
+ ['Golf – Shoulder CARs','Mobilitet','Skulder','Kroppsvekt','Kontrollerte store skuldersirklar med ribbein og bekken stabile. 5 per retning.'],
+ ['Golf – Wall Slide','Mobilitet','Skulder','Vegg','Før underarmane opp langs veggen utan å svaia i korsryggen. 10 reps.'],
+ ['Golf – Goblet Squat','Styrke','Bein','Kettlebell / manual','Knebøy med last framfor brystet. Bygg bein- og hoftestyrke. 3 × 8–10.'],
+ ['Golf – Split Squat','Styrke','Bein','Manualar / kroppsvekt','Kontrollert utfall på staden. 3 × 8 per side.'],
+ ['Golf – Single-leg Romanian Deadlift','Styrke','Bein','Manual','Eittbeins hoftehinge for bakside lår, sete og balanse. 3 × 8 per side.'],
+ ['Golf – Hip Thrust','Styrke','Hofte','Stong / manual','Seteløft med kontrollert topposisjon. 3 × 10.'],
+ ['Golf – Lateral Lunge','Styrke','Bein','Manual / kroppsvekt','Sideutfall for adduktorar og sideveis kraft. 3 × 8 per side.'],
+ ['Golf – Calf Raise','Styrke','Bein','Trapp / manual','Tåhev med full kontroll i botn og topp. 3 × 12–15.'],
+ ['Golf – Pallof Press','Kjerne','Mage','Strikk / kabel','Anti-rotasjon: press rett fram utan at overkroppen roterer. 3 × 10 per side.'],
+ ['Golf – Dead Bug','Kjerne','Mage','Matte','Stabiliser korsryggen medan motsett arm og bein strekkjer seg ut. 3 × 8 per side.'],
+ ['Golf – Side Plank','Kjerne','Mage','Matte','Sideplanke for lateral kjernestabilitet. 3 × 20–40 sekund per side.'],
+ ['Golf – Bird Dog','Kjerne','Rygg','Matte','Strekk motsett arm og bein utan rotasjon i bekkenet. 3 × 8 per side.'],
+ ['Golf – Cable/Band Chop','Kjerne','Mage','Kabel / strikk','Diagonal kraftoverføring frå høgt til lågt med kontrollert hofte- og overkroppsrotasjon. 3 × 8 per side.'],
+ ['Golf – Cable/Band Lift','Kjerne','Mage','Kabel / strikk','Diagonal løft frå lågt til høgt. Kontroller rotasjonen og hald balansen. 3 × 8 per side.'],
+ ['Golf – Medicine Ball Rotational Throw','Golf','Fullkropp','Medisinball','Eksplosiv rotasjon med hofte- og overkroppssamspel. Kast mot vegg berre med trygg plass og lett ball. 3 × 5 per side.'],
+ ['Golf – Step-and-Rotate','Golf','Fullkropp','Medisinball','Steg inn i kontrollert rotasjon og kast/overføring. 3 × 5 per side.'],
+ ['Golf – Farmer Carry','Styrke','Fullkropp','Manualar','Gå med tunge manualar, høg haldning og stabil kjerne. 3 × 30–40 meter.'],
+ ['Golf – Suitcase Carry','Kjerne','Fullkropp','Kettlebell / manual','Gå med last på éi side utan å lene deg. 3 × 20–30 meter per side.'],
+ ['Golf – Band External Rotation','Styrke','Skulder','Strikk','Rotatorcuff med albogen inntil sida. 2–3 × 12–15.'],
+ ['Golf – Band Row','Styrke','Rygg','Strikk','Trekk skulderblada roleg saman og hald overkroppen stabil. 3 × 12.'],
+ ['Golf – Single-leg Balance with Reach','Golf','Bein','Kroppsvekt','Balanse på eitt bein med kontrollert rekkeøving i fleire retningar. 3 × 5 per side.']
+].map(([name,category,body_area,equipment,description],i)=>({id:'golf-'+i,name,category,body_area,equipment,description,video_url:null,is_rehab:false,is_golf:true}))
+
 const CLASSIC_WODS=[
  {name:'Fran',group:'The Girls',format:'For Time',minutes:10,rounds:3,items:[['Thruster','21-15-9'],['Pull-up','21-15-9']],notes:'Original benchmark: 21-15-9 thrusters og pull-ups. RX-vekt: 95/65 lb (ca. 43/30 kg).'},
  {name:'Cindy',group:'The Girls',format:'AMRAP',minutes:20,items:[['Pull-up','5'],['Push-up','10'],['Air squat','15']],notes:'20 minutt AMRAP: 5 pull-ups, 10 push-ups, 15 air squats.'},
@@ -53,7 +86,7 @@ const intervalFormats=['Intervall','Tabata','Row Intervals']
 const timedFormats=['EMOM','E2MOM','E3MOM']
 const timedLabel=f=>f==='E2MOM'?'kvart 2. minutt':f==='E3MOM'?'kvart 3. minutt':'kvart minutt'
 const isRow=x=>x.equipment==='Romaskin'
-const categoryTone=value=>{const v=(value||'').toLowerCase();return v.includes('kond')||v.includes('cardio')?'conditioning':v.includes('kjern')||v.includes('core')?'core':v.includes('styr')||v.includes('strength')?'strength':v.includes('mobil')?'mobility':v.includes('rehab')||v.includes('fysio')?'rehab':'other'}
+const categoryTone=value=>{const v=(value||'').toLowerCase();return v.includes('kond')||v.includes('cardio')?'conditioning':v.includes('kjern')||v.includes('core')?'core':v.includes('styr')||v.includes('strength')?'strength':v.includes('mobil')?'mobility':v.includes('golf')?'golf':v.includes('rehab')||v.includes('fysio')?'rehab':'other'}
 
 export default function WodBuilder({assignedClientId=null,onAssigned}){
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område')
@@ -110,20 +143,6 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
  function updateItem(key,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,...patch}:x))}
  function updateSet(key,index,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,sets:x.sets.map((s,i)=>i===index?{...s,...patch}:s)}:x))}
  function move(i,dir){setSelected(rows=>{const next=[...rows],j=i+dir;if(j<0||j>=next.length)return rows;[next[i],next[j]]=[next[j],next[i]];return next})}
- function loadPerformanceProgram(type){
-  const programs={
-   golf:{name:'Golf Performance – styrke A',items:[['Goblet squat','Styrke','Bein','8'],['Split squat','Styrke','Bein','8'],['Pallof press','Kjerne','Mage','10'],['Cable woodchop','Kjerne','Mage','10'],['Single-leg Romanian deadlift','Styrke','Bein','8'],['Medicine ball rotational throw','Kondisjon','Fullkropp','6'],['Farmer carry','Styrke','Fullkropp','30']]},
-   running:{name:'Running Performance – styrke A',items:[['Bulgarian split squat','Styrke','Bein','8'],['Step-up','Styrke','Bein','8'],['Romanian deadlift','Styrke','Bein','8'],['Standing calf raise','Styrke','Bein','12'],['Seated calf raise','Styrke','Bein','12'],['Hamstring curl','Styrke','Bein','10'],['Side plank','Kjerne','Mage','30']]}
-  }
-  const p=programs[type];if(!p)return
-  const rows=p.items.map(([name,cat,area,reps])=>{
-   const match=exercises.find(x=>x.name.toLowerCase()===name.toLowerCase())
-   const base=blankItem(match||{id:null,name,category:cat,equipment:'',body_area:area,video_url:null,description:'Programøving – legg til detaljar og belastning etter nivå.'})
-   return {...base,sets:Array.from({length:3},()=>({...newSet(),reps,restSeconds:'90'}))}
-  })
-  setSelected(rows);setName(p.name);setFormat('Strength');setMinutes('40');setNotes(type==='golf'?'Fokus på rotasjonskraft, stabilitet, hofte og kontrollert kraftoverføring.':'Fokus på eittbeinsstyrke, legg, hamstring og hoftekontroll.');setStimulus('Kontrollert styrketrening · god teknikk · tilpass belastning til nivå.')
-  setNotice(p.name+' er lasta inn. Tilpass øvingar, sett og belastning før lagring.');setError('')
- }
  function generateRowingIntervals(){
   const row=exercises.find(x=>x.equipment==='Romaskin')
   if(!row){setError('Romaskinøvinga manglar i biblioteket.');return}
@@ -210,7 +229,6 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
   {assignedClientId&&<div className="pt-wod-mode-switch"><button type="button" className={builderMode==='library'?'selected':''} onClick={()=>setBuilderMode('library')}>Finn WOD i biblioteket</button><button type="button" className={builderMode==='build'?'selected':''} onClick={()=>setBuilderMode('build')}>Bygg ny WOD</button></div>}
   {assignedClientId&&builderMode==='library'?<section className="pt-wod-library-panel"><div className="engine-section-title"><div><h4>Vel frå WOD-biblioteket</h4><p>Bruk same publiserte WOD på fleire kundar utan å laga kopiar.</p></div><span>{libraryWods.length} WOD-ar</span></div><div className="wod-search"><Search size={16}/><input value={librarySearch} onChange={e=>setLibrarySearch(e.target.value)} placeholder="Søk etter namn eller format …"/></div><div className="pt-wod-library-list">{libraryWods.filter(w=>(w.name+' '+w.format).toLowerCase().includes(librarySearch.toLowerCase())).map(w=><button type="button" key={w.id} className={selectedLibraryWod===w.id?'selected':''} onClick={()=>setSelectedLibraryWod(w.id)}><span><strong>{w.name}</strong><small>{w.format} · {w.duration_minutes||'–'} min · {w.movements?.split('\n').filter(Boolean).length||0} øvingar</small></span><span>{selectedLibraryWod===w.id?'Vald':'Vel'}</span></button>)}</div><button type="button" className="primary-button" disabled={!selectedLibraryWod||busy} onClick={assignLibraryWod}><Plus size={15}/>{busy?'Tildeler …':'Tildel vald WOD til kunden'}</button></section>:<div className="pt-wod-builder-form">
   <section className="wod-classic-picker"><div className="wod-classic-copy"><span className="wod-classic-kicker">BENCHMARK COLLECTION</span><strong>Klassiske WOD-ar</strong><small>The Girls · Hero WODs · originaloppsett</small></div><div className="wod-classic-controls"><select className="wod-classic-select" value={classicChoice} onChange={e=>setClassicChoice(e.target.value)}><option value="">Vel ei klassisk økt …</option><optgroup label="The Girls">{CLASSIC_WODS.filter(x=>x.group==='The Girls').map(x=><option key={x.name} value={x.name}>{x.name}</option>)}</optgroup><optgroup label="Hero WODs">{CLASSIC_WODS.filter(x=>x.group==='Hero WODs').map(x=><option key={x.name} value={x.name}>{x.name}</option>)}</optgroup></select><button type="button" className="secondary-button" disabled={!classicChoice} onClick={loadClassicWod}>Last inn</button></div></section>
-  <div className="wod-performance-templates"><button type="button" onClick={()=>loadPerformanceProgram('golf')}><strong>Golf Performance</strong><small>Rotasjon · hofte · stabilitet · styrke</small></button><button type="button" onClick={()=>loadPerformanceProgram('running')}><strong>Running Performance</strong><small>Bein · legg · hamstring · kjerne</small></button></div>
   <div className="wod-studio-tools"><button type="button" className="primary-button" onClick={randomWod}><Dices size={17}/> Generer tilfeldig WOD</button><button type="button" className="secondary-button" onClick={generateRowingIntervals}><Footprints size={16}/> Generer romaskinintervall</button><button type="button" className="secondary-button" onClick={reset}><Trash2 size={15}/> Forkast økt</button></div>
   <div className="wod-builder-layout">
    <section className="engine-section wod-library"><div className="engine-section-title"><h4>Øvingsbibliotek</h4><span>{filtered.length} av {exercises.length}</span></div>
