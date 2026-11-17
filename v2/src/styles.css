@@ -1221,31 +1221,6 @@ footer {
 }
 
 
-/* Personal Spotify module – compact and shared with the training timer */
-.music-page{display:grid;gap:18px;max-width:980px;margin:0 auto}
-.music-heading{display:flex;align-items:center;gap:13px}.music-heading-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:13px;background:#382b1c;color:#ffb34e}.music-heading h2{margin:2px 0;font-size:27px}.music-heading p{margin:3px 0;color:var(--muted);font-size:12px}
-.music-connect-card,.music-player-card{display:flex;align-items:center;gap:13px;padding:14px;border:1px solid var(--line,#3b4444);border-radius:13px;background:#1b2021}.music-connect-card>div{flex:1;min-width:0}.music-connect-card strong{font-size:13px}.music-connect-card p{margin:4px 0 0;color:var(--muted);font-size:11px;overflow-wrap:anywhere}
-.music-notice{padding:11px 13px;border:1px solid #66502e;border-radius:9px;background:#2b241a;color:#f2c47e;font-size:11px;line-height:1.5}.music-notice.warning{border-color:#735b35}
-.music-section-title{display:flex;align-items:center;justify-content:space-between;margin-top:5px;color:var(--orange,#f5a632)}.music-section-title h3{margin:3px 0;color:var(--text,#f3f1e9);font-size:19px}
-.music-presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.music-preset{display:grid;grid-template-columns:38px minmax(0,1fr);grid-template-rows:auto auto auto;align-items:center;gap:3px 10px;min-width:0;padding:13px;text-align:left;border:1px solid var(--line,#3b4444);border-radius:12px;background:#202526;color:var(--text,#f3f1e9);cursor:pointer}
-.music-preset>span{grid-row:1/4;font-size:25px}.music-preset strong{font-size:13px}.music-preset small{color:var(--muted);font-size:10px;line-height:1.35}.music-preset em{margin-top:4px;color:var(--orange,#f5a632);font-size:10px;font-style:normal;font-weight:750}.music-preset:hover:not(:disabled){border-color:var(--orange,#f5a632);transform:translateY(-1px)}.music-preset:disabled{opacity:.48;cursor:not-allowed}
-.music-player-card{margin-top:3px}.music-cover{width:64px;height:64px;flex:0 0 64px;display:grid;place-items:center;border-radius:8px;background:#303737;color:#9ca8a3;overflow:hidden}.music-cover img{width:100%;height:100%;object-fit:cover}.music-track-meta{flex:1;min-width:0;display:grid;gap:4px}.music-track-meta strong,.music-track-meta span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.music-track-meta strong{font-size:12px}.music-track-meta span{font-size:10px;color:var(--muted)}.music-progress{height:3px;margin-top:5px;border-radius:99px;background:#394242;overflow:hidden}.music-progress span{display:block;height:100%;background:var(--orange,#f5a632)}.music-controls,.music-mini-controls{display:flex;align-items:center;gap:5px}.music-controls button,.music-mini-controls button{width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--line,#3b4444);border-radius:50%;background:#252c2d;color:var(--text,#f3f1e9);cursor:pointer}.music-controls button:disabled,.music-mini-controls button:disabled{opacity:.4;cursor:not-allowed}.music-footnote{margin:0;color:var(--muted);font-size:11px;line-height:1.5}
-.music-mini-player{display:flex;align-items:center;gap:9px;margin:10px 0 2px;padding:8px 10px;border:1px solid #3b4444;border-radius:10px;background:#171c1d}.music-mini-cover{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:5px;background:#303737;color:#9ca8a3;overflow:hidden}.music-mini-cover img{width:100%;height:100%;object-fit:cover}.music-mini-info{display:grid;gap:2px;flex:1;min-width:0}.music-mini-info strong,.music-mini-info span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.music-mini-info strong{font-size:10px}.music-mini-info span{font-size:9px;color:var(--muted)}.music-mini-controls button{width:29px;height:29px}
-@media(max-width:620px){.music-presets{grid-template-columns:1fr}.music-connect-card{align-items:flex-start;flex-direction:column}.music-player-card{gap:9px;padding:10px}.music-cover{width:48px;height:48px;flex-basis:48px}.music-controls button{width:30px;height:30px}}
-
-
-.music-live-tag { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:9px; font-weight:900; letter-spacing:1px; white-space:nowrap; }
-.music-live-tag span { width:7px; height:7px; border-radius:50%; background:#79c58b; box-shadow:0 0 0 4px rgba(121,197,139,.12); }
-.music-admin-panel { display:grid; gap:14px; margin-top:24px; padding-top:20px; border-top:1px solid var(--line); }
-.music-admin-panel > p { margin:0; color:var(--muted); font-size:12px; line-height:1.6; }
-.music-preset.unavailable { opacity:.72; cursor:default; }
-.music-preset.unavailable em { color:var(--muted); }
-.music-mini-refresh { display:grid; place-items:center; width:30px; height:30px; color:var(--muted); background:transparent; border:1px solid var(--line); border-radius:7px; cursor:pointer; }
-.music-mini-refresh:disabled { opacity:.5; }
-.music-mini-refresh:hover { color:var(--orange); }
-
-
 /* Private Spotify hand-off: account and playback stay in Spotify */
 .personal-spotify-card{display:grid;gap:12px;padding:15px;border:1px solid #3b4444;border-radius:14px;background:linear-gradient(135deg,#202a25,#1b2021)}
 .personal-spotify-top{display:flex;align-items:center;gap:12px}
