@@ -1787,6 +1787,15 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .simple-quick-form .timer-side,
 .simple-quick-form .timer-music-footer,
 .simple-quick-form .engine-timer>small{display:none!important}
+.simple-quick-form .engine-section{display:none!important}
+.simple-quick-form.review-open .engine-section{display:block!important}
+.simple-quick-form .simple-review-toggle{min-height:50px;width:100%;justify-content:center}
+.simple-quick-form.review-open .engine-fields,
+.simple-quick-form.review-open .engine-note{display:grid}
+.simple-quick-form.review-open .engine-fields label{display:flex}
+.simple-quick-form.review-open .engine-section{padding:14px;border:1px solid var(--line,#ddd);border-radius:14px}
+.simple-quick-form .save-workout{order:20}
+.simple-quick-form .simple-review-toggle{order:19}
 .simple-quick-form .engine-timer{padding:12px 0;border:0;background:transparent}
 .simple-quick-form .timer-dashboard{display:block}
 .simple-quick-form .timer-center{width:100%;max-width:620px;margin:0 auto}
@@ -1818,3 +1827,16 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .simple-result-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
 .simple-result-tabs button{min-height:48px;padding:8px 5px}
 @media(max-width:390px){.simple-home-grid{gap:8px}.simple-home-grid .simple-home-action{min-height:120px;padding:12px}.simple-home-grid .simple-home-action strong{font-size:16px}}
+
+.newest-workout-card{width:100%;text-align:left;border:1px solid var(--line,#ddd);cursor:pointer}
+.newest-workout-card:active,.my-page-log:active{transform:scale(.995)}
+.older-workouts{margin-top:14px;border:1px solid var(--line,#ddd);border-radius:14px;padding:0 14px}
+.older-workouts summary{cursor:pointer;list-style:none;padding:16px 2px;font-weight:650}
+.older-workouts summary::-webkit-details-marker{display:none}
+.older-workouts summary:after{content:"+";float:right}
+.older-workouts[open] summary:after{content:"−"}
+.older-workouts>div{display:grid;gap:8px;padding-bottom:12px}
+.simple-quick-form .engine-fields{display:none}
+.simple-quick-form.review-open .engine-fields{display:grid}
+.simple-quick-form .engine-note{display:none}
+.simple-quick-form.review-open .engine-note{display:block}
