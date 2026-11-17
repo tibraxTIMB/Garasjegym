@@ -1209,3 +1209,13 @@ footer {
 .exercise-library-toolbar{display:flex;gap:8px;align-items:center;margin:10px 0}.exercise-library-search{flex:1}
 .exercise-library-groups{display:grid;gap:7px}.exercise-library-group{margin:0}.exercise-library-group .exercise-list{padding:0 9px 8px}.exercise-library-group .exercise-row{margin:5px 0}
 @media(max-width:600px){.rank-catalogue-row{grid-template-columns:minmax(0,1fr) minmax(78px,auto) 38px;gap:5px}.rank-catalogue-row strong{font-size:10px}.rank-catalogue-row span{font-size:9px}.exercise-library-toolbar{align-items:stretch;flex-direction:column}}
+
+
+.timer-time-pair { display:flex; flex-wrap:wrap; justify-content:center; gap:7px 18px; color:#d5d9d7; font-size:12px; font-variant-numeric:tabular-nums; text-align:center; }
+.timer-time-pair span { white-space:nowrap; }
+.timer-time-pair b { color:#fff; font-size:14px; }
+.engine-timer > .timer-round-label { text-align:center; }
+@media(max-width:520px) {
+  .timer-time-pair { gap:6px 12px; font-size:11px; }
+  .timer-time-pair b { font-size:13px; }
+}
