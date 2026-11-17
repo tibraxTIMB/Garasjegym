@@ -1768,3 +1768,36 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
  .simple-entry-grid{grid-template-columns:1fr}
  .simple-entry-grid button{min-height:100px}
 }
+
+
+/* Superenkel medlem: direkte frå framsida til klokke og lagring. */
+.simple-welcome{padding-bottom:8px}
+.simple-welcome .eyebrow,.simple-welcome p{display:none}
+.simple-home{max-width:560px;padding:10px 0 24px}
+.simple-home h2{font-size:clamp(26px,5vw,36px);margin:0 0 8px}
+.simple-home-action{min-height:92px}
+.simple-entry-grid{grid-template-columns:1fr}
+.simple-entry-grid button{min-height:82px;padding:16px}
+.simple-quick-form{gap:12px}
+.simple-quick-form>.text-button{align-self:flex-start}
+.simple-quick-form>.training-heading,
+.simple-quick-form>.engine-fields,
+.simple-quick-form>.engine-section,
+.simple-quick-form .timer-caption,
+.simple-quick-form .timer-side,
+.simple-quick-form .timer-music-footer,
+.simple-quick-form .engine-timer>small{display:none!important}
+.simple-quick-form .engine-timer{padding:12px 0;border:0;background:transparent}
+.simple-quick-form .timer-dashboard{display:block}
+.simple-quick-form .timer-center{width:100%;max-width:620px;margin:0 auto}
+.simple-quick-form .timer-main-clock{font-size:clamp(64px,18vw,112px)}
+.simple-quick-form .timer-round-label{display:none}
+.simple-quick-form .timer-actions{display:flex;justify-content:center;gap:10px}
+.simple-quick-form .timer-actions>button{min-height:52px;flex:1;justify-content:center}
+.simple-quick-form .timer-actions>button:nth-child(n+3){display:none}
+.simple-quick-form .save-workout{min-height:58px;font-size:17px}
+@media(max-width:620px){
+ .simple-home{padding:8px 0 18px}
+ .simple-home-action{min-height:82px}
+ .simple-quick-form .timer-center{padding:18px 8px}
+}
