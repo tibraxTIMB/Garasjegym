@@ -1263,3 +1263,54 @@ footer {
 .timer-spotify-shortcut{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:8px 10px;border:1px solid #355a43;border-radius:8px;background:#1c3025;color:#a5e4b6;font-size:10px;font-weight:750;cursor:pointer}
 .timer-spotify-shortcut:hover{background:#254331}
 @media(max-width:620px){.personal-spotify-actions{display:grid;grid-template-columns:1fr 1fr}.personal-spotify-actions button{justify-content:center}.personal-spotify-saved{grid-column:1/-1}}
+
+
+/* Personal Spotify Connect integration */
+.personal-spotify-player{display:grid;gap:12px;padding:15px;border:1px solid #355443;border-radius:14px;background:linear-gradient(135deg,#1d2c23,#1b2021);min-width:0}
+.personal-spotify-player-head{display:flex;align-items:center;gap:10px}
+.personal-spotify-mark{width:39px;height:39px;flex:0 0 39px;display:grid;place-items:center;border-radius:11px;background:#1f5137;color:#9be8b3}
+.personal-spotify-account{display:grid;gap:2px;min-width:0;flex:1}
+.personal-spotify-account strong{font-size:12px}
+.personal-spotify-account small{font-size:10px;color:var(--muted)}
+.spotify-disconnect{width:32px;height:32px;display:grid;place-items:center;border:1px solid #425149;border-radius:8px;background:#202b24;color:#bdc9c1}
+.personal-spotify-now{display:flex;align-items:center;gap:11px;min-width:0;padding:10px;border:1px solid #35443b;border-radius:10px;background:#151b18}
+.personal-spotify-art{width:58px;height:58px;flex:0 0 58px;display:grid;place-items:center;border-radius:7px;background:#2c3830;color:#aebdb2;overflow:hidden}
+.personal-spotify-art img{width:100%;height:100%;object-fit:cover}
+.personal-spotify-meta{display:grid;gap:4px;min-width:0;flex:1}
+.personal-spotify-meta strong,.personal-spotify-meta span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.personal-spotify-meta strong{font-size:12px}
+.personal-spotify-meta span,.personal-spotify-meta small{font-size:10px;color:var(--muted)}
+.spotify-open-track{color:#a8dfb7}
+.personal-spotify-controls{display:flex;align-items:center;justify-content:center;gap:10px}
+.personal-spotify-controls button{width:36px;height:36px;display:grid;place-items:center;border:1px solid #405047;border-radius:50%;background:#222d26;color:#e7f0e9}
+.personal-spotify-controls .spotify-play-button{width:43px;height:43px;background:#1db954;border-color:#1db954;color:#102015}
+.personal-spotify-controls button:disabled{opacity:.4}
+.personal-spotify-selects{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.personal-spotify-selects label{display:grid;gap:5px;color:var(--muted);font-size:10px;font-weight:700;min-width:0}
+.personal-spotify-selects select,.spotify-setup-card input{width:100%;min-width:0;padding:9px 10px;border:1px solid var(--line,#3b4444);border-radius:8px;background:#111617;color:var(--text,#f3f1e9);font-size:11px}
+.personal-spotify-connect{display:grid;gap:10px}
+.personal-spotify-connect p,.spotify-setup-card p{margin:0;color:var(--muted);font-size:11px;line-height:1.5}
+.spotify-connect-button{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 14px;border:0;border-radius:9px;background:#1db954;color:#102015;font-size:12px;font-weight:850;cursor:pointer}
+.spotify-error{padding:9px 11px;border:1px solid #74433f;border-radius:8px;background:#321f1e;color:#f0b0a9;font-size:10px;line-height:1.5}
+.spotify-hint{margin:0;color:var(--muted);font-size:10px;line-height:1.5}
+.spotify-setup-card{display:grid;gap:9px;padding:13px;border:1px solid #65512f;border-radius:11px;background:#282318}
+.spotify-setup-card strong{font-size:12px}
+.spotify-setup-card small{color:var(--muted);font-size:10px;line-height:1.5;overflow-wrap:anywhere}
+.spotify-setup-card code{color:#f0c57c;overflow-wrap:anywhere}
+.personal-spotify-player.compact{gap:8px;padding:9px;border-radius:10px}
+.personal-spotify-player.compact .personal-spotify-player-head{gap:7px}
+.personal-spotify-player.compact .personal-spotify-mark{width:28px;height:28px;flex-basis:28px;border-radius:8px}
+.personal-spotify-player.compact .personal-spotify-account .section-kicker{font-size:8px}
+.personal-spotify-player.compact .personal-spotify-account strong{font-size:10px}
+.personal-spotify-player.compact .personal-spotify-account small{font-size:9px}
+.personal-spotify-player.compact .personal-spotify-now{padding:6px;gap:7px}
+.personal-spotify-player.compact .personal-spotify-art{width:38px;height:38px;flex-basis:38px}
+.personal-spotify-player.compact .personal-spotify-meta strong{font-size:10px}
+.personal-spotify-player.compact .personal-spotify-meta span,.personal-spotify-player.compact .personal-spotify-meta small{font-size:9px}
+.personal-spotify-player.compact .personal-spotify-controls{gap:7px}
+.personal-spotify-player.compact .personal-spotify-controls button{width:29px;height:29px}
+.personal-spotify-player.compact .personal-spotify-controls .spotify-play-button{width:34px;height:34px}
+.personal-spotify-player.compact .personal-spotify-selects{display:none}
+.personal-spotify-player.compact .personal-spotify-connect p{display:none}
+.personal-spotify-player.compact .spotify-hint{display:none}
+@media(max-width:620px){.personal-spotify-selects{grid-template-columns:1fr}.personal-spotify-now{gap:8px}.personal-spotify-art{width:48px;height:48px;flex-basis:48px}}
