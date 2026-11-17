@@ -3,7 +3,7 @@ import {Plus,Search,Trash2,ArrowUp,ArrowDown,Save,LoaderCircle,WandSparkles,Dice
 import {supabase} from '../lib/supabase.js'
 
 const categories=['Alle','Styrke','Mobilitet','Kondisjon','Kjerne','Golf','Rehab']
-const areas=['Alle område','Fullkropp','Bein','Mage','Rygg','Overkropp','Hofte','Skulder','Kne','Nakke']
+const areas=['Alle område','Fullkropp','Bein','Mage','Rygg','Overkropp']
 const formats=[
  {group:'Metcon',items:['AMRAP','For Time','Chipper','Couplet','Triplet','Ladder','Death By']},
  {group:'Tidsstyrt',items:['EMOM','E2MOM','E3MOM']},
@@ -106,6 +106,8 @@ const categoryTone=value=>{const v=(value||'').toLowerCase();return v.includes('
 
 export default function WodBuilder({assignedClientId=null,onAssigned}){
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område')
+ const rehabBodyAreas=['hofte','skulder','kne','nakke']
+ const isRehabExercise=x=>!!(x.is_rehab||x.category==='Rehab / fysio'||rehabBodyAreas.includes((x.body_area||'').toLowerCase()))
  const [selected,setSelected]=useState([]),[name,setName]=useState(()=>randomWodName()),[format,setFormat]=useState('AMRAP'),[libraryWods,setLibraryWods]=useState([]),[builderMode,setBuilderMode]=useState(assignedClientId?'library':'build'),[librarySearch,setLibrarySearch]=useState(''),[selectedLibraryWod,setSelectedLibraryWod]=useState(''),[classicChoice,setClassicChoice]=useState(''),[publishToMembers,setPublishToMembers]=useState(false)
  const [minutes,setMinutes]=useState('20'),[notes,setNotes]=useState(''),[stimulus,setStimulus]=useState('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
  const [rounds,setRounds]=useState('5'),[workSeconds,setWorkSeconds]=useState('60'),[restSeconds,setRestSeconds]=useState('10'),[timeCap,setTimeCap]=useState('20')
@@ -122,7 +124,8 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
   setLoading(false)
  }
  const filtered=useMemo(()=>[...exercises,...GOLF_EXERCISES,...REHAB_EXERCISES].filter(x=>{
-  const matchesCategory=category==='Alle'||(category==='Rehab'?(x.is_rehab||x.category==='Rehab / fysio'):x.category===category)
+  const rehab=isRehabExercise(x)
+   const matchesCategory=category==='Alle'||(category==='Rehab'?rehab:!rehab&&x.category===category)
   const searchable=[x.name,x.category,x.equipment,x.body_area,x.description].filter(Boolean).join(' ').toLowerCase()
   const matchesSearch=!search||searchable.includes(search.toLowerCase())
   const tags=(x.body_area||'').toLowerCase(),needle=area==='Mage'?'kjerne':area.toLowerCase()
@@ -222,7 +225,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
     superset_groups:showSets&&format==='Superset'?Array.from(new Set(selected.map(x=>x.group))):[],
     complex_order:showSets&&format==='Complex'?selected.map(x=>x.name):[],
     items:selected.map((x,i)=>({
-     sort_order:i+1,exercise_id:x.is_golf?null:(x.id||null),exercise_name:x.name,category:x.category,body_area:x.body_area,equipment:x.equipment,golf_focus:x.golf_focus||null,
+     sort_order:i+1,exercise_id:x.is_golf?null:(x.id||null),exercise_name:x.name,category:isRehabExercise(x)?'Rehab':x.category,body_area:x.body_area,equipment:x.equipment,golf_focus:x.golf_focus||null,
      sets:showSets?x.sets.map(s=>({reps:Number(s.reps),load_mode:s.loadMode,load_kg:s.loadKg?Number(s.loadKg):null,percent_1rm:s.percent1rm?Number(s.percent1rm):null,rir:s.rir!==''?Number(s.rir):null,rpe:s.rpe!==''?Number(s.rpe):null,rest_seconds:Number(s.restSeconds)||0,tempo:s.tempo||null})):null,
      reps:showSets?null:x.reps,load_mode:showSets?null:x.loadMode,load_kg:x.loadKg?Number(x.loadKg):null,percent_1rm:x.percent1rm?Number(x.percent1rm):null,rir:x.rir!==''?Number(x.rir):null,rpe:x.rpe!==''?Number(x.rpe):null,
      row_value:isRow(x)?Number(x.rowValue):null,row_unit:isRow(x)?x.rowUnit:null,meters:isRow(x)&&x.rowUnit==='m'?Number(x.rowValue):null,calories:isRow(x)&&x.rowUnit==='cal'?Number(x.rowValue):null,work_seconds:isRow(x)&&x.rowUnit==='s'?Number(x.rowValue):null,
@@ -249,9 +252,9 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
   <div className="wod-builder-layout">
    <section className="engine-section wod-library"><div className="engine-section-title"><h4>Øvingsbibliotek</h4><span>{filtered.length} av {exercises.length}</span></div>
     <div className="wod-search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Søk øving, kroppsdel eller utstyr …"/></div>
-    <div className="wod-category-filter">{categories.map(x=><button type="button" key={x} className={category===x?'selected':''} onClick={()=>setCategory(x)}>{x}</button>)}</div>
+    <div className="wod-category-filter">{categories.map(x=><button type="button" key={x} className={category===x?'selected':''} onClick={()=>{setCategory(x);if(x==='Rehab')setArea('Alle område')}}>{x}</button>)}</div>
     {category!=='Rehab'&&<div className="wod-area-filter"><span>KROPPSOMRÅDE</span>{areas.map(x=><button type="button" key={x} className={area===x?'selected':''} onClick={()=>setArea(x)}>{x}</button>)}</div>}
-    {loading?<div className="training-state"><LoaderCircle className="spin"/> Hentar øvingar …</div>:filtered.length?<div className="wod-exercise-grid">{filtered.map(ex=><article className={"wod-exercise-card wod-category-"+categoryTone(ex.category)} key={ex.id}><div className="wod-exercise-info"><strong>{ex.name}</strong>{ex.video_url?<a href={ex.video_url} target="_blank" rel="noreferrer">Sjå video</a>:<small className="no-video">Video kjem</small>}<small>{ex.category}{ex.golf_focus?' · '+ex.golf_focus:''} · {ex.body_area||'Fullkropp'}{ex.equipment?' · '+ex.equipment:''}</small>{ex.description&&<p className={ex.is_rehab?'wod-rehab-description':''}>{ex.description}</p>}{ex.is_rehab&&<em><Info size={12}/> Tilpass etter toleranse – ved skade eller vedvarande smerte, få råd frå fysioterapeut</em>}</div><button className="wod-add-button" type="button" onClick={()=>add(ex)}><Plus size={16}/> Legg til</button></article>)}</div>:<div className="empty-state">Ingen øvingar treff søket.</div>}
+    {loading?<div className="training-state"><LoaderCircle className="spin"/> Hentar øvingar …</div>:filtered.length?<div className="wod-exercise-grid">{filtered.map(ex=><article className={"wod-exercise-card wod-category-"+categoryTone(ex.category)} key={ex.id}><div className="wod-exercise-info"><strong>{ex.name}</strong>{ex.video_url?<a href={ex.video_url} target="_blank" rel="noreferrer">Sjå video</a>:<small className="no-video">Video kjem</small>}<small>{isRehabExercise(ex)?'Rehab':ex.category}{ex.golf_focus?' · '+ex.golf_focus:''} · {ex.body_area||'Fullkropp'}{ex.equipment?' · '+ex.equipment:''}</small>{ex.description&&<p className={isRehabExercise(ex)?'wod-rehab-description':''}>{ex.description}</p>}{isRehabExercise(ex)&&<em><Info size={12}/> Tilpass etter toleranse – ved skade eller vedvarande smerte, få råd frå fysioterapeut</em>}</div><button className="wod-add-button" type="button" onClick={()=>add(ex)}><Plus size={16}/> Legg til</button></article>)}</div>:<div className="empty-state">Ingen øvingar treff søket.</div>}
    </section>
    <aside className="engine-section wod-composer">
     <div className="engine-section-title"><h4>Programmer økta</h4><span>{selected.length} øvingar</span></div>
