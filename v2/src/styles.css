@@ -917,3 +917,10 @@ footer {
 .pt-note-card p{line-height:1.5}
 .pt-note-goal{padding:10px 12px;border-left:3px solid var(--orange);background:#242522}
 @media(max-width:650px){.pt-request-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.pt-customer-rank{display:none}.pt-active-customer{padding:14px}.pt-customer-picker-row{flex-direction:column;align-items:stretch}.pt-customer-picker-row .primary-button{width:100%}.pt-request-compact{align-items:flex-start;flex-direction:column}.pt-note-card-head{flex-direction:column}}
+
+
+/* Clear garage-owner identity on community posts */
+.community-author-identity{min-width:0;display:flex;flex-direction:column;gap:5px}
+.community-author-line{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.community-owner-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border:1px solid #a96d25;border-radius:6px;background:linear-gradient(135deg,#3a2b19,#29231b);color:#ffc16b;font-size:9px;font-weight:950;letter-spacing:1.25px;line-height:1.2}
+.community-owner-badge:before{content:'★';font-size:10px;color:#f2a43a}
