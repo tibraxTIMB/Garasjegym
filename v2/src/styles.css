@@ -1073,3 +1073,20 @@ footer {
 .pt-rank-ladder small{color:var(--muted);white-space:nowrap}
 .wod-category-golf{background:linear-gradient(120deg,#253d32 0%,#1d2925 100%)!important;border-color:#4e9b72!important}
 @media(max-width:620px){.pt-active-customer-compact{flex-wrap:wrap!important}.pt-active-customer-compact .pt-customer-rank{width:100%;margin-left:52px}.rank-list article{grid-template-columns:minmax(0,1fr) auto}.rank-list-stars{grid-column:2}.pt-rank-ladder{grid-template-columns:minmax(0,1fr)}}
+
+/* 2.0 usability polish: no horizontal sliders in filters or PT workspace */
+.wod-category-filter{display:flex;flex-wrap:wrap;overflow:visible;gap:7px;padding:4px 0 12px}
+.wod-category-filter button{flex:0 0 auto}
+.pt-workspace-tabs{display:flex;flex-wrap:wrap;overflow:visible;gap:7px}
+.pt-active-customer-compact{display:inline-flex!important;width:auto;max-width:100%;min-height:0;padding:8px 10px!important;gap:9px!important;border-radius:10px!important;background:#202526!important;border-color:#3b4444!important}
+.pt-active-customer-compact .pt-customer-avatar{width:30px!important;height:30px!important;flex:0 0 30px!important;font-size:12px!important}
+.pt-active-customer-compact .pt-customer-identity{min-width:0!important;gap:1px!important}
+.pt-active-customer-compact .pt-customer-identity>span{font-size:8px!important;letter-spacing:1px!important}
+.pt-active-customer-compact .pt-customer-identity strong{font-size:12px!important}
+.pt-active-customer-compact .pt-customer-identity small{font-size:9px!important}
+.pt-active-customer-compact .pt-customer-rank{display:flex!important;align-items:flex-start!important;margin:0 0 0 4px!important;padding:4px 7px!important;gap:2px!important;border:0!important;background:transparent!important}
+.pt-active-customer-compact .pt-customer-rank>span{font-size:8px!important;letter-spacing:.6px!important}
+.pt-active-customer-compact .pt-customer-rank>strong{font-size:10px!important}
+.pt-active-customer-compact .pt-rank-stars{font-size:10px!important}
+.pt-active-customer-compact .pt-rank-link{font-size:9px!important}
+@media(max-width:620px){.pt-active-customer-compact{display:flex!important;flex-wrap:wrap!important;width:100%}.pt-active-customer-compact .pt-customer-rank{width:auto!important;margin-left:0!important}}
