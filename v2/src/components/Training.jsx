@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Activity, CheckCircle2, Clock3, Dumbbell, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
+import { MusicMiniPlayer } from './Music.jsx'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E2MOM', 'E3MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '' }] })
@@ -150,6 +151,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
       <button type="button" className="secondary-button" onClick={() => setSoundOn(value => !value)}>{soundOn ? 'Lyd på' : 'Lyd av'}</button>
       <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
     </div>
+    <MusicMiniPlayer />
     {laps.length > 0 && <div className="timer-round-label">MELLOMTIDER: {laps.map((lap, index) => `${index + 1}: ${clock(lap)}`).join(' · ')}</div>}
     <small>{isTimedInterval ? 'Arbeid / kvile · samla økttid og tid att' : isCountdown ? 'Nedtelling med medgått tid' : isEMOM ? (emomEvery > 1 ? `E${emomEvery}MOM · arbeid kvart ${emomEvery}. minutt` : 'E1MOM · arbeid kvart minutt') : isDeathBy ? 'Aukande arbeid for kvar minutt' : isForTime ? 'Stoppeklokke med eventuell tidsgrense' : 'Stoppeklokke – tel medgått tid'}</small>
   </div>
