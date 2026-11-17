@@ -3,6 +3,7 @@ import {
   Activity,
   CalendarDays,
   Coffee,
+  Music2,
   Dumbbell,
   LayoutDashboard,
   LogOut,
@@ -28,6 +29,7 @@ import WodBuilder from './components/WodBuilder.jsx'
 import WodLibrary from './components/WodLibrary.jsx'
 import CalendarAdmin from './components/CalendarAdmin.jsx'
 import MyTraining from './components/MyTraining.jsx'
+import { Music, SpotifyProvider } from './components/Music.jsx'
 
 const sections = [
   { id: 'oversikt', label: 'Oversikt', icon: LayoutDashboard, note: 'Dashboard og treningsstatus' },
@@ -38,6 +40,7 @@ const sections = [
   { id: 'fellesskap', label: 'Fellesskap', icon: Users, note: 'Garasjeprat' },
   { id: 'utfordringar', label: 'Utfordringar', icon: Activity, note: 'Felles mål og framgang' },
   { id: 'kaffi', label: 'Kaffebar', icon: Coffee, note: 'Meny og bestillingar' },
+  { id: 'musikk', label: 'Musikk', icon: Music2, note: 'Personleg Spotify og hurtigval' },
 ]
 
 function AuthScreen({ recovery = false, onRecoveryComplete }) {
@@ -225,6 +228,7 @@ export default function App() {
   const Icon = current.icon
 
   return (
+    <SpotifyProvider memberId={session.user.id}>
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
@@ -255,7 +259,7 @@ export default function App() {
           <h1>Bygd for å <em>prestera.</em></h1>
           <p>Ein felles plattform for trening, booking og fellesskap.</p>
         </section>
-        {active === 'oversikt' ? <section className="content-card training-content"><Overview profile={profile} onNavigate={setActive} /></section> : active === 'trening' ? <section className="content-card training-content"><Training launchWodId={launchWodId} launchClassSessionId={launchClassSessionId} onLaunchConsumed={() => { setLaunchWodId(null); setLaunchClassSessionId(null) }} /></section> : active === 'mi-trening' ? <section className="content-card training-content"><MyTraining onLaunchWod={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'booking' ? <section className="content-card training-content"><Booking profile={profile} onLogResult={(wodId, sessionId) => { setLaunchWodId(wodId); setLaunchClassSessionId(sessionId); setActive('trening') }} /></section> : active === 'pt' ? <section className="content-card training-content"><PT profile={profile} focusRequestId={focusPTRequestId} onFocusConsumed={()=>setFocusPTRequestId(null)} onLaunchWorkout={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community profile={profile} /></section> : active === 'utfordringar' ? <section className="content-card training-content"><Challenges profile={profile} /></section> : active === 'kaffi' ? <section className="content-card training-content"><CoffeeBar profile={profile} /></section> : active === 'wod-studio' ? <section className="content-card training-content"><WodBuilder /></section> : active === 'wod-library' ? <section className="content-card training-content"><WodLibrary onLaunchWod={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'calendar' ? <section className="content-card training-content"><CalendarAdmin /></section> : active === 'admin' ? <section className="content-card training-content"><Admin profile={profile} /></section> : <section className="content-card">
+        {active === 'oversikt' ? <section className="content-card training-content"><Overview profile={profile} onNavigate={setActive} /></section> : active === 'trening' ? <section className="content-card training-content"><Training launchWodId={launchWodId} launchClassSessionId={launchClassSessionId} onLaunchConsumed={() => { setLaunchWodId(null); setLaunchClassSessionId(null) }} /></section> : active === 'mi-trening' ? <section className="content-card training-content"><MyTraining onLaunchWod={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'booking' ? <section className="content-card training-content"><Booking profile={profile} onLogResult={(wodId, sessionId) => { setLaunchWodId(wodId); setLaunchClassSessionId(sessionId); setActive('trening') }} /></section> : active === 'pt' ? <section className="content-card training-content"><PT profile={profile} focusRequestId={focusPTRequestId} onFocusConsumed={()=>setFocusPTRequestId(null)} onLaunchWorkout={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community profile={profile} /></section> : active === 'utfordringar' ? <section className="content-card training-content"><Challenges profile={profile} /></section> : active === 'kaffi' ? <section className="content-card training-content"><CoffeeBar profile={profile} /></section> : active === 'musikk' ? <section className="content-card training-content"><Music memberId={session.user.id} /></section> : active === 'wod-studio' ? <section className="content-card training-content"><WodBuilder /></section> : active === 'wod-library' ? <section className="content-card training-content"><WodLibrary onLaunchWod={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'calendar' ? <section className="content-card training-content"><CalendarAdmin /></section> : active === 'admin' ? <section className="content-card training-content"><Admin profile={profile} /></section> : <section className="content-card">
           <div className="section-icon"><Icon size={22} /></div>
           <div className="section-kicker">MODUL · {active.toUpperCase()}</div>
           <h2>{current.label}</h2>
@@ -268,5 +272,6 @@ export default function App() {
         <footer>GARASJEGYM 2.0 · STURMKOPF <span>UTVIKLINGSVERSJON</span></footer>
       </main>
     </div>
+    </SpotifyProvider>
   )
 }
