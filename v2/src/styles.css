@@ -1044,3 +1044,32 @@ footer {
 .wod-performance-templates button small{color:#b6c0bd;line-height:1.45;white-space:normal;overflow-wrap:anywhere}
 .wod-performance-templates button:hover{border-color:#f3a43b;transform:translateY(-1px)}
 @media(max-width:600px){.wod-performance-templates{grid-template-columns:minmax(0,1fr)}}
+
+
+/* Garasjekadett rank links and compact PT member card */
+.rank-card-link{display:block;width:100%;text-align:left;color:inherit;background:transparent;border:0;padding:0;cursor:pointer}
+.rank-see-all{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:10px;color:var(--orange);font-size:11px;font-weight:800}
+.rank-modal-backdrop{position:fixed;inset:0;z-index:1200;background:#000b;display:flex;align-items:center;justify-content:center;padding:14px}
+.rank-modal{width:min(620px,100%);max-height:88vh;overflow:hidden;display:flex;flex-direction:column;background:#1b2021;border:1px solid #48504f;border-radius:16px;padding:18px;box-shadow:0 20px 80px #0009}
+.rank-modal>header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.rank-modal h3{margin:4px 0;font-size:20px}
+.rank-list{overflow:auto;display:grid;gap:5px;padding:10px 2px}
+.rank-list article{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:8px 10px;border:1px solid transparent;border-radius:8px;background:#222829}
+.rank-list article.current{border-color:var(--orange);background:#33291d}
+.rank-list article strong{font-size:12px}.rank-list article span{font-size:10px;color:var(--muted)}.rank-list-stars{color:var(--orange)!important;letter-spacing:2px}
+.pt-active-customer-compact{padding:12px 14px!important;gap:12px!important;align-items:center!important}
+.pt-active-customer-compact .pt-customer-avatar{width:40px!important;height:40px!important;flex:0 0 40px}
+.pt-active-customer-compact .pt-customer-identity{gap:2px!important;min-width:120px}
+.pt-active-customer-compact .pt-customer-identity strong{font-size:14px!important}
+.pt-active-customer-compact .pt-customer-identity small{font-size:10px!important}
+.pt-active-customer-compact .pt-customer-rank{display:grid;gap:3px;min-width:0;margin-left:auto}
+.pt-rank-display>span{font-size:9px;letter-spacing:1px;color:var(--muted)}
+.pt-rank-display>strong{font-size:13px;color:#f4f1e9}
+.pt-rank-stars{color:var(--orange)!important;letter-spacing:2px;font-size:14px!important}
+.pt-rank-link{justify-self:start;padding:0;border:0;background:none;color:var(--orange);font-size:10px;font-weight:800;cursor:pointer}
+.pt-rank-ladder{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:55vh;overflow:auto}
+.pt-rank-ladder>span{display:flex;justify-content:space-between;gap:8px;padding:8px;border:1px solid var(--line);border-radius:7px;font-size:11px}
+.pt-rank-ladder>span.current{border-color:var(--orange);background:#33291d}
+.pt-rank-ladder small{color:var(--muted);white-space:nowrap}
+.wod-category-golf{background:linear-gradient(120deg,#253d32 0%,#1d2925 100%)!important;border-color:#4e9b72!important}
+@media(max-width:620px){.pt-active-customer-compact{flex-wrap:wrap!important}.pt-active-customer-compact .pt-customer-rank{width:100%;margin-left:52px}.rank-list article{grid-template-columns:minmax(0,1fr) auto}.rank-list-stars{grid-column:2}.pt-rank-ladder{grid-template-columns:minmax(0,1fr)}}
