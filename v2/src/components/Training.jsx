@@ -495,9 +495,11 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       <section className="engine-section">
         <h4>Resultat frå økta</h4>
         <div className="engine-fields three">
-          <label>Rundar<input type="number" min="0" value={scoreRounds} onChange={e => setScoreRounds(e.target.value)} placeholder="–"/></label>
-          <label>Ekstra reps<input type="number" min="0" value={scoreReps} onChange={e => setScoreReps(e.target.value)} placeholder="–"/></label>
-          <label>Tid / sluttid<input value={scoreTime} onChange={e => setScoreTime(e.target.value)} placeholder="t.d. 12:45"/></label>
+          {['AMRAP'].includes(format)&&<><label>Fullførte rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder={String(timerSnapshot.roundsCompleted||0)}/></label><label>Ekstra reps i neste runde<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="0"/></label></>}
+          {['For Time','Chipper','Couplet','Triplet'].includes(format)&&<label>Sluttid (mm:ss eller tt:mm:ss)<input value={scoreTime} onChange={e=>setScoreTime(e.target.value)} placeholder={timerSnapshot.elapsed?clock(timerSnapshot.elapsed):'t.d. 12:45'}/></label>}
+          {['Strength','Pyramid','Superset','Complex'].includes(format)&&<label>Tungaste løft (kg)<input type="number" min="0" step="0.5" value={scoreLoad} onChange={e=>setScoreLoad(e.target.value)} placeholder="Valfritt"/></label>}
+          {['Row Intervals','Intervall','Tabata'].includes(format)&&<><label>Kaloriar (valfritt)<input type="number" min="0" step="0.1" value={scoreCalories} onChange={e=>setScoreCalories(e.target.value)} placeholder="Totalt"/></label><label>Avstand (valfritt)<input type="number" min="0" step="1" value={scoreDistance} onChange={e=>setScoreDistance(e.target.value)} placeholder="Total distanse"/></label><label>Eining<select value={scoreUnit} onChange={e=>setScoreUnit(e.target.value)}><option value="m">Meter</option><option value="km">Kilometer</option><option value="cal">Kaloriar</option></select></label></>}
+          {!['AMRAP','For Time','Chipper','Couplet','Triplet','Strength','Pyramid','Superset','Complex','Row Intervals','Intervall','Tabata'].includes(format)&&<><label>Rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder="–"/></label><label>Reps<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="–"/></label><label>Tid / sluttid<input value={scoreTime} onChange={e=>setScoreTime(e.target.value)} placeholder="t.d. 12:45"/></label></>}
         </div>
         <label className="engine-note">Notat<textarea value={note} onChange={e => setNote(e.target.value)} rows="3" placeholder="Belastning, dagsform eller kommentar …"/></label>
       </section>
