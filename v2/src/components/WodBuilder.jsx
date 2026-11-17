@@ -40,7 +40,6 @@ export default function WodBuilder(){
  const [ladderStart,setLadderStart]=useState('2'),[ladderStep,setLadderStep]=useState('2'),[ladderDirection,setLadderDirection]=useState('up')
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [prescription,setPrescription]=useState('rx'),[customInstructions,setCustomInstructions]=useState('')
- const [customRounds,setCustomRounds]=useState(false)
 
  useEffect(()=>{load()},[])
  async function load(){
@@ -105,7 +104,6 @@ export default function WodBuilder(){
   if(!showSets&&selected.some(x=>!x.reps&&!x.meters&&!x.calories&&!x.workSeconds)){setError('Alle øvingar må ha reps, distanse, kalorier eller arbeidstid.');return}
   if(isInterval&&(!Number(rounds)||!Number(workSeconds))){setError('Intervall krev arbeidstid og tal drag.');return}
   if(isTabata&&Number(workSeconds)+Number(restSeconds)<=0){setError('Kontroller arbeid og pause i Tabata.');return}
-  if(!userReady()){}
   setBusy(true)
   try{
    const {data:{user}}=await supabase.auth.getUser()
@@ -154,7 +152,7 @@ export default function WodBuilder(){
      <label>Programmeringsnivå<select value={prescription} onChange={e=>setPrescription(e.target.value)}><option value="rx">RX · Føreskriven</option><option value="scaled">Skalert</option><option value="beginner">Nybegynnar</option><option value="custom">Individuelt tilpassa</option></select></label>
      <div className="engine-fields"><label>Format<select value={format} onChange={e=>setFormat(e.target.value)}>{formats.map(group=><optgroup key={group.group} label={group.group}>{group.items.map(x=><option key={x} value={x}>{x}</option>)}</optgroup>)}</select></label>{!isTimed&&<label>Varigheit (min)<input type="number" min="1" max="300" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label>}</div>
      {isTimed&&<div className="wod-advanced-fields"><label>Varigheit (min)<input type="number" min="1" max="300" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label><p className="wod-help">Arbeidet startar {timedLabel(format)}. Reps-feltet på kvar øving er målet per arbeidsintervall.</p></div>}
-     {isInterval&&<div className="wod-advanced-fields"><label>{isTabata?'Arbeid (sek.)':'Arbeid (sek.)'}<input type="number" min="1" value={workSeconds} onChange={e=>setWorkSeconds(isTabata?'20':e.target.value)}/></label><label>Pause (sek.)<input type="number" min="0" value={restSeconds} onChange={e=>setRestSeconds(isTabata?'10':e.target.value)}/></label><label>Tal drag<input type="number" min="1" value={rounds} onChange={e=>setRounds(e.target.value)}/></label></div>}
+     {isInterval&&<div className="wod-advanced-fields"><label>Arbeid (sek.)<input type="number" min="1" value={isTabata?'20':workSeconds} onChange={e=>setWorkSeconds(e.target.value)}/></label><label>Pause (sek.)<input type="number" min="0" value={isTabata?'10':restSeconds} onChange={e=>setRestSeconds(e.target.value)}/></label><label>Tal drag<input type="number" min="1" value={rounds} onChange={e=>setRounds(e.target.value)}/></label></div>}
      {isLadder&&<div className="wod-advanced-fields"><label>Startreps<input type="number" min="1" value={ladderStart} onChange={e=>setLadderStart(e.target.value)}/></label><label>Endring per runde<input type="number" min="1" value={ladderStep} onChange={e=>setLadderStep(e.target.value)}/></label><label>Retning<select value={ladderDirection} onChange={e=>setLadderDirection(e.target.value)}><option value="up">Aukande</option><option value="down">Minkande</option></select></label></div>}
      {isAmrap&&<div className="wod-advanced-fields"><label>Tidsgrense (min)<input type="number" min="1" max="300" value={timeCap} onChange={e=>setTimeCap(e.target.value)}/></label><p className="wod-help">Resultatet blir rundar + ekstra repetisjonar.</p></div>}
      {isForTime&&<div className="wod-advanced-fields"><label>{format==='Chipper'?'Tidsgrense (valfri, min)':'Maks tid (min)'}<input type="number" min="1" max="300" value={timeCap} onChange={e=>setTimeCap(e.target.value)}/></label>{format!=='Chipper'&&<label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(e.target.value)}/></label>}</div>}
