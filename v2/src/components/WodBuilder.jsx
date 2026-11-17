@@ -217,9 +217,10 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
    if(!user)throw new Error('Du må vera innlogga for å publisera WOD.')
    const schema={
     version:3,format,structure:showSets?'strength':isTimed?'interval_clock':isInterval?'interval':isAmrap||isForTime||isLadder?'metcon':'custom',
-    duration_minutes:Number(minutes)||null,time_cap_minutes:isAmrap||isForTime||(isCoupletTriplet&&combinationMode!=='Open')?Number(timeCap)||null:null,combination_mode:isCoupletTriplet?combinationMode:null,
+    duration_minutes:Math.ceil(((Number(minutes)||0)*60+(Number(durationSeconds)||0))/60)||null,time_cap_minutes:isAmrap||isForTime||(isCoupletTriplet&&combinationMode!=='Open')?Number(timeCap)||null:null,combination_mode:isCoupletTriplet?combinationMode:null,
     rounds:isInterval||isLadder||isForTime?Number(rounds)||null:null,
-    duration_seconds:(Number(minutes)||0)*60+(Number(durationSeconds)||0),\n    interval:{work_seconds:isTabata?20:Number(workSeconds)||null,rest_seconds:isTabata?10:Number(restSeconds)||0,work_every_minutes:isTimed?timedEvery(format):null},
+    duration_seconds:(Number(minutes)||0)*60+(Number(durationSeconds)||0),
+    interval:{work_seconds:isTabata?20:Number(workSeconds)||null,rest_seconds:isTabata?10:Number(restSeconds)||0,work_every_minutes:isTimed?timedEvery(format):null},
     ladder:isLadder?{start:Number(ladderStart),step:Number(ladderStep),direction:ladderDirection}:null,
     stimulus,coach_notes:notes,prescription,
     superset_groups:showSets&&format==='Superset'?Array.from(new Set(selected.map(x=>x.group))):[],
