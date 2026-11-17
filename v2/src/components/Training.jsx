@@ -380,6 +380,9 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
           const value = Number(String(record.result).replace(',', '.'))
           if (Number.isFinite(value)) bestByName.set(record.exercise_name.toLowerCase(), Math.max(bestByName.get(record.exercise_name.toLowerCase()) || 0, value))
         })
+        const { data: savedLogs, error: savedLogError } = await supabase.from('workout_logs').select('id').eq('member_id', user.id).eq('title', payload.title).eq('workout_date', payload.workout_date).order('created_at', { ascending: false }).limit(1)
+        if (savedLogError) throw savedLogError
+        const sourceWorkoutId = savedLogs?.[0]?.id || null
         const newPRs = []
         payload.exercises.forEach(exercise => {
           const loads = exercise.sets.map(set => set.load_kg).filter(value => Number.isFinite(value) && value > 0)
@@ -387,7 +390,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
           const best = Math.max(...loads)
           const key = exercise.exercise_name.toLowerCase()
           if (best > (bestByName.get(key) || 0)) {
-            newPRs.push({ member_id: user.id, exercise_name: exercise.exercise_name, result: String(best), unit: 'kg', note: 'Automatisk PR frå økta «' + payload.title + '»' })
+            newPRs.push({ member_id: user.id, workout_log_id: sourceWorkoutId, exercise_name: exercise.exercise_name, result: String(best), unit: 'kg', record_date: payload.workout_date, note: 'Automatisk PR frå økta «' + payload.title + '»' })
             bestByName.set(key, best)
           }
         })
