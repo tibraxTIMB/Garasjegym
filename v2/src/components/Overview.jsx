@@ -5,16 +5,18 @@ export const RANK_TITLES = ["Garasjekadett","Kraftknøtt","Schwitzling","Kneipen
 export const rankForCount = count => { const n=Math.max(0,Number(count)||0); if(n>=600)return {level:200,stars:3,title:RANK_TITLES[199],next:600,gold:true}; if(n===0)return {level:1,stars:0,title:RANK_TITLES[0],next:1,gold:false}; const level=Math.min(200,Math.floor((n-1)/3)+1),stars=((n-1)%3)+1; return {level,stars,title:RANK_TITLES[level-1],next:level*3,gold:false} }
 
 export default function Overview({profile,onNavigate,onOpenWorkout}){
- const [logs,setLogs]=useState([]),[prs,setPrs]=useState([]),[assignments,setAssignments]=useState([]),[bookings,setBookings]=useState([]),[totalCount,setTotalCount]=useState(0),[loading,setLoading]=useState(true),[error,setError]=useState('')
+ const [logs,setLogs]=useState([]),[prs,setPrs]=useState([]),[assignments,setAssignments]=useState([]),[bookings,setBookings]=useState([]),[totalCount,setTotalCount]=useState(0),[ranking,setRanking]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState('')
  useEffect(()=>{let live=true;async function load(){
   const {data:{user}}=await supabase.auth.getUser()
   if(!user){if(live)setLoading(false);return}
-  const [l,p,count,a,b]=await Promise.all([
+  const [l,p,count,a,b,leaderboardLogs,leaderboardProfiles]=await Promise.all([
    supabase.from('workout_logs').select('id,title,workout_date,format,score_rounds,score_reps,note').order('workout_date',{ascending:false}).limit(100),
    supabase.from('personal_records').select('id,exercise_name,result,unit,record_date').order('record_date',{ascending:false}).limit(100),
    supabase.from('workout_logs').select('id',{count:'exact',head:true}),
    supabase.from('pt_wod_assignments').select('id,status,due_date,wods(name,format,duration_minutes)').eq('member_id',user.id).in('status',['assigned','in_progress']).order('due_date',{ascending:true,nullsFirst:false}).limit(5),
-   supabase.from('class_bookings').select('id,status,classes(id,title,starts_at,duration_minutes)').eq('member_id',user.id).eq('status','confirmed').limit(20)
+   supabase.from('class_bookings').select('id,status,classes(id,title,starts_at,duration_minutes)').eq('member_id',user.id).eq('status','confirmed').limit(20),
+   supabase.from('workout_logs').select('member_id').limit(10000),
+   supabase.from('profiles').select('id,display_name').eq('active',true)
   ])
   if(!live)return
   if(l.error)setError(l.error.message);else setLogs(l.data||[])
@@ -22,6 +24,7 @@ export default function Overview({profile,onNavigate,onOpenWorkout}){
   if(!count.error)setTotalCount(count.count||0)
   if(!a.error)setAssignments((a.data||[]).filter(x=>x.wods))
   if(!b.error)setBookings((b.data||[]).filter(x=>x.classes).map(x=>x.classes).sort((x,y)=>new Date(x.starts_at)-new Date(y.starts_at)))
+  if(!leaderboardLogs.error&&!leaderboardProfiles.error){const counts=new Map();(leaderboardLogs.data||[]).forEach(row=>counts.set(row.member_id,(counts.get(row.member_id)||0)+1));const rows=(leaderboardProfiles.data||[]).map(person=>({id:person.id,name:person.display_name||'Medlem',count:counts.get(person.id)||0})).sort((x,y)=>y.count-x.count||x.name.localeCompare(y.name,'nn'));setRanking(rows.map((row,index)=>({...row,position:index+1}))) }
   setLoading(false)
  }load();const timer=setInterval(load,60000);return()=>{live=false;clearInterval(timer)}},[])
  const now=new Date(),weekStart=new Date(now);weekStart.setHours(0,0,0,0);weekStart.setDate(weekStart.getDate()-(weekStart.getDay()+6)%7)
@@ -30,8 +33,9 @@ export default function Overview({profile,onNavigate,onOpenWorkout}){
  const nextBooking=bookings.find(x=>new Date(x.starts_at)>=now)
  if(loading)return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar oversikta …</div>
  return <div className="overview-module overview-dashboard">
-  <div className="training-heading"><div><div className="section-kicker">GARASJEGYM · DI TRENING</div><h3>Hei, {profile.display_name||'medlem'}!</h3><p>Dette er det viktigaste som skjer med treninga di no.</p></div><span className="count-pill">NIVÅ {rank.level}</span></div>
+  <div className="training-heading"><div><div className="section-kicker">GARASJEGYM · DI TRENING</div><h3>Hei, {profile.display_name||'medlem'}!</h3><p>Dette er det viktigaste som skjer med treninga di no.</p></div><div className="overview-rank-label"><span className="overview-rank-title">{rank.title}</span><span className="count-pill">NIVÅ {rank.level} · {rank.stars}/3</span></div></div>
   {error&&<div className="auth-error" role="alert">{error}</div>}
+  <section className="engine-section overview-ranking"><div className="engine-section-title"><h4><Trophy size={16}/> Rangering</h4><span>{ranking.length} aktive medlemer</span></div>{ranking.length?<><div className="overview-ranking-self"><strong>{ranking.find(x=>x.id===profile.id)?.position ? '#'+ranking.find(x=>x.id===profile.id).position : '–'}</strong><span>Di plassering · {rank.title}</span><b>{totalCount} økter</b></div><ol>{ranking.slice(0,5).map(person=><li key={person.id} className={person.id===profile.id?'is-current-member':''}><span className="overview-ranking-position">{person.position}</span><span>{person.name}{person.id===profile.id?' (deg)':''}</span><b>{person.count} økter</b></li>)}</ol></>:<div className="empty-state">Rangeringa er ikkje tilgjengeleg akkurat no.</div>}</section>
   <div className="overview-stats">
    <button type="button" onClick={()=>onNavigate('mi-side')}><Activity size={18}/><strong>{weekCount}</strong><span>Økter denne veka</span></button>
    <button type="button" onClick={()=>onNavigate('mi-side')}><Dumbbell size={18}/><strong>{totalCount}</strong><span>Gjennomførte økter</span></button>
