@@ -100,7 +100,8 @@ const strengthFormats=['Strength','Pyramid','Superset','Complex']
 const strengthLike=f=>strengthFormats.includes(f)
 const intervalFormats=['Intervall','Tabata','Row Intervals']
 const timedFormats=['EMOM','E1MOM','E2MOM','E3MOM']
-const timedEvery=f=>f==='E2MOM'?2:f==='E3MOM'?3:1\nconst timedLabel=f=>`kvart ${timedEvery(f)}. minutt`
+const timedEvery=f=>f==='E2MOM'?2:f==='E3MOM'?3:1
+const timedLabel=f=>`kvart ${timedEvery(f)}. minutt`
 const isRow=x=>x.equipment==='Romaskin'
 const categoryTone=value=>{const v=(value||'').toLowerCase();return v.includes('kond')||v.includes('cardio')?'conditioning':v.includes('kjern')||v.includes('core')?'core':v.includes('styr')||v.includes('strength')?'strength':v.includes('mobil')?'mobility':v.includes('golf')?'golf':v.includes('rehab')||v.includes('fysio')?'rehab':'other'}
 
