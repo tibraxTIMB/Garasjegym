@@ -126,7 +126,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
   const showTimeCap = (isForTime || isDeathBy) && capDuration > 0
   const roundsShown = isTimedInterval ? Math.min(currentRound, Number(rounds)) : currentRound
   const completedRounds = isAmrap ? laps.length : round
-  const lapAction = () => { setLaps(value => [...value, Math.max(0, elapsed - value.reduce((sum, lap) => sum + lap, 0))]); setRound(value => value + 1); cue(1200, 0.1) }
+  const lapAction = () => { if(!running)return; setLaps(value => [...value, Math.max(0, elapsed - value.reduce((sum, lap) => sum + lap, 0))]); setRound(value => value + 1); cue(1200, 0.1) }
   return <div className={focused ? 'engine-timer timer-focused' : 'engine-timer'}>
     <div className="timer-caption"><Clock3 size={15}/> {format.toUpperCase()}</div>
     <div className="timer-dashboard timer-dashboard-reflow">
@@ -138,7 +138,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
         {isAmrap && <div className="timer-round-total"><span>RUNDER FULLFØRT</span><b>{completedRounds}</b></div>}
         <div className="timer-actions">
           <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) setPhase('PÅGÅR'); setRunning(value => !value) }} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
-          {isAmrap && <button type="button" className="timer-lap-button" onClick={lapAction} disabled={!running && elapsed===0}>+ REGISTRER RUNDE</button>}
+          {isAmrap && <button type="button" className="timer-lap-button" onClick={lapAction} disabled={!running}>+ REGISTRER RUNDE</button>}
           <button type="button" className="secondary-button" onClick={() => { setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar') }}><RotateCcw size={14}/> Nullstill</button>
           {(isStopwatch || isForTime) && <button type="button" className="secondary-button" onClick={() => setLaps(value => [...value, elapsed])}>Mellomtid</button>}
           <button type="button" className="secondary-button" onClick={() => setSoundOn(value => !value)}>{soundOn ? 'Lyd på' : 'Lyd av'}</button>
