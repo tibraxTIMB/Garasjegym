@@ -281,7 +281,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   function startWorkout(wod = null) {
     setClassSessionId(null)
     setSource(wod)
-    setTitle(wod?.name || '')
+    setTitle(wod?.name || (simpleMode ? 'Eiga trening' : ''))
     setFormat(wod?.format || 'Fri trening')
     setDuration(String(wod?.timer_settings?.workout_schema?.duration_seconds ? Math.floor(wod.timer_settings.workout_schema.duration_seconds / 60) : (wod?.duration_minutes || 10)))
     setDurationSeconds(String(wod?.timer_settings?.workout_schema?.duration_seconds ? wod.timer_settings.workout_schema.duration_seconds % 60 : 0))
@@ -352,7 +352,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   async function saveWorkout(event) {
     event.preventDefault()
     if (!title.trim()) { setError('Gi økta eit namn før du lagrar.'); return }
-    if (!items.length || items.some(item => !item.exercise_name.trim())) {
+    if ((!simpleMode && !items.length) || items.some(item => !item.exercise_name.trim())) {
       setError('Alle øvingane må ha namn.'); return
     }
     setSaving(true); setError(''); setNotice('')
@@ -460,7 +460,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   return <div className={simpleMode ? "training-module simple-mode" : "training-module"}>
     {error && <div className="auth-error" role="alert">{error}</div>}
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16}/> {notice}</div>}
-    {mode === 'active' ? <form className="engine-form" onSubmit={saveWorkout}>
+    {mode === 'active' ? <form className={simpleMode ? "engine-form simple-quick-form" : "engine-form"} onSubmit={saveWorkout}>
       <button type="button" className="text-button" onClick={leaveWorkout}>← Avslutt økta</button>
       <div className="training-heading"><div><div className="section-kicker">TRENING · AKTIV ØKT</div><h3>Bygg økta di</h3></div><span className="count-pill">{items.length} øvingar</span></div>
       <div className="engine-fields">
@@ -505,7 +505,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     </form> : <>
       <div className="training-heading"><div><div className="section-kicker">{simpleMode ? "SUPERENKEL MODUS · TRENING" : "TRENING · MOTOR"}</div><h3>{simpleMode ? "Kva vil du gjera i dag?" : "Vel øktform"}</h3>{simpleMode&&<p>Vel ei ferdig økt eller start di eiga. Resultatet blir lagra på profilen din.</p>}</div>{!simpleMode&&<span className="count-pill">STURMKOPF</span>}</div>
       <div className={simpleMode ? "engine-entry-grid simple-entry-grid" : "engine-entry-grid"}>
-        <button onClick={() => startWorkout()}><Dumbbell size={20}/><strong>{simpleMode ? "Start eiga økt" : "Fri trening"}</strong><small>{simpleMode ? "Registrer treninga di" : "Bygg økta frå botnen"}</small></button>
+        <button onClick={() => startWorkout()}><Dumbbell size={20}/><strong>{simpleMode ? "Start trening" : "Fri trening"}</strong><small>{simpleMode ? "Start klokka og tren" : "Bygg økta frå botnen"}</small></button>
         <button onClick={() => setMode('wods')}><Activity size={20}/><strong>{simpleMode ? "Følg eit opplegg" : "Start ein WOD"}</strong><small>{simpleMode ? "Vel ei økt som er laga for deg" : "Vel ei publisert økt"}</small></button>
       </div>
       {mode === 'wods' && <section className="engine-section"><div className="engine-section-title"><h4>Publiserte WOD-ar</h4><button className="text-button" onClick={() => setMode('home')}>Lukk</button></div>
