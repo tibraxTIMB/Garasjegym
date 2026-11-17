@@ -202,6 +202,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [notice, setNotice] = useState('')
   const [saving, setSaving] = useState(false)
   const [mode, setMode] = useState('home')
+  const [reviewOpen,setReviewOpen]=useState(false)
   const [source, setSource] = useState(null)
   const [classSessionId, setClassSessionId] = useState(null)
   const [title, setTitle] = useState('')
@@ -279,8 +280,9 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const filteredExercises = useMemo(() => exercises.filter(e => e.name.toLowerCase().includes(query.toLowerCase()) || (e.category || '').toLowerCase().includes(query.toLowerCase())), [exercises, query])
 
   function leaveWorkout() {
-    if (window.confirm('Vil du avslutta økta? Resultata som ikkje er lagra, går tapt.')) {
+    if (window.confirm('Avbryt økta utan å lagra? Alle resultat frå denne økta går tapt.')) {
       setMode('home'); setSource(null); setClassSessionId(null); setItems([])
+      setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
     }
   }
 
@@ -319,6 +321,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       const names = wod.movements.split(/\n|,/).map(x => x.trim()).filter(Boolean)
       setItems(names.map(name => ({ ...emptyExercise(), exercise_name: name })))
     }
+    setReviewOpen(false)
     setMode('active')
     setError(''); setNotice('')
   }
@@ -434,6 +437,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       }
       setNotice('Økta er lagra i treningsloggen.' + prMessage)
       setMode('home')
+      setReviewOpen(false)
       await loadAll()
     } catch (err) {
       setError(err.message || 'Kunne ikkje lagra økta.')
@@ -466,8 +470,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   return <div className={simpleMode ? "training-module simple-mode" : "training-module"}>
     {error && <div className="auth-error" role="alert">{error}</div>}
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16}/> {notice}</div>}
-    {mode === 'active' ? <form className={simpleMode ? "engine-form simple-quick-form" : "engine-form"} onSubmit={saveWorkout}>
-      <button type="button" className="text-button" onClick={leaveWorkout}>← Avslutt økta</button>
+    {mode === 'active' ? <form className={simpleMode ? `engine-form simple-quick-form${reviewOpen?" review-open":""}` : "engine-form"} onSubmit={saveWorkout}>
+      <button type="button" className="text-button" onClick={leaveWorkout}>← Avbryt økta</button>
       <div className="training-heading"><div><div className="section-kicker">TRENING · AKTIV ØKT</div><h3>Bygg økta di</h3></div><span className="count-pill">{items.length} øvingar</span></div>
       <div className="engine-fields">
         <label>Namn på økta<input value={title} onChange={e => setTitle(e.target.value)} placeholder="Til dømes Styrke A" required/></label>
@@ -507,6 +511,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         </div>
         <label className="engine-note">Notat<textarea value={note} onChange={e => setNote(e.target.value)} rows="3" placeholder="Belastning, dagsform eller kommentar …"/></label>
       </section>
+      {simpleMode&&<button type="button" className="secondary-button simple-review-toggle" onClick={()=>setReviewOpen(v=>!v)}>{reviewOpen?"Skjul redigering":"Revider øvingar og resultat"}</button>}
       <button className="primary-button save-workout" disabled={saving} type="submit"><Save size={16}/> {saving ? 'Lagrar økta …' : 'Lagre treningsøkt'}</button>
     </form> : <>
       <div className="training-heading"><div><div className="section-kicker">{simpleMode ? "SUPERENKEL MODUS · TRENING" : "TRENING · MOTOR"}</div><h3>{simpleMode ? "Kva vil du gjera i dag?" : "Vel øktform"}</h3>{simpleMode&&<p>Vel ei ferdig økt eller start di eiga. Resultatet blir lagra på profilen din.</p>}</div>{!simpleMode&&<span className="count-pill">STURMKOPF</span>}</div>
