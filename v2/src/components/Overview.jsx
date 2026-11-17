@@ -10,9 +10,9 @@ export default function Overview({profile,onNavigate,onOpenWorkout}){
   const {data:{user}}=await supabase.auth.getUser()
   if(!user){if(live)setLoading(false);return}
   const [l,p,count,a,b,leaderboardLogs,leaderboardProfiles]=await Promise.all([
-   supabase.from('workout_logs').select('id,title,workout_date,format,score_rounds,score_reps,note').order('workout_date',{ascending:false}).limit(100),
+   supabase.from('workout_logs').select('id,title,workout_date,format,score_rounds,score_reps,note').eq('member_id',user.id).order('workout_date',{ascending:false}).limit(100),
    supabase.from('personal_records').select('id,exercise_name,result,unit,record_date').order('record_date',{ascending:false}).limit(100),
-   supabase.from('workout_logs').select('id',{count:'exact',head:true}),
+   supabase.from('workout_logs').select('id',{count:'exact',head:true}).eq('member_id',user.id),
    supabase.from('pt_wod_assignments').select('id,status,due_date,wods(name,format,duration_minutes)').eq('member_id',user.id).in('status',['assigned','in_progress']).order('due_date',{ascending:true,nullsFirst:false}).limit(5),
    supabase.from('class_bookings').select('id,status,classes(id,title,starts_at,duration_minutes)').eq('member_id',user.id).eq('status','confirmed').limit(20),
    supabase.from('workout_logs').select('member_id').limit(10000),
