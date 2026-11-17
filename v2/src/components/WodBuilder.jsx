@@ -252,7 +252,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
     duration_seconds:(Number(minutes)||0)*60+(Number(durationSeconds)||0),
     interval:{work_seconds:Number(workSeconds)||null,rest_seconds:Number(restSeconds)||0,work_every_minutes:isTimed?timedEvery(format):null},
     ladder:isLadder?{start:Number(ladderStart),step:Number(ladderStep),direction:ladderDirection}:null,
-    stimulus,coach_notes:notes,prescription,
+    stimulus,coach_notes:notes,prescription,custom_instructions:customInstructions,
     superset_groups:showSets&&format==='Superset'?Array.from(new Set(selected.map(x=>x.group))):[],
     complex_order:showSets&&format==='Complex'?selected.map(x=>x.name):[],
     items:selected.map((x,i)=>({
@@ -269,7 +269,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    const stationDuration=isStationCircuit?(stationSlots*Number(stationWork)+(stationSlots-1)*Number(stationTransition)):schema.duration_seconds
    schema.duration_seconds=stationDuration
    const timer_settings={workout_schema:schema,work_seconds:isStationCircuit?Number(stationWork):Number(workSeconds)||null,rest_seconds:isStationCircuit?Number(stationTransition):Number(restSeconds)||null,rounds:isStationCircuit?Number(stationRounds):Number(rounds)||null,duration_seconds:stationDuration}
-   const wodPayload={name:name.trim(),format,duration_minutes:Math.ceil(stationDuration/60)||null,movements,notes:[stimulus,notes,customInstructions].filter(Boolean).join('\n\n'),is_published:publishToMembers,created_by:user.id,timer_settings}\n   const wodRequest=editingWodId?supabase.from('wods').update(wodPayload).eq('id',editingWodId).select('id').single():supabase.from('wods').insert(wodPayload).select('id').single()\n   const {data:savedWod,error:e}=await wodRequest
+   const wodPayload={name:name.trim(),format,duration_minutes:Math.ceil(stationDuration/60)||null,movements,notes:[stimulus,notes,customInstructions].filter(Boolean).join('\n\n'),is_published:publishToMembers,timer_settings}\n   if(!editingWodId)wodPayload.created_by=user.id\n   const wodRequest=editingWodId?supabase.from('wods').update(wodPayload).eq('id',editingWodId).select('id').single():supabase.from('wods').insert(wodPayload).select('id').single()\n   const {data:savedWod,error:e}=await wodRequest
    if(e)throw e
    if(assignedClientId){const {error:linkError}=await supabase.from('pt_wod_assignments').insert({member_id:assignedClientId,wod_id:savedWod.id,assigned_by:user.id,location:'Valfritt',coach_note:'Tildelt frå PT Studio'});if(linkError)throw new Error('WOD-en vart lagra, men kunne ikkje knytast til kunden: '+linkError.message);onAssigned?.()}
    setNotice(publishToMembers?'WOD lagra i biblioteket og publisert for medlemmene.':'WOD lagra i det interne PT-biblioteket.')
