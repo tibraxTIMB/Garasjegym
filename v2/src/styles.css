@@ -1448,3 +1448,51 @@ footer {
 .admin-member-enhanced .admin-member-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .admin-member-enhanced .admin-member-actions select{max-width:145px;min-height:34px}
 @media(max-width:600px){.admin-member-enhanced{display:grid;grid-template-columns:1fr}.admin-member-enhanced .admin-member-actions{justify-content:flex-start}.admin-member-enhanced .admin-member-actions select{flex:1;max-width:none}}
+
+
+/* VERSION GO – consolidated member navigation */
+.hub-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 20px;padding:5px;border:1px solid var(--line);border-radius:11px;background:#171b1d}
+.hub-tabs button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:39px;padding:8px 14px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);font-size:12px;font-weight:800;cursor:pointer}
+.hub-tabs button.selected{border-color:#71542f;background:#332a1e;color:#f3bd6c}
+.schedule-hub,.wod-hub{min-width:0}
+.workout-mode-intro{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;padding:14px 16px;border:1px solid #70542f;border-radius:12px;background:linear-gradient(120deg,#30271c,#202522)}
+.workout-mode-intro h2{margin:0;font-size:clamp(23px,4vw,32px)}
+.workout-mode-intro p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+.overview-dashboard .overview-stats button{display:grid;justify-items:start;gap:5px;padding:13px;border:1px solid var(--line);border-radius:10px;background:#1c2222;color:var(--text);text-align:left;cursor:pointer}
+.overview-dashboard .overview-stats button strong{font-size:25px;line-height:1.1}
+.overview-dashboard .overview-stats button span{color:var(--muted);font-size:10px}
+.overview-dashboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}
+.overview-mini-panel{min-width:0}
+.overview-mini-item{display:grid;width:100%;gap:5px;padding:10px 0;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text);text-align:left;cursor:pointer}
+.overview-mini-item:last-child{border-bottom:0}
+.overview-mini-item strong{font-size:13px}
+.overview-mini-item small{color:var(--muted);font-size:10px}
+.overview-mini-item>span,.overview-log-open{display:flex;align-items:center;gap:5px;color:var(--orange);font-size:10px;font-weight:800}
+.overview-log-button{display:block;width:100%;text-align:left;cursor:pointer}
+.overview-log-open{margin-top:7px}
+.overview-pr-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.overview-pr-grid .history-card{min-width:0}
+.overview-pr-grid .history-card strong{font-size:12px}
+.overview-dashboard .overview-shortcuts{display:flex;flex-wrap:wrap;gap:8px}
+.overview-dashboard .overview-shortcuts button{display:inline-flex;align-items:center;gap:7px}
+.my-profile-card{display:flex;align-items:center;gap:13px;padding:16px;border:1px solid var(--line);border-radius:13px;background:linear-gradient(120deg,#242a26,#1b2021)}
+.my-profile-avatar{width:48px;height:48px;display:grid;place-items:center;border-radius:50%;background:#3b3326;color:#f4bd6d}
+.my-profile-card h3{margin:0 0 4px;font-size:18px}
+.my-profile-card span,.my-profile-facts span{color:var(--muted);font-size:11px}
+.my-profile-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.my-profile-facts>div{display:grid;grid-template-columns:20px 1fr;gap:4px 7px;padding:11px;border:1px solid var(--line);border-radius:10px;background:#1b2021}
+.my-profile-facts>div svg{grid-row:span 2;color:var(--orange)}
+.my-profile-facts strong{font-size:11px;overflow-wrap:anywhere}
+.my-pr-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.my-page-log{display:block;width:100%;text-align:left;cursor:pointer}
+.workout-detail-score{display:grid;grid-template-columns:repeat(4,auto);align-items:center;justify-content:start;gap:8px 12px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#171b1d}
+.workout-detail-score strong{font-size:22px;color:var(--orange)}
+.workout-detail-score span{font-size:10px;color:var(--muted)}
+.text-action{border:0;background:none;color:var(--orange);font-weight:800;cursor:pointer}
+@media(max-width:620px){
+ .overview-dashboard-grid{grid-template-columns:1fr}
+ .overview-pr-grid,.my-pr-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .my-profile-facts{grid-template-columns:1fr}
+ .hub-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .hub-tabs button{padding:8px 6px;font-size:11px}
+}
