@@ -1881,3 +1881,10 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .overview-daily-wod>strong{font-size:clamp(22px,4vw,30px);line-height:1.15}
 .overview-daily-wod>span:not(.section-kicker){display:flex;align-items:center;gap:7px;color:#f0c98b;font-size:12px;font-weight:800}
 .overview-daily-wod small{color:#d4dcd8;font-size:12px;line-height:1.45}
+
+.app-daily-wod-strip{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;margin:0 0 12px;padding:11px 14px;border:1px solid #9a6b2e;border-radius:11px;background:#292218;color:#fff;text-align:left;cursor:pointer}
+.app-daily-wod-strip>span{padding:5px 7px;border-radius:6px;background:#d99a3d;color:#1b1c1b;font-size:9px;font-weight:1000;letter-spacing:.08em}
+.app-daily-wod-strip>strong{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app-daily-wod-strip>small{color:#e7c58e;font-size:10px;text-align:right}
+.wod-card-detail-list{display:grid;gap:4px;margin:8px 0;color:#f1d3a1;font-size:11px}
+@media(max-width:620px){.app-daily-wod-strip{grid-template-columns:auto minmax(0,1fr);gap:6px}.app-daily-wod-strip>small{grid-column:2;text-align:left}}
