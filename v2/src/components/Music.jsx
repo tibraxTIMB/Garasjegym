@@ -221,7 +221,7 @@ export function MusicProvider({ children, memberId = null }) {
 
   const connectSpotify = useCallback(async () => {
     const id = getClientId()
-    if (!id) { setSpotifyError('Spotify er ikkje aktivert av GarasjeGym-administrator enno.'); return }
+    if (!id) { setSpotifyError('Spotify er mellombels utilgjengeleg. Prøv igjen seinare.'); return }
     try {
       const verifier = randomString(64)
       const state = randomString(32)
@@ -326,8 +326,7 @@ export function Music() {
       <div><span className="section-kicker">GARASJEGYM · DIN MUSIKK</span><h2>Musikk</h2><p>Din personlege Spotify-konto – privat og separat.</p></div>
     </div>
     <PersonalSpotifyPlayer/>
-    {!music?.spotifyConfigured && <div className="music-notice warning">Spotify-integrasjonen er ikkje aktivert av GarasjeGym-administrator enno. Når han er konfigurert, kan kvar medlem kople til sin eigen private konto.</div>}
-    {music?.spotifyConfigured && <p className="music-footnote">Spotify blir konfigurert éin gong sentralt for heile GarasjeGym. Kvar medlem loggar inn med sin eigen konto. Development Mode kan avgrense talet på autoriserte brukarar.</p>}
+    <p className="music-footnote">Kvar medlem koplar til sin eigen Spotify-konto. GarasjeGym deler ikkje spelelister eller avspelingsstatus mellom medlemmene.</p>
     <p className="music-footnote">Privat Spotify-status, spelelister og kontrollar blir ikkje delte med andre medlemmer.</p>
   </div>
 }
