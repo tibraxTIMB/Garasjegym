@@ -110,10 +110,11 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
  function updateItem(key,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,...patch}:x))}
  function updateSet(key,index,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,sets:x.sets.map((s,i)=>i===index?{...s,...patch}:s)}:x))}
  function move(i,dir){setSelected(rows=>{const next=[...rows],j=i+dir;if(j<0||j>=next.length)return rows;[next[i],next[j]]=[next[j],next[i]];return next})}
- function addRowing(){
+ function generateRowingIntervals(){
   const row=exercises.find(x=>x.equipment==='Romaskin')
   if(!row){setError('Romaskinøvinga manglar i biblioteket.');return}
-  add(row);setNotice('Romaskin er lagt til som ei vanleg øving.');setError('')
+  const item={...blankItem(row),rowValue:'500',rowUnit:'m',reps:'',restSeconds:'60'}
+  setSelected([item]);setFormat('Row Intervals');setName('Romaskinintervall');setMinutes('20');setWorkSeconds('60');setRestSeconds('60');setRounds('6');setTimeCap('20');setNotice('Romaskinintervall er klart. Tilpass drag, pause og tal rundar.');setError('')
  }
  function randomWod(){
   const pool=exercises.filter(x=>!x.is_rehab&&x.category!=='Rehab / fysio')
