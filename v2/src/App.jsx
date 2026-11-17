@@ -22,6 +22,7 @@ import Challenges from './components/Challenges.jsx'
 import CoffeeBar from './components/CoffeeBar.jsx'
 import Admin from './components/Admin.jsx'
 import Overview from './components/Overview.jsx'
+import Notifications from './components/Notifications.jsx'
 
 const sections = [
   { id: 'oversikt', label: 'Oversikt', icon: LayoutDashboard, note: 'Dashboard og treningsstatus' },
@@ -238,6 +239,7 @@ export default function App() {
           <div className="mobile-brand">GARASJEGYM <span>2.0</span></div>
           <div className="top-meta">
             <span className="member-name">{profile.display_name || session.user.email}</span>
+            <Notifications onNavigate={setActive} />
             <button className="icon-button" onClick={() => supabase.auth.signOut()} title="Logg ut" aria-label="Logg ut"><LogOut size={16} /></button>
           </div>
         </header>
