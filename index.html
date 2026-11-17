@@ -114,6 +114,24 @@ input,select,textarea{border-radius:12px;background:#0d141c;border-color:#344658
 @media(max-width:700px){.admin-summary-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-top-actions button{min-height:36px;padding:8px 11px}}
 
 .app-footer{text-align:center;padding:22px 12px 16px;color:var(--muted);font-size:12px}
+.rank-admin-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.rank-admin-summary>div{background:#101923;border:1px solid var(--line);border-radius:12px;padding:11px}
+.rank-admin-summary strong{display:block;color:var(--accent);font-size:22px}.rank-admin-summary span{color:var(--muted);font-size:11px}
+.rank-level-group{border:1px solid var(--line);border-radius:12px;margin:8px 0;overflow:hidden;background:#101923}
+.rank-level-group>summary{display:flex;justify-content:space-between;align-items:center;padding:12px;cursor:pointer;list-style:none}
+.rank-level-group>summary::-webkit-details-marker{display:none}
+.rank-table{padding:0 10px 10px}.rank-table-head,.rank-table-row{display:grid;grid-template-columns:minmax(150px,2fr) minmax(110px,1fr) 80px minmax(90px,1fr);gap:8px;align-items:center}
+.rank-table-head{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);padding:8px 4px;border-bottom:1px solid var(--line)}
+.rank-table-row{font-size:12px;padding:9px 4px;border-bottom:1px solid #263443}.rank-table-row:last-child{border-bottom:0}
+.rank-stars{color:#ffc45e}.rank-stars .hint{display:block;color:var(--muted);font-size:10px}.rank-holder-names{display:block;font-size:10px;overflow-wrap:anywhere}
+.exercise-category{grid-column:1/-1;border:1px solid var(--line);border-radius:14px;background:#101923;overflow:hidden}
+.exercise-category>summary{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:13px 15px;cursor:pointer;list-style:none;font-weight:800}
+.exercise-category>summary::-webkit-details-marker{display:none}.exercise-category>summary:after{content:'＋';color:var(--accent);font-size:18px}
+.exercise-category[open]>summary:after{content:'−'}
+.exercise-category-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:0 10px 10px}
+.exercise-category-count{color:var(--muted);font-size:11px;font-weight:500}
+@media(max-width:700px){.rank-admin-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.rank-table-head,.rank-table-row{grid-template-columns:minmax(100px,1.5fr) 72px 55px minmax(55px,1fr);gap:5px}.rank-table-row{font-size:11px}.exercise-category-grid{grid-template-columns:1fr}}
+
 
 
 /* GarasjeGym 0.3.1 – coffee bar UI */
@@ -1459,6 +1477,7 @@ body.gg-app-fullscreen main{padding-top:8px!important}
   <div id="adminMembers"></div>
  </details>
  <details class="card"><summary>Achievements <span class="hint">Heile katalogen · berre admin</span></summary><p class="hint">Her ser admin alle moglege merke, kriterium og kor mange medlemer som har oppnådd dei. Medlemmene ser berre eigne oppnådde merke på profilsida.</p><div id="achievementAdmin"></div></details>
+ <details class="card"><summary>Treningsrangering <span class="hint">Alle rangar · Garasjekadett til nivå 200</span></summary><div id="rankAdmin"></div></details>
  <details class="card"><summary>Klubbverktøy <span class="hint">Status</span></summary><div id="adminSummaryDetail"></div></details>
 </div>
 </section>
@@ -1930,15 +1949,17 @@ async function deletePTMessage(id){const message=db.ptMessages.find(x=>String(x.
 async function deletePTSession(id){if(!isPTStaff())return;if(!confirm('Slett denne PT-planen?'))return;const {error}=await supabaseClient.from('pt_sessions').delete().eq('id',String(id));if(error){alert('PT-planen blei ikkje sletta: '+error.message);return;}db.ptSessions=db.ptSessions.filter(x=>String(x.id)!==String(id));localStorage.setItem(KEY,JSON.stringify(db));renderPT();}
 function renderCalendar(){let all=[...db.classes.map(c=>({date:c.when,title:c.title,type:c.type,detail:`${c.attendees.length}/${c.capacity} påmelde`})),...db.wods.map(w=>({date:w.date,title:w.name,type:'Publisert WOD',detail:w.format}))].sort((a,b)=>a.date.localeCompare(b.date));$('#calendarList').innerHTML=all.length?all.map(x=>item(x.title,`${fmt(x.date)} · ${x.detail}`,`<span class="pill">${x.type}</span>`)).join(''):'<div class="empty">Kalenderen er tom.</div>'}
 function renderExercises(){
- let q=$('#exerciseSearch').value.toLowerCase(),cat=$('#exerciseCat').value,favs=favBucket('exercises');
- let allExercises=[...initialExercises,...db.customExercises.map(x=>[x.name,x.category,x.equipment,x.description,x.video||''])];
+ const q=$('#exerciseSearch').value.trim().toLowerCase(),cat=$('#exerciseCat').value,favs=favBucket('exercises');
+ const allExercises=[...initialExercises,...db.customExercises.map(x=>[x.name,x.category,x.equipment,x.description,x.video||''])];
  let list=allExercises.filter(x=>(!cat||x[1]===cat)&&(!exerciseFavOnly||favs.includes(String(x[0])))&&x.slice(0,3).join(' ').toLowerCase().includes(q));
  list.sort((a,b)=>Number(favs.includes(String(b[0])))-Number(favs.includes(String(a[0]))));
  $('#selectedCount').textContent=selectedExercises.size+' øvingar valde';
- $('#exerciseList').innerHTML=list.map(x=>{const fav=favs.includes(String(x[0]));return `<div class="card span-4 exercise-card"><div class="exercise-head">
+ const categories=[...new Set(list.map(x=>x[1]||'Anna'))].sort((a,b)=>{const order=['Styrke','Vektløfting','Kroppsvekt','Gymnastics','Kondisjon','Kjerne','Mobilitet'];return (order.indexOf(a)<0?99:order.indexOf(a))-(order.indexOf(b)<0?99:order.indexOf(b))||a.localeCompare(b,'nn');});
+ const card=x=>{const fav=favs.includes(String(x[0]));return `<div class="card exercise-card"><div class="exercise-head">
  <input type="checkbox" aria-label="Vel ${esc(x[0])}" data-exercise="${encodeURIComponent(x[0])}" ${selectedExercises.has(x[0])?'checked':''} onchange="toggleExercise(decodeURIComponent(this.dataset.exercise),this.checked)">
  <div><strong>${esc(x[0])}</strong><div><span class="pill">${esc(x[1])}</span><span class="pill gold">${esc(x[2])}</span></div></div><button type="button" class="secondary favorite-button ${fav?'is-favorite':''}" aria-label="${fav?'Fjern frå':'Legg til'} favorittar" onclick="toggleFavorite('exercises',${JSON.stringify(String(x[0]))})">${fav?'★':'☆'}</button></div>
- <p>${esc(x[3])}</p><a href="${x[4] ? esc(x[4]) : 'https://www.youtube.com/results?search_query='+encodeURIComponent(x[0]+' exercise tutorial')}" target="_blank" rel="noopener">Sjå videodøme ↗</a></div>`}).join('')||'<div class="empty span-12">Ingen treff.</div>';
+ <p>${esc(x[3])}</p><a href="${x[4]?esc(x[4]):'https://www.youtube.com/results?search_query='+encodeURIComponent(x[0]+' exercise tutorial')}" target="_blank" rel="noopener">Sjå videodøme ↗</a></div>`;};
+ $('#exerciseList').innerHTML=list.length?categories.map((category,i)=>{const group=list.filter(x=>(x[1]||'Anna')===category);const expanded=!!q||!!cat||i===0;return `<details class="exercise-category" ${expanded?'open':''}><summary><span>${esc(category)}</span><span class="exercise-category-count">${group.length} øvingar</span></summary><div class="exercise-category-grid">${group.map(card).join('')}</div></details>`;}).join(''):'<div class="empty span-12">Ingen treff.</div>';
 }
 function toggleExercise(name,checked){if(checked)selectedExercises.add(name);else selectedExercises.delete(name);$('#selectedCount').textContent=selectedExercises.size+' øvingar valde';}
 function discardWodDraft(){
@@ -2381,6 +2402,7 @@ function renderManager(){
 function renderAdmin(){
  renderAdminCoffee();
  renderAchievementAdmin();
+ renderRankAdmin();
  renderRoleAdmin();
  const summary=`<span><strong>${db.wods.length}</strong> WOD-ar</span><span><strong>${db.classes.length}</strong> timar</span><span><strong>${db.customExercises.length}</strong> eigne øvingar</span><span><strong>${db.notifications.filter(n=>!n.read).length}</strong> uleste varsel</span>`;$('#adminSummary').innerHTML=summary;if($('#adminSummaryDetail'))$('#adminSummaryDetail').innerHTML=summary;
  $('#adminWods').innerHTML=db.wods.length?db.wods.map(w=>item(w.name,`${w.format} · ${w.duration||'–'} min · ${w.audience}`,'<span class="pill gold">WOD</span>',`<button class="secondary" onclick='adminEditWod(${JSON.stringify(String(w.id))})'>Rediger</button> <button class="danger" onclick='deleteWod(${JSON.stringify(String(w.id))})'>Slett</button>`)).join(''):'<div class="empty">Ingen WOD-ar å administrere.</div>';
@@ -2488,8 +2510,20 @@ function renderAchievementAdmin(){
 const GG_RANK_TITLES = ["Garasjekadett", "Kraftknøtt", "Schwitzling", "Kneipenkrieger", "Tattenmaester", "Kraftknöchel", "Kraftbengel", "Kraftritter", "Kraftbaron", "Kraftfürst", "Kraftmeister", "Kraftgeneral", "Kraftkaiser", "Kraftkoloss", "Kraftlegende", "Kraftheld", "Kraftkobold", "Kraftochse", "Kraftpanzer", "Kraftorkan", "Kraftmagier", "Kraftmonarch", "Krafttitan", "Kraftüberlord", "Kraftweltmeister", "Muskelknöchel", "Muskelbengel", "Muskelritter", "Muskelbaron", "Muskelfürst", "Muskelmeister", "Muskelgeneral", "Muskelkaiser", "Muskelkoloss", "Muskellegende", "Muskelheld", "Muskelkobold", "Muskelochse", "Muskelpanzer", "Muskelorkan", "Muskelmagier", "Muskelmonarch", "Muskeltitan", "Muskelüberlord", "Muskelweltmeister", "Hantelknöchel", "Hantelbengel", "Hantelritter", "Hantelbaron", "Hantelfürst", "Hantelmeister", "Hantelgeneral", "Hantelkaiser", "Hantelkoloss", "Hantellegende", "Hantelheld", "Hantelkobold", "Hantelochse", "Hantelpanzer", "Hantelorkan", "Hantelmagier", "Hantelmonarch", "Hanteltitan", "Hantelüberlord", "Hantelweltmeister", "Schwitzknöchel", "Schwitzbengel", "Schwitzritter", "Schwitzbaron", "Schwitzfürst", "Schwitzmeister", "Schwitzgeneral", "Schwitzkaiser", "Schwitzkoloss", "Schwitzlegende", "Schwitzheld", "Schwitzkobold", "Schwitzochse", "Schwitzpanzer", "Schwitzorkan", "Schwitzmagier", "Schwitzmonarch", "Schwitztitan", "Schwitzüberlord", "Schwitzweltmeister", "Eisenknöchel", "Eisenbengel", "Eisenritter", "Eisenbaron", "Eisenfürst", "Eisenmeister", "Eisengeneral", "Eisenkaiser", "Eisenkoloss", "Eisenlegende", "Eisenheld", "Eisenkobold", "Eisenochse", "Eisenpanzer", "Eisenorkan", "Eisenmagier", "Eisenmonarch", "Eisentitan", "Eisenüberlord", "Eisenweltmeister", "Pumpenknöchel", "Pumpenbengel", "Pumpenritter", "Pumpenbaron", "Pumpenfürst", "Pumpenmeister", "Pumpengeneral", "Pumpenkaiser", "Pumpenkoloss", "Pumpenlegende", "Pumpenheld", "Pumpenkobold", "Pumpenochse", "Pumpenpanzer", "Pumpenorkan", "Pumpenmagier", "Pumpenmonarch", "Pumpentitan", "Pumpenüberlord", "Pumpenweltmeister", "Bizepsknöchel", "Bizepsbengel", "Bizepsritter", "Bizepsbaron", "Bizepsfürst", "Bizepsmeister", "Bizepsgeneral", "Bizepskaiser", "Bizepskoloss", "Bizepslegende", "Bizepsheld", "Bizepskobold", "Bizepsochse", "Bizepspanzer", "Bizepsorkan", "Bizepsmagier", "Bizepsmonarch", "Bizepstitan", "Bizepsüberlord", "Bizepsweltmeister", "Garagenknöchel", "Garagenbengel", "Garagenritter", "Garagenbaron", "Garagenfürst", "Garagenmeister", "Garagengeneral", "Garagenkaiser", "Garagenkoloss", "Garagenlegende", "Garagenheld", "Garagenkobold", "Garagenochse", "Garagenpanzer", "Garagenorkan", "Garagenmagier", "Garagenmonarch", "Garagentitan", "Garagenüberlord", "Garagenweltmeister", "Schnitzelknöchel", "Schnitzelbengel", "Schnitzelritter", "Schnitzelbaron", "Schnitzelfürst", "Schnitzelmeister", "Schnitzelgeneral", "Schnitzelkaiser", "Schnitzelkoloss", "Schnitzellegende", "Schnitzelheld", "Schnitzelkobold", "Schnitzelochse", "Schnitzelpanzer", "Schnitzelorkan", "Schnitzelmagier", "Schnitzelmonarch", "Schnitzeltitan", "Schnitzelüberlord", "Schnitzelweltmeister", "Knödelknöchel", "Knödelbengel", "Knödelritter", "Knödelbaron", "Knödelfürst", "Knödelmeister", "Knödelgeneral", "Knödelkaiser", "Knödelkoloss", "Knödellegende", "Knödelheld", "Knödelkobold", "Knödelochse", "Knödelpanzer", "Tattenkaiser Supreme"];
 function ggRankForCount(count){const n=Math.max(0,Number(count)||0);if(n>=600)return {level:200,stars:3,title:GG_RANK_TITLES[199],next:600,gold:true};if(n===0)return {level:1,stars:0,title:GG_RANK_TITLES[0],next:1,gold:false};const level=Math.min(200,Math.floor((n-1)/3)+1),stars=((n-1)%3)+1;return {level,stars,title:GG_RANK_TITLES[level-1],next:level*3,gold:false};}
 function ggRankHtml(memberId,count,goldAt){const r=ggRankForCount(count),gold=!!goldAt||r.gold,displayLevel=gold?200:r.level,stars='★'.repeat(r.stars)+'☆'.repeat(3-r.stars),remain=gold?0:Math.max(0,r.next-count),pct=gold?100:(r.stars/3)*100;return `<div class="gg-rank-card ${gold?'gg-gold-forever':''}"><div class="row" style="justify-content:space-between;gap:8px"><span class="hint">STATUS · NIVÅ ${displayLevel}</span>${gold?'<span class="pill gold">GULL FOR EVIG</span>':''}</div><div class="gg-rank-title">${esc(gold?GG_RANK_TITLES[199]:r.title)}</div><div class="gg-rank-stars">${gold?'★★★':stars}</div><div class="gg-rank-progress"><span style="width:${pct}%"></span></div><div class="gg-rank-small">${Number(count)||0} fullførte økter · ${gold?'Livsvarig ærestittel':remain+' økter til neste grad'}</div></div>`;}
-async function loadMemberTrainingRanks(){if(!authUser)return;try{const {data,error}=await supabaseClient.from('member_training_status').select('member_id,completed_sessions,gold_earned_at');if(error)throw error;db.memberRanks={};(data||[]).forEach(r=>{db.memberRanks[String(r.member_id)]={count:Number(r.completed_sessions)||0,goldAt:r.gold_earned_at||null};});}catch(e){console.warn('Statusrangering kunne ikkje hentast frå Supabase:',e.message);db.memberRanks=db.memberRanks||{};}refreshHeaderRank();}
+async function loadMemberTrainingRanks(){if(!authUser)return;try{const {data,error}=await supabaseClient.from('member_training_status').select('member_id,completed_sessions,gold_earned_at');if(error)throw error;db.memberRanks={};(data||[]).forEach(r=>{db.memberRanks[String(r.member_id)]={count:Number(r.completed_sessions)||0,goldAt:r.gold_earned_at||null};});}catch(e){console.warn('Statusrangering kunne ikkje hentast frå Supabase:',e.message);db.memberRanks=db.memberRanks||{};}refreshHeaderRank();renderRankAdmin();}
 function ggMemberRankHtml(member){const r=db.memberRanks?.[String(member.id)]||{count:0,goldAt:null};return ggRankHtml(member.id,r.count,r.goldAt);}
+function renderRankAdmin(){
+ const el=$('#rankAdmin');if(!el)return;
+ if(!authProfile||authProfile.role!=='admin'){el.innerHTML='<div class="hint">Berre admin kan sjå rangkatalogen.</div>';return;}
+ const people=db.members||[],ranks=GG_RANK_TITLES.map((title,i)=>{
+  const level=i+1,threshold=i===0?0:i*3+1;
+  const holders=people.filter(m=>{const data=db.memberRanks?.[String(m.id)]||{count:0};return ggRankForCount(data.count).level===level;});
+  return {title,level,threshold,holders};
+ });
+ const grouped=[];
+ for(let i=0;i<ranks.length;i+=25)grouped.push(ranks.slice(i,i+25));
+ el.innerHTML=`<div class="rank-admin-summary"><div><strong>${ranks.length}</strong><span>rangar totalt</span></div><div><strong>${people.length}</strong><span>medlemsprofilar</span></div><div><strong>${people.filter(m=>(db.memberRanks?.[String(m.id)]?.count||0)>=600||db.memberRanks?.[String(m.id)]?.goldAt).length}</strong><span>gull for evig</span></div></div><p class="hint">Rangane blir rekna frå fullførte treningsøkter. Første rang er startnivå; kvar ny rang krev tre økter meir. Opne nivågruppene for å sjå heile katalogen.</p>${grouped.map((group,g)=>`<details class="rank-level-group" ${g===0?'open':''}><summary><strong>Nivå ${group[0].level}–${group[group.length-1].level}</strong><span class="hint">${group.length} rangar</span></summary><div class="rank-table"><div class="rank-table-head"><span>Nivå / rang</span><span>Stjerner</span><span>Økter frå</span><span>Medlemer</span></div>${group.map(r=>`<div class="rank-table-row"><div><strong>${r.level}. ${esc(r.title)}</strong></div><span class="rank-stars">${'★'.repeat(r.level===1?0:3)}<span class="hint">${r.level===1?'Start':'3/3 ved nivåskifte'}</span></span><span>${r.threshold}</span><span>${r.holders.length}${r.holders.length?`<span class="hint rank-holder-names">${esc(r.holders.map(m=>m.name).join(', '))}</span>`:''}</span></div>`).join('')}</div></details>`).join('')}`;
+}
 function refreshHeaderRank(){const el=$('#headerRank');if(el&&authUser)el.innerHTML=ggMemberRankHtml({id:authUser.id});}
 
 function renderProfile(){
