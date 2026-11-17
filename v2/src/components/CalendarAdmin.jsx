@@ -6,13 +6,13 @@ const pad=n=>String(n).padStart(2,'0')
 const toLocalInput=d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16)
 const types=[['pt','PT-time'],['class','Gruppetime'],['meeting','Møte'],['maintenance','Drift'],['other','Anna']]
 const tone={pt:'pt',class:'class',meeting:'meeting',maintenance:'maintenance',other:'other'}
-export default function CalendarAdmin(){
+export default function CalendarAdmin({onNavigate=()=>{}}){
  const [month,setMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1)),[focusDay,setFocusDay]=useState(()=>new Date())
  const [events,setEvents]=useState([]),[sessions,setSessions]=useState([]),[classes,setClasses]=useState([])
  const [loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [mode,setMode]=useState('month'),[showForm,setShowForm]=useState(false),[editing,setEditing]=useState(null)
  const [title,setTitle]=useState(''),[kind,setKind]=useState('meeting'),[start,setStart]=useState(()=>toLocalInput(new Date())),[end,setEnd]=useState(()=>toLocalInput(new Date(Date.now()+3600000))),[description,setDescription]=useState(''),[client,setClient]=useState('')
- const [clients,setClients]=useState([])
+ const [clients,setClients]=useState([]),[detail,setDetail]=useState(null)
  const from=new Date(month.getFullYear(),month.getMonth(),1),to=new Date(month.getFullYear(),month.getMonth()+1,1)
  async function load(){
   setLoading(true);setError('')
@@ -39,7 +39,10 @@ export default function CalendarAdmin(){
  const visibleDays=mode==='day'?[focusDay]:mode==='week'?Array.from({length:7},(_,i)=>{const d=new Date(focusDay);d.setDate(d.getDate()-((d.getDay()+6)%7)+i);return d}):Array.from({length:days},(_,i)=>new Date(month.getFullYear(),month.getMonth(),i+1))
  const dayRows=d=>rows.filter(x=>new Date(x.starts_at).toDateString()===d.toDateString())
  function openNew(d=new Date()){setEditing(null);setTitle('');setKind('meeting');setDescription('');setClient('');const s=new Date(d);s.setHours(10,0,0,0);setStart(toLocalInput(s));setEnd(toLocalInput(new Date(s.getTime()+3600000)));setShowForm(true)}
- function openEdit(e){if(e.source!=='manual')return;setEditing(e);setTitle(e.title);setKind(e.type);setDescription(e.description||'');setClient(e.client_id||'');setStart(toLocalInput(new Date(e.starts_at)));setEnd(toLocalInput(new Date(e.ends_at)));setShowForm(true)}
+ function openEdit(e){
+  if(e.source!=='manual'){setDetail(e);return}
+  setEditing(e);setTitle(e.title);setKind(e.type);setDescription(e.description||'');setClient(e.client_id||'');setStart(toLocalInput(new Date(e.starts_at)));setEnd(toLocalInput(new Date(e.ends_at)));setShowForm(true)
+ }
  async function save(ev){ev.preventDefault();setError('');setNotice('');if(new Date(end)<=new Date(start)){setError('Sluttid må vera etter starttid.');return}
   const {data:{user}}=await supabase.auth.getUser()
   const startsAt=new Date(start).toISOString(),endsAt=new Date(end).toISOString()
@@ -66,6 +69,15 @@ export default function CalendarAdmin(){
    {loading?<div className="training-state"><LoaderCircle className="spin"/> Hentar kalender …</div>:<div className="calendar-grid"><div className="calendar-weekdays">{['Mån','Tys','Ons','Tor','Fre','Laur','Sun'].map(x=><span key={x}>{x}</span>)}</div><div className="calendar-days">{mode==='month'&&Array.from({length:startDay},(_,i)=><div className="calendar-day empty" key={'empty'+i}/>)}{visibleDays.map(d=><div className={'calendar-day '+(d.toDateString()===new Date().toDateString()?'today':'')} key={d.toISOString()}><button className="calendar-day-number" onClick={()=>openNew(d)}>{d.getDate()} <Plus size={12}/></button>{dayRows(d).map(e=><button key={e.id} className={'calendar-event '+tone[e.type]} title={e.title+' · '+new Date(e.starts_at).toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'})} onClick={()=>openEdit(e)}><b>{new Date(e.starts_at).toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'})}</b> {e.title}{e.client_name?' · '+e.client_name:''}</button>)}</div>)}</div></div>}
   </section>
   <section className="engine-section"><h4>Komande avtalar</h4>{rows.filter(x=>new Date(x.starts_at)>=new Date()&&new Date(x.starts_at)<new Date(Date.now()+7*86400000)).slice(0,12).map(e=><article className="calendar-upcoming" key={e.id}><div><strong>{e.title}</strong><small>{new Date(e.starts_at).toLocaleString('nn-NO',{dateStyle:'medium',timeStyle:'short'})}{e.client_name?' · '+e.client_name:''}</small></div><span>{types.find(t=>t[0]===e.type)?.[1]||'Anna'}</span></article>)}</section>
+  {detail&&<div className="calendar-modal-backdrop" onClick={()=>setDetail(null)}><section className="calendar-modal calendar-detail-modal" role="dialog" aria-modal="true" aria-label="Avtaledetaljar" onClick={e=>e.stopPropagation()}>
+    <div className="training-heading"><div><div className="section-kicker">KALENDER · DETALJAR</div><h3>{detail.title}</h3></div><button type="button" className="secondary-button" onClick={()=>setDetail(null)}>Lukk</button></div>
+    <div className="calendar-detail-type">{types.find(t=>t[0]===detail.type)?.[1]||'Avtale'}</div>
+    <div className="calendar-detail-row"><Clock3 size={16}/><span><b>{new Date(detail.starts_at).toLocaleDateString('nn-NO',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</b><small>{new Date(detail.starts_at).toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'})} – {new Date(detail.ends_at).toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'})}</small></span></div>
+    {detail.client_name&&<div className="calendar-detail-row"><span><b>Kunde</b><small>{detail.client_name}</small></span></div>}
+    {detail.status&&<div className="calendar-detail-row"><span><b>Status</b><small>{detail.status}</small></span></div>}
+    {detail.description&&<p className="calendar-detail-description">{detail.description}</p>}
+    <div className="calendar-modal-actions"><button type="button" className="primary-button" onClick={()=>{const target=detail.source==='class'?'booking':'pt';setDetail(null);onNavigate(target)}}>{detail.source==='class'?'Opna booking':'Opna PT-oversikt'}</button></div>
+  </section></div>}
   {showForm&&<div className="calendar-modal-backdrop"><form className="calendar-modal" onSubmit={save}><div className="training-heading"><h3>{editing?'Rediger avtale':'Ny avtale'}</h3><button type="button" className="secondary-button" onClick={()=>setShowForm(false)}>Lukk</button></div><label>Tittel<input value={title} onChange={e=>setTitle(e.target.value)} required/></label><label>Type<select value={kind} onChange={e=>setKind(e.target.value)}>{types.map(([id,label])=><option value={id} key={id}>{label}</option>)}</select></label><label>Kunde (valfritt)<select value={client} onChange={e=>setClient(e.target.value)}><option value="">Ingen kunde</option>{clients.map(x=><option value={x.id} key={x.id}>{x.display_name}</option>)}</select></label><div className="engine-fields"><label>Start<input type="datetime-local" value={start} onChange={e=>setStart(e.target.value)} required/></label><label>Slutt<input type="datetime-local" value={end} onChange={e=>setEnd(e.target.value)} required/></label></div><label>Notat<textarea value={description} onChange={e=>setDescription(e.target.value)} rows="3"/></label><div className="calendar-modal-actions"><button className="primary-button">{editing?'Lagre endring':'Opprett avtale'}</button>{editing&&<button type="button" className="secondary-button" onClick={remove}>Slett</button>}</div></form></div>}
  </div>
 }
