@@ -388,30 +388,13 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         result_data:resultData,
         note:[note.trim(),scoreTime?'Tid: '+scoreTime:'',`Timer: ${format} · ${clock(elapsedSeconds)} · ${timerSnapshot.phase}`,timerSnapshot.laps.length?'Mellomtider: '+timerSnapshot.laps.map((lap,i)=>`${i+1}: ${clock(lap)}`).join(', '):''].filter(Boolean).join('\\n')
       }
-      const {data:log,error:logError}=await supabase.from('workout_logs').insert({
-        member_id:payload.member_id,title:payload.title,source_wod_id:payload.source_wod_id,
-        class_live_session_id:payload.class_live_session_id,
-        workout_date:payload.workout_date,format:payload.format,rounds:payload.rounds,
-        score_rounds:payload.score_rounds,score_reps:payload.score_reps,
-        score_time_seconds:payload.score_time_seconds,score_load_kg:payload.score_load_kg,
-        score_calories:payload.score_calories,score_distance:payload.score_distance,
-        score_unit:payload.score_unit,result_data:payload.result_data,note:payload.note
-      }).select('id').single()
-      if(logError)throw logError
-      const workoutId=log.id
-      try{
-        const exerciseRows=payload.exercises=items.map((item,index)=>({
-          exercise_id:item.exercise_id||null,exercise_name:item.exercise_name.trim(),sort_order:index+1,
-          sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_text:s.time_text.trim()||null,time_seconds:s.time_seconds===''?null:Number(s.time_seconds)}))
-        }))
-        if(exerciseRows.length){
-          const {data:savedExercises,error:exerciseError}=await supabase.from('workout_exercises').insert(exerciseRows.map(x=>({workout_log_id:workoutId,exercise_id:x.exercise_id,exercise_name:x.exercise_name,sort_order:x.sort_order}))).select('id,sort_order')
-          if(exerciseError)throw exerciseError
-          const setRows=[]
-          savedExercises.forEach(saved=>{const original=exerciseRows.find(x=>x.sort_order===saved.sort_order);original.sets.forEach((set,index)=>{if(set.reps!==null||set.load_kg!==null||set.time_text||set.time_seconds!==null)setRows.push({workout_exercise_id:saved.id,set_number:index+1,...set})})})
-          if(setRows.length){const {error:setError}=await supabase.from('workout_sets').insert(setRows);if(setError)throw setError}
-        }
-      }catch(childError){await supabase.from('workout_logs').delete().eq('id',workoutId);throw new Error('Økta vart ikkje lagra fordi øvingsdetaljane feila: '+childError.message)}
+      payload.exercises=items.map((item,index)=>({
+        exercise_id:item.exercise_id||null,exercise_name:item.exercise_name.trim(),sort_order:index+1,
+        sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_text:s.time_text.trim()||null,time_seconds:s.time_seconds===''?null:Number(s.time_seconds)}))
+      }))
+      const {data:workoutId,error:saveError}=await supabase.rpc('save_workout_atomic',{p_workout:payload})
+      if(saveError)throw saveError
+      if(!workoutId)throw new Error('Databasen returnerte ikkje ID for den lagra økta.')
       // Automatically detect new heaviest logged loads and store them as PRs.
       let prMessage = ''
       try {
