@@ -3,7 +3,7 @@ import {Plus,Search,Trash2,ArrowUp,ArrowDown,Save,LoaderCircle,WandSparkles,Dice
 import {supabase} from '../lib/supabase.js'
 
 const categories=['Alle','Styrke','Mobilitet','Kondisjon','Kjerne','Golf','Rehab / fysio']
-const areas=['Alle område','Fullkropp','Bein','Mage','Rygg','Overkropp','Hofte','Skulder','Kne']
+const areas=['Alle område','Fullkropp','Bein','Mage','Rygg','Overkropp','Hofte','Skulder','Kne','Nakke']
 const formats=[
  {group:'Metcon',items:['AMRAP','For Time','Chipper','Couplet','Triplet','Ladder','Death By']},
  {group:'Tidsstyrt',items:['EMOM','E2MOM','E3MOM']},
@@ -51,7 +51,7 @@ const REHAB_EXERCISES=[
  ['Fysio – Sittande knestrekk','Bein','Kne','Stol','Sit oppreist. Strekk eitt kne roleg, spenn framsida av låret og senk kontrollert. 2 × 10 per side.','https://patient.info/video/patient-physio'],
  ['Fysio – Setehev','Bein','Hofte','Matte','Ligg på ryggen med bøygde kne. Spenn setet og løft hofta utan å svaie i korsryggen. 2 × 10.','https://www.ouh.nhs.uk/physiotherapy/outpatients/videos/'],
  ['Fysio – Clamshell','Hofte','Hofte','Matte','Ligg på sida med bøygde kne og føtene samla. Opne øvste kne utan å rulle bekkenet bakover. 2 × 12 per side.','https://patient.info/video/patient-physio'],
- ['Fysio – Hofteabduksjon ståande','Hofte','Hofte','Stol / støtte','Stå stødig og før beinet roleg ut til sida utan å lene overkroppen. 2 × 10 per side.','https://www.nhsfife.org/media/qrlay62e/knee-osteoarthritis-english.pdf'],
+ ['Fysio – Hofteabduksjon ståande','Hofte','Hofte','Stol / støtte','Stå stødig og før beinet roleg ut til sida utan å lene overkroppen. 2 × 10 per side.','https://patient.info/video/patient-physio'],
  ['Fysio – Hoftebøyarstrekk','Hofte','Hofte','Matte','Stå i halvt kneståande. Tipp bekkenet lett bakover og flytt kroppen varsamt fram til du kjenner strekk framme i hofta. 20–30 sek per side.','https://patient.info/video/patient-physio'],
  ['Fysio – Bekkenvipp','Rygg','Rygg','Matte','Ligg med bøygde kne. Vipp bekkenet slik at korsryggen nærmar seg underlaget, slepp roleg tilbake. 10–12 repetisjonar.','https://www.nhsinform.scot/illnesses-and-conditions/muscle-bone-and-joints/neck-and-back-problems-and-conditions/exercises-for-back-pain/'],
  ['Fysio – Kne til bryst','Rygg','Rygg','Matte','Ligg på ryggen og før eitt kne varsamt mot brystet. Hald kort og byt side. 5–8 per side.','https://www.csp.org.uk/conditions/back-pain/video-exercises-back-pain'],
