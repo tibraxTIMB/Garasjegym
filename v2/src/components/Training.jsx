@@ -243,7 +243,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         }],
       })))
     } else if (wod?.movements) {
-      const names = wod.movements.split(/\\n|,/).map(x => x.trim()).filter(Boolean)
+      const names = wod.movements.split(/\n|,/).map(x => x.trim()).filter(Boolean)
       setItems(names.map(name => ({ ...emptyExercise(), exercise_name: name })))
     }
     setMode('active')
