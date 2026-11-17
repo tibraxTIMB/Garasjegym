@@ -283,30 +283,36 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         throw saveError
       }
       // Automatically detect new heaviest logged loads and store them as PRs.
-      const { data: existingPRs, error: prReadError } = await supabase.from('personal_records')
-        .select('exercise_name,result,unit').eq('member_id', user.id).eq('unit', 'kg')
-      if (prReadError) throw new Error('Økta er lagra, men PR-kontrollen feila: ' + prReadError.message)
-      const bestByName = new Map()
-      ;(existingPRs || []).forEach(record => {
-        const value = Number(String(record.result).replace(',', '.'))
-        if (Number.isFinite(value)) bestByName.set(record.exercise_name.toLowerCase(), Math.max(bestByName.get(record.exercise_name.toLowerCase()) || 0, value))
-      })
-      const newPRs = []
-      payload.exercises.forEach(exercise => {
-        const loads = exercise.sets.map(set => set.load_kg).filter(value => Number.isFinite(value) && value > 0)
-        if (!loads.length) return
-        const best = Math.max(...loads)
-        const key = exercise.exercise_name.toLowerCase()
-        if (best > (bestByName.get(key) || 0)) {
-          newPRs.push({ member_id: user.id, exercise_name: exercise.exercise_name, result: String(best), unit: 'kg', note: 'Automatisk PR frå økta «' + payload.title + '»' })
-          bestByName.set(key, best)
+      let prMessage = ''
+      try {
+        const { data: existingPRs, error: prReadError } = await supabase.from('personal_records')
+          .select('exercise_name,result,unit').eq('member_id', user.id).eq('unit', 'kg')
+        if (prReadError) throw prReadError
+        const bestByName = new Map()
+        ;(existingPRs || []).forEach(record => {
+          const value = Number(String(record.result).replace(',', '.'))
+          if (Number.isFinite(value)) bestByName.set(record.exercise_name.toLowerCase(), Math.max(bestByName.get(record.exercise_name.toLowerCase()) || 0, value))
+        })
+        const newPRs = []
+        payload.exercises.forEach(exercise => {
+          const loads = exercise.sets.map(set => set.load_kg).filter(value => Number.isFinite(value) && value > 0)
+          if (!loads.length) return
+          const best = Math.max(...loads)
+          const key = exercise.exercise_name.toLowerCase()
+          if (best > (bestByName.get(key) || 0)) {
+            newPRs.push({ member_id: user.id, exercise_name: exercise.exercise_name, result: String(best), unit: 'kg', note: 'Automatisk PR frå økta «' + payload.title + '»' })
+            bestByName.set(key, best)
+          }
+        })
+        if (newPRs.length) {
+          const { error: prWriteError } = await supabase.from('personal_records').insert(newPRs)
+          if (prWriteError) throw prWriteError
+          prMessage = ' Ny PR registrert: ' + newPRs.map(pr => pr.exercise_name + ' ' + pr.result + ' kg').join(', ')
         }
-      })
-      if (newPRs.length) {
-        const { error: prWriteError } = await supabase.from('personal_records').insert(newPRs)
-        if (prWriteError) throw new Error('Økta er lagra, men automatisk PR-registrering feila: ' + prWriteError.message)
+      } catch (prError) {
+        prMessage = ' Automatisk PR-kontroll kunne ikkje fullførast: ' + (prError.message || 'ukjend feil')
       }
-      setNotice('Økta er lagra i treningsloggen.' + (newPRs.length ? ' Ny PR registrert: ' + newPRs.map(pr => pr.exercise_name + ' ' + pr.result + ' kg').join(', ') : ''))
+      setNotice('Økta er lagra i treningsloggen.' + prMessage)
       setMode('home')
       await loadAll()
     } catch (err) {
