@@ -35,7 +35,7 @@ export default function Notifications({onNavigate}){
  }
  function openItem(item){
   if(!item.is_read)markRead(item.id)
-  if(item.href&&onNavigate)onNavigate(item.href)
+  if(item.href&&onNavigate)onNavigate(item)
   setOpen(false)
  }
  return <div className="notification-wrap">
