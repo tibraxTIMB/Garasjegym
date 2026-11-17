@@ -60,7 +60,7 @@ export default function WodBuilder(){
  const isTimed=timedFormats.includes(format)
  const isLadder=['Ladder','Death By'].includes(format)
  const isAmrap=format==='AMRAP'
- const isForTime=['For Time','Chipper','Couplet','Triplet'].includes(format)
+ const isForTime=['For Time','Chipper'].includes(format)
  const isCoupletTriplet=['Couplet','Triplet'].includes(format)
  const isTabata=format==='Tabata'
  const isRowIntervals=format==='Row Intervals'
