@@ -6,6 +6,7 @@ const categories=['Alle','Styrke','Mobilitet','Kondisjon','Kjerne','Golf','Rehab
 const areas=['Alle område','Fullkropp','Bein','Mage','Rygg','Overkropp']
 const formats=[
  {group:'Metcon',items:['AMRAP','For Time','Chipper','Couplet','Triplet','Ladder','Death By']},
+ {group:'Gruppetime',items:['Stasjonssirkel']},
  {group:'Tidsstyrt',items:['E1MOM','E2MOM','E3MOM']},
  {group:'Intervall',items:['Intervall','Tabata','Row Intervals']},
  {group:'Styrke',items:['Strength','Pyramid','Superset','Complex']},
@@ -111,7 +112,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
  const isRehabExercise=x=>!!(x.is_rehab||x.category==='Rehab / fysio'||rehabBodyAreas.includes((x.body_area||'').toLowerCase()))
  const [selected,setSelected]=useState([]),[name,setName]=useState(()=>randomWodName()),[format,setFormat]=useState('AMRAP'),[libraryWods,setLibraryWods]=useState([]),[builderMode,setBuilderMode]=useState(assignedClientId?'library':'build'),[librarySearch,setLibrarySearch]=useState(''),[selectedLibraryWod,setSelectedLibraryWod]=useState(''),[classicChoice,setClassicChoice]=useState(''),[publishToMembers,setPublishToMembers]=useState(false)
  const [minutes,setMinutes]=useState('20'),[durationSeconds,setDurationSeconds]=useState('0'),[notes,setNotes]=useState(''),[stimulus,setStimulus]=useState('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
- const [rounds,setRounds]=useState('5'),[workSeconds,setWorkSeconds]=useState('60'),[restSeconds,setRestSeconds]=useState('10'),[timeCap,setTimeCap]=useState('20'),[timeCapSeconds,setTimeCapSeconds]=useState('0')
+ const [rounds,setRounds]=useState('5'),[workSeconds,setWorkSeconds]=useState('60'),[restSeconds,setRestSeconds]=useState('10'),[timeCap,setTimeCap]=useState('20'),[timeCapSeconds,setTimeCapSeconds]=useState('0'),[stationCount,setStationCount]=useState('8'),[stationWork,setStationWork]=useState('45'),[stationTransition,setStationTransition]=useState('15'),[stationRounds,setStationRounds]=useState('3')
  const [ladderStart,setLadderStart]=useState('2'),[ladderStep,setLadderStep]=useState('2'),[ladderDirection,setLadderDirection]=useState('up')
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [prescription,setPrescription]=useState('rx'),[customInstructions,setCustomInstructions]=useState(''),[customUseSets,setCustomUseSets]=useState(false),[combinationMode,setCombinationMode]=useState('For Time')
@@ -141,7 +142,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
  const isCoupletTriplet=['Couplet','Triplet'].includes(format)
  const isTabata=format==='Tabata'
  const isRowIntervals=format==='Row Intervals'
- const isCustom=format==='Eigen økt'
+ const isStationCircuit=format==='Stasjonssirkel'\n const isCustom=format==='Eigen økt'
  function loadClassicWod(){
   const preset=CLASSIC_WODS.find(x=>x.name===classicChoice)
   if(!preset)return
@@ -210,16 +211,16 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
   if(!name.trim()){setError('Gi WOD-en eit namn.');return}
   if(showSets&&selected.some(x=>!x.sets.length||x.sets.some(s=>!s.reps||Number(s.reps)<1))){setError('Alle styrkesett må ha minst éi repetisjon.');return}
   if(!showSets&&selected.some(x=>isRow(x)?(!x.rowValue||Number(x.rowValue)<=0):!x.reps)){setError('Alle øvingar må ha reps, distanse, kalorier eller arbeidstid.');return}
-  if(isInterval&&(!Number(rounds)||!Number(workSeconds))){setError('Intervall krev arbeidstid og tal drag.');return}
+  if(isStationCircuit&&(selected.length!==Number(stationCount)||Number(stationCount)!==8)){setError('Stasjonssirkel krev nøyaktig 8 øvingar/stasjonar. Legg til eller fjern øvingar til du har 8.');return}\n  if(isStationCircuit&&(!Number(stationWork)||Number(stationWork)<1||Number(stationTransition)<0||!Number(stationRounds))){setError('Kontroller arbeidstid, bytettid og tal rundar.');return}\n  if(isInterval&&(!Number(rounds)||!Number(workSeconds))){setError('Intervall krev arbeidstid og tal drag.');return}
   if(isTabata&&Number(workSeconds)+Number(restSeconds)<=0){setError('Kontroller arbeid og pause i Tabata.');return}
   setBusy(true)
   try{
    const {data:{user}}=await supabase.auth.getUser()
    if(!user)throw new Error('Du må vera innlogga for å publisera WOD.')
    const schema={
-    version:3,format,structure:showSets?'strength':isTimed?'interval_clock':isInterval?'interval':isAmrap||isForTime||isLadder?'metcon':'custom',
+    version:3,format,structure:isStationCircuit?'station_circuit':showSets?'strength':isTimed?'interval_clock':isInterval?'interval':isAmrap||isForTime||isLadder?'metcon':'custom',
     duration_minutes:Math.ceil(((Number(minutes)||0)*60+(Number(durationSeconds)||0))/60)||null,time_cap_minutes:isAmrap||isForTime||(isCoupletTriplet&&combinationMode!=='Open')?Number(timeCap)||null:null,time_cap_seconds:isAmrap||isForTime||(isCoupletTriplet&&combinationMode!=='Open')?(Number(timeCap)||0)*60+(Number(timeCapSeconds)||0):null,combination_mode:isCoupletTriplet?combinationMode:null,
-    rounds:isInterval||isLadder||isForTime?Number(rounds)||null:null,
+    rounds:isStationCircuit?Number(stationRounds):isInterval||isLadder||isForTime?Number(rounds)||null:null,\n    station_circuit:isStationCircuit?{rotation:'all_rotate_together',station_count:8,work_seconds:Number(stationWork),transition_seconds:Number(stationTransition),rounds:Number(stationRounds),stations:selected.map((x,i)=>({station_number:i+1,exercise_name:x.name,reps:x.reps,load_mode:x.loadMode,load_kg:x.loadKg?Number(x.loadKg):null,coach_note:x.coachNote||null,equipment:x.equipment||null}))}:null,
     duration_seconds:(Number(minutes)||0)*60+(Number(durationSeconds)||0),
     interval:{work_seconds:Number(workSeconds)||null,rest_seconds:Number(restSeconds)||0,work_every_minutes:isTimed?timedEvery(format):null},
     ladder:isLadder?{start:Number(ladderStart),step:Number(ladderStep),direction:ladderDirection}:null,
@@ -236,7 +237,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
     }))
    }
    const movements=selected.map((x,i)=>(i+1)+'. '+buildPrescription(x)).join('\n')
-   const timer_settings={workout_schema:schema,work_seconds:Number(workSeconds)||null,rest_seconds:Number(restSeconds)||null,rounds:Number(rounds)||null,duration_seconds:schema.duration_seconds}
+   const stationDuration=isStationCircuit?(Number(stationRounds)*8*Number(stationWork)+(Number(stationRounds)*8-1)*Number(stationTransition)):schema.duration_seconds\n   schema.duration_seconds=stationDuration\n   const timer_settings={workout_schema:schema,work_seconds:isStationCircuit?Number(stationWork):Number(workSeconds)||null,rest_seconds:isStationCircuit?Number(stationTransition):Number(restSeconds)||null,rounds:isStationCircuit?Number(stationRounds):Number(rounds)||null,duration_seconds:stationDuration}
    const {data:savedWod,error:e}=await supabase.from('wods').insert({name:name.trim(),format,duration_minutes:Math.ceil(((Number(minutes)||0)*60+(Number(durationSeconds)||0))/60)||null,movements,notes:[stimulus,notes,customInstructions].filter(Boolean).join('\n\n'),is_published:publishToMembers,created_by:user.id,timer_settings}).select('id').single()
    if(e)throw e
    if(assignedClientId){const {error:linkError}=await supabase.from('pt_wod_assignments').insert({member_id:assignedClientId,wod_id:savedWod.id,assigned_by:user.id,location:'Valfritt',coach_note:'Tildelt frå PT Studio'});if(linkError)throw new Error('WOD-en vart lagra, men kunne ikkje knytast til kunden: '+linkError.message);onAssigned?.()}
@@ -264,7 +265,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
      <div className="wod-name-field"><label>WOD-namn<input value={name} onChange={e=>setName(e.target.value)} required/></label><button type="button" className="secondary-button" onClick={()=>setName(randomWodName())}>Nytt namn</button></div><label className="wod-publish-toggle"><input type="checkbox" checked={publishToMembers} onChange={e=>setPublishToMembers(e.target.checked)}/> Publiser for medlemmer</label>
      <label>Programmeringsnivå<select value={prescription} onChange={e=>setPrescription(e.target.value)}><option value="rx">RX · Føreskriven</option><option value="scaled">Skalert</option><option value="beginner">Nybegynnar</option><option value="custom">Individuelt tilpassa</option></select></label>
      <div className="engine-fields"><label>Format<select value={format} onChange={e=>{const next=e.target.value;setFormat(next);if(next==='Tabata'){setWorkSeconds('20');setRestSeconds('10');setRounds('8')}else if(format==='Tabata'){setWorkSeconds('60');setRestSeconds('10');setRounds('5')}}}>{formats.map(group=><optgroup key={group.group} label={group.group}>{group.items.map(x=><option key={x} value={x}>{x}</option>)}</optgroup>)}</select></label>{!isTimed&&<><label>Varigheit (min)<input type="number" min="1" max="600" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label><label>Ekstra sekund<input type="number" min="0" max="59" value={durationSeconds} onChange={e=>setDurationSeconds(e.target.value)}/></label></>}</div>
-     {isTimed&&<div className="wod-advanced-fields"><label>Varigheit (min)<input type="number" min="1" max="600" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label><label>Ekstra sekund<input type="number" min="0" max="59" value={durationSeconds} onChange={e=>setDurationSeconds(e.target.value)}/></label><p className="wod-help">Arbeidet startar {timedLabel(format)}. Reps-feltet på kvar øving er målet per arbeidsintervall.</p></div>}
+     {isStationCircuit&&<div className="wod-advanced-fields station-circuit-settings"><label>Tal stasjonar<input type="number" value="8" readOnly/></label><label>Arbeid per stasjon (sek.)<input type="number" min="1" value={stationWork} onChange={e=>setStationWork(e.target.value)}/></label><label>Bytetid (sek.)<input type="number" min="0" value={stationTransition} onChange={e=>setStationTransition(e.target.value)}/></label><label>Tal rundar<input type="number" min="1" max="20" value={stationRounds} onChange={e=>setStationRounds(e.target.value)}/></label><p className="wod-help">Alle grupper roterer samtidig til neste stasjon. Legg inn nøyaktig 8 øvingar i stasjonsrekkjefølgje. Total tid blir rekna automatisk.</p></div>}\n     {isTimed&&<div className="wod-advanced-fields"><label>Varigheit (min)<input type="number" min="1" max="600" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label><label>Ekstra sekund<input type="number" min="0" max="59" value={durationSeconds} onChange={e=>setDurationSeconds(e.target.value)}/></label><p className="wod-help">Arbeidet startar {timedLabel(format)}. Reps-feltet på kvar øving er målet per arbeidsintervall.</p></div>}
      {isInterval&&<div className="wod-advanced-fields"><label>Arbeid (sek.)<input type="number" min="1" value={workSeconds} onChange={e=>setWorkSeconds(e.target.value)}/></label><label>Pause (sek.)<input type="number" min="0" value={restSeconds} onChange={e=>setRestSeconds(e.target.value)}/></label><label>Tal drag<input type="number" min="1" value={rounds} onChange={e=>setRounds(e.target.value)}/></label></div>}
      {isLadder&&<div className="wod-advanced-fields"><label>Startreps<input type="number" min="1" value={ladderStart} onChange={e=>setLadderStart(e.target.value)}/></label><label>Endring per runde<input type="number" min="1" value={ladderStep} onChange={e=>setLadderStep(e.target.value)}/></label><label>Retning<select value={ladderDirection} onChange={e=>setLadderDirection(e.target.value)}><option value="up">Aukande</option><option value="down">Minkande</option></select></label></div>}
      {isAmrap&&<div className="wod-advanced-fields"><label>Tidsgrense (min)<input type="number" min="1" max="600" value={timeCap} onChange={e=>setTimeCap(e.target.value)}/></label><label>Ekstra sekund<input type="number" min="0" max="59" value={timeCapSeconds} onChange={e=>setTimeCapSeconds(e.target.value)}/></label><p className="wod-help">Resultatet blir rundar + ekstra repetisjonar.</p></div>}
