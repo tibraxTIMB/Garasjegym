@@ -390,6 +390,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       }
       const {data:log,error:logError}=await supabase.from('workout_logs').insert({
         member_id:payload.member_id,title:payload.title,source_wod_id:payload.source_wod_id,
+        class_live_session_id:payload.class_live_session_id,
         workout_date:payload.workout_date,format:payload.format,rounds:payload.rounds,
         score_rounds:payload.score_rounds,score_reps:payload.score_reps,
         score_time_seconds:payload.score_time_seconds,score_load_kg:payload.score_load_kg,
