@@ -1840,3 +1840,14 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .simple-quick-form.review-open .engine-fields{display:grid}
 .simple-quick-form .engine-note{display:none}
 .simple-quick-form.review-open .engine-note{display:block}
+
+
+/* Avslutning av økt: felles stadfestingsvindauge for enkel og vanleg modus. */
+.workout-finish-backdrop{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:14px;overflow-y:auto}
+.workout-finish-dialog{width:min(100%,680px);max-height:94dvh;overflow:auto;background:#171d1f;color:#f5f6f3;border:1px solid #596365;border-radius:18px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.55);display:grid;gap:16px}
+.workout-finish-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.workout-finish-head h3{margin:5px 0 0;font-size:clamp(22px,5vw,30px)}
+.workout-finish-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.workout-finish-summary>div{background:#252d2f;border:1px solid #3d494b;border-radius:10px;padding:11px;display:grid;gap:5px;min-width:0}.workout-finish-summary span{font-size:10px;color:#b8c1bf;font-weight:800;letter-spacing:.08em}.workout-finish-summary strong{font-size:17px;overflow-wrap:anywhere}
+.workout-finish-exercises{background:#202729;border-radius:12px;padding:13px}.workout-finish-exercises ol{margin:8px 0 0;padding-left:22px;display:grid;gap:7px}.workout-finish-exercises li{padding-left:3px}.workout-finish-exercises small{display:block;color:#bac4c1;margin-top:3px}
+.workout-finish-results{display:grid;gap:10px}.workout-finish-results h4{margin:0;font-size:18px}.workout-finish-results p{margin:0;color:#c1cbc8;font-size:13px}.workout-finish-results .engine-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.workout-finish-results label{display:grid;gap:5px;font-size:12px;font-weight:750}.workout-finish-results input,.workout-finish-results select,.workout-finish-results textarea{width:100%;min-width:0;min-height:42px;padding:9px;border:1px solid #536062;border-radius:8px;background:#101617;color:#fff;font:inherit}.workout-finish-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:sticky;bottom:-20px;background:#171d1f;padding:12px 0 2px}.workout-finish-actions button{min-height:52px;justify-content:center}
+.danger-button{display:inline-flex;align-items:center;gap:8px;border:1px solid #a64c45;border-radius:10px;background:#512522;color:#fff;padding:12px;font:inherit;font-weight:800;cursor:pointer}
+@media(max-width:480px){.workout-finish-dialog{padding:15px}.workout-finish-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.workout-finish-results .engine-fields{grid-template-columns:1fr}.workout-finish-actions{grid-template-columns:1fr 1fr}.workout-finish-actions button{font-size:13px;padding:9px}}
