@@ -184,7 +184,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
   </div>
 }
 
-export default function Training({ launchWodId = null, launchClassSessionId = null, onLaunchConsumed, simpleMode = false, quickStart = false, onQuickStartConsumed, onSaved, onDiscard }) {
+export default function Training({ launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, onLaunchConsumed, simpleMode = false, quickStart = false, onQuickStartConsumed, onSaved, onDiscard }) {
   const [wods, setWods] = useState([])
   const [exercises, setExercises] = useState([])
   const [favoriteNames, setFavoriteNames] = useState([])
