@@ -1193,3 +1193,18 @@ footer {
 .my-training-actions button{font-size:11px;padding:7px 10px}
 .pt-request-type{display:grid;gap:5px;max-width:360px;font-size:11px;font-weight:700;color:var(--muted)}
 .pt-request-type select{font-size:12px}
+
+/* Compact rank catalogue and collapsible exercise library */
+.admin-rank-catalogue{margin-top:18px;padding-top:16px;border-top:1px solid var(--line,#343d3d)}
+.rank-catalogue-search,.exercise-library-search{display:flex!important;align-items:center;gap:8px;padding:0 11px;border:1px solid var(--line,#3b4444);border-radius:10px;background:#151a1b;min-width:0}
+.rank-catalogue-search input,.exercise-library-search input{width:100%;min-width:0;border:0!important;background:transparent!important;box-shadow:none!important;padding:10px 0!important}
+.rank-catalogue-group,.exercise-library-group{margin:8px 0;border:1px solid var(--line,#3b4444);border-radius:10px;background:#1b2021;overflow:hidden}
+.rank-catalogue-group>summary,.exercise-library-group>summary{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 13px;cursor:pointer;list-style:none;font-size:12px}
+.rank-catalogue-group>summary::-webkit-details-marker,.exercise-library-group>summary::-webkit-details-marker{display:none}
+.rank-catalogue-group>summary span,.exercise-library-group>summary span{font-size:10px;color:var(--muted)}
+.rank-catalogue-list{padding:0 10px 8px}
+.rank-catalogue-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(95px,auto) 48px;align-items:center;gap:8px;padding:8px 3px;border-top:1px solid var(--line,#343d3d)}
+.rank-catalogue-row strong{font-size:11px}.rank-catalogue-row span{font-size:10px;color:var(--muted)}.rank-catalogue-row b{text-align:right;color:var(--orange,#f5a632);font-size:11px}
+.exercise-library-toolbar{display:flex;gap:8px;align-items:center;margin:10px 0}.exercise-library-search{flex:1}
+.exercise-library-groups{display:grid;gap:7px}.exercise-library-group{margin:0}.exercise-library-group .exercise-list{padding:0 9px 8px}.exercise-library-group .exercise-row{margin:5px 0}
+@media(max-width:600px){.rank-catalogue-row{grid-template-columns:minmax(0,1fr) minmax(78px,auto) 38px;gap:5px}.rank-catalogue-row strong{font-size:10px}.rank-catalogue-row span{font-size:9px}.exercise-library-toolbar{align-items:stretch;flex-direction:column}}
