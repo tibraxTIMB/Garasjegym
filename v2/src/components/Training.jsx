@@ -182,7 +182,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
   </div>
 }
 
-export default function Training({ launchWodId = null, launchClassSessionId = null, onLaunchConsumed, simpleMode = false }) {
+export default function Training({ launchWodId = null, launchClassSessionId = null, onLaunchConsumed, simpleMode = false, quickStart = false, onQuickStartConsumed }) {
   const [wods, setWods] = useState([])
   const [exercises, setExercises] = useState([])
   const [favoriteNames, setFavoriteNames] = useState([])
@@ -269,6 +269,12 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     const wod = wods.find(item => item.id === launchWodId)
     if (wod) { startWorkout(wod); setClassSessionId(launchClassSessionId || null); onLaunchConsumed?.() }
   }, [launchWodId, loading, wods])
+
+  useEffect(() => {
+    if (!quickStart || !simpleMode || loading || mode !== 'home') return
+    startWorkout()
+    onQuickStartConsumed?.()
+  }, [quickStart, simpleMode, loading, mode])
 
   const filteredExercises = useMemo(() => exercises.filter(e => e.name.toLowerCase().includes(query.toLowerCase()) || (e.category || '').toLowerCase().includes(query.toLowerCase())), [exercises, query])
 
