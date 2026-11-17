@@ -34,14 +34,15 @@ const isRow=x=>x.equipment==='Romaskin'
 
 export default function WodBuilder({assignedClientId=null,onAssigned}){
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område')
- const [selected,setSelected]=useState([]),[name,setName]=useState(()=>randomWodName()),[format,setFormat]=useState('AMRAP')
+ const [selected,setSelected]=useState([]),[name,setName]=useState(()=>randomWodName()),[format,setFormat]=useState('AMRAP'),[libraryWods,setLibraryWods]=useState([]),[builderMode,setBuilderMode]=useState(assignedClientId?'library':'build'),[librarySearch,setLibrarySearch]=useState(''),[selectedLibraryWod,setSelectedLibraryWod]=useState('')
  const [minutes,setMinutes]=useState('20'),[notes,setNotes]=useState(''),[stimulus,setStimulus]=useState('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
  const [rounds,setRounds]=useState('5'),[workSeconds,setWorkSeconds]=useState('60'),[restSeconds,setRestSeconds]=useState('10'),[timeCap,setTimeCap]=useState('20')
  const [ladderStart,setLadderStart]=useState('2'),[ladderStep,setLadderStep]=useState('2'),[ladderDirection,setLadderDirection]=useState('up')
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [prescription,setPrescription]=useState('rx'),[customInstructions,setCustomInstructions]=useState(''),[customUseSets,setCustomUseSets]=useState(false),[combinationMode,setCombinationMode]=useState('For Time')
 
- useEffect(()=>{load()},[])
+ useEffect(()=>{load();loadWods()},[])
+ async function loadWods(){const {data,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,created_at').eq('is_published',true).order('created_at',{ascending:false});if(e)setError(e.message);else setLibraryWods(data||[])}
  async function load(){
   setLoading(true)
   const {data,error:e}=await supabase.from('exercises').select('id,name,category,equipment,video_url,body_area,description,is_rehab').eq('is_active',true).order('name')
@@ -94,6 +95,19 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
   const dose=showSets?x.sets.map((s,i)=>(i+1)+': '+s.reps+' reps'+(s.loadMode==='kg'&&s.loadKg?' @ '+s.loadKg+' kg':s.loadMode==='percent'&&s.percent1rm?' @ '+s.percent1rm+'% 1RM':s.loadMode==='rir'&&s.rir!==''?' · RIR '+s.rir:s.loadMode==='rpe'&&s.rpe!==''?' · RPE '+s.rpe:'')+(s.restSeconds?' · pause '+s.restSeconds+'s':'')).join(' | '):target+loadText
   return x.name+' – '+dose+(x.tempo?' · tempo '+x.tempo:'')+(x.coachNote?' · '+x.coachNote:'')
  }
+ async function assignLibraryWod(){
+  const wod=libraryWods.find(x=>x.id===selectedLibraryWod)
+  if(!wod||!assignedClientId)return
+  setBusy(true);setError('');setNotice('')
+  try{
+   const {data:{user}}=await supabase.auth.getUser()
+   if(!user)throw new Error('Logg inn på nytt.')
+   const {error:e}=await supabase.from('pt_sessions').insert({client_id:assignedClientId,title:wod.name,starts_at:new Date().toISOString(),duration_minutes:wod.duration_minutes||60,capacity:1,status:'planned',created_by:user.id,wod_ids:[wod.id],message:'Tildelt frå WOD-biblioteket'})
+   if(e)throw e
+   setNotice('Eksisterande WOD er tildelt kunden. Biblioteket er ikkje kopiert eller endra.')
+   onAssigned?.()
+  }catch(e){setError(e.message||'Kunne ikkje tildela WOD.')}finally{setBusy(false)}
+ }
  async function save(event){
   event.preventDefault();setError('');setNotice('')
   if(!selected.length){setError('Legg minst ei øving til WOD-en.');return}
@@ -130,7 +144,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
    const timer_settings={workout_schema:schema,work_seconds:Number(workSeconds)||null,rest_seconds:Number(restSeconds)||null,rounds:Number(rounds)||null}
    const {data:savedWod,error:e}=await supabase.from('wods').insert({name:name.trim(),format,duration_minutes:Number(minutes)||null,movements,notes:[stimulus,notes,customInstructions].filter(Boolean).join('\n\n'),is_published:true,created_by:user.id,timer_settings}).select('id').single()
    if(e)throw e
-   if(assignedClientId){const {error:linkError}=await supabase.from('pt_sessions').insert({client_id:assignedClientId,title:name.trim(),starts_at:new Date().toISOString(),duration_minutes:Number(minutes)||60,capacity:1,status:'planned',created_by:user.id,wod_ids:[savedWod.id],message:'WOD oppretta direkte frå PT Studio'}) ;if(linkError)throw new Error('WOD-en vart lagra, men kunne ikkje knytast til kunden: '+linkError.message);onAssigned?.() }
+   if(assignedClientId){const {error:linkError}=await supabase.from('pt_sessions').insert({client_id:assignedClientId,title:name.trim(),starts_at:new Date().toISOString(),duration_minutes:Number(minutes)||60,capacity:1,status:'planned',created_by:user.id,wod_ids:[savedWod.id],message:'WOD oppretta direkte frå PT Studio'});if(linkError)throw new Error('WOD-en vart lagra, men kunne ikkje knytast til kunden: '+linkError.message);onAssigned?.()}
    setNotice('WOD publisert med full programmering.')
    setSelected([]);setNotes('');setCustomInstructions('');setName(randomWodName())
   }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{setBusy(false)}
@@ -138,6 +152,8 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
  return <div className="wod-builder">
   <div className="training-heading"><div><div className="section-kicker">GARASJEGYM · PROGRAMMERINGSVERKSTAD</div><h3>WOD-studio PRO</h3><p>Programmer styrke, metcon og intervall med formattilpassa dosering.</p></div><span className="count-pill"><WandSparkles size={14}/> PRO</span></div>
   {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message">{notice}</div>}
+  {assignedClientId&&<div className="pt-wod-mode-switch"><button type="button" className={builderMode==='library'?'selected':''} onClick={()=>setBuilderMode('library')}>Finn WOD i biblioteket</button><button type="button" className={builderMode==='build'?'selected':''} onClick={()=>setBuilderMode('build')}>Bygg ny WOD</button></div>}
+  {assignedClientId&&builderMode==='library'?<section className="pt-wod-library-panel"><div className="engine-section-title"><div><h4>Vel frå WOD-biblioteket</h4><p>Bruk same publiserte WOD på fleire kundar utan å laga kopiar.</p></div><span>{libraryWods.length} WOD-ar</span></div><div className="wod-search"><Search size={16}/><input value={librarySearch} onChange={e=>setLibrarySearch(e.target.value)} placeholder="Søk etter namn eller format …"/></div><div className="pt-wod-library-list">{libraryWods.filter(w=>(w.name+' '+w.format).toLowerCase().includes(librarySearch.toLowerCase())).map(w=><button type="button" key={w.id} className={selectedLibraryWod===w.id?'selected':''} onClick={()=>setSelectedLibraryWod(w.id)}><span><strong>{w.name}</strong><small>{w.format} · {w.duration_minutes||'–'} min · {w.movements?.split('\n').filter(Boolean).length||0} øvingar</small></span><span>{selectedLibraryWod===w.id?'Vald':'Vel'}</span></button>)}</div><button type="button" className="primary-button" disabled={!selectedLibraryWod||busy} onClick={assignLibraryWod}><Plus size={15}/>{busy?'Tildeler …':'Tildel vald WOD til kunden'}</button></section>:<div className="pt-wod-builder-form">
   <div className="wod-studio-tools"><button type="button" className="primary-button" onClick={randomWod}><Dices size={17}/> Generer tilfeldig WOD</button><button type="button" className="secondary-button" onClick={addRowing}><Footprints size={16}/> Legg til romaskin</button><button type="button" className="secondary-button" onClick={reset}><Trash2 size={15}/> Forkast økt</button></div>
   <div className="wod-builder-layout">
    <section className="engine-section wod-library"><div className="engine-section-title"><h4>Øvingsbibliotek</h4><span>{filtered.length} av {exercises.length}</span></div>
@@ -173,6 +189,6 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
      <button className="primary-button" disabled={busy||!selected.length||!name.trim()}><Save size={16}/>{busy?'Lagrar …':'Publiser WOD'}</button>
     </form>
    </aside>
-  </div>
+  </div></div>}
  </div>
 }
