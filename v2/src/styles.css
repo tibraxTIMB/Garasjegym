@@ -1414,3 +1414,9 @@ footer {
 .calendar-detail-modal .calendar-modal-actions{justify-content:flex-end}
 .calendar-event{cursor:pointer}
 .calendar-event:hover{filter:brightness(1.25);transform:translateY(-1px)}
+
+
+.station-circuit-settings{padding:12px;border:1px solid #8b693b55;border-radius:12px;background:linear-gradient(135deg,#2b2922,#202522)}
+.station-circuit-settings .wod-help{grid-column:1/-1;margin:0;color:#d3c6aa;line-height:1.5}
+.station-circuit-settings input[readonly]{opacity:.8}
+.live-session-banner strong{color:#f5b64f}
