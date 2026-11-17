@@ -219,7 +219,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
     version:3,format,structure:showSets?'strength':isTimed?'interval_clock':isInterval?'interval':isAmrap||isForTime||isLadder?'metcon':'custom',
     duration_minutes:Math.ceil(((Number(minutes)||0)*60+(Number(durationSeconds)||0))/60)||null,time_cap_minutes:isAmrap||isForTime||(isCoupletTriplet&&combinationMode!=='Open')?Number(timeCap)||null:null,time_cap_seconds:isAmrap||isForTime||(isCoupletTriplet&&combinationMode!=='Open')?(Number(timeCap)||0)*60+(Number(timeCapSeconds)||0):null,combination_mode:isCoupletTriplet?combinationMode:null,
     rounds:isInterval||isLadder||isForTime?Number(rounds)||null:null,
-    duration_seconds:(Number(minutes)||0)*60+(Number(durationSeconds)||0),time_cap_seconds:isAmrap||isForTime||(isCoupletTriplet&&combinationMode!=='Open')?(Number(timeCap)||0)*60+(Number(timeCapSeconds)||0):null,
+    duration_seconds:(Number(minutes)||0)*60+(Number(durationSeconds)||0),
     interval:{work_seconds:Number(workSeconds)||null,rest_seconds:Number(restSeconds)||0,work_every_minutes:isTimed?timedEvery(format):null},
     ladder:isLadder?{start:Number(ladderStart),step:Number(ladderStep),direction:ladderDirection}:null,
     stimulus,coach_notes:notes,prescription,
