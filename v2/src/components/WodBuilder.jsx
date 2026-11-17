@@ -195,7 +195,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
   try{
    const {data:{user}}=await supabase.auth.getUser()
    if(!user)throw new Error('Logg inn på nytt.')
-   const {error:e}=await supabase.from('pt_sessions').insert({client_id:assignedClientId,title:wod.name,starts_at:new Date().toISOString(),duration_minutes:wod.duration_minutes||60,capacity:1,status:'planned',created_by:user.id,wod_ids:[wod.id],message:'Tildelt frå WOD-biblioteket'})
+   const {error:e}=await supabase.from('pt_wod_assignments').insert({member_id:assignedClientId,wod_id:wod.id,assigned_by:user.id,location:'Valfritt',coach_note:'Tildelt frå PT Studio'})
    if(e)throw e
    setNotice('Eksisterande WOD er tildelt kunden. Biblioteket er ikkje kopiert eller endra.')
    onAssigned?.()
@@ -237,7 +237,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
    const timer_settings={workout_schema:schema,work_seconds:Number(workSeconds)||null,rest_seconds:Number(restSeconds)||null,rounds:Number(rounds)||null}
    const {data:savedWod,error:e}=await supabase.from('wods').insert({name:name.trim(),format,duration_minutes:Number(minutes)||null,movements,notes:[stimulus,notes,customInstructions].filter(Boolean).join('\n\n'),is_published:publishToMembers,created_by:user.id,timer_settings}).select('id').single()
    if(e)throw e
-   if(assignedClientId){const {error:linkError}=await supabase.from('pt_sessions').insert({client_id:assignedClientId,title:name.trim(),starts_at:new Date().toISOString(),duration_minutes:Number(minutes)||60,capacity:1,status:'planned',created_by:user.id,wod_ids:[savedWod.id],message:'WOD oppretta direkte frå PT Studio'});if(linkError)throw new Error('WOD-en vart lagra, men kunne ikkje knytast til kunden: '+linkError.message);onAssigned?.()}
+   if(assignedClientId){const {error:linkError}=await supabase.from('pt_wod_assignments').insert({member_id:assignedClientId,wod_id:savedWod.id,assigned_by:user.id,location:'Valfritt',coach_note:'Tildelt frå PT Studio'});if(linkError)throw new Error('WOD-en vart lagra, men kunne ikkje knytast til kunden: '+linkError.message);onAssigned?.()}
    setNotice(publishToMembers?'WOD lagra i biblioteket og publisert for medlemmene.':'WOD lagra i det interne PT-biblioteket.')
    setSelected([]);setNotes('');setCustomInstructions('');setName(randomWodName())
   }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{setBusy(false)}
