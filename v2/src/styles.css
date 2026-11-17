@@ -1655,3 +1655,67 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .wod-library-actions .primary-button{grid-column:1/-1}
 @media(min-width:900px){.wod-builder{grid-template-columns:minmax(0,1.1fr) minmax(340px,.9fr);align-items:start}.wod-builder .wod-composer{position:sticky;top:70px;max-height:calc(100vh - 90px);overflow:auto}.wod-library-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.wod-builder .wod-exercise-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:520px){.wod-library-grid{grid-template-columns:1fr}.wod-builder .wod-exercise-grid{grid-template-columns:1fr 1fr}.wod-library-actions{grid-template-columns:1fr 1fr}}
+
+/* WOD studio compact workspace refinement */
+.wod-hub{gap:10px}
+.wod-hub>.training-heading{margin:0}
+.wod-hub .hub-tabs{position:sticky;top:0;z-index:8;display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px;background:#171d1f;border:1px solid #394447;border-radius:12px}
+.wod-hub .hub-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:42px;margin:0;padding:8px 10px;border-radius:8px;font-size:12px}
+.wod-hub .hub-tabs button.selected{background:var(--orange);color:#17191a;border-color:var(--orange);font-weight:900}
+.wod-builder{display:grid;gap:10px;min-width:0}
+.wod-builder>.training-heading{margin:0;padding:12px 14px;background:#1c2426;border:1px solid #394447;border-radius:12px}
+.wod-builder>.training-heading h3{font-size:19px}
+.wod-builder>.training-heading p{font-size:11px;margin:3px 0 0}
+.wod-classic-picker{margin:0;padding:10px 12px;grid-template-columns:1fr minmax(210px,.9fr)}
+.wod-studio-tools{gap:6px;margin:0}
+.wod-studio-tools button{min-height:36px;padding:8px 10px;font-size:11px}
+.wod-builder-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-items:start}
+.wod-builder-layout>.wod-library,.wod-builder-layout>.wod-composer{padding:12px;border:1px solid #394447;border-radius:12px;background:#1a2224}
+.wod-builder-layout .engine-section-title{margin-bottom:7px}
+.wod-search{margin:7px 0;padding:0 9px}
+.wod-search input{min-height:38px;font-size:12px}
+.wod-category-filter{gap:5px;padding:2px 0 7px}
+.wod-category-filter button{padding:6px 9px;font-size:10px}
+.wod-area-filter{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.wod-area-filter button{padding:5px 8px;font-size:9px}
+.wod-exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:390px}
+.wod-exercise-card{padding:8px;gap:6px;align-items:flex-start}
+.wod-exercise-card strong{font-size:10px}
+.wod-exercise-card small{font-size:8px;line-height:1.25}
+.wod-exercise-card p{font-size:9px;line-height:1.3;margin:2px 0}
+.wod-add-button{flex:0 0 auto;min-height:30px;padding:6px 7px;font-size:9px}
+.wod-composer{position:relative;top:auto;max-height:none;overflow:visible}
+.wod-composer .admin-create-form{gap:9px}
+.wod-composer .wod-selected-list{margin:7px 0;gap:5px}
+.wod-composer .wod-selected-list>article{padding:7px;gap:6px}
+.wod-composer .wod-dose-grid{gap:6px}
+.wod-composer .wod-dose-grid label,.wod-composer .wod-set-row label{font-size:10px}
+.wod-composer .wod-dose-grid input,.wod-composer .wod-dose-grid select{min-height:34px;padding:6px;font-size:11px}
+.wod-composer .wod-selected-actions button{width:30px;height:30px}
+.wod-composer .wod-publish-toggle{padding:8px 10px}
+.wod-library-page{gap:9px}
+.wod-library-page>.training-heading{margin:0;padding:12px 14px;background:#1c2426;border:1px solid #394447;border-radius:12px}
+.wod-library-page>.training-heading h3{font-size:19px}
+.wod-library-toolbar{gap:7px}
+.wod-library-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.wod-library-card{padding:10px;min-width:0}
+.wod-library-card h4{font-size:13px;overflow-wrap:anywhere}
+.wod-library-card p{font-size:10px;line-height:1.35}
+.wod-library-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.wod-library-actions button{display:flex;align-items:center;justify-content:center;gap:4px;min-height:36px;padding:6px;font-size:10px;line-height:1.15}
+.wod-library-actions .primary-button{grid-column:1/-1}
+@media(min-width:900px){
+ .wod-builder-layout{grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr);gap:12px}
+ .wod-composer{position:sticky;top:72px;max-height:calc(100vh - 90px);overflow:auto}
+ .wod-exercise-grid{max-height:calc(100vh - 330px);grid-template-columns:repeat(2,minmax(0,1fr))}
+ .wod-library-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:560px){
+ .wod-classic-picker{grid-template-columns:1fr}
+ .wod-studio-tools button{flex:1 1 calc(50% - 6px)}
+ .wod-exercise-grid{grid-template-columns:1fr 1fr;max-height:330px}
+ .wod-exercise-card{flex-direction:column}
+ .wod-add-button{width:100%;justify-content:center}
+ .wod-library-grid{grid-template-columns:1fr}
+ .wod-library-actions button{font-size:11px}
+}
