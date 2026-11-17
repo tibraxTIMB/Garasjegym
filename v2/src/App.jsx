@@ -228,7 +228,7 @@ export default function App() {
   const Icon = current.icon
 
   return (
-    <MusicProvider>
+    <MusicProvider memberId={session.user.id}>
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
