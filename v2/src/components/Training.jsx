@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Activity, CheckCircle2, Clock3, Dumbbell, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 
-const FORMATS = ['Fri trening', 'EMOM', 'AMRAP', 'For Time', 'Tabata', 'Intervall', 'Death By', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
+const FORMATS = ['Fri trening', 'EMOM 1', 'EMOM 2', 'EMOM', 'AMRAP', 'For Time', 'Tabata', 'Intervall', 'Death By', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '' }] })
 const pad = (n) => String(n).padStart(2, '0')
 const clock = (seconds) => `${pad(Math.floor(Math.max(0, seconds) / 60))}:${pad(Math.max(0, seconds) % 60)}`
@@ -25,7 +25,7 @@ function Timer({ format, minutes, activeExercise = '', timerSettings = null, onS
   const target = Math.max(1, Number(minutes) || 10) * 60
   const isTimedInterval = ['Tabata', 'Intervall', 'Tilpassa'].includes(format)
   const isCountdown = ['AMRAP', 'Nedteljing'].includes(format)
-  const isEMOM = format === 'EMOM'
+  const isEMOM = ['EMOM', 'EMOM 1', 'EMOM 2'].includes(format)
   const isDeathBy = format === 'Death By'
   const cycle = Math.max(1, Number(workSeconds)) + Math.max(0, Number(restSeconds))
   const roundLength = isTimedInterval ? cycle : 60
@@ -116,7 +116,7 @@ function Timer({ format, minutes, activeExercise = '', timerSettings = null, onS
       <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
     </div>
     {laps.length > 0 && <div className="timer-round-label">MELLOMTIDER: {laps.map((lap, i) => `${i + 1}: ${clock(lap)}`).join(' · ')}</div>}
-    <small>{isTimedInterval ? 'Arbeid / kvile-intervall' : isCountdown ? 'Nedtelling' : isEMOM ? 'Eitt minutt per runde' : isDeathBy ? 'Aukande arbeid for kvar minutt · tidsgrense frå varigheita' : format === 'For Time' ? 'Stoppeklokke – registrer sluttid når du er ferdig' : 'Stoppeklokke'}</small>
+    <small>{isTimedInterval ? 'Arbeid / kvile-intervall' : isCountdown ? 'Nedtelling' : isEMOM ? (format === 'EMOM 2' ? 'To øvingar per minutt – fordel arbeidet mellom dei' : 'Éi øving per minutt') : isDeathBy ? 'Aukande arbeid for kvar minutt · tidsgrense frå varigheita' : format === 'For Time' ? 'Stoppeklokke – registrer sluttid når du er ferdig' : 'Stoppeklokke'}</small>
   </div>
 }
 
