@@ -22,10 +22,13 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
   const [phase, setPhase] = useState('Klar')
   const [laps, setLaps] = useState([])
   const [soundOn, setSoundOn] = useState(true)
-  const savedDuration = timerSettings?.workout_schema?.duration_seconds
-  const target = Math.max(1, Number(savedDuration) || ((Number(minutes) || 10) * 60 + (Number(seconds) || 0)) )
+  const schema = timerSettings?.workout_schema
+  const savedDuration = schema?.duration_seconds
+  const capDuration = schema?.time_cap_seconds
+  const target = Math.max(1, Number((['AMRAP','Nedteljing','For Time','Chipper'].includes(format) || (['Couplet','Triplet'].includes(format) && schema?.combination_mode !== 'Open')) && capDuration) || Number(savedDuration) || ((Number(minutes) || 10) * 60 + (Number(seconds) || 0)))
   const isTimedInterval = ['Tabata', 'Intervall', 'Tilpassa'].includes(format)
-  const isCountdown = ['AMRAP', 'Nedteljing'].includes(format)
+  const isCountdown = ['AMRAP', 'Nedteljing'].includes(format) || (['Couplet','Triplet'].includes(format) && schema?.combination_mode === 'AMRAP')
+  const isForTimeCap = ['For Time','Chipper'].includes(format) || (['Couplet','Triplet'].includes(format) && schema?.combination_mode === 'For Time')
   const isEMOM = ['EMOM', 'EMOM 1', 'EMOM 2', 'E1MOM', 'E2MOM', 'E3MOM'].includes(format)
   const emomEvery = Math.max(1, Number(timerSettings?.workout_schema?.interval?.work_every_minutes) || (format === 'E2MOM' || format === 'EMOM 2' ? 2 : format === 'E3MOM' ? 3 : 1))
   const emomCycle = emomEvery * 60
@@ -79,9 +82,9 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
     if (!running) return
     if (isCountdown && elapsed >= target) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
     if (isTimedInterval && elapsed >= cycle * Math.max(1, Number(rounds))) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
-    if ((isEMOM || isDeathBy) && elapsed >= target) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
+    if ((isEMOM || isDeathBy || isForTimeCap) && elapsed >= target) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
     if ((isTimedInterval && elapsed % cycle === 0) || (isTimedInterval && elapsed % cycle === Number(workSeconds)) || ((isEMOM && elapsed % emomCycle === 0) || (isDeathBy && elapsed % 60 === 0))) cue(elapsed % 60 === 0 ? 1040 : 660, 0.12)
-  }, [elapsed, running, target, isCountdown, isTimedInterval, cycle, rounds, isEMOM, emomCycle, isDeathBy, workSeconds])
+  }, [elapsed, running, target, isCountdown, isForTimeCap, isTimedInterval, cycle, rounds, isEMOM, emomCycle, isDeathBy, workSeconds])
 
   useEffect(() => {
     if (running) setPhase(currentPhase)
