@@ -18,7 +18,7 @@ export default function CoffeeBar({profile,ordersOnly=false}){
   if(o.error)setError(o.error.message);else setOrders(o.data||[])
   setLoading(false)
  }
- useEffect(()=>{load();const refresh=setInterval(()=>load(true),30000);return()=>clearInterval(refresh)},[])
+ useEffect(()=>{load();const refresh=setInterval(()=>load(true),30000);return()=>clearInterval(refresh)},[showArchived])
  const cartItems=useMemo(()=>products.filter(p=>cart[p.id]>0).map(p=>({product_id:p.id,quantity:cart[p.id],price:Number(p.price)})),[products,cart])
  const total=cartItems.reduce((sum,item)=>sum+item.price*item.quantity,0)
  function change(id,delta){setCart(v=>({...v,[id]:Math.max(0,Math.min(20,(v[id]||0)+delta))}))}
