@@ -1215,6 +1215,15 @@ body.gg-app-fullscreen main{padding-top:8px!important}
    <input id="authPassword" type="password" autocomplete="current-password" minlength="8" required placeholder="Minst 8 teikn">
    <button id="authSubmit" type="submit">Logg inn</button>
   </form>
+  <button id="authForgotBtn" type="button" class="auth-secondary">Gløymt passord?</button>
+  <form id="authRecoveryForm" hidden>
+   <p class="hint">Vel eit nytt passord for kontoen din.</p>
+   <label for="authNewPassword">Nytt passord</label>
+   <input id="authNewPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="Minst 8 teikn">
+   <label for="authNewPasswordConfirm">Gjenta nytt passord</label>
+   <input id="authNewPasswordConfirm" type="password" minlength="8" autocomplete="new-password" required placeholder="Skriv passordet ein gong til">
+   <button id="authRecoverySubmit" type="submit">Lagre nytt passord</button>
+  </form>
   <button id="authModeBtn" type="button" class="auth-secondary">Opprett ny konto</button>
   <div id="authMessage" class="auth-message" role="status" aria-live="polite"></div>
   <p class="hint">Første gong? Opprett konto med e-post og passord. Dersom e-poststadfesting er slått på i Supabase, må du stadfeste e-posten før innlogging.</p>
@@ -2550,9 +2559,45 @@ function setAuthMode(create){
  $('#authPassword').autocomplete=create?'new-password':'current-password';
  $('#authDisplayNameWrap').hidden=!create;
  $('#authDisplayName').required=create;
+ $('#authForgotBtn').hidden=create;
+ $('#authForm').hidden=false;$('#authRecoveryForm').hidden=true;
  showAuthMessage('');
 }
 $('#authModeBtn').addEventListener('click',()=>setAuthMode(!authCreateMode));
+function ggAuthRedirectUrl(){return window.location.origin+window.location.pathname;}
+function showPasswordRecovery(){
+ $('#authTitle').textContent='Vel nytt passord';
+ $('#authForm').hidden=true;$('#authModeBtn').hidden=true;$('#authForgotBtn').hidden=true;
+ $('#authRecoveryForm').hidden=false;document.body.classList.add('auth-locked');
+ showAuthMessage('Lenka er godkjend. Vel eit nytt passord nedanfor.');
+}
+$('#authForgotBtn').addEventListener('click',async()=>{
+ const email=$('#authEmail').value.trim();
+ if(!email){showAuthMessage('Skriv inn e-postadressa di først.',true);$('#authEmail').focus();return;}
+ const b=$('#authForgotBtn');b.disabled=true;showAuthMessage('Sender lenke for nytt passord …');
+ try{
+  const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:ggAuthRedirectUrl()});
+  if(error)throw error;
+  showAuthMessage('E-post sendt. Opna lenka på same eining og i same nettlesar, og vel eit nytt passord.');
+ }catch(err){showAuthMessage(err.message||'Klarte ikkje sende e-post.',true);}
+ finally{b.disabled=false;}
+});
+$('#authRecoveryForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const password=$('#authNewPassword').value,confirm=$('#authNewPasswordConfirm').value,b=$('#authRecoverySubmit');
+ if(password.length<8){showAuthMessage('Passordet må ha minst 8 teikn.',true);return;}
+ if(password!==confirm){showAuthMessage('Passorda er ikkje like.',true);return;}
+ b.disabled=true;showAuthMessage('Lagrar nytt passord …');
+ try{
+  const {error}=await supabaseClient.auth.updateUser({password});
+  if(error)throw error;
+  await supabaseClient.auth.signOut();
+  $('#authRecoveryForm').hidden=true;$('#authForm').hidden=false;$('#authModeBtn').hidden=false;
+  $('#authTitle').textContent='Passord oppdatert';$('#authPassword').value=password;
+  setAuthMode(false);showAuthMessage('Passordet er endra. Du kan no logga inn med det nye passordet.');
+ }catch(err){showAuthMessage(err.message||'Klarte ikkje endra passordet.',true);}
+ finally{b.disabled=false;}
+});
 
 function splitWodNotes(raw){const text=String(raw||'');const m=text.match(/\[\[GG_TIMER:([A-Za-z0-9+/=]+)\]\]/);let timerConfig=null;if(m){try{timerConfig=JSON.parse(decodeURIComponent(escape(atob(m[1]))));}catch(e){}}return {notes:text.replace(/\n?\[\[GG_TIMER:[^\]]+\]\]/g,'').trim(),timerConfig};}
 function encodeWodNotes(notes,config){const clean=String(notes||'').trim();return config?(clean?clean+'\n\n':'')+'[[GG_TIMER:'+btoa(unescape(encodeURIComponent(JSON.stringify(config))))+']]':clean;}
@@ -2646,7 +2691,7 @@ $('#authForm').addEventListener('submit',async e=>{
   if(authCreateMode){
    const displayName=$('#authDisplayName').value.trim();
    if(!displayName)throw new Error('Skriv inn fullt namn.');
-   const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{display_name:displayName}}});
+   const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{display_name:displayName},emailRedirectTo:ggAuthRedirectUrl()}});
    if(error)throw error;
    if(data.session){await loadSignedInProfile(data.user);showAuthMessage('Konto oppretta.');}
    else{showAuthMessage('Konto oppretta. Sjekk e-posten din for stadfesting før du loggar inn.');}
@@ -2666,6 +2711,7 @@ $('#signOutBtn').addEventListener('click',async()=>{
 // Auth callbacks must not run Supabase queries while the auth lock is held.
 // The login/signup form itself loads the profile after signInWithPassword/signUp resolves.
 supabaseClient.auth.onAuthStateChange((event,session)=>{
+ if(event==='PASSWORD_RECOVERY'){showPasswordRecovery();return;}
  if(event==='SIGNED_OUT'){
   authUser=null;authProfile=null;
   document.body.classList.add('auth-locked');
