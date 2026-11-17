@@ -1314,3 +1314,8 @@ footer {
 .personal-spotify-player.compact .personal-spotify-connect p{display:none}
 .personal-spotify-player.compact .spotify-hint{display:none}
 @media(max-width:620px){.personal-spotify-selects{grid-template-columns:1fr}.personal-spotify-now{gap:8px}.personal-spotify-art{width:48px;height:48px;flex-basis:48px}}
+
+.spotify-setup-card summary{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;list-style:none}
+.spotify-setup-card summary::-webkit-details-marker{display:none}
+.spotify-setup-card summary span{color:var(--orange,#f5a632);font-size:10px;font-weight:750;white-space:nowrap}
+.spotify-setup-card[open] summary{margin-bottom:2px}
