@@ -43,7 +43,7 @@ const GOLF_EXERCISES=[
  ['Golf – Band External Rotation','Styrke','Skulder','Strikk','Rotatorcuff med albogen inntil sida. 2–3 × 12–15.'],
  ['Golf – Band Row','Styrke','Rygg','Strikk','Trekk skulderblada roleg saman og hald overkroppen stabil. 3 × 12.'],
  ['Golf – Single-leg Balance with Reach','Golf','Bein','Kroppsvekt','Balanse på eitt bein med kontrollert rekkeøving i fleire retningar. 3 × 5 per side.']
-].map(([name,category,body_area,equipment,description],i)=>({id:'golf-'+i,name,category,body_area,equipment,description,video_url:null,is_rehab:false,is_golf:true}))
+].map(([name,focus,body_area,equipment,description],i)=>({id:'golf-'+i,name,category:'Golf',golf_focus:focus,body_area,equipment,description,video_url:null,is_rehab:false,is_golf:true}))
 
 const CLASSIC_WODS=[
  {name:'Fran',group:'The Girls',format:'For Time',minutes:10,rounds:3,items:[['Thruster','21-15-9'],['Pull-up','21-15-9']],notes:'Original benchmark: 21-15-9 thrusters og pull-ups. RX-vekt: 95/65 lb (ca. 43/30 kg).'},
@@ -206,7 +206,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
     superset_groups:showSets&&format==='Superset'?Array.from(new Set(selected.map(x=>x.group))):[],
     complex_order:showSets&&format==='Complex'?selected.map(x=>x.name):[],
     items:selected.map((x,i)=>({
-     sort_order:i+1,exercise_id:x.id||null,exercise_name:x.name,category:x.category,body_area:x.body_area,equipment:x.equipment,
+     sort_order:i+1,exercise_id:x.is_golf?null:(x.id||null),exercise_name:x.name,category:x.category,body_area:x.body_area,equipment:x.equipment,golf_focus:x.golf_focus||null,
      sets:showSets?x.sets.map(s=>({reps:Number(s.reps),load_mode:s.loadMode,load_kg:s.loadKg?Number(s.loadKg):null,percent_1rm:s.percent1rm?Number(s.percent1rm):null,rir:s.rir!==''?Number(s.rir):null,rpe:s.rpe!==''?Number(s.rpe):null,rest_seconds:Number(s.restSeconds)||0,tempo:s.tempo||null})):null,
      reps:showSets?null:x.reps,load_mode:showSets?null:x.loadMode,load_kg:x.loadKg?Number(x.loadKg):null,percent_1rm:x.percent1rm?Number(x.percent1rm):null,rir:x.rir!==''?Number(x.rir):null,rpe:x.rpe!==''?Number(x.rpe):null,
      row_value:isRow(x)?Number(x.rowValue):null,row_unit:isRow(x)?x.rowUnit:null,meters:isRow(x)&&x.rowUnit==='m'?Number(x.rowValue):null,calories:isRow(x)&&x.rowUnit==='cal'?Number(x.rowValue):null,work_seconds:isRow(x)&&x.rowUnit==='s'?Number(x.rowValue):null,
@@ -235,7 +235,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
     <div className="wod-search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Søk øving, kroppsdel eller utstyr …"/></div>
     <div className="wod-category-filter">{categories.map(x=><button type="button" key={x} className={category===x?'selected':''} onClick={()=>setCategory(x)}>{x}</button>)}</div>
     <div className="wod-area-filter"><span>KROPPSOMRÅDE</span>{areas.map(x=><button type="button" key={x} className={area===x?'selected':''} onClick={()=>setArea(x)}>{x}</button>)}</div>
-    {loading?<div className="training-state"><LoaderCircle className="spin"/> Hentar øvingar …</div>:filtered.length?<div className="wod-exercise-grid">{filtered.map(ex=><article className={"wod-exercise-card wod-category-"+categoryTone(ex.category)} key={ex.id}><div className="wod-exercise-info"><strong>{ex.name}</strong>{ex.video_url?<a href={ex.video_url} target="_blank" rel="noreferrer">Sjå video</a>:<small className="no-video">Video kjem</small>}<small>{ex.category} · {ex.body_area||'Fullkropp'}{ex.equipment?' · '+ex.equipment:''}</small>{ex.description&&<p>{ex.description}</p>}{ex.is_rehab&&<em><Info size={12}/> Etter råd frå fysioterapeut</em>}</div><button className="wod-add-button" type="button" onClick={()=>add(ex)}><Plus size={16}/> Legg til</button></article>)}</div>:<div className="empty-state">Ingen øvingar treff søket.</div>}
+    {loading?<div className="training-state"><LoaderCircle className="spin"/> Hentar øvingar …</div>:filtered.length?<div className="wod-exercise-grid">{filtered.map(ex=><article className={"wod-exercise-card wod-category-"+categoryTone(ex.category)} key={ex.id}><div className="wod-exercise-info"><strong>{ex.name}</strong>{ex.video_url?<a href={ex.video_url} target="_blank" rel="noreferrer">Sjå video</a>:<small className="no-video">Video kjem</small>}<small>{ex.category}{ex.golf_focus?' · '+ex.golf_focus:''} · {ex.body_area||'Fullkropp'}{ex.equipment?' · '+ex.equipment:''}</small>{ex.description&&<p>{ex.description}</p>}{ex.is_rehab&&<em><Info size={12}/> Etter råd frå fysioterapeut</em>}</div><button className="wod-add-button" type="button" onClick={()=>add(ex)}><Plus size={16}/> Legg til</button></article>)}</div>:<div className="empty-state">Ingen øvingar treff søket.</div>}
    </section>
    <aside className="engine-section wod-composer">
     <div className="engine-section-title"><h4>Programmer økta</h4><span>{selected.length} øvingar</span></div>
