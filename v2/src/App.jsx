@@ -25,6 +25,8 @@ import Admin from './components/Admin.jsx'
 import Overview from './components/Overview.jsx'
 import Notifications from './components/Notifications.jsx'
 import WodBuilder from './components/WodBuilder.jsx'
+import WodLibrary from './components/WodLibrary.jsx'
+import CalendarAdmin from './components/CalendarAdmin.jsx'
 
 const sections = [
   { id: 'oversikt', label: 'Oversikt', icon: LayoutDashboard, note: 'Dashboard og treningsstatus' },
@@ -215,7 +217,7 @@ export default function App() {
   }
 
   const visibleSections = isStaff(profile)
-    ? [...sections, { id: 'wod-studio', label: 'WOD-generator', icon: WandSparkles, note: 'Søk og bygg WOD-ar' }, { id: 'admin', label: 'Admin', icon: Settings, note: 'Medlemmer og drift' }]
+    ? [...sections, { id: 'wod-studio', label: 'WOD-generator', icon: WandSparkles, note: 'Bygg og publiser WOD-ar' }, { id: 'wod-library', label: 'WOD-bibliotek', icon: Dumbbell, note: 'Alle oppretta WOD-ar' }, { id: 'calendar', label: 'Kalender', icon: CalendarDays, note: 'PT, gruppetimar og avtalar' }, { id: 'admin', label: 'Admin', icon: Settings, note: 'Medlemmer og drift' }]
     : sections
   const current = visibleSections.find((item) => item.id === active) || visibleSections[0]
   const Icon = current.icon
@@ -251,7 +253,7 @@ export default function App() {
           <h1>Bygd for å <em>prestera.</em></h1>
           <p>Ein felles plattform for trening, booking og fellesskap.</p>
         </section>
-        {active === 'oversikt' ? <section className="content-card training-content"><Overview profile={profile} onNavigate={setActive} /></section> : active === 'trening' ? <section className="content-card training-content"><Training launchWodId={launchWodId} launchClassSessionId={launchClassSessionId} onLaunchConsumed={() => { setLaunchWodId(null); setLaunchClassSessionId(null) }} /></section> : active === 'booking' ? <section className="content-card training-content"><Booking profile={profile} onLogResult={(wodId, sessionId) => { setLaunchWodId(wodId); setLaunchClassSessionId(sessionId); setActive('trening') }} /></section> : active === 'pt' ? <section className="content-card training-content"><PT profile={profile} focusRequestId={focusPTRequestId} onFocusConsumed={()=>setFocusPTRequestId(null)} onLaunchWorkout={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community profile={profile} /></section> : active === 'utfordringar' ? <section className="content-card training-content"><Challenges profile={profile} /></section> : active === 'kaffi' ? <section className="content-card training-content"><CoffeeBar profile={profile} /></section> : active === 'wod-studio' ? <section className="content-card training-content"><WodBuilder /></section> : active === 'admin' ? <section className="content-card training-content"><Admin profile={profile} /></section> : <section className="content-card">
+        {active === 'oversikt' ? <section className="content-card training-content"><Overview profile={profile} onNavigate={setActive} /></section> : active === 'trening' ? <section className="content-card training-content"><Training launchWodId={launchWodId} launchClassSessionId={launchClassSessionId} onLaunchConsumed={() => { setLaunchWodId(null); setLaunchClassSessionId(null) }} /></section> : active === 'booking' ? <section className="content-card training-content"><Booking profile={profile} onLogResult={(wodId, sessionId) => { setLaunchWodId(wodId); setLaunchClassSessionId(sessionId); setActive('trening') }} /></section> : active === 'pt' ? <section className="content-card training-content"><PT profile={profile} focusRequestId={focusPTRequestId} onFocusConsumed={()=>setFocusPTRequestId(null)} onLaunchWorkout={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community profile={profile} /></section> : active === 'utfordringar' ? <section className="content-card training-content"><Challenges profile={profile} /></section> : active === 'kaffi' ? <section className="content-card training-content"><CoffeeBar profile={profile} /></section> : active === 'wod-studio' ? <section className="content-card training-content"><WodBuilder /></section> : active === 'wod-library' ? <section className="content-card training-content"><WodLibrary /></section> : active === 'calendar' ? <section className="content-card training-content"><CalendarAdmin /></section> : active === 'admin' ? <section className="content-card training-content"><Admin profile={profile} /></section> : <section className="content-card">
           <div className="section-icon"><Icon size={22} /></div>
           <div className="section-kicker">MODUL · {active.toUpperCase()}</div>
           <h2>{current.label}</h2>
