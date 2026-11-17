@@ -268,7 +268,7 @@ export default function App() {
           </div>
         </section>}
         {selectedWorkout&&<div className="modal-backdrop" role="presentation" onClick={()=>setSelectedWorkout(null)}><section className="booking-create workout-detail-modal" role="dialog" aria-modal="true" aria-label="Treningsresultat" onClick={e=>e.stopPropagation()}><div className="training-heading"><div><span className="section-kicker">GJENNOMFØRT ØKT</span><h3>{selectedWorkout.title||'Treningsøkt'}</h3><p>{selectedWorkout.workout_date||''}</p></div><button className="secondary-button" onClick={()=>setSelectedWorkout(null)}>Lukk</button></div><div className="workout-detail-score"><strong>{selectedWorkout.score_rounds??'–'}</strong><span>Rundar</span><strong>{selectedWorkout.score_reps??'–'}</strong><span>Ekstra reps</span></div><p>{selectedWorkout.format||'Trening'}</p><p>{selectedWorkout.note||'Ingen notat registrert.'}</p><small>Resultatvisinga brukar data som er lagra på økta. Me kan byggje ut djupare analyse når fleire detaljar er registrerte.</small></section></div>}
-        <footer>GARASJEGYM 2.0 · STURMKOPF <span>VERSJON GO</span></footer>
+        <footer>GARASJEGYM 2.0 · STURMKOPF</footer>
       </main>
     </div>
     </MusicProvider>
