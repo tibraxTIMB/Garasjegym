@@ -57,7 +57,7 @@ const categoryTone=value=>{const v=(value||'').toLowerCase();return v.includes('
 
 export default function WodBuilder({assignedClientId=null,onAssigned}){
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område')
- const [selected,setSelected]=useState([]),[name,setName]=useState(()=>randomWodName()),[format,setFormat]=useState('AMRAP'),[libraryWods,setLibraryWods]=useState([]),[builderMode,setBuilderMode]=useState(assignedClientId?'library':'build'),[librarySearch,setLibrarySearch]=useState(''),[selectedLibraryWod,setSelectedLibraryWod]=useState(''),[classicChoice,setClassicChoice]=useState('')
+ const [selected,setSelected]=useState([]),[name,setName]=useState(()=>randomWodName()),[format,setFormat]=useState('AMRAP'),[libraryWods,setLibraryWods]=useState([]),[builderMode,setBuilderMode]=useState(assignedClientId?'library':'build'),[librarySearch,setLibrarySearch]=useState(''),[selectedLibraryWod,setSelectedLibraryWod]=useState(''),[classicChoice,setClassicChoice]=useState(''),[publishToMembers,setPublishToMembers]=useState(false)
  const [minutes,setMinutes]=useState('20'),[notes,setNotes]=useState(''),[stimulus,setStimulus]=useState('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
  const [rounds,setRounds]=useState('5'),[workSeconds,setWorkSeconds]=useState('60'),[restSeconds,setRestSeconds]=useState('10'),[timeCap,setTimeCap]=useState('20')
  const [ladderStart,setLadderStart]=useState('2'),[ladderStep,setLadderStep]=useState('2'),[ladderDirection,setLadderDirection]=useState('up')
@@ -65,7 +65,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
  const [prescription,setPrescription]=useState('rx'),[customInstructions,setCustomInstructions]=useState(''),[customUseSets,setCustomUseSets]=useState(false),[combinationMode,setCombinationMode]=useState('For Time')
 
  useEffect(()=>{load();loadWods()},[])
- async function loadWods(){const {data,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,created_at').eq('is_published',true).order('created_at',{ascending:false});if(e)setError(e.message);else setLibraryWods(data||[])}
+ async function loadWods(){const {data,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,created_at,is_published').order('created_at',{ascending:false});if(e)setError(e.message);else setLibraryWods(data||[])}
  async function load(){
   setLoading(true)
   const {data,error:e}=await supabase.from('exercises').select('id,name,category,equipment,video_url,body_area,description,is_rehab').eq('is_active',true).order('name')
@@ -183,10 +183,10 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
    }
    const movements=selected.map((x,i)=>(i+1)+'. '+buildPrescription(x)).join('\n')
    const timer_settings={workout_schema:schema,work_seconds:Number(workSeconds)||null,rest_seconds:Number(restSeconds)||null,rounds:Number(rounds)||null}
-   const {data:savedWod,error:e}=await supabase.from('wods').insert({name:name.trim(),format,duration_minutes:Number(minutes)||null,movements,notes:[stimulus,notes,customInstructions].filter(Boolean).join('\n\n'),is_published:true,created_by:user.id,timer_settings}).select('id').single()
+   const {data:savedWod,error:e}=await supabase.from('wods').insert({name:name.trim(),format,duration_minutes:Number(minutes)||null,movements,notes:[stimulus,notes,customInstructions].filter(Boolean).join('\n\n'),is_published:publishToMembers,created_by:user.id,timer_settings}).select('id').single()
    if(e)throw e
    if(assignedClientId){const {error:linkError}=await supabase.from('pt_sessions').insert({client_id:assignedClientId,title:name.trim(),starts_at:new Date().toISOString(),duration_minutes:Number(minutes)||60,capacity:1,status:'planned',created_by:user.id,wod_ids:[savedWod.id],message:'WOD oppretta direkte frå PT Studio'});if(linkError)throw new Error('WOD-en vart lagra, men kunne ikkje knytast til kunden: '+linkError.message);onAssigned?.()}
-   setNotice('WOD publisert med full programmering.')
+   setNotice(publishToMembers?'WOD lagra i biblioteket og publisert for medlemmene.':'WOD lagra i det interne PT-biblioteket.')
    setSelected([]);setNotes('');setCustomInstructions('');setName(randomWodName())
   }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{setBusy(false)}
  }
@@ -207,7 +207,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
    <aside className="engine-section wod-composer">
     <div className="engine-section-title"><h4>Programmer økta</h4><span>{selected.length} øvingar</span></div>
     <form className="admin-create-form" onSubmit={save}>
-     <div className="wod-name-field"><label>WOD-namn<input value={name} onChange={e=>setName(e.target.value)} required/></label><button type="button" className="secondary-button" onClick={()=>setName(randomWodName())}>Nytt namn</button></div>
+     <div className="wod-name-field"><label>WOD-namn<input value={name} onChange={e=>setName(e.target.value)} required/></label><button type="button" className="secondary-button" onClick={()=>setName(randomWodName())}>Nytt namn</button></div><label className="wod-publish-toggle"><input type="checkbox" checked={publishToMembers} onChange={e=>setPublishToMembers(e.target.checked)}/> Publiser for medlemmer</label>
      <label>Programmeringsnivå<select value={prescription} onChange={e=>setPrescription(e.target.value)}><option value="rx">RX · Føreskriven</option><option value="scaled">Skalert</option><option value="beginner">Nybegynnar</option><option value="custom">Individuelt tilpassa</option></select></label>
      <div className="engine-fields"><label>Format<select value={format} onChange={e=>setFormat(e.target.value)}>{formats.map(group=><optgroup key={group.group} label={group.group}>{group.items.map(x=><option key={x} value={x}>{x}</option>)}</optgroup>)}</select></label>{!isTimed&&<label>Varigheit (min)<input type="number" min="1" max="300" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label>}</div>
      {isTimed&&<div className="wod-advanced-fields"><label>Varigheit (min)<input type="number" min="1" max="300" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label><p className="wod-help">Arbeidet startar {timedLabel(format)}. Reps-feltet på kvar øving er målet per arbeidsintervall.</p></div>}
