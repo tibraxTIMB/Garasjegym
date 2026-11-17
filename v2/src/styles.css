@@ -1244,3 +1244,22 @@ footer {
 .music-mini-refresh { display:grid; place-items:center; width:30px; height:30px; color:var(--muted); background:transparent; border:1px solid var(--line); border-radius:7px; cursor:pointer; }
 .music-mini-refresh:disabled { opacity:.5; }
 .music-mini-refresh:hover { color:var(--orange); }
+
+
+/* Private Spotify hand-off: account and playback stay in Spotify */
+.personal-spotify-card{display:grid;gap:12px;padding:15px;border:1px solid #3b4444;border-radius:14px;background:linear-gradient(135deg,#202a25,#1b2021)}
+.personal-spotify-top{display:flex;align-items:center;gap:12px}
+.personal-spotify-mark{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:12px;background:#1f5137;color:#8ee5ad}
+.personal-spotify-top h3{margin:2px 0;font-size:18px}
+.personal-spotify-top p{margin:3px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
+.personal-spotify-label{display:grid;gap:6px;color:var(--muted);font-size:11px;font-weight:700}
+.personal-spotify-label input{width:100%;min-width:0;padding:10px 11px;border:1px solid var(--line,#3b4444);border-radius:9px;background:#111617;color:var(--text,#f3f1e9);font-size:12px}
+.personal-spotify-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.personal-spotify-actions button{display:inline-flex;align-items:center;gap:7px}
+.personal-spotify-saved{color:#91d6a5;font-size:10px;font-weight:700}
+.personal-spotify-note{color:var(--muted);font-size:10px;line-height:1.5}
+.timer-music-stack{display:grid;gap:6px;margin-top:10px}
+.timer-music-stack .music-mini-player{margin:0}
+.timer-spotify-shortcut{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:8px 10px;border:1px solid #355a43;border-radius:8px;background:#1c3025;color:#a5e4b6;font-size:10px;font-weight:750;cursor:pointer}
+.timer-spotify-shortcut:hover{background:#254331}
+@media(max-width:620px){.personal-spotify-actions{display:grid;grid-template-columns:1fr 1fr}.personal-spotify-actions button{justify-content:center}.personal-spotify-saved{grid-column:1/-1}}
