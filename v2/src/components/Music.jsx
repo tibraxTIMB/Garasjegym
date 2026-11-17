@@ -10,14 +10,13 @@ const presets = [
   { id:'dance-90s', label:'90s dance & trance', emoji:'🪩', description:'Eurodance, rave og trance' },
   { id:'relax', label:'Relax', emoji:'🌙', description:'Ambient, chillout og akustisk' },
 ]
-const CLIENT_ID_KEY = 'garasjegym:spotify-client-id'
 const TOKEN_KEY_PREFIX = 'garasjegym:spotify-token:'
 const VERIFIER_KEY = 'garasjegym:spotify-verifier'
 const STATE_KEY = 'garasjegym:spotify-state'
 const SPOTIFY_API = 'https://api.spotify.com/v1'
 const REDIRECT_URI = () => window.location.origin + window.location.pathname
 
-function getClientId() { try { return localStorage.getItem(CLIENT_ID_KEY) || import.meta.env.VITE_SPOTIFY_CLIENT_ID || '' } catch { return import.meta.env.VITE_SPOTIFY_CLIENT_ID || '' } }
+function getClientId() { return import.meta.env.VITE_SPOTIFY_CLIENT_ID || '' }
 function getTokenKey(memberId) { return TOKEN_KEY_PREFIX + (memberId || 'guest') }
 function readToken(memberId) { try { return JSON.parse(localStorage.getItem(getTokenKey(memberId)) || 'null') } catch { return null } }
 function saveToken(memberId, token) { try { localStorage.setItem(getTokenKey(memberId), JSON.stringify(token)) } catch { /* Lagring kan vere blokkert. */ } }
@@ -53,7 +52,7 @@ export function MusicProvider({ children, memberId = null }) {
   const [staff, setStaff] = useState(false)
   const [status, setStatus] = useState('Koplar til felles musikk …')
   const [loading, setLoading] = useState(false)
-  const [clientId, setClientId] = useState(getClientId)
+  const clientId = getClientId()
   const [spotifyToken, setSpotifyToken] = useState(() => readToken(memberId))
   const [spotifyProfile, setSpotifyProfile] = useState(null)
   const [spotifyTrack, setSpotifyTrack] = useState(null)
@@ -190,7 +189,7 @@ export function MusicProvider({ children, memberId = null }) {
 
   const connectSpotify = useCallback(async () => {
     const id = getClientId()
-    if (!id) { setSpotifyError('Legg inn Spotify Client ID frå developer.spotify.com først.'); return }
+    if (!id) { setSpotifyError('Spotify er ikkje aktivert av GarasjeGym-administrator enno.'); return }
     try {
       const verifier = randomString(64)
       const state = randomString(32)
@@ -243,7 +242,7 @@ export function MusicProvider({ children, memberId = null }) {
 
   const value = useMemo(() => ({
     nowPlaying, configured, staff, status, loading, refresh,
-    clientId, setClientId, spotifyConnected:Boolean(spotifyToken?.access_token), spotifyProfile,
+    clientId, spotifyConfigured:Boolean(clientId), spotifyConnected:Boolean(spotifyToken?.access_token), spotifyProfile,
     spotifyTrack, spotifyPlaying, spotifyDevices, spotifyDeviceId, setSpotifyDeviceId,
     spotifyPlaylists, spotifyStatus, spotifyBusy, spotifyError, setSpotifyError,
     connectSpotify, disconnectSpotify, spotifyAction, playPlaylist, selectedPlaylist,
@@ -291,27 +290,14 @@ function PersonalSpotifyPlayer({ compact = false }) {
 export function Music({ isStaff = false }) {
   const music = useMusic()
   const canControl = isStaff && music?.staff
-  const [clientDraft, setClientDraft] = useState(music?.clientId || '')
-  function saveClientId() {
-    const value = clientDraft.trim()
-    try { if (value) localStorage.setItem(CLIENT_ID_KEY, value); else localStorage.removeItem(CLIENT_ID_KEY) } catch { /* Ignorer. */ }
-    music?.setClientId(value)
-    music?.setSpotifyError('')
-  }
   return <div className="music-page">
     <div className="music-heading">
       <div className="music-heading-icon"><Headphones size={22}/></div>
       <div><span className="section-kicker">GARASJEGYM · DIN MUSIKK</span><h2>Musikk</h2><p>Din personlege Spotify-konto – privat og separat frå fellesmusikken.</p></div>
     </div>
     <PersonalSpotifyPlayer/>
-    <details className="spotify-setup-card">
-      <summary><strong>{music?.clientId ? 'Spotify-app er konfigurert' : 'Første oppsett · Spotify Client ID'}</strong><span>{music?.clientId ? 'Vis oppsett' : 'Krev éin gong'}</span></summary>
-      <p>Client ID frå Spotify Developer Dashboard. Dette er ein offentleg app-ID, ikkje eit passord eller ein hemmeleg nøkkel.</p>
-      <input value={clientDraft} onChange={event => setClientDraft(event.target.value)} placeholder="Spotify Client ID"/>
-      <button className="secondary-button" onClick={saveClientId} disabled={!clientDraft.trim()}>Lagra app-ID</button>
-      <small>Registrer denne Redirect URI-en i Spotify Developer Dashboard (eksakt): <code>{REDIRECT_URI()}</code></small>
-      <small>Development Mode støttar inntil fem autoriserte Spotify-brukarar. Utviklarkontoen må ha Premium, og kvar brukar treng Premium for avspelingsstyring.</small>
-    </details>
+    {!music?.spotifyConfigured && <div className="music-notice warning">Spotify-integrasjonen er ikkje aktivert av GarasjeGym-administrator enno. Når han er konfigurert, kan kvar medlem kople til sin eigen private konto.</div>}
+    {music?.spotifyConfigured && <p className="music-footnote">Spotify blir konfigurert éin gong sentralt for heile GarasjeGym. Kvar medlem loggar inn med sin eigen konto. Development Mode kan avgrense talet på autoriserte brukarar.</p>}
     <section className="music-connect-card">
       <div><strong>{music?.configured ? 'Felles Soundtrack er kopla til' : 'Felles Soundtrack er ikkje konfigurert'}</strong><p>{music?.status || 'Hentar status …'}</p></div>
       <button className="secondary-button" onClick={() => music?.refresh()} disabled={music?.loading}><RefreshCw size={15}/> Oppdater</button>
