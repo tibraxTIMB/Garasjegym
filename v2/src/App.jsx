@@ -248,7 +248,7 @@ export default function App() {
           <div className="mobile-brand">GARASJEGYM <span>2.0</span></div>
           <div className="top-meta">
             <span className="member-name">{profile.display_name || session.user.email}</span>
-            <Notifications onNavigate={(item) => { if(item.href?.startsWith('pt-request:')) { setFocusPTRequestId(item.href.slice('pt-request:'.length)); setActive('pt') } else if(item.category==='pt') { setFocusPTRequestId(null); setActive('pt') } else if(item.href) setActive(item.href) }} />
+            <Notifications onNavigate={(item) => { if(item.href?.startsWith('pt-request:')) { setFocusPTRequestId(item.href.slice('pt-request:'.length)); setActive('pt') } else if(item.category==='pt') { setFocusPTRequestId(null); setActive('timeplan') } else if(item.href) setActive(({booking:'timeplan',pt:'timeplan','mi-trening':'mi-side','wod-studio':'wod','wod-library':'wod'}[item.href]||item.href)) }} />
             <button className="icon-button" onClick={() => supabase.auth.signOut()} title="Logg ut" aria-label="Logg ut"><LogOut size={16} /></button>
           </div>
         </header>
