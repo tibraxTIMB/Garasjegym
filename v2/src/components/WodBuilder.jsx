@@ -2,7 +2,7 @@ import {useEffect,useMemo,useState} from 'react'
 import {Plus,Search,Trash2,ArrowUp,ArrowDown,Save,LoaderCircle,WandSparkles,Dices,Info,Footprints,Copy} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 
-const categories=['Alle','Styrke','Mobilitet','Kondisjon','Kjerne','Golf','Rehab']
+const categories=['Alle','CrossFit','Styrke','Pilates','Mobilitet','Kondisjon','Kjerne','Golf','Rehab']
 const areas=['Alle område','Fullkropp','Bein','Mage','Rygg','Overkropp']
 const formats=[
  {group:'Metcon',items:['AMRAP','For Time','Chipper','Couplet','Triplet','Ladder','Death By']},
