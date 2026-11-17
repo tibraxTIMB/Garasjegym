@@ -32,7 +32,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
   const isDeathBy = format === 'Death By'
   const cycle = Math.max(1, Number(workSeconds)) + Math.max(0, Number(restSeconds))
   const roundLength = isTimedInterval ? cycle : isEMOM ? emomCycle : 60
-  const currentRound = isTimedInterval || isDeathBy ? Math.floor(elapsed / roundLength) + 1 : Math.floor(elapsed / 60) + 1
+  const currentRound = isTimedInterval || isDeathBy || isEMOM ? Math.floor(elapsed / roundLength) + 1 : Math.floor(elapsed / 60) + 1
   const phaseElapsed = isTimedInterval ? elapsed % cycle : elapsed % (isEMOM ? emomCycle : 60)
   const currentPhase = isTimedInterval ? (phaseElapsed < Number(workSeconds) ? 'ARBEID' : 'KVILE') : (isEMOM ? 'NYTT MINUTT' : isDeathBy ? 'NY RUNDE' : 'PÅGÅR')
   const intervalRemaining = isTimedInterval
@@ -213,7 +213,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     setSource(wod)
     setTitle(wod?.name || '')
     setFormat(wod?.format || 'Fri trening')
-    setDuration(String(wod?.duration_minutes || 10))
+    setDuration(String(wod?.timer_settings?.workout_schema?.duration_seconds ? Math.floor(wod.timer_settings.workout_schema.duration_seconds / 60) : (wod?.duration_minutes || 10)))
     setDurationSeconds(String(wod?.timer_settings?.workout_schema?.duration_seconds ? wod.timer_settings.workout_schema.duration_seconds % 60 : 0))
     setNote(wod?.notes || '')
     setItems([])
