@@ -68,12 +68,12 @@ export function SpotifyProvider({ memberId, children }) {
       window.history.replaceState({},'',window.location.pathname)
       fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:CLIENT_ID,grant_type:'authorization_code',code,redirect_uri:REDIRECT_URI,code_verifier:verifier})})
         .then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error_description||'Tokenutveksling feila.');return d})
-        .then(d=>{setToken(d.access_token);setExpiresAt(Date.now()+d.expires_in*1000);localStorage.setItem(stateKey,JSON.stringify({access_token:d.access_token,expires_at:Date.now()+d.expires_in*1000,refresh_token:d.refresh_token||null}));setStatus('Spotify tilkopla')})
+        .then(d=>{setToken(d.access_token);setExpiresAt(Date.now()+d.expires_in*1000);sessionStorage.setItem(stateKey,JSON.stringify({access_token:d.access_token,expires_at:Date.now()+d.expires_in*1000,refresh_token:d.refresh_token||null}));setStatus('Spotify tilkopla')})
         .catch(e=>setStatus(e.message))
       sessionStorage.removeItem(stateKey+'_verifier');sessionStorage.removeItem(stateKey+'_oauth_state')
       return
     }
-    try { const saved=JSON.parse(localStorage.getItem(stateKey)||'null'); if(saved?.access_token && saved.expires_at>Date.now()+30000){setToken(saved.access_token);setExpiresAt(saved.expires_at);setStatus('Spotify tilkopla')} } catch {}
+    try { const saved=JSON.parse(sessionStorage.getItem(stateKey)||'null'); if(saved?.access_token && saved.expires_at>Date.now()+30000){setToken(saved.access_token);setExpiresAt(saved.expires_at);setStatus('Spotify tilkopla')} } catch {}
   },[memberId,stateKey])
 
   useEffect(() => {
@@ -99,7 +99,22 @@ export function SpotifyProvider({ memberId, children }) {
     return ()=>{cancelled=true}
   },[token])
 
-  useEffect(()=>{if(!token||!expiresAt)return;const id=window.setInterval(()=>{if(Date.now()>expiresAt-60000)setStatus('Spotify-økta nærmar seg utløp. Kople til på nytt ved behov.')},15000);return()=>clearInterval(id)},[token,expiresAt])
+  useEffect(()=>{
+    if(!token||!expiresAt)return
+    const id=window.setInterval(async()=>{
+      if(Date.now()<expiresAt-90000)return
+      try{
+        const saved=JSON.parse(sessionStorage.getItem(stateKey)||'null')
+        if(!saved?.refresh_token){setStatus('Spotify-økta er utløpt. Kople til på nytt.');return}
+        const response=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:CLIENT_ID,grant_type:'refresh_token',refresh_token:saved.refresh_token})})
+        const data=await response.json()
+        if(!response.ok)throw new Error(data.error_description||'Kunne ikkje fornya Spotify-økta.')
+        const next={access_token:data.access_token,expires_at:Date.now()+data.expires_in*1000,refresh_token:data.refresh_token||saved.refresh_token}
+        sessionStorage.setItem(stateKey,JSON.stringify(next));setToken(next.access_token);setExpiresAt(next.expires_at);setStatus('Spotify-økta er fornya')
+      }catch(e){setStatus(e.message||'Spotify-økta er utløpt. Kople til på nytt.')}
+    },15000)
+    return()=>clearInterval(id)
+  },[token,expiresAt,stateKey])
   useEffect(()=>()=>{playerRef.current?.disconnect()},[])
 
   const playRandom = useCallback(async (categoryId) => {
@@ -128,7 +143,7 @@ export function SpotifyProvider({ memberId, children }) {
   const togglePlay=useCallback(async()=>{try{if(!playerRef.current)throw new Error('Spotify-spelaren er ikkje klar.');await playerRef.current.togglePlay()}catch(e){setStatus(e.message)}},[])
   const next=useCallback(async()=>{try{await playerRef.current?.nextTrack()}catch(e){setStatus(e.message)}},[])
   const previous=useCallback(async()=>{try{await playerRef.current?.previousTrack()}catch(e){setStatus(e.message)}},[])
-  const disconnect=useCallback(()=>{playerRef.current?.disconnect();playerRef.current=null;setPlayer(null);setDeviceId('');setToken('');setTrack(null);setPlaying(false);localStorage.removeItem(stateKey);setStatus('Spotify fråkopla')},[stateKey])
+  const disconnect=useCallback(()=>{playerRef.current?.disconnect();playerRef.current=null;setPlayer(null);setDeviceId('');setToken('');setTrack(null);setPlaying(false);sessionStorage.removeItem(stateKey);setStatus('Spotify fråkopla')},[stateKey])
   const value=useMemo(()=>({categories,token,player,deviceId,track,playing,position,duration,status,busy,connect,disconnect,playRandom,togglePlay,next,previous}),[token,player,deviceId,track,playing,position,duration,status,busy,connect,disconnect,playRandom,togglePlay,next,previous])
   return <SpotifyContext.Provider value={value}>{children}</SpotifyContext.Provider>
 }
