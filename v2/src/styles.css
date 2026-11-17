@@ -819,3 +819,20 @@ footer {
 .coffee-status.status-cancelled{color:#d0d3d2;background:rgba(110,118,120,.18);border-color:#555d5f}
 .coffee-order-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
 .coffee-order-actions .secondary-button{margin:0}
+
+
+/* PT Studio – active customer workspace */
+.pt-customer-picker,.pt-active-customer,.pt-customer-wod-action,.pt-inline-wod{margin:18px 0;padding:18px 20px;border:1px solid var(--line);border-radius:14px;background:var(--panel2)}
+.pt-customer-picker-row{display:flex;align-items:end;gap:12px;max-width:760px;margin-top:12px}
+.pt-customer-picker-row label{flex:1}
+.pt-customer-picker-row select{width:100%;margin-top:7px}
+.pt-active-customer{display:flex;flex-direction:column;gap:5px;border-color:var(--orange);background:linear-gradient(110deg,#382b1c,#202326)}
+.pt-active-customer span{font-size:10px;font-weight:900;letter-spacing:1.8px;color:var(--orange)}
+.pt-active-customer strong{font-size:23px}
+.pt-active-customer small,.pt-customer-wod-action p{color:var(--muted)}
+.pt-customer-wod-action{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.pt-customer-wod-action p{margin:6px 0 0}
+.pt-inline-wod{padding:14px}
+.pt-inline-wod-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.pt-customer-picker-row .primary-button{white-space:nowrap}
+@media(max-width:640px){.pt-customer-picker-row,.pt-customer-wod-action{align-items:stretch;flex-direction:column}.pt-customer-picker-row .primary-button{width:100%}}
