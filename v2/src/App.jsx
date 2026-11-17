@@ -11,6 +11,7 @@ import {
   UserRound,
   Settings,
   Wrench,
+  WandSparkles,
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from './lib/supabase.js'
 import { fetchMemberProfile, isStaff } from './lib/auth.js'
@@ -23,6 +24,7 @@ import CoffeeBar from './components/CoffeeBar.jsx'
 import Admin from './components/Admin.jsx'
 import Overview from './components/Overview.jsx'
 import Notifications from './components/Notifications.jsx'
+import WodBuilder from './components/WodBuilder.jsx'
 
 const sections = [
   { id: 'oversikt', label: 'Oversikt', icon: LayoutDashboard, note: 'Dashboard og treningsstatus' },
@@ -146,6 +148,7 @@ export default function App() {
   const [active, setActive] = useState('oversikt')
   const [launchWodId, setLaunchWodId] = useState(null)
   const [launchClassSessionId, setLaunchClassSessionId] = useState(null)
+  const [focusPTRequestId, setFocusPTRequestId] = useState(null)
 
   useEffect(() => {
     if (!supabase) return
@@ -212,7 +215,7 @@ export default function App() {
   }
 
   const visibleSections = isStaff(profile)
-    ? [...sections, { id: 'admin', label: 'Admin', icon: Settings, note: 'Medlemmer og drift' }]
+    ? [...sections, { id: 'wod-studio', label: 'WOD-generator', icon: WandSparkles, note: 'Søk og bygg WOD-ar' }, { id: 'admin', label: 'Admin', icon: Settings, note: 'Medlemmer og drift' }]
     : sections
   const current = visibleSections.find((item) => item.id === active) || visibleSections[0]
   const Icon = current.icon
@@ -239,7 +242,7 @@ export default function App() {
           <div className="mobile-brand">GARASJEGYM <span>2.0</span></div>
           <div className="top-meta">
             <span className="member-name">{profile.display_name || session.user.email}</span>
-            <Notifications onNavigate={setActive} />
+            <Notifications onNavigate={(item) => { if(item.href?.startsWith('pt-request:')) { setFocusPTRequestId(item.href.slice('pt-request:'.length)); setActive('pt') } else if(item.category==='pt') { setFocusPTRequestId(null); setActive('pt') } else if(item.href) setActive(item.href) }} />
             <button className="icon-button" onClick={() => supabase.auth.signOut()} title="Logg ut" aria-label="Logg ut"><LogOut size={16} /></button>
           </div>
         </header>
@@ -248,7 +251,7 @@ export default function App() {
           <h1>Bygd for å <em>prestera.</em></h1>
           <p>Ein felles plattform for trening, booking og fellesskap.</p>
         </section>
-        {active === 'oversikt' ? <section className="content-card training-content"><Overview profile={profile} onNavigate={setActive} /></section> : active === 'trening' ? <section className="content-card training-content"><Training launchWodId={launchWodId} launchClassSessionId={launchClassSessionId} onLaunchConsumed={() => { setLaunchWodId(null); setLaunchClassSessionId(null) }} /></section> : active === 'booking' ? <section className="content-card training-content"><Booking profile={profile} onLogResult={(wodId, sessionId) => { setLaunchWodId(wodId); setLaunchClassSessionId(sessionId); setActive('trening') }} /></section> : active === 'pt' ? <section className="content-card training-content"><PT profile={profile} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community profile={profile} /></section> : active === 'utfordringar' ? <section className="content-card training-content"><Challenges profile={profile} /></section> : active === 'kaffi' ? <section className="content-card training-content"><CoffeeBar profile={profile} /></section> : active === 'admin' ? <section className="content-card training-content"><Admin profile={profile} /></section> : <section className="content-card">
+        {active === 'oversikt' ? <section className="content-card training-content"><Overview profile={profile} onNavigate={setActive} /></section> : active === 'trening' ? <section className="content-card training-content"><Training launchWodId={launchWodId} launchClassSessionId={launchClassSessionId} onLaunchConsumed={() => { setLaunchWodId(null); setLaunchClassSessionId(null) }} /></section> : active === 'booking' ? <section className="content-card training-content"><Booking profile={profile} onLogResult={(wodId, sessionId) => { setLaunchWodId(wodId); setLaunchClassSessionId(sessionId); setActive('trening') }} /></section> : active === 'pt' ? <section className="content-card training-content"><PT profile={profile} focusRequestId={focusPTRequestId} onFocusConsumed={()=>setFocusPTRequestId(null)} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community profile={profile} /></section> : active === 'utfordringar' ? <section className="content-card training-content"><Challenges profile={profile} /></section> : active === 'kaffi' ? <section className="content-card training-content"><CoffeeBar profile={profile} /></section> : active === 'wod-studio' ? <section className="content-card training-content"><WodBuilder /></section> : active === 'admin' ? <section className="content-card training-content"><Admin profile={profile} /></section> : <section className="content-card">
           <div className="section-icon"><Icon size={22} /></div>
           <div className="section-kicker">MODUL · {active.toUpperCase()}</div>
           <h2>{current.label}</h2>
