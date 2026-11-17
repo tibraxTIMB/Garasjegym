@@ -1719,3 +1719,6 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
  .wod-library-grid{grid-template-columns:1fr}
  .wod-library-actions button{font-size:11px}
 }
+
+.my-profile-shortcut{display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-size:10px;font-weight:900;cursor:pointer}
+.my-profile-shortcut:hover{background:rgba(240,163,58,.16)}
