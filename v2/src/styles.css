@@ -1801,3 +1801,8 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
  .simple-home-action{min-height:82px}
  .simple-quick-form .timer-center{padding:18px 8px}
 }
+
+.simple-mode .wod-note,
+.simple-mode .favorite-filter,
+.simple-mode .favorite-star{display:none!important}
+.simple-mode .workout-mode-intro p{display:none}
