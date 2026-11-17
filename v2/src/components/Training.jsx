@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Activity, CheckCircle2, Clock3, Dumbbell, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 
-const FORMATS = ['Fri trening', 'EMOM 1', 'EMOM 2', 'EMOM', 'E2MOM', 'E3MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
+const FORMATS = ['Fri trening', 'E1MOM', 'E2MOM', 'E3MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '' }] })
 const pad = (n) => String(n).padStart(2, '0')
 const clock = (seconds) => `${pad(Math.floor(Math.max(0, seconds) / 60))}:${pad(Math.max(0, seconds) % 60)}`
@@ -11,7 +11,7 @@ const localDateISO = (date = new Date()) => {
   return local.toISOString().slice(0, 10)
 }
 
-function Timer({ format, minutes, activeExercise = '', timerSettings = null, onSnapshot = () => {} }) {
+function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSettings = null, onSnapshot = () => {} }) {
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [round, setRound] = useState(1)
@@ -22,19 +22,19 @@ function Timer({ format, minutes, activeExercise = '', timerSettings = null, onS
   const [phase, setPhase] = useState('Klar')
   const [laps, setLaps] = useState([])
   const [soundOn, setSoundOn] = useState(true)
-  const target = Math.max(1, Number(minutes) || 10) * 60
+  const savedDuration = timerSettings?.workout_schema?.duration_seconds\n  const target = Math.max(1, Number(savedDuration) || ((Number(minutes) || 10) * 60 + (Number(seconds) || 0)) )
   const isTimedInterval = ['Tabata', 'Intervall', 'Tilpassa'].includes(format)
   const isCountdown = ['AMRAP', 'Nedteljing'].includes(format)
-  const isEMOM = ['EMOM', 'EMOM 1', 'EMOM 2', 'E2MOM', 'E3MOM'].includes(format)
+  const isEMOM = ['EMOM', 'EMOM 1', 'EMOM 2', 'E1MOM', 'E2MOM', 'E3MOM'].includes(format)\n  const emomEvery = Math.max(1, Number(timerSettings?.workout_schema?.interval?.work_every_minutes) || (format === 'E2MOM' || format === 'EMOM 2' ? 2 : format === 'E3MOM' ? 3 : 1))\n  const emomCycle = emomEvery * 60
   const isDeathBy = format === 'Death By'
   const cycle = Math.max(1, Number(workSeconds)) + Math.max(0, Number(restSeconds))
-  const roundLength = isTimedInterval ? cycle : 60
+  const roundLength = isTimedInterval ? cycle : isEMOM ? emomCycle : 60
   const currentRound = isTimedInterval || isDeathBy ? Math.floor(elapsed / roundLength) + 1 : Math.floor(elapsed / 60) + 1
-  const phaseElapsed = isTimedInterval ? elapsed % cycle : elapsed % 60
+  const phaseElapsed = isTimedInterval ? elapsed % cycle : elapsed % (isEMOM ? emomCycle : 60)
   const currentPhase = isTimedInterval ? (phaseElapsed < Number(workSeconds) ? 'ARBEID' : 'KVILE') : (isEMOM ? 'NYTT MINUTT' : isDeathBy ? 'NY RUNDE' : 'PÅGÅR')
   const intervalRemaining = isTimedInterval
     ? Math.max(0, (phaseElapsed < Number(workSeconds) ? Number(workSeconds) : cycle) - phaseElapsed)
-    : Math.max(0, 60 - phaseElapsed)
+    : Math.max(0, (isEMOM ? emomCycle : 60) - phaseElapsed)
   const display = isCountdown ? Math.max(0, target - elapsed)
     : isEMOM || isTimedInterval || isDeathBy ? intervalRemaining : elapsed
 
@@ -77,8 +77,8 @@ function Timer({ format, minutes, activeExercise = '', timerSettings = null, onS
     if (isCountdown && elapsed >= target) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
     if (isTimedInterval && elapsed >= cycle * Math.max(1, Number(rounds))) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
     if ((isEMOM || isDeathBy) && elapsed >= target) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
-    if ((isTimedInterval && elapsed % cycle === 0) || (isTimedInterval && elapsed % cycle === Number(workSeconds)) || ((isEMOM || isDeathBy) && elapsed % 60 === 0)) cue(elapsed % 60 === 0 ? 1040 : 660, 0.12)
-  }, [elapsed, running, target, isCountdown, isTimedInterval, cycle, rounds, isEMOM, isDeathBy, workSeconds])
+    if ((isTimedInterval && elapsed % cycle === 0) || (isTimedInterval && elapsed % cycle === Number(workSeconds)) || ((isEMOM && elapsed % emomCycle === 0) || (isDeathBy && elapsed % 60 === 0))) cue(elapsed % 60 === 0 ? 1040 : 660, 0.12)
+  }, [elapsed, running, target, isCountdown, isTimedInterval, cycle, rounds, isEMOM, emomCycle, isDeathBy, workSeconds])
 
   useEffect(() => {
     if (running) setPhase(currentPhase)
@@ -116,7 +116,7 @@ function Timer({ format, minutes, activeExercise = '', timerSettings = null, onS
       <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
     </div>
     {laps.length > 0 && <div className="timer-round-label">MELLOMTIDER: {laps.map((lap, i) => `${i + 1}: ${clock(lap)}`).join(' · ')}</div>}
-    <small>{isTimedInterval ? 'Arbeid / kvile-intervall' : isCountdown ? 'Nedtelling' : isEMOM ? (['EMOM 2','E2MOM'].includes(format) ? 'Arbeid kvart 2. minutt' : format==='E3MOM' ? 'Arbeid kvart 3. minutt' : 'Éi øving per minutt') : isDeathBy ? 'Aukande arbeid for kvar minutt · tidsgrense frå varigheita' : format === 'For Time' ? 'Stoppeklokke – registrer sluttid når du er ferdig' : 'Stoppeklokke'}</small>
+    <small>{isTimedInterval ? 'Arbeid / kvile-intervall' : isCountdown ? 'Nedtelling' : isEMOM ? (emomEvery > 1 ? `Arbeid kvart ${emomEvery}. minutt` : 'Arbeid kvart minutt') : isDeathBy ? 'Aukande arbeid for kvar minutt · tidsgrense frå varigheita' : format === 'For Time' ? 'Stoppeklokke – registrer sluttid når du er ferdig' : 'Stoppeklokke'}</small>
   </div>
 }
 
@@ -144,7 +144,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [classSessionId, setClassSessionId] = useState(null)
   const [title, setTitle] = useState('')
   const [format, setFormat] = useState('Fri trening')
-  const [duration, setDuration] = useState('10')
+  const [duration, setDuration] = useState('10')\n  const [durationSeconds, setDurationSeconds] = useState('0')
   const [note, setNote] = useState('')
   const [items, setItems] = useState([])
   const [query, setQuery] = useState('')
@@ -210,7 +210,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     setSource(wod)
     setTitle(wod?.name || '')
     setFormat(wod?.format || 'Fri trening')
-    setDuration(String(wod?.duration_minutes || 10))
+    setDuration(String(wod?.duration_minutes || 10))\n    setDurationSeconds(String(wod?.timer_settings?.workout_schema?.duration_seconds ? wod.timer_settings.workout_schema.duration_seconds % 60 : 0))
     setNote(wod?.notes || '')
     setItems([])
     setActiveExerciseIndex(0)
@@ -382,9 +382,9 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       <div className="engine-fields">
         <label>Namn på økta<input value={title} onChange={e => setTitle(e.target.value)} placeholder="Til dømes Styrke A" required/></label>
         <label>Treningsformat<select value={format} onChange={e => setFormat(e.target.value)}>{FORMATS.map(x => <option key={x}>{x}</option>)}</select></label>
-        <label>Varigheit / timer (min)<input type="number" min="1" max="240" value={duration} onChange={e => setDuration(e.target.value)}/></label>
+        <label>Varigheit (min)<input type="number" min="1" max="600" value={duration} onChange={e => setDuration(e.target.value)}/></label>\n        <label>Ekstra sekund<input type="number" min="0" max="59" value={durationSeconds} onChange={e => setDurationSeconds(e.target.value)}/></label>
       </div>
-      <Timer format={format} minutes={duration} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot}/>
+      <Timer format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot}/>
       {items.length > 0 && <section className="engine-section">
         <div className="engine-section-title"><h4>WOD / øvingsrekkjefølgje</h4><span>Vel øvinga du arbeider med</span></div>
         <div className="wod-list">{items.map((item, index) => <button type="button" key={item.key} className={index === activeExerciseIndex ? 'secondary-button active' : 'secondary-button'} onClick={() => setActiveExerciseIndex(index)}>{index + 1}. {item.exercise_name || 'Ny øving'}</button>)}</div>
