@@ -22,10 +22,13 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
   const [phase, setPhase] = useState('Klar')
   const [laps, setLaps] = useState([])
   const [soundOn, setSoundOn] = useState(true)
-  const savedDuration = timerSettings?.workout_schema?.duration_seconds\n  const target = Math.max(1, Number(savedDuration) || ((Number(minutes) || 10) * 60 + (Number(seconds) || 0)) )
+  const savedDuration = timerSettings?.workout_schema?.duration_seconds
+  const target = Math.max(1, Number(savedDuration) || ((Number(minutes) || 10) * 60 + (Number(seconds) || 0)) )
   const isTimedInterval = ['Tabata', 'Intervall', 'Tilpassa'].includes(format)
   const isCountdown = ['AMRAP', 'Nedteljing'].includes(format)
-  const isEMOM = ['EMOM', 'EMOM 1', 'EMOM 2', 'E1MOM', 'E2MOM', 'E3MOM'].includes(format)\n  const emomEvery = Math.max(1, Number(timerSettings?.workout_schema?.interval?.work_every_minutes) || (format === 'E2MOM' || format === 'EMOM 2' ? 2 : format === 'E3MOM' ? 3 : 1))\n  const emomCycle = emomEvery * 60
+  const isEMOM = ['EMOM', 'EMOM 1', 'EMOM 2', 'E1MOM', 'E2MOM', 'E3MOM'].includes(format)
+  const emomEvery = Math.max(1, Number(timerSettings?.workout_schema?.interval?.work_every_minutes) || (format === 'E2MOM' || format === 'EMOM 2' ? 2 : format === 'E3MOM' ? 3 : 1))
+  const emomCycle = emomEvery * 60
   const isDeathBy = format === 'Death By'
   const cycle = Math.max(1, Number(workSeconds)) + Math.max(0, Number(restSeconds))
   const roundLength = isTimedInterval ? cycle : isEMOM ? emomCycle : 60
@@ -210,7 +213,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     setSource(wod)
     setTitle(wod?.name || '')
     setFormat(wod?.format || 'Fri trening')
-    setDuration(String(wod?.duration_minutes || 10))\n    setDurationSeconds(String(wod?.timer_settings?.workout_schema?.duration_seconds ? wod.timer_settings.workout_schema.duration_seconds % 60 : 0))
+    setDuration(String(wod?.duration_minutes || 10))
+    setDurationSeconds(String(wod?.timer_settings?.workout_schema?.duration_seconds ? wod.timer_settings.workout_schema.duration_seconds % 60 : 0))
     setNote(wod?.notes || '')
     setItems([])
     setActiveExerciseIndex(0)
@@ -382,7 +386,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       <div className="engine-fields">
         <label>Namn på økta<input value={title} onChange={e => setTitle(e.target.value)} placeholder="Til dømes Styrke A" required/></label>
         <label>Treningsformat<select value={format} onChange={e => setFormat(e.target.value)}>{FORMATS.map(x => <option key={x}>{x}</option>)}</select></label>
-        <label>Varigheit (min)<input type="number" min="1" max="600" value={duration} onChange={e => setDuration(e.target.value)}/></label>\n        <label>Ekstra sekund<input type="number" min="0" max="59" value={durationSeconds} onChange={e => setDurationSeconds(e.target.value)}/></label>
+        <label>Varigheit (min)<input type="number" min="1" max="600" value={duration} onChange={e => setDuration(e.target.value)}/></label>
+        <label>Ekstra sekund<input type="number" min="0" max="59" value={durationSeconds} onChange={e => setDurationSeconds(e.target.value)}/></label>
       </div>
       <Timer format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot}/>
       {items.length > 0 && <section className="engine-section">
