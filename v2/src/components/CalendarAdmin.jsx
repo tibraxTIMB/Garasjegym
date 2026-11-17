@@ -41,10 +41,20 @@ export default function CalendarAdmin(){
  function openNew(d=new Date()){setEditing(null);setTitle('');setKind('meeting');setDescription('');setClient('');const s=new Date(d);s.setHours(10,0,0,0);setStart(toLocalInput(s));setEnd(toLocalInput(new Date(s.getTime()+3600000)));setShowForm(true)}
  function openEdit(e){if(e.source!=='manual')return;setEditing(e);setTitle(e.title);setKind(e.type);setDescription(e.description||'');setClient(e.client_id||'');setStart(toLocalInput(new Date(e.starts_at)));setEnd(toLocalInput(new Date(e.ends_at)));setShowForm(true)}
  async function save(ev){ev.preventDefault();setError('');setNotice('');if(new Date(end)<=new Date(start)){setError('Sluttid må vera etter starttid.');return}
-  const {data:{user}}=await supabase.auth.getUser();const values={title:title.trim(),event_type:kind,starts_at:new Date(start).toISOString(),ends_at:new Date(end).toISOString(),description:description.trim(),client_id:client||null,created_by:user.id}
-  const result=editing?await supabase.from('calendar_events').update(values).eq('id',editing.id):await supabase.from('calendar_events').insert(values)
-  if(result.error){setError(result.error.message);return}
-  setShowForm(false);setNotice(editing?'Avtalen er oppdatert.':'Avtalen er lagra.');await load()
+  const {data:{user}}=await supabase.auth.getUser()
+  const startsAt=new Date(start).toISOString(),endsAt=new Date(end).toISOString()
+  if(!editing&&kind==='pt'){
+   const {error:e}=await supabase.from('pt_sessions').insert({client_id:client||null,title:title.trim(),starts_at:startsAt,duration_minutes:Math.max(1,Math.round((new Date(end)-new Date(start))/60000)),capacity:1,status:'planned',created_by:user.id,message:description.trim()||'Oppretta frå administratorkalenderen'})
+   if(e){setError(e.message);return}
+  }else if(!editing&&kind==='class'){
+   const {error:e}=await supabase.from('classes').insert({title:title.trim(),type:'Gruppetime',starts_at:startsAt,duration_minutes:Math.max(1,Math.round((new Date(end)-new Date(start))/60000)),capacity:12,description:description.trim(),created_by:user.id})
+   if(e){setError(e.message);return}
+  }else{
+   const values={title:title.trim(),event_type:kind,starts_at:startsAt,ends_at:endsAt,description:description.trim(),client_id:client||null,created_by:user.id}
+   const result=editing?await supabase.from('calendar_events').update(values).eq('id',editing.id):await supabase.from('calendar_events').insert(values)
+   if(result.error){setError(result.error.message);return}
+  }
+  setShowForm(false);setNotice(kind==='pt'?'PT-time oppretta i PT-systemet.':kind==='class'?'Gruppetime oppretta i booking og kalender.':editing?'Avtalen er oppdatert.':'Avtalen er lagra.');await load()
  }
  async function remove(){if(!editing||!window.confirm('Sletta avtalen?'))return;const {error:e}=await supabase.from('calendar_events').delete().eq('id',editing.id);if(e)setError(e.message);else{setShowForm(false);setNotice('Avtalen er sletta.');await load()}}
  return <div className="calendar-admin">
