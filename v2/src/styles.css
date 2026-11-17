@@ -1622,3 +1622,12 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .personal-spotify-meta strong{font-size:clamp(21px,3.2vw,30px);line-height:1.12;font-weight:950;letter-spacing:-.45px;color:#fff}
 .personal-spotify-meta span{font-size:13px;color:#d4dcda}
 @media(max-width:620px){.simple-home-action{min-height:70px;padding:15px}.simple-mode-setting{align-items:flex-start}.class-detail-modal{padding:14px}}
+
+/* Mobile-first super simple mode controls */
+.simple-mode-setting{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:stretch;width:100%;min-width:0;box-sizing:border-box}
+.simple-mode-copy{min-width:0;overflow-wrap:anywhere}
+.simple-mode-toggle{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:48px;white-space:normal;font-size:14px}
+.simple-mode-toggle:disabled{opacity:.65;cursor:wait}
+.simple-mode-feedback{display:block;width:100%;padding:9px 11px;border-radius:8px;background:#3b2221;color:#ffd5d1;overflow-wrap:anywhere}
+.simple-mode-feedback.success{background:#1d342b;color:#c4f3d6}
+@media(min-width:700px){.simple-mode-setting{grid-template-columns:minmax(0,1fr) minmax(190px,auto);align-items:center}.simple-mode-feedback{grid-column:1/-1}.simple-mode-toggle{width:auto;min-width:190px}}
