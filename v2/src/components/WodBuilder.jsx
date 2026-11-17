@@ -101,7 +101,7 @@ const strengthLike=f=>strengthFormats.includes(f)
 const intervalFormats=['Intervall','Tabata','Row Intervals']
 const timedFormats=['EMOM','E1MOM','E2MOM','E3MOM']
 const timedEvery=f=>f==='E2MOM'?2:f==='E3MOM'?3:1
-const timedLabel=f=>`kvart ${timedEvery(f)}. minutt`
+const timedLabel=f=>timedEvery(f)===1?'kvart minutt':`kvart ${timedEvery(f)}. minutt`
 const isRow=x=>x.equipment==='Romaskin'
 const categoryTone=value=>{const v=(value||'').toLowerCase();return v.includes('kond')||v.includes('cardio')?'conditioning':v.includes('kjern')||v.includes('core')?'core':v.includes('styr')||v.includes('strength')?'strength':v.includes('mobil')?'mobility':v.includes('golf')?'golf':v.includes('rehab')||v.includes('fysio')?'rehab':'other'}
 
@@ -173,7 +173,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
   const pool=exercises.filter(x=>!x.is_rehab&&x.category!=='Rehab / fysio')
   if(!pool.length)return
   const chosen=shuffle(pool).slice(0,3+Math.floor(Math.random()*4))
-  setSelected(chosen.map(blankItem));setFormat(['AMRAP','EMOM','For Time','Chipper','Intervall'][Math.floor(Math.random()*5)])
+  setSelected(chosen.map(blankItem));setFormat(['AMRAP','E1MOM','For Time','Chipper','Intervall'][Math.floor(Math.random()*5)])
   setMinutes(String([10,12,15,18,20][Math.floor(Math.random()*5)]));setDurationSeconds('0');setTimeCap('20');setRounds('5')
   setName(randomWodName());setNotes('');setStimulus('Jamn intensitet · god teknikk · hald att litt kapasitet')
   setNotice('Ny WOD er generert. Kontroller dosering og stimulus før publisering.');setError('')
