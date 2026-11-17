@@ -8,7 +8,7 @@ const formats=['AMRAP','EMOM','For Time','Chipper','Couplet','Triplet','Ladder',
 const names=['Stål i underbuksa','Panser på leggane','Rammstein på romaskina','Schmerz und Svette','Betongbein Deluxe','Der Muskelhammer','Keine Gnade, berre knebøy','Brutal Frühstück','Biceps aus Stahl','Du Hast Burpees','Full Metall Fitness','Übermensch på overtid','Kettlebell mit Gefühl','Siste mann i garasjen']
 const shuffle=items=>[...items].sort(()=>Math.random()-.5)
 const blankItem=ex=>({key:crypto.randomUUID(),...ex,sets:'3',reps:ex.equipment==='Romaskin'?'500':'10',loadMode:'none',loadKg:'',percent1rm:'70',rir:'2',rpe:'8',restSeconds:'90',tempo:'',meters:ex.equipment==='Romaskin'?'500':'',calories:'',workSeconds:'',distanceUnit:'m',coachNote:''})
-const fmtLoad=x=>x.loadMode==='kg'&&x.loadKg?x.loadKg+' kg':x.loadMode==='percent'&&x.percent1rm?x.percent1rm+' % 1RM':x.loadMode==='rir'?'RIR '+x.rir:x.loadMode==='rpe'?'RPE '+x.rpe:x.loadMode==='bodyweight'?'Kroppsvekt / assistanse':'Eigen belastning'
+const fmtLoad=x=>x.loadMode==='kg'&&x.loadKg?x.loadKg+' kg':x.loadMode==='percent'&&x.percent1rm?x.percent1rm+' % 1RM':x.loadMode==='rir'?'RIR':x.loadMode==='rpe'?'RPE '+x.rpe:x.loadMode==='bodyweight'?'Kroppsvekt / assistanse':'Eigen belastning'
 
 export default function WodBuilder(){
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område')
@@ -94,7 +94,7 @@ export default function WodBuilder(){
    <aside className="engine-section wod-composer">
     <div className="engine-section-title"><h4>Programmer økta</h4><span>{selected.length} øvingar</span></div>
     <form className="admin-create-form" onSubmit={save}>
-     <label>WOD-namn<input value={name} onChange={e=>setName(e.target.value)} required/></label>
+     <label>WOD-namn<input value={name} onChange={e=>setName(e.target.value)} required/></label><label>Programmeringsnivå<select value={prescription} onChange={e=>setPrescription(e.target.value)}><option value="rx">RX · Føreskriven</option><option value="scaled">Skalert</option><option value="beginner">Nybegynnar</option><option value="custom">Individuelt tilpassa</option></select></label>
      <div className="engine-fields"><label>Format<select value={format} onChange={e=>setFormat(e.target.value)}>{formats.map(x=><option key={x}>{x}</option>)}</select></label><label>Varigheit (min)<input type="number" min="1" max="300" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label></div>
      {isEmom&&<div className="wod-advanced-fields"><label>EMOM-varigheit (min)<input type="number" min="1" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label><label>Arbeid per minutt (sek.)<input type="number" min="1" max="60" value={workSeconds} onChange={e=>setWorkSeconds(e.target.value)}/></label></div>}
      {isInterval&&<div className="wod-advanced-fields"><label>Arbeid (sek.)<input type="number" min="1" value={workSeconds} onChange={e=>setWorkSeconds(e.target.value)}/></label><label>Pause (sek.)<input type="number" min="0" value={restSeconds} onChange={e=>setRestSeconds(e.target.value)}/></label><label>Tal drag/rundar<input type="number" min="1" value={rounds} onChange={e=>setRounds(e.target.value)}/></label></div>}
