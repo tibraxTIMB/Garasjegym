@@ -201,6 +201,10 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [scoreRounds, setScoreRounds] = useState('')
   const [scoreReps, setScoreReps] = useState('')
   const [scoreTime, setScoreTime] = useState('')
+  const [scoreLoad, setScoreLoad] = useState('')
+  const [scoreCalories, setScoreCalories] = useState('')
+  const [scoreDistance, setScoreDistance] = useState('')
+  const [scoreUnit, setScoreUnit] = useState('m')
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(0)
   const [timerSnapshot, setTimerSnapshot] = useState({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
 
@@ -217,7 +221,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     }
     const [e, h, pr] = await Promise.all([
       supabase.from('exercises').select('id,name,category,equipment,description,video_url').eq('is_active', true).order('name'),
-      supabase.from('workout_logs').select('id,title,workout_date,format,rounds,score_rounds,score_reps,note,created_at,workout_exercises(id,exercise_name,sort_order,workout_sets(id,set_number,reps,load_kg,time_text,time_seconds))').order('workout_date', { ascending: false }).limit(30),
+      supabase.from('workout_logs').select('id,title,workout_date,format,rounds,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,result_data,note,created_at,workout_exercises(id,exercise_name,sort_order,workout_sets(id,set_number,reps,load_kg,time_text,time_seconds))').order('workout_date', { ascending: false }).limit(30),
       supabase.from('personal_records').select('id,exercise_name,result,unit,note,record_date').order('record_date', { ascending: false }).limit(50),
     ])
     if (w.error) setError(w.error.message); else setWods(w.data || [])
@@ -341,34 +345,58 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user) throw new Error('Innlogginga er utgått. Logg inn på nytt.')
+      const normalizedFormat = format.toLowerCase()
+      const isAmrapScore = normalizedFormat === 'amrap'
+      const isForTimeScore = ['for time','chipper','couplet','triplet'].includes(normalizedFormat)
+      const elapsedSeconds = Number(timerSnapshot.elapsed)||0
+      const parsedTime = scoreTime.trim() ? (()=>{const parts=scoreTime.trim().split(':').map(Number);return parts.length===2?parts[0]*60+parts[1]:parts.length===3?parts[0]*3600+parts[1]*60+parts[2]:NaN})() : (isForTimeScore&&elapsedSeconds>0?elapsedSeconds:null)
+      if(scoreTime.trim()&&!Number.isFinite(parsedTime))throw new Error('Tid må skrivast som mm:ss eller tt:mm:ss.')
+      const resultData = {
+        version:1,format,elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,
+        completed_rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):null,
+        extra_reps:isAmrapScore?(scoreReps===''?0:Number(scoreReps)):null,
+        split_seconds:Array.isArray(timerSnapshot.laps)?timerSnapshot.laps:[],
+        score_time_seconds:parsedTime,
+        load_kg:scoreLoad===''?null:Number(scoreLoad),
+        calories:scoreCalories===''?null:Number(scoreCalories),
+        distance:scoreDistance===''?null:Number(scoreDistance),distance_unit:scoreUnit,
+        exercise_results:items.map(item=>({exercise_name:item.exercise_name,sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null}))}))
+      }
       const payload = {
-        title: title.trim(),
-        source_wod_id: source?.id || null,
-        class_live_session_id: classSessionId || null,
-        workout_date: localDateISO(),
-        format,
-        rounds: Math.max(1, Number(scoreRounds) || 1),
-        score_rounds: scoreRounds === '' ? null : Number(scoreRounds),
-        score_reps: scoreReps === '' ? null : Number(scoreReps),
-        note: [note.trim(), scoreTime ? 'Tid: ' + scoreTime : '', `Timer: ${format} · ${clock(timerSnapshot.elapsed)} · ${timerSnapshot.phase}`, timerSnapshot.laps.length ? 'Mellomtider: ' + timerSnapshot.laps.map((lap, i) => `${i + 1}: ${clock(lap)}`).join(', ') : ''].filter(Boolean).join('\n'),
-        exercises: items.map(item => ({
-          exercise_id: item.exercise_id || null,
-          exercise_name: item.exercise_name.trim(),
-          sets: item.sets.map(s => ({
-            reps: s.reps === '' ? null : Number(s.reps),
-            load_kg: s.load_kg === '' ? null : Number(s.load_kg),
-            time_text: s.time_text.trim() || null,
-            time_seconds: s.time_seconds === '' ? null : Number(s.time_seconds),
-          })),
-        })),
+        member_id:user.id,title:title.trim(),source_wod_id:source?.id||null,
+        class_live_session_id:classSessionId||null,workout_date:localDateISO(),format,
+        rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):Math.max(1,Number(scoreRounds)||1),
+        score_rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):scoreRounds===''?null:Number(scoreRounds),
+        score_reps:scoreReps===''?(isAmrapScore?0:null):Number(scoreReps),
+        score_time_seconds:parsedTime,score_load_kg:scoreLoad===''?null:Number(scoreLoad),
+        score_calories:scoreCalories===''?null:Number(scoreCalories),
+        score_distance:scoreDistance===''?null:Number(scoreDistance),score_unit:scoreDistance===''?null:scoreUnit,
+        result_data:resultData,
+        note:[note.trim(),scoreTime?'Tid: '+scoreTime:'',`Timer: ${format} · ${clock(elapsedSeconds)} · ${timerSnapshot.phase}`,timerSnapshot.laps.length?'Mellomtider: '+timerSnapshot.laps.map((lap,i)=>`${i+1}: ${clock(lap)}`).join(', '):''].filter(Boolean).join('\\n')
       }
-      const { data, error: saveError } = await supabase.rpc('save_workout_atomic', { p_workout: payload })
-      if (saveError) {
-        if (saveError.message?.includes('save_workout_atomic')) {
-          throw new Error('Den atomiske lagringsfunksjonen er ikkje installert i databasen enno. Økta er ikkje lagra. Sjå migreringa i v2/supabase/migrations.')
+      const {data:log,error:logError}=await supabase.from('workout_logs').insert({
+        member_id:payload.member_id,title:payload.title,source_wod_id:payload.source_wod_id,
+        workout_date:payload.workout_date,format:payload.format,rounds:payload.rounds,
+        score_rounds:payload.score_rounds,score_reps:payload.score_reps,
+        score_time_seconds:payload.score_time_seconds,score_load_kg:payload.score_load_kg,
+        score_calories:payload.score_calories,score_distance:payload.score_distance,
+        score_unit:payload.score_unit,result_data:payload.result_data,note:payload.note
+      }).select('id').single()
+      if(logError)throw logError
+      const workoutId=log.id
+      try{
+        const exerciseRows=payload.exercises=items.map((item,index)=>({
+          exercise_id:item.exercise_id||null,exercise_name:item.exercise_name.trim(),sort_order:index+1,
+          sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_text:s.time_text.trim()||null,time_seconds:s.time_seconds===''?null:Number(s.time_seconds)}))
+        }))
+        if(exerciseRows.length){
+          const {data:savedExercises,error:exerciseError}=await supabase.from('workout_exercises').insert(exerciseRows.map(x=>({workout_log_id:workoutId,exercise_id:x.exercise_id,exercise_name:x.exercise_name,sort_order:x.sort_order}))).select('id,sort_order')
+          if(exerciseError)throw exerciseError
+          const setRows=[]
+          savedExercises.forEach(saved=>{const original=exerciseRows.find(x=>x.sort_order===saved.sort_order);original.sets.forEach((set,index)=>{if(set.reps!==null||set.load_kg!==null||set.time_text||set.time_seconds!==null)setRows.push({workout_exercise_id:saved.id,set_number:index+1,...set})})})
+          if(setRows.length){const {error:setError}=await supabase.from('workout_sets').insert(setRows);if(setError)throw setError}
         }
-        throw saveError
-      }
+      }catch(childError){await supabase.from('workout_logs').delete().eq('id',workoutId);throw new Error('Økta vart ikkje lagra fordi øvingsdetaljane feila: '+childError.message)}
       // Automatically detect new heaviest logged loads and store them as PRs.
       let prMessage = ''
       try {
@@ -380,9 +408,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
           const value = Number(String(record.result).replace(',', '.'))
           if (Number.isFinite(value)) bestByName.set(record.exercise_name.toLowerCase(), Math.max(bestByName.get(record.exercise_name.toLowerCase()) || 0, value))
         })
-        const { data: savedLogs, error: savedLogError } = await supabase.from('workout_logs').select('id').eq('member_id', user.id).eq('title', payload.title).eq('workout_date', payload.workout_date).order('created_at', { ascending: false }).limit(1)
-        if (savedLogError) throw savedLogError
-        const sourceWorkoutId = savedLogs?.[0]?.id || null
+        const sourceWorkoutId = workoutId
         const newPRs = []
         payload.exercises.forEach(exercise => {
           const loads = exercise.sets.map(set => set.load_kg).filter(value => Number.isFinite(value) && value > 0)
