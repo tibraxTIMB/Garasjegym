@@ -106,18 +106,42 @@ const timedLabel=f=>timedEvery(f)===1?'kvart minutt':`kvart ${timedEvery(f)}. mi
 const isRow=x=>x.equipment==='Romaskin'
 const categoryTone=value=>{const v=(value||'').toLowerCase();return v.includes('kond')||v.includes('cardio')?'conditioning':v.includes('kjern')||v.includes('core')?'core':v.includes('styr')||v.includes('strength')?'strength':v.includes('mobil')?'mobility':v.includes('golf')?'golf':v.includes('rehab')||v.includes('fysio')?'rehab':'other'}
 
-export default function WodBuilder({assignedClientId=null,onAssigned}){
+export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=null,onSaved}){
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område')
  const rehabBodyAreas=['hofte','skulder','kne','nakke']
  const isRehabExercise=x=>!!(x.is_rehab||x.category==='Rehab / fysio'||rehabBodyAreas.includes((x.body_area||'').toLowerCase()))
- const [selected,setSelected]=useState([]),[name,setName]=useState(()=>randomWodName()),[format,setFormat]=useState('AMRAP'),[libraryWods,setLibraryWods]=useState([]),[builderMode,setBuilderMode]=useState(assignedClientId?'library':'build'),[librarySearch,setLibrarySearch]=useState(''),[selectedLibraryWod,setSelectedLibraryWod]=useState(''),[classicChoice,setClassicChoice]=useState(''),[publishToMembers,setPublishToMembers]=useState(false)
+ const [selected,setSelected]=useState([]),[editingWodId,setEditingWodId]=useState(null),[name,setName]=useState(()=>randomWodName()),[format,setFormat]=useState('AMRAP'),[libraryWods,setLibraryWods]=useState([]),[builderMode,setBuilderMode]=useState(assignedClientId?'library':'build'),[librarySearch,setLibrarySearch]=useState(''),[selectedLibraryWod,setSelectedLibraryWod]=useState(''),[classicChoice,setClassicChoice]=useState(''),[publishToMembers,setPublishToMembers]=useState(false)
  const [minutes,setMinutes]=useState('20'),[durationSeconds,setDurationSeconds]=useState('0'),[notes,setNotes]=useState(''),[stimulus,setStimulus]=useState('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
  const [rounds,setRounds]=useState('5'),[workSeconds,setWorkSeconds]=useState('60'),[restSeconds,setRestSeconds]=useState('10'),[timeCap,setTimeCap]=useState('20'),[timeCapSeconds,setTimeCapSeconds]=useState('0'),[stationCount,setStationCount]=useState('8'),[stationWork,setStationWork]=useState('45'),[stationTransition,setStationTransition]=useState('15'),[stationRounds,setStationRounds]=useState('3')
  const [ladderStart,setLadderStart]=useState('2'),[ladderStep,setLadderStep]=useState('2'),[ladderDirection,setLadderDirection]=useState('up')
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [prescription,setPrescription]=useState('rx'),[customInstructions,setCustomInstructions]=useState(''),[customUseSets,setCustomUseSets]=useState(false),[combinationMode,setCombinationMode]=useState('For Time')
 
- useEffect(()=>{load();loadWods()},[])
+ async function loadWodForEdit(id){
+  if(!id)return
+  setLoading(true);setError('')
+  const {data:w,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,is_published,timer_settings').eq('id',id).single()
+  if(e){setError('Kunne ikkje opna WOD for redigering: '+e.message);setLoading(false);return}
+  const schema=w.timer_settings?.workout_schema||{}
+  const items=schema.items||[]
+  setEditingWodId(w.id);setName(w.name);setFormat(w.format||'AMRAP');setPublishToMembers(!!w.is_published)
+  setMinutes(String(schema.duration_seconds?Math.floor(schema.duration_seconds/60):w.duration_minutes||20));setDurationSeconds(String(schema.duration_seconds?schema.duration_seconds%60:0))
+  setNotes(schema.coach_notes||w.notes||'');setStimulus(schema.stimulus||'Jamn intensitet · teknisk kvalitet · kontrollert tempo')
+  setPrescription(schema.prescription||'rx');setCustomInstructions(schema.custom_instructions||'')
+  if(schema.time_cap_seconds){setTimeCap(String(Math.floor(schema.time_cap_seconds/60)));setTimeCapSeconds(String(schema.time_cap_seconds%60))}
+  if(schema.rounds)setRounds(String(schema.rounds))
+  if(schema.interval){if(schema.interval.work_seconds)setWorkSeconds(String(schema.interval.work_seconds));if(schema.interval.rest_seconds!=null)setRestSeconds(String(schema.interval.rest_seconds))}
+  if(schema.ladder){setLadderStart(String(schema.ladder.start||2));setLadderStep(String(schema.ladder.step||2));setLadderDirection(schema.ladder.direction||'up')}
+  if(schema.station_circuit){setStationCount(String(schema.station_circuit.station_count||items.length));setStationWork(String(schema.station_circuit.work_seconds||45));setStationTransition(String(schema.station_circuit.transition_seconds||15));setStationRounds(String(schema.station_circuit.rounds||3))}
+  const hydrated=items.map(item=>{
+   const found=exercises.find(x=>x.id===item.exercise_id)||{id:item.exercise_id||null,name:item.exercise_name,category:item.category||'Styrke',body_area:item.body_area||'Fullkropp',equipment:item.equipment||'',description:'',video_url:null}
+   const base=blankItem(found)
+   const sets=(item.sets||[]).map(s=>({...newSet(),reps:String(s.reps??''),loadMode:s.load_mode||'none',loadKg:String(s.load_kg??''),percent1rm:String(s.percent_1rm??''),rir:s.rir==null?'':String(s.rir),rpe:s.rpe==null?'':String(s.rpe),restSeconds:String(s.rest_seconds??120),tempo:s.tempo||''}))
+   return {...base,reps:String(item.reps??''),rowValue:String(item.row_value??item.meters??item.calories??item.work_seconds??''),rowUnit:item.row_unit||(item.calories?'cal':item.work_seconds?'s':'m'),loadMode:item.load_mode||'none',loadKg:String(item.load_kg??''),percent1rm:String(item.percent_1rm??''),rir:item.rir==null?'':String(item.rir),rpe:item.rpe==null?'':String(item.rpe),restSeconds:String(item.rest_seconds??''),tempo:item.tempo||'',coachNote:item.coach_note||'',minuteSlot:item.minute_slot||'',group:item.superset_group||'A',sets:sets.length?sets:[newSet()]}
+  })
+  setSelected(hydrated);setNotice('WOD-en er opna for redigering. Endringane blir lagra på same WOD.');setLoading(false)
+ }
+ useEffect(()=>{load();loadWods()},[])\n useEffect(()=>{if(editWodId&&exercises.length)loadWodForEdit(editWodId)},[editWodId,exercises.length])
  async function loadWods(){const {data,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,created_at,is_published').order('created_at',{ascending:false});if(e)setError(e.message);else setLibraryWods(data||[])}
  async function load(){
   setLoading(true)
@@ -245,7 +269,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
    const stationDuration=isStationCircuit?(stationSlots*Number(stationWork)+(stationSlots-1)*Number(stationTransition)):schema.duration_seconds
    schema.duration_seconds=stationDuration
    const timer_settings={workout_schema:schema,work_seconds:isStationCircuit?Number(stationWork):Number(workSeconds)||null,rest_seconds:isStationCircuit?Number(stationTransition):Number(restSeconds)||null,rounds:isStationCircuit?Number(stationRounds):Number(rounds)||null,duration_seconds:stationDuration}
-   const {data:savedWod,error:e}=await supabase.from('wods').insert({name:name.trim(),format,duration_minutes:Math.ceil(stationDuration/60)||null,movements,notes:[stimulus,notes,customInstructions].filter(Boolean).join('\n\n'),is_published:publishToMembers,created_by:user.id,timer_settings}).select('id').single()
+   const wodPayload={name:name.trim(),format,duration_minutes:Math.ceil(stationDuration/60)||null,movements,notes:[stimulus,notes,customInstructions].filter(Boolean).join('\n\n'),is_published:publishToMembers,created_by:user.id,timer_settings}\n   const wodRequest=editingWodId?supabase.from('wods').update(wodPayload).eq('id',editingWodId).select('id').single():supabase.from('wods').insert(wodPayload).select('id').single()\n   const {data:savedWod,error:e}=await wodRequest
    if(e)throw e
    if(assignedClientId){const {error:linkError}=await supabase.from('pt_wod_assignments').insert({member_id:assignedClientId,wod_id:savedWod.id,assigned_by:user.id,location:'Valfritt',coach_note:'Tildelt frå PT Studio'});if(linkError)throw new Error('WOD-en vart lagra, men kunne ikkje knytast til kunden: '+linkError.message);onAssigned?.()}
    setNotice(publishToMembers?'WOD lagra i biblioteket og publisert for medlemmene.':'WOD lagra i det interne PT-biblioteket.')
@@ -253,7 +277,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
   }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{setBusy(false)}
  }
  return <div className="wod-builder">
-  <div className="training-heading"><div><div className="section-kicker">GARASJEGYM · PROGRAMMERINGSVERKSTAD</div><h3>WOD-studio PRO</h3><p>Programmer styrke, metcon og intervall med formattilpassa dosering.</p></div><span className="count-pill"><WandSparkles size={14}/> PRO</span></div>
+  <div className="training-heading"><div><div className="section-kicker">GARASJEGYM · PROGRAMMERINGSVERKSTAD</div><h3>{editingWodId?'Rediger WOD':'WOD-studio'}</h3><p>Programmer styrke, metcon og intervall med formattilpassa dosering.</p></div><span className="count-pill"><WandSparkles size={14}/> PRO</span></div>
   {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message">{notice}</div>}
   {assignedClientId&&<div className="pt-wod-mode-switch"><button type="button" className={builderMode==='library'?'selected':''} onClick={()=>setBuilderMode('library')}>Finn WOD i biblioteket</button><button type="button" className={builderMode==='build'?'selected':''} onClick={()=>setBuilderMode('build')}>Bygg ny WOD</button></div>}
   {assignedClientId&&builderMode==='library'?<section className="pt-wod-library-panel"><div className="engine-section-title"><div><h4>Vel frå WOD-biblioteket</h4><p>Bruk same publiserte WOD på fleire kundar utan å laga kopiar.</p></div><span>{libraryWods.length} WOD-ar</span></div><div className="wod-search"><Search size={16}/><input value={librarySearch} onChange={e=>setLibrarySearch(e.target.value)} placeholder="Søk etter namn eller format …"/></div><div className="pt-wod-library-list">{libraryWods.filter(w=>(w.name+' '+w.format).toLowerCase().includes(librarySearch.toLowerCase())).map(w=><button type="button" key={w.id} className={selectedLibraryWod===w.id?'selected':''} onClick={()=>setSelectedLibraryWod(w.id)}><span><strong>{w.name}</strong><small>{w.format} · {w.duration_minutes||'–'} min · {w.movements?.split('\n').filter(Boolean).length||0} øvingar</small></span><span>{selectedLibraryWod===w.id?'Vald':'Vel'}</span></button>)}</div><button type="button" className="primary-button" disabled={!selectedLibraryWod||busy} onClick={assignLibraryWod}><Plus size={15}/>{busy?'Tildeler …':'Tildel vald WOD til kunden'}</button></section>:<div className="pt-wod-builder-form">
