@@ -170,7 +170,7 @@ export function MusicProvider({ children, memberId = null }) {
   // at medlemmen allereie hadde ein aktiv Spotify-app på telefonen.
   useEffect(() => {
     if (!spotifyToken?.access_token) return undefined
-    const grantedScopes=(spotifyToken.scope||'').split(/\\s+/).filter(Boolean)
+    const grantedScopes=(spotifyToken.scope||'').split(/\s+/).filter(Boolean)
     if (!grantedScopes.includes('streaming')) { setSpotifyError('Spotify-tilgangen manglar streaming-løyvet. Kople frå og til Spotify på nytt, og godkjenn alle tilgangane.'); return undefined }
     if (spotifyProfile && spotifyProfile.product !== 'premium') { setSpotifyError('Spotify Web Player krev Spotify Premium. Du kan framleis bruke Spotify-appen som avspelings-eining.'); setSpotifyStatus('Premium krevst for innebygd avspeling.'); return undefined }
     if (!spotifyProfile) return undefined
