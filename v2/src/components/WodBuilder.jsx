@@ -60,11 +60,11 @@ export default function WodBuilder(){
  function buildPrescription(x,i){
   const load=fmtLoad(x),base=x.name+' – '+(x.sets||'1')+' sett × '+(x.reps||'valfri reps')
   const row=x.equipment==='Romaskin'
-  return base+(row?' · '+(x.meters?x.meters+' m':x.calories?x.calories+' kcal':x.workSeconds?x.workSeconds+' sek':'valfri distanse'):'')+(x.loadMode!=='none'?' · '+load:'')+(x.rir?' · RIR '+x.rir:'')+(x.restSeconds?' · pause '+x.restSeconds+' sek':'')+(x.tempo?' · tempo '+x.tempo:'')+(x.coachNote?' · '+x.coachNote:'')
+  return base+(row?' · '+(x.meters?x.meters+' m':x.calories?x.calories+' kcal':x.workSeconds?x.workSeconds+' sek':'valfri distanse'):'')+(x.loadMode!=='none'?' · '+load:'')+(x.rir!==''&&x.rir!==null?' · RIR '+x.rir:'')+(x.restSeconds?' · pause '+x.restSeconds+' sek':'')+(x.tempo?' · tempo '+x.tempo:'')+(x.coachNote?' · '+x.coachNote:'')
  }
  async function save(event){
   event.preventDefault();setError('');setNotice('')
-  if(!selected.length){setError('Legg minst ei øving til WOD-en.');return}
+  if(!selected.length){setError('Legg minst ei øving til WOD-en.');return}\n  if(format==='Couplet'&&selected.length!==2){setError('Couplet skal ha nøyaktig to øvingar.');return}\n  if(format==='Triplet'&&selected.length!==3){setError('Triplet skal ha nøyaktig tre øvingar.');return}
   if(!name.trim()){setError('Gi WOD-en eit namn.');return}
   if(selected.some(x=>!x.reps&&!x.meters&&!x.calories&&!x.workSeconds)){setError('Alle øvingar må ha reps, distanse, kalorier eller arbeidstid.');return}
   setBusy(true)
@@ -104,7 +104,7 @@ export default function WodBuilder(){
       <div className="wod-dose-grid"><label>Sett<input type="number" min="1" value={ex.sets} onChange={e=>updateItem(ex.key,{sets:e.target.value})}/></label><label>Reps / mål<input value={ex.reps} onChange={e=>updateItem(ex.key,{reps:e.target.value})}/></label><label>Belastning<select value={ex.loadMode} onChange={e=>updateItem(ex.key,{loadMode:e.target.value})}><option value="none">Ikkje oppgitt</option><option value="kg">Fast kg</option><option value="percent">% 1RM</option><option value="rir">RIR</option><option value="rpe">RPE</option><option value="bodyweight">Kroppsvekt / assistanse</option></select></label>
        {ex.loadMode==='kg'&&<label>Kg<input type="number" min="0" step="0.5" value={ex.loadKg} onChange={e=>updateItem(ex.key,{loadKg:e.target.value})}/></label>}
        {ex.loadMode==='percent'&&<label>% av 1RM<input type="number" min="1" max="100" value={ex.percent1rm} onChange={e=>updateItem(ex.key,{percent1rm:e.target.value})}/></label>}
-       {ex.loadMode==='rir'&&<label>Reps i reserve<input type="number" min="0" max="10" value={ex.rir} onChange={e=>updateItem(ex.key,{rir:e.target.value})}/></label>}
+       <label>RIR<input type="number" min="0" max="10" value={ex.rir} onChange={e=>updateItem(ex.key,{rir:e.target.value})}/></label>
        {ex.loadMode==='rpe'&&<label>RPE (1–10)<input type="number" min="1" max="10" step="0.5" value={ex.rpe} onChange={e=>updateItem(ex.key,{rpe:e.target.value})}/></label>}
        <label>Pause (sek.)<input type="number" min="0" value={ex.restSeconds} onChange={e=>updateItem(ex.key,{restSeconds:e.target.value})}/></label>
        <label>Tempo<input value={ex.tempo} onChange={e=>updateItem(ex.key,{tempo:e.target.value})} placeholder="t.d. 3-1-1"/></label>
