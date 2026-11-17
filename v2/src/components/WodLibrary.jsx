@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useState} from 'react'
 import {BookOpen,Search,Eye,EyeOff,LoaderCircle,Clock3,Dumbbell,Play,Layers,UserPlus,Trash2,Archive,Edit3,Star,CalendarDays,Info} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
-export default function WodLibrary({onLaunchWod,onEditWod,staff=true,focusWodId=null,onFocusConsumed}){
+export default function WodLibrary({onLaunchWod,onEditWod,staff=true,isAdmin=false,focusWodId=null,onFocusConsumed}){
  const [wods,setWods]=useState([]),[query,setQuery]=useState(''),[filter,setFilter]=useState('all'),[loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [customers,setCustomers]=useState([]),[assignWod,setAssignWod]=useState(null),[customerId,setCustomerId]=useState(''),[dueDate,setDueDate]=useState(''),[coachNote,setCoachNote]=useState('')
  const [sessionWods,setSessionWods]=useState([]),[sessionName,setSessionName]=useState(''),[sessionDate,setSessionDate]=useState(new Date().toISOString().slice(0,10)),[showSession,setShowSession]=useState(false),[favorites,setFavorites]=useState([]),[dailyWodId,setDailyWodId]=useState(null),[classes,setClasses]=useState([]),[classWod,setClassWod]=useState(null),[classId,setClassId]=useState(''),[expanded,setExpanded]=useState(null)
