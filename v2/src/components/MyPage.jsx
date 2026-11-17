@@ -2,7 +2,7 @@ import {useEffect,useState} from 'react'
 import {UserRound,Trophy,Activity,LoaderCircle,CalendarDays,Mail,ShieldCheck} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 
-export default function MyPage({profile,onOpenWorkout}){
+export default function MyPage({profile,email,onOpenWorkout}){
  const [logs,setLogs]=useState([]),[prs,setPrs]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState('')
  useEffect(()=>{let live=true;async function load(){const [l,p]=await Promise.all([
   supabase.from('workout_logs').select('id,title,workout_date,format,score_rounds,score_reps,note').order('workout_date',{ascending:false}).limit(100),
@@ -11,7 +11,7 @@ export default function MyPage({profile,onOpenWorkout}){
  return <div className="my-page">
   <div className="training-heading"><div><span className="section-kicker">MEDLEMSPROFIL</span><h3>Mi side</h3><p>Personleg treningsprofil, resultat og utvikling.</p></div><span className="count-pill"><UserRound size={14}/> Profil</span></div>
   <section className="my-profile-card"><div className="my-profile-avatar"><UserRound size={26}/></div><div><h3>{profile.display_name||'GarasjeGym-medlem'}</h3><span>{profile.role==='admin'?'Administrator':profile.role==='manager'?'Manager':'Medlem'}</span></div></section>
-  <div className="my-profile-facts"><div><ShieldCheck size={16}/><span>Medlemsstatus</span><strong>{profile.active?'Aktiv':'Inaktiv'}</strong></div><div><Mail size={16}/><span>Innloggingsadresse</span><strong>{profile.email||'Administrert via konto'}</strong></div></div>
+  <div className="my-profile-facts"><div><ShieldCheck size={16}/><span>Medlemsstatus</span><strong>{profile.active?'Aktiv':'Inaktiv'}</strong></div><div><Mail size={16}/><span>Innloggingsadresse</span><strong>{email||'Administrert via konto'}</strong></div></div>
   {error&&<div className="auth-error">{error}</div>}
   {loading?<div className="training-state"><LoaderCircle className="spin"/> Hentar treningsprofil …</div>:<>
    <section className="engine-section"><div className="engine-section-title"><h4><Trophy size={17}/> Personlege rekordar</h4><span>{prs.length}</span></div>{prs.length?<div className="my-pr-grid">{prs.map(pr=><article className="history-card" key={pr.id}><strong>{pr.exercise_name}</strong><div className="pr-result">{pr.result} {pr.unit}</div><small>{pr.record_date||'Dato ikkje registrert'}</small></article>)}</div>:<div className="empty-state">Du har ikkje registrert personlege rekordar enno.</div>}</section>
