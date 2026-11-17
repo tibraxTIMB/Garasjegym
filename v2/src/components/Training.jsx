@@ -204,8 +204,26 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     setActiveExerciseIndex(0)
     setTimerSnapshot({ elapsed: 0, laps: [], phase: 'Klar', running: false })
     setScoreRounds(''); setScoreReps(''); setScoreTime('')
-    if (wod?.movements) {
-      const names = wod.movements.split(/\n|,/).map(x => x.trim()).filter(Boolean)
+    const schema = wod?.timer_settings?.workout_schema
+    if (Array.isArray(schema?.items) && schema.items.length) {
+      setItems(schema.items.map(item => ({
+        ...emptyExercise(),
+        exercise_id: item.exercise_id || '',
+        exercise_name: item.exercise_name || '',
+        sets: Array.isArray(item.sets) && item.sets.length ? item.sets.map(set => ({
+          reps: set.reps == null ? '' : String(set.reps),
+          load_kg: set.load_kg == null ? '' : String(set.load_kg),
+          time_text: set.tempo || '',
+          time_seconds: '',
+        })) : [{
+          reps: item.reps == null ? '' : String(item.reps),
+          load_kg: item.load_kg == null ? '' : String(item.load_kg),
+          time_text: item.row_value != null ? String(item.row_value)+' '+(item.row_unit||'') : '',
+          time_seconds: item.work_seconds == null ? '' : String(item.work_seconds),
+        }],
+      })))
+    } else if (wod?.movements) {
+      const names = wod.movements.split(/\\n|,/).map(x => x.trim()).filter(Boolean)
       setItems(names.map(name => ({ ...emptyExercise(), exercise_name: name })))
     }
     setMode('active')
