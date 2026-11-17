@@ -57,7 +57,12 @@ export default function CoffeeBar({profile,ordersOnly=false}){
   }catch(e){setError(e.message||'Kunne ikkje endra produktstatus.')}
   finally{setBusy('')}
  }
- async function saveStaffComment(order){\n  setBusy('comment-'+order.id);setError('')\n  try{const {error:e}=await supabase.from('coffee_orders').update({staff_comment:(staffComments[order.id]??order.staff_comment??'').trim()}).eq('id',order.id);if(e)throw e;setNotice('Kommentaren på ordren er lagra.');await load()}\n  catch(e){setError(e.message||'Kunne ikkje lagra ord kommentaren.')}\n  finally{setBusy('')}\n }\n async function updateStatus(order,status){
+ async function saveStaffComment(order){
+  setBusy('comment-'+order.id);setError('')
+  try{const {error:e}=await supabase.from('coffee_orders').update({staff_comment:(staffComments[order.id]??order.staff_comment??'').trim()}).eq('id',order.id);if(e)throw e;setNotice('Kommentaren på ordren er lagra.');await load()}
+  catch(e){setError(e.message||'Kunne ikkje lagra ord kommentaren.')}
+  finally{setBusy('')}
+ }\n async function updateStatus(order,status){
   setBusy(order.id);setError('')
   try{const {error:e}=await supabase.from('coffee_orders').update({status}).eq('id',order.id);if(e)throw e;setNotice('Ordrestatus oppdatert.');await load()}
   catch(e){setError(e.message||'Kunne ikkje oppdatera status.')}
