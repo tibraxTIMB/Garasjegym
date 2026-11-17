@@ -37,7 +37,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
   const roundLength = isTimedInterval ? cycle : isEMOM ? emomCycle : 60
   const currentRound = isTimedInterval || isDeathBy || isEMOM ? Math.floor(elapsed / roundLength) + 1 : Math.floor(elapsed / 60) + 1
   const phaseElapsed = isTimedInterval ? elapsed % cycle : elapsed % (isEMOM ? emomCycle : 60)
-  const currentPhase = isTimedInterval ? (phaseElapsed < Number(workSeconds) ? 'ARBEID' : 'KVILE') : (isEMOM ? 'NYTT MINUTT' : isDeathBy ? 'NY RUNDE' : 'PÅGÅR')
+  const currentPhase = isTimedInterval ? (phaseElapsed < Number(workSeconds) ? 'ARBEID' : 'KVILE') : (isEMOM ? (phaseElapsed === 0 ? 'ARBEID' : 'TIL NESTE START') : isDeathBy ? 'NY RUNDE' : 'PÅGÅR')
   const intervalRemaining = isTimedInterval
     ? Math.max(0, (phaseElapsed < Number(workSeconds) ? Number(workSeconds) : cycle) - phaseElapsed)
     : Math.max(0, (isEMOM ? emomCycle : 60) - phaseElapsed)
@@ -82,7 +82,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
     if (!running) return
     if (isCountdown && elapsed >= target) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
     if (isTimedInterval && elapsed >= cycle * Math.max(1, Number(rounds))) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
-    if ((isEMOM || isDeathBy || isForTimeCap) && elapsed >= target) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
+    if ((isEMOM || isDeathBy || isForTimeCap) && elapsed >= target) { setRunning(false); setPhase(isForTimeCap ? 'TIDSGRENSE' : 'FERDIG'); cue(520, 0.5); return }
     if ((isTimedInterval && elapsed % cycle === 0) || (isTimedInterval && elapsed % cycle === Number(workSeconds)) || ((isEMOM && elapsed % emomCycle === 0) || (isDeathBy && elapsed % 60 === 0))) cue(elapsed % 60 === 0 ? 1040 : 660, 0.12)
   }, [elapsed, running, target, isCountdown, isForTimeCap, isTimedInterval, cycle, rounds, isEMOM, emomCycle, isDeathBy, workSeconds])
 
