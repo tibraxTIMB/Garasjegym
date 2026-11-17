@@ -32,7 +32,7 @@ const timedFormats=['EMOM','E2MOM','E3MOM']
 const timedLabel=f=>f==='E2MOM'?'kvart 2. minutt':f==='E3MOM'?'kvart 3. minutt':'kvart minutt'
 const isRow=x=>x.equipment==='Romaskin'
 
-export default function WodBuilder(){
+export default function WodBuilder({assignedClientId=null,onAssigned}){
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område')
  const [selected,setSelected]=useState([]),[name,setName]=useState(()=>randomWodName()),[format,setFormat]=useState('AMRAP')
  const [minutes,setMinutes]=useState('20'),[notes,setNotes]=useState(''),[stimulus,setStimulus]=useState('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
@@ -128,8 +128,9 @@ export default function WodBuilder(){
    }
    const movements=selected.map((x,i)=>(i+1)+'. '+buildPrescription(x)).join('\n')
    const timer_settings={workout_schema:schema,work_seconds:Number(workSeconds)||null,rest_seconds:Number(restSeconds)||null,rounds:Number(rounds)||null}
-   const {error:e}=await supabase.from('wods').insert({name:name.trim(),format,duration_minutes:Number(minutes)||null,movements,notes:[stimulus,notes,customInstructions].filter(Boolean).join('\n\n'),is_published:true,created_by:user.id,timer_settings})
+   const {data:savedWod,error:e}=await supabase.from('wods').insert({name:name.trim(),format,duration_minutes:Number(minutes)||null,movements,notes:[stimulus,notes,customInstructions].filter(Boolean).join('\n\n'),is_published:true,created_by:user.id,timer_settings}).select('id').single()
    if(e)throw e
+   if(assignedClientId){const {error:linkError}=await supabase.from('pt_sessions').insert({client_id:assignedClientId,title:name.trim(),starts_at:new Date().toISOString(),duration_minutes:Number(minutes)||60,capacity:1,status:'planned',created_by:user.id,wod_ids:[savedWod.id],message:'WOD oppretta direkte frå PT Studio'}) ;if(linkError)throw new Error('WOD-en vart lagra, men kunne ikkje knytast til kunden: '+linkError.message);onAssigned?.() }
    setNotice('WOD publisert med full programmering.')
    setSelected([]);setNotes('');setCustomInstructions('');setName(randomWodName())
   }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{setBusy(false)}
