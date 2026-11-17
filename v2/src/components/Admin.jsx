@@ -32,7 +32,8 @@ export default function Admin({profile}){
   event.preventDefault();setBusy('wod');setError('')
   try{
    const {data:{user}}=await supabase.auth.getUser()
-   const movements=(wodSelectedExercises.length?wodSelectedExercises.join('\\n'):wodMoves).trim()\n   const values={name:wodName.trim(),format:wodFormat,duration_minutes:Number(wodMinutes)||null,movements,notes:wodNotes.trim(),timer_settings:{work_seconds:Number(wodWork),rest_seconds:Number(wodRest),rounds:Number(wodRounds)}}
+   const movements=(wodSelectedExercises.length?wodSelectedExercises.join('\n'):wodMoves).trim()
+   const values={name:wodName.trim(),format:wodFormat,duration_minutes:Number(wodMinutes)||null,movements,notes:wodNotes.trim(),timer_settings:{work_seconds:Number(wodWork),rest_seconds:Number(wodRest),rounds:Number(wodRounds)}}
    let result=editingWod?await supabase.from('wods').update(values).eq('id',editingWod.id):await supabase.from('wods').insert({...values,is_published:true,created_by:user.id})
    if(result.error && /timer_settings|column .* does not exist/i.test(result.error.message||'')){
     const {timer_settings,...baseValues}=values
@@ -58,10 +59,10 @@ export default function Admin({profile}){
   try{const {error:e}=await supabase.from('profiles').update(patch).eq('id',member.id);if(e)throw e;setNotice('Medlemsprofil oppdatert.');await load()}
   catch(e){setError(e.message||'Kunne ikkje oppdatera medlemmet.')}finally{setBusy('')}
  }
- function editWod(wod){setEditingWod(wod);setWodName(wod.name||'');setWodFormat(wod.format||'AMRAP');setWodMinutes(String(wod.duration_minutes||20));setWodMoves(wod.movements||'');setWodSelectedExercises((wod.movements||'').split(/\\n|,/).map(x=>x.trim()).filter(Boolean));setWodNotes(wod.notes||'');setWodWork(String(wod.timer_settings?.work_seconds??60));setWodRest(String(wod.timer_settings?.rest_seconds??0));setWodRounds(String(wod.timer_settings?.rounds??5));window.scrollTo({top:0,behavior:'smooth'})}
- function addWodExercise(name){const value=String(name||'').trim();if(!value)return;setWodSelectedExercises(current=>[...current,value]);setWodMoves(current=>[current,value].filter(Boolean).join('\\n'));setWodExerciseSearch('');setCustomWodExercise('')}
- function removeWodExercise(index){setWodSelectedExercises(current=>current.filter((_,i)=>i!==index));setWodMoves(current=>current.split(/\\n|,/).map(x=>x.trim()).filter((_,i)=>i!==index).join('\\n'))}
- function moveWodExercise(index,direction){const next=[...wodSelectedExercises];const target=index+direction;if(target<0||target>=next.length)return;[next[index],next[target]]=[next[target],next[index]];setWodSelectedExercises(next);setWodMoves(next.join('\\n'))}
+ function editWod(wod){setEditingWod(wod);setWodName(wod.name||'');setWodFormat(wod.format||'AMRAP');setWodMinutes(String(wod.duration_minutes||20));setWodMoves(wod.movements||'');setWodSelectedExercises((wod.movements||'').split(/\n|,/).map(x=>x.trim()).filter(Boolean));setWodNotes(wod.notes||'');setWodWork(String(wod.timer_settings?.work_seconds??60));setWodRest(String(wod.timer_settings?.rest_seconds??0));setWodRounds(String(wod.timer_settings?.rounds??5));window.scrollTo({top:0,behavior:'smooth'})}
+ function addWodExercise(name){const value=String(name||'').trim();if(!value)return;setWodSelectedExercises(current=>[...current,value]);setWodMoves(current=>[current,value].filter(Boolean).join('\n'));setWodExerciseSearch('');setCustomWodExercise('')}
+ function removeWodExercise(index){setWodSelectedExercises(current=>current.filter((_,i)=>i!==index));setWodMoves(current=>current.split(/\n|,/).map(x=>x.trim()).filter((_,i)=>i!==index).join('\n'))}
+ function moveWodExercise(index,direction){const next=[...wodSelectedExercises];const target=index+direction;if(target<0||target>=next.length)return;[next[index],next[target]]=[next[target],next[index]];setWodSelectedExercises(next);setWodMoves(next.join('\n'))}
  function cancelWodEdit(){if(window.confirm('Forkasta endringane i WOD-en?')){setEditingWod(null);setWodName('');setWodMoves('');setWodSelectedExercises([]);setWodNotes('')}}
  async function toggleWod(wod){
   setBusy(wod.id);try{const {error:e}=await supabase.from('wods').update({is_published:!wod.is_published}).eq('id',wod.id);if(e)throw e;await load()}catch(e){setError(e.message)}finally{setBusy('')}
