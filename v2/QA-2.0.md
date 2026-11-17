@@ -120,3 +120,22 @@ Ingen ende-til-ende-testar er stadfesta køyrde i denne arbeidsøkta. Migrering 
 - Auth-profiltrigger kontrollert. Testkonto og innlogging må framleis prøvast manuelt.
 - Tryggleiksråd: ingen anon SECURITY DEFINER-funksjonar; 6 SECURITY DEFINER-funksjonar er medvite tilgjengelege for authenticated (rolleoppslag og handlingar/RPC). Ytterlegare RLS-ytelsesvarsel må vurderast før produksjon.
 - Ytelsesråd etter indeksmigrering: 20 manglande FK-indeksar er retta; att står RLS initplan- og fleire permissive policy-varsel.
+
+
+## 11. Timer og treningsformat – kvalitetssjekk
+| ID | Format / handling | Forventa åtferd |
+|---|---|---|
+| TIMER-01 | E1MOM | Arbeidsstart ved 00:00 og deretter kvart minutt; stoppar ved øktvarigheita |
+| TIMER-02 | E2MOM | Arbeidsstart ved 00:00, 02:00, 04:00 osv.; nedteljing viser tid til neste start |
+| TIMER-03 | E3MOM | Arbeidsstart ved 00:00, 03:00, 06:00 osv.; nedteljing viser tid til neste start |
+| TIMER-04 | AMRAP / Nedteljing | Tel ned frå tidsgrensa og stoppar på null |
+| TIMER-05 | For Time / Chipper | Tel opp og stoppar ved eventuell tidsgrense |
+| TIMER-06 | Tabata | Arbeid, pause og tal drag kan endrast; standard er 20/10 × 8 |
+| TIMER-07 | Intervall / Row Intervals | Tel arbeid og pause per drag og stoppar etter valt tal drag |
+| TIMER-08 | Stoppeklokke / Fri trening | Tel opp utan automatisk tidsgrense; mellomtid og nullstilling fungerer |
+| TIMER-09 | Varigheit 75:30 | Minutt kan vera over 60; sekund kan setjast 00–59; vising held fram som mm:ss |
+| TIMER-10 | WOD med lagra timer_settings | Format, kadens, varigheit og tidsgrense blir lesne frå same WOD-skjema |
+| TIMER-11 | Gammal WOD utan workout_schema | Fallback til format og duration_minutes utan krasj |
+| TIMER-12 | Pause, start og nullstill | Klokka held attende ved pause; nullstill set tid, rundar og mellomtider til start |
+
+Teststatus: Desse testane er lagde til som krav for manuell/ende-til-ende-kontroll. Dei er ikkje stadfesta køyrde berre ved at bygginga passerer.
