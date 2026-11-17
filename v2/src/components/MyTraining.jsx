@@ -1,0 +1,26 @@
+import {useEffect,useState} from 'react'
+import {CalendarDays,ClipboardList,CheckCircle2,Play,LoaderCircle} from 'lucide-react'
+import {supabase} from '../lib/supabase.js'
+export default function MyTraining({onLaunchWod}){
+ const [assignments,setAssignments]=useState([]),[sessions,setSessions]=useState([]),[classes,setClasses]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState('')
+ async function load(){setLoading(true);setError('');const {data:{user}}=await supabase.auth.getUser();if(!user){setError('Logg inn på nytt.');setLoading(false);return}
+ const [a,p,b]=await Promise.all([
+  supabase.from('pt_wod_assignments').select('id,wod_id,due_date,location,coach_note,status,created_at,wods(id,name,format,duration_minutes,movements,notes)').eq('member_id',user.id).in('status',['assigned','in_progress','completed']).order('due_date',{ascending:true,nullsFirst:false}),
+  supabase.from('pt_sessions').select('id,title,starts_at,duration_minutes,status,session_type,message,coach_notes').eq('client_id',user.id).in('status',['published','planned','completed']).order('starts_at',{ascending:true}).limit(50),
+  supabase.from('class_bookings').select('id,status,classes(id,title,type,starts_at,duration_minutes,description)').eq('member_id',user.id).eq('status','confirmed').limit(50)
+ ])
+ if(a.error)setError(a.error.message);else setAssignments(a.data||[])
+ if(p.error)setError(p.error.message);else setSessions(p.data||[])
+ if(b.error)setError(b.error.message);else setClasses((b.data||[]).filter(x=>x.classes).map(x=>({...x.classes,booking_id:x.id})))
+ setLoading(false)}
+ useEffect(()=>{load();const t=setInterval(load,60000);return()=>clearInterval(t)},[])
+ async function update(a,status){setBusy(a.id);setError('');setNotice('');const {error:e}=await supabase.from('pt_wod_assignments').update({status,completed_at:status==='completed'?new Date().toISOString():null}).eq('id',a.id);if(e)setError(e.message);else{setAssignments(rows=>rows.map(x=>x.id===a.id?{...x,status}:x));setNotice(status==='completed'?'Treningsoppgåva er markert som gjennomført.':'WOD er sett i gang.')}setBusy('')}
+ if(loading)return <div className="training-state"><LoaderCircle className="spin"/> Hentar Mi trening …</div>
+ return <div className="my-training"><div className="training-heading"><div><span className="section-kicker">MI TRENING</span><h3>Planen min</h3><p>PT, eigentrening og gruppetimar samla på ein stad.</p></div><button className="secondary-button" onClick={load}>Oppdater</button></div>
+ {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message"><CheckCircle2 size={14}/>{notice}</div>}
+ <section className="engine-section"><div className="engine-section-title"><h4><ClipboardList size={17}/> Tildelte WOD-ar</h4><span>{assignments.filter(x=>x.status!=='completed').length} aktive</span></div>
+ {assignments.length?assignments.map(a=><article className="history-card my-training-card" key={a.id}><div className="history-card-top"><strong>{a.wods?.name||'Treningsoppgåve'}</strong><span>{a.status==='completed'?'Gjennomført':a.status==='in_progress'?'Påbegynt':'Tildelt'}</span></div><small>{a.wods?.format||'WOD'} · {a.wods?.duration_minutes||'–'} min · {a.location||'Valfritt stad'}</small>{a.due_date&&<small>Frist: {new Date(a.due_date+'T12:00:00').toLocaleDateString('nn-NO')}</small>}{a.coach_note&&<p>{a.coach_note}</p>}{a.wods?.movements&&<p>{a.wods.movements}</p>}<div className="my-training-actions">{a.status!=='completed'&&<><button className="primary-button" disabled={busy===a.id} onClick={()=>{if(a.status==='assigned')update(a,'in_progress');onLaunchWod?.(a.wod_id)}}><Play size={14}/> Start WOD</button><button className="secondary-button" disabled={busy===a.id} onClick={()=>update(a,'completed')}>Marker gjennomført</button></>}</div></article>):<div className="empty-state">Ingen WOD-ar er tildelte akkurat no.</div>}</section>
+ <section className="engine-section"><div className="engine-section-title"><h4><CalendarDays size={17}/> PT-avtalar</h4><span>{sessions.length}</span></div>{sessions.length?sessions.map(x=><article className="history-card my-training-card" key={x.id}><div className="history-card-top"><strong>{x.title}</strong><span>{x.status==='completed'?'Gjennomført':'Planlagd'}</span></div><small>{new Date(x.starts_at).toLocaleString('nn-NO')} · {x.duration_minutes} min</small><p>{({guided:'Rettleiing',free:'Fri trening',wod:'Strukturert WOD'})[x.session_type]||'PT-avtale'}</p>{x.message&&<small>{x.message}</small>}</article>):<div className="empty-state">Ingen PT-avtalar.</div>}</section>
+ <section className="engine-section"><div className="engine-section-title"><h4><CalendarDays size={17}/> Gruppetimar eg er påmeld</h4><span>{classes.length}</span></div>{classes.length?classes.map(x=><article className="history-card my-training-card" key={x.id}><div className="history-card-top"><strong>{x.title}</strong><span>Påmeld</span></div><small>{new Date(x.starts_at).toLocaleString('nn-NO')} · {x.duration_minutes} min</small><p>{x.description||x.type}</p></article>):<div className="empty-state">Du er ikkje påmeld gruppetimar enno.</div>}</section>
+ </div>
+}
