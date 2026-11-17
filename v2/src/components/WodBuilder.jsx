@@ -110,6 +110,20 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
  function updateItem(key,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,...patch}:x))}
  function updateSet(key,index,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,sets:x.sets.map((s,i)=>i===index?{...s,...patch}:s)}:x))}
  function move(i,dir){setSelected(rows=>{const next=[...rows],j=i+dir;if(j<0||j>=next.length)return rows;[next[i],next[j]]=[next[j],next[i]];return next})}
+ function loadPerformanceProgram(type){
+  const programs={
+   golf:{name:'Golf Performance – styrke A',items:[['Goblet squat','Styrke','Bein','8'],['Split squat','Styrke','Bein','8'],['Pallof press','Kjerne','Mage','10'],['Cable woodchop','Kjerne','Mage','10'],['Single-leg Romanian deadlift','Styrke','Bein','8'],['Medicine ball rotational throw','Kondisjon','Fullkropp','6'],['Farmer carry','Styrke','Fullkropp','30']]},
+   running:{name:'Running Performance – styrke A',items:[['Bulgarian split squat','Styrke','Bein','8'],['Step-up','Styrke','Bein','8'],['Romanian deadlift','Styrke','Bein','8'],['Standing calf raise','Styrke','Bein','12'],['Seated calf raise','Styrke','Bein','12'],['Hamstring curl','Styrke','Bein','10'],['Side plank','Kjerne','Mage','30']]}
+  }
+  const p=programs[type];if(!p)return
+  const rows=p.items.map(([name,cat,area,reps])=>{
+   const match=exercises.find(x=>x.name.toLowerCase()===name.toLowerCase())
+   const base=blankItem(match||{id:null,name,category:cat,equipment:'',body_area:area,video_url:null,description:'Programøving – legg til detaljar og belastning etter nivå.'})
+   return {...base,sets:Array.from({length:3},()=>({...newSet(),reps,restSeconds:'90'}))}
+  })
+  setSelected(rows);setName(p.name);setFormat('Strength');setMinutes('40');setNotes(type==='golf'?'Fokus på rotasjonskraft, stabilitet, hofte og kontrollert kraftoverføring.':'Fokus på eittbeinsstyrke, legg, hamstring og hoftekontroll.');setStimulus('Kontrollert styrketrening · god teknikk · tilpass belastning til nivå.')
+  setNotice(p.name+' er lasta inn. Tilpass øvingar, sett og belastning før lagring.');setError('')
+ }
  function generateRowingIntervals(){
   const row=exercises.find(x=>x.equipment==='Romaskin')
   if(!row){setError('Romaskinøvinga manglar i biblioteket.');return}
@@ -196,6 +210,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
   {assignedClientId&&<div className="pt-wod-mode-switch"><button type="button" className={builderMode==='library'?'selected':''} onClick={()=>setBuilderMode('library')}>Finn WOD i biblioteket</button><button type="button" className={builderMode==='build'?'selected':''} onClick={()=>setBuilderMode('build')}>Bygg ny WOD</button></div>}
   {assignedClientId&&builderMode==='library'?<section className="pt-wod-library-panel"><div className="engine-section-title"><div><h4>Vel frå WOD-biblioteket</h4><p>Bruk same publiserte WOD på fleire kundar utan å laga kopiar.</p></div><span>{libraryWods.length} WOD-ar</span></div><div className="wod-search"><Search size={16}/><input value={librarySearch} onChange={e=>setLibrarySearch(e.target.value)} placeholder="Søk etter namn eller format …"/></div><div className="pt-wod-library-list">{libraryWods.filter(w=>(w.name+' '+w.format).toLowerCase().includes(librarySearch.toLowerCase())).map(w=><button type="button" key={w.id} className={selectedLibraryWod===w.id?'selected':''} onClick={()=>setSelectedLibraryWod(w.id)}><span><strong>{w.name}</strong><small>{w.format} · {w.duration_minutes||'–'} min · {w.movements?.split('\n').filter(Boolean).length||0} øvingar</small></span><span>{selectedLibraryWod===w.id?'Vald':'Vel'}</span></button>)}</div><button type="button" className="primary-button" disabled={!selectedLibraryWod||busy} onClick={assignLibraryWod}><Plus size={15}/>{busy?'Tildeler …':'Tildel vald WOD til kunden'}</button></section>:<div className="pt-wod-builder-form">
   <section className="wod-classic-picker"><div className="wod-classic-copy"><span className="wod-classic-kicker">BENCHMARK COLLECTION</span><strong>Klassiske WOD-ar</strong><small>The Girls · Hero WODs · originaloppsett</small></div><div className="wod-classic-controls"><select className="wod-classic-select" value={classicChoice} onChange={e=>setClassicChoice(e.target.value)}><option value="">Vel ei klassisk økt …</option><optgroup label="The Girls">{CLASSIC_WODS.filter(x=>x.group==='The Girls').map(x=><option key={x.name} value={x.name}>{x.name}</option>)}</optgroup><optgroup label="Hero WODs">{CLASSIC_WODS.filter(x=>x.group==='Hero WODs').map(x=><option key={x.name} value={x.name}>{x.name}</option>)}</optgroup></select><button type="button" className="secondary-button" disabled={!classicChoice} onClick={loadClassicWod}>Last inn</button></div></section>
+  <div className="wod-performance-templates"><button type="button" onClick={()=>loadPerformanceProgram('golf')}><strong>Golf Performance</strong><small>Rotasjon · hofte · stabilitet · styrke</small></button><button type="button" onClick={()=>loadPerformanceProgram('running')}><strong>Running Performance</strong><small>Bein · legg · hamstring · kjerne</small></button></div>
   <div className="wod-studio-tools"><button type="button" className="primary-button" onClick={randomWod}><Dices size={17}/> Generer tilfeldig WOD</button><button type="button" className="secondary-button" onClick={generateRowingIntervals}><Footprints size={16}/> Generer romaskinintervall</button><button type="button" className="secondary-button" onClick={reset}><Trash2 size={15}/> Forkast økt</button></div>
   <div className="wod-builder-layout">
    <section className="engine-section wod-library"><div className="engine-section-title"><h4>Øvingsbibliotek</h4><span>{filtered.length} av {exercises.length}</span></div>
