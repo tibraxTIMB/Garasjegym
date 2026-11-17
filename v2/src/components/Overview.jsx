@@ -1,48 +1,52 @@
 import {useEffect,useState} from 'react'
-import {Activity,CalendarDays,Dumbbell,LoaderCircle,Trophy,ChevronRight,X} from 'lucide-react'
-
+import {Activity,CalendarDays,ClipboardList,Dumbbell,LoaderCircle,Trophy,ArrowRight} from 'lucide-react'
+import {supabase} from '../lib/supabase.js'
 export const RANK_TITLES = ["Garasjekadett","Kraftknøtt","Schwitzling","Kneipenkrieger","Tattenmaester","Kraftknöchel","Kraftbengel","Kraftritter","Kraftbaron","Kraftfürst","Kraftmeister","Kraftgeneral","Kraftkaiser","Kraftkoloss","Kraftlegende","Kraftheld","Kraftkobold","Kraftochse","Kraftpanzer","Kraftorkan","Kraftmagier","Kraftmonarch","Krafttitan","Kraftüberlord","Kraftweltmeister","Muskelknöchel","Muskelbengel","Muskelritter","Muskelbaron","Muskelfürst","Muskelmeister","Muskelgeneral","Muskelkaiser","Muskelkoloss","Muskellegende","Muskelheld","Muskelkobold","Muskelochse","Muskelpanzer","Muskelorkan","Muskelmagier","Muskelmonarch","Muskeltitan","Muskelüberlord","Muskelweltmeister","Hantelknöchel","Hantelbengel","Hantelritter","Hantelbaron","Hantelfürst","Hantelmeister","Hantelgeneral","Hantelkaiser","Hantelkoloss","Hantellegende","Hantelheld","Hantelkobold","Hantelochse","Hantelpanzer","Hantelorkan","Hantelmagier","Hantelmonarch","Hanteltitan","Hantelüberlord","Hantelweltmeister","Schwitzknöchel","Schwitzbengel","Schwitzritter","Schwitzbaron","Schwitzfürst","Schwitzmeister","Schwitzgeneral","Schwitzkaiser","Schwitzkoloss","Schwitzlegende","Schwitzheld","Schwitzkobold","Schwitzochse","Schwitzpanzer","Schwitzorkan","Schwitzmagier","Schwitzmonarch","Schwitztitan","Schwitzüberlord","Schwitzweltmeister","Eisenknöchel","Eisenbengel","Eisenritter","Eisenbaron","Eisenfürst","Eisenmeister","Eisengeneral","Eisenkaiser","Eisenkoloss","Eisenlegende","Eisenheld","Eisenkobold","Eisenochse","Eisenpanzer","Eisenorkan","Eisenmagier","Eisenmonarch","Eisentitan","Eisenüberlord","Eisenweltmeister","Pumpenknöchel","Pumpenbengel","Pumpenritter","Pumpenbaron","Pumpenfürst","Pumpenmeister","Pumpengeneral","Pumpenkaiser","Pumpenkoloss","Pumpenlegende","Pumpenheld","Pumpenkobold","Pumpenochse","Pumpenpanzer","Pumpenorkan","Pumpenmagier","Pumpenmonarch","Pumpentitan","Pumpenüberlord","Pumpenweltmeister","Bizepsknöchel","Bizepsbengel","Bizepsritter","Bizepsbaron","Bizepsfürst","Bizepsmeister","Bizepsgeneral","Bizepskaiser","Bizepskoloss","Bizepslegende","Bizepsheld","Bizepskobold","Bizepsochse","Bizepspanzer","Bizepsorkan","Bizepsmagier","Bizepsmonarch","Bizepstitan","Bizepsüberlord","Bizepsweltmeister","Garagenknöchel","Garagenbengel","Garagenritter","Garagenbaron","Garagenfürst","Garagenmeister","Garagengeneral","Garagenkaiser","Garagenkoloss","Garagenlegende","Garagenheld","Garagenkobold","Garagenochse","Garagenpanzer","Garagenorkan","Garagenmagier","Garagenmonarch","Garagentitan","Garagenüberlord","Garagenweltmeister","Schnitzelknöchel","Schnitzelbengel","Schnitzelritter","Schnitzelbaron","Schnitzelfürst","Schnitzelmeister","Schnitzelgeneral","Schnitzelkaiser","Schnitzelkoloss","Schnitzellegende","Schnitzelheld","Schnitzelkobold","Schnitzelochse","Schnitzelpanzer","Schnitzelorkan","Schnitzelmagier","Schnitzelmonarch","Schnitzeltitan","Schnitzelüberlord","Schnitzelweltmeister","Knödelknöchel","Knödelbengel","Knödelritter","Knödelbaron","Knödelfürst","Knödelmeister","Knödelgeneral","Knödelkaiser","Knödelkoloss","Knödellegende","Knödelheld","Knödelkobold","Knödelochse","Knödelpanzer","Tattenkaiser Supreme"]
 export const rankForCount = count => { const n=Math.max(0,Number(count)||0); if(n>=600)return {level:200,stars:3,title:RANK_TITLES[199],next:600,gold:true}; if(n===0)return {level:1,stars:0,title:RANK_TITLES[0],next:1,gold:false}; const level=Math.min(200,Math.floor((n-1)/3)+1),stars=((n-1)%3)+1; return {level,stars,title:RANK_TITLES[level-1],next:level*3,gold:false} }
-import {supabase} from '../lib/supabase.js'
 
-export default function Overview({profile,onNavigate}){
- const [logs,setLogs]=useState([]),[prs,setPrs]=useState([]),[totalCount,setTotalCount]=useState(0),[loading,setLoading]=useState(true),[error,setError]=useState(''),[showRanks,setShowRanks]=useState(false)
- useEffect(()=>{
-  let live=true
-  async function refresh(){
-   const [l,p,count]=await Promise.all([
-    supabase.from('workout_logs').select('id,title,workout_date,format,score_rounds,score_reps').order('workout_date',{ascending:false}).limit(100),
-    supabase.from('personal_records').select('id,exercise_name,result,unit,record_date').order('record_date',{ascending:false}),
-    supabase.from('workout_logs').select('id',{count:'exact',head:true})
-   ])
-   if(!live)return
-   if(l.error)setError(l.error.message);else setLogs(l.data||[])
-   if(p.error)setError(p.error.message);else setPrs(p.data||[])
-   if(count.error)setError(count.error.message);else setTotalCount(count.count||0)
-   setLoading(false)
-  }
-  refresh()
-  const timer=setInterval(refresh,60000)
-  return()=>{live=false;clearInterval(timer)}
- },[])
- const today=new Date(),monday=new Date(today);monday.setHours(0,0,0,0);monday.setDate(monday.getDate()-(monday.getDay()+6)%7)
- const week=logs.filter(x=>new Date(x.workout_date+'T12:00:00')>=monday)
- const month=logs.filter(x=>{const d=new Date(x.workout_date+'T12:00:00');return d.getMonth()===today.getMonth()&&d.getFullYear()===today.getFullYear()})
+export default function Overview({profile,onNavigate,onOpenWorkout}){
+ const [logs,setLogs]=useState([]),[prs,setPrs]=useState([]),[assignments,setAssignments]=useState([]),[bookings,setBookings]=useState([]),[totalCount,setTotalCount]=useState(0),[loading,setLoading]=useState(true),[error,setError]=useState('')
+ useEffect(()=>{let live=true;async function load(){
+  const {data:{user}}=await supabase.auth.getUser()
+  if(!user){if(live)setLoading(false);return}
+  const [l,p,count,a,b]=await Promise.all([
+   supabase.from('workout_logs').select('id,title,workout_date,format,score_rounds,score_reps,note').order('workout_date',{ascending:false}).limit(100),
+   supabase.from('personal_records').select('id,exercise_name,result,unit,record_date').order('record_date',{ascending:false}).limit(100),
+   supabase.from('workout_logs').select('id',{count:'exact',head:true}),
+   supabase.from('pt_wod_assignments').select('id,status,due_date,wods(name,format,duration_minutes)').eq('member_id',user.id).in('status',['assigned','in_progress']).order('due_date',{ascending:true,nullsFirst:false}).limit(5),
+   supabase.from('class_bookings').select('id,status,classes(id,title,starts_at,duration_minutes)').eq('member_id',user.id).eq('status','confirmed').limit(20)
+  ])
+  if(!live)return
+  if(l.error)setError(l.error.message);else setLogs(l.data||[])
+  if(p.error)setError(p.error.message);else setPrs(p.data||[])
+  if(!count.error)setTotalCount(count.count||0)
+  if(!a.error)setAssignments((a.data||[]).filter(x=>x.wods))
+  if(!b.error)setBookings((b.data||[]).filter(x=>x.classes).map(x=>x.classes).sort((x,y)=>new Date(x.starts_at)-new Date(y.starts_at)))
+  setLoading(false)
+ }load();const timer=setInterval(load,60000);return()=>{live=false;clearInterval(timer)}},[])
+ const now=new Date(),weekStart=new Date(now);weekStart.setHours(0,0,0,0);weekStart.setDate(weekStart.getDate()-(weekStart.getDay()+6)%7)
+ const weekCount=logs.filter(x=>new Date(x.workout_date+'T12:00:00')>=weekStart).length
  const rank=rankForCount(totalCount)
- const bestLifts=['Back squat','Front squat','Deadlift','Bench press','Strict press','Clean','Snatch','Thruster'].map(name=>{const best=prs.filter(p=>p.exercise_name.toLowerCase()===name.toLowerCase()&&p.unit==='kg').reduce((max,p)=>Math.max(max,Number(p.result)||0),0);return {name,best}}).filter(x=>x.best>0)
- if(loading)return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar treningsstatus …</div>
- return <div className="overview-module">
-  <div className="training-heading"><div><div className="section-kicker">MEDLEMSOVERSIKT</div><h3>Velkomen, {profile.display_name||'medlem'}</h3></div><span className="count-pill">NIVÅ {rank.level}</span></div>
+ const nextBooking=bookings.find(x=>new Date(x.starts_at)>=now)
+ if(loading)return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar oversikta …</div>
+ return <div className="overview-module overview-dashboard">
+  <div className="training-heading"><div><div className="section-kicker">GARASJEGYM · DI TRENING</div><h3>Hei, {profile.display_name||'medlem'}!</h3><p>Dette er det viktigaste som skjer med treninga di no.</p></div><span className="count-pill">NIVÅ {rank.level}</span></div>
   {error&&<div className="auth-error" role="alert">{error}</div>}
-  <div className="overview-stats"><div><Activity size={18}/><strong>{week.length}</strong><span>Økter denne veka</span></div><div><Dumbbell size={18}/><strong>{totalCount}</strong><span>Økter totalt</span></div><div><Trophy size={18}/><strong>{prs.length}</strong><span>Nylege rekordar</span></div></div>
-  <section className="rank-card"><div className="rank-card-link"><div className="rank-card-top"><span>GARASJEKADETT · NIVÅ {rank.level}</span>{rank.gold&&<b>GULL FOR EVIG</b>}</div><strong>{rank.title}</strong><div className="rank-stars">{'★'.repeat(rank.gold?3:rank.stars)}{'☆'.repeat(rank.gold?0:3-rank.stars)}</div><div className="rank-progress"><span style={{width:(rank.gold?100:(rank.stars/3)*100)+'%'}}/></div><small>{totalCount} fullførte økter · {rank.gold?'Livsvarig ærestittel':Math.max(0,rank.next-totalCount)+' økter til neste grad'}</small></div></section>{showRanks&&profile.role==='admin'&&<div className="rank-modal-backdrop" role="presentation" onClick={()=>setShowRanks(false)}><section className="rank-modal" role="dialog" aria-modal="true" aria-label="Alle rangordningar" onClick={e=>e.stopPropagation()}><header><div><span className="section-kicker">GARASJEKADETT</span><h3>Alle rangordningar</h3></div><button type="button" className="icon-button" onClick={()=>setShowRanks(false)} aria-label="Lukk"><X size={18}/></button></header><div className="rank-list">{RANK_TITLES.map((title,i)=><article className={i+1===rank.level?'current':''} key={title}><strong>{i+1}. {title}</strong><span>{i===0?'Startgrad':i===199?'600 økter · Gull for evig':((i)*3+1)+'–'+((i+1)*3)+' økter'}</span><span className="rank-list-stars">{'★'.repeat(i===199?3:3)} </span></article>)}</div></section></div>}
-  <section className="engine-section"><div className="training-heading"><div><div className="section-kicker">SISTE AKTIVITET</div><h3>Treningsloggen</h3></div><button className="secondary-button" onClick={()=>onNavigate('trening')}>Opne trening</button></div>
-   {logs.length?logs.slice(0,6).map(log=><article className="history-card" key={log.id}><div className="history-card-top"><strong>{log.title}</strong><span>{new Date(log.workout_date+'T12:00:00').toLocaleDateString('nn-NO')}</span></div><small>{log.format}{log.score_rounds!=null?' · '+log.score_rounds+' rundar':''}{log.score_reps!=null?' + '+log.score_reps+' reps':''}</small></article>):<div className="empty-state">Du har ikkje registrert ei økt enno. Start med ei fri økt eller ein WOD.</div>}
+  <div className="overview-stats">
+   <button type="button" onClick={()=>onNavigate('mi-side')}><Activity size={18}/><strong>{weekCount}</strong><span>Økter denne veka</span></button>
+   <button type="button" onClick={()=>onNavigate('mi-side')}><Dumbbell size={18}/><strong>{totalCount}</strong><span>Gjennomførte økter</span></button>
+   <button type="button" onClick={()=>onNavigate('mi-side')}><Trophy size={18}/><strong>{prs.length}</strong><span>Personlege rekordar</span></button>
+  </div>
+  <div className="overview-dashboard-grid">
+   <section className="engine-section overview-mini-panel"><div className="engine-section-title"><h4><CalendarDays size={16}/> Påmeldingar</h4><span>{bookings.length}</span></div>{nextBooking?<button type="button" className="overview-mini-item" onClick={()=>onNavigate('timeplan')}><strong>{nextBooking.title}</strong><small>{new Date(nextBooking.starts_at).toLocaleString('nn-NO',{dateStyle:'medium',timeStyle:'short'})}</small><span>Opne timeplan <ArrowRight size={13}/></span></button>:<div className="empty-state">Ingen komande gruppetimar. <button className="text-action" onClick={()=>onNavigate('timeplan')}>Sjå timeplan</button></div>}</section>
+   <section className="engine-section overview-mini-panel"><div className="engine-section-title"><h4><ClipboardList size={16}/> Tildelte økter</h4><span>{assignments.length}</span></div>{assignments.length?assignments.slice(0,3).map(a=><button type="button" className="overview-mini-item" key={a.id} onClick={()=>onNavigate('mi-side')}><strong>{a.wods.name}</strong><small>{a.wods.format} · {a.wods.duration_minutes||'–'} min{a.due_date?' · Frist '+a.due_date:''}</small><span>Opne Mi side <ArrowRight size={13}/></span></button>):<div className="empty-state">Ingen tildelte WOD-ar akkurat no.</div>}</section>
+  </div>
+  <section className="engine-section"><div className="training-heading"><div><div className="section-kicker">SISTE AKTIVITET</div><h3>Gjennomførte økter</h3></div><button className="secondary-button" onClick={()=>onNavigate('mi-side')}>Heile historikken</button></div>
+   {logs.length?logs.slice(0,4).map(log=><button type="button" className="history-card overview-log-button" key={log.id} onClick={()=>onOpenWorkout?.(log)}><div className="history-card-top"><strong>{log.title}</strong><span>{new Date(log.workout_date+'T12:00:00').toLocaleDateString('nn-NO')}</span></div><small>{log.format}{log.score_rounds!=null?' · '+log.score_rounds+' rundar':''}{log.score_reps!=null?' + '+log.score_reps+' reps':''}</small><span className="overview-log-open">Sjå resultat og analyse <ArrowRight size={13}/></span></button>):<div className="empty-state">Du har ikkje registrert ei økt enno. Start trening frå menyen.</div>}
   </section>
-  <section className="engine-section"><div className="training-heading"><div><div className="section-kicker">PERSONLEGE REKORDAR</div><h3>Siste PR</h3></div><button className="secondary-button" onClick={()=>onNavigate('trening')}>Registrer PR</button></div>
-   {prs.length?prs.map(pr=><article className="history-card" key={pr.id}><div className="history-card-top"><strong>{pr.exercise_name}</strong><span>{pr.record_date}</span></div><div className="pr-result">{pr.result} {pr.unit}</div></article>):<div className="empty-state">Registrer den første personlege rekorden din.</div>}
+  <section className="engine-section"><div className="training-heading"><div><div className="section-kicker">PERSONLEGE REKORDAR</div><h3>Siste PR</h3></div><button className="secondary-button" onClick={()=>onNavigate('mi-side')}>Alle PR-ar</button></div>
+   {prs.length?<div className="overview-pr-grid">{prs.slice(0,3).map(pr=><article className="history-card" key={pr.id}><strong>{pr.exercise_name}</strong><div className="pr-result">{pr.result} {pr.unit}</div><small>{pr.record_date}</small></article>)}</div>:<div className="empty-state">Registrer den første personlege rekorden din.</div>}
   </section>
-  <section className="engine-section"><h4>Styrkeprosentar</h4>{bestLifts.length?<div className="percentage-wrap"><table className="percentage-table"><thead><tr><th>Øving</th>{[60,70,75,80,85,90].map(n=><th key={n}>{n}%</th>)}</tr></thead><tbody>{bestLifts.map(x=><tr key={x.name}><td>{x.name} ({x.best} kg)</td>{[60,70,75,80,85,90].map(n=><td key={n}>{Math.round(x.best*n/100*2)/2}</td>)}</tr>)}</tbody></table></div>:<div className="empty-state">Registrer maksløft i PR-fana for å sjå prosenttabellen.</div>}</section>
-  <div className="overview-shortcuts"><button onClick={()=>onNavigate('booking')}><CalendarDays size={17}/> Gruppetimar</button><button onClick={()=>onNavigate('fellesskap')}><Activity size={17}/> Garasjeprat</button></div>
+  <div className="overview-shortcuts"><button onClick={()=>onNavigate('trening')}><Dumbbell size={17}/> Start trening</button><button onClick={()=>onNavigate('timeplan')}><CalendarDays size={17}/> Finn ei time</button><button onClick={()=>onNavigate('mi-side')}><Trophy size={17}/> Mi treningsprofil</button></div>
  </div>
 }
