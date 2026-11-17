@@ -1294,3 +1294,58 @@ footer {
 .spotify-setup-card summary::-webkit-details-marker{display:none}
 .spotify-setup-card summary span{color:var(--orange,#f5a632);font-size:10px;font-weight:750;white-space:nowrap}
 .spotify-setup-card[open] summary{margin-bottom:2px}
+
+
+/* GarasjeGym timer dashboard – compact, centred clock and readable lap column */
+.engine-timer{display:grid;gap:12px;padding:clamp(12px,2vw,22px);min-height:0;background:radial-gradient(ellipse at 50% 0%,#343026 0%,#202322 48%,#171b1d 100%);border:1px solid #55452e;border-radius:16px;overflow:hidden}
+.timer-dashboard{display:grid;grid-template-columns:minmax(115px,.78fr) minmax(240px,1.7fr) minmax(130px,.9fr);gap:clamp(10px,2vw,22px);align-items:stretch;width:100%;min-width:0}
+.timer-side{display:flex;flex-direction:column;gap:10px;min-width:0;padding:8px 0}
+.timer-side-left{align-items:flex-start;text-align:left}
+.timer-side-right{border-left:1px solid #ffffff18;padding-left:clamp(10px,1.5vw,18px)}
+.timer-side-stat{display:grid;gap:3px}
+.timer-side-stat span,.timer-active-exercise span,.timer-round-total span{color:#9da6a1;font-size:9px;font-weight:850;letter-spacing:1px}
+.timer-side-stat b{color:#f4f1e9;font-size:clamp(14px,2vw,19px);font-variant-numeric:tabular-nums}
+.timer-active-exercise{display:grid;gap:4px;margin-top:auto;padding-top:9px;border-top:1px solid #ffffff18}
+.timer-active-exercise b{font-size:11px;line-height:1.35;color:#e7e8e2;overflow-wrap:anywhere}
+.timer-center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-width:0;text-align:center;padding:8px 0}
+.timer-center .timer-phase{padding:5px 12px;border:1px solid #5a4a30;border-radius:999px;background:#30291f;color:#f2b75d;font-size:10px;font-weight:900;letter-spacing:1.5px}
+.timer-main-clock{display:block;color:#fff;font-size:clamp(58px,10vw,100px);line-height:1;font-weight:900;letter-spacing:-3px;font-variant-numeric:tabular-nums;text-align:center}
+.timer-center>.timer-round-label{margin-top:-1px;text-align:center}
+.timer-round-total{display:grid;justify-items:center;gap:0;margin:2px 0 4px}
+.timer-round-total b{font-size:30px;line-height:1.1;color:#f4b45a;font-variant-numeric:tabular-nums}
+.timer-actions{width:100%;display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+.timer-actions .secondary-button{min-height:35px;padding:0 10px;font-size:10px}
+.timer-lap-button{min-height:40px;padding:0 15px;border:0;border-radius:9px;background:linear-gradient(135deg,#f3ad49,#e88b2b);color:#1c1c19;font-size:11px;font-weight:950;letter-spacing:.5px;cursor:pointer}
+.timer-lap-button:disabled{opacity:.4;cursor:not-allowed}
+.timer-lap-heading{display:flex;justify-content:space-between;align-items:center;gap:5px;color:#aeb7b1;font-size:9px;font-weight:900;letter-spacing:1px}
+.timer-lap-heading b{display:grid;place-items:center;min-width:23px;height:23px;border-radius:50%;background:#343a35;color:#f2b45a;font-size:11px}
+.timer-lap-list{display:grid;gap:5px;max-height:210px;overflow:auto;margin:0;padding:0;list-style:none}
+.timer-lap-list li{display:flex;justify-content:space-between;gap:7px;padding:7px 8px;border:1px solid #ffffff12;border-radius:7px;background:#111716;font-size:10px}
+.timer-lap-list li span{color:#aab3ad}.timer-lap-list li b{color:#fff;font-variant-numeric:tabular-nums}
+.timer-no-laps{margin:0;color:#8e9992;font-size:10px;line-height:1.5}
+.timer-dashboard+.timer-music-stack,.engine-timer>.timer-music-stack{margin:0;max-width:100%}
+.engine-timer>.timer-music-stack .personal-spotify-player.compact{padding:7px 9px;gap:5px;background:#151b18;border-color:#303e34}
+.engine-timer>.timer-music-stack .personal-spotify-now{padding:4px 6px}
+.engine-timer>.timer-music-stack .personal-spotify-art{width:30px;height:30px;flex-basis:30px}
+.engine-timer>.timer-music-stack .personal-spotify-meta strong{font-size:10px}
+.engine-timer>.timer-music-stack .personal-spotify-controls button{width:27px;height:27px}
+.engine-timer>.timer-music-stack .personal-spotify-controls .spotify-play-button{width:31px;height:31px}
+.engine-timer>small{font-size:9px;text-align:center;color:#8f9992}
+@media(max-width:700px){
+ .timer-dashboard{grid-template-columns:minmax(78px,.62fr) minmax(150px,1.5fr) minmax(88px,.75fr);gap:8px}
+ .timer-side-right{padding-left:8px}
+ .timer-main-clock{font-size:clamp(43px,10vw,72px);letter-spacing:-2px}
+ .timer-side-stat b{font-size:13px}
+ .timer-lap-list li{padding:6px 5px;font-size:9px}
+ .timer-actions{gap:5px}
+ .timer-actions .secondary-button{padding:0 7px;font-size:9px}
+}
+@media(max-width:480px){
+ .timer-dashboard{grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:9px}
+ .timer-center{grid-column:1/-1;grid-row:1;min-height:155px}
+ .timer-side-left{grid-column:1;grid-row:2;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start}
+ .timer-side-right{grid-column:2;grid-row:2;border-left:1px solid #ffffff18;padding-left:9px}
+ .timer-main-clock{font-size:clamp(64px,18vw,86px)}
+ .timer-lap-list{max-height:145px}
+ .timer-active-exercise{grid-column:1/-1}
+}
