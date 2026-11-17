@@ -34,6 +34,8 @@ export function SpotifyProvider({ memberId, children }) {
   const [status,setStatus] = useState('Ikkje tilkopla')
   const [busy,setBusy] = useState(false)
   const playerRef = useRef(null)
+  const tokenRef = useRef(token)
+  tokenRef.current = token
   const stateKey = storageKey(memberId)
 
   const api = useCallback(async (path, method='GET', body) => {
@@ -87,7 +89,7 @@ export function SpotifyProvider({ memberId, children }) {
     })
     window.onSpotifyWebPlaybackSDKReady=()=>{}
     load().then(()=>new Promise((resolve,reject)=>{
-      const sdk=new window.Spotify.Player({name:'GarasjeGym',getOAuthToken:cb=>cb(token),volume:0.65})
+      const sdk=new window.Spotify.Player({name:'GarasjeGym',getOAuthToken:cb=>cb(tokenRef.current),volume:0.65})
       sdk.addListener('ready',({device_id})=>{if(!cancelled){setDeviceId(device_id);setStatus('Spotify-spelar klar')}resolve(sdk)})
       sdk.addListener('not_ready',()=>{if(!cancelled){setDeviceId('');setStatus('Spotify-spelar fråkopla')}})
       sdk.addListener('player_state_changed',s=>{if(!s)return;setTrack(s.track_window.current_track);setPlaying(!s.paused);setPosition(s.position);setDuration(s.duration)})
@@ -97,7 +99,7 @@ export function SpotifyProvider({ memberId, children }) {
       sdk.connect().then(ok=>{if(!ok)reject(new Error('Kunne ikkje starta Spotify-spelaren.'))})
     })).then(sdk=>{if(cancelled){sdk.disconnect();return}playerRef.current=sdk;setPlayer(sdk)}).catch(e=>setStatus(e.message||'Spotify-spelaren kunne ikkje startast.'))
     return ()=>{cancelled=true}
-  },[token])
+  },[Boolean(token)])
 
   useEffect(()=>{
     if(!token||!expiresAt)return
