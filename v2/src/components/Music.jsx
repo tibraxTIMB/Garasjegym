@@ -1,15 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { Disc3, Headphones, Music2, RefreshCw, ShieldCheck, Play, Pause, SkipBack, SkipForward, LogIn, LogOut, Volume2, ExternalLink } from 'lucide-react'
-import { supabase } from '../lib/supabase.js'
 
 const MusicContext = createContext(null)
-const presets = [
-  { id:'hard-rock', label:'Hard rock', emoji:'🎸', description:'Klassisk hard rock og tung energi' },
-  { id:'balkan', label:'Balkan turbo', emoji:'🪗', description:'Balkan pop-folk og brass' },
-  { id:'indie-90s', label:'90s indie', emoji:'🎧', description:'Britpop og alternativ rock' },
-  { id:'dance-90s', label:'90s dance & trance', emoji:'🪩', description:'Eurodance, rave og trance' },
-  { id:'relax', label:'Relax', emoji:'🌙', description:'Ambient, chillout og akustisk' },
-]
 const TOKEN_KEY_PREFIX = 'garasjegym:spotify-token:'
 const VERIFIER_KEY = 'garasjegym:spotify-verifier'
 const STATE_KEY = 'garasjegym:spotify-state'
@@ -47,11 +39,6 @@ function trackFromPlayback(data) {
 }
 
 export function MusicProvider({ children, memberId = null }) {
-  const [nowPlaying, setNowPlaying] = useState(null)
-  const [configured, setConfigured] = useState(false)
-  const [staff, setStaff] = useState(false)
-  const [status, setStatus] = useState('Koplar til felles musikk …')
-  const [loading, setLoading] = useState(false)
   const clientId = getClientId()
   const [spotifyToken, setSpotifyToken] = useState(() => readToken(memberId))
   const [spotifyProfile, setSpotifyProfile] = useState(null)
@@ -64,21 +51,6 @@ export function MusicProvider({ children, memberId = null }) {
   const [spotifyBusy, setSpotifyBusy] = useState(false)
   const [spotifyError, setSpotifyError] = useState('')
   const [selectedPlaylist, setSelectedPlaylist] = useState('')
-
-  const refresh = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true)
-    try {
-      const { data, error } = await supabase.functions.invoke('garasjegym-music', { body: { action: 'now-playing' } })
-      if (error) throw error
-      if (data?.error) throw new Error(data.error)
-      setConfigured(Boolean(data?.configured))
-      setStaff(Boolean(data?.staff))
-      setNowPlaying(data?.track || null)
-      setStatus(data?.configured ? (data.track ? 'Spelar no' : 'Ingen låt rapportert frå lydsona') : (data?.message || 'Soundtrack er ikkje konfigurert'))
-    } catch (error) {
-      setStatus(error.message || 'Kunne ikkje hente musikkstatus')
-    } finally { setLoading(false) }
-  }, [])
 
   const spotifyRequest = useCallback(async (path, options = {}, retry = true) => {
     let token = readToken(memberId)
@@ -129,12 +101,6 @@ export function MusicProvider({ children, memberId = null }) {
       setSpotifyStatus('Kunne ikkje hente Spotify-data')
     }
   }, [spotifyRequest])
-
-  useEffect(() => {
-    refresh(true)
-    const id = window.setInterval(() => refresh(true), 30000)
-    return () => window.clearInterval(id)
-  }, [refresh])
 
   useEffect(() => {
     setSpotifyToken(readToken(memberId))
@@ -241,12 +207,11 @@ export function MusicProvider({ children, memberId = null }) {
   }, [spotifyDeviceId, spotifyRequest])
 
   const value = useMemo(() => ({
-    nowPlaying, configured, staff, status, loading, refresh,
     clientId, spotifyConfigured:Boolean(clientId), spotifyConnected:Boolean(spotifyToken?.access_token), spotifyProfile,
     spotifyTrack, spotifyPlaying, spotifyDevices, spotifyDeviceId, setSpotifyDeviceId,
     spotifyPlaylists, spotifyStatus, spotifyBusy, spotifyError, setSpotifyError,
     connectSpotify, disconnectSpotify, spotifyAction, playPlaylist, selectedPlaylist,
-  }), [nowPlaying, configured, staff, status, loading, refresh, clientId, spotifyToken, spotifyProfile, spotifyTrack, spotifyPlaying, spotifyDevices, spotifyDeviceId, spotifyPlaylists, spotifyStatus, spotifyBusy, spotifyError, connectSpotify, disconnectSpotify, spotifyAction, playPlaylist, selectedPlaylist])
+  }), [clientId, spotifyToken, spotifyProfile, spotifyTrack, spotifyPlaying, spotifyDevices, spotifyDeviceId, spotifyPlaylists, spotifyStatus, spotifyBusy, spotifyError, connectSpotify, disconnectSpotify, spotifyAction, playPlaylist, selectedPlaylist])
   return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>
 }
 
@@ -287,28 +252,16 @@ function PersonalSpotifyPlayer({ compact = false }) {
   </section>
 }
 
-export function Music({ isStaff = false }) {
+export function Music() {
   const music = useMusic()
-  const canControl = isStaff && music?.staff
   return <div className="music-page">
     <div className="music-heading">
       <div className="music-heading-icon"><Headphones size={22}/></div>
-      <div><span className="section-kicker">GARASJEGYM · DIN MUSIKK</span><h2>Musikk</h2><p>Din personlege Spotify-konto – privat og separat frå fellesmusikken.</p></div>
+      <div><span className="section-kicker">GARASJEGYM · DIN MUSIKK</span><h2>Musikk</h2><p>Din personlege Spotify-konto – privat og separat.</p></div>
     </div>
     <PersonalSpotifyPlayer/>
     {!music?.spotifyConfigured && <div className="music-notice warning">Spotify-integrasjonen er ikkje aktivert av GarasjeGym-administrator enno. Når han er konfigurert, kan kvar medlem kople til sin eigen private konto.</div>}
     {music?.spotifyConfigured && <p className="music-footnote">Spotify blir konfigurert éin gong sentralt for heile GarasjeGym. Kvar medlem loggar inn med sin eigen konto. Development Mode kan avgrense talet på autoriserte brukarar.</p>}
-    <section className="music-connect-card">
-      <div><strong>{music?.configured ? 'Felles Soundtrack er kopla til' : 'Felles Soundtrack er ikkje konfigurert'}</strong><p>{music?.status || 'Hentar status …'}</p></div>
-      <button className="secondary-button" onClick={() => music?.refresh()} disabled={music?.loading}><RefreshCw size={15}/> Oppdater</button>
-    </section>
-    <section className="music-player-card">
-      <div className="music-cover">{music?.nowPlaying?.imageUrl ? <img src={music.nowPlaying.imageUrl} alt="Albumomslag"/> : <Disc3 size={32}/>}</div>
-      <div className="music-track-meta"><strong>{music?.nowPlaying?.name || 'Ingen felles låt vald'}</strong><span>{music?.nowPlaying?.artists?.join(', ') || music?.status}</span>{music?.nowPlaying?.album && <small>{music.nowPlaying.album}</small>}</div>
-      <div className="music-live-tag"><span/> FELLES LYD</div>
-    </section>
-    {canControl && <section className="music-admin-panel"><div className="music-section-title"><div><span className="section-kicker">BERRE ADMIN / MANAGER</span><h3>Felles musikk</h3></div><ShieldCheck size={18}/></div><p>Felles Soundtrack blir halde separat frå kvar brukar sin private Spotify-konto.</p><div className="music-presets">{presets.map(item => <div className="music-preset unavailable" key={item.id}><span>{item.emoji}</span><strong>{item.label}</strong><small>{item.description}</small><em>Vent på speleliste-ID</em></div>)}</div></section>}
-    {!music?.configured && <div className="music-notice warning">Soundtrack er valfri fellesmusikk. Privat Spotify fungerer uavhengig av denne koplinga.</div>}
     <p className="music-footnote">Privat Spotify-status, spelelister og kontrollar blir ikkje delte med andre medlemmer.</p>
   </div>
 }
