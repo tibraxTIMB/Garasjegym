@@ -91,7 +91,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
     return () => window.clearInterval(id)
   }, [running])
 
-  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isCountdown ? laps.length : round, phase, running }) }, [elapsed, laps, phase, running, onSnapshot])
+  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isCountdown ? laps.length : round, phase, running }) }, [elapsed, laps, round, phase, running, isCountdown, onSnapshot])
 
   useEffect(() => {
     if (!running) return
@@ -126,7 +126,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
   const showTimeCap = (isForTime || isDeathBy) && capDuration > 0
   const roundsShown = isTimedInterval ? Math.min(currentRound, Number(rounds)) : currentRound
   const completedRounds = isAmrap ? laps.length : round
-  const lapAction = () => { setLaps(value => [...value, elapsed]); setRound(value => value + 1); cue(1200, 0.1) }
+  const lapAction = () => { setLaps(value => [...value, Math.max(0, elapsed - value.reduce((sum, lap) => sum + lap, 0))]); setRound(value => value + 1); cue(1200, 0.1) }
   return <div className={focused ? 'engine-timer timer-focused' : 'engine-timer'}>
     <div className="timer-caption"><Clock3 size={15}/> {format.toUpperCase()}</div>
     <div className="timer-dashboard">
