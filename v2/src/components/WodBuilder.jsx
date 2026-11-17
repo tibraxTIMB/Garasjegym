@@ -2,7 +2,7 @@ import {useEffect,useMemo,useState} from 'react'
 import {Plus,Search,Trash2,ArrowUp,ArrowDown,Save,LoaderCircle,WandSparkles,Dices,Info,Footprints,Copy} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 
-const categories=['Alle','Styrke','Mobilitet','Kondisjon','Kjerne','Golf','Rehab / fysio']
+const categories=['Alle','Styrke','Mobilitet','Kondisjon','Kjerne','Golf','Rehab']
 const areas=['Alle område','Fullkropp','Bein','Mage','Rygg','Overkropp','Hofte','Skulder','Kne','Nakke']
 const formats=[
  {group:'Metcon',items:['AMRAP','For Time','Chipper','Couplet','Triplet','Ladder','Death By']},
@@ -122,11 +122,11 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
   setLoading(false)
  }
  const filtered=useMemo(()=>[...exercises,...GOLF_EXERCISES,...REHAB_EXERCISES].filter(x=>{
-  const matchesCategory=category==='Alle'||x.category===category
+  const matchesCategory=category==='Alle'||(category==='Rehab'?(x.is_rehab||x.category==='Rehab / fysio'):x.category===category)
   const searchable=[x.name,x.category,x.equipment,x.body_area,x.description].filter(Boolean).join(' ').toLowerCase()
   const matchesSearch=!search||searchable.includes(search.toLowerCase())
   const tags=(x.body_area||'').toLowerCase(),needle=area==='Mage'?'kjerne':area.toLowerCase()
-  return matchesCategory&&matchesSearch&&(area==='Alle område'||tags.includes(needle))
+  return matchesCategory&&matchesSearch&&(category==='Rehab'||area==='Alle område'||tags.includes(needle))
  }),[exercises,category,area,search])
  const showSets=strengthLike(format)||(format==='Eigen økt'&&customUseSets)
  const isInterval=intervalFormats.includes(format)
@@ -250,8 +250,8 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
    <section className="engine-section wod-library"><div className="engine-section-title"><h4>Øvingsbibliotek</h4><span>{filtered.length} av {exercises.length}</span></div>
     <div className="wod-search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Søk øving, kroppsdel eller utstyr …"/></div>
     <div className="wod-category-filter">{categories.map(x=><button type="button" key={x} className={category===x?'selected':''} onClick={()=>setCategory(x)}>{x}</button>)}</div>
-    <div className="wod-area-filter"><span>KROPPSOMRÅDE</span>{areas.map(x=><button type="button" key={x} className={area===x?'selected':''} onClick={()=>setArea(x)}>{x}</button>)}</div>
-    {loading?<div className="training-state"><LoaderCircle className="spin"/> Hentar øvingar …</div>:filtered.length?<div className="wod-exercise-grid">{filtered.map(ex=><article className={"wod-exercise-card wod-category-"+categoryTone(ex.category)} key={ex.id}><div className="wod-exercise-info"><strong>{ex.name}</strong>{ex.video_url?<a href={ex.video_url} target="_blank" rel="noreferrer">Sjå video</a>:<small className="no-video">Video kjem</small>}<small>{ex.category}{ex.golf_focus?' · '+ex.golf_focus:''} · {ex.body_area||'Fullkropp'}{ex.equipment?' · '+ex.equipment:''}</small>{ex.description&&<p>{ex.description}</p>}{ex.is_rehab&&<em><Info size={12}/> Tilpass etter toleranse – ved skade eller vedvarande smerte, få råd frå fysioterapeut</em>}</div><button className="wod-add-button" type="button" onClick={()=>add(ex)}><Plus size={16}/> Legg til</button></article>)}</div>:<div className="empty-state">Ingen øvingar treff søket.</div>}
+    {category!=='Rehab'&&<div className="wod-area-filter"><span>KROPPSOMRÅDE</span>{areas.map(x=><button type="button" key={x} className={area===x?'selected':''} onClick={()=>setArea(x)}>{x}</button>)}</div>}
+    {loading?<div className="training-state"><LoaderCircle className="spin"/> Hentar øvingar …</div>:filtered.length?<div className="wod-exercise-grid">{filtered.map(ex=><article className={"wod-exercise-card wod-category-"+categoryTone(ex.category)} key={ex.id}><div className="wod-exercise-info"><strong>{ex.name}</strong>{ex.video_url?<a href={ex.video_url} target="_blank" rel="noreferrer">Sjå video</a>:<small className="no-video">Video kjem</small>}<small>{ex.category}{ex.golf_focus?' · '+ex.golf_focus:''} · {ex.body_area||'Fullkropp'}{ex.equipment?' · '+ex.equipment:''}</small>{ex.description&&<p className={ex.is_rehab?'wod-rehab-description':''}>{ex.description}</p>}{ex.is_rehab&&<em><Info size={12}/> Tilpass etter toleranse – ved skade eller vedvarande smerte, få råd frå fysioterapeut</em>}</div><button className="wod-add-button" type="button" onClick={()=>add(ex)}><Plus size={16}/> Legg til</button></article>)}</div>:<div className="empty-state">Ingen øvingar treff søket.</div>}
    </section>
    <aside className="engine-section wod-composer">
     <div className="engine-section-title"><h4>Programmer økta</h4><span>{selected.length} øvingar</span></div>
