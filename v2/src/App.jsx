@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import {
-  Activity,
   CalendarDays,
   Coffee,
   Music2,
@@ -8,11 +7,8 @@ import {
   LayoutDashboard,
   LogOut,
   ShieldCheck,
-  Users,
-  UserRound,
   Settings,
   Wrench,
-  WandSparkles,
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from './lib/supabase.js'
 import { fetchMemberProfile, isStaff } from './lib/auth.js'
@@ -20,27 +16,25 @@ import Training from './components/Training.jsx'
 import Booking from './components/Booking.jsx'
 import PT from './components/PT.jsx'
 import Community from './components/Community.jsx'
-import Challenges from './components/Challenges.jsx'
 import CoffeeBar from './components/CoffeeBar.jsx'
 import Admin from './components/Admin.jsx'
 import Overview from './components/Overview.jsx'
 import Notifications from './components/Notifications.jsx'
-import WodBuilder from './components/WodBuilder.jsx'
-import WodLibrary from './components/WodLibrary.jsx'
+import WodHub from './components/WodHub.jsx'
+import ScheduleHub from './components/ScheduleHub.jsx'
+import MyPage from './components/MyPage.jsx'
 import CalendarAdmin from './components/CalendarAdmin.jsx'
-import MyTraining from './components/MyTraining.jsx'
 import { Music, MusicProvider } from './components/Music.jsx'
 
 const sections = [
   { id: 'oversikt', label: 'Oversikt', icon: LayoutDashboard, note: 'Dashboard og treningsstatus' },
   { id: 'trening', label: 'Trening', icon: Dumbbell, note: 'WOD, fri trening, logg og PR' },
-  { id: 'mi-trening', label: 'Mi trening', icon: CalendarDays, note: 'PT, tildelte WOD-ar og gruppetimar' },
-  { id: 'booking', label: 'Booking', icon: CalendarDays, note: 'Gruppetimar' },
-  { id: 'pt', label: 'PT-studio', icon: UserRound, note: 'Personleg trening og PT-førespurnader' },
+  { id: 'timeplan', label: 'Timeplan og booking', icon: CalendarDays, note: 'Gruppetimar og PT-avtalar' },
+  { id: 'wod', label: 'WOD', icon: Dumbbell, note: 'WOD-bibliotek og programmering' },
   { id: 'fellesskap', label: 'Fellesskap', icon: Users, note: 'Garasjeprat' },
-  { id: 'utfordringar', label: 'Utfordringar', icon: Activity, note: 'Felles mål og framgang' },
   { id: 'kaffi', label: 'Kaffebar', icon: Coffee, note: 'Meny og bestillingar' },
   { id: 'musikk', label: 'Musikk', icon: Music2, note: 'Personleg Spotify' },
+  { id: 'mi-side', label: 'Mi side', icon: UserRound, note: 'Profil, treningshistorikk og PR' },
 ]
 
 function AuthScreen({ recovery = false, onRecoveryComplete }) {
@@ -156,6 +150,7 @@ export default function App() {
   const [launchWodId, setLaunchWodId] = useState(null)
   const [launchClassSessionId, setLaunchClassSessionId] = useState(null)
   const [focusPTRequestId, setFocusPTRequestId] = useState(null)
+  const [selectedWorkout, setSelectedWorkout] = useState(null)
 
   useEffect(() => {
     if (!supabase) return
@@ -222,7 +217,7 @@ export default function App() {
   }
 
   const visibleSections = isStaff(profile)
-    ? [...sections, { id: 'wod-studio', label: 'WOD-generator', icon: WandSparkles, note: 'Bygg og publiser WOD-ar' }, { id: 'wod-library', label: 'WOD-bibliotek', icon: Dumbbell, note: 'Alle oppretta WOD-ar' }, { id: 'calendar', label: 'Kalender', icon: CalendarDays, note: 'PT, gruppetimar og avtalar' }, { id: 'admin', label: 'Admin', icon: Settings, note: 'Medlemmer og drift' }]
+    ? [...sections, { id: 'calendar', label: 'Kalender', icon: CalendarDays, note: 'PT, gruppetimar og avtalar' }, { id: 'admin', label: 'Administrasjon', icon: Settings, note: 'Medlemmer og drift' }]
     : sections
   const current = visibleSections.find((item) => item.id === active) || visibleSections[0]
   const Icon = current.icon
@@ -259,7 +254,7 @@ export default function App() {
           <h1>Bygd for å <em>prestera.</em></h1>
           <p>Ein felles plattform for trening, booking og fellesskap.</p>
         </section>
-        {active === 'oversikt' ? <section className="content-card training-content"><Overview profile={profile} onNavigate={setActive} /></section> : active === 'trening' ? <section className="content-card training-content"><Training launchWodId={launchWodId} launchClassSessionId={launchClassSessionId} onLaunchConsumed={() => { setLaunchWodId(null); setLaunchClassSessionId(null) }} /></section> : active === 'mi-trening' ? <section className="content-card training-content"><MyTraining onLaunchWod={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'booking' ? <section className="content-card training-content"><Booking profile={profile} onLogResult={(wodId, sessionId) => { setLaunchWodId(wodId); setLaunchClassSessionId(sessionId); setActive('trening') }} /></section> : active === 'pt' ? <section className="content-card training-content"><PT profile={profile} focusRequestId={focusPTRequestId} onFocusConsumed={()=>setFocusPTRequestId(null)} onLaunchWorkout={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community profile={profile} /></section> : active === 'utfordringar' ? <section className="content-card training-content"><Challenges profile={profile} /></section> : active === 'kaffi' ? <section className="content-card training-content"><CoffeeBar profile={profile} /></section> : active === 'musikk' ? <section className="content-card training-content"><Music /></section> : active === 'wod-studio' ? <section className="content-card training-content"><WodBuilder /></section> : active === 'wod-library' ? <section className="content-card training-content"><WodLibrary onLaunchWod={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'calendar' ? <section className="content-card training-content"><CalendarAdmin onNavigate={setActive} /></section> : active === 'admin' ? <section className="content-card training-content"><Admin profile={profile} /></section> : <section className="content-card">
+        {active === 'oversikt' ? <section className="content-card training-content"><Overview profile={profile} onNavigate={setActive} /></section> : active === 'trening' ? <section className="content-card training-content workout-entry"><div className="workout-mode-intro"><span className="section-kicker">WORKOUT MODE</span><h2>Trening</h2><p>Vel økt og gå rett inn i treningsverktøyet med timer, rundar og resultatregistrering.</p></div><Training launchWodId={launchWodId} launchClassSessionId={launchClassSessionId} onLaunchConsumed={() => { setLaunchWodId(null); setLaunchClassSessionId(null) }} /></section> : active === 'timeplan' ? <section className="content-card training-content"><ScheduleHub profile={profile} focusRequestId={focusPTRequestId} onFocusConsumed={()=>setFocusPTRequestId(null)} onLogResult={(wodId,sessionId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(sessionId);setActive('trening')}} onLaunchWorkout={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'wod' ? <section className="content-card training-content"><WodHub staff={isStaff(profile)} onLaunchWod={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community profile={profile} /></section> : active === 'kaffi' ? <section className="content-card training-content"><CoffeeBar profile={profile} /></section> : active === 'musikk' ? <section className="content-card training-content"><Music /></section> : active === 'mi-side' ? <section className="content-card training-content"><MyPage profile={profile} onOpenWorkout={setSelectedWorkout} /></section> : active === 'calendar' ? <section className="content-card training-content"><CalendarAdmin onNavigate={(target)=>setActive(target==='pt'||target==='booking'?'timeplan':target)} /></section> : active === 'admin' ? <section className="content-card training-content"><Admin profile={profile} /></section> : <section className="content-card">
           <div className="section-icon"><Icon size={22} /></div>
           <div className="section-kicker">MODUL · {active.toUpperCase()}</div>
           <h2>{current.label}</h2>
@@ -269,7 +264,8 @@ export default function App() {
             <span>Dette er første funksjonelle steg i 2.0. Modulane blir bygde ut stegvis. Eksisterande 1.8.16 og produksjonsdata er ikkje endra.</span>
           </div>
         </section>}
-        <footer>GARASJEGYM 2.0 · STURMKOPF <span>UTVIKLINGSVERSJON</span></footer>
+        {selectedWorkout&&<div className="modal-backdrop" role="presentation" onClick={()=>setSelectedWorkout(null)}><section className="booking-create workout-detail-modal" role="dialog" aria-modal="true" aria-label="Treningsresultat" onClick={e=>e.stopPropagation()}><div className="training-heading"><div><span className="section-kicker">GJENNOMFØRT ØKT</span><h3>{selectedWorkout.title||'Treningsøkt'}</h3><p>{selectedWorkout.workout_date||''}</p></div><button className="secondary-button" onClick={()=>setSelectedWorkout(null)}>Lukk</button></div><div className="workout-detail-score"><strong>{selectedWorkout.score_rounds??'–'}</strong><span>Rundar</span><strong>{selectedWorkout.score_reps??'–'}</strong><span>Ekstra reps</span></div><p>{selectedWorkout.format||'Trening'}</p><p>{selectedWorkout.note||'Ingen notat registrert.'}</p><small>Resultatvisinga brukar data som er lagra på økta. Me kan byggje ut djupare analyse når fleire detaljar er registrerte.</small></section></div>}
+        <footer>GARASJEGYM 2.0 · STURMKOPF <span>VERSJON GO</span></footer>
       </main>
     </div>
     </MusicProvider>
