@@ -31,7 +31,6 @@ import WodHub from './components/WodHub.jsx'
 import ScheduleHub from './components/ScheduleHub.jsx'
 import MyPage from './components/MyPage.jsx'
 import MyTraining from './components/MyTraining.jsx'
-import CalendarAdmin from './components/CalendarAdmin.jsx'
 import { Music, MusicProvider } from './components/Music.jsx'
 
 const sections = [
