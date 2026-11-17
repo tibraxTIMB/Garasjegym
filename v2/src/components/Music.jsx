@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { Disc3, Headphones, Music2, RefreshCw, ShieldCheck, Play, Pause, SkipBack, SkipForward, LogIn, LogOut, Volume2, ExternalLink } from 'lucide-react'
+import { Disc3, Headphones, Music2, RefreshCw, Play, Pause, SkipBack, SkipForward, LogIn, LogOut, ExternalLink } from 'lucide-react'
 
 const MusicContext = createContext(null)
 const TOKEN_KEY_PREFIX = 'garasjegym:spotify-token:'
