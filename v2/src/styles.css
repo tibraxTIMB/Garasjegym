@@ -1739,3 +1739,8 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .timer-focused .timer-main-clock{font-size:clamp(76px,13vw,150px)}
 .timer-focused .timer-side-stat b{font-size:clamp(22px,3vw,32px)}
 @media(max-width:600px){.timer-station-grid{grid-template-columns:1fr}.timer-station-card{padding:14px}.timer-station-card>strong{font-size:20px}.timer-focused .timer-station-grid{grid-template-columns:1fr}}
+
+/* Whole group-class card opens the details panel. */
+.class-card-clickable{cursor:pointer;transition:border-color .16s ease,background .16s ease}
+.class-card-clickable:hover,.class-card-clickable:focus-visible{border-color:var(--orange);background:#1b1e20;outline:none}
+.class-card-clickable:focus-visible{box-shadow:0 0 0 2px rgba(226,145,48,.28)}
