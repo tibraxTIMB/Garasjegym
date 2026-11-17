@@ -1389,3 +1389,16 @@ footer {
  .timer-dashboard-reflow .timer-lap-list{grid-template-columns:1fr;max-height:110px}
  .timer-music-footer{width:min(100%,320px)}
 }
+
+
+/* Larger primary timer digits on tablet and desktop */
+.timer-dashboard-reflow .timer-main-clock{font-size:clamp(96px,17vw,184px);letter-spacing:-7px}
+.timer-dashboard-reflow .timer-side-stat b{font-size:clamp(17px,2.4vw,25px)}
+.timer-dashboard-reflow .timer-round-total b{font-size:clamp(34px,4.5vw,48px)}
+@media(max-width:700px){
+ .timer-dashboard-reflow .timer-main-clock{font-size:clamp(88px,18vw,142px);letter-spacing:-5px}
+}
+@media(max-width:520px){
+ .timer-dashboard-reflow .timer-main-clock{font-size:clamp(78px,21vw,116px);letter-spacing:-4px}
+ .timer-dashboard-reflow .timer-side-stat b{font-size:clamp(16px,4vw,21px)}
+}
