@@ -21,17 +21,17 @@ export default function PT({profile,focusRequestId,onFocusConsumed}){
  const [title,setTitle]=useState('Personleg trening'),[starts,setStarts]=useState(''),[duration,setDuration]=useState('60'),[capacity,setCapacity]=useState('1'),[price,setPrice]=useState('')
  const [goal,setGoal]=useState(''),[preferred,setPreferred]=useState(''),[alternative,setAlternative]=useState(''),[availability,setAvailability]=useState('')
  const [members,setMembers]=useState([]),[messages,setMessages]=useState([]),[notes,setNotes]=useState([]),[plans,setPlans]=useState({}),[exerciseLibrary,setExerciseLibrary]=useState([]),[planDrafts,setPlanDrafts]=useState({}),[wodLibrary,setWodLibrary]=useState([]),[prescribeClient,setPrescribeClient]=useState(''),[prescribeWod,setPrescribeWod]=useState(''),[prescribeAt,setPrescribeAt]=useState('')
- const [messageClient,setMessageClient]=useState(''),[messageText,setMessageText]=useState('')
- const [noteClient,setNoteClient]=useState(''),[noteGoals,setNoteGoals]=useState(''),[noteText,setNoteText]=useState(''),[followUp,setFollowUp]=useState(''),[requestDrafts,setRequestDrafts]=useState({})
+ const [messageClient,setMessageClient]=useState(''),[messageText,setMessageText]=useState(''),[showRequestArchive,setShowRequestArchive]=useState(false)
+ const [noteClient,setNoteClient]=useState(''),[noteGoals,setNoteGoals]=useState(''),[noteText,setNoteText]=useState(''),[followUp,setFollowUp]=useState(''),[requestDrafts,setRequestDrafts]=useState({}),[noteType,setNoteType]=useState('progress')
  async function load(silent=false){
   if(!silent)setLoading(true);setError('')
   const {data:{user},error:authError}=await supabase.auth.getUser()
   if(authError||!user){setError('Logg inn på nytt.');setLoading(false);return}
   const [s,b,r,m,p,n,pe,ex,wd]=await Promise.all([
-   supabase.from('pt_sessions').select('id,title,client_id,starts_at,duration_minutes,capacity,price,status,prep,message,custom_workout,wod_ids').in('status',staff?['draft','published','planned','completed']:['published','planned']).gte('starts_at',new Date(Date.now()-86400000).toISOString()).order('starts_at').limit(50).then(result=>staff?result:{...result,data:(result.data||[]).filter(row=>row.status==='published'||row.client_id===user.id)}),
+   supabase.from('pt_sessions').select('id,title,client_id,starts_at,duration_minutes,capacity,price,status,prep,message,custom_workout,wod_ids').in('status',staff?['draft','published','planned','completed']:['published','planned']).order('starts_at',{ascending:false}).limit(100).then(result=>staff?result:{...result,data:(result.data||[]).filter(row=>row.status==='published'||row.client_id===user.id)}),
    supabase.from('pt_bookings').select('id,session_id,status,note').eq('member_id',user.id),
-   supabase.from('pt_requests').select('id,member_id,preferred_at,alternative_at,availability_note,goal,status,staff_note,created_at,handled_at').order('created_at',{ascending:false}).limit(100).then(result=>staff?result:{...result,data:(result.data||[]).filter(row=>row.member_id===user.id)}),
-   staff ? supabase.from('profiles').select('id,display_name').eq('active',true).order('display_name') : Promise.resolve({data:[],error:null}),
+   supabase.from('pt_requests').select('id,member_id,preferred_at,alternative_at,availability_note,goal,status,staff_note,created_at,handled_at,archived_at').order('created_at',{ascending:false}).limit(100).then(result=>staff?result:{...result,data:(result.data||[]).filter(row=>row.member_id===user.id)}),
+   staff ? supabase.from('profiles').select('id,display_name,role').eq('active',true).order('display_name') : Promise.resolve({data:[],error:null}),
    supabase.from('pt_messages').select('id,client_id,sender_id,body,created_at').order('created_at',{ascending:true}).limit(200),
    staff ? supabase.from('pt_client_notes').select('id,client_id,coach_id,goals,note,follow_up_at,created_at').order('updated_at',{ascending:false}).limit(100) : Promise.resolve({data:[],error:null}),
    supabase.from('pt_session_exercises').select('id,session_id,sort_order,phase,exercise_name,sets,reps,target_load,rest_seconds,notes').order('sort_order'),
@@ -122,6 +122,16 @@ export default function PT({profile,focusRequestId,onFocusConsumed}){
    setNotice('PT-førespurnaden er oppdatert.')
   }catch(e){setError(e.message||'Kunne ikkje oppdatera førespurnaden.')}finally{setBusy('')}
  }
+ async function archiveRequest(request){
+  setBusy('request-'+request.id);setError('');setNotice('')
+  try{const {error:e}=await supabase.from('pt_requests').update({archived_at:new Date().toISOString()}).eq('id',request.id);if(e)throw e;setRequests(rows=>rows.map(row=>row.id===request.id?{...row,archived_at:new Date().toISOString()}:row));setNotice('Førespurnaden er flytta til arkivet.')}
+  catch(e){setError(e.message||'Kunne ikkje arkivera førespurnaden.')}finally{setBusy('')}
+ }
+ async function restoreRequest(request){
+  setBusy('request-'+request.id);setError('');setNotice('')
+  try{const {error:e}=await supabase.from('pt_requests').update({archived_at:null}).eq('id',request.id);if(e)throw e;setRequests(rows=>rows.map(row=>row.id===request.id?{...row,archived_at:null}:row));setNotice('Førespurnaden er gjenoppretta.')}
+  catch(e){setError(e.message||'Kunne ikkje gjenoppretta førespurnaden.')}finally{setBusy('')}
+ }
  async function setRequestDecision(request,status){
   setBusy('request-'+request.id);setError('');setNotice('')
   try{
@@ -170,7 +180,7 @@ export default function PT({profile,focusRequestId,onFocusConsumed}){
    const {data:{user}}=await supabase.auth.getUser()
    const {error:e}=await supabase.from('pt_client_notes').insert({client_id:noteClient,coach_id:user.id,goals:noteGoals.trim(),note:noteText.trim(),follow_up_at:followUp?new Date(followUp).toISOString():null})
    if(e)throw e
-   setNoteGoals('');setNoteText('');setFollowUp('');setNotice('PT-notatet er lagra privat.');await load()
+   setNoteGoals('');setNoteText('');setFollowUp('');setNoteType('progress');setNotice('PT-notatet er lagra privat.');await load()
   }catch(e){setError(e.message||'Kunne ikkje lagra notatet.')}finally{setBusy('')}
  }
  if(loading)return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar PT-studio …</div>
