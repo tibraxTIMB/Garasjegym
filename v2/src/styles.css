@@ -664,3 +664,27 @@ footer {
 .notification-panel>footer { padding:10px 15px; border-top:1px solid var(--line); color:var(--muted); font-size:9px; }
 .notification-dismiss { position:fixed; z-index:79; inset:0; border:0; background:transparent; cursor:default; }
 @media(max-width:620px){ .notification-panel { right:-52px; top:calc(100% + 10px); } .top-meta { gap:8px; } }
+
+/* PT studio calendar and customer workspace */
+.pt-calendar{display:grid;gap:9px;padding:12px;background:#151a1c;border:1px solid #394244;border-radius:12px;min-width:0}
+.pt-calendar-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pt-calendar-head>strong{font-size:11px;color:#e8e7e1}
+.pt-calendar-head>div{display:flex;align-items:center;gap:10px}
+.pt-calendar-head>div span{font-size:11px;text-transform:capitalize;color:#d6d7d2;min-width:112px;text-align:center}
+.pt-calendar-head button{width:28px;height:28px;border:1px solid #454e50;border-radius:7px;background:#252c2e;color:#f5f3ed;font-size:18px;cursor:pointer}
+.pt-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.pt-calendar-grid>button{min-height:34px;border:1px solid transparent;border-radius:7px;background:#22292b;color:#e9e8e2;font-size:11px;cursor:pointer}
+.pt-calendar-grid>button:hover{border-color:var(--orange)}
+.pt-calendar-grid>button.selected{background:var(--orange);color:#17191a;font-weight:900}
+.pt-calendar-weekday{display:grid;place-items:center;padding:5px 0;color:var(--muted);font-size:9px;font-weight:900}
+.pt-calendar-time{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--muted);font-size:10px;font-weight:800}
+.pt-calendar-time input{max-width:130px}
+.pt-customer-switch{display:grid;grid-template-columns:1fr minmax(180px,.7fr);align-items:center;gap:14px;padding:15px;margin:12px 0;background:#202729;border:1px solid #4a5556;border-left:3px solid var(--orange);border-radius:11px}
+.pt-customer-switch>div{display:grid;gap:4px}
+.pt-customer-switch>div strong{font-size:13px}
+.pt-customer-switch>div small{color:var(--muted);font-size:10px;line-height:1.45}
+.pt-customer-switch label{display:grid;gap:5px;color:var(--muted);font-size:10px;font-weight:800}
+.pt-prescribed-wod{margin-top:9px;padding:10px;background:#202729;border:1px solid #414a4c;border-radius:9px}
+.pt-prescribed-wod strong,.pt-prescribed-wod small{display:block}
+.pt-prescribed-wod p{white-space:pre-line;font-size:11px}
+@media(max-width:620px){.pt-customer-switch{grid-template-columns:1fr}.pt-calendar-head>div span{min-width:95px}}
