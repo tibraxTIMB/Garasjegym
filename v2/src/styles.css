@@ -924,3 +924,28 @@ footer {
 .community-author-line{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .community-owner-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border:1px solid #a96d25;border-radius:6px;background:linear-gradient(135deg,#3a2b19,#29231b);color:#ffc16b;font-size:9px;font-weight:950;letter-spacing:1.25px;line-height:1.2}
 .community-owner-badge:before{content:'★';font-size:10px;color:#f2a43a}
+
+
+/* PT WOD workspace: full-width, readable and responsive */
+.pt-inline-wod{display:block!important;width:100%;max-width:none;min-width:0;grid-column:1/-1;overflow:visible}
+.pt-inline-wod .wod-builder{width:100%;min-width:0}
+.pt-inline-wod .wod-builder-layout{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(330px,.92fr);gap:18px;width:100%;align-items:start}
+.pt-inline-wod .wod-library,.pt-inline-wod .wod-composer{min-width:0;width:100%}
+.pt-inline-wod .wod-exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:720px}
+.pt-wod-mode-switch{display:flex;gap:8px;margin:12px 0 18px;padding:5px;border:1px solid #394242;border-radius:12px;background:#171c1d}
+.pt-wod-mode-switch button{flex:1;padding:12px;border:1px solid transparent;border-radius:8px;background:transparent;color:#b9c1c0;font-weight:800;cursor:pointer}
+.pt-wod-mode-switch button.selected{background:#3a2b19;border-color:#9b682b;color:#ffb34e}
+.pt-wod-library-panel{display:grid;gap:14px;padding:20px;border:1px solid #394242;border-radius:14px;background:#1a2021}
+.pt-wod-library-panel .engine-section-title p{margin:5px 0 0;color:var(--muted);font-size:12px}
+.pt-wod-library-list{display:grid;gap:8px;max-height:520px;overflow:auto}
+.pt-wod-library-list>button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:13px 15px;border:1px solid #3b4545;border-radius:10px;background:#202728;color:#f4f4f0;text-align:left;cursor:pointer}
+.pt-wod-library-list>button.selected{border-color:var(--orange);background:#302719}
+.pt-wod-library-list>button>span:first-child{display:grid;gap:5px}
+.pt-wod-library-list small{color:var(--muted);font-size:11px}
+.pt-wod-library-list>button>span:last-child{color:var(--orange);font-size:12px;font-weight:800}
+.pt-wod-builder-form{width:100%;min-width:0}
+.pt-start-workout{margin-top:12px;display:inline-flex;align-items:center;gap:9px}
+.pt-start-workout span{font-size:18px}
+.pt-plan-form{display:none!important}
+@media(max-width:900px){.pt-inline-wod .wod-builder-layout{grid-template-columns:minmax(0,1fr)}.pt-inline-wod .wod-exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.pt-inline-wod{padding:12px}.pt-inline-wod .wod-exercise-grid{grid-template-columns:minmax(0,1fr);max-height:460px}.pt-wod-mode-switch button{font-size:12px;padding:10px 6px}.pt-wod-library-panel{padding:13px}}
