@@ -159,12 +159,30 @@ export default function App() {
   const [focusPTRequestId, setFocusPTRequestId] = useState(null)
   const [selectedWorkout, setSelectedWorkout] = useState(null)
   const [simpleMode,setSimpleMode]=useState(false)
+  const [simpleModeReady,setSimpleModeReady]=useState(false)
   const [simpleModeError,setSimpleModeError]=useState('')
   const [simpleModeSaving,setSimpleModeSaving]=useState(false)
   const [appFullscreen,setAppFullscreen]=useState(Boolean(document.fullscreenElement))
   const [scheduleTab,setScheduleTab]=useState('booking')
   useEffect(()=>{const sync=()=>setAppFullscreen(Boolean(document.fullscreenElement));document.addEventListener('fullscreenchange',sync);return()=>document.removeEventListener('fullscreenchange',sync)},[])
-  useEffect(()=>{if(!session?.user?.id||!profile?.role)return;let live=true;if(profile.role==='admin'){setSimpleMode(false);return()=>{live=false}}supabase.from('member_preferences').select('super_simple_mode').eq('user_id',session.user.id).maybeSingle().then(({data,error})=>{if(live&&!error)setSimpleMode(Boolean(data?.super_simple_mode))});return()=>{live=false}},[session?.user?.id,profile?.role])
+  useEffect(()=>{
+    let live=true
+    setSimpleModeReady(false)
+    setSimpleMode(false)
+    setSimpleModeError('')
+    if(!session?.user?.id||!profile?.role)return()=>{live=false}
+    if(profile.role==='admin'){setSimpleModeReady(true);return()=>{live=false}}
+    supabase.from('member_preferences').select('super_simple_mode').eq('user_id',session.user.id).maybeSingle().then(({data,error})=>{
+      if(!live)return
+      if(error){setSimpleMode(false);setSimpleModeError('Kunne ikkje lesa innstillinga for superenkel modus: '+error.message)}
+      else setSimpleMode(Boolean(data?.super_simple_mode))
+      setSimpleModeReady(true)
+    })
+    return()=>{live=false}
+  },[session?.user?.id,profile?.role])
+  useEffect(()=>{
+    if(simpleMode&&!['oversikt','trening','timeplan','mi-side'].includes(active))setActive('oversikt')
+  },[simpleMode,active])
   async function changeSimpleMode(value){if(profile?.role==='admin')return;const previous=simpleMode;setSimpleMode(value);setSimpleModeError('');setSimpleModeSaving(true);try{const {error}=await supabase.from('member_preferences').upsert({user_id:session.user.id,super_simple_mode:value,updated_at:new Date().toISOString()},{onConflict:'user_id'});if(error)throw error;setSimpleModeError('Valet er lagra.')}catch(error){setSimpleMode(previous);setSimpleModeError('Kunne ikkje lagra valet: '+(error.message||'Ukjend feil'))}finally{setSimpleModeSaving(false)}}
   async function toggleAppFullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch{setProfileError('Fullskjerm er ikkje tilgjengeleg i denne nettlesaren.')}}
   async function openWorkout(log) {
@@ -242,6 +260,8 @@ export default function App() {
       </div></main>
     )
   }
+
+  if (!simpleModeReady) return <LoadingScreen text="Hentar medlemsinnstillingar …" />
 
   const visibleSections = (simpleMode ? sections.filter(item=>['oversikt','trening','timeplan','mi-side'].includes(item.id)) : sections).concat(isStaff(profile)?[{id:'admin',label:'Administrasjon',icon:Settings,note:'Medlemmer og drift'}]:[])
   const current = visibleSections.find((item) => item.id === active) || visibleSections[0]
