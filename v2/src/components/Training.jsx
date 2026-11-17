@@ -32,8 +32,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
   const isCountdown = ['AMRAP', 'Nedteljing'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'AMRAP')
   const isForTime = ['For Time', 'Chipper'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'For Time')
   const isDeathBy = format === 'Death By'
-  const isCountUp = !isCountdown && !isEMOM && !isTimedInterval
-  const fallbackDuration = Math.max(1, (Number(minutes) || 10) * 60 + (Number(seconds) || 0))
+    const fallbackDuration = Math.max(1, (Number(minutes) || 10) * 60 + (Number(seconds) || 0))
   const target = Math.max(1, (isCountdown || isForTime) && capDuration ? capDuration : savedDuration || fallbackDuration)
   const cycle = Math.max(1, Number(workSeconds)) + Math.max(0, Number(restSeconds))
   const intervalTotal = cycle * Math.max(1, Number(rounds) || 1)
@@ -95,7 +94,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
 
   useEffect(() => {
     if (!running) return
-    if ((isCountdown || isEMOM || isDeathBy || isForTime) && elapsed >= target) {
+    if ((isCountdown || isEMOM || isDeathBy || (isForTime && capDuration > 0)) && elapsed >= target) {
       setRunning(false); setPhase(isForTime ? 'TIDSGRENSE' : 'FERDIG'); cue(520, 0.5); return
     }
     if (isTimedInterval && elapsed >= intervalTotal) {
