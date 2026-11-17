@@ -1722,3 +1722,20 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 
 .my-profile-shortcut{display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-size:10px;font-weight:900;cursor:pointer}
 .my-profile-shortcut:hover{background:rgba(240,163,58,.16)}
+
+/* Station circuit: readable on a wall-mounted tablet and mobile */
+.timer-station-plan{width:min(100%,980px);margin:18px auto 8px;text-align:left}
+.timer-station-plan-heading{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px;font-size:clamp(13px,2vw,17px);font-weight:900;letter-spacing:.06em}
+.timer-station-plan-heading b{color:var(--orange);letter-spacing:0}
+.timer-station-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.timer-station-card{min-width:0;padding:16px;border:1px solid #596365;border-radius:13px;background:linear-gradient(145deg,#252c2e,#171c1e);display:grid;gap:7px;text-align:left}
+.timer-station-card>span{color:var(--orange);font-size:clamp(12px,1.8vw,15px);font-weight:900;letter-spacing:.08em}
+.timer-station-card>strong{font-size:clamp(18px,2.7vw,25px);line-height:1.18;color:#fff;overflow-wrap:anywhere}
+.timer-station-card>small{font-size:clamp(13px,1.9vw,17px);color:#f0c36e;font-weight:800}
+.timer-station-card p{margin:0;color:#cbd0ce;font-size:clamp(13px,1.7vw,16px);line-height:1.4}
+.timer-focused .timer-station-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.timer-focused .timer-station-card{padding:20px}
+.timer-focused .timer-station-card>strong{font-size:clamp(22px,3.2vw,32px)}
+.timer-focused .timer-main-clock{font-size:clamp(76px,13vw,150px)}
+.timer-focused .timer-side-stat b{font-size:clamp(22px,3vw,32px)}
+@media(max-width:600px){.timer-station-grid{grid-template-columns:1fr}.timer-station-card{padding:14px}.timer-station-card>strong{font-size:20px}.timer-focused .timer-station-grid{grid-template-columns:1fr}}
