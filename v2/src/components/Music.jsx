@@ -8,7 +8,7 @@ const STATE_KEY = 'garasjegym:spotify-state'
 const SPOTIFY_API = 'https://api.spotify.com/v1'
 const REDIRECT_URI = () => window.location.origin + window.location.pathname
 
-function getClientId() { return import.meta.env.VITE_SPOTIFY_CLIENT_ID || '' }
+function getClientId() { return import.meta.env.VITE_SPOTIFY_CLIENT_ID || '82eb64ec22074235a0a29ffc937d9053' }
 function getTokenKey(memberId) { return TOKEN_KEY_PREFIX + (memberId || 'guest') }
 function readToken(memberId) { try { return JSON.parse(localStorage.getItem(getTokenKey(memberId)) || 'null') } catch { return null } }
 function saveToken(memberId, token) { try { localStorage.setItem(getTokenKey(memberId), JSON.stringify(token)) } catch { /* Lagring kan vere blokkert. */ } }
@@ -21,6 +21,32 @@ function randomString(length = 64) {
 async function sha256(value) {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
   return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+let spotifySdkPromise = null
+function ensureSpotifySdk() {
+  if (window.Spotify) return Promise.resolve()
+  if (spotifySdkPromise) return spotifySdkPromise
+  spotifySdkPromise = new Promise((resolve, reject) => {
+    let settled = false
+    const finish = error => { if (settled) return; settled = true; error ? reject(error) : resolve() }
+    window.onSpotifyWebPlaybackSDKReady = () => finish()
+    let script = document.querySelector('script[data-garasje-spotify-sdk]')
+    if (!script) {
+      script = document.createElement('script')
+      script.src = 'https://sdk.scdn.co/spotify-player.js'
+      script.async = true
+      script.dataset.garasjeSpotifySdk = '1'
+      script.onerror = () => finish(new Error('Kunne ikkje lasta Spotify-spelaren.'))
+      document.head.appendChild(script)
+    } else script.addEventListener('error', () => finish(new Error('Kunne ikkje lasta Spotify-spelaren.')), { once:true })
+    window.setTimeout(() => finish(new Error('Spotify-spelaren svara ikkje. Last sida på nytt og prøv igjen.')), 15000)
+  })
+  return spotifySdkPromise
+}
+function trackFromSdkState(state) {
+  const item = state?.track_window?.current_track
+  if (!item) return null
+  return { id:item.id, uri:item.uri, name:item.name, artists:item.artists?.map(a=>a.name)||[], album:item.album?.name||'', imageUrl:item.album?.images?.[0]?.url||'', durationMs:state.duration||0, progressMs:state.position||0, externalUrl:item.uri ? 'https://open.spotify.com/track/'+item.id : '' }
 }
 function trackFromPlayback(data) {
   const item = data?.item
@@ -51,6 +77,7 @@ export function MusicProvider({ children, memberId = null }) {
   const [spotifyBusy, setSpotifyBusy] = useState(false)
   const [spotifyError, setSpotifyError] = useState('')
   const [selectedPlaylist, setSelectedPlaylist] = useState('')
+  const [spotifyPlayer, setSpotifyPlayer] = useState(null)
 
   const spotifyRequest = useCallback(async (path, options = {}, retry = true) => {
     let token = readToken(memberId)
@@ -136,6 +163,45 @@ export function MusicProvider({ children, memberId = null }) {
   }, [memberId])
 
   useEffect(() => { if (spotifyToken?.access_token) loadSpotifyData() }, [spotifyToken?.access_token, loadSpotifyData])
+
+  // Den gamle GarasjeGym-spelaren oppretta ei eiga Spotify-eining i staden for å krevja
+  // at medlemmen allereie hadde ein aktiv Spotify-app på telefonen.
+  useEffect(() => {
+    if (!spotifyToken?.access_token) return undefined
+    let cancelled = false
+    let player = null
+    ;(async () => {
+      try {
+        await ensureSpotifySdk()
+        if (cancelled || !window.Spotify) return
+        player = new window.Spotify.Player({
+          name:'GarasjeGym',
+          getOAuthToken: callback => {
+            const current = readToken(memberId)
+            if (current?.access_token) callback(current.access_token)
+          },
+          volume:0.65,
+        })
+        player.addListener('ready', ({device_id}) => {
+          if (cancelled) return
+          setSpotifyDeviceId(device_id)
+          setSpotifyStatus('GarasjeGym-spelaren er klar.')
+          setSpotifyPlayer(player)
+        })
+        player.addListener('not_ready', () => { if (!cancelled) setSpotifyStatus('Spotify-spelaren er mellombels fråkopla.') })
+        player.addListener('player_state_changed', state => {
+          if (!state || cancelled) return
+          setSpotifyTrack(trackFromSdkState(state))
+          setSpotifyPlaying(!state.paused)
+        })
+        player.addListener('initialization_error', ({message}) => { if (!cancelled) setSpotifyError('Spotify: '+message) })
+        player.addListener('authentication_error', ({message}) => { if (!cancelled) setSpotifyError('Spotify-innlogging: '+message) })
+        player.addListener('account_error', ({message}) => { if (!cancelled) setSpotifyError('Spotify-konto: '+message) })
+        await player.connect()
+      } catch (error) { if (!cancelled) setSpotifyError(error.message || 'Kunne ikkje starta Spotify-spelaren.') }
+    })()
+    return () => { cancelled = true; if (player) player.disconnect(); setSpotifyPlayer(null); setSpotifyDeviceId('') }
+  }, [spotifyToken?.access_token, memberId])
   useEffect(() => {
     if (!spotifyToken?.access_token) return undefined
     const id = window.setInterval(async () => {
@@ -163,7 +229,7 @@ export function MusicProvider({ children, memberId = null }) {
       const challenge = await sha256(verifier)
       const params = new URLSearchParams({
         client_id:id, response_type:'code', redirect_uri:REDIRECT_URI(), code_challenge_method:'S256', code_challenge:challenge,
-        state, scope:'user-read-private user-read-email playlist-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing',
+        state, scope:'streaming user-read-private user-read-email playlist-read-private playlist-read-collaborative user-read-playback-state user-modify-playback-state user-read-currently-playing',
       })
       window.location.assign('https://accounts.spotify.com/authorize?' + params.toString())
     } catch (error) { setSpotifyError(error.message || 'Kunne ikkje starte Spotify-innlogginga.') }
@@ -178,10 +244,10 @@ export function MusicProvider({ children, memberId = null }) {
     setSpotifyBusy(true); setSpotifyError('')
     try {
       const device = spotifyDeviceId ? '?device_id=' + encodeURIComponent(spotifyDeviceId) : ''
-      if (action === 'play') await spotifyRequest('/me/player/play' + device, {method:'PUT'})
-      if (action === 'pause') await spotifyRequest('/me/player/pause' + device, {method:'PUT'})
-      if (action === 'next') await spotifyRequest('/me/player/next' + device, {method:'POST'})
-      if (action === 'previous') await spotifyRequest('/me/player/previous' + device, {method:'POST'})
+      if (action === 'play') { if (spotifyPlayer) await spotifyPlayer.resume(); else await spotifyRequest('/me/player/play' + device, {method:'PUT'}) }
+      if (action === 'pause') { if (spotifyPlayer) await spotifyPlayer.pause(); else await spotifyRequest('/me/player/pause' + device, {method:'PUT'}) }
+      if (action === 'next') { if (spotifyPlayer) await spotifyPlayer.nextTrack(); else await spotifyRequest('/me/player/next' + device, {method:'POST'}) }
+      if (action === 'previous') { if (spotifyPlayer) await spotifyPlayer.previousTrack(); else await spotifyRequest('/me/player/previous' + device, {method:'POST'}) }
       if (action === 'refresh') await loadSpotifyData()
       await new Promise(resolve => window.setTimeout(resolve, 500))
       const playback = await spotifyRequest('/me/player').catch(() => null)
@@ -189,7 +255,7 @@ export function MusicProvider({ children, memberId = null }) {
       setSpotifyDevices((await spotifyRequest('/me/player/devices').catch(() => ({devices:[]}))).devices || [])
     } catch (error) { setSpotifyError(error.message || 'Spotify-handlinga feila.') }
     finally { setSpotifyBusy(false) }
-  }, [spotifyDeviceId, spotifyRequest, loadSpotifyData])
+  }, [spotifyDeviceId, spotifyRequest, loadSpotifyData, spotifyPlayer])
 
   const playPlaylist = useCallback(async (playlistUri) => {
     if (!playlistUri) return
@@ -210,8 +276,8 @@ export function MusicProvider({ children, memberId = null }) {
     clientId, spotifyConfigured:Boolean(clientId), spotifyConnected:Boolean(spotifyToken?.access_token), spotifyProfile,
     spotifyTrack, spotifyPlaying, spotifyDevices, spotifyDeviceId, setSpotifyDeviceId,
     spotifyPlaylists, spotifyStatus, spotifyBusy, spotifyError, setSpotifyError,
-    connectSpotify, disconnectSpotify, spotifyAction, playPlaylist, selectedPlaylist,
-  }), [clientId, spotifyToken, spotifyProfile, spotifyTrack, spotifyPlaying, spotifyDevices, spotifyDeviceId, spotifyPlaylists, spotifyStatus, spotifyBusy, spotifyError, connectSpotify, disconnectSpotify, spotifyAction, playPlaylist, selectedPlaylist])
+    connectSpotify, disconnectSpotify, spotifyAction, playPlaylist, selectedPlaylist, spotifyPlayer,
+  }), [clientId, spotifyToken, spotifyProfile, spotifyTrack, spotifyPlaying, spotifyDevices, spotifyDeviceId, spotifyPlaylists, spotifyStatus, spotifyBusy, spotifyError, connectSpotify, disconnectSpotify, spotifyAction, playPlaylist, selectedPlaylist, spotifyPlayer])
   return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>
 }
 
