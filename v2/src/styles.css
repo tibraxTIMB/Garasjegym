@@ -1572,3 +1572,27 @@ button:disabled, input:disabled, select:disabled, textarea:disabled {
 
 /* Overview contrast and progression chart */
 .overview-stats>button{display:grid;justify-items:start;gap:6px;padding:15px;color:#ffc15c;background:#202729;border:1px solid #596466;border-radius:10px;text-align:left;cursor:pointer}.overview-stats>button strong{color:#fff;font-size:27px}.overview-stats>button span{color:#d0d8d6;font-size:12px;line-height:1.35}.overview-stats>button:hover,.overview-pr-card:hover{border-color:#d6a83e;background:#292b27}.overview-pr-card{display:block;width:100%;color:#f4f4f0;text-align:left;cursor:pointer}.overview-pr-card strong{color:#fff}.overview-pr-card small{display:block;color:#c5cecc}.progress-select-label{display:grid;gap:7px;max-width:360px;color:#e4e8e5;font-size:12px;font-weight:800}.progress-select-label select{width:100%;min-height:42px;padding:9px 12px;color:#f4f4f0;background:#111719;border:1px solid #596466;border-radius:8px}.progress-chart-wrap{padding:14px;border:1px solid #465052;border-radius:12px;background:linear-gradient(145deg,#202729,#171b1d)}.progress-chart-summary{display:flex;align-items:baseline;gap:10px}.progress-chart-summary strong{color:#ffd16a;font-size:25px}.progress-chart-summary span,.progress-chart-note{color:#c0cac8;font-size:11px}.progress-chart{display:block;width:100%;height:auto;overflow:visible;margin-top:8px}.progress-axis{stroke:#647071;stroke-width:1}.progress-line{fill:none;stroke:#ffc15c;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.progress-point{fill:#ffd16a;stroke:#171b1d;stroke-width:2}.progress-value{fill:#fff;font-size:13px;font-weight:800}.progress-date{fill:#c0cac8;font-size:12px}.progress-chart-note{margin:6px 0 0;line-height:1.5}@media(max-width:520px){.overview-stats>button{padding:12px}.progress-chart-wrap{padding:9px}.progress-chart-summary strong{font-size:22px}}
+/* STURMKOPF: explicit readable text and interactive card affordances */
+.history-card{color:#f2f1ed}
+.history-card strong,.history-card b{color:#f2f1ed}
+.history-card small,.history-card p{color:#c6cfce}
+button.history-card{width:100%;font:inherit;text-align:left;cursor:pointer;background:#202629;color:#f2f1ed;border:1px solid #647174}
+button.history-card:hover,button.history-card:focus-visible{background:#293236;border-color:#f0a33a;outline:2px solid rgba(240,163,58,.35);outline-offset:2px}
+.pr-click-card{display:block;width:100%;text-align:left;cursor:pointer}
+.pr-click-card:hover,.pr-click-card:focus-visible{border-color:#f0a33a;background:#293236;outline:2px solid rgba(240,163,58,.25);outline-offset:2px}
+.pr-click-card .overview-log-open,.overview-log-open{display:flex;align-items:center;gap:6px;color:#ffc15c;font-size:11px;font-weight:850}
+.my-page-tabs{margin:10px 0 20px}
+.pr-progress{display:grid;gap:10px;padding:14px;border:1px solid var(--line);border-radius:12px;background:#171c1e}
+.pr-progress label{display:grid;gap:7px;color:#dce2df;font-size:12px;font-weight:800}
+.pr-progress select{min-height:42px;padding:8px 10px;color:#f2f1ed;background:#111416;border:1px solid #596668;border-radius:8px}
+.pr-progress svg{width:100%;height:auto;color:#b8c2c2}
+.pr-chart-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#c6cfce;font-size:10px}
+.pr-chart-foot strong{color:#ffc15c;font-size:16px}
+.pr-detail-panel{padding:16px;border:1px solid #80602e;border-radius:12px;background:#211e19}
+.workout-exercise-detail{display:grid;gap:10px;margin-top:18px}
+.workout-exercise-detail h4{margin:0}
+.workout-exercise-detail .history-card{display:grid;gap:8px}
+.workout-set-detail{display:flex;justify-content:space-between;gap:10px;padding-top:7px;border-top:1px solid #3b4547;color:#d8dfdc;font-size:12px}
+.workout-set-detail b{color:#ffc15c}
+.overview-stats>button small{color:#ffc15c;font-size:10px;font-weight:800}
+@media(max-width:620px){.pr-chart-foot{font-size:9px}.workout-set-detail{flex-wrap:wrap}}
