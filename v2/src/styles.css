@@ -1434,3 +1434,17 @@ footer {
 .live-station-row>small{grid-column:2;font-size:10px;line-height:1.35;overflow-wrap:anywhere}
 .live-station-row>p,.live-station-row>em{grid-column:2;margin:2px 0 0;color:#c0c9c2;font-size:10px;line-height:1.4;overflow-wrap:anywhere}
 .live-station-row>em{color:#f1c27b;font-style:normal}
+
+
+/* Expanded member administration */
+.admin-member-enhanced{align-items:flex-start;gap:12px;padding:13px 0}
+.admin-member-main{display:grid;gap:5px;min-width:0;flex:1}
+.admin-member-main>strong{font-size:14px;overflow-wrap:anywhere}
+.admin-member-main>small{color:var(--muted);font-size:10px;line-height:1.45}
+.admin-member-help{margin:10px 0 14px;padding:10px 12px;border:1px solid #8b693b55;border-radius:9px;background:#26251f;color:#d6c8aa;font-size:11px;line-height:1.5}
+.admin-member-rename{display:grid;gap:9px;max-width:420px}
+.admin-member-rename label{display:grid;gap:5px;color:var(--muted);font-size:10px;font-weight:750}
+.admin-member-rename input{width:100%;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#111617;color:var(--text)}
+.admin-member-enhanced .admin-member-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.admin-member-enhanced .admin-member-actions select{max-width:145px;min-height:34px}
+@media(max-width:600px){.admin-member-enhanced{display:grid;grid-template-columns:1fr}.admin-member-enhanced .admin-member-actions{justify-content:flex-start}.admin-member-enhanced .admin-member-actions select{flex:1;max-width:none}}
