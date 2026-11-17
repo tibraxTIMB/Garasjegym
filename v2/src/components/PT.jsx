@@ -27,7 +27,7 @@ export default function PT({profile,focusRequestId,onFocusConsumed,onLaunchWorko
   const {data:{user},error:authError}=await supabase.auth.getUser()
   if(authError||!user){setError('Logg inn på nytt.');setLoading(false);return}
   const [s,b,r,m,p,n,pe,ex,wd]=await Promise.all([
-   supabase.from('pt_sessions').select('id,title,client_id,starts_at,duration_minutes,capacity,price,status,prep,message,custom_workout,wod_ids').in('status',staff?['draft','published','planned','completed']:['published','planned']).order('starts_at',{ascending:false}).limit(100).then(result=>staff?result:{...result,data:(result.data||[]).filter(row=>row.status==='published'||row.client_id===user.id)}),
+   supabase.from('pt_sessions').select('id,title,client_id,starts_at,duration_minutes,capacity,price,status,prep,message,custom_workout,wod_ids,session_type,coach_notes,completed_notes,attendance_status').in('status',staff?['draft','published','planned','completed']:['published','planned']).order('starts_at',{ascending:false}).limit(100).then(result=>staff?result:{...result,data:(result.data||[]).filter(row=>row.status==='published'||row.client_id===user.id)}),
    supabase.from('pt_bookings').select('id,session_id,status,note').eq('member_id',user.id),
    supabase.from('pt_requests').select('id,member_id,preferred_at,alternative_at,availability_note,goal,status,staff_note,created_at,handled_at,archived_at').order('created_at',{ascending:false}).limit(100).then(result=>staff?result:{...result,data:(result.data||[]).filter(row=>row.member_id===user.id)}),
    staff ? supabase.from('profiles').select('id,display_name,role').eq('active',true).order('display_name') : Promise.resolve({data:[],error:null}),
