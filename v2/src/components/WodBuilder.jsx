@@ -142,7 +142,8 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
  const isCoupletTriplet=['Couplet','Triplet'].includes(format)
  const isTabata=format==='Tabata'
  const isRowIntervals=format==='Row Intervals'
- const isStationCircuit=format==='Stasjonssirkel'\n const isCustom=format==='Eigen økt'
+ const isStationCircuit=format==='Stasjonssirkel'
+ const isCustom=format==='Eigen økt'
  function loadClassicWod(){
   const preset=CLASSIC_WODS.find(x=>x.name===classicChoice)
   if(!preset)return
@@ -211,7 +212,9 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
   if(!name.trim()){setError('Gi WOD-en eit namn.');return}
   if(showSets&&selected.some(x=>!x.sets.length||x.sets.some(s=>!s.reps||Number(s.reps)<1))){setError('Alle styrkesett må ha minst éi repetisjon.');return}
   if(!showSets&&selected.some(x=>isRow(x)?(!x.rowValue||Number(x.rowValue)<=0):!x.reps)){setError('Alle øvingar må ha reps, distanse, kalorier eller arbeidstid.');return}
-  if(isStationCircuit&&(Number(stationCount)<2||Number(stationCount)>8||selected.length!==Number(stationCount))){setError(`Stasjonssirkel krev ${stationCount} øvingar – éi per stasjon. Vel mellom 2 og 8 stasjonar.`);return}\n  if(isStationCircuit&&(!Number(stationWork)||Number(stationWork)<1||Number(stationTransition)<0||!Number(stationRounds))){setError('Kontroller arbeidstid, bytettid og tal rundar.');return}\n  if(isInterval&&(!Number(rounds)||!Number(workSeconds))){setError('Intervall krev arbeidstid og tal drag.');return}
+  if(isStationCircuit&&(Number(stationCount)<2||Number(stationCount)>8||selected.length!==Number(stationCount))){setError(`Stasjonssirkel krev ${stationCount} øvingar – éi per stasjon. Vel mellom 2 og 8 stasjonar.`);return}
+  if(isStationCircuit&&(!Number(stationWork)||Number(stationWork)<1||Number(stationTransition)<0||!Number(stationRounds))){setError('Kontroller arbeidstid, bytettid og tal rundar.');return}
+  if(isInterval&&(!Number(rounds)||!Number(workSeconds))){setError('Intervall krev arbeidstid og tal drag.');return}
   if(isTabata&&Number(workSeconds)+Number(restSeconds)<=0){setError('Kontroller arbeid og pause i Tabata.');return}
   setBusy(true)
   try{
@@ -220,7 +223,8 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
    const schema={
     version:3,format,structure:isStationCircuit?'station_circuit':showSets?'strength':isTimed?'interval_clock':isInterval?'interval':isAmrap||isForTime||isLadder?'metcon':'custom',
     duration_minutes:Math.ceil(((Number(minutes)||0)*60+(Number(durationSeconds)||0))/60)||null,time_cap_minutes:isAmrap||isForTime||(isCoupletTriplet&&combinationMode!=='Open')?Number(timeCap)||null:null,time_cap_seconds:isAmrap||isForTime||(isCoupletTriplet&&combinationMode!=='Open')?(Number(timeCap)||0)*60+(Number(timeCapSeconds)||0):null,combination_mode:isCoupletTriplet?combinationMode:null,
-    rounds:isStationCircuit?Number(stationRounds):isInterval||isLadder||isForTime?Number(rounds)||null:null,\n    station_circuit:isStationCircuit?{rotation:'all_rotate_together',station_count:Number(stationCount),work_seconds:Number(stationWork),transition_seconds:Number(stationTransition),rounds:Number(stationRounds),stations:selected.map((x,i)=>({station_number:i+1,exercise_name:x.name,reps:x.reps,load_mode:x.loadMode,load_kg:x.loadKg?Number(x.loadKg):null,load_label:fmtLoad(x),equipment:x.equipment||null,description:x.description||null,coach_note:x.coachNote||null}))}:null,
+    rounds:isStationCircuit?Number(stationRounds):isInterval||isLadder||isForTime?Number(rounds)||null:null,
+    station_circuit:isStationCircuit?{rotation:'all_rotate_together',station_count:Number(stationCount),work_seconds:Number(stationWork),transition_seconds:Number(stationTransition),rounds:Number(stationRounds),stations:selected.map((x,i)=>({station_number:i+1,exercise_name:x.name,reps:x.reps,load_mode:x.loadMode,load_kg:x.loadKg?Number(x.loadKg):null,load_label:fmtLoad(x),equipment:x.equipment||null,description:x.description||null,coach_note:x.coachNote||null}))}:null,
     duration_seconds:(Number(minutes)||0)*60+(Number(durationSeconds)||0),
     interval:{work_seconds:Number(workSeconds)||null,rest_seconds:Number(restSeconds)||0,work_every_minutes:isTimed?timedEvery(format):null},
     ladder:isLadder?{start:Number(ladderStart),step:Number(ladderStep),direction:ladderDirection}:null,
@@ -237,7 +241,9 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
     }))
    }
    const movements=selected.map((x,i)=>(i+1)+'. '+buildPrescription(x)).join('\n')
-   const stationSlots=Number(stationRounds)*Number(stationCount)\n   const stationDuration=isStationCircuit?(stationSlots*Number(stationWork)+(stationSlots-1)*Number(stationTransition)):schema.duration_seconds\n   schema.duration_seconds=stationDuration\n   const timer_settings={workout_schema:schema,work_seconds:isStationCircuit?Number(stationWork):Number(workSeconds)||null,rest_seconds:isStationCircuit?Number(stationTransition):Number(restSeconds)||null,rounds:isStationCircuit?Number(stationRounds):Number(rounds)||null,duration_seconds:stationDuration}
+   const stationSlots=Number(stationRounds)*Number(stationCount)
+   const stationDuration=isStationCircuit?(stationSlots*Number(stationWork)+(stationSlots-1)*Number(stationTransition)):schema.duration_seconds
+   schema.duration_seconds=stationDuration\n   const timer_settings={workout_schema:schema,work_seconds:isStationCircuit?Number(stationWork):Number(workSeconds)||null,rest_seconds:isStationCircuit?Number(stationTransition):Number(restSeconds)||null,rounds:isStationCircuit?Number(stationRounds):Number(rounds)||null,duration_seconds:stationDuration}
    const {data:savedWod,error:e}=await supabase.from('wods').insert({name:name.trim(),format,duration_minutes:Math.ceil(stationDuration/60)||null,movements,notes:[stimulus,notes,customInstructions].filter(Boolean).join('\n\n'),is_published:publishToMembers,created_by:user.id,timer_settings}).select('id').single()
    if(e)throw e
    if(assignedClientId){const {error:linkError}=await supabase.from('pt_wod_assignments').insert({member_id:assignedClientId,wod_id:savedWod.id,assigned_by:user.id,location:'Valfritt',coach_note:'Tildelt frå PT Studio'});if(linkError)throw new Error('WOD-en vart lagra, men kunne ikkje knytast til kunden: '+linkError.message);onAssigned?.()}
