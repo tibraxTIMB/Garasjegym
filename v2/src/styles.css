@@ -779,3 +779,8 @@ footer {
 .wod-selected-actions{display:flex;flex-direction:column;gap:4px}
 @media(max-width:900px){.wod-builder-layout{grid-template-columns:1fr}.wod-composer{order:-1}}
 @media(max-width:600px){.wod-advanced-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.wod-dose-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wod-selected-list>article{grid-template-columns:22px minmax(0,1fr) 28px}.wod-selected-actions{flex-direction:column}}
+
+.wod-name-field{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px}
+.wod-name-field>label{min-width:0}
+.wod-name-field>button{margin:0;min-height:40px;white-space:nowrap}
+@media(max-width:520px){.wod-name-field{grid-template-columns:1fr}.wod-name-field>button{width:100%}}
