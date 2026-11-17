@@ -182,7 +182,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
   </div>
 }
 
-export default function Training({ launchWodId = null, launchClassSessionId = null, onLaunchConsumed }) {
+export default function Training({ launchWodId = null, launchClassSessionId = null, onLaunchConsumed, simpleMode = false }) {
   const [wods, setWods] = useState([])
   const [exercises, setExercises] = useState([])
   const [favoriteNames, setFavoriteNames] = useState([])
@@ -473,7 +473,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
 
   if (loading) return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar treningsdata …</div>
 
-  return <div className="training-module">
+  return <div className={simpleMode ? "training-module simple-mode" : "training-module"}>
     {error && <div className="auth-error" role="alert">{error}</div>}
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16}/> {notice}</div>}
     {mode === 'active' ? <form className="engine-form" onSubmit={saveWorkout}>
@@ -519,20 +519,20 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       </section>
       <button className="primary-button save-workout" disabled={saving} type="submit"><Save size={16}/> {saving ? 'Lagrar økta …' : 'Lagre treningsøkt'}</button>
     </form> : <>
-      <div className="training-heading"><div><div className="section-kicker">TRENING · MOTOR</div><h3>Vel øktform</h3></div><span className="count-pill">STURMKOPF</span></div>
-      <div className="engine-entry-grid">
-        <button onClick={() => startWorkout()}><Dumbbell size={20}/><strong>Fri trening</strong><small>Bygg økta frå botnen</small></button>
-        <button onClick={() => setMode('wods')}><Activity size={20}/><strong>Start ein WOD</strong><small>Vel ei publisert økt</small></button>
+      <div className="training-heading"><div><div className="section-kicker">{simpleMode ? "SUPERENKEL MODUS · TRENING" : "TRENING · MOTOR"}</div><h3>{simpleMode ? "Kva vil du gjera i dag?" : "Vel øktform"}</h3>{simpleMode&&<p>Vel ei ferdig økt eller start di eiga. Resultatet blir lagra på profilen din.</p>}</div>{!simpleMode&&<span className="count-pill">STURMKOPF</span>}</div>
+      <div className={simpleMode ? "engine-entry-grid simple-entry-grid" : "engine-entry-grid"}>
+        <button onClick={() => startWorkout()}><Dumbbell size={20}/><strong>{simpleMode ? "Start eiga økt" : "Fri trening"}</strong><small>{simpleMode ? "Registrer treninga di" : "Bygg økta frå botnen"}</small></button>
+        <button onClick={() => setMode('wods')}><Activity size={20}/><strong>{simpleMode ? "Følg eit opplegg" : "Start ein WOD"}</strong><small>{simpleMode ? "Vel ei økt som er laga for deg" : "Vel ei publisert økt"}</small></button>
       </div>
       {mode === 'wods' && <section className="engine-section"><div className="engine-section-title"><h4>Publiserte WOD-ar</h4><button className="text-button" onClick={() => setMode('home')}>Lukk</button></div>
         <button type="button" className={wodFavoritesOnly?'secondary-button favorite-filter active':'secondary-button favorite-filter'} onClick={()=>setWodFavoritesOnly(v=>!v)}><Heart size={14} fill={wodFavoritesOnly?'currentColor':'none'}/>{wodFavoritesOnly?'Vis alle publiserte WOD-ar':'Mine favoritt-WOD-ar'}</button>
         {wods.filter(wod=>!wodFavoritesOnly||favoriteWodIds.includes(wod.id)).length ? <div className="wod-list">{wods.filter(wod=>!wodFavoritesOnly||favoriteWodIds.includes(wod.id)).map(wod => <article className="wod-card" key={wod.id}><div className="wod-top"><span>{wod.format}</span><span>{wod.duration_minutes ? wod.duration_minutes + ' MIN' : ''}</span></div><h4>{wod.name}</h4>{wod.movements && <p className="wod-movements">{wod.movements}</p>}{wod.notes && <p className="wod-note">{wod.notes}</p>}<div className="wod-card-actions"><button type="button" className="secondary-button" onClick={() => startWorkout(wod)}>Start WOD</button><button type="button" className={favoriteWodIds.includes(wod.id)?'favorite-star selected':'favorite-star'} onClick={()=>toggleWodFavorite(wod)} aria-label={favoriteWodIds.includes(wod.id)?'Fjern WOD-favoritt':'Merk WOD som favoritt'}><Heart size={17} fill={favoriteWodIds.includes(wod.id)?'currentColor':'none'}/></button></div></article>)}</div> : <div className="empty-state">{wodFavoritesOnly?'Du har ikkje merkt nokon WOD-ar som favoritt.':'Ingen publiserte WOD-ar enno.'}</div>}
        </section>}}
-      <section className="engine-section">
+      <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
         <div className="training-heading"><div><div className="section-kicker">HISTORIKK</div><h3>Siste økter</h3></div><span className="count-pill">{history.length} økter</span></div>
         {history.length ? <div className="history-list">{history.map(log => <article className="history-card" key={log.id}><div className="history-card-top"><strong>{log.title}</strong><span>{log.workout_date}</span></div><small>{log.format} · {log.workout_exercises?.length || 0} øvingar</small>{log.workout_exercises?.sort((a,b)=>a.sort_order-b.sort_order).map(ex => <div className="history-exercise" key={ex.id}><b>{ex.exercise_name}</b><span>{(ex.workout_sets || []).map(s => [s.reps ? s.reps+' reps' : '', s.load_kg ? s.load_kg+' kg' : '', s.time_text || ''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ') || 'Ingen sett registrert'}</span></div>)}{log.note && <p>{log.note}</p>}</article>)}</div> : <div className="empty-state">Du har ikkje lagra økter enno.</div>}
       </section>
-      <section className="engine-section">
+      <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
         <div className="training-heading"><div><div className="section-kicker">PROGRESJON</div><h3>Personlege rekordar</h3></div><span className="count-pill">{records.length} PR</span></div>
         <form className="pr-form" onSubmit={savePersonalRecord}>
           <input value={prName} onChange={e => setPrName(e.target.value)} placeholder="Øving, t.d. Markløft" required/>
@@ -543,7 +543,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         </form>
         {records.length ? <div className="history-list">{records.map(record => <article className="history-card" key={record.id}><div className="history-card-top"><strong>{record.exercise_name}</strong><span>{record.record_date}</span></div><div className="pr-result">{record.result} {record.unit}</div>{record.note && <small>{record.note}</small>}</article>)}</div> : <div className="empty-state">Ingen personlege rekordar registrerte enno.</div>}
       </section>
-      <section className="engine-section">
+      <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
         <div className="training-heading"><div><div className="section-kicker">BIBLIOTEK</div><h3>Øvingsbibliotek</h3></div><span className="count-pill">{exercises.length} øvingar</span></div>
         {exercises.length ? <><div className="exercise-library-toolbar"><label className="exercise-library-search"><Search size={15}/><input value={libraryQuery} onChange={e => setLibraryQuery(e.target.value)} placeholder="Søk etter øving eller kategori …"/></label><button type="button" className={favoritesOnly ? 'secondary-button favorite-filter active' : 'secondary-button favorite-filter'} onClick={() => setFavoritesOnly(v => !v)}><Star size={14}/>{favoritesOnly ? 'Vis alle øvingar' : 'Favorittar'}</button></div>{(()=>{const q=libraryQuery.trim().toLowerCase();const filtered=exercises.filter(ex=>(!favoritesOnly||favoriteNames.includes(ex.name))&&(!q||[ex.name,ex.category,ex.equipment].some(v=>(v||'').toLowerCase().includes(q))));const categories=[...new Set(filtered.map(ex=>ex.category||'Anna'))].sort((a,b)=>a.localeCompare(b,'nn'));return <div className="exercise-library-groups">{categories.length?categories.map((category,index)=>{const group=filtered.filter(ex=>(ex.category||'Anna')===category);return <details className="exercise-library-group" key={category} open={!!q||index===0}><summary><strong>{category}</strong><span>{group.length} øvingar</span></summary><div className="exercise-list">{group.map(ex=><div className="exercise-row" key={ex.id}><Dumbbell size={16}/><div><strong>{ex.name}</strong><span>{[ex.category,ex.equipment].filter(Boolean).join(' · ')}</span></div><button type="button" className={favoriteNames.includes(ex.name)?'favorite-star selected':'favorite-star'} onClick={()=>toggleFavorite(ex)} aria-label={favoriteNames.includes(ex.name)?'Fjern favoritt':'Legg til favoritt'}><Star size={17} fill={favoriteNames.includes(ex.name)?'currentColor':'none'}/></button></div>)}</div></details>}) : <div className="empty-state">{favoritesOnly?'Du har ikkje merkt nokon øvingar som favoritt.':'Ingen øvingar passar søket.'}</div>}</div>})()}</> : <div className="empty-state">Øvingsbiblioteket er tomt. Øvingar kan leggjast inn av admin/manager.</div>}
       </section>
