@@ -320,7 +320,7 @@ function PersonalSpotifyPlayer({ compact = false }) {
       <p>Kople til din eigen konto. GarasjeGym får berre tilgang til spelelister og avspelingskontrollane du godkjenner.</p>
       <button className="spotify-connect-button" onClick={music.connectSpotify}><LogIn size={16}/> Kople til Spotify</button>
     </div>}
-    {music.spotifyError && <div className="spotify-error" role="alert">{music.spotifyError}</div>}
+    {music.spotifyError && <div className="spotify-error" role="alert">{music.spotifyError}{music.spotifyConnected&&<button type="button" className="secondary-button" onClick={()=>{music.disconnectSpotify();music.connectSpotify()}}>Kople til Spotify på nytt</button>}</div>}
   </section>
 }
 
