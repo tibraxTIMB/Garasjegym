@@ -182,7 +182,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
   </div>
 }
 
-export default function Training({ launchWodId = null, launchClassSessionId = null, onLaunchConsumed, simpleMode = false, quickStart = false, onQuickStartConsumed }) {
+export default function Training({ launchWodId = null, launchClassSessionId = null, onLaunchConsumed, simpleMode = false, quickStart = false, onQuickStartConsumed, onSaved, onDiscard }) {
   const [wods, setWods] = useState([])
   const [exercises, setExercises] = useState([])
   const [favoriteNames, setFavoriteNames] = useState([])
@@ -203,6 +203,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [saving, setSaving] = useState(false)
   const [mode, setMode] = useState('home')
   const [reviewOpen,setReviewOpen]=useState(false)
+  const [finishOpen,setFinishOpen]=useState(false)
   const [source, setSource] = useState(null)
   const [classSessionId, setClassSessionId] = useState(null)
   const [title, setTitle] = useState('')
@@ -280,10 +281,10 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const filteredExercises = useMemo(() => exercises.filter(e => e.name.toLowerCase().includes(query.toLowerCase()) || (e.category || '').toLowerCase().includes(query.toLowerCase())), [exercises, query])
 
   function leaveWorkout() {
-    if (window.confirm('Avbryt økta utan å lagra? Alle resultat frå denne økta går tapt.')) {
-      setMode('home'); setSource(null); setClassSessionId(null); setItems([])
-      setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
-    }
+    if (!window.confirm('Forkasta økta? Ho blir sletta utan å bli lagra i treningsloggen.')) return
+    setFinishOpen(false); setMode('home'); setSource(null); setClassSessionId(null); setItems([])
+    setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
+    onDiscard?.()
   }
 
   function startWorkout(wod = null) {
@@ -436,9 +437,9 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         prMessage = ' Automatisk PR-kontroll kunne ikkje fullførast: ' + (prError.message || 'ukjend feil')
       }
       setNotice('Økta er lagra i treningsloggen.' + prMessage)
-      setMode('home')
-      setReviewOpen(false)
+      setFinishOpen(false); setMode('home'); setReviewOpen(false)
       await loadAll()
+      onSaved?.()
     } catch (err) {
       setError(err.message || 'Kunne ikkje lagra økta.')
     } finally {
@@ -471,7 +472,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     {error && <div className="auth-error" role="alert">{error}</div>}
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16}/> {notice}</div>}
     {mode === 'active' ? <form className={simpleMode ? `engine-form simple-quick-form${reviewOpen?" review-open":""}` : "engine-form"} onSubmit={saveWorkout}>
-      <button type="button" className="text-button" onClick={leaveWorkout}>← Avbryt økta</button>
+      <button type="button" className="text-button" onClick={() => setFinishOpen(true)}>✓ Avslutt økt</button>
       <div className="training-heading"><div><div className="section-kicker">TRENING · AKTIV ØKT</div><h3>Bygg økta di</h3></div><span className="count-pill">{items.length} øvingar</span></div>
       <div className="engine-fields">
         <label>Namn på økta<input value={title} onChange={e => setTitle(e.target.value)} placeholder="Til dømes Styrke A" required/></label>
@@ -500,19 +501,33 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         </article>)}
         <button type="button" className="secondary-button" onClick={() => setItems(current => [...current, emptyExercise()])}><Plus size={15}/> Legg til eiga øving</button>
       </section>
-      <section className="engine-section">
-        <h4>Resultat frå økta</h4>
-        <div className="engine-fields three">
-          {['AMRAP'].includes(format)&&<><label>Fullførte rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder={String(timerSnapshot.roundsCompleted||0)}/></label><label>Ekstra reps i neste runde<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="0"/></label></>}
-          {['For Time','Chipper','Couplet','Triplet'].includes(format)&&<label>Sluttid (mm:ss eller tt:mm:ss)<input value={scoreTime} onChange={e=>setScoreTime(e.target.value)} placeholder={timerSnapshot.elapsed?clock(timerSnapshot.elapsed):'t.d. 12:45'}/></label>}
-          {['Strength','Pyramid','Superset','Complex'].includes(format)&&<label>Tungaste løft (kg)<input type="number" min="0" step="0.5" value={scoreLoad} onChange={e=>setScoreLoad(e.target.value)} placeholder="Valfritt"/></label>}
-          {['Row Intervals','Intervall','Tabata'].includes(format)&&<><label>Kaloriar (valfritt)<input type="number" min="0" step="0.1" value={scoreCalories} onChange={e=>setScoreCalories(e.target.value)} placeholder="Totalt"/></label><label>Avstand (valfritt)<input type="number" min="0" step="1" value={scoreDistance} onChange={e=>setScoreDistance(e.target.value)} placeholder="Total distanse"/></label><label>Eining<select value={scoreUnit} onChange={e=>setScoreUnit(e.target.value)}><option value="m">Meter</option><option value="km">Kilometer</option><option value="cal">Kaloriar</option></select></label></>}
-          {!['AMRAP','For Time','Chipper','Couplet','Triplet','Strength','Pyramid','Superset','Complex','Row Intervals','Intervall','Tabata'].includes(format)&&<><label>Rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder="–"/></label><label>Reps<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="–"/></label><label>Tid / sluttid<input value={scoreTime} onChange={e=>setScoreTime(e.target.value)} placeholder="t.d. 12:45"/></label></>}
-        </div>
-        <label className="engine-note">Notat<textarea value={note} onChange={e => setNote(e.target.value)} rows="3" placeholder="Belastning, dagsform eller kommentar …"/></label>
-      </section>
       {simpleMode&&<button type="button" className="secondary-button simple-review-toggle" onClick={()=>setReviewOpen(v=>!v)}>{reviewOpen?"Skjul redigering":"Revider øvingar og resultat"}</button>}
-      <button className="primary-button save-workout" disabled={saving} type="submit"><Save size={16}/> {saving ? 'Lagrar økta …' : 'Lagre treningsøkt'}</button>
+      {finishOpen&&<div className="workout-finish-backdrop" role="presentation">
+        <section className="workout-finish-dialog" role="dialog" aria-modal="true" aria-labelledby="finish-workout-title">
+          <div className="workout-finish-head"><div><span className="section-kicker">ØKTA ER FERDIG</span><h3 id="finish-workout-title">{title||'Treningsøkt'}</h3></div><button type="button" className="danger-icon" aria-label="Lukk" onClick={()=>setFinishOpen(false)}>×</button></div>
+          <div className="workout-finish-summary">
+            <div><span>FORMAT</span><strong>{format}</strong></div>
+            <div><span>TID</span><strong>{clock(timerSnapshot.elapsed)}</strong></div>
+            <div><span>ØVINGAR</span><strong>{items.length}</strong></div>
+            {timerSnapshot.roundsCompleted>0&&<div><span>RUNDER</span><strong>{timerSnapshot.roundsCompleted}</strong></div>}
+          </div>
+          {items.length>0&&<div className="workout-finish-exercises"><strong>Øvingar i økta</strong><ol>{items.map((item,index)=><li key={item.key}>{item.exercise_name||'Øving utan namn'}{item.sets?.some(set=>set.reps||set.load_kg||set.time_text)?<small>{item.sets.map(set=>[set.reps?set.reps+' reps':'',set.load_kg?set.load_kg+' kg':'',set.time_text||''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ')}</small>:null}</li>)}</ol></div>}
+          <section className="workout-finish-results"><h4>Registrer resultat</h4><p>Fel ta utgangspunkt i øktforma{source?.name?' og WOD-oppsettet':''}. Fyll berre inn det som manglar.</p>
+            <div className="engine-fields three">
+              {format==='AMRAP'&&<><label>Fullførte rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder={String(timerSnapshot.roundsCompleted||0)}/></label><label>Ekstra reps<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="0"/></label></>}
+              {['For Time','Chipper','Couplet','Triplet'].includes(format)&&<label>Sluttid<input value={scoreTime} onChange={e=>setScoreTime(e.target.value)} placeholder={timerSnapshot.elapsed?clock(timerSnapshot.elapsed):'mm:ss'}/></label>}
+              {['Strength','Pyramid','Superset','Complex'].includes(format)&&<label>Tungaste løft (kg)<input type="number" min="0" step="0.5" value={scoreLoad} onChange={e=>setScoreLoad(e.target.value)} placeholder="Valfritt"/></label>}
+              {['Row Intervals','Intervall','Tabata'].includes(format)&&<><label>Kaloriar<input type="number" min="0" step="0.1" value={scoreCalories} onChange={e=>setScoreCalories(e.target.value)} placeholder="Totalt"/></label><label>Avstand<input type="number" min="0" step="1" value={scoreDistance} onChange={e=>setScoreDistance(e.target.value)} placeholder="Total distanse"/></label><label>Eining<select value={scoreUnit} onChange={e=>setScoreUnit(e.target.value)}><option value="m">Meter</option><option value="km">Kilometer</option><option value="cal">Kaloriar</option></select></label></>}
+              {!['AMRAP','For Time','Chipper','Couplet','Triplet','Strength','Pyramid','Superset','Complex','Row Intervals','Intervall','Tabata'].includes(format)&&<><label>Rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder="–"/></label><label>Reps<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="–"/></label><label>Tid / sluttid<input value={scoreTime} onChange={e=>setScoreTime(e.target.value)} placeholder="mm:ss"/></label></>}
+            </div>
+            <label className="engine-note">Notat<textarea value={note} onChange={e=>setNote(e.target.value)} rows="2" placeholder="Kommentar eller dagsform …"/></label>
+          </section>
+          <div className="workout-finish-actions">
+            <button type="button" className="danger-button" onClick={leaveWorkout}><Trash2 size={17}/> Forkast økta</button>
+            <button type="submit" className="primary-button" disabled={saving}><Save size={17}/>{saving?'Lagrar …':'Lagre økt'}</button>
+          </div>
+        </section>
+      </div>}
     </form> : <>
       <div className="training-heading"><div><div className="section-kicker">{simpleMode ? "SUPERENKEL MODUS · TRENING" : "TRENING · MOTOR"}</div><h3>{simpleMode ? "Kva vil du gjera i dag?" : "Vel øktform"}</h3>{simpleMode&&<p>Vel ei ferdig økt eller start di eiga. Resultatet blir lagra på profilen din.</p>}</div>{!simpleMode&&<span className="count-pill">STURMKOPF</span>}</div>
       <div className={simpleMode ? "engine-entry-grid simple-entry-grid" : "engine-entry-grid"}>
