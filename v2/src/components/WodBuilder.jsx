@@ -10,7 +10,7 @@ export default function WodBuilder(){
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område')
  const [selected,setSelected]=useState([]),[name,setName]=useState(''),[format,setFormat]=useState('AMRAP'),[minutes,setMinutes]=useState('20'),[notes,setNotes]=useState('')
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('')
- const [rowMeters,setRowMeters]=useState('500'),[rowMinutes,setRowMinutes]=useState(''),[rowSeconds,setRowSeconds]=useState('')
+ const [rowMeters,setRowMeters]=useState('500'),[rowMinutes,setRowMinutes]=useState(''),[rowSeconds,setRowSeconds]=useState(''),[rowRounds,setRowRounds]=useState('5'),[rowRest,setRowRest]=useState('90')
 
  useEffect(()=>{load()},[])
  async function load(){
@@ -35,7 +35,7 @@ export default function WodBuilder(){
  function addRow(){const row=exercises.find(x=>x.equipment==='Romaskin');if(row)add(row);else setError('Romaskinøvinga manglar i biblioteket.')}
  function updateItem(key,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,...patch}:x))}
  function move(i,dir){setSelected(rows=>{const next=[...rows],j=i+dir;if(j<0||j>=next.length)return rows;[next[i],next[j]]=[next[j],next[i]];return next})}
- function randomWod(){
+ function generateRowWod(){\n  const row=exercises.find(x=>x.equipment==='Romaskin');if(!row){setError('Romaskinøvinga manglar i biblioteket.');return}\n  const rounds=Math.max(1,Number(rowRounds)||1),distance=Math.max(1,Number(rowMeters)||500)\n  setSelected([{...row,key:crypto.randomUUID(),sets:String(rounds),reps:distance+' m · '+rowRest+' sek pause',meters:String(distance),minutes:'',seconds:''}]);setName('Ro-intervall');setFormat('Intervall');setMinutes(String(rounds*3));setNotice('Ro-intervall er lagt i WOD-byggjaren. Du kan leggja til andre øvingar frå biblioteket.');setError('')\n }\n function randomWod(){
   const pool=exercises.filter(x=>x.category!=='Rehab / fysio')
   if(!pool.length)return
   const chosen=shuffle(pool).slice(0,4+Math.floor(Math.random()*3))
