@@ -1496,3 +1496,12 @@ footer {
  .hub-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
  .hub-tabs button{padding:8px 6px;font-size:11px}
 }
+
+/* AMRAP: display the complete exercise list, not a misleading active exercise */
+.timer-amrap-exercise-list{width:min(100%,360px);margin:12px auto 4px;padding:11px 13px;border:1px solid var(--line);border-radius:11px;background:#191f20;text-align:left}
+.timer-amrap-exercise-list>span{display:block;margin-bottom:7px;color:var(--muted);font-size:9px;font-weight:900;letter-spacing:.12em}
+.timer-amrap-exercise-list ol{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.timer-amrap-exercise-list li{display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.35}
+.timer-amrap-exercise-list li b{flex:0 0 19px;color:var(--orange)}
+.timer-amrap-exercise-list li span{font-weight:750}
+.timer-amrap-exercise-list p{margin:0;color:var(--muted);font-size:11px}
