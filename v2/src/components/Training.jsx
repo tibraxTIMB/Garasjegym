@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Activity, CheckCircle2, Clock3, Dumbbell, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Trash2 } from 'lucide-react'
+import { Activity, CheckCircle2, Clock3, Dumbbell, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 
 const FORMATS = ['Fri trening', 'EMOM 1', 'EMOM 2', 'EMOM', 'E2MOM', 'E3MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
@@ -124,6 +124,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [wods, setWods] = useState([])
   const [exercises, setExercises] = useState([])
   const [favoriteNames, setFavoriteNames] = useState([])
+  const [favoriteWodIds, setFavoriteWodIds] = useState([])
+  const [wodFavoritesOnly, setWodFavoritesOnly] = useState(false)
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [history, setHistory] = useState([])
   const [records, setRecords] = useState([])
@@ -179,6 +181,15 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     setLoading(false)
   }
   useEffect(() => { loadAll(); const refresh=setInterval(()=>loadAll(true),60000); return()=>clearInterval(refresh) }, [])
+  async function toggleWodFavorite(wod){
+    const {data:{user}}=await supabase.auth.getUser()
+    if(!user)return
+    const exists=favoriteWodIds.includes(wod.id)
+    const result=exists?await supabase.from('wod_favorites').delete().eq('user_id',user.id).eq('wod_id',wod.id):await supabase.from('wod_favorites').insert({user_id:user.id,wod_id:wod.id})
+    if(result.error){setError(result.error.message);return}
+    setFavoriteWodIds(ids=>exists?ids.filter(id=>id!==wod.id):[...ids,wod.id])
+  }
+
   useEffect(() => {
     if (!launchWodId || loading) return
     const wod = wods.find(item => item.id === launchWodId)
@@ -410,8 +421,9 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         <button onClick={() => setMode('wods')}><Activity size={20}/><strong>Start ein WOD</strong><small>Vel ei publisert økt</small></button>
       </div>
       {mode === 'wods' && <section className="engine-section"><div className="engine-section-title"><h4>Publiserte WOD-ar</h4><button className="text-button" onClick={() => setMode('home')}>Lukk</button></div>
-        {wods.length ? <div className="wod-list">{wods.map(wod => <article className="wod-card" key={wod.id}><div className="wod-top"><span>{wod.format}</span><span>{wod.duration_minutes ? wod.duration_minutes + ' MIN' : ''}</span></div><h4>{wod.name}</h4>{wod.movements && <p className="wod-movements">{wod.movements}</p>}{wod.notes && <p className="wod-note">{wod.notes}</p>}<button type="button" className="secondary-button" onClick={() => startWorkout(wod)}>Start WOD</button></article>)}</div> : <div className="empty-state">Ingen publiserte WOD-ar enno.</div>}
-      </section>}
+        <button type="button" className={wodFavoritesOnly?'secondary-button favorite-filter active':'secondary-button favorite-filter'} onClick={()=>setWodFavoritesOnly(v=>!v)}><Heart size={14} fill={wodFavoritesOnly?'currentColor':'none'}/>{wodFavoritesOnly?'Vis alle publiserte WOD-ar':'Mine favoritt-WOD-ar'}</button>
+        {wods.filter(wod=>!wodFavoritesOnly||favoriteWodIds.includes(wod.id)).length ? <div className="wod-list">{wods.filter(wod=>!wodFavoritesOnly||favoriteWodIds.includes(wod.id)).map(wod => <article className="wod-card" key={wod.id}><div className="wod-top"><span>{wod.format}</span><span>{wod.duration_minutes ? wod.duration_minutes + ' MIN' : ''}</span></div><h4>{wod.name}</h4>{wod.movements && <p className="wod-movements">{wod.movements}</p>}{wod.notes && <p className="wod-note">{wod.notes}</p>}<div className="wod-card-actions"><button type="button" className="secondary-button" onClick={() => startWorkout(wod)}>Start WOD</button><button type="button" className={favoriteWodIds.includes(wod.id)?'favorite-star selected':'favorite-star'} onClick={()=>toggleWodFavorite(wod)} aria-label={favoriteWodIds.includes(wod.id)?'Fjern WOD-favoritt':'Merk WOD som favoritt'}><Heart size={17} fill={favoriteWodIds.includes(wod.id)?'currentColor':'none'}/></button></div></article>)}</div> : <div className="empty-state">{wodFavoritesOnly?'Du har ikkje merkt nokon WOD-ar som favoritt.':'Ingen publiserte WOD-ar enno.'}</div>}
+       </section>}}
       <section className="engine-section">
         <div className="training-heading"><div><div className="section-kicker">HISTORIKK</div><h3>Siste økter</h3></div><span className="count-pill">{history.length} økter</span></div>
         {history.length ? <div className="history-list">{history.map(log => <article className="history-card" key={log.id}><div className="history-card-top"><strong>{log.title}</strong><span>{log.workout_date}</span></div><small>{log.format} · {log.workout_exercises?.length || 0} øvingar</small>{log.workout_exercises?.sort((a,b)=>a.sort_order-b.sort_order).map(ex => <div className="history-exercise" key={ex.id}><b>{ex.exercise_name}</b><span>{(ex.workout_sets || []).map(s => [s.reps ? s.reps+' reps' : '', s.load_kg ? s.load_kg+' kg' : '', s.time_text || ''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ') || 'Ingen sett registrert'}</span></div>)}{log.note && <p>{log.note}</p>}</article>)}</div> : <div className="empty-state">Du har ikkje lagra økter enno.</div>}
