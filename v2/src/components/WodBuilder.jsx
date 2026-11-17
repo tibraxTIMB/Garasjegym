@@ -236,7 +236,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   if(format==='Triplet'&&selected.length!==3){setError('Triplet skal ha nøyaktig tre øvingar.');return}
   if(!name.trim()){setError('Gi WOD-en eit namn.');return}
   if(showSets&&selected.some(x=>!x.sets.length||x.sets.some(s=>!s.reps||Number(s.reps)<1))){setError('Alle styrkesett må ha minst éi repetisjon.');return}
-  if(!showSets&&selected.some(x=>isRow(x)?(!x.rowValue||Number(x.rowValue)<=0):!x.reps)){setError('Alle øvingar må ha reps, distanse, kalorier eller arbeidstid.');return}
+  if(!showSets&&selected.some(x=>isStationCircuit&&x.repsMode==='amrap'?false:isRow(x)?(!x.rowValue||Number(x.rowValue)<=0):!x.reps)){setError('Alle øvingar må ha reps, distanse, kalorier eller arbeidstid.');return}
   if(isStationCircuit&&(Number(stationCount)<2||Number(stationCount)>8||selected.length!==Number(stationCount))){setError(`Stasjonssirkel krev ${stationCount} øvingar – éi per stasjon. Vel mellom 2 og 8 stasjonar.`);return}
   if(isStationCircuit&&(!Number(stationWork)||Number(stationWork)<1||Number(stationTransition)<0||!Number(stationRounds))){setError('Kontroller arbeidstid, bytettid og tal rundar.');return}
   if(isInterval&&(!Number(rounds)||!Number(workSeconds))){setError('Intervall krev arbeidstid og tal drag.');return}
