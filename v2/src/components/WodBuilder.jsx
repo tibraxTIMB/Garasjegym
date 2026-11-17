@@ -10,7 +10,9 @@ const nameNouns=['Panzer','Granate','Berserker','Keule','Kampfsau','Eber','Bär'
 const nameNumbers=['1942','1939','69'];
 const randomWodName=()=>{
  const base=nameAdjectives[Math.floor(Math.random()*nameAdjectives.length)]+' '+nameNouns[Math.floor(Math.random()*nameNouns.length)];
- return Math.random()<0.22?base+' '+nameNumbers[Math.floor(Math.random()*nameNumbers.length)]:base;
+ if(Math.random()>=0.22)return base;
+ const number=nameNumbers[Math.floor(Math.random()*nameNumbers.length)];
+ return Math.random()<0.5?number+' '+base:base+' '+number;
 };
 const shuffle=items=>[...items].sort(()=>Math.random()-.5)
 const blankItem=ex=>({key:crypto.randomUUID(),...ex,sets:'3',reps:ex.equipment==='Romaskin'?'500':'10',loadMode:'none',loadKg:'',percent1rm:'70',rir:'2',rpe:'8',restSeconds:'90',tempo:'',meters:ex.equipment==='Romaskin'?'500':'',calories:'',workSeconds:'',distanceUnit:'m',coachNote:''})
@@ -102,7 +104,7 @@ export default function WodBuilder(){
    <aside className="engine-section wod-composer">
     <div className="engine-section-title"><h4>Programmer økta</h4><span>{selected.length} øvingar</span></div>
     <form className="admin-create-form" onSubmit={save}>
-     <div className="wod-name-field"><label>WOD-namn<input value={name} onChange={e=>setName(e.target.value)} required/></label><button type="button" className="secondary-button" onClick={()=>setName(randomWodName())}>Nytt tullenamn</button></div><label>Programmeringsnivå<select value={prescription} onChange={e=>setPrescription(e.target.value)}><option value="rx">RX · Føreskriven</option><option value="scaled">Skalert</option><option value="beginner">Nybegynnar</option><option value="custom">Individuelt tilpassa</option></select></label>
+     <div className="wod-name-field"><label>WOD-namn<input value={name} onChange={e=>setName(e.target.value)} required/></label><button type="button" className="secondary-button" onClick={()=>setName(randomWodName())}>Nytt namn</button></div><label>Programmeringsnivå<select value={prescription} onChange={e=>setPrescription(e.target.value)}><option value="rx">RX · Føreskriven</option><option value="scaled">Skalert</option><option value="beginner">Nybegynnar</option><option value="custom">Individuelt tilpassa</option></select></label>
      <div className="engine-fields"><label>Format<select value={format} onChange={e=>setFormat(e.target.value)}>{formats.map(x=><option key={x}>{x}</option>)}</select></label><label>Varigheit (min)<input type="number" min="1" max="300" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label></div>
      {isEmom&&<div className="wod-advanced-fields"><label>EMOM-varigheit (min)<input type="number" min="1" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label><label>Arbeid per minutt (sek.)<input type="number" min="1" max="60" value={workSeconds} onChange={e=>setWorkSeconds(e.target.value)}/></label></div>}
      {isInterval&&<div className="wod-advanced-fields"><label>Arbeid (sek.)<input type="number" min="1" value={workSeconds} onChange={e=>setWorkSeconds(e.target.value)}/></label><label>Pause (sek.)<input type="number" min="0" value={restSeconds} onChange={e=>setRestSeconds(e.target.value)}/></label><label>Tal drag/rundar<input type="number" min="1" value={rounds} onChange={e=>setRounds(e.target.value)}/></label></div>}
