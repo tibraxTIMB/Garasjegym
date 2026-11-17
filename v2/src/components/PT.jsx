@@ -12,7 +12,7 @@ function CalendarSelect({value,onChange,label='Vel dato'}) {
  const dateKey=d=>year+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0')
  return <div className="pt-calendar"><div className="pt-calendar-head"><strong>{label}</strong><div><button type="button" onClick={()=>setMonth(new Date(year,m-1,1))}>‹</button><span>{month.toLocaleDateString('nn-NO',{month:'long',year:'numeric'})}</span><button type="button" onClick={()=>setMonth(new Date(year,m+1,1))}>›</button></div></div><div className="pt-calendar-grid">{['M','T','O','T','F','L','S'].map((d,i)=><span className="pt-calendar-weekday" key={i}>{d}</span>)}{Array.from({length:offset},(_,i)=><span key={'blank'+i}/>)}{Array.from({length:days},(_,i)=>i+1).map(d=><button type="button" key={d} className={selected===dateKey(d)?'selected':''} onClick={()=>onChange(dateKey(d)+'T'+time)}>{d}</button>)}</div><label className="pt-calendar-time">Klokkeslett<input type="time" value={time} onChange={e=>onChange((selected||dateKey(new Date().getDate()))+'T'+e.target.value)}/></label></div>
 }
-export default function PT({profile}){
+export default function PT({profile,focusRequestId,onFocusConsumed}){
  const staff=isStaff(profile)
  const [sessions,setSessions]=useState([]),[bookings,setBookings]=useState([]),[requests,setRequests]=useState([])
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
@@ -49,6 +49,7 @@ export default function PT({profile}){
   setLoading(false)
  }
  useEffect(()=>{load();const refresh=setInterval(()=>load(true),60000);return()=>clearInterval(refresh)},[])
+ useEffect(()=>{if(!staff||!focusRequestId||!requests.length)return;const target=requests.find(row=>row.id===focusRequestId);if(target)setActiveClient(target.member_id);const timer=setTimeout(()=>{document.getElementById('pt-request-'+focusRequestId)?.scrollIntoView({behavior:'smooth',block:'center'});onFocusConsumed?.()},120);return()=>clearTimeout(timer)},[staff,focusRequestId,requests])
  async function prescribeWorkout(event){
   event.preventDefault();setBusy('prescribe');setError('');setNotice('')
   try{
@@ -118,6 +119,17 @@ export default function PT({profile}){
    setNotice('PT-førespurnaden er oppdatert.')
   }catch(e){setError(e.message||'Kunne ikkje oppdatera førespurnaden.')}finally{setBusy('')}
  }
+ async function setRequestDecision(request,status){
+  setBusy('request-'+request.id);setError('');setNotice('')
+  try{
+   const {data:{user}}=await supabase.auth.getUser()
+   const draft=requestDrafts[request.id]||{}
+   const {error:e}=await supabase.from('pt_requests').update({status,staff_note:draft.staffNote??request.staff_note,handled_by:user.id,handled_at:new Date().toISOString()}).eq('id',request.id)
+   if(e)throw e
+   setRequests(rows=>rows.map(row=>row.id===request.id?{...row,status,staff_note:draft.staffNote??row.staff_note,handled_at:new Date().toISOString()}:row))
+   setNotice(status==='approved'?'PT-førespurnaden er godkjend.':'PT-førespurnaden er avslått.')
+  }catch(e){setError(e.message||'Kunne ikkje oppdatera førespurnaden.')}finally{setBusy('')}
+ }
  async function createSessionFromRequest(request){
   const draft=requestDrafts[request.id]||{}
   if(!draft.sessionAt){setError('Vel dato og klokkeslett for PT-timen.');return}
@@ -184,6 +196,6 @@ export default function PT({profile}){
    </form>
    {notes.filter(n=>n.client_id===activeClient).map(n=><article className="history-card" key={n.id}><strong>{members.find(m=>m.id===n.client_id)?.display_name||'Medlem'}</strong><p><b>Mål:</b> {n.goals}</p><p>{n.note}</p><small>{n.follow_up_at?'Oppfølging: '+new Date(n.follow_up_at).toLocaleString('nn-NO'):'Ingen oppfølgingsdato'}</small></article>)}
   </section>}
-  <section className="engine-section"><h4>{staff?'PT-førespurnader':'Mine førespurnader'}</h4>{requests.filter(r=>!staff||r.member_id===activeClient).length?requests.filter(r=>!staff||r.member_id===activeClient).map(r=><article className="history-card" key={r.id}><div className="history-card-top"><strong>{staff?(members.find(m=>m.id===r.member_id)?.display_name||'Medlem')+' · ':''}{r.goal}</strong><span>{r.status}</span></div><small>{r.preferred_at?'Ønskt: '+new Date(r.preferred_at).toLocaleString('nn-NO'):'Tidspunkt ikkje valt'}{r.alternative_at?' · Alternativ: '+new Date(r.alternative_at).toLocaleString('nn-NO'):''}</small>{r.availability_note&&<p>Tilgjenge: {r.availability_note}</p>}{staff?<div className="admin-create-form"><label>Status<select value={requestDrafts[r.id]?.status||r.status} onChange={e=>setRequestDrafts(v=>({...v,[r.id]:{...v[r.id],status:e.target.value}}))}><option value="pending">Ventande</option><option value="approved">Godkjend</option><option value="declined">Avslått</option><option value="cancelled">Avlyst</option></select></label><CalendarSelect value={requestDrafts[r.id]?.sessionAt||r.preferred_at?.slice(0,16)||''} onChange={value=>setRequestDrafts(v=>({...v,[r.id]:{...v[r.id],sessionAt:value}}))} label="Vel tidspunkt for PT-time"/><button className="secondary-button" disabled={busy==='request-'+r.id||(!requestDrafts[r.id]?.sessionAt&&!r.preferred_at)} onClick={()=>createSessionFromRequest(r)}>Opprett PT-time for medlem</button><label>Tilbakemelding / internt notat<textarea rows="2" value={requestDrafts[r.id]?.staffNote??r.staff_note??''} onChange={e=>setRequestDrafts(v=>({...v,[r.id]:{...v[r.id],staffNote:e.target.value}}))}/></label><button className="secondary-button" disabled={busy==='request-'+r.id} onClick={()=>updateRequest(r)}>Lagra svar</button></div>:r.staff_note&&<p>{r.staff_note}</p>}</article>):<div className="empty-state">{staff?'Ingen PT-førespurnader mottatt.':'Ingen PT-førespurnader sende.'}</div>}</section>
+  <section className="engine-section"><h4>{staff?'PT-førespurnader':'Mine førespurnader'}</h4>{requests.filter(r=>!staff||r.member_id===activeClient).length?requests.filter(r=>!staff||r.member_id===activeClient).map(r=><article id={"pt-request-"+r.id} className={"history-card pt-request-card "+(r.id===focusRequestId?"focused":"")} key={r.id}><div className="history-card-top"><strong>{staff?(members.find(m=>m.id===r.member_id)?.display_name||'Medlem')+' · ':''}{r.goal}</strong><span>{r.status}</span></div><small>{r.preferred_at?'Ønskt: '+new Date(r.preferred_at).toLocaleString('nn-NO'):'Tidspunkt ikkje valt'}{r.alternative_at?' · Alternativ: '+new Date(r.alternative_at).toLocaleString('nn-NO'):''}</small>{r.availability_note&&<p>Tilgjenge: {r.availability_note}</p>}{staff?<div className="admin-create-form"><div className="pt-request-decision"><strong>Status: {r.status==='pending'?'Ventande':r.status==='approved'?'Godkjend':r.status==='declined'?'Avslått':r.status}</strong><div><button type="button" className="primary-button" disabled={busy==='request-'+r.id||r.status==='approved'} onClick={()=>setRequestDecision(r,'approved')}>Godkjenn</button><button type="button" className="secondary-button" disabled={busy==='request-'+r.id||r.status==='declined'} onClick={()=>setRequestDecision(r,'declined')}>Avslå</button></div></div><CalendarSelect value={requestDrafts[r.id]?.sessionAt||r.preferred_at?.slice(0,16)||''} onChange={value=>setRequestDrafts(v=>({...v,[r.id]:{...v[r.id],sessionAt:value}}))} label="Vel tidspunkt for PT-time"/><button className="secondary-button" disabled={busy==='request-'+r.id||(!requestDrafts[r.id]?.sessionAt&&!r.preferred_at)} onClick={()=>createSessionFromRequest(r)}>Opprett PT-time for medlem</button><label>Tilbakemelding / internt notat<textarea rows="2" value={requestDrafts[r.id]?.staffNote??r.staff_note??''} onChange={e=>setRequestDrafts(v=>({...v,[r.id]:{...v[r.id],staffNote:e.target.value}}))}/></label><button className="secondary-button" disabled={busy==='request-'+r.id} onClick={()=>updateRequest(r)}>Lagra svar</button></div>:r.staff_note&&<p>{r.staff_note}</p>}</article>):<div className="empty-state">{staff?'Ingen PT-førespurnader mottatt.':'Ingen PT-førespurnader sende.'}</div>}</section>
  </div>
 }
