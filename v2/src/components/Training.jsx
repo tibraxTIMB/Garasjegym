@@ -157,7 +157,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     if (!silent) setLoading(true); setError('')
     let w = await supabase.from('wods')
       .select('id,name,format,duration_minutes,movements,notes,audience,is_published,created_at,timer_settings')
-      .eq('is_published', true).order('created_at', { ascending: false })
+      .order('created_at', { ascending: false })
     // Keep the WOD library usable while the optional timer-settings migration is staged.
     if (w.error && /timer_settings|column .* does not exist/i.test(w.error.message || '')) {
       w = await supabase.from('wods')
