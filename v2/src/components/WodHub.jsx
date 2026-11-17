@@ -11,6 +11,6 @@ export default function WodHub({onLaunchWod,staff}){
    <button type="button" role="tab" aria-selected={tab==='library'} className={tab==='library'?'selected':''} onClick={()=>setTab('library')}><BookOpen size={16}/> WOD-bibliotek</button>
    {staff&&<button type="button" role="tab" aria-selected={tab==='builder'} className={tab==='builder'?'selected':''} onClick={()=>setTab('builder')}><WandSparkles size={16}/> Bygg WOD</button>}
   </div>
-  {tab==='library'?<WodLibrary onLaunchWod={onLaunchWod}/>:<WodBuilder/>}
+  {tab==='library'?<WodLibrary staff={staff} onLaunchWod={onLaunchWod}/>:<WodBuilder/>}
  </div>
 }
