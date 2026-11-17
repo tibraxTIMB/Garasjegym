@@ -12,7 +12,7 @@ const localDateISO = (date = new Date()) => {
   return local.toISOString().slice(0, 10)
 }
 
-function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSettings = null, onSnapshot = () => {} }) {
+function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList = [], timerSettings = null, onSnapshot = () => {} }) {
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [round, setRound] = useState(1)
@@ -134,7 +134,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
         <div className="timer-phase">{phase}</div>
         <strong className="timer-main-clock">{clock(primaryTime)}</strong>
         <div className="timer-round-label">{isCountdown ? 'GJENSTÅANDE TID' : isEMOM ? 'TIL NESTE ARBEIDSSTART' : isTimedInterval ? 'TID I INTERVALLFASEN' : 'MEDGÅTT TID'}</div>
-        {activeExercise && <div className="timer-active-under-clock"><span>GJELDANDE ØVING</span><b>{activeExercise}</b></div>}
+        {isAmrap ? <div className="timer-amrap-exercise-list"><span>ØVINGAR I WOD-EN</span>{exerciseList.length ? <ol>{exerciseList.map((exercise,index)=><li key={exercise.key||index}><b>{index+1}.</b><span>{exercise.exercise_name||'Øving utan namn'}</span></li>)}</ol> : <p>Ingen øvingar er lagde til.</p>}</div> : activeExercise && <div className="timer-active-under-clock"><span>GJELDANDE ØVING</span><b>{activeExercise}</b></div>}
         {isAmrap && <div className="timer-round-total"><span>RUNDER FULLFØRT</span><b>{completedRounds}</b></div>}
         <div className="timer-actions">
           <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) setPhase('PÅGÅR'); setRunning(value => !value) }} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
@@ -442,7 +442,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         <label>Varigheit (min)<input type="number" min="1" max="600" value={duration} onChange={e => setDuration(e.target.value)}/></label>
         <label>Ekstra sekund<input type="number" min="0" max="59" value={durationSeconds} onChange={e => setDurationSeconds(e.target.value)}/></label>
       </div>
-      <Timer format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot}/>
+      <Timer format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} exerciseList={items} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot}/>
       {items.length > 0 && <section className="engine-section">
         <div className="engine-section-title"><h4>WOD / øvingsrekkjefølgje</h4><span>Vel øvinga du arbeider med</span></div>
         <div className="wod-list">{items.map((item, index) => <button type="button" key={item.key} className={index === activeExerciseIndex ? 'secondary-button active' : 'secondary-button'} onClick={() => setActiveExerciseIndex(index)}>{index + 1}. {item.exercise_name || 'Ny øving'}</button>)}</div>
