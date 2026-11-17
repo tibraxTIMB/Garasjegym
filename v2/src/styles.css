@@ -1349,3 +1349,43 @@ footer {
  .timer-lap-list{max-height:145px}
  .timer-active-exercise{grid-column:1/-1}
 }
+
+
+/* Timer layout refinement from tablet feedback: clock first, stats and laps below */
+.engine-timer{gap:8px;padding:clamp(10px,1.6vw,18px);min-height:0}
+.timer-dashboard-reflow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"main main" "stats laps";gap:12px 22px;align-items:start}
+.timer-dashboard-reflow .timer-center{grid-area:main;min-height:0;padding:4px 0 10px;gap:5px}
+.timer-dashboard-reflow .timer-main-clock{font-size:clamp(76px,14vw,142px);line-height:.95;letter-spacing:-5px}
+.timer-dashboard-reflow .timer-phase{font-size:10px;padding:4px 11px}
+.timer-active-under-clock{display:grid;justify-items:center;gap:3px;margin:2px 0 4px}
+.timer-active-under-clock span{color:#a4aea7;font-size:9px;font-weight:900;letter-spacing:1.2px}
+.timer-active-under-clock b{color:#f5f2e9;font-size:clamp(13px,2vw,18px);text-align:center}
+.timer-dashboard-reflow .timer-round-total{margin:0 0 3px}
+.timer-dashboard-reflow .timer-round-total b{font-size:clamp(28px,4vw,42px)}
+.timer-dashboard-reflow .timer-actions{gap:7px}
+.timer-dashboard-reflow .timer-side{padding:9px 0 2px;gap:8px;border-top:1px solid #ffffff20}
+.timer-dashboard-reflow .timer-side-left{grid-area:stats;display:flex;flex-direction:row;flex-wrap:wrap;align-content:start;align-items:flex-start;gap:10px 20px;border-left:0}
+.timer-dashboard-reflow .timer-side-right{grid-area:laps;border-left:1px solid #ffffff20;padding:9px 0 2px 14px}
+.timer-bottom-heading{width:100%;color:#aeb7b1;font-size:9px;font-weight:900;letter-spacing:1px}
+.timer-dashboard-reflow .timer-side-stat{gap:2px}
+.timer-dashboard-reflow .timer-side-stat b{font-size:clamp(15px,2vw,21px)}
+.timer-dashboard-reflow .timer-lap-list{max-height:100px;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start}
+.timer-dashboard-reflow .timer-no-laps{font-size:9px}
+.timer-music-footer{width:min(100%,360px);margin:0 auto}
+.timer-music-footer .timer-music-stack{margin:0;gap:0}
+.timer-music-footer .personal-spotify-player.compact{padding:5px 7px;gap:4px;border-radius:9px}
+.timer-music-footer .personal-spotify-player.compact .personal-spotify-player-head{display:none}
+.timer-music-footer .personal-spotify-player.compact .personal-spotify-now{padding:4px 6px}
+.timer-music-footer .personal-spotify-player.compact .personal-spotify-art{width:28px;height:28px;flex-basis:28px}
+.timer-music-footer .personal-spotify-player.compact .personal-spotify-controls{gap:5px}
+.timer-music-footer .personal-spotify-player.compact .personal-spotify-controls button{width:25px;height:25px}
+.timer-music-footer .personal-spotify-player.compact .personal-spotify-controls .spotify-play-button{width:29px;height:29px}
+.timer-music-footer .personal-spotify-player.compact .personal-spotify-selects{display:none}
+@media(max-width:520px){
+ .timer-dashboard-reflow{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px 12px}
+ .timer-dashboard-reflow .timer-main-clock{font-size:clamp(68px,19vw,100px);letter-spacing:-3px}
+ .timer-dashboard-reflow .timer-side-left{gap:8px 13px}
+ .timer-dashboard-reflow .timer-side-right{padding-left:9px}
+ .timer-dashboard-reflow .timer-lap-list{grid-template-columns:1fr;max-height:110px}
+ .timer-music-footer{width:min(100%,320px)}
+}
