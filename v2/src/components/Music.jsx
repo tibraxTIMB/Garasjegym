@@ -304,13 +304,14 @@ export function Music({ isStaff = false }) {
       <div><span className="section-kicker">GARASJEGYM · DIN MUSIKK</span><h2>Musikk</h2><p>Din personlege Spotify-konto – privat og separat frå fellesmusikken.</p></div>
     </div>
     <PersonalSpotifyPlayer/>
-    {!music?.clientId && <section className="spotify-setup-card">
-      <strong>Første oppsett · Spotify Client ID</strong>
-      <p>Lim inn Client ID frå Spotify Developer Dashboard. Dette er ein offentleg app-ID, ikkje eit passord eller ein hemmeleg nøkkel.</p>
+    <details className="spotify-setup-card">
+      <summary><strong>{music?.clientId ? 'Spotify-app er konfigurert' : 'Første oppsett · Spotify Client ID'}</strong><span>{music?.clientId ? 'Vis oppsett' : 'Krev éin gong'}</span></summary>
+      <p>Client ID frå Spotify Developer Dashboard. Dette er ein offentleg app-ID, ikkje eit passord eller ein hemmeleg nøkkel.</p>
       <input value={clientDraft} onChange={event => setClientDraft(event.target.value)} placeholder="Spotify Client ID"/>
       <button className="secondary-button" onClick={saveClientId} disabled={!clientDraft.trim()}>Lagra app-ID</button>
-      <small>Redirect URI som må registrerast i Spotify: <code>{REDIRECT_URI()}</code></small>
-    </section>}
+      <small>Registrer denne Redirect URI-en i Spotify Developer Dashboard (eksakt): <code>{REDIRECT_URI()}</code></small>
+      <small>Development Mode støttar inntil fem autoriserte Spotify-brukarar. Utviklarkontoen må ha Premium, og kvar brukar treng Premium for avspelingsstyring.</small>
+    </details>
     <section className="music-connect-card">
       <div><strong>{music?.configured ? 'Felles Soundtrack er kopla til' : 'Felles Soundtrack er ikkje konfigurert'}</strong><p>{music?.status || 'Hentar status …'}</p></div>
       <button className="secondary-button" onClick={() => music?.refresh()} disabled={music?.loading}><RefreshCw size={15}/> Oppdater</button>
