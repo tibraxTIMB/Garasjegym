@@ -1090,3 +1090,12 @@ footer {
 .pt-active-customer-compact .pt-rank-stars{font-size:10px!important}
 .pt-active-customer-compact .pt-rank-link{font-size:9px!important}
 @media(max-width:620px){.pt-active-customer-compact{display:flex!important;flex-wrap:wrap!important;width:100%}.pt-active-customer-compact .pt-customer-rank{width:auto!important;margin-left:0!important}}
+
+/* Compact PT customer badge – no oversized profile frame */
+.pt-customer-badge{display:inline-flex;align-items:center;gap:8px;max-width:100%;width:max-content;margin:5px 0 10px;padding:5px 9px;border:1px solid #3b4444;border-radius:999px;background:#202526;color:#f4f1e9}
+.pt-customer-badge-avatar{display:grid;place-items:center;width:25px;height:25px;flex:0 0 25px;border-radius:50%;background:var(--orange);color:#17191a;font-size:10px;font-weight:900}
+.pt-customer-badge>span:nth-child(2){display:grid;gap:1px}
+.pt-customer-badge>span:nth-child(2)>b{font-size:11px;line-height:1.2}
+.pt-customer-badge small{font-size:9px;color:var(--muted)}
+.pt-customer-badge-rank{padding-left:8px;border-left:1px solid #46504f;color:#f3b45e;font-size:9px;font-weight:750;white-space:nowrap}
+@media(max-width:620px){.pt-customer-badge{width:100%;border-radius:10px;flex-wrap:wrap}.pt-customer-badge-rank{margin-left:33px;padding-left:0;border:0}}
