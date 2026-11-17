@@ -112,7 +112,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const isRehabExercise=x=>!!(x.is_rehab||x.category==='Rehab / fysio'||rehabBodyAreas.includes((x.body_area||'').toLowerCase()))
  const [selected,setSelected]=useState([]),[editingWodId,setEditingWodId]=useState(null),[name,setName]=useState(()=>randomWodName()),[format,setFormat]=useState('AMRAP'),[libraryWods,setLibraryWods]=useState([]),[builderMode,setBuilderMode]=useState(assignedClientId?'library':'build'),[librarySearch,setLibrarySearch]=useState(''),[selectedLibraryWod,setSelectedLibraryWod]=useState(''),[classicChoice,setClassicChoice]=useState(''),[publishToMembers,setPublishToMembers]=useState(false)
  const [minutes,setMinutes]=useState('20'),[durationSeconds,setDurationSeconds]=useState('0'),[notes,setNotes]=useState(''),[stimulus,setStimulus]=useState('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
- const [rounds,setRounds]=useState('5'),[workSeconds,setWorkSeconds]=useState('60'),[restSeconds,setRestSeconds]=useState('10'),[timeCap,setTimeCap]=useState('20'),[timeCapSeconds,setTimeCapSeconds]=useState('0'),[stationCount,setStationCount]=useState('8'),[stationWork,setStationWork]=useState('45'),[stationTransition,setStationTransition]=useState('15'),[stationRounds,setStationRounds]=useState('3')
+ const [rounds,setRounds]=useState('5'),[workSeconds,setWorkSeconds]=useState('60'),[restSeconds,setRestSeconds]=useState('10'),[timeCap,setTimeCap]=useState('20'),[timeCapSeconds,setTimeCapSeconds]=useState('0'),[stationCount,setStationCount]=useState('4'),[stationWork,setStationWork]=useState('45'),[stationTransition,setStationTransition]=useState('15'),[stationRounds,setStationRounds]=useState('3')
  const [ladderStart,setLadderStart]=useState('2'),[ladderStep,setLadderStep]=useState('2'),[ladderDirection,setLadderDirection]=useState('up')
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [prescription,setPrescription]=useState('rx'),[customInstructions,setCustomInstructions]=useState(''),[customUseSets,setCustomUseSets]=useState(false),[combinationMode,setCombinationMode]=useState('For Time')
@@ -211,7 +211,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  }
  function buildPrescription(x){
   const load=fmtLoad(x)
-  const target=isRow(x)?(x.rowValue?x.rowValue+' '+({s:'sek',min:'min',m:'m',cal:'cal'}[x.rowUnit]||'m'):'ikkje dosert'):x.reps+' reps'
+  const target=isStationCircuit&&x.repsMode==='amrap'?'AMRAP · maks reps på '+stationWork+' sek.':isRow(x)?(x.rowValue?x.rowValue+' '+({s:'sek',min:'min',m:'m',cal:'cal'}[x.rowUnit]||'m'):'ikkje dosert'):x.reps+' reps'
   const loadText=load?' · '+load:''
   const dose=showSets?x.sets.map((s,i)=>(i+1)+': '+s.reps+' reps'+(s.loadMode==='kg'&&s.loadKg?' @ '+s.loadKg+' kg':s.loadMode==='percent'&&s.percent1rm?' @ '+s.percent1rm+'% 1RM':s.loadMode==='rir'&&s.rir!==''?' · RIR '+s.rir:s.loadMode==='rpe'&&s.rpe!==''?' · RPE '+s.rpe:'')+(s.restSeconds?' · pause '+s.restSeconds+'s':'')).join(' | '):target+loadText
   return x.name+' – '+dose+(x.tempo?' · tempo '+x.tempo:'')+(x.coachNote?' · '+x.coachNote:'')
