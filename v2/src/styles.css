@@ -960,3 +960,27 @@ footer {
 .wod-classic-controls select{flex:1;min-width:0}
 .wod-classic-controls button{white-space:nowrap}
 @media(max-width:600px){.wod-classic-picker{grid-template-columns:minmax(0,1fr)}.wod-classic-controls{flex-direction:column}.wod-classic-controls button{width:100%}}
+
+
+/* Clear, compact classic benchmark selector */
+.wod-classic-picker{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:12px 0 16px;padding:14px 16px;border:1px solid #6b4b27;border-radius:13px;background:linear-gradient(110deg,#302719 0%,#222625 72%)}
+.wod-classic-copy{display:flex;flex-direction:column;gap:4px;min-width:180px}
+.wod-classic-kicker{font-size:9px;font-weight:900;letter-spacing:1.5px;color:#d9a15a}
+.wod-classic-copy strong{font-size:16px;color:#ffb34e}
+.wod-classic-copy small{font-size:11px;color:#aeb8b6}
+.wod-classic-controls{display:flex;align-items:center;gap:8px;min-width:0;flex:1;justify-content:flex-end}
+.wod-classic-select{max-width:300px;min-width:180px;height:43px;padding:0 36px 0 12px!important;border:1px solid #4b5553!important;border-radius:9px!important;background-color:#171c1d!important;color:#f1f2ed!important;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23f3a43b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 11px center!important}
+.wod-classic-select:focus{outline:2px solid #f3a43b;outline-offset:2px}
+.wod-category-conditioning{border-left:3px solid #e3a33c!important}
+.wod-category-core{border-left:3px solid #b78ae0!important}
+.wod-category-strength{border-left:3px solid #6fa6e8!important}
+.wod-category-mobility{border-left:3px solid #55c2ad!important}
+.wod-category-rehab{border-left:3px solid #d17d8c!important}
+.wod-category-other{border-left:3px solid #778482!important}
+.wod-order-conditioning{background:#49371e!important;color:#ffc36c!important}
+.wod-order-core{background:#382b49!important;color:#d5b5f4!important}
+.wod-order-strength{background:#24394d!important;color:#9fcaff!important}
+.wod-order-mobility{background:#1e403b!important;color:#8de0cf!important}
+.wod-order-rehab{background:#472b32!important;color:#f3b0bd!important}
+.wod-row-interval-button{border-color:#527b8b!important;color:#9bd8ed!important}
+@media(max-width:650px){.wod-classic-picker{align-items:stretch;flex-direction:column;gap:10px}.wod-classic-controls{justify-content:stretch;flex-direction:column}.wod-classic-select{max-width:none;width:100%}.wod-classic-controls button{width:100%}}
