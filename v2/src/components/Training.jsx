@@ -15,34 +15,49 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [round, setRound] = useState(1)
-  const [workSeconds, setWorkSeconds] = useState(timerSettings?.work_seconds ?? (format === 'Tabata' ? 20 : 60))
-  const [restSeconds, setRestSeconds] = useState(timerSettings?.rest_seconds ?? (format === 'Tabata' ? 10 : 60))
-  const [rounds, setRounds] = useState(timerSettings?.rounds ?? (format === 'Tabata' ? 8 : 5))
+  const [workSeconds, setWorkSeconds] = useState(timerSettings?.work_seconds ?? timerSettings?.workout_schema?.interval?.work_seconds ?? (format === 'Tabata' ? 20 : 60))
+  const [restSeconds, setRestSeconds] = useState(timerSettings?.rest_seconds ?? timerSettings?.workout_schema?.interval?.rest_seconds ?? (format === 'Tabata' ? 10 : 60))
+  const [rounds, setRounds] = useState(timerSettings?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
   const [focused, setFocused] = useState(false)
   const [phase, setPhase] = useState('Klar')
   const [laps, setLaps] = useState([])
   const [soundOn, setSoundOn] = useState(true)
   const schema = timerSettings?.workout_schema
-  const savedDuration = schema?.duration_seconds
-  const capDuration = schema?.time_cap_seconds
-  const target = Math.max(1, Number((['AMRAP','Nedteljing','For Time','Chipper'].includes(format) || (['Couplet','Triplet'].includes(format) && schema?.combination_mode !== 'Open')) && capDuration) || Number(savedDuration) || ((Number(minutes) || 10) * 60 + (Number(seconds) || 0)))
-  const isTimedInterval = ['Tabata', 'Intervall', 'Tilpassa'].includes(format)
-  const isCountdown = ['AMRAP', 'Nedteljing'].includes(format) || (['Couplet','Triplet'].includes(format) && schema?.combination_mode === 'AMRAP')
-  const isForTimeCap = ['For Time','Chipper'].includes(format) || (['Couplet','Triplet'].includes(format) && schema?.combination_mode === 'For Time')
+  const savedDuration = Number(schema?.duration_seconds) || 0
+  const capDuration = Number(schema?.time_cap_seconds) || (Number(schema?.time_cap_minutes) || 0) * 60
   const isEMOM = ['EMOM', 'EMOM 1', 'EMOM 2', 'E1MOM', 'E2MOM', 'E3MOM'].includes(format)
-  const emomEvery = Math.max(1, Number(timerSettings?.workout_schema?.interval?.work_every_minutes) || (format === 'E2MOM' || format === 'EMOM 2' ? 2 : format === 'E3MOM' ? 3 : 1))
+  const emomEvery = Math.max(1, Number(schema?.interval?.work_every_minutes) || (format === 'E2MOM' || format === 'EMOM 2' ? 2 : format === 'E3MOM' ? 3 : 1))
   const emomCycle = emomEvery * 60
+  const isTimedInterval = ['Tabata', 'Intervall', 'Tilpassa', 'Row Intervals'].includes(format)
+  const isCountdown = ['AMRAP', 'Nedteljing'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'AMRAP')
+  const isForTime = ['For Time', 'Chipper'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'For Time')
   const isDeathBy = format === 'Death By'
+  const isCountUp = !isCountdown && !isEMOM && !isTimedInterval
+  const fallbackDuration = Math.max(1, (Number(minutes) || 10) * 60 + (Number(seconds) || 0))
+  const target = Math.max(1, (isCountdown || isForTime) && capDuration ? capDuration : savedDuration || fallbackDuration)
   const cycle = Math.max(1, Number(workSeconds)) + Math.max(0, Number(restSeconds))
-  const roundLength = isTimedInterval ? cycle : isEMOM ? emomCycle : 60
-  const currentRound = isTimedInterval || isDeathBy || isEMOM ? Math.floor(elapsed / roundLength) + 1 : Math.floor(elapsed / 60) + 1
-  const phaseElapsed = isTimedInterval ? elapsed % cycle : elapsed % (isEMOM ? emomCycle : 60)
-  const currentPhase = isTimedInterval ? (phaseElapsed < Number(workSeconds) ? 'ARBEID' : 'KVILE') : (isEMOM ? (phaseElapsed === 0 ? 'ARBEID' : 'TIL NESTE START') : isDeathBy ? 'NY RUNDE' : 'PÅGÅR')
-  const intervalRemaining = isTimedInterval
-    ? Math.max(0, (phaseElapsed < Number(workSeconds) ? Number(workSeconds) : cycle) - phaseElapsed)
-    : Math.max(0, (isEMOM ? emomCycle : 60) - phaseElapsed)
-  const display = isCountdown ? Math.max(0, target - elapsed)
-    : isEMOM || isTimedInterval || isDeathBy ? intervalRemaining : elapsed
+  const intervalTotal = cycle * Math.max(1, Number(rounds) || 1)
+  const totalTarget = isTimedInterval ? intervalTotal : target
+  const remainingTotal = Math.max(0, totalTarget - elapsed)
+  const phaseElapsed = isTimedInterval ? elapsed % cycle : elapsed % emomCycle
+  const inWorkPhase = phaseElapsed < Number(workSeconds)
+  const phaseRemaining = isTimedInterval
+    ? Math.max(0, (inWorkPhase ? Number(workSeconds) : cycle) - phaseElapsed)
+    : Math.max(0, emomCycle - (elapsed % emomCycle || 0))
+  const emomNextStart = elapsed === 0 ? 0 : (emomCycle - (elapsed % emomCycle || emomCycle)) || emomCycle
+  const currentRound = isTimedInterval
+    ? Math.min(Math.floor(elapsed / cycle) + 1, Math.max(1, Number(rounds) || 1))
+    : isEMOM ? Math.floor(elapsed / emomCycle) + 1
+    : isDeathBy ? Math.floor(elapsed / 60) + 1
+    : Math.floor(elapsed / 60) + 1
+  const currentPhase = isTimedInterval
+    ? (inWorkPhase ? 'ARBEID' : 'KVILE')
+    : isEMOM ? (elapsed === 0 || elapsed % emomCycle === 0 ? 'ARBEID' : 'TIL NESTE START')
+    : isDeathBy ? 'NY RUNDE' : 'PÅGÅR'
+  const primaryTime = isCountdown ? remainingTotal
+    : isTimedInterval ? phaseRemaining
+    : isEMOM ? remainingTotal
+    : elapsed
 
   function cue(frequency = 880, duration = 0.16) {
     if (!soundOn) return
@@ -65,14 +80,14 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
 
   useEffect(() => {
     setElapsed(0); setRunning(false); setRound(1); setPhase('Klar'); setLaps([])
-    setWorkSeconds(timerSettings?.work_seconds ?? (format === 'Tabata' ? 20 : 60))
-    setRestSeconds(timerSettings?.rest_seconds ?? (format === 'Tabata' ? 10 : 60))
-    setRounds(timerSettings?.rounds ?? (format === 'Tabata' ? 8 : 5))
-  }, [format, minutes, timerSettings?.work_seconds, timerSettings?.rest_seconds, timerSettings?.rounds])
+    setWorkSeconds(timerSettings?.work_seconds ?? timerSettings?.workout_schema?.interval?.work_seconds ?? (format === 'Tabata' ? 20 : 60))
+    setRestSeconds(timerSettings?.rest_seconds ?? timerSettings?.workout_schema?.interval?.rest_seconds ?? (format === 'Tabata' ? 10 : 60))
+    setRounds(timerSettings?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
+  }, [format, minutes, seconds, timerSettings?.work_seconds, timerSettings?.rest_seconds, timerSettings?.rounds, timerSettings?.workout_schema?.duration_seconds, timerSettings?.workout_schema?.time_cap_seconds])
 
   useEffect(() => {
     if (!running) return undefined
-    const id = window.setInterval(() => setElapsed(s => s + 1), 1000)
+    const id = window.setInterval(() => setElapsed(value => value + 1), 1000)
     return () => window.clearInterval(id)
   }, [running])
 
@@ -80,11 +95,16 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
 
   useEffect(() => {
     if (!running) return
-    if (isCountdown && elapsed >= target) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
-    if (isTimedInterval && elapsed >= cycle * Math.max(1, Number(rounds))) { setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return }
-    if ((isEMOM || isDeathBy || isForTimeCap) && elapsed >= target) { setRunning(false); setPhase(isForTimeCap ? 'TIDSGRENSE' : 'FERDIG'); cue(520, 0.5); return }
-    if ((isTimedInterval && elapsed % cycle === 0) || (isTimedInterval && elapsed % cycle === Number(workSeconds)) || ((isEMOM && elapsed % emomCycle === 0) || (isDeathBy && elapsed % 60 === 0))) cue(elapsed % 60 === 0 ? 1040 : 660, 0.12)
-  }, [elapsed, running, target, isCountdown, isForTimeCap, isTimedInterval, cycle, rounds, isEMOM, emomCycle, isDeathBy, workSeconds])
+    if ((isCountdown || isEMOM || isDeathBy || isForTime) && elapsed >= target) {
+      setRunning(false); setPhase(isForTime ? 'TIDSGRENSE' : 'FERDIG'); cue(520, 0.5); return
+    }
+    if (isTimedInterval && elapsed >= intervalTotal) {
+      setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return
+    }
+    if ((isTimedInterval && (elapsed % cycle === 0 || elapsed % cycle === Number(workSeconds))) ||
+      (isEMOM && elapsed > 0 && elapsed % emomCycle === 0) ||
+      (isDeathBy && elapsed > 0 && elapsed % 60 === 0)) cue(1040, 0.12)
+  }, [elapsed, running, target, isCountdown, isEMOM, isDeathBy, isForTime, isTimedInterval, intervalTotal, cycle, emomCycle, workSeconds])
 
   useEffect(() => {
     if (running) setPhase(currentPhase)
@@ -100,29 +120,39 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
     }
   }
 
+  const isAmrap = isCountdown
+  const isStopwatch = ['Stoppeklokke', 'Fri trening', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt'].includes(format) ||
+    (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'Open')
+  const showTimeCap = (isForTime || isDeathBy) && capDuration > 0
   const roundsShown = isTimedInterval ? Math.min(currentRound, Number(rounds)) : currentRound
   return <div className={focused ? 'engine-timer timer-focused' : 'engine-timer'}>
     <div className="timer-caption"><Clock3 size={15}/> {format.toUpperCase()}</div>
     <div className="timer-phase">{phase}</div>
-    <strong>{clock(display)}</strong>
+    <strong>{clock(primaryTime)}</strong>
+    <div className="timer-round-label">{isCountdown ? 'GJENSTÅANDE TID' : isEMOM ? 'GJENSTÅANDE ØKTTID' : isTimedInterval ? 'TID I INTERVALLFASEN' : 'MEDGÅTT TID'}</div>
     {activeExercise && <div className="timer-round-label">NO: {activeExercise}</div>}
+    {isCountdown && <div className="timer-time-pair"><span>Medgått: <b>{clock(elapsed)}</b></span></div>}
+    {isEMOM && <div className="timer-time-pair"><span>Medgått: <b>{clock(elapsed)}</b></span><span>{elapsed === 0 ? 'Første arbeidsstart no' : 'Neste arbeidsstart om'}: <b>{clock(emomNextStart)}</b></span></div>}
+    {isTimedInterval && <div className="timer-time-pair"><span>Medgått: <b>{clock(elapsed)}</b></span><span>Økta att: <b>{clock(remainingTotal)}</b></span></div>}
+    {isForTime && <div className="timer-time-pair"><span>{showTimeCap ? <>Tid att: <b>{clock(Math.max(0, target - elapsed))}</b></> : <>Medgått: <b>{clock(elapsed)}</b></>}</span></div>}
+    {isDeathBy && <div className="timer-time-pair"><span>Medgått: <b>{clock(elapsed)}</b></span><span>Tid att: <b>{clock(Math.max(0, target - elapsed))}</b></span><span>Neste minutt om: <b>{clock(elapsed === 0 ? 60 : 60 - (elapsed % 60 || 0))}</b></span></div>}
     {(isEMOM || isTimedInterval || isDeathBy) && <div className="timer-round-label">RUNDE {roundsShown}{isTimedInterval ? ` / ${rounds}` : ''}</div>}
     {isTimedInterval && !running && elapsed === 0 && <div className="timer-settings-inline">
       <label>Arbeid sek.<input type="number" min="1" max="600" value={workSeconds} onChange={e => setWorkSeconds(Math.max(1, Number(e.target.value) || 1))}/></label>
       <label>Kvile sek.<input type="number" min="0" max="600" value={restSeconds} onChange={e => setRestSeconds(Math.max(0, Number(e.target.value) || 0))}/></label>
       <label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e => setRounds(Math.max(1, Number(e.target.value) || 1))}/></label>
     </div>}
-    {format === 'AMRAP' && <div className="timer-round-label">RUNDAR FULLFØRT: {round}</div>}
+    {isAmrap && <div className="timer-round-label">RUNDAR FULLFØRT: {round}</div>}
     <div className="timer-actions">
-      <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) setPhase('PÅGÅR'); setRunning(v => !v) }} disabled={phase === 'FERDIG'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
+      <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) setPhase('PÅGÅR'); setRunning(value => !value) }} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
       <button type="button" className="secondary-button" onClick={() => { setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar') }}><RotateCcw size={14}/> Nullstill</button>
-      {format === 'AMRAP' && <button type="button" className="secondary-button" onClick={() => setRound(r => r + 1)}>+ Runde</button>}
-      {['Stoppeklokke','For Time','Tilpassa'].includes(format) && <button type="button" className="secondary-button" onClick={() => setLaps(v => [...v, elapsed])}>Mellomtid</button>}
-      <button type="button" className="secondary-button" onClick={() => setSoundOn(v => !v)}>{soundOn ? 'Lyd på' : 'Lyd av'}</button>
+      {isAmrap && <button type="button" className="secondary-button" onClick={() => setRound(value => value + 1)}>+ Runde</button>}
+      {isStopwatch || isForTime ? <button type="button" className="secondary-button" onClick={() => setLaps(value => [...value, elapsed])}>Mellomtid</button> : null}
+      <button type="button" className="secondary-button" onClick={() => setSoundOn(value => !value)}>{soundOn ? 'Lyd på' : 'Lyd av'}</button>
       <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
     </div>
-    {laps.length > 0 && <div className="timer-round-label">MELLOMTIDER: {laps.map((lap, i) => `${i + 1}: ${clock(lap)}`).join(' · ')}</div>}
-    <small>{isTimedInterval ? 'Arbeid / kvile-intervall' : isCountdown ? 'Nedtelling' : isEMOM ? (emomEvery > 1 ? `Arbeid kvart ${emomEvery}. minutt` : 'Arbeid kvart minutt') : isDeathBy ? 'Aukande arbeid for kvar minutt · tidsgrense frå varigheita' : format === 'For Time' ? 'Stoppeklokke – registrer sluttid når du er ferdig' : 'Stoppeklokke'}</small>
+    {laps.length > 0 && <div className="timer-round-label">MELLOMTIDER: {laps.map((lap, index) => `${index + 1}: ${clock(lap)}`).join(' · ')}</div>}
+    <small>{isTimedInterval ? 'Arbeid / kvile · samla økttid og tid att' : isCountdown ? 'Nedtelling med medgått tid' : isEMOM ? (emomEvery > 1 ? `E${emomEvery}MOM · arbeid kvart ${emomEvery}. minutt` : 'E1MOM · arbeid kvart minutt') : isDeathBy ? 'Aukande arbeid for kvar minutt' : isForTime ? 'Stoppeklokke med eventuell tidsgrense' : 'Stoppeklokke – tel medgått tid'}</small>
   </div>
 }
 
