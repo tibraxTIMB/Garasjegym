@@ -798,3 +798,6 @@ footer {
 .wod-add-set{justify-self:start;margin:0!important;min-height:32px;padding:0 9px;font-size:10px}
 .wod-help{grid-column:1/-1;margin:0;color:#c0c8c5;font-size:10px;line-height:1.5}
 @media(max-width:520px){.wod-set-row{grid-template-columns:42px repeat(2,minmax(0,1fr)) 27px}.wod-set-row label:nth-of-type(3){grid-column:2}.wod-set-row label:nth-of-type(4){grid-column:3}.wod-set-row label:nth-of-type(5){grid-column:2}.wod-set-row label:nth-of-type(6){grid-column:3}}
+
+.wod-custom-sets{display:flex!important;align-items:center;gap:9px;padding:10px 12px;background:#202729;border:1px solid #41494a;border-radius:8px;color:#e5e5df;font-size:11px;font-weight:800}
+.wod-custom-sets input{width:17px!important;min-height:17px!important;accent-color:var(--orange)}
