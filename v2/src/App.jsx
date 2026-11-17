@@ -33,7 +33,7 @@ const sections = [
   { id: 'pt', label: 'PT-studio', icon: UserRound, note: 'Personleg trening og PT-førespurnader' },
   { id: 'fellesskap', label: 'Fellesskap', icon: Users, note: 'Garasjeprat' },
   { id: 'utfordringar', label: 'Utfordringar', icon: Activity, note: 'Felles mål og framgang' },
-  { id: 'kaffi', label: 'Barista', icon: Coffee, note: 'Meny og bestillingar' },
+  { id: 'kaffi', label: 'Kaffebar', icon: Coffee, note: 'Meny og bestillingar' },
 ]
 
 function AuthScreen({ recovery = false, onRecoveryComplete }) {
