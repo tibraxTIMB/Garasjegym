@@ -1029,3 +1029,18 @@ footer {
 .wod-publish-toggle input{width:auto;min-width:16px}
 .wod-card-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 @media(max-width:720px){.wod-library-grid{grid-template-columns:minmax(0,1fr)}.calendar-day{min-height:88px;padding:4px}.calendar-event{font-size:9px;padding:4px}.calendar-toolbar{align-items:stretch}.calendar-month-nav{justify-content:space-between}.calendar-upcoming{align-items:flex-start}}
+
+
+/* Full-card category coding and performance templates */
+.wod-category-conditioning{background:linear-gradient(120deg,#49371e 0%,#28231d 100%)!important;border-color:#a87937!important}
+.wod-category-core{background:linear-gradient(120deg,#382b49 0%,#24202d 100%)!important;border-color:#8764a8!important}
+.wod-category-strength{background:linear-gradient(120deg,#26394b 0%,#20272e 100%)!important;border-color:#527ca5!important}
+.wod-category-mobility{background:linear-gradient(120deg,#1e403b 0%,#1d2928 100%)!important;border-color:#438e80!important}
+.wod-category-rehab{background:linear-gradient(120deg,#472b32 0%,#2a2023 100%)!important;border-color:#a75e70!important}
+.wod-category-other{background:linear-gradient(120deg,#29302f 0%,#202526 100%)!important;border-color:#586361!important}
+.wod-performance-templates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.wod-performance-templates button{min-width:0;text-align:left;display:flex;flex-direction:column;gap:5px;padding:13px 15px;border:1px solid #66502e;border-radius:12px;background:linear-gradient(120deg,#302719,#202526);color:#f4f3ee;cursor:pointer}
+.wod-performance-templates button strong{color:#ffb34e;font-size:14px}
+.wod-performance-templates button small{color:#b6c0bd;line-height:1.45;white-space:normal;overflow-wrap:anywhere}
+.wod-performance-templates button:hover{border-color:#f3a43b;transform:translateY(-1px)}
+@media(max-width:600px){.wod-performance-templates{grid-template-columns:minmax(0,1fr)}}
