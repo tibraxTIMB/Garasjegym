@@ -12,6 +12,10 @@ import {
   ShieldCheck,
   Settings,
   Wrench,
+  Maximize,
+  Minimize,
+  Users as UsersIcon,
+  UserRound as UserRoundIcon,
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from './lib/supabase.js'
 import { fetchMemberProfile, isStaff } from './lib/auth.js'
@@ -155,6 +159,13 @@ export default function App() {
   const [launchClassSessionId, setLaunchClassSessionId] = useState(null)
   const [focusPTRequestId, setFocusPTRequestId] = useState(null)
   const [selectedWorkout, setSelectedWorkout] = useState(null)
+  const [simpleMode,setSimpleMode]=useState(false)
+  const [appFullscreen,setAppFullscreen]=useState(Boolean(document.fullscreenElement))
+  const [scheduleTab,setScheduleTab]=useState('booking')
+  useEffect(()=>{const sync=()=>setAppFullscreen(Boolean(document.fullscreenElement));document.addEventListener('fullscreenchange',sync);return()=>document.removeEventListener('fullscreenchange',sync)},[])
+  useEffect(()=>{if(!session?.user?.id)return;let live=true;supabase.from('member_preferences').select('super_simple_mode').eq('user_id',session.user.id).maybeSingle().then(({data,error})=>{if(live&&!error)setSimpleMode(Boolean(data?.super_simple_mode))});return()=>{live=false}},[session?.user?.id])
+  async function changeSimpleMode(value){setSimpleMode(value);const {error}=await supabase.from('member_preferences').upsert({user_id:session.user.id,super_simple_mode:value,updated_at:new Date().toISOString()},{onConflict:'user_id'});if(error){setSimpleMode(!value);setProfileError('Kunne ikkje lagra visingsvalet: '+error.message)}}
+  async function toggleAppFullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch{setProfileError('Fullskjerm er ikkje tilgjengeleg i denne nettlesaren.')}}
   async function openWorkout(log) {
     if (!log?.id) { setSelectedWorkout(log); return }
     const { data: exercises, error } = await supabase.from('workout_exercises').select('id,exercise_name,source_text,sort_order,workout_sets(id,set_number,reps,load_kg,time_text,time_seconds)').eq('workout_log_id',log.id).order('sort_order',{ascending:true})
@@ -225,9 +236,7 @@ export default function App() {
     )
   }
 
-  const visibleSections = isStaff(profile)
-    ? [...sections, { id: 'calendar', label: 'Kalender', icon: CalendarDays, note: 'PT, gruppetimar og avtalar' }, { id: 'admin', label: 'Administrasjon', icon: Settings, note: 'Medlemmer og drift' }]
-    : sections
+  const visibleSections = (simpleMode ? sections.filter(item=>['oversikt','trening','timeplan','mi-side'].includes(item.id)) : sections).concat(isStaff(profile)?[{id:'admin',label:'Administrasjon',icon:Settings,note:'Medlemmer og drift'}]:[])
   const current = visibleSections.find((item) => item.id === active) || visibleSections[0]
   const Icon = current.icon
 
@@ -255,7 +264,7 @@ export default function App() {
           <div className="top-meta">
             <span className="member-name">{profile.display_name || session.user.email}</span>
             <Notifications onNavigate={(item) => { if(item.href?.startsWith('pt-request:')) { setFocusPTRequestId(item.href.slice('pt-request:'.length)); setActive('pt') } else if(item.category==='pt') { setFocusPTRequestId(null); setActive('timeplan') } else if(item.href) setActive(({booking:'timeplan',pt:'timeplan','mi-trening':'mi-side','wod-studio':'wod','wod-library':'wod'}[item.href]||item.href)) }} />
-            <button className="icon-button" onClick={() => supabase.auth.signOut()} title="Logg ut" aria-label="Logg ut"><LogOut size={16} /></button>
+            <button className="icon-button" onClick={toggleAppFullscreen} title={appFullscreen?"Avslutt fullskjerm":"Fullskjerm"} aria-label={appFullscreen?"Avslutt fullskjerm":"Fullskjerm"}>{appFullscreen?<Minimize size={16}/>:<Maximize size={16}/>}</button><button className="icon-button" onClick={() => supabase.auth.signOut()} title="Logg ut" aria-label="Logg ut"><LogOut size={16} /></button>
           </div>
         </header>
         <section className="welcome">
@@ -263,7 +272,7 @@ export default function App() {
           <h1>Bygd for å <em>prestera.</em></h1>
           <p>Ein felles plattform for trening, booking og fellesskap.</p>
         </section>
-        {active === 'oversikt' ? <section className="content-card training-content"><Overview profile={profile} onNavigate={setActive} onOpenWorkout={openWorkout} /></section> : active === 'trening' ? <section className="content-card training-content workout-entry"><div className="workout-mode-intro"><span className="section-kicker">WORKOUT MODE</span><h2>Trening</h2><p>Vel økt og gå rett inn i treningsverktøyet med timer, rundar og resultatregistrering.</p></div><Training launchWodId={launchWodId} launchClassSessionId={launchClassSessionId} onLaunchConsumed={() => { setLaunchWodId(null); setLaunchClassSessionId(null) }} /></section> : active === 'timeplan' ? <section className="content-card training-content"><ScheduleHub profile={profile} focusRequestId={focusPTRequestId} onFocusConsumed={()=>setFocusPTRequestId(null)} onLogResult={(wodId,sessionId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(sessionId);setActive('trening')}} onLaunchWorkout={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'mi-trening' ? <section className="content-card training-content"><MyTraining onLaunchWod={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'wod' ? <section className="content-card training-content"><WodHub staff={isStaff(profile)} onLaunchWod={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community profile={profile} /></section> : active === 'kaffi' ? <section className="content-card training-content"><CoffeeBar profile={profile} /></section> : active === 'musikk' ? <section className="content-card training-content"><Music /></section> : active === 'mi-side' || active === 'pr-senter' ? <section className="content-card training-content"><MyPage profile={profile} email={session.user.email} onOpenWorkout={openWorkout} initialTab={active==='pr-senter'?'records':'profile'} /></section> : active === 'calendar' ? <section className="content-card training-content"><CalendarAdmin onNavigate={(target)=>setActive(target==='pt'||target==='booking'?'timeplan':target)} /></section> : active === 'admin' ? <section className="content-card training-content"><Admin profile={profile} /></section> : <section className="content-card">
+        {active === 'oversikt' ? <section className="content-card training-content">{simpleMode?<div className="simple-home"><span className="section-kicker">SUPERENKEL MODUS</span><h2>Klar for trening?</h2><p>Vel det du skal gjennomføre. Me tek vare på resultatet.</p><button className="simple-home-action" onClick={()=>{setScheduleTab("booking");setActive("timeplan")}}><UsersIcon/> Finn ein gruppetime <span>→</span></button><button className="simple-home-action" onClick={()=>setActive("trening")}><Dumbbell/> Start eiga økt <span>→</span></button><button className="simple-home-action" onClick={()=>{setScheduleTab("pt");setActive("timeplan")}}><UserRoundIcon/> PT-time <span>→</span></button></div>:<Overview profile={profile} onNavigate={setActive} onOpenWorkout={openWorkout} />}</section> : active === 'trening' ? <section className="content-card training-content workout-entry"><div className="workout-mode-intro"><span className="section-kicker">WORKOUT MODE</span><h2>Trening</h2><p>Vel økt og gå rett inn i treningsverktøyet med timer, rundar og resultatregistrering.</p></div><Training launchWodId={launchWodId} launchClassSessionId={launchClassSessionId} onLaunchConsumed={() => { setLaunchWodId(null); setLaunchClassSessionId(null) }} /></section> : active === 'timeplan' ? <section className="content-card training-content"><ScheduleHub profile={profile} initialTab={scheduleTab} onTabChange={setScheduleTab} focusRequestId={focusPTRequestId} onFocusConsumed={()=>setFocusPTRequestId(null)} onLogResult={(wodId,sessionId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(sessionId);setActive('trening')}} onLaunchWorkout={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'mi-trening' ? <section className="content-card training-content"><MyTraining onLaunchWod={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'wod' ? <section className="content-card training-content"><WodHub staff={isStaff(profile)} onLaunchWod={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setActive('trening')}} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community profile={profile} /></section> : active === 'kaffi' ? <section className="content-card training-content"><CoffeeBar profile={profile} /></section> : active === 'musikk' ? <section className="content-card training-content"><Music /></section> : active === 'mi-side' || active === 'pr-senter' ? <section className="content-card training-content"><MyPage profile={profile} email={session.user.email} onOpenWorkout={openWorkout} simpleMode={simpleMode} onSimpleModeChange={changeSimpleMode} initialTab={active==='pr-senter'?'records':'profile'} /></section> : active === 'admin' ? <section className="content-card training-content"><Admin profile={profile} /></section> : <section className="content-card">
           <div className="section-icon"><Icon size={22} /></div>
           <div className="section-kicker">MODUL · {active.toUpperCase()}</div>
           <h2>{current.label}</h2>
