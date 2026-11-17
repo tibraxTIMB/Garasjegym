@@ -91,7 +91,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
     return () => window.clearInterval(id)
   }, [running])
 
-  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isCountdown ? laps.length : round, phase, running }) }, [elapsed, laps, round, phase, running, isCountdown, onSnapshot])
+  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isAmrap ? laps.length : round, phase, running }) }, [elapsed, laps, round, phase, running, isCountdown, onSnapshot])
 
   useEffect(() => {
     if (!running) return
@@ -120,7 +120,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
     }
   }
 
-  const isAmrap = isCountdown
+  const isAmrap = format === 'AMRAP' || (['Couplet','Triplet'].includes(format) && schema?.combination_mode === 'AMRAP')
   const isStopwatch = ['Stoppeklokke', 'Fri trening', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt'].includes(format) ||
     (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'Open')
   const showTimeCap = (isForTime || isDeathBy) && capDuration > 0
