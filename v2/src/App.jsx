@@ -264,7 +264,7 @@ export default function App() {
 
   if (!simpleModeReady) return <LoadingScreen text="Hentar medlemsinnstillingar …" />
 
-  const visibleSections = (simpleMode ? sections.filter(item=>['oversikt','trening','timeplan','mi-side'].includes(item.id)) : sections).concat(isStaff(profile)?[{id:'admin',label:'Administrasjon',icon:Settings,note:'Medlemmer og drift'}]:[])
+  const visibleSections = (simpleMode ? sections.filter(item=>['oversikt','trening','timeplan','mi-trening','mi-historikk','pr-senter','mi-side'].includes(item.id)) : sections).concat(isStaff(profile)?[{id:'admin',label:'Administrasjon',icon:Settings,note:'Medlemmer og drift'}]:[])
   const current = visibleSections.find((item) => item.id === active) || visibleSections[0]
   const Icon = current.icon
 
