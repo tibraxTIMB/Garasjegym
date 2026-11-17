@@ -45,6 +45,22 @@ const GOLF_EXERCISES=[
  ['Golf – Single-leg Balance with Reach','Golf','Bein','Kroppsvekt','Balanse på eitt bein med kontrollert rekkeøving i fleire retningar. 3 × 5 per side.']
 ].map(([name,focus,body_area,equipment,description],i)=>({id:'golf-'+i,name,category:'Golf',golf_focus:focus,body_area,equipment,description,video_url:null,is_rehab:false,is_golf:true}))
 
+const REHAB_EXERCISES=[
+ ['Fysio – Hælløft','Bein','Bein','Trapp / støtte','Stå med støtte. Løft hælane roleg, hald eit sekund på toppen og senk kontrollert. Start med 2 × 10.','https://www.ouh.nhs.uk/physiotherapy/outpatients/videos/'],
+ ['Fysio – Ankelmobilitet mot vegg','Bein','Bein','Vegg','Hald hælen i golvet og før kneet kontrollert fram mot veggen over tærne. 2 × 10 per side.','https://www.ouh.nhs.uk/physiotherapy/outpatients/videos/'],
+ ['Fysio – Sittande knestrekk','Bein','Kne','Stol','Sit oppreist. Strekk eitt kne roleg, spenn framsida av låret og senk kontrollert. 2 × 10 per side.','https://patient.info/video/patient-physio'],
+ ['Fysio – Setehev','Bein','Hofte','Matte','Ligg på ryggen med bøygde kne. Spenn setet og løft hofta utan å svaie i korsryggen. 2 × 10.','https://www.ouh.nhs.uk/physiotherapy/outpatients/videos/'],
+ ['Fysio – Clamshell','Hofte','Hofte','Matte','Ligg på sida med bøygde kne og føtene samla. Opne øvste kne utan å rulle bekkenet bakover. 2 × 12 per side.','https://patient.info/video/patient-physio'],
+ ['Fysio – Hofteabduksjon ståande','Hofte','Hofte','Stol / støtte','Stå stødig og før beinet roleg ut til sida utan å lene overkroppen. 2 × 10 per side.','https://www.nhsfife.org/media/qrlay62e/knee-osteoarthritis-english.pdf'],
+ ['Fysio – Hoftebøyarstrekk','Hofte','Hofte','Matte','Stå i halvt kneståande. Tipp bekkenet lett bakover og flytt kroppen varsamt fram til du kjenner strekk framme i hofta. 20–30 sek per side.','https://patient.info/video/patient-physio'],
+ ['Fysio – Bekkenvipp','Rygg','Rygg','Matte','Ligg med bøygde kne. Vipp bekkenet slik at korsryggen nærmar seg underlaget, slepp roleg tilbake. 10–12 repetisjonar.','https://www.nhsinform.scot/illnesses-and-conditions/muscle-bone-and-joints/neck-and-back-problems-and-conditions/exercises-for-back-pain/'],
+ ['Fysio – Kne til bryst','Rygg','Rygg','Matte','Ligg på ryggen og før eitt kne varsamt mot brystet. Hald kort og byt side. 5–8 per side.','https://www.csp.org.uk/conditions/back-pain/video-exercises-back-pain'],
+ ['Fysio – Cat Camel','Rygg','Rygg','Matte','Stå på alle fire. Rund ryggen roleg og før han deretter varsamt mot ein lett svai. 8–10 repetisjonar.','https://www.nhsinform.scot/illnesses-and-conditions/muscle-bone-and-joints/neck-and-back-problems-and-conditions/exercises-for-back-pain/'],
+ ['Fysio – Kne-rulling','Rygg','Rygg','Matte','Ligg på ryggen med bøygde kne og føtene i golvet. La knærne falle roleg frå side til side innanfor komfortabelt utslag. 8–10 per side.','https://www.nhsinform.scot/illnesses-and-conditions/muscle-bone-and-joints/neck-and-back-problems-and-conditions/exercises-for-back-pain/'],
+ ['Fysio – Nakkedreiing','Nakke','Nakke','Stol','Sit med avslappa skuldrer. Drei hovudet roleg mot høgre og venstre utan å presse ytterstillinga. 5–8 per side.','https://patient.info/video/patient-physio'],
+ ['Fysio – Nakkebøy sidevegs','Nakke','Nakke','Stol','Før øyret varsamt mot skuldra utan å løfte skuldra. Hald 5 sekund og byt side. 5 per side.','https://www.whittington.nhs.uk/default.asp?c=26915'],
+ ['Fysio – Hakeinntrekk','Nakke','Nakke','Stol / vegg','Trekk haka rett bakover som om du lagar dobbelthake. Hald 3–5 sekund utan å bøye hovudet ned. 8–10 repetisjonar.','https://patient.info/video/patient-physio']
+].map(([name,body_area,region,equipment,description,video_url],i)=>({id:'rehab-'+i,name,category:'Rehab / fysio',body_area,equipment,description,video_url,is_rehab:true,is_golf:false,rehab_region:region}))
 const CLASSIC_WODS=[
  {name:'Fran',group:'The Girls',format:'For Time',minutes:10,rounds:3,items:[['Thruster','21-15-9'],['Pull-up','21-15-9']],notes:'Original benchmark: 21-15-9 thrusters og pull-ups. RX-vekt: 95/65 lb (ca. 43/30 kg).'},
  {name:'Cindy',group:'The Girls',format:'AMRAP',minutes:20,items:[['Pull-up','5'],['Push-up','10'],['Air squat','15']],notes:'20 minutt AMRAP: 5 pull-ups, 10 push-ups, 15 air squats.'},
@@ -105,7 +121,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
   if(e)setError(e.message);else setExercises(data||[])
   setLoading(false)
  }
- const filtered=useMemo(()=>[...exercises,...GOLF_EXERCISES].filter(x=>{
+ const filtered=useMemo(()=>[...exercises,...GOLF_EXERCISES,...REHAB_EXERCISES].filter(x=>{
   const matchesCategory=category==='Alle'||x.category===category
   const searchable=[x.name,x.category,x.equipment,x.body_area,x.description].filter(Boolean).join(' ').toLowerCase()
   const matchesSearch=!search||searchable.includes(search.toLowerCase())
@@ -235,7 +251,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
     <div className="wod-search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Søk øving, kroppsdel eller utstyr …"/></div>
     <div className="wod-category-filter">{categories.map(x=><button type="button" key={x} className={category===x?'selected':''} onClick={()=>setCategory(x)}>{x}</button>)}</div>
     <div className="wod-area-filter"><span>KROPPSOMRÅDE</span>{areas.map(x=><button type="button" key={x} className={area===x?'selected':''} onClick={()=>setArea(x)}>{x}</button>)}</div>
-    {loading?<div className="training-state"><LoaderCircle className="spin"/> Hentar øvingar …</div>:filtered.length?<div className="wod-exercise-grid">{filtered.map(ex=><article className={"wod-exercise-card wod-category-"+categoryTone(ex.category)} key={ex.id}><div className="wod-exercise-info"><strong>{ex.name}</strong>{ex.video_url?<a href={ex.video_url} target="_blank" rel="noreferrer">Sjå video</a>:<small className="no-video">Video kjem</small>}<small>{ex.category}{ex.golf_focus?' · '+ex.golf_focus:''} · {ex.body_area||'Fullkropp'}{ex.equipment?' · '+ex.equipment:''}</small>{ex.description&&<p>{ex.description}</p>}{ex.is_rehab&&<em><Info size={12}/> Etter råd frå fysioterapeut</em>}</div><button className="wod-add-button" type="button" onClick={()=>add(ex)}><Plus size={16}/> Legg til</button></article>)}</div>:<div className="empty-state">Ingen øvingar treff søket.</div>}
+    {loading?<div className="training-state"><LoaderCircle className="spin"/> Hentar øvingar …</div>:filtered.length?<div className="wod-exercise-grid">{filtered.map(ex=><article className={"wod-exercise-card wod-category-"+categoryTone(ex.category)} key={ex.id}><div className="wod-exercise-info"><strong>{ex.name}</strong>{ex.video_url?<a href={ex.video_url} target="_blank" rel="noreferrer">Sjå video</a>:<small className="no-video">Video kjem</small>}<small>{ex.category}{ex.golf_focus?' · '+ex.golf_focus:''} · {ex.body_area||'Fullkropp'}{ex.equipment?' · '+ex.equipment:''}</small>{ex.description&&<p>{ex.description}</p>}{ex.is_rehab&&<em><Info size={12}/> Tilpass etter toleranse – ved skade eller vedvarande smerte, få råd frå fysioterapeut</em>}</div><button className="wod-add-button" type="button" onClick={()=>add(ex)}><Plus size={16}/> Legg til</button></article>)}</div>:<div className="empty-state">Ingen øvingar treff søket.</div>}
    </section>
    <aside className="engine-section wod-composer">
     <div className="engine-section-title"><h4>Programmer økta</h4><span>{selected.length} øvingar</span></div>
