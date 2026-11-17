@@ -105,7 +105,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned}){
   if(e)setError(e.message);else setExercises(data||[])
   setLoading(false)
  }
- const filtered=useMemo(()=>exercises.filter(x=>{
+ const filtered=useMemo(()=>[...exercises,...GOLF_EXERCISES].filter(x=>{
   const matchesCategory=category==='Alle'||x.category===category
   const searchable=[x.name,x.category,x.equipment,x.body_area,x.description].filter(Boolean).join(' ').toLowerCase()
   const matchesSearch=!search||searchable.includes(search.toLowerCase())
