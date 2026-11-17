@@ -276,8 +276,8 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    const {data:savedWod,error:e}=await wodRequest
    if(e)throw e
    if(assignedClientId){const {error:linkError}=await supabase.from('pt_wod_assignments').insert({member_id:assignedClientId,wod_id:savedWod.id,assigned_by:user.id,location:'Valfritt',coach_note:'Tildelt frå PT Studio'});if(linkError)throw new Error('WOD-en vart lagra, men kunne ikkje knytast til kunden: '+linkError.message);onAssigned?.()}
-   setNotice(publishToMembers?'WOD lagra i biblioteket og publisert for medlemmene.':'WOD lagra i det interne PT-biblioteket.')
-   setSelected([]);setNotes('');setCustomInstructions('');setName(randomWodName())
+   setNotice(editingWodId?'WOD-en er oppdatert.':publishToMembers?'WOD lagra i biblioteket og publisert for medlemmene.':'WOD lagra i det interne PT-biblioteket.')
+   setSelected([]);setNotes('');setCustomInstructions('');setName(randomWodName());setEditingWodId(null);onSaved?.()
   }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{setBusy(false)}
  }
  return <div className="wod-builder">
@@ -319,7 +319,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
      </div><div className="wod-selected-actions"><button type="button" title="Flytt opp" disabled={!i} onClick={()=>move(i,-1)}><ArrowUp size={14}/></button><button type="button" title="Flytt ned" disabled={i===selected.length-1} onClick={()=>move(i,1)}><ArrowDown size={14}/></button><button type="button" title="Fjern" onClick={()=>setSelected(rows=>rows.filter(x=>x.key!==ex.key))}><Trash2 size={14}/></button></div></article>):<div className="empty-state">Legg til øvingar frå biblioteket.</div>}</div>
      <div className="wod-programming-note"><label>Planlagd treningsstimulus<textarea rows="2" value={stimulus} onChange={e=>setStimulus(e.target.value)}/></label><small>Beskriv kva kunden skal oppleva og kva som er målet med økta.</small></div>
      <label>Coach-notat / skalering<textarea rows="3" value={notes} onChange={e=>setNotes(e.target.value)} placeholder="RX, skalering, tekniske krav, oppvarming …"/></label>
-     <button className="primary-button" disabled={busy||!selected.length||!name.trim()}><Save size={16}/>{busy?'Lagrar …':'Publiser WOD'}</button>
+     <button className="primary-button" disabled={busy||!selected.length||!name.trim()}><Save size={16}/>{busy?'Lagrar …':editingWodId?'Lagre endringar':'Lagre WOD'}</button>
     </form>
    </aside>
   </div></div>}
