@@ -91,7 +91,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
     return () => window.clearInterval(id)
   }, [running])
 
-  useEffect(() => { onSnapshot({ elapsed, laps, phase, running }) }, [elapsed, laps, phase, running, onSnapshot])
+  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isCountdown ? laps.length : round, phase, running }) }, [elapsed, laps, phase, running, onSnapshot])
 
   useEffect(() => {
     if (!running) return
@@ -125,35 +125,46 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
     (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'Open')
   const showTimeCap = (isForTime || isDeathBy) && capDuration > 0
   const roundsShown = isTimedInterval ? Math.min(currentRound, Number(rounds)) : currentRound
+  const completedRounds = isAmrap ? laps.length : round
+  const lapAction = () => { setLaps(value => [...value, elapsed]); setRound(value => value + 1); cue(1200, 0.1) }
   return <div className={focused ? 'engine-timer timer-focused' : 'engine-timer'}>
     <div className="timer-caption"><Clock3 size={15}/> {format.toUpperCase()}</div>
-    <div className="timer-phase">{phase}</div>
-    <strong>{clock(primaryTime)}</strong>
-    <div className="timer-round-label">{isCountdown ? 'GJENSTÅANDE TID' : isEMOM ? 'TIL NESTE ARBEIDSSTART' : isTimedInterval ? 'TID I INTERVALLFASEN' : 'MEDGÅTT TID'}</div>
-    {activeExercise && <div className="timer-round-label">NO: {activeExercise}</div>}
-    {isCountdown && <div className="timer-time-pair"><span>Medgått: <b>{clock(elapsed)}</b></span></div>}
-    {isEMOM && <div className="timer-time-pair"><span>Gjenståande økttid: <b>{clock(remainingTotal)}</b></span></div>}
-    {isTimedInterval && <div className="timer-time-pair"><span>Medgått: <b>{clock(elapsed)}</b></span><span>Økta att: <b>{clock(remainingTotal)}</b></span></div>}
-    {isForTime && <div className="timer-time-pair"><span>{showTimeCap ? <>Tid att: <b>{clock(Math.max(0, target - elapsed))}</b></> : <>Medgått: <b>{clock(elapsed)}</b></>}</span></div>}
-    {isDeathBy && <div className="timer-time-pair"><span>Medgått: <b>{clock(elapsed)}</b></span><span>Tid att: <b>{clock(Math.max(0, target - elapsed))}</b></span><span>Neste minutt om: <b>{clock(elapsed === 0 ? 60 : 60 - (elapsed % 60 || 0))}</b></span></div>}
-    {(isEMOM || isTimedInterval || isDeathBy) && <div className="timer-round-label">RUNDE {roundsShown}{isTimedInterval ? ` / ${rounds}` : ''}</div>}
-    {isTimedInterval && !running && elapsed === 0 && <div className="timer-settings-inline">
-      <label>Arbeid sek.<input type="number" min="1" max="600" value={workSeconds} onChange={e => setWorkSeconds(Math.max(1, Number(e.target.value) || 1))}/></label>
-      <label>Kvile sek.<input type="number" min="0" max="600" value={restSeconds} onChange={e => setRestSeconds(Math.max(0, Number(e.target.value) || 0))}/></label>
-      <label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e => setRounds(Math.max(1, Number(e.target.value) || 1))}/></label>
-    </div>}
-    {isAmrap && <div className="timer-round-label">RUNDAR FULLFØRT: {round}</div>}
-    <div className="timer-actions">
-      <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) setPhase('PÅGÅR'); setRunning(value => !value) }} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
-      <button type="button" className="secondary-button" onClick={() => { setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar') }}><RotateCcw size={14}/> Nullstill</button>
-      {isAmrap && <button type="button" className="secondary-button" onClick={() => setRound(value => value + 1)}>+ Runde</button>}
-      {isStopwatch || isForTime ? <button type="button" className="secondary-button" onClick={() => setLaps(value => [...value, elapsed])}>Mellomtid</button> : null}
-      <button type="button" className="secondary-button" onClick={() => setSoundOn(value => !value)}>{soundOn ? 'Lyd på' : 'Lyd av'}</button>
-      <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
+    <div className="timer-dashboard">
+      <aside className="timer-side timer-side-left">
+        <div className="timer-side-stat"><span>MEDGÅTT</span><b>{clock(elapsed)}</b></div>
+        {isCountdown && <div className="timer-side-stat"><span>TID ATT</span><b>{clock(remainingTotal)}</b></div>}
+        {isEMOM && <div className="timer-side-stat"><span>NESTE START</span><b>{clock(emomNextStart)}</b></div>}
+        {isTimedInterval && <><div className="timer-side-stat"><span>ØKTA ATT</span><b>{clock(remainingTotal)}</b></div><div className="timer-side-stat"><span>RUNDE</span><b>{roundsShown}/{rounds}</b></div></>}
+        {isForTime && showTimeCap && <div className="timer-side-stat"><span>TIDSGRENSE</span><b>{clock(Math.max(0,target-elapsed))}</b></div>}
+        {isDeathBy && <div className="timer-side-stat"><span>NESTE MINUTT</span><b>{clock(elapsed===0?60:60-(elapsed%60||0))}</b></div>}
+        {activeExercise && <div className="timer-active-exercise"><span>NO ARBEIDER DU MED</span><b>{activeExercise}</b></div>}
+      </aside>
+      <section className="timer-center">
+        <div className="timer-phase">{phase}</div>
+        <strong className="timer-main-clock">{clock(primaryTime)}</strong>
+        <div className="timer-round-label">{isCountdown ? 'GJENSTÅANDE TID' : isEMOM ? 'TIL NESTE ARBEIDSSTART' : isTimedInterval ? 'TID I INTERVALLFASEN' : 'MEDGÅTT TID'}</div>
+        {isAmrap && <div className="timer-round-total"><span>RUNDER FULLFØRT</span><b>{completedRounds}</b></div>}
+        <div className="timer-actions">
+          <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) setPhase('PÅGÅR'); setRunning(value => !value) }} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
+          {isAmrap && <button type="button" className="timer-lap-button" onClick={lapAction} disabled={!running && elapsed===0}>+ REGISTRER RUNDE</button>}
+          <button type="button" className="secondary-button" onClick={() => { setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar') }}><RotateCcw size={14}/> Nullstill</button>
+          {(isStopwatch || isForTime) && <button type="button" className="secondary-button" onClick={() => setLaps(value => [...value, elapsed])}>Mellomtid</button>}
+          <button type="button" className="secondary-button" onClick={() => setSoundOn(value => !value)}>{soundOn ? 'Lyd på' : 'Lyd av'}</button>
+          <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
+        </div>
+      </section>
+      <aside className="timer-side timer-side-right">
+        <div className="timer-lap-heading">RUNDETIDER <b>{laps.length}</b></div>
+        {laps.length ? <ol className="timer-lap-list">{laps.map((lap,index)=><li key={index}><span>Runde {index+1}</span><b>{clock(lap)}</b></li>)}</ol> : <p className="timer-no-laps">Trykk «Registrer runde» når du fullfører ein runde.</p>}
+        {isTimedInterval && !running && elapsed===0 && <div className="timer-settings-inline">
+          <label>Arbeid sek.<input type="number" min="1" max="600" value={workSeconds} onChange={e=>setWorkSeconds(Math.max(1,Number(e.target.value)||1))}/></label>
+          <label>Kvile sek.<input type="number" min="0" max="600" value={restSeconds} onChange={e=>setRestSeconds(Math.max(0,Number(e.target.value)||0))}/></label>
+          <label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(Math.max(1,Number(e.target.value)||1))}/></label>
+        </div>}
+      </aside>
     </div>
     <MusicMiniPlayer />
-    {laps.length > 0 && <div className="timer-round-label">MELLOMTIDER: {laps.map((lap, index) => `${index + 1}: ${clock(lap)}`).join(' · ')}</div>}
-    <small>{isTimedInterval ? 'Arbeid / kvile · samla økttid og tid att' : isCountdown ? 'Nedtelling med medgått tid' : isEMOM ? (emomEvery > 1 ? `E${emomEvery}MOM · arbeid kvart ${emomEvery}. minutt` : 'E1MOM · arbeid kvart minutt') : isDeathBy ? 'Aukande arbeid for kvar minutt' : isForTime ? 'Stoppeklokke med eventuell tidsgrense' : 'Stoppeklokke – tel medgått tid'}</small>
+    <small>{isTimedInterval ? 'Arbeid / kvile · samla økttid og tid att' : isCountdown ? 'AMRAP · registrer kvar fullførte runde' : isEMOM ? (emomEvery > 1 ? `E${emomEvery}MOM · arbeid kvart ${emomEvery}. minutt` : 'E1MOM · arbeid kvart minutt') : isDeathBy ? 'Aukande arbeid for kvar minutt' : isForTime ? 'Stoppeklokke med eventuell tidsgrense' : 'Stoppeklokke – tel medgått tid'}</small>
   </div>
 }
 
@@ -190,7 +201,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [scoreReps, setScoreReps] = useState('')
   const [scoreTime, setScoreTime] = useState('')
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(0)
-  const [timerSnapshot, setTimerSnapshot] = useState({ elapsed: 0, laps: [], phase: 'Klar', running: false })
+  const [timerSnapshot, setTimerSnapshot] = useState({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
 
   async function loadAll(silent=false) {
     if (!silent) setLoading(true); setError('')
@@ -230,6 +241,12 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   }
 
   useEffect(() => {
+    if (format === 'AMRAP' || (['Couplet','Triplet'].includes(format) && source?.timer_settings?.workout_schema?.combination_mode === 'AMRAP')) {
+      setScoreRounds(String(timerSnapshot.roundsCompleted || 0))
+    }
+  }, [timerSnapshot.roundsCompleted, format, source])
+
+  useEffect(() => {
     if (!launchWodId || loading) return
     const wod = wods.find(item => item.id === launchWodId)
     if (wod) { startWorkout(wod); setClassSessionId(launchClassSessionId || null); onLaunchConsumed?.() }
@@ -253,7 +270,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     setNote(wod?.notes || '')
     setItems([])
     setActiveExerciseIndex(0)
-    setTimerSnapshot({ elapsed: 0, laps: [], phase: 'Klar', running: false })
+    setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
     setScoreRounds(''); setScoreReps(''); setScoreTime('')
     const schema = wod?.timer_settings?.workout_schema
     if (Array.isArray(schema?.items) && schema.items.length) {
