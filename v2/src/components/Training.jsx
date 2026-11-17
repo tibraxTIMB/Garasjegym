@@ -129,20 +129,12 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
   const lapAction = () => { setLaps(value => [...value, Math.max(0, elapsed - value.reduce((sum, lap) => sum + lap, 0))]); setRound(value => value + 1); cue(1200, 0.1) }
   return <div className={focused ? 'engine-timer timer-focused' : 'engine-timer'}>
     <div className="timer-caption"><Clock3 size={15}/> {format.toUpperCase()}</div>
-    <div className="timer-dashboard">
-      <aside className="timer-side timer-side-left">
-        <div className="timer-side-stat"><span>MEDGÅTT</span><b>{clock(elapsed)}</b></div>
-        {isCountdown && <div className="timer-side-stat"><span>TID ATT</span><b>{clock(remainingTotal)}</b></div>}
-        {isEMOM && <div className="timer-side-stat"><span>NESTE START</span><b>{clock(emomNextStart)}</b></div>}
-        {isTimedInterval && <><div className="timer-side-stat"><span>ØKTA ATT</span><b>{clock(remainingTotal)}</b></div><div className="timer-side-stat"><span>RUNDE</span><b>{roundsShown}/{rounds}</b></div></>}
-        {isForTime && showTimeCap && <div className="timer-side-stat"><span>TIDSGRENSE</span><b>{clock(Math.max(0,target-elapsed))}</b></div>}
-        {isDeathBy && <div className="timer-side-stat"><span>NESTE MINUTT</span><b>{clock(elapsed===0?60:60-(elapsed%60||0))}</b></div>}
-        {activeExercise && <div className="timer-active-exercise"><span>NO ARBEIDER DU MED</span><b>{activeExercise}</b></div>}
-      </aside>
+    <div className="timer-dashboard timer-dashboard-reflow">
       <section className="timer-center">
         <div className="timer-phase">{phase}</div>
         <strong className="timer-main-clock">{clock(primaryTime)}</strong>
         <div className="timer-round-label">{isCountdown ? 'GJENSTÅANDE TID' : isEMOM ? 'TIL NESTE ARBEIDSSTART' : isTimedInterval ? 'TID I INTERVALLFASEN' : 'MEDGÅTT TID'}</div>
+        {activeExercise && <div className="timer-active-under-clock"><span>GJELDANDE ØVING</span><b>{activeExercise}</b></div>}
         {isAmrap && <div className="timer-round-total"><span>RUNDER FULLFØRT</span><b>{completedRounds}</b></div>}
         <div className="timer-actions">
           <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) setPhase('PÅGÅR'); setRunning(value => !value) }} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
@@ -153,17 +145,26 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
           <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
         </div>
       </section>
-      <aside className="timer-side timer-side-right">
-        <div className="timer-lap-heading">RUNDETIDER <b>{laps.length}</b></div>
-        {laps.length ? <ol className="timer-lap-list">{laps.map((lap,index)=><li key={index}><span>Runde {index+1}</span><b>{clock(lap)}</b></li>)}</ol> : <p className="timer-no-laps">Trykk «Registrer runde» når du fullfører ein runde.</p>}
+      <aside className="timer-side timer-side-left">
+        <div className="timer-bottom-heading">ØKTINFORMASJON</div>
+        <div className="timer-side-stat"><span>MEDGÅTT TID</span><b>{clock(elapsed)}</b></div>
+        {isCountdown && <div className="timer-side-stat"><span>TID ATT</span><b>{clock(remainingTotal)}</b></div>}
+        {isEMOM && <div className="timer-side-stat"><span>NESTE ARBEIDSSTART</span><b>{clock(emomNextStart)}</b></div>}
+        {isTimedInterval && <><div className="timer-side-stat"><span>ØKTA ATT</span><b>{clock(remainingTotal)}</b></div><div className="timer-side-stat"><span>RUNDE</span><b>{roundsShown}/{rounds}</b></div></>}
+        {isForTime && showTimeCap && <div className="timer-side-stat"><span>TIDSGRENSE</span><b>{clock(Math.max(0,target-elapsed))}</b></div>}
+        {isDeathBy && <div className="timer-side-stat"><span>NESTE MINUTT</span><b>{clock(elapsed===0?60:60-(elapsed%60||0))}</b></div>}
         {isTimedInterval && !running && elapsed===0 && <div className="timer-settings-inline">
           <label>Arbeid sek.<input type="number" min="1" max="600" value={workSeconds} onChange={e=>setWorkSeconds(Math.max(1,Number(e.target.value)||1))}/></label>
           <label>Kvile sek.<input type="number" min="0" max="600" value={restSeconds} onChange={e=>setRestSeconds(Math.max(0,Number(e.target.value)||0))}/></label>
           <label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(Math.max(1,Number(e.target.value)||1))}/></label>
         </div>}
       </aside>
+      <aside className="timer-side timer-side-right">
+        <div className="timer-lap-heading">RUNDETIDER <b>{laps.length}</b></div>
+        {laps.length ? <ol className="timer-lap-list">{laps.map((lap,index)=><li key={index}><span>Runde {index+1}</span><b>{clock(lap)}</b></li>)}</ol> : <p className="timer-no-laps">Registrer kvar fullførte runde her.</p>}
+      </aside>
     </div>
-    <MusicMiniPlayer />
+    <div className="timer-music-footer"><MusicMiniPlayer /></div>
     <small>{isTimedInterval ? 'Arbeid / kvile · samla økttid og tid att' : isCountdown ? 'AMRAP · registrer kvar fullførte runde' : isEMOM ? (emomEvery > 1 ? `E${emomEvery}MOM · arbeid kvart ${emomEvery}. minutt` : 'E1MOM · arbeid kvart minutt') : isDeathBy ? 'Aukande arbeid for kvar minutt' : isForTime ? 'Stoppeklokke med eventuell tidsgrense' : 'Stoppeklokke – tel medgått tid'}</small>
   </div>
 }
