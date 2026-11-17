@@ -42,7 +42,9 @@ export default function WodBuilder(){
   const tags=(x.body_area||'').toLowerCase(),needle=area==='Mage'?'kjerne':area.toLowerCase()
   return matchesCategory&&matchesSearch&&(area==='Alle område'||tags.includes(needle))
  }),[exercises,category,area,search])
- const isStrength=['Strength'].includes(format)
+ const isStrength=format==='Strength'
+ const showSets=isStrength
+ const isConditioning=['AMRAP','EMOM','For Time','Chipper','Couplet','Triplet','Ladder','Tabata','Intervall','Death By','Row Intervals'].includes(format)
  const isInterval=['Intervall','Tabata','Row Intervals'].includes(format)
  const isEmom=format==='EMOM'
  const isLadder=format==='Ladder'||format==='Death By'
@@ -55,15 +57,13 @@ export default function WodBuilder(){
   const chosen=shuffle(pool).slice(0,3+Math.floor(Math.random()*4))
   setSelected(chosen.map(blankItem));setFormat(['AMRAP','EMOM','For Time','Chipper','Intervall'][Math.floor(Math.random()*5)])
   setMinutes(String([10,12,15,18,20][Math.floor(Math.random()*5)]));setTimeCap('20')
-  setName(names[Math.floor(Math.random()*names.length)]);setNotes('');setStimulus('Jamn intensitet · god teknikk · hald att litt kapasitet')
+  setName(randomWodName());setNotes('');setStimulus('Jamn intensitet · god teknikk · hald att litt kapasitet')
   setNotice('Ny WOD er generert. Gå gjennom belastning, reps og stimulus før du publiserer.');setError('')
  }
- function generateRowWod(){
+ function addRowing(){
   const row=exercises.find(x=>x.equipment==='Romaskin')
   if(!row){setError('Romaskinøvinga manglar i biblioteket.');return}
-  setSelected([blankItem(row)]);setFormat('Row Intervals');setMinutes(String(Number(rowRounds)*3));setRounds(rowRounds)
-  setName(names[Math.floor(Math.random()*names.length)]+' · Ro')
-  setNotice('Ro-intervall er lagt i byggjaren. Du kan kombinera med andre øvingar.');setError('')
+  add(row);setNotice('Romaskin er lagt til. Du kan leggja til fleire øvingar som vanleg.');setError('')
  }
  function buildPrescription(x,i){
   const load=fmtLoad(x),base=x.name+' – '+(x.sets||'1')+' sett × '+(x.reps||'valfri reps')
@@ -82,18 +82,18 @@ export default function WodBuilder(){
    const {data:{user}}=await supabase.auth.getUser()
    const movementLines=selected.map((x,i)=>buildPrescription(x,i))
    const movements=movementLines.join('\n')
-   const workoutSchema={version:2,format,minutes:Number(minutes)||null,time_cap:Number(timeCap)||null,rounds:Number(rounds)||null,work_seconds:Number(workSeconds)||null,rest_seconds:Number(restSeconds)||null,ladder:{start:Number(ladderStart),step:Number(ladderStep),direction:ladderDirection},stimulus,prescription,items:selected.map((x,i)=>({sort_order:i+1,exercise_id:x.id||null,exercise_name:x.name,category:x.category,body_area:x.body_area,equipment:x.equipment,sets:Number(x.sets)||1,reps:x.reps,load_mode:x.loadMode,load_kg:x.loadKg?Number(x.loadKg):null,percent_1rm:x.percent1rm?Number(x.percent1rm):null,rir:x.rir?Number(x.rir):null,rpe:x.rpe?Number(x.rpe):null,rest_seconds:Number(x.restSeconds)||0,tempo:x.tempo,meters:x.meters?Number(x.meters):null,calories:x.calories?Number(x.calories):null,work_seconds:x.workSeconds?Number(x.workSeconds):null,coach_note:x.coachNote}))}
+   const workoutSchema={version:2,format,minutes:Number(minutes)||null,time_cap:Number(timeCap)||null,rounds:Number(rounds)||null,work_seconds:Number(workSeconds)||null,rest_seconds:Number(restSeconds)||null,ladder:{start:Number(ladderStart),step:Number(ladderStep),direction:ladderDirection},stimulus,prescription,items:selected.map((x,i)=>({sort_order:i+1,exercise_id:x.id||null,exercise_name:x.name,category:x.category,body_area:x.body_area,equipment:x.equipment,sets:isStrength?(Number(x.sets)||1):null,reps:x.reps,load_mode:x.loadMode,load_kg:x.loadKg?Number(x.loadKg):null,percent_1rm:x.percent1rm?Number(x.percent1rm):null,rir:x.rir?Number(x.rir):null,rpe:x.rpe?Number(x.rpe):null,rest_seconds:Number(x.restSeconds)||0,tempo:x.tempo,meters:x.meters?Number(x.meters):null,calories:x.calories?Number(x.calories):null,work_seconds:x.workSeconds?Number(x.workSeconds):null,coach_note:x.coachNote}))}
    const timer_settings={work_seconds:Number(workSeconds)||60,rest_seconds:Number(restSeconds)||0,rounds:Number(rounds)||5,workout_schema:workoutSchema}
    const {error:e}=await supabase.from('wods').insert({name:name.trim(),format,duration_minutes:Number(minutes)||null,movements,notes:[stimulus,notes].filter(Boolean).join('\n\n'),is_published:true,created_by:user.id,timer_settings})
    if(e)throw e
    setNotice('WOD publisert med full programmering og belastningsdata.')
-   setSelected([]);setNotes('');setName(names[Math.floor(Math.random()*names.length)])
+   setSelected([]);setNotes('');setName(randomWodName())
   }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{setBusy(false)}
  }
  return <div className="wod-builder">
   <div className="training-heading"><div><div className="section-kicker">GARASJEGYM · PROGRAMMERINGSVERKSTAD</div><h3>WOD-studio PRO</h3><p>Bygg presise økter med format, dosering, belastning og treningsstimulus.</p></div><span className="count-pill"><WandSparkles size={14}/> PRO</span></div>
   {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message">{notice}</div>}
-  <div className="wod-studio-tools"><button type="button" className="primary-button" onClick={randomWod}><Dices size={17}/> Generer tilfeldig WOD</button><button type="button" className="secondary-button" onClick={generateRowWod}><Footprints size={16}/> Ro-intervall</button><button type="button" className="secondary-button" onClick={()=>{setSelected([]);setNotes('');setName(names[Math.floor(Math.random()*names.length)])}}><Copy size={15}/> Ny blank økt</button></div>
+  <div className="wod-studio-tools"><button type="button" className="primary-button" onClick={randomWod}><Dices size={17}/> Generer tilfeldig WOD</button><button type="button" className="secondary-button" onClick={addRowing}><Footprints size={16}/> Legg til romaskin</button><button type="button" className="secondary-button" onClick={()=>{setSelected([]);setNotes('');setName(names[Math.floor(Math.random()*names.length)])}}><Copy size={15}/> Ny blank økt</button></div>
   <div className="wod-builder-layout">
    <section className="engine-section wod-library"><div className="engine-section-title"><h4>Øvingsbibliotek</h4><span>{filtered.length} av {exercises.length}</span></div>
     <div className="wod-search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Søk øving, kroppsdel eller utstyr …"/></div>
@@ -106,12 +106,12 @@ export default function WodBuilder(){
     <form className="admin-create-form" onSubmit={save}>
      <div className="wod-name-field"><label>WOD-namn<input value={name} onChange={e=>setName(e.target.value)} required/></label><button type="button" className="secondary-button" onClick={()=>setName(randomWodName())}>Nytt namn</button></div><label>Programmeringsnivå<select value={prescription} onChange={e=>setPrescription(e.target.value)}><option value="rx">RX · Føreskriven</option><option value="scaled">Skalert</option><option value="beginner">Nybegynnar</option><option value="custom">Individuelt tilpassa</option></select></label>
      <div className="engine-fields"><label>Format<select value={format} onChange={e=>setFormat(e.target.value)}>{formats.map(x=><option key={x}>{x}</option>)}</select></label><label>Varigheit (min)<input type="number" min="1" max="300" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label></div>
-     {isEmom&&<div className="wod-advanced-fields"><label>EMOM-varigheit (min)<input type="number" min="1" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label><label>Arbeid per minutt (sek.)<input type="number" min="1" max="60" value={workSeconds} onChange={e=>setWorkSeconds(e.target.value)}/></label></div>}
+     {isEmom&&<div className="wod-advanced-fields"><label>EMOM-varigheit (min)<input type="number" min="1" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label><small>Reps-feltet på kvar øving er talet du skal gjera i kvart minutt. Ingen sett.</small></div>}
      {isInterval&&<div className="wod-advanced-fields"><label>Arbeid (sek.)<input type="number" min="1" value={workSeconds} onChange={e=>setWorkSeconds(e.target.value)}/></label><label>Pause (sek.)<input type="number" min="0" value={restSeconds} onChange={e=>setRestSeconds(e.target.value)}/></label><label>Tal drag/rundar<input type="number" min="1" value={rounds} onChange={e=>setRounds(e.target.value)}/></label></div>}
      {isLadder&&<div className="wod-advanced-fields"><label>Startreps<input type="number" min="1" value={ladderStart} onChange={e=>setLadderStart(e.target.value)}/></label><label>Endring per runde<input type="number" min="1" value={ladderStep} onChange={e=>setLadderStep(e.target.value)}/></label><label>Retning<select value={ladderDirection} onChange={e=>setLadderDirection(e.target.value)}><option value="up">Aukande</option><option value="down">Minkande</option></select></label></div>}
-     {['AMRAP','For Time','Chipper','Couplet','Triplet'].includes(format)&&<div className="wod-advanced-fields"><label>{format==='AMRAP'?'Tidsgrense (min)':'Maks tid (min)'}<input type="number" min="1" max="300" value={timeCap} onChange={e=>setTimeCap(e.target.value)}/></label><label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(e.target.value)}/></label></div>}
+     {['AMRAP','For Time','Chipper','Couplet','Triplet'].includes(format)&&<div className="wod-advanced-fields"><label>{format==='AMRAP'?'Tidsgrense (min)':'Maks tid (min)'}<input type="number" min="1" max="300" value={timeCap} onChange={e=>setTimeCap(e.target.value)}/></label>{format!=='AMRAP'&&<label>Rundar (ved behov)<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(e.target.value)}/></label>}</div>}
      <div className="wod-selected-list">{selected.length?selected.map((ex,i)=><article key={ex.key}><span className="wod-order">{i+1}</span><div className="wod-selected-info"><strong>{ex.name}</strong><small>{ex.category} · {ex.body_area||'Fullkropp'}</small>{ex.video_url&&<a href={ex.video_url} target="_blank" rel="noreferrer">Video</a>}
-      <div className="wod-dose-grid"><label>Sett<input type="number" min="1" value={ex.sets} onChange={e=>updateItem(ex.key,{sets:e.target.value})}/></label><label>Reps / mål<input value={ex.reps} onChange={e=>updateItem(ex.key,{reps:e.target.value})}/></label><label>Belastning<select value={ex.loadMode} onChange={e=>updateItem(ex.key,{loadMode:e.target.value})}><option value="none">Ikkje oppgitt</option><option value="kg">Fast kg</option><option value="percent">% 1RM</option><option value="rir">RIR</option><option value="rpe">RPE</option><option value="bodyweight">Kroppsvekt / assistanse</option></select></label>
+      <div className="wod-dose-grid">{showSets&&<label>Sett<input type="number" min="1" value={ex.sets} onChange={e=>updateItem(ex.key,{sets:e.target.value})}/></label>}<label>Reps / mål<input value={ex.reps} onChange={e=>updateItem(ex.key,{reps:e.target.value})}/></label><label>Belastning<select value={ex.loadMode} onChange={e=>updateItem(ex.key,{loadMode:e.target.value})}><option value="none">Ikkje oppgitt</option><option value="kg">Fast kg</option><option value="percent">% 1RM</option><option value="rir">RIR</option><option value="rpe">RPE</option><option value="bodyweight">Kroppsvekt / assistanse</option></select></label>
        {ex.loadMode==='kg'&&<label>Kg<input type="number" min="0" step="0.5" value={ex.loadKg} onChange={e=>updateItem(ex.key,{loadKg:e.target.value})}/></label>}
        {ex.loadMode==='percent'&&<label>% av 1RM<input type="number" min="1" max="100" value={ex.percent1rm} onChange={e=>updateItem(ex.key,{percent1rm:e.target.value})}/></label>}
        <label>RIR<input type="number" min="0" max="10" value={ex.rir} onChange={e=>updateItem(ex.key,{rir:e.target.value})}/></label>
@@ -119,7 +119,7 @@ export default function WodBuilder(){
        <label>Pause (sek.)<input type="number" min="0" value={ex.restSeconds} onChange={e=>updateItem(ex.key,{restSeconds:e.target.value})}/></label>
        <label>Tempo<input value={ex.tempo} onChange={e=>updateItem(ex.key,{tempo:e.target.value})} placeholder="t.d. 3-1-1"/></label>
        {ex.equipment==='Romaskin'&&<><label>Meter<input type="number" min="1" value={ex.meters} onChange={e=>updateItem(ex.key,{meters:e.target.value})}/></label><label>Kalorier<input type="number" min="1" value={ex.calories} onChange={e=>updateItem(ex.key,{calories:e.target.value})}/></label><label>Arbeidstid (sek.)<input type="number" min="1" value={ex.workSeconds} onChange={e=>updateItem(ex.key,{workSeconds:e.target.value})}/></label></>}
-      </div><label className="wod-coach-note">Instruksjon for øving<input value={ex.coachNote} onChange={e=>updateItem(ex.key,{coachNote:e.target.value})} placeholder="Teknikk, skalering, mål …"/></label><small className="wod-load-summary">{ex.sets} × {ex.reps} · {fmtLoad(ex)} · pause {ex.restSeconds}s</small>
+      </div><label className="wod-coach-note">Instruksjon for øving<input value={ex.coachNote} onChange={e=>updateItem(ex.key,{coachNote:e.target.value})} placeholder="Teknikk, skalering, mål …"/></label><small className="wod-load-summary">{showSets?ex.sets+' sett × ':''}{ex.reps} {format==='EMOM'?'per minutt':''} · {fmtLoad(ex)}{showSets?' · pause '+ex.restSeconds+'s':''}</small>
      </div><div className="wod-selected-actions"><button type="button" title="Flytt opp" disabled={!i} onClick={()=>move(i,-1)}><ArrowUp size={14}/></button><button type="button" title="Flytt ned" disabled={i===selected.length-1} onClick={()=>move(i,1)}><ArrowDown size={14}/></button><button type="button" title="Fjern" onClick={()=>setSelected(rows=>rows.filter(x=>x.key!==ex.key))}><Trash2 size={14}/></button></div></article>):<div className="empty-state">Legg til øvingar frå biblioteket.</div>}</div>
      <div className="wod-programming-note"><label>Planlagd treningsstimulus<textarea rows="2" value={stimulus} onChange={e=>setStimulus(e.target.value)}/></label><small>Skal økta vera tung og kontrollert, jamn kondisjon eller høg intensitet med korte pausar?</small></div>
      <label>Coach-notat / skalering<textarea rows="3" value={notes} onChange={e=>setNotes(e.target.value)} placeholder="RX, skalering, tekniske krav, oppvarming …"/></label>
