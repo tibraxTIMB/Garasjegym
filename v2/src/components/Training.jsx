@@ -43,7 +43,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
   const phaseRemaining = isTimedInterval
     ? Math.max(0, (inWorkPhase ? Number(workSeconds) : cycle) - phaseElapsed)
     : Math.max(0, emomCycle - (elapsed % emomCycle || 0))
-  const emomNextStart = elapsed === 0 ? 0 : (emomCycle - (elapsed % emomCycle || emomCycle)) || emomCycle
+  const emomNextStart = elapsed % emomCycle === 0 ? 0 : emomCycle - (elapsed % emomCycle)
   const currentRound = isTimedInterval
     ? Math.min(Math.floor(elapsed / cycle) + 1, Math.max(1, Number(rounds) || 1))
     : isEMOM ? Math.floor(elapsed / emomCycle) + 1
@@ -55,7 +55,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
     : isDeathBy ? 'NY RUNDE' : 'PÅGÅR'
   const primaryTime = isCountdown ? remainingTotal
     : isTimedInterval ? phaseRemaining
-    : isEMOM ? remainingTotal
+    : isEMOM ? emomNextStart
     : elapsed
 
   function cue(frequency = 880, duration = 0.16) {
@@ -128,10 +128,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
     <div className="timer-caption"><Clock3 size={15}/> {format.toUpperCase()}</div>
     <div className="timer-phase">{phase}</div>
     <strong>{clock(primaryTime)}</strong>
-    <div className="timer-round-label">{isCountdown ? 'GJENSTÅANDE TID' : isEMOM ? 'GJENSTÅANDE ØKTTID' : isTimedInterval ? 'TID I INTERVALLFASEN' : 'MEDGÅTT TID'}</div>
+    <div className="timer-round-label">{isCountdown ? 'GJENSTÅANDE TID' : isEMOM ? 'TIL NESTE ARBEIDSSTART' : isTimedInterval ? 'TID I INTERVALLFASEN' : 'MEDGÅTT TID'}</div>
     {activeExercise && <div className="timer-round-label">NO: {activeExercise}</div>}
     {isCountdown && <div className="timer-time-pair"><span>Medgått: <b>{clock(elapsed)}</b></span></div>}
-    {isEMOM && <div className="timer-time-pair"><span>Medgått: <b>{clock(elapsed)}</b></span><span>{elapsed === 0 ? 'Første arbeidsstart no' : 'Neste arbeidsstart om'}: <b>{clock(emomNextStart)}</b></span></div>}
+    {isEMOM && <div className="timer-time-pair"><span>Gjenståande økttid: <b>{clock(remainingTotal)}</b></span></div>}
     {isTimedInterval && <div className="timer-time-pair"><span>Medgått: <b>{clock(elapsed)}</b></span><span>Økta att: <b>{clock(remainingTotal)}</b></span></div>}
     {isForTime && <div className="timer-time-pair"><span>{showTimeCap ? <>Tid att: <b>{clock(Math.max(0, target - elapsed))}</b></> : <>Medgått: <b>{clock(elapsed)}</b></>}</span></div>}
     {isDeathBy && <div className="timer-time-pair"><span>Medgått: <b>{clock(elapsed)}</b></span><span>Tid att: <b>{clock(Math.max(0, target - elapsed))}</b></span><span>Neste minutt om: <b>{clock(elapsed === 0 ? 60 : 60 - (elapsed % 60 || 0))}</b></span></div>}
