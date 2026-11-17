@@ -1102,3 +1102,15 @@ footer {
 
 /* Rehab exercise cards: concise descriptions in the overview */
 .wod-exercise-info .wod-rehab-description{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:3px 0 0;font-size:10px;line-height:1.35;color:#c4cbc8}
+
+/* Coffee bar: compact counters and quieter order history */
+.coffee-stats-strip{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 16px}
+.coffee-stat{display:flex;align-items:center;gap:9px;min-width:130px;padding:7px 11px;border:1px solid var(--line,#343d3d);border-radius:10px;background:#202526}
+.coffee-stat span{font-size:10px;color:var(--muted);font-weight:650}
+.coffee-stat strong{font-size:18px;line-height:1;color:var(--orange,#f5a632);font-variant-numeric:tabular-nums}
+.coffee-orders-section{margin-top:12px!important;padding-top:12px!important}
+.coffee-order-views{margin:8px 0 12px}
+.coffee-order-views button{padding:6px 10px;font-size:11px}
+.coffee-orders-section .history-card{padding:11px;margin:8px 0;border-radius:10px}
+.coffee-orders-section .coffee-staff-comment-editor{margin-top:8px;padding-top:8px}
+.coffee-orders-section .coffee-order-actions{gap:6px;margin-top:8px}
