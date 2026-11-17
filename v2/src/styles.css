@@ -1806,3 +1806,15 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .simple-mode .favorite-filter,
 .simple-mode .favorite-star{display:none!important}
 .simple-mode .workout-mode-intro p{display:none}
+
+/* Large, tappable member choices in superenkel modus. */
+.simple-home-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.simple-home-grid .simple-home-action{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:9px;min-height:134px;padding:17px}
+.simple-home-grid .simple-home-action>span{margin:0}
+.simple-home-grid .simple-home-action svg{width:27px;height:27px}
+.simple-home-grid .simple-home-action:last-child{grid-column:1/-1;min-height:100px}
+.simple-assigned .my-training-card{padding:17px;margin-bottom:12px}
+.simple-assigned .my-training-actions .primary-button{min-height:52px;width:100%;justify-content:center}
+.simple-result-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.simple-result-tabs button{min-height:48px;padding:8px 5px}
+@media(max-width:390px){.simple-home-grid{gap:8px}.simple-home-grid .simple-home-action{min-height:120px;padding:12px}.simple-home-grid .simple-home-action strong{font-size:16px}}
