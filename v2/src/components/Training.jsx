@@ -149,7 +149,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', timerSetting
         <div className="timer-bottom-heading">ØKTINFORMASJON</div>
         <div className="timer-side-stat"><span>MEDGÅTT TID</span><b>{clock(elapsed)}</b></div>
         {isCountdown && <div className="timer-side-stat"><span>TID ATT</span><b>{clock(remainingTotal)}</b></div>}
-        {isEMOM && <div className="timer-side-stat"><span>NESTE ARBEIDSSTART</span><b>{clock(emomNextStart)}</b></div>}
+        {isEMOM && <><div className="timer-side-stat"><span>GJENSTÅANDE ØKTTID</span><b>{clock(remainingTotal)}</b></div><div className="timer-side-stat"><span>NESTE ARBEIDSSTART</span><b>{clock(emomNextStart)}</b></div></>}
         {isTimedInterval && <><div className="timer-side-stat"><span>ØKTA ATT</span><b>{clock(remainingTotal)}</b></div><div className="timer-side-stat"><span>RUNDE</span><b>{roundsShown}/{rounds}</b></div></>}
         {isForTime && showTimeCap && <div className="timer-side-stat"><span>TIDSGRENSE</span><b>{clock(Math.max(0,target-elapsed))}</b></div>}
         {isDeathBy && <div className="timer-side-stat"><span>NESTE MINUTT</span><b>{clock(elapsed===0?60:60-(elapsed%60||0))}</b></div>}
