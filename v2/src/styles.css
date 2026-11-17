@@ -1099,3 +1099,6 @@ footer {
 .pt-customer-badge small{font-size:9px;color:var(--muted)}
 .pt-customer-badge-rank{padding-left:8px;border-left:1px solid #46504f;color:#f3b45e;font-size:9px;font-weight:750;white-space:nowrap}
 @media(max-width:620px){.pt-customer-badge{width:100%;border-radius:10px;flex-wrap:wrap}.pt-customer-badge-rank{margin-left:33px;padding-left:0;border:0}}
+
+/* Rehab exercise cards: concise descriptions in the overview */
+.wod-exercise-info .wod-rehab-description{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:3px 0 0;font-size:10px;line-height:1.35;color:#c4cbc8}
