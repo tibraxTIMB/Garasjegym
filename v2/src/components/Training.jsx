@@ -12,7 +12,7 @@ const localDateISO = (date = new Date()) => {
   return local.toISOString().slice(0, 10)
 }
 
-function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList = [], timerSettings = null, onSnapshot = () => {} }) {
+function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList = [], timerSettings = null, onSnapshot = () => {}, stop = false }) {
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [round, setRound] = useState(1)
@@ -96,6 +96,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
     setRestSeconds(timerSettings?.rest_seconds ?? timerSettings?.workout_schema?.station_circuit?.transition_seconds ?? timerSettings?.workout_schema?.interval?.rest_seconds ?? (format === 'Tabata' ? 10 : 60))
     setRounds(timerSettings?.rounds ?? timerSettings?.workout_schema?.station_circuit?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
   }, [format, minutes, seconds, timerSettings?.work_seconds, timerSettings?.rest_seconds, timerSettings?.rounds, timerSettings?.workout_schema?.duration_seconds, timerSettings?.workout_schema?.time_cap_seconds, timerSettings?.workout_schema?.station_circuit?.work_seconds, timerSettings?.workout_schema?.station_circuit?.transition_seconds, timerSettings?.workout_schema?.station_circuit?.rounds])
+
+  useEffect(() => { if (stop) setRunning(false) }, [stop])
 
   useEffect(() => {
     if (!running) return undefined
@@ -480,7 +482,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         <label>Varigheit (min)<input type="number" min="1" max="600" value={duration} onChange={e => setDuration(e.target.value)}/></label>
         <label>Ekstra sekund<input type="number" min="0" max="59" value={durationSeconds} onChange={e => setDurationSeconds(e.target.value)}/></label>
       </div>
-      <Timer format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} exerciseList={items} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot}/>
+      <Timer format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} exerciseList={items} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen}/>
       {items.length > 0 && format!=='Stasjonssirkel' && <section className="engine-section">
         <div className="engine-section-title"><h4>{format==='Stasjonssirkel'?'Stasjonane i økta':'WOD / øvingsrekkjefølgje'}</h4><span>{format==='Stasjonssirkel'?'Alle stasjonar – roter etter eiga startplassering':'Vel øvinga du arbeider med'}</span></div>
         <div className={format==='Stasjonssirkel'?'timer-station-grid':'wod-list'}>{items.map((item, index) => format==='Stasjonssirkel' ? <article className="timer-station-card" key={item.key}><span>STASJON {index+1}</span><strong>{item.exercise_name||'Øving'}</strong><small>{item.reps_mode==='amrap'?'AMRAP · maks reps':item.reps?item.reps+' reps':'Valfritt tal reps'}</small></article> : <button type="button" key={item.key} className={index === activeExerciseIndex ? 'secondary-button active' : 'secondary-button'} onClick={() => setActiveExerciseIndex(index)}>{index + 1}. {item.exercise_name || 'Ny øving'}</button>)}</div>
