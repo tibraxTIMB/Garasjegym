@@ -30,6 +30,11 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
   const emomEvery = Math.max(1, Number(schema?.interval?.work_every_minutes) || (format === 'E2MOM' || format === 'EMOM 2' ? 2 : format === 'E3MOM' ? 3 : 1))
   const emomCycle = emomEvery * 60
   const isTimedInterval = ['Tabata', 'Intervall', 'Tilpassa', 'Row Intervals'].includes(format)
+  const isStationCircuit = format === 'Stasjonssirkel' || schema?.structure === 'station_circuit'
+  const stationPlan = schema?.station_circuit || {}
+  const stationList = Array.isArray(stationPlan.stations) && stationPlan.stations.length ? stationPlan.stations : (schema?.items || []).map((item,index)=>({...item,station_number:index+1}))
+  const stationCount = Math.max(1, Number(stationPlan.station_count) || stationList.length || 1)
+  const stationSlots = Math.max(1, Number(stationPlan.rounds ?? schema?.rounds ?? rounds) || 1) * stationCount
   const isCountdown = ['AMRAP', 'Nedteljing'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'AMRAP')
   const isForTime = ['For Time', 'Chipper'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'For Time')
   const isDeathBy = format === 'Death By'
@@ -37,25 +42,30 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
   const target = Math.max(1, (isCountdown || isForTime) && capDuration ? capDuration : savedDuration || fallbackDuration)
   const cycle = Math.max(1, Number(workSeconds)) + Math.max(0, Number(restSeconds))
   const intervalTotal = cycle * Math.max(1, Number(rounds) || 1)
-  const totalTarget = isTimedInterval ? intervalTotal : target
+  const stationTotal = Math.max(1, Number(stationPlan.work_seconds ?? workSeconds)) * stationSlots + Math.max(0, stationSlots - 1) * Math.max(0, Number(stationPlan.transition_seconds ?? restSeconds))
+  const totalTarget = isStationCircuit ? stationTotal : isTimedInterval ? intervalTotal : target
   const remainingTotal = Math.max(0, totalTarget - elapsed)
-  const phaseElapsed = isTimedInterval ? elapsed % cycle : elapsed % emomCycle
+  const phaseElapsed = (isTimedInterval || isStationCircuit) ? elapsed % cycle : elapsed % emomCycle
   const inWorkPhase = phaseElapsed < Number(workSeconds)
-  const phaseRemaining = isTimedInterval
+  const phaseRemaining = (isTimedInterval || isStationCircuit)
     ? Math.max(0, (inWorkPhase ? Number(workSeconds) : cycle) - phaseElapsed)
     : Math.max(0, emomCycle - (elapsed % emomCycle || 0))
   const emomNextStart = elapsed % emomCycle === 0 ? 0 : emomCycle - (elapsed % emomCycle)
-  const currentRound = isTimedInterval
+  const currentRound = isStationCircuit
+    ? Math.min(Math.floor(elapsed / (cycle * stationCount)) + 1, Math.max(1, Number(stationPlan.rounds ?? schema?.rounds ?? rounds) || 1))
+    : isTimedInterval
     ? Math.min(Math.floor(elapsed / cycle) + 1, Math.max(1, Number(rounds) || 1))
     : isEMOM ? Math.floor(elapsed / emomCycle) + 1
     : isDeathBy ? Math.floor(elapsed / 60) + 1
     : Math.floor(elapsed / 60) + 1
-  const currentPhase = isTimedInterval
+  const currentPhase = isStationCircuit
+    ? (inWorkPhase ? 'ARBEID' : 'BYTE STASJON')
+    : isTimedInterval
     ? (inWorkPhase ? 'ARBEID' : 'KVILE')
     : isEMOM ? (elapsed === 0 || elapsed % emomCycle === 0 ? 'ARBEID' : 'TIL NESTE START')
     : isDeathBy ? 'NY RUNDE' : 'PÅGÅR'
   const primaryTime = isCountdown ? remainingTotal
-    : isTimedInterval ? phaseRemaining
+    : (isTimedInterval || isStationCircuit) ? phaseRemaining
     : isEMOM ? emomNextStart
     : elapsed
 
@@ -91,20 +101,20 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
     return () => window.clearInterval(id)
   }, [running])
 
-  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isAmrap ? laps.length : round, phase, running }) }, [elapsed, laps, round, phase, running, isCountdown, onSnapshot])
+  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isStationCircuit ? Math.min(Math.floor(elapsed / (cycle * stationCount)), Number(stationPlan.rounds ?? schema?.rounds ?? rounds)) : isAmrap ? laps.length : round, phase, running, remaining:remainingTotal, currentRound }) }, [elapsed, laps, round, phase, running, isCountdown, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, currentRound])
 
   useEffect(() => {
     if (!running) return
-    if ((isCountdown || isEMOM || isDeathBy || (isForTime && capDuration > 0)) && elapsed >= target) {
+    if ((isCountdown || isEMOM || isDeathBy || (isForTime && capDuration > 0) || isStationCircuit) && elapsed >= (isStationCircuit ? stationTotal : target)) {
       setRunning(false); setPhase(isForTime ? 'TIDSGRENSE' : 'FERDIG'); cue(520, 0.5); return
     }
     if (isTimedInterval && elapsed >= intervalTotal) {
       setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return
     }
-    if ((isTimedInterval && (elapsed % cycle === 0 || elapsed % cycle === Number(workSeconds))) ||
+    if (((isTimedInterval || isStationCircuit) && (elapsed % cycle === 0 || elapsed % cycle === Number(workSeconds))) ||
       (isEMOM && elapsed > 0 && elapsed % emomCycle === 0) ||
       (isDeathBy && elapsed > 0 && elapsed % 60 === 0)) cue(1040, 0.12)
-  }, [elapsed, running, target, isCountdown, isEMOM, isDeathBy, isForTime, isTimedInterval, intervalTotal, cycle, emomCycle, workSeconds])
+  }, [elapsed, running, target, isCountdown, isEMOM, isDeathBy, isForTime, isTimedInterval, isStationCircuit, intervalTotal, stationTotal, cycle, emomCycle, workSeconds])
 
   useEffect(() => {
     if (running) setPhase(currentPhase)
@@ -134,7 +144,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
         <div className="timer-phase">{phase}</div>
         <strong className="timer-main-clock">{clock(primaryTime)}</strong>
         <div className="timer-round-label">{isCountdown ? 'GJENSTÅANDE TID' : isEMOM ? 'TIL NESTE ARBEIDSSTART' : isTimedInterval ? 'TID I INTERVALLFASEN' : 'MEDGÅTT TID'}</div>
-        {isAmrap ? <div className="timer-amrap-exercise-list"><span>ØVINGAR I WOD-EN</span>{exerciseList.length ? <ol>{exerciseList.map((exercise,index)=>{const setReps=(exercise.sets||[]).map(set=>String(set.reps??'').trim()).filter(Boolean);const uniqueReps=[...new Set(setReps)];const repsLabel=uniqueReps.length===1?(setReps.length>1?`${setReps.length} × ${uniqueReps[0]}`:uniqueReps[0]):uniqueReps.length>1?uniqueReps.join(' / '):String(exercise.reps??'').trim();return <li key={exercise.key||index}><b>{index+1}.</b><span>{repsLabel&&<strong className="timer-amrap-reps">{repsLabel} × </strong>}{exercise.exercise_name||'Øving utan namn'}</span></li>})}</ol> : <p>Ingen øvingar er lagde til.</p>}</div> : activeExercise && <div className="timer-active-under-clock"><span>GJELDANDE ØVING</span><b>{activeExercise}</b></div>}
+        {isStationCircuit ? <div className="timer-station-plan"><div className="timer-station-plan-heading"><span>STASJONANE I SIRKELEN</span><b>{stationPlan.rounds ?? schema?.rounds ?? rounds} rundar</b></div><div className="timer-station-grid">{stationList.map((station,index)=><article className="timer-station-card" key={station.station_number||index}><span>STASJON {station.station_number||index+1}</span><strong>{station.exercise_name||station.name||'Øving'}</strong><small>{station.reps_mode==='amrap'?'AMRAP · maks reps i arbeidsperioden':station.reps!=null&&station.reps!==''?`${station.reps} reps`:'Valfritt tal reps'}{station.load_label?' · '+station.load_label:''}</small>{station.description&&<p>{station.description}</p>}{station.coach_note&&<p>{station.coach_note}</p>}</article>)}</div></div> : isAmrap ? <div className="timer-amrap-exercise-list"><span>ØVINGAR I WOD-EN</span>{exerciseList.length ? <ol>{exerciseList.map((exercise,index)=>{const setReps=(exercise.sets||[]).map(set=>String(set.reps??'').trim()).filter(Boolean);const uniqueReps=[...new Set(setReps)];const repsLabel=uniqueReps.length===1?(setReps.length>1?`${setReps.length} × ${uniqueReps[0]}`:uniqueReps[0]):uniqueReps.length>1?uniqueReps.join(' / '):String(exercise.reps??'').trim();return <li key={exercise.key||index}><b>{index+1}.</b><span>{repsLabel&&<strong className="timer-amrap-reps">{repsLabel} × </strong>}{exercise.exercise_name||'Øving utan namn'}</span></li>})}</ol> : <p>Ingen øvingar er lagde til.</p>}</div> : !isStationCircuit && activeExercise && <div className="timer-active-under-clock"><span>GJELDANDE ØVING</span><b>{activeExercise}</b></div>}
         {isAmrap && <div className="timer-round-total"><span>RUNDER FULLFØRT</span><b>{completedRounds}</b></div>}
         <div className="timer-actions">
           <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) setPhase('PÅGÅR'); setRunning(value => !value) }} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
@@ -148,8 +158,9 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
       <aside className="timer-side timer-side-left">
         <div className="timer-bottom-heading">ØKTINFORMASJON</div>
         <div className="timer-side-stat"><span>MEDGÅTT TID</span><b>{clock(elapsed)}</b></div>
-        {isCountdown && <div className="timer-side-stat"><span>TID ATT</span><b>{clock(remainingTotal)}</b></div>}
+        {(isCountdown || isStationCircuit) && <div className="timer-side-stat"><span>GJENVERANDE TID</span><b>{clock(remainingTotal)}</b></div>}
         {isEMOM && <><div className="timer-side-stat"><span>GJENSTÅANDE ØKTTID</span><b>{clock(remainingTotal)}</b></div><div className="timer-side-stat"><span>NESTE ARBEIDSSTART</span><b>{clock(emomNextStart)}</b></div></>}
+        {isStationCircuit && <><div className="timer-side-stat"><span>RUNDE</span><b>{Math.min(currentRound,Number(stationPlan.rounds ?? schema?.rounds ?? rounds))}/{stationPlan.rounds ?? schema?.rounds ?? rounds}</b></div><div className="timer-side-stat"><span>ARBEID / BYTE</span><b>{stationPlan.work_seconds ?? workSeconds}s / {stationPlan.transition_seconds ?? restSeconds}s</b></div></>}
         {isTimedInterval && <><div className="timer-side-stat"><span>ØKTA ATT</span><b>{clock(remainingTotal)}</b></div><div className="timer-side-stat"><span>RUNDE</span><b>{roundsShown}/{rounds}</b></div></>}
         {isForTime && showTimeCap && <div className="timer-side-stat"><span>TIDSGRENSE</span><b>{clock(Math.max(0,target-elapsed))}</b></div>}
         {isDeathBy && <div className="timer-side-stat"><span>NESTE MINUTT</span><b>{clock(elapsed===0?60:60-(elapsed%60||0))}</b></div>}
@@ -165,7 +176,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
       </aside>
     </div>
     <div className="timer-music-footer"><MusicMiniPlayer /></div>
-    <small>{isTimedInterval ? 'Arbeid / kvile · samla økttid og tid att' : isCountdown ? 'AMRAP · registrer kvar fullførte runde' : isEMOM ? (emomEvery > 1 ? `E${emomEvery}MOM · arbeid kvart ${emomEvery}. minutt` : 'E1MOM · arbeid kvart minutt') : isDeathBy ? 'Aukande arbeid for kvar minutt' : isForTime ? 'Stoppeklokke med eventuell tidsgrense' : 'Stoppeklokke – tel medgått tid'}</small>
+    <small>{isStationCircuit ? 'Stasjonssirkel · roterande stasjonar · fast tal rundar' : isTimedInterval ? 'Arbeid / kvile · samla økttid og tid att' : isCountdown ? 'AMRAP · registrer kvar fullførte runde' : isEMOM ? (emomEvery > 1 ? `E${emomEvery}MOM · arbeid kvart ${emomEvery}. minutt` : 'E1MOM · arbeid kvart minutt') : isDeathBy ? 'Aukande arbeid for kvar minutt' : isForTime ? 'Stoppeklokke med eventuell tidsgrense' : 'Stoppeklokke – tel medgått tid'}</small>
   </div>
 }
 
