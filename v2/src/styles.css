@@ -1855,3 +1855,10 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 /* Lite merke på Mi økt når PT har lagt inn ei ny tildeling. */
 .simple-home-grid .simple-home-icon-wrap{position:relative;display:inline-flex!important;align-items:center;justify-content:center;margin:0!important;color:var(--orange);font-size:inherit}
 .simple-home-notification-dot{position:absolute;top:-4px;right:-7px;width:10px;height:10px;border:2px solid #171b1d;border-radius:50%;background:#ef6258;box-shadow:0 0 0 2px rgba(239,98,88,.18)}
+
+/* Tydeleg NY-merke med tal på nye PT-tildelingar på Mi økt. */
+.simple-home-grid .simple-home-action{position:relative}
+.simple-home-grid .simple-home-new-badge{position:absolute;top:10px;right:10px;display:flex!important;flex-direction:row;align-items:center;justify-content:center;gap:7px;margin:0!important;padding:7px 10px;border:1px solid #ff8b80;border-radius:999px;background:#a8322d;color:#fff!important;box-shadow:0 3px 12px rgba(0,0,0,.35);font-size:12px!important;line-height:1}
+.simple-home-grid .simple-home-new-badge b{font-size:11px;font-weight:1000;letter-spacing:.08em;color:#fff}
+.simple-home-grid .simple-home-new-badge strong{display:grid;place-items:center;min-width:21px;height:21px;padding:0 5px;border-radius:50%;background:#fff;color:#9b2824;font-size:12px;font-weight:1000}
+@media(max-width:390px){.simple-home-grid .simple-home-new-badge{top:7px;right:7px;padding:6px 8px}.simple-home-grid .simple-home-new-badge b{font-size:10px}}
