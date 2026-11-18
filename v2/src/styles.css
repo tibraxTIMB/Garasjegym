@@ -5013,3 +5013,5 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .pt2-modal{width:min(100%,560px);max-height:min(90vh,900px);overflow:auto;padding:22px;background:#1b2022;border:1px solid #41494a;border-radius:15px;box-shadow:0 24px 80px rgba(0,0,0,.5)}
 .pt2-modal .primary-button{justify-self:start}
 @media(max-width:700px){.pt2-grid,.pt2-form-grid{grid-template-columns:1fr}.pt2-wide{grid-column:auto}.pt2-check-grid{grid-template-columns:1fr}.pt2-customer-bar{align-items:stretch}.pt2-customer-bar .pt2-field{width:100%}.pt2-session{grid-template-columns:34px minmax(0,1fr)}.pt2-session>.pt2-pill,.pt2-session>.secondary-button{grid-column:2;justify-self:start}.pt2-stat-row strong{font-size:19px}.pt2-panel{padding:15px}.pt2-head h2{font-size:27px}}
+
+.pt2-order-button{width:29px;height:29px;border:1px solid #485052;border-radius:7px;background:#202729;color:#e8e7e2;font-weight:900;cursor:pointer}.pt2-order-button:disabled{opacity:.25;cursor:not-allowed}
