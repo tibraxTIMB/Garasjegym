@@ -126,7 +126,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [prescription,setPrescription]=useState('rx'),[customInstructions,setCustomInstructions]=useState(''),[customUseSets,setCustomUseSets]=useState(false),[combinationMode,setCombinationMode]=useState('For Time')
  const [wizardStep,setWizardStep]=useState(1),[libraryOpen,setLibraryOpen]=useState(false),[rxNotes,setRxNotes]=useState(''),[scaledNotes,setScaledNotes]=useState(''),[intensity,setIntensity]=useState('2')
- const [editingSelectedKey,setEditingSelectedKey]=useState(null),[draggingSelectedKey,setDraggingSelectedKey]=useState(null),[doseLevelByKey,setDoseLevelByKey]=useState({}),[doseLevelByKey,setDoseLevelByKey]=useState({})
+ const [editingSelectedKey,setEditingSelectedKey]=useState(null),[draggingSelectedKey,setDraggingSelectedKey]=useState(null),[doseLevelByKey,setDoseLevelByKey]=useState({})
 
  async function loadWodForEdit(id){
   if(!id)return
