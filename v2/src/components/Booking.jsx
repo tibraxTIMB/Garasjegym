@@ -3,7 +3,7 @@ import { CalendarDays, CheckCircle2, Clock3, LoaderCircle, Plus, Users, Radio, P
 import { supabase } from '../lib/supabase.js'
 import { isStaff } from '../lib/auth.js'
 
-const LIVE_SESSION_FIELDS = 'id,class_id,status,started_at,session_title,wod_id,wod_ids,active_wod_index,timer_format,timer_duration_seconds,timer_settings,timer_started_at,timer_elapsed_seconds,timer_status'
+const LIVE_SESSION_FIELDS = 'id,class_id,status,started_at,session_title,wod_id,wod_ids,active_wod_index,timer_format,timer_duration_seconds,timer_settings,timer_started_at,timer_elapsed_seconds,timer_status,results_published_at'
 const LIVE_SESSION_BASE_FIELDS = 'id,class_id,status,started_at,session_title,wod_id,wod_ids,active_wod_index'
 
 async function fetchLiveSessions() {
@@ -63,9 +63,9 @@ export default function Booking({ profile, onLogResult }) {
     if(b.error)setError(b.error.message);else setMine(b.data||[])
     if(a.error)setError(a.error.message);else {setAttendance(a.data||[]);const ids=[...new Set((a.data||[]).map(row=>row.member_id).filter(Boolean))];if(ids.length){const {data:people}=await supabase.from('profiles').select('id,display_name').in('id',ids);setMemberNames(v=>({...v,...Object.fromEntries((people||[]).map(p=>[p.id,p.display_name||'Medlem']))}))}}
     if(live.error)setError(live.error.message);else setLiveSessions(live.data||[])
-    let w=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings').eq('is_published',true).order('name')
+    let w=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,category').eq('is_published',true).order('name')
     if(w.error && /timer_settings|column .* does not exist/i.test(w.error.message||'')){
-      w=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes').eq('is_published',true).order('name')
+      w=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,category').eq('is_published',true).order('name')
     }
     if(!w.error)setWods(w.data||[])
 
