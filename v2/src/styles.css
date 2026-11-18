@@ -2528,3 +2528,59 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 @media(max-width:460px){
  .wod-builder-step-1 .wod-composer .wod-format-tiles{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+
+
+/* WOD Studio step 1: use the full available content width */
+.wod-builder-step-1,
+.wod-builder-step-1 .pt-wod-builder-form,
+.wod-builder-step-1 .wod-builder-layout,
+.wod-builder-step-1 .wod-composer,
+.wod-builder-step-1 .wod-composer>.admin-create-form{
+ width:100%!important;max-width:none!important;min-width:0!important;box-sizing:border-box!important
+}
+.wod-builder-step-1 .wod-builder-layout{display:block!important}
+.wod-builder-step-1 .wod-composer{margin:0!important}
+.wod-builder-step-1 .wod-composer .admin-create-form{display:block!important}
+.wod-builder-step-1 .wod-composer .wizard-format-panel{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:22px!important;
+ width:100%!important;max-width:none!important;padding:24px!important;box-sizing:border-box!important
+}
+.wod-builder-step-1 .wod-composer .wod-name-field{max-width:760px!important}
+.wod-builder-step-1 .wod-composer .wod-setup-format{max-width:none!important;width:100%!important}
+.wod-builder-step-1 .wod-composer .wod-format-tiles{
+ display:grid!important;grid-template-columns:repeat(auto-fit,minmax(125px,1fr))!important;
+ gap:10px!important;width:100%!important
+}
+.wod-builder-step-1 .wod-composer .wod-format-tiles button{
+ min-height:88px!important;display:flex!important;flex-direction:column!important;
+ align-items:center!important;justify-content:center!important;gap:9px!important;
+ padding:12px 9px!important;border:1px solid #40565d!important;border-radius:13px!important;
+ background:linear-gradient(155deg,#22343b,#17252a)!important;color:#eef4f4!important;
+ box-shadow:inset 0 1px 0 #ffffff0c!important
+}
+.wod-builder-step-1 .wod-composer .wod-format-tiles button:hover{
+ border-color:#f5a623!important;transform:translateY(-1px)!important
+}
+.wod-builder-step-1 .wod-composer .wod-format-tiles button.selected{
+ background:linear-gradient(155deg,#ffb33c,#ed9418)!important;color:#172126!important;
+ border-color:#ffbd51!important;box-shadow:0 0 0 2px #f5a62330!important
+}
+.wod-builder-step-1 .wod-composer .wod-format-tiles button .wod-format-icon{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ width:38px!important;height:38px!important;font-size:25px!important;line-height:1!important;
+ color:inherit!important
+}
+.wod-builder-step-1 .wod-composer .wod-format-tiles button strong{
+ font-size:13px!important;line-height:1.2!important;text-align:center!important;
+ white-space:normal!important
+}
+.wod-builder-step-1 .wod-composer .engine-fields{
+ display:grid!important;grid-template-columns:minmax(220px,320px)!important
+}
+.wod-builder-step-1 .wod-composer .wod-advanced-fields{
+ max-width:760px!important;display:grid!important;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))!important
+}
+@media(max-width:700px){
+ .wod-builder-step-1 .wod-composer .wizard-format-panel{padding:15px!important}
+ .wod-builder-step-1 .wod-composer .wod-format-tiles{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
