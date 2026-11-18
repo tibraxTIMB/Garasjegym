@@ -494,12 +494,13 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         const {error:assignmentError}=await supabase.from('pt_wod_assignments').update({status:'completed',completed_at:new Date().toISOString(),workout_log_id:workoutId}).eq('id',launchAssignmentId).eq('member_id',user.id)
         if(assignmentError)throw assignmentError
       }
+      let programSyncMessage = ''
       if(launchProgramSessionId){
         const {error:programError}=await supabase.from('pt_program_sessions').update({status:'completed',completed_at:new Date().toISOString(),workout_log_id:workoutId}).eq('id',launchProgramSessionId)
-        if(programError)prMessage += ' Treningsloggen er lagra, men PT-planen kunne ikkje oppdaterast: '+programError.message
+        if(programError)programSyncMessage = ' Treningsloggen er lagra, men PT-planen kunne ikkje oppdaterast: '+programError.message
       }
       // Automatically detect new heaviest logged loads and store them as PRs.
-      let prMessage = ''
+      let prMessage = programSyncMessage
       try {
         const { data: existingPRs, error: prReadError } = await supabase.from('personal_records')
           .select('exercise_name,result,unit').eq('member_id', user.id).eq('unit', 'kg')
