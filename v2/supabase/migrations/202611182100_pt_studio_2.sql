@@ -112,7 +112,7 @@ create policy pt_program_sessions_read_parent on public.pt_program_sessions for 
 create policy pt_program_sessions_staff_insert on public.pt_program_sessions for insert to authenticated with check(public.is_admin_or_manager());
 create policy pt_program_sessions_staff_update on public.pt_program_sessions for update to authenticated using(public.is_admin_or_manager()) with check(public.is_admin_or_manager());
 create policy pt_program_sessions_member_complete on public.pt_program_sessions for update to authenticated using(status in ('planned','in_progress') and exists(select 1 from public.pt_programs p where p.id=program_id and p.client_id=auth.uid())) with check(status in ('completed','in_progress') and exists(select 1 from public.pt_programs p where p.id=program_id and p.client_id=auth.uid()));
-revoke update on public.pt_program_sessions from authenticated;\ngrant select,insert on public.pt_program_sessions to authenticated;\ngrant update(status,completed_at) on public.pt_program_sessions to authenticated;
+revoke update on public.pt_program_sessions from authenticated;\ngrant select,insert on public.pt_program_sessions to authenticated;\ngrant update(status,completed_at,sequence_no) on public.pt_program_sessions to authenticated;
 
 create table if not exists public.pt_checkins (
  id uuid primary key default gen_random_uuid(),
@@ -132,4 +132,4 @@ create policy pt_checkins_read_own_or_staff on public.pt_checkins for select to 
 create policy pt_checkins_staff_insert on public.pt_checkins for insert to authenticated with check(public.is_admin_or_manager() and created_by=auth.uid());
 create policy pt_checkins_member_answer on public.pt_checkins for update to authenticated using(member_id=auth.uid() and status='pending') with check(member_id=auth.uid() and status='submitted');
 create policy pt_checkins_staff_update on public.pt_checkins for update to authenticated using(public.is_admin_or_manager()) with check(public.is_admin_or_manager());
-revoke update on public.pt_checkins from authenticated;\ngrant select,insert on public.pt_checkins to authenticated;\ngrant update(answers,status,submitted_at,reviewed_at) on public.pt_checkins to authenticated;
+revoke update on public.pt_checkins from authenticated;\ngrant select,insert on public.pt_checkins to authenticated;\ngrant update(answers,status,submitted_at) on public.pt_checkins to authenticated;
