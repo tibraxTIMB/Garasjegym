@@ -4326,3 +4326,51 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
  .wod-library-portal{padding:calc(8px + env(safe-area-inset-top,0px)) 10px 0!important}
  .wod-library-portal .wod-library-fullscreen-head{min-height:50px!important}
 }
+
+
+/* STURMKOPF – WOD Studio step 3 dosage and scaling */
+.wizard-dose-stage{display:flex;flex-direction:column;gap:16px;padding:8px 0 24px}
+.wizard-dose-intro{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:8px 2px}
+.wizard-dose-intro h2{margin:5px 0 4px;font-size:clamp(22px,4vw,30px);line-height:1.12}
+.wizard-dose-intro p{margin:0;color:var(--muted,#aab4bb);font-size:14px}
+.wod-dose-count{white-space:nowrap;padding:7px 10px;border-radius:999px;background:rgba(221,111,13,.15);color:#f0a044;font-weight:800;font-size:12px}
+.wizard-dose-exercises{display:flex;flex-direction:column;gap:10px}
+.wizard-dose-card{border:1px solid rgba(130,151,160,.4);border-radius:15px;background:linear-gradient(145deg,rgba(20,30,35,.9),rgba(7,14,18,.95));overflow:hidden}
+.wizard-dose-card-head{width:100%;display:flex;align-items:center;gap:10px;padding:13px 14px;background:transparent;border:0;color:inherit;text-align:left}
+.wizard-dose-card-head>.wod-order{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border-radius:50%;background:#b95a0b;color:#fff;font-weight:900}
+.wizard-dose-card-head>strong{flex:1;min-width:0;font-size:16px}
+.wizard-dose-card-summary{font-size:12px;color:#b8c3ca;text-align:right}
+.wizard-dose-card-body{padding:0 13px 14px;border-top:1px solid rgba(130,151,160,.2)}
+.wizard-dose-level-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0}
+.wizard-dose-level-tabs button{min-height:42px;border:1px solid #46545b;border-radius:10px;background:#192329;color:#e5e9eb;font-weight:800}
+.wizard-dose-level-tabs button.active{background:#c45b08;border-color:#f28b22;color:white;box-shadow:0 0 0 1px rgba(255,145,35,.25)}
+.wizard-dose-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.wizard-dose-fields label,.wizard-dose-method label{display:flex;flex-direction:column;gap:6px;min-width:0;color:#e9edef;font-size:13px;font-weight:700}
+.wizard-dose-fields input,.wizard-dose-fields select,.wizard-dose-fields textarea,.wizard-dose-method input,.wizard-dose-method select,.wizard-dose-method textarea{width:100%;min-width:0;box-sizing:border-box}
+.wizard-dose-fields .wizard-dose-instruction{grid-column:1/-1}
+.wizard-dose-copy{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;color:#aebbc1;font-size:12px}
+.wizard-dose-copy button{border:1px solid #5b6267;border-radius:9px;background:#1b252a;color:#f2a24d;padding:8px 10px;font-size:12px;font-weight:750}
+.wizard-dose-method,.wizard-dose-summary{border:1px solid rgba(130,151,160,.35);border-radius:15px;padding:14px;background:rgba(14,23,28,.75);display:flex;flex-direction:column;gap:11px}
+.wizard-dose-method>strong{font-size:16px}
+.wizard-dose-summary-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.wizard-dose-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.wizard-dose-summary-card{min-width:0;border:1px solid rgba(130,151,160,.35);border-radius:10px;overflow:hidden;background:rgba(4,12,16,.65)}
+.wizard-dose-summary-card>strong{display:block;padding:8px 9px;font-size:14px;background:rgba(31,53,45,.85);color:#8ee4b0}
+.wizard-dose-summary-card.level-scaled>strong{background:rgba(23,47,70,.9);color:#9bcfff}
+.wizard-dose-summary-card.level-foundation>strong{background:rgba(55,36,72,.9);color:#d9b0ff}
+.wizard-dose-summary-card ul{list-style:none;margin:0;padding:8px 9px;display:flex;flex-direction:column;gap:6px}
+.wizard-dose-summary-card li{font-size:11px;line-height:1.35;color:#e0e6e8;overflow-wrap:anywhere}
+@media(max-width:760px){
+ .wizard-dose-stage{gap:12px;padding:4px 0 120px}
+ .wizard-dose-intro{padding:6px 0}
+ .wizard-dose-card-head{padding:11px 10px;gap:8px}
+ .wizard-dose-card-head>strong{font-size:14px}
+ .wizard-dose-card-summary{max-width:105px;font-size:10px}
+ .wizard-dose-card-body{padding:0 10px 12px}
+ .wizard-dose-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .wizard-dose-fields label{font-size:12px}
+ .wizard-dose-fields input,.wizard-dose-fields select{min-height:42px;font-size:14px}
+ .wizard-dose-summary-grid{grid-template-columns:1fr;gap:8px}
+ .wizard-dose-summary-card ul{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+ .wizard-stage-actions{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:30;padding:10px;background:rgba(3,10,14,.97);border:1px solid #425159;border-radius:14px;box-shadow:0 -6px 20px rgba(0,0,0,.4)}
+}
