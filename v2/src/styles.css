@@ -5058,3 +5058,216 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .notification-context .notification-item-v2{padding:9px 6px}
 .notification-context .notification-actions-v2{margin-top:2px}
 @media(max-width:620px){.notification-panel-v2{right:-48px}.notification-summary{gap:4px}.notification-summary span{font-size:8px;padding:5px 6px}}
+
+
+/* STURMKOPF responsive device shell and Android touch support */
+html, body, #root {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100%;
+  max-width: 100%;
+}
+html { -webkit-text-size-adjust: 100%; }
+body { overflow-x: clip; }
+.app-shell { min-height: calc(var(--gg-vh, 1vh) * 100); min-width: 0; }
+.main, .content-card, .training-content, .training-module { min-width: 0; max-width: 100%; }
+.content-card { width: 100%; }
+img, video, canvas, svg { max-width: 100%; }
+input, select, textarea { max-width: 100%; }
+
+/* Portrait Android tablets use a compact top navigation rather than a cramped sidebar. */
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .app-shell {
+  display: block;
+}
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 9px 12px;
+  border-right: 0;
+  border-bottom: 1px solid var(--line);
+}
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .sidebar .brand,
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .sidebar .side-label,
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .sidebar .sidebar-foot {
+  display: none;
+}
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .sidebar nav {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .nav-item {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 10px 12px;
+}
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .nav-item svg { display: none; }
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .main {
+  padding: 0 clamp(12px, 3vw, 28px);
+}
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .content-card {
+  max-width: none;
+}
+
+/* Timer canvas adapts independently from the outer app viewport. */
+.timer-panel-canvas { min-width: 0; }
+.timer-layout-panel { min-width: 0; max-width: 100%; }
+.timer-panel-content { min-width: 0; overflow-x: auto; }
+.timer-panel-clock .timer-center { min-width: 0; }
+.timer-panel-clock .timer-main-clock {
+  font-size: clamp(52px, min(var(--timer-clock-size), 18vw), 190px);
+  line-height: .98;
+}
+.timer-actions, .timer-finish-row { max-width: 100%; }
+.timer-actions button, .timer-finish-button { touch-action: manipulation; }
+
+/* Phones in portrait: one readable column, no fixed-height panels. */
+html[data-gg-device="mobile"][data-gg-orientation="portrait"] .main {
+  padding-left: max(10px, env(safe-area-inset-left));
+  padding-right: max(10px, env(safe-area-inset-right));
+}
+html[data-gg-device="mobile"][data-gg-orientation="portrait"] .content-card {
+  padding: clamp(10px, 3vw, 18px);
+  border-radius: 12px;
+}
+html[data-gg-device="mobile"][data-gg-orientation="portrait"] .timer-panel-canvas {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 9px;
+}
+html[data-gg-device="mobile"][data-gg-orientation="portrait"] .timer-layout-panel {
+  grid-column: 1 / -1 !important;
+  min-height: 0 !important;
+  height: auto !important;
+}
+html[data-gg-device="mobile"][data-gg-orientation="portrait"] .timer-panel-clock .timer-main-clock {
+  font-size: clamp(54px, 18vw, 104px);
+  letter-spacing: -.045em;
+}
+html[data-gg-device="mobile"][data-gg-orientation="portrait"] .timer-panel-clock .timer-center {
+  gap: 8px;
+  padding: 6px 2px;
+}
+html[data-gg-device="mobile"][data-gg-orientation="portrait"] .timer-panel-clock .timer-amrap-exercise-list ol {
+  max-height: 24dvh;
+  overflow: auto;
+}
+html[data-gg-device="mobile"][data-gg-orientation="portrait"] .timer-panel-toolbar {
+  position: static;
+  gap: 6px;
+}
+html[data-gg-device="mobile"][data-gg-orientation="portrait"] .timer-panel-tools {
+  width: 100%;
+  margin-left: 0;
+  flex-wrap: wrap;
+}
+html[data-gg-device="mobile"][data-gg-orientation="portrait"] .timer-panel-tools button {
+  flex: 1 1 40px;
+}
+
+/* Phones in landscape: prioritise the clock and keep key controls in the first view. */
+html[data-gg-device="mobile"][data-gg-orientation="landscape"] .main {
+  padding-left: max(8px, env(safe-area-inset-left));
+  padding-right: max(8px, env(safe-area-inset-right));
+}
+html[data-gg-device="mobile"][data-gg-orientation="landscape"] .welcome,
+html[data-gg-device="mobile"][data-gg-orientation="landscape"] .app-daily-wod-strip {
+  display: none;
+}
+html[data-gg-device="mobile"][data-gg-orientation="landscape"] .topbar {
+  height: 42px;
+  min-height: 42px;
+}
+html[data-gg-device="mobile"][data-gg-orientation="landscape"] .content-card {
+  padding: 8px;
+}
+html[data-gg-device="mobile"][data-gg-orientation="landscape"] .timer-panel-canvas {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+html[data-gg-device="mobile"][data-gg-orientation="landscape"] .timer-layout-panel {
+  grid-column: auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+}
+html[data-gg-device="mobile"][data-gg-orientation="landscape"] .timer-panel-clock,
+html[data-gg-device="mobile"][data-gg-orientation="landscape"] .timer-panel-music {
+  grid-column: 1 / -1 !important;
+}
+html[data-gg-device="mobile"][data-gg-orientation="landscape"] .timer-panel-clock .timer-main-clock {
+  font-size: clamp(48px, 15vh, 92px);
+}
+html[data-gg-device="mobile"][data-gg-orientation="landscape"] .timer-panel-clock .timer-center {
+  gap: 5px;
+  padding: 3px;
+}
+html[data-gg-device="mobile"][data-gg-orientation="landscape"] .timer-panel-toolbar {
+  min-height: 34px;
+  padding: 3px 6px;
+}
+html[data-gg-device="mobile"][data-gg-orientation="landscape"] .timer-panel-tools {
+  gap: 3px;
+}
+
+/* Tablets: two columns in portrait; retain the 12-column workspace in landscape. */
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-canvas {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-layout-panel {
+  grid-column: auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+}
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-clock,
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-music {
+  grid-column: 1 / -1 !important;
+}
+html[data-gg-device="tablet"][data-gg-orientation="landscape"] .timer-layout-panel {
+  min-height: 0 !important;
+  height: auto !important;
+}
+html[data-gg-device="tablet"][data-gg-orientation="landscape"] .timer-panel-clock .timer-main-clock {
+  font-size: clamp(64px, 10vw, 170px);
+}
+
+/* Touch targets: keep all primary controls comfortable for a finger or stylus. */
+@media (pointer: coarse), (hover: none) {
+  button, [role="button"], select, input:not([type="range"]):not([type="checkbox"]):not([type="radio"]), textarea {
+    min-height: 44px;
+  }
+  .icon-button { width: 44px; height: 44px; }
+  .nav-item { min-height: 46px; }
+  .timer-panel-tools { gap: 5px; }
+  .timer-panel-tools button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 6px 8px;
+    font-size: 11px;
+    touch-action: manipulation;
+  }
+  .timer-panel-toolbar { touch-action: pan-y; }
+  .timer-panel-grip { min-width: 28px; min-height: 32px; display: inline-grid; place-items: center; }
+  input[type="range"] { min-height: 36px; }
+  button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+}
+
+/* Landscape devices with short viewports: remove decorative vertical gaps. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .welcome { padding-top: 12px; padding-bottom: 8px; }
+  .topbar { height: 44px; min-height: 44px; }
+  .content-card { padding-top: 10px; padding-bottom: 10px; }
+  .timer-caption { margin: 0; }
+  .timer-layout-toolbar { padding: 5px 8px; margin-bottom: 7px; }
+  .timer-panel-content { padding: 5px; }
+  .timer-panel-clock .timer-main-clock { line-height: .9; }
+}
+
+/* Safe area and viewport-height handling for Android browser chrome and display cut-outs. */
+.app-shell:fullscreen { min-height: 100dvh; }
+.engine-timer:fullscreen, .timer-focused {
+  min-height: 100dvh;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+}
