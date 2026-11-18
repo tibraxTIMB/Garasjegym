@@ -3923,3 +3923,88 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
     padding:10px!important;gap:8px!important;
   }
 }
+
+
+/* STURMKOPF – final mobile clarity pass */
+@media(max-width:760px){
+  /* Library: use the full available width and generous, readable exercise tiles */
+  .wod-builder-step-2.wod-library-open .wod-library{
+    width:100%!important;max-width:none!important;box-sizing:border-box!important;
+    padding:14px!important;
+  }
+  .wod-builder-step-2.wod-library-open .wod-filter-toolbar{
+    display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+  .wod-builder-step-2.wod-library-open .wod-filter-panel .wod-equipment-filter>div{
+    display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+  .wod-builder-step-2.wod-library-open .wod-filter-panel .wod-equipment-filter button{
+    width:100%!important;min-height:42px!important;justify-content:flex-start!important;
+    padding:9px 10px!important;font-size:12px!important;
+  }
+  .wod-builder-step-2.wod-library-open .wod-exercise-grid{
+    display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:12px!important;width:100%!important;max-width:none!important;
+    max-height:none!important;height:auto!important;overflow:visible!important;
+  }
+  .wod-builder-step-2.wod-library-open .wod-exercise-card{
+    width:100%!important;min-width:0!important;min-height:210px!important;
+    padding:14px!important;gap:12px!important;border-radius:16px!important;
+  }
+  .wod-builder-step-2.wod-library-open .wod-exercise-card .wod-exercise-info>strong{
+    font-size:15px!important;line-height:1.28!important;overflow-wrap:normal!important;
+    word-break:normal!important;
+  }
+  .wod-builder-step-2.wod-library-open .wod-exercise-card .wod-exercise-info>small{
+    font-size:12px!important;line-height:1.35!important;
+  }
+  .wod-builder-step-2.wod-library-open .wod-exercise-card .wod-exercise-info>p{
+    font-size:12px!important;line-height:1.4!important;-webkit-line-clamp:4!important;
+  }
+  .wod-builder-step-2.wod-library-open .wod-exercise-card .wod-add-button{
+    width:48px!important;height:48px!important;min-width:48px!important;
+  }
+
+  /* WOD list: robust flex rows; avoid the empty tall cards caused by grid placement */
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-list{
+    display:flex!important;flex-direction:column!important;gap:9px!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-card{
+    display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;
+    align-items:center!important;justify-content:space-between!important;
+    gap:9px!important;width:100%!important;min-height:0!important;height:auto!important;
+    padding:12px!important;overflow:visible!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-card>.wod-order{
+    flex:0 0 30px!important;width:30px!important;height:30px!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-card>.wod-selected-info{
+    display:flex!important;flex:1 1 auto!important;flex-direction:column!important;
+    width:auto!important;min-width:0!important;max-width:none!important;
+    height:auto!important;overflow:visible!important;opacity:1!important;
+    visibility:visible!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-info .wod-selected-title strong{
+    display:inline!important;font-size:15px!important;line-height:1.25!important;
+    color:#f2f1ed!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-info>small,
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-info>.wod-load-summary{
+    display:block!important;visibility:visible!important;opacity:1!important;
+    color:#d1dada!important;font-size:11px!important;line-height:1.35!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-actions{
+    display:flex!important;flex:0 0 auto!important;flex-direction:column!important;
+    width:auto!important;align-items:center!important;justify-content:center!important;
+    gap:5px!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-actions button{
+    display:grid!important;width:34px!important;height:34px!important;
+    min-width:34px!important;min-height:34px!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-card .wod-selected-editor{
+    width:100%!important;max-width:100%!important;
+  }
+}
