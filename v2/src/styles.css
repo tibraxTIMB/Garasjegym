@@ -4776,3 +4776,15 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
  .wod-builder-step-3 .wizard-dose-card-head{padding:8px 10px!important}
  .wod-builder-step-3 .wizard-dose-card-body{padding:0 10px 10px!important}
 }
+
+
+/* Exercise-specific WOD loading profiles */
+.admin-dose-profile{display:grid;gap:12px;padding:14px;border:1px solid var(--line,rgba(255,255,255,.14));border-radius:12px;background:rgba(255,255,255,.025)}
+.admin-dose-profile>p{margin:0;color:var(--muted,#9aa4ad);font-size:.86rem;line-height:1.45}
+.admin-dose-profile-grid{display:grid;grid-template-columns:minmax(76px,.7fr) repeat(2,minmax(90px,1fr));gap:8px;align-items:center}
+.admin-dose-profile-grid>span{font-size:.78rem;color:var(--muted,#9aa4ad);font-weight:700}
+.admin-dose-profile-grid>strong{font-size:.88rem}
+.admin-dose-profile-grid input{min-width:0;width:100%}
+.wizard-dose-suggestion{display:grid;gap:4px;padding:10px 12px;border:1px solid rgba(245,158,11,.35);border-radius:10px;background:rgba(245,158,11,.07);font-size:.88rem}
+.wizard-dose-suggestion small{color:var(--muted,#9aa4ad);line-height:1.4}
+@media(max-width:480px){.admin-dose-profile-grid{grid-template-columns:64px repeat(2,minmax(70px,1fr));gap:6px}.admin-dose-profile-grid input{font-size:.9rem;padding:9px 6px}}
