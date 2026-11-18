@@ -13,6 +13,18 @@ const localDateISO = (date = new Date()) => {
   return local.toISOString().slice(0, 10)
 }
 
+function TimerPanel({id,title,layout,onMove,onResize,onLock,locked,children,wide=false}){
+ return <section className={`timer-layout-panel timer-panel-${id} ${locked?'is-locked':''}`} style={{gridColumn:`span ${layout.span}`,minHeight:layout.height}} draggable={!locked} onDragStart={e=>{e.dataTransfer.setData('text/plain',id);e.dataTransfer.effectAllowed='move'}} onDragOver={e=>{if(!locked)e.preventDefault()}} onDrop={e=>{e.preventDefault();const from=e.dataTransfer.getData('text/plain');if(from&&from!==id)onMove(from,id)}}>
+  <header className="timer-panel-toolbar"><span className="timer-panel-grip" aria-hidden="true">⠿</span><b>{title}</b><div className="timer-panel-tools">
+   <button type="button" title="Gjer panelet smalare" aria-label="Gjer panelet smalare" disabled={locked||layout.span<=2} onClick={()=>onResize(id,'span',-1)}>−B</button>
+   <button type="button" title="Gjer panelet breiare" aria-label="Gjer panelet breiare" disabled={locked||layout.span>=12} onClick={()=>onResize(id,'span',1)}>+B</button>
+   <button type="button" title="Gjer panelet lågare" aria-label="Gjer panelet lågare" disabled={locked||layout.height<=120} onClick={()=>onResize(id,'height',-40)}>−H</button>
+   <button type="button" title="Gjer panelet høgare" aria-label="Gjer panelet høgare" disabled={locked||layout.height>=900} onClick={()=>onResize(id,'height',40)}>+H</button>
+   <button type="button" className={locked?'is-locked':''} onClick={()=>onLock(id)} title={locked?'Lås opp panelet':'Lås panelet'}>{locked?'Låst':'Lås'}</button>
+  </div></header>
+  <div className="timer-panel-content">{children}</div>
+ </section>
+}
 function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, originLabel = 'EIGA ØKT' }) {
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
@@ -26,6 +38,19 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [laps, setLaps] = useState([])
   const [soundOn, setSoundOn] = useState(true)
   const [showTimerSettings, setShowTimerSettings] = useState(false)
+  const [panelLayout,setPanelLayout]=useState(()=>{
+    const defaults={clock:{span:6,height:520},info:{span:3,height:360},laps:{span:3,height:360},music:{span:12,height:90}}
+    try{return {...defaults,...JSON.parse(localStorage.getItem('garasjegym.timer.panels')||'{}')}}
+    catch{return defaults}
+  })
+  const [panelOrder,setPanelOrder]=useState(()=>{try{return JSON.parse(localStorage.getItem('garasjegym.timer.panelOrder')||'["clock","info","laps","music"]')}catch{return ['clock','info','laps','music']}})
+  const [lockedPanels,setLockedPanels]=useState(()=>{try{return JSON.parse(localStorage.getItem('garasjegym.timer.panelLocks')||'{}')}catch{return {}}})
+  useEffect(()=>{try{localStorage.setItem('garasjegym.timer.panels',JSON.stringify(panelLayout));localStorage.setItem('garasjegym.timer.panelOrder',JSON.stringify(panelOrder));localStorage.setItem('garasjegym.timer.panelLocks',JSON.stringify(lockedPanels))}catch{}},[panelLayout,panelOrder,lockedPanels])
+  function movePanel(from,to){setPanelOrder(order=>{const next=[...order],a=next.indexOf(from),b=next.indexOf(to);if(a<0||b<0)return order;next.splice(a,1);next.splice(b,0,from);return next})}
+  function resizePanel(id,field,delta){setPanelLayout(layout=>({...layout,[id]:{...layout[id],[field]:field==='span'?Math.max(2,Math.min(12,layout[id].span+delta)):Math.max(120,Math.min(900,layout[id].height+delta))}}))}
+  function togglePanelLock(id){setLockedPanels(v=>({...v,[id]:!v[id]}))}
+  function resetPanelLayout(){setPanelLayout({clock:{span:6,height:520},info:{span:3,height:360},laps:{span:3,height:360},music:{span:12,height:90}});setPanelOrder(['clock','info','laps','music']);setLockedPanels({})}
+
   const [appearance, setAppearance] = useState(() => {
     try { return { clockSize: 112, accent: '#f0a33a', ...(JSON.parse(localStorage.getItem('garasjegym.timer.appearance') || '{}')) } }
     catch { return { clockSize: 112, accent: '#f0a33a' } }
@@ -171,49 +196,11 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     </section>}
     <div className="timer-caption"><Clock3 size={15}/> {format.toUpperCase()}</div>
     <div className="timer-dashboard timer-dashboard-reflow">
-      <section className="timer-center">
-        <div className="timer-phase">{phase}</div>
-        <strong className="timer-main-clock">{clock(primaryTime)}</strong>
-        <div className="timer-round-label">{isStationCircuit ? 'ARBEID / STASJONSBYTE' : isCountdown ? 'GJENSTÅANDE TID' : isEMOM ? 'TIL NESTE ARBEIDSSTART' : isTimedInterval ? 'TID I INTERVALLFASEN' : 'MEDGÅTT TID'}</div>
-        {isStationCircuit ? <div className="timer-station-plan"><div className="timer-station-plan-heading"><span>STASJONANE I SIRKELEN</span><b>{stationPlan.rounds ?? schema?.rounds ?? rounds} rundar</b></div><div className="timer-station-grid">{stationList.map((station,index)=><article className="timer-station-card" key={station.station_number||index}><span>STASJON {station.station_number||index+1}</span><strong>{station.exercise_name||station.name||'Øving'}</strong><small>{station.reps_mode==='amrap'?'AMRAP · så mange som mogleg':station.reps!=null&&station.reps!==''?`${station.reps} reps`:'Vel sjølv tal reps'}{station.load_label?' · '+station.load_label:''}</small>{station.description&&<p>{station.description}</p>}{station.coach_note&&<p>{station.coach_note}</p>}</article>)}</div></div> : isAmrap ? <div className="timer-amrap-exercise-list"><span>ØVINGAR I WOD-EN</span>{exerciseList.length ? <ol>{exerciseList.map((exercise,index)=>{const setReps=(exercise.sets||[]).map(set=>String(set.reps??'').trim()).filter(Boolean);const uniqueReps=[...new Set(setReps)];const repsLabel=uniqueReps.length===1?(setReps.length>1?`${setReps.length} × ${uniqueReps[0]}`:uniqueReps[0]):uniqueReps.length>1?uniqueReps.join(' / '):String(exercise.reps??'').trim();return <li key={exercise.key||index} className={exercise.is_rest?'timer-rest-item':''}><b>{index+1}.</b><span>{exercise.is_rest?<><strong>PAUSE</strong><small> {clock(Number(exercise.rest_duration_seconds)||30)}</small></>:<>{repsLabel&&<strong className="timer-amrap-reps">{repsLabel} × </strong>}{exercise.exercise_name||'Øving utan namn'}</>}</span></li>})}</ol> : <p>Ingen øvingar er lagde til.</p>}</div> : <><div className="timer-active-under-clock"><span>{isTimedInterval ? `DRAG ${intervalExerciseIndex+1} / ${intervalExerciseCount}` : activeExercise ? 'GJELDANDE ØVING' : 'WOD-OVERSIKT'}</span><b>{isTimedInterval ? currentIntervalExercise : activeExercise || 'Sjå øvingsrekkjefølgja'}</b></div><div className="timer-amrap-exercise-list"><span>ØVINGAR I WOD-EN · {exerciseList.length}</span>{exerciseList.length ? <ol>{exerciseList.map((exercise,index)=>{const dose=(exercise.sets||[]).map(set=>[set.reps?set.reps+' reps':'',set.load_kg?set.load_kg+' kg':'',set.time_text||''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ');return <li key={exercise.key||index} className={exercise.is_rest?'timer-rest-item':''}><b>{index+1}.</b><span><strong>{exercise.is_rest?'PAUSE':exercise.exercise_name||'Øving utan namn'}</strong>{dose&&<small>{dose}</small>}{exercise.prescription_label&&<small>{exercise.prescription_label}</small>}</span></li>})}</ol> : <p>Ingen øvingar er lagde til.</p>}</div></>}
-        {isAmrap && <div className="timer-round-total"><span>RUNDER FULLFØRT</span><b>{completedRounds}</b></div>}
-        {!isStationCircuit && !isAmrap && (isTimedInterval ? (exerciseList[intervalExerciseIndex + 1]?.exercise_name || exerciseList[0]?.exercise_name) : nextExercise) && <div className="timer-next-exercise"><span>NESTE ØVING</span><b>{isTimedInterval ? (exerciseList[intervalExerciseIndex + 1]?.exercise_name || exerciseList[0]?.exercise_name) : nextExercise}</b></div>}
-        <div className="timer-actions">
-          <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) { setPhase('PÅGÅR'); setHasStarted(true) } setRunning(value => !value) }} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
-          {isAmrap && <button type="button" className="timer-lap-button" onClick={lapAction} disabled={!running}>+ REGISTRER RUNDE</button>}
-          <button type="button" className="secondary-button" onClick={() => { setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar'); setHasStarted(false) }}><RotateCcw size={14}/> Nullstill</button>
-          {(isStopwatch || isForTime) && <button type="button" className="secondary-button" onClick={() => setLaps(value => [...value, elapsed])}>Mellomtid</button>}
-          <button type="button" className="secondary-button" onClick={() => setSoundOn(value => !value)}>{soundOn ? 'Lyd på' : 'Lyd av'}</button>
-          <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
-        </div>
-        <div className="timer-finish-row">
-          <button type="button" className="timer-finish-button" onClick={onFinish} disabled={!hasStarted}>
-            <CheckCircle2 size={18}/><span>Fullfør økta</span>
-          </button>
-          <small>{hasStarted ? 'Registrer resultat og lagre treningsøkta' : 'Start timeren før du fullfører økta'}</small>
-        </div>
-      </section>
-      <aside className="timer-side timer-side-left">
-        <div className="timer-bottom-heading">ØKTINFORMASJON</div>
-        <div className="timer-side-stat"><span>MEDGÅTT TID</span><b>{clock(elapsed)}</b></div>
-        {(isCountdown || isStationCircuit) && <div className="timer-side-stat"><span>GJENVERANDE TID</span><b>{clock(remainingTotal)}</b></div>}
-        {isEMOM && <><div className="timer-side-stat"><span>GJENSTÅANDE ØKTTID</span><b>{clock(remainingTotal)}</b></div><div className="timer-side-stat"><span>NESTE ARBEIDSSTART</span><b>{clock(emomNextStart)}</b></div></>}
-        {isStationCircuit && <><div className="timer-side-stat"><span>RUNDE</span><b>{Math.min(currentRound,Number(stationPlan.rounds ?? schema?.rounds ?? rounds))}/{stationPlan.rounds ?? schema?.rounds ?? rounds}</b></div><div className="timer-side-stat"><span>ARBEID / BYTE</span><b>{stationPlan.work_seconds ?? workSeconds}s / {stationPlan.transition_seconds ?? restSeconds}s</b></div></>}
-        {isTimedInterval && <><div className="timer-side-stat"><span>ØKTA ATT</span><b>{clock(remainingTotal)}</b></div><div className="timer-side-stat"><span>RUNDE</span><b>{roundsShown}/{rounds}</b></div></>}
-        {isForTime && showTimeCap && <div className="timer-side-stat"><span>TIDSGRENSE</span><b>{clock(Math.max(0,target-elapsed))}</b></div>}
-        {(isDeathBy || isLadder) && <><div className="timer-side-stat"><span>{isDeathBy?'TID TIL NESTE MINUTT':'LADDER-RUNDE'}</span><b>{isDeathBy?clock(elapsed===0?60:60-(elapsed%60||0)):currentRound}</b></div>{schema?.ladder&&<div className="timer-side-stat"><span>REPS I RUNDA</span><b>{Math.max(0,Number(schema.ladder.start||2)+(currentRound-1)*Number(schema.ladder.step||2)*(schema.ladder.direction==='down'?-1:1))}</b></div>}</>}
-        {isTimedInterval && !running && elapsed===0 && <div className="timer-settings-inline">
-          <label>Arbeid sek.<input type="number" min="1" max="600" value={workSeconds} onChange={e=>setWorkSeconds(Math.max(1,Number(e.target.value)||1))}/></label>
-          <label>Kvile sek.<input type="number" min="0" max="600" value={restSeconds} onChange={e=>setRestSeconds(Math.max(0,Number(e.target.value)||0))}/></label>
-          <label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(Math.max(1,Number(e.target.value)||1))}/></label>
-        </div>}
-      </aside>
-      <aside className="timer-side timer-side-right">
-        <div className="timer-lap-heading">RUNDETIDER <b>{laps.length}</b></div>
-        {laps.length ? <ol className="timer-lap-list">{laps.map((lap,index)=><li key={index}><span>Runde {index+1}</span><b>{clock(lap)}</b></li>)}</ol> : <p className="timer-no-laps">Registrer kvar fullførte runde her.</p>}
-      </aside>
-    </div>
-    <div className="timer-music-footer"><MusicMiniPlayer /></div>
+      <div className="timer-layout-toolbar"><strong>Tilpass oppsett</strong><span>Dra panela etter handtaket · endra breidd/høgd · lås dei når du er nøgd</span><button type="button" className="text-button" onClick={resetPanelLayout}>Tilbakestill panel</button></div>
+      <div className="timer-panel-canvas">
+       {panelOrder.map(id=>id==='clock'?<TimerPanel key={id} id="clock" title="HOVUDKLOKKE OG WOD" layout={panelLayout.clock} locked={Boolean(lockedPanels.clock)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}>{REPLACE_CLOCK}</TimerPanel>:id==='info'?<TimerPanel key={id} id="info" title="ØKTINFORMASJON" layout={panelLayout.info} locked={Boolean(lockedPanels.info)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}>{REPLACE_INFO}</TimerPanel>:id==='laps'?<TimerPanel key={id} id="laps" title="RUNDETIDER" layout={panelLayout.laps} locked={Boolean(lockedPanels.laps)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}>{REPLACE_LAPS}</TimerPanel>:<TimerPanel key={id} id="music" title="MUSIKK" layout={panelLayout.music} locked={Boolean(lockedPanels.music)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}><MusicMiniPlayer /></TimerPanel>)}
+      </div>
+
     <small>{isStationCircuit ? 'Stasjonssirkel · roterande stasjonar · fast tal rundar' : isTimedInterval ? 'Arbeid / kvile · samla økttid og tid att' : isCountdown ? 'AMRAP · registrer kvar fullførte runde' : isEMOM ? (emomEvery > 1 ? `E${emomEvery}MOM · arbeid kvart ${emomEvery}. minutt` : 'E1MOM · arbeid kvart minutt') : isDeathBy ? 'Aukande arbeid for kvar minutt' : isForTime ? 'Stoppeklokke med eventuell tidsgrense' : 'Stoppeklokke – tel medgått tid'}</small>
   </div>
 }
