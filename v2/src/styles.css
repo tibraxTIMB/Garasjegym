@@ -4920,3 +4920,38 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .timer-amrap-exercise-list li { align-items:flex-start; }
 .timer-amrap-exercise-list li span { display:grid; gap:3px; }
 .timer-amrap-exercise-list li small { color:var(--muted); font-size:11px; }
+
+
+/* STURMKOPF timer workspace: movable, scalable and lockable panels */
+.timer-dashboard-reflow{display:block!important;width:100%;max-width:none!important;min-width:0!important}
+.timer-layout-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 12px;margin:0 0 12px;border:1px solid rgba(255,255,255,.13);border-radius:10px;background:#151b1e}
+.timer-layout-toolbar strong{font-size:12px;letter-spacing:.06em}
+.timer-layout-toolbar span{flex:1 1 240px;color:var(--muted);font-size:11px}
+.timer-panel-canvas{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;width:100%;min-width:0;align-items:start}
+.timer-layout-panel{position:relative;display:flex;flex-direction:column;min-width:0;max-width:100%;overflow:hidden;border:1px solid #3c484d;border-radius:13px;background:#101719;box-sizing:border-box}
+.timer-layout-panel.is-locked{border-color:rgba(240,163,58,.55)}
+.timer-panel-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:38px;padding:6px 9px;background:#1a2428;border-bottom:1px solid rgba(255,255,255,.10);cursor:grab;touch-action:pan-y}
+.timer-layout-panel.is-locked .timer-panel-toolbar{cursor:default}
+.timer-panel-grip{font-size:17px;color:#f0a33a;line-height:1}
+.timer-panel-toolbar>b{font-size:10px;letter-spacing:.07em;color:#d9e0e2}
+.timer-panel-tools{display:flex;align-items:center;gap:4px;margin-left:auto}
+.timer-panel-tools button{min-width:30px;min-height:27px;padding:3px 6px;border:1px solid #465258;border-radius:6px;background:#253136;color:#f3f5f5;font-size:10px;font-weight:800}
+.timer-panel-tools button:disabled{opacity:.3;cursor:not-allowed}
+.timer-panel-tools button.is-locked{border-color:#f0a33a;color:#f0a33a}
+.timer-panel-content{flex:1;min-width:0;min-height:0;overflow:auto;padding:8px;overscroll-behavior:contain}
+.timer-panel-content>.timer-center,.timer-panel-content>.timer-side{width:100%;max-width:none;min-width:0;min-height:0;margin:0;padding:8px;border:0;box-shadow:none}
+.timer-panel-clock .timer-panel-content{padding:0}
+.timer-panel-clock .timer-center{display:flex;align-items:center;gap:12px}
+.timer-panel-clock .timer-main-clock{font-size:clamp(42px,min(var(--timer-clock-size),22vw),220px);max-width:100%;overflow:hidden;text-overflow:clip}
+.timer-panel-clock .timer-amrap-exercise-list ol{max-height:24vh}
+.timer-panel-music .timer-panel-content{display:flex;align-items:center}
+.timer-panel-music .timer-music-footer{width:100%;margin:0}
+.timer-panel-info .timer-side-stat,.timer-panel-laps .timer-lap-list{max-width:100%}
+.timer-panel-info .timer-side-stat b,.timer-panel-laps .timer-lap-list b{overflow-wrap:anywhere}
+.timer-panel-clock .timer-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+.timer-panel-clock .timer-finish-row{width:min(100%,360px)}
+.timer-customize-panel{box-sizing:border-box;max-width:100%}
+.timer-customized{min-width:0;max-width:100%;overflow-x:hidden}
+.timer-customized .timer-dashboard{min-width:0;width:100%}
+@media(max-width:850px){.timer-panel-canvas{grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}.timer-layout-panel{grid-column:span 6!important}.timer-panel-toolbar{position:sticky;top:0;z-index:2}.timer-panel-tools button{min-width:28px}.timer-panel-clock .timer-main-clock{font-size:min(var(--timer-clock-size),18vw)}}
+@media(max-width:520px){.timer-layout-toolbar{align-items:flex-start}.timer-panel-canvas{grid-template-columns:minmax(0,1fr)}.timer-layout-panel{grid-column:1!important}.timer-panel-clock .timer-main-clock{font-size:min(var(--timer-clock-size),16vw)}.timer-panel-tools{gap:3px}.timer-panel-tools button{min-width:26px;padding:2px 4px}}
