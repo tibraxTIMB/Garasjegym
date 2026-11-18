@@ -68,6 +68,15 @@ Deno.serve(async (req: Request) => {
     }
     if (!created.user) return reply({ error: "Supabase oppretta ikkje brukaren." }, 500)
 
+    const { error: approvalError } = await adminClient
+      .from("profiles")
+      .update({ active: true, membership_status: "approved", email })
+      .eq("id", created.user.id)
+    if (approvalError) {
+      await adminClient.auth.admin.deleteUser(created.user.id)
+      return reply({ error: "Brukaren vart ikkje aktivert. Opprettinga vart rulla tilbake." }, 500)
+    }
+
     return reply({
       success: true,
       user: { id: created.user.id, email: created.user.email, display_name: displayName, role: "member" },
