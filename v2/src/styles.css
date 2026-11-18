@@ -2353,3 +2353,53 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 
 .wod-builder-step-3 .wod-composer .wizard-format-panel,.wod-builder-step-4 .wod-composer .wizard-format-panel{display:none!important}
 .wod-builder-step-4 .wod-composer>.engine-section-title{display:none!important}
+
+
+/* WOD STUDIO — rebuilt persistent three-panel workspace */
+.wod-builder .wod-builder-layout{
+ display:grid!important;
+ grid-template-columns:minmax(260px,.9fr) minmax(320px,1.15fr) minmax(250px,.85fr)!important;
+ align-items:start!important;
+ gap:16px!important;
+ width:100%!important;
+ min-width:0!important;
+}
+.wod-builder .wod-setup-summary{display:none!important}
+.wod-builder .wod-composer{grid-column:1;grid-row:1;min-width:0!important;width:100%!important}
+.wod-builder .wod-library{grid-column:2;grid-row:1;display:flex!important;flex-direction:column;min-width:0!important;width:100%!important;max-height:calc(100vh - 220px);overflow:hidden}
+.wod-builder .wod-live-preview{grid-column:3;grid-row:1;position:sticky;top:16px;align-self:start;min-width:0;width:100%;max-height:calc(100vh - 220px);overflow:auto;padding:18px;border:1px solid var(--line,#30343b);border-radius:16px;background:var(--panel,#171a20);color:var(--text,#f4f4f5)}
+.wod-builder .wod-library .wod-exercise-grid{overflow-y:auto;min-height:180px;max-height:calc(100vh - 440px);padding:4px 4px 12px 0}
+.wod-builder .wod-library .wod-exercise-card{min-width:0}
+.wod-builder .wod-live-preview-head,.wod-builder .wod-live-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.wod-builder .wod-live-preview h4{font-size:1.25rem;margin:12px 0 8px;overflow-wrap:anywhere}
+.wod-builder .wod-live-meta span,.wod-builder .wod-live-station-meta{font-size:.78rem;padding:5px 8px;border-radius:8px;background:rgba(128,128,128,.13)}
+.wod-builder .wod-live-exercises{list-style:none;margin:18px 0;padding:0;display:grid;gap:9px}
+.wod-builder .wod-live-exercises li{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid rgba(128,128,128,.2);border-radius:11px;min-width:0}
+.wod-builder .wod-live-number{display:grid;place-items:center;flex:0 0 26px;height:26px;border-radius:8px;background:rgba(128,128,128,.18);font-weight:800}
+.wod-builder .wod-live-exercises li div{display:grid;gap:3px;min-width:0}
+.wod-builder .wod-live-exercises strong{overflow-wrap:anywhere}
+.wod-builder .wod-live-exercises small{opacity:.72}
+.wod-builder .wod-live-empty{padding:18px 10px;border:1px dashed rgba(128,128,128,.35);border-radius:12px;opacity:.72;font-size:.9rem}
+.wod-builder .wod-live-footer{border-top:1px solid rgba(128,128,128,.2);padding-top:12px;margin-top:16px}
+.wod-builder .wod-live-footer>span{font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.65}
+.wod-builder .wod-live-footer p{font-size:.86rem;margin:6px 0 0;line-height:1.5}
+.wod-builder .wizard-format-panel{display:block!important}
+.wod-builder .wod-composer>.engine-section-title{display:flex!important}
+.wod-builder .wod-composer .admin-create-form{min-width:0}
+.wod-builder .wod-wizard-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.wod-builder .wod-wizard-steps button{min-width:0;white-space:normal;line-height:1.2}
+.wod-builder .wod-wizard-steps button span{flex:0 0 auto}
+@media(max-width:1180px){
+ .wod-builder .wod-builder-layout{grid-template-columns:minmax(260px,1fr) minmax(300px,1.1fr)!important}
+ .wod-builder .wod-composer{grid-column:1;grid-row:1}
+ .wod-builder .wod-library{grid-column:2;grid-row:1}
+ .wod-builder .wod-live-preview{grid-column:1 / -1;grid-row:2;position:static;max-height:none}
+ .wod-builder .wod-live-exercises{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+ .wod-builder .wod-builder-layout{display:flex!important;flex-direction:column!important;gap:12px!important}
+ .wod-builder .wod-composer,.wod-builder .wod-library,.wod-builder .wod-live-preview{width:100%!important;max-height:none!important;position:static!important}
+ .wod-builder .wod-library .wod-exercise-grid{max-height:420px}
+ .wod-builder .wod-live-exercises{grid-template-columns:1fr}
+ .wod-builder .wod-wizard-steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
