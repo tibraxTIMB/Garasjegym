@@ -44,7 +44,7 @@ export default function Admin({profile}){
    if(invokeError)throw invokeError
    if(data?.error)throw new Error(data.error)
    setCreatedUser({email,display_name})
-   setNotice('Brukarkonto oppretta. Kontoen er godkjend og har medlemsrolla.')
+   setNotice('Brukarkonto oppretta. Gå til Medlemmer og tilgang for å kontrollera og godkjenna medlemskapet.')
    setNewUserName('');setNewUserEmail('');setNewUserPassword('')
    await load()
   }catch(e){setError(e.message||'Kunne ikkje oppretta brukaren.')}
@@ -76,7 +76,7 @@ export default function Admin({profile}){
    setExerciseName('');setEquipment('');setVideoUrl('');setBodyArea('Fullkropp');setExerciseDescription('');setVariantLabel('');setDoseDefaults({rx:{men_kg:'',women_kg:''},scaled:{men_kg:'',women_kg:''},foundation:{men_kg:'',women_kg:''}});setEditingExercise(null);setShowExerciseForm(false);setNotice(editingExercise?'Øving oppdatert.':'Øving lagra i biblioteket.');await load()
   }catch(e){setError(e.message||'Kunne ikkje lagra øving.')}finally{setBusy('')}
  }
- function canManageMember(member){return isAdmin||(profile.role==='manager'&&(member.role==='member'||member.id===profile.id))}
+ function canManageMember(member){return isAdmin||(profile.role==='manager'&&member.membership_status==='approved'&&(member.role==='member'||member.id===profile.id))}
  function startMemberRename(member){setEditingMemberId(member.id);setMemberNameDraft(member.display_name||'')}
  function cancelMemberRename(){setEditingMemberId('');setMemberNameDraft('')}
  async function saveMemberName(member){
