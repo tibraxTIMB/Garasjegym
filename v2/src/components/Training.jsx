@@ -7,6 +7,7 @@ const FORMATS = ['Fri trening', 'E1MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '' }] })
 const pad = (n) => String(n).padStart(2, '0')
 const clock = (seconds) => `${pad(Math.floor(Math.max(0, seconds) / 60))}:${pad(Math.max(0, seconds) % 60)}`
+const doseLabel=(item,level='rx')=>{const d=item?.levels?.[level]||{};const parts=[];if(d.sets)parts.push(d.sets+' sett');if(d.reps)parts.push(d.reps+' reps');if(d.heightCm)parts.push(d.heightCm+' cm');if(d.durationSeconds)parts.push(d.durationSeconds+' sek');if(d.distanceMeters)parts.push(d.distanceMeters+' m');if(d.calories)parts.push(d.calories+' cal');if(d.loadMode==='kg'){const loads=[d.loadKgMen!==''&&d.loadKgMen!=null?'M '+d.loadKgMen+' kg':'',d.loadKgWomen!==''&&d.loadKgWomen!=null?'K '+d.loadKgWomen+' kg':''].filter(Boolean);if(loads.length)parts.push(loads.join(' / '))}else if(d.loadMode==='percent'&&d.percent1rm)parts.push(d.percent1rm+' % 1RM');else if(d.loadMode==='rir'&&d.rir!=='')parts.push('RIR '+d.rir);else if(d.loadMode==='bodyweight')parts.push('Kroppsvekt');if(d.tempo)parts.push('Tempo '+d.tempo);if(d.variant)parts.push('Variant: '+d.variant);if(d.instruction)parts.push(d.instruction);return parts.join(' · ')||''};
 const localDateISO = (date = new Date()) => {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
   return local.toISOString().slice(0, 10)
@@ -217,6 +218,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [reviewOpen,setReviewOpen]=useState(false)
   const [finishOpen,setFinishOpen]=useState(false)
   const [source, setSource] = useState(null)
+  const [wodLevel,setWodLevel]=useState('rx')
   const [classSessionId, setClassSessionId] = useState(null)
   const [title, setTitle] = useState('')
   const [format, setFormat] = useState('Fri trening')
@@ -306,6 +308,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   function startWorkout(wod = null) {
     setClassSessionId(null)
     setSource(wod)
+    setWodLevel(wod?.timer_settings?.workout_schema?.prescription||'rx')
     setTitle(wod?.name || (simpleMode ? 'Eiga trening' : ''))
     setFormat(wod?.format || 'Fri trening')
     setDuration(String(wod?.timer_settings?.workout_schema?.duration_seconds ? Math.floor(wod.timer_settings.workout_schema.duration_seconds / 60) : (wod?.duration_minutes || 10)))
@@ -324,6 +327,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         is_rest: !!item.is_rest,
         rest_duration_seconds: item.rest_duration_seconds == null ? null : Number(item.rest_duration_seconds),
         reps_mode: item.reps_mode || 'fixed',
+        prescription_levels: item.levels || null,
+        prescription_label: doseLabel(item,'rx'),
         sets: Array.isArray(item.sets) && item.sets.length ? item.sets.map(set => ({
           reps: set.reps == null ? '' : String(set.reps),
           load_kg: set.load_kg == null ? '' : String(set.load_kg),
@@ -496,7 +501,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16}/> {notice}</div>}
     {mode === 'active' ? <form className={simpleMode ? `engine-form simple-quick-form${reviewOpen?" review-open":""}` : "engine-form"} onSubmit={saveWorkout}>
       <button type="button" className="text-button" onClick={() => setFinishOpen(true)}>✓ Avslutt økt</button>
-      <div className="training-heading"><div><div className="section-kicker">TRENING · AKTIV ØKT</div><h3>Bygg økta di</h3></div><span className="count-pill">{items.length} øvingar</span></div>
+      <div className="training-heading"><div><div className="section-kicker">TRENING · AKTIV ØKT</div><h3>{source?.name||'Bygg økta di'}</h3></div><span className="count-pill">{items.length} øvingar</span></div>
+      {source?.timer_settings?.workout_schema?.items?.some(item=>item.levels)&&<section className="wod-execution-level"><strong>Vel doseringsnivå</strong><div className="hub-tabs" role="group" aria-label="Doseringsnivå">{[{id:'rx',label:'RX'},{id:'scaled',label:'Scaled'},{id:'foundation',label:'Foundation'}].map(level=><button type="button" key={level.id} className={wodLevel===level.id?'selected':''} aria-pressed={wodLevel===level.id} onClick={()=>setWodLevel(level.id)}>{level.label}</button>)}</div></section>}
       <div className="engine-fields">
         <label>Namn på økta<input value={title} onChange={e => setTitle(e.target.value)} placeholder="Til dømes Styrke A" required/></label>
         <label>Treningsformat<select value={format} onChange={e => setFormat(e.target.value)}>{FORMATS.map(x => <option key={x}>{x}</option>)}</select></label>
@@ -514,7 +520,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         {items.map((item, index) => <article className="engine-exercise" key={item.key}>
           <div className="engine-exercise-head"><strong>{index + 1}. {item.exercise_name || 'Ny øving'}</strong><button type="button" className="danger-icon" aria-label="Fjern øving" onClick={() => setItems(current => current.filter(x => x.key !== item.key))}><Trash2 size={16}/></button></div>
           {!item.exercise_id && <input aria-label="Namn på øving" value={item.exercise_name} onChange={e => updateExercise(item.key,{exercise_name:e.target.value})} placeholder="Namn på øving"/>}
-          {item.sets.map((set, i) => <div className="set-grid" key={i}>
+          {item.prescription_levels&&<div className="wod-prescription-target"><strong>Planlagt dosering · {wodLevel.toUpperCase()}</strong><span>{doseLabel({levels:item.prescription_levels},wodLevel)||'Ikkje dosert på dette nivået'}</span></div>}{item.sets.map((set, i) => <div className="set-grid" key={i}>
             <span>Sett {i + 1}</span><input type="number" min="0" step="1" value={set.reps} onChange={e => updateSet(item.key,i,{reps:e.target.value})} placeholder="Reps"/>
             <input type="number" min="0" step="0.5" value={set.load_kg} onChange={e => updateSet(item.key,i,{load_kg:e.target.value})} placeholder="Kg"/>
             <input value={set.time_text} onChange={e => updateSet(item.key,i,{time_text:e.target.value})} placeholder="Tid"/>
