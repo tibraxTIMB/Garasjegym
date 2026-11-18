@@ -190,8 +190,14 @@ export default function Booking({ profile, onLogResult }) {
         result=await supabase.from('class_live_sessions').update(basePatch).eq('id',session.id)
       }
       if(result.error)throw result.error
+      let deliveryNotice=''
+      if(status==='finished'){
+        const {data:sentCount,error:deliveryError}=await supabase.rpc('publish_class_session_results',{p_session_id:session.id})
+        if(deliveryError)deliveryNotice=' Resultatvarslinga feila: '+deliveryError.message
+        else deliveryNotice=' WOD-ane er sende til '+(sentCount||0)+' påmelde deltakarar.'
+      }
       setLiveSessions(v=>status==='finished'?v.filter(x=>x.id!==session.id):v.map(x=>x.id===session.id?{...x,...patch}:x))
-      setNotice(status==='finished'?'Gruppetreninga er avslutta.':status==='paused'?'Gruppetreninga er sett på pause.':'Gruppetreninga er i gang igjen.')
+      setNotice((status==='finished'?'Gruppetreninga er avslutta.':status==='paused'?'Gruppetreninga er sett på pause.':'Gruppetreninga er i gang igjen.')+deliveryNotice)
     }catch(e){setError(e.message||'Kunne ikkje oppdatera gruppetreninga.')}
     finally{setBusy('')}
   }
