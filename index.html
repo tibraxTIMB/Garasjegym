@@ -3280,6 +3280,18 @@ body.gg-floating-training #trainingConsole .training-module>*{max-width:100%;min
   addButton();
   if(document.body.classList.contains('wod-dashboard-mode')||document.body.classList.contains('gg-floating-training')){document.body.classList.add('gg-floating-training');apply()}
  }
+ function resetWhenTrainingEnds(){
+  if(document.body.classList.contains('wod-dashboard-mode')||document.body.classList.contains('gg-floating-training'))return;
+  editing=false;document.body.classList.remove('gg-panel-edit','training-layout-edit');
+  modules().forEach(el=>{
+   ['position','left','top','width','height','margin'].forEach(k=>el.style.removeProperty(k));
+   el.querySelectorAll('.module-grip,.gg-panel-resize').forEach(n=>n.remove());
+   el.classList.remove('gg-panel-locked');
+  });
+  const b=$('#ggPanelEditToggle');if(b)b.remove();
+ }
+ const classObserver=new MutationObserver(resetWhenTrainingEnds);
+ classObserver.observe(document.body,{attributes:true,attributeFilter:['class']});
  const observer=new MutationObserver(()=>{if($('#trainingConsole')&&!$('#ggPanelEditToggle'))addButton()});
  observer.observe(document.body,{childList:true,subtree:true});
  document.addEventListener('click',e=>{
