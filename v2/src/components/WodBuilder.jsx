@@ -114,7 +114,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område'),[equipmentFilter,setEquipmentFilter]=useState('all')
  const rehabBodyAreas=['hofte','skulder','kne','nakke']
  const isRehabExercise=x=>!!(x.is_rehab||x.category==='Rehab / fysio'||rehabBodyAreas.includes((x.body_area||'').toLowerCase()))
- const [selected,setSelected]=useState([]),[editingWodId,setEditingWodId]=useState(null),[name,setName]=useState(()=>randomWodName()),[format,setFormat]=useState('AMRAP'),[libraryWods,setLibraryWods]=useState([]),[builderMode,setBuilderMode]=useState(assignedClientId?'library':'build'),[librarySearch,setLibrarySearch]=useState(''),[selectedLibraryWod,setSelectedLibraryWod]=useState(''),[classicChoice,setClassicChoice]=useState(''),[publishToMembers,setPublishToMembers]=useState(false)
+ const [selected,setSelected]=useState([]),[editingWodId,setEditingWodId]=useState(null),[name,setName]=useState(''),[format,setFormat]=useState('AMRAP'),[libraryWods,setLibraryWods]=useState([]),[builderMode,setBuilderMode]=useState(assignedClientId?'library':'build'),[librarySearch,setLibrarySearch]=useState(''),[selectedLibraryWod,setSelectedLibraryWod]=useState(''),[classicChoice,setClassicChoice]=useState(''),[publishToMembers,setPublishToMembers]=useState(false)
  const [minutes,setMinutes]=useState('20'),[durationSeconds,setDurationSeconds]=useState('0'),[notes,setNotes]=useState(''),[stimulus,setStimulus]=useState('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
  const [rounds,setRounds]=useState('5'),[workSeconds,setWorkSeconds]=useState('60'),[restSeconds,setRestSeconds]=useState('10'),[timeCap,setTimeCap]=useState('20'),[timeCapSeconds,setTimeCapSeconds]=useState('0'),[stationCount,setStationCount]=useState('4'),[stationWork,setStationWork]=useState('45'),[stationTransition,setStationTransition]=useState('15'),[stationRounds,setStationRounds]=useState('3')
  const [ladderStart,setLadderStart]=useState('2'),[ladderStep,setLadderStep]=useState('2'),[ladderDirection,setLadderDirection]=useState('up')
@@ -210,7 +210,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  }
  function reset(){
   setSelected([]);setIntensity('2');setNotes('');setCustomInstructions('');setCustomUseSets(false);setCombinationMode('For Time');setStimulus('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
-  setName(randomWodName());setError('');setNotice('Økta er forkasta. Du kan byrja på nytt.')
+  setName('');setError('');setNotice('Økta er forkasta. Du kan byrja på nytt.')
  }
  function buildPrescription(x){
   const load=fmtLoad(x)
@@ -280,7 +280,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    if(e)throw e
    if(assignedClientId){const {error:linkError}=await supabase.from('pt_wod_assignments').insert({member_id:assignedClientId,wod_id:savedWod.id,assigned_by:user.id,location:'Valfritt',coach_note:'Tildelt frå PT Studio'});if(linkError)throw new Error('WOD-en vart lagra, men kunne ikkje knytast til kunden: '+linkError.message);onAssigned?.()}
    setNotice(editingWodId?'WOD-en er oppdatert.':publishToMembers?'WOD lagra i biblioteket og publisert for medlemmene.':'WOD lagra i det interne PT-biblioteket.')
-   setSelected([]);setNotes('');setCustomInstructions('');setRxNotes('');setScaledNotes('');setWizardStep(1);setName(randomWodName());setEditingWodId(null);onSaved?.()
+   setSelected([]);setNotes('');setCustomInstructions('');setRxNotes('');setScaledNotes('');setWizardStep(1);setName('');setEditingWodId(null);onSaved?.()
   }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{setBusy(false)}
  }
  function goToStep(next){setError('');if(next===2&&isStationCircuit&&selected.length>Number(stationCount))setSelected(rows=>rows.slice(0,Number(stationCount)));if(next===3&&!selected.length){setError('Legg minst ei øving til WOD-en før du går vidare.');return}if(next===3&&format==='Couplet'&&selected.length!==2){setError('Couplet skal ha nøyaktig to øvingar.');return}if(next===3&&format==='Triplet'&&selected.length!==3){setError('Triplet skal ha nøyaktig tre øvingar.');return}setWizardStep(next)}
@@ -304,7 +304,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    <aside className="engine-section wod-composer">
     <div className="engine-section-title"><h4>{wizardStep===1?"1 · Format og tidsramme":wizardStep===2?"2 · Valde øvingar":"3 · RX, skalering og publisering"}</h4><span>{selected.length} øvingar</span></div>
     <form className="admin-create-form" onSubmit={save}>
-     <div className="wizard-format-panel"><div className="wod-name-field"><label>WOD-namn<input value={name} onChange={e=>setName(e.target.value)} required/></label><button type="button" className="secondary-button" onClick={()=>setName(randomWodName())}>Nytt namn</button></div>
+     <div className="wizard-format-panel"><div className="wod-name-field"><label>WOD-namn<input value={name} onChange={e=>setName(e.target.value)} required placeholder="Gje økta eit namn …"/></label><button type="button" className="secondary-button" onClick={()=>setName(randomWodName())}>Nytt namn</button></div>
      
      <div className="engine-fields"><label>Format<select value={format} onChange={e=>{const next=e.target.value;setFormat(next);if(next==='Stasjonssirkel'){setSelected(rows=>rows.map(x=>({...x,reps:'',repsMode:'amrap'})))}if(next==='Tabata'){setWorkSeconds('20');setRestSeconds('10');setRounds('8')}else if(format==='Tabata'){setWorkSeconds('60');setRestSeconds('10');setRounds('5')}}}>{formats.map(group=><optgroup key={group.group} label={group.group}>{group.items.map(x=><option key={x} value={x}>{x}</option>)}</optgroup>)}</select></label>{!isTimed&&!isStationCircuit&&!isAmrap&&<><label>Varigheit (min)<input type="number" min="1" max="600" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label><label>Ekstra sekund<input type="number" min="0" max="59" value={durationSeconds} onChange={e=>setDurationSeconds(e.target.value)}/></label></>}</div>
      {isStationCircuit&&<div className="wod-advanced-fields station-circuit-settings"><label>Tal stasjonar<select value={stationCount} onChange={e=>{const count=Number(e.target.value);setStationCount(String(count));setSelected(current=>current.slice(0,count))}}>{[2,3,4,5,6,7,8].map(n=><option key={n} value={n}>{n}</option>)}</select></label><label>Arbeid per stasjon (sek.)<input type="number" min="1" value={stationWork} onChange={e=>setStationWork(e.target.value)}/></label><label>Bytetid (sek.)<input type="number" min="0" value={stationTransition} onChange={e=>setStationTransition(e.target.value)}/></label><label>Tal rundar<input type="number" min="1" max="20" value={stationRounds} onChange={e=>setStationRounds(e.target.value)}/></label><p className="wod-help">Vel 2–8 stasjonar og legg inn éi øving per stasjon i rett rekkjefølgje. Alle grupper startar på kvar si stasjon og roterer samtidig. Total tid blir rekna automatisk.</p></div>}
