@@ -4788,3 +4788,70 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .wizard-dose-suggestion{display:grid;gap:4px;padding:10px 12px;border:1px solid rgba(245,158,11,.35);border-radius:10px;background:rgba(245,158,11,.07);font-size:.88rem}
 .wizard-dose-suggestion small{color:var(--muted,#9aa4ad);line-height:1.4}
 @media(max-width:480px){.admin-dose-profile-grid{grid-template-columns:64px repeat(2,minmax(70px,1fr));gap:6px}.admin-dose-profile-grid input{font-size:.9rem;padding:9px 6px}}
+
+ 
+/* STURMKOPF – step 4: use the complete content canvas for final review */
+.main:has(.wod-builder-step-4){
+  padding-left:0!important;padding-right:0!important;min-width:0!important;
+}
+.content-card:has(.wod-builder-step-4){
+  width:100%!important;max-width:none!important;min-width:0!important;
+  padding:clamp(10px,1.35vw,20px)!important;
+  border-left:0!important;border-right:0!important;border-radius:0!important;
+}
+.wod-hub:has(.wod-builder-step-4),
+.wod-hub:has(.wod-builder-step-4)>.wod-builder-step-4{
+  display:block!important;width:100%!important;max-width:none!important;min-width:0!important;
+}
+.wod-builder.wod-builder-step-4{
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  grid-auto-flow:row!important;align-items:stretch!important;justify-items:stretch!important;
+  position:static!important;left:auto!important;transform:none!important;
+  width:100%!important;max-width:none!important;min-width:0!important;
+  margin:0!important;padding:clamp(10px,1.2vw,18px)!important;box-sizing:border-box!important;
+}
+.wod-builder-step-4>*{
+  grid-column:1/-1!important;width:100%!important;max-width:none!important;
+  min-width:0!important;box-sizing:border-box!important;
+}
+.wod-builder-step-4 .wod-builder-layout{
+  display:block!important;width:100%!important;max-width:none!important;
+  min-width:0!important;margin:0!important;padding:0!important;
+}
+.wod-builder-step-4 .wod-builder-layout>.wod-composer{
+  display:block!important;width:100%!important;max-width:none!important;
+  min-width:0!important;margin:0!important;position:static!important;
+  inset:auto!important;overflow:visible!important;box-sizing:border-box!important;
+}
+.wod-builder-step-4 .wod-composer>.engine-section-title,
+.wod-builder-step-4 .wod-composer>.admin-create-form,
+.wod-builder-step-4 .wizard-publish-stage{
+  display:grid!important;width:100%!important;max-width:none!important;
+  min-width:0!important;box-sizing:border-box!important;
+}
+.wod-builder-step-4 .wizard-publish-stage{gap:clamp(14px,1.8vw,24px)!important}
+.wod-builder-step-4 .wod-final-preview{
+  width:100%!important;max-width:none!important;min-width:0!important;
+  box-sizing:border-box!important;padding:clamp(18px,2.4vw,30px)!important;
+}
+.wod-builder-step-4 .wod-final-preview ol{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:10px!important;width:100%!important;padding:0!important;
+}
+.wod-builder-step-4 .wod-final-preview ol li{min-width:0!important;box-sizing:border-box!important}
+.wod-builder-step-4 .wod-publish-toggle{width:100%!important;max-width:none!important}
+.wod-builder-step-4 .wizard-stage-actions{
+  display:flex!important;flex-wrap:wrap!important;justify-content:space-between!important;
+  width:100%!important;max-width:none!important;box-sizing:border-box!important;
+}
+@media(max-width:900px){
+  .wod-builder-step-4 .wod-final-preview ol{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:600px){
+  .wod-builder-step-4{padding:0!important}
+  .wod-builder-step-4 .wod-builder-layout{padding:0!important}
+  .wod-builder-step-4 .wod-builder-layout>.wod-composer{padding:10px!important}
+  .wod-builder-step-4 .wod-final-preview{padding:16px!important}
+  .wod-builder-step-4 .wod-final-preview ol{grid-template-columns:minmax(0,1fr)!important}
+  .wod-builder-step-4 .wizard-stage-actions{position:sticky!important;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:30}
+}
