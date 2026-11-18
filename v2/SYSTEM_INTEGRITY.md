@@ -5,7 +5,7 @@
 **Revisjonsstatus:** Fase 1 kartlegging – første tekniske gjennomgang  
 **GitHub-repo:** tibraxTIMB/Garasjegym  
 **Arbeidsbranch:** `garasjegym-2.0-sturm­kopf`  
-**Kontrollert kodecommit:** `a78f89c675a9354a846dc553e0dbb79236a57f42`  
+**Kontrollert kodecommit:** `ec5abc38481af1ddb18a23e0db6d1ab051e1a6ed`  
 **Revisjonsdokument commit:** `620212f3b872387cb20a91e2f83a24892b9a9960`  
 **Supabase testprosjekt:** `garasjegym-2-test` / `izwzwvlexqxqewzijhhd`
 
@@ -104,7 +104,7 @@ Testprosjektet har to aktive Edge Functions, begge med JWT-verifisering:
 - `admin-delete-user`
 - `admin-create-user`
 
-Admin-grensesnittet har funksjon for sletting av medlem via `admin-delete-user`. Det vart ikkje funne nokon klientkall til `admin-create-user` i Admin-komponenten, og det vart ikkje funne ei synleg opprettingshandling i medlemsregisteret. **Edge Function `admin-create-user` er likevel framleis aktiv i testprosjektet.** Dette må avklarast mot kravet om å fjerna moglegheita for å oppretta brukarar. Ho er ikkje deaktivert eller endra i denne kartlegginga.
+Admin-grensesnittet har funksjon for sletting av medlem via `admin-delete-user`. Det vart ikkje funne nokon klientkall til `admin-create-user` i Admin-komponenten, og det vart ikkje funne ei synleg opprettingshandling i medlemsregisteret. For å oppfylla kravet om å fjerna oppretting er testprosjektet no oppdatert til Edge Function versjon 2, som returnerer HTTP 410 for alle kall (OPTIONS preflight er framleis støtta). JWT-verifisering er framleis på. Funksjonen er framleis registrert som ACTIVE i Supabase, men opprettingslogikken er fjerna. Runtime-kall som stadfestar 410-responsen er ikkje utført.
 
 Sletting av brukar er destruktiv. Endeleg test må brukast med ein dedikert testkonto, aldri ein reell medlemskonto.
 
@@ -134,7 +134,7 @@ Kodegjennomgang fann at treningsmotoren ikkje kontrollerte om oppdatering av `pt
 | AUD-03 | Høg | Gå gjennom alle SECURITY DEFINER-funksjonar og dokumentera kvifor dei må vera definer/invoker | IKKJE TESTA |
 | AUD-04 | Høg | Testa RLS med admin, manager og medlem, inkludert forsøk på å lesa/endra andre sine data | IKKJE TESTA |
 | AUD-05 | Middels | Setja fast search_path for set_notification_read_at etter kontroll av funksjonskroppen | FEIL FUNNE – ikkje retta |
-| AUD-06 | Middels | Avklara om aktiv admin-create-user Edge Function skal fjernast/deaktiverast | BLOKKERT – krav må stadfestast |
+| AUD-06 | Middels | Avklara om aktiv admin-create-user Edge Function skal fjernast/deaktiverast | RETTA I TEST – versjon 2 returnerer 410; runtime-kall ikkje stadfesta |
 | AUD-07 | Middels | Revidera 45 RLS initplan-varsel og 7 doble permissive policysett | IKKJE TESTA |
 | AUD-08 | Middels | Vurdera 14 manglande FK-indeksar; ikkje sletta ubruka indeksar utan måling | IKKJE TESTA |
 | AUD-09 | Høg | Byggja automatiserte arbeidsflyttestar for WOD → trening → historikk/PR og PT/gruppetime | IKKJE TESTA |
