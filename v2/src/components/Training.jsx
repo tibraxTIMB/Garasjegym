@@ -241,6 +241,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
 
     <small>{isStationCircuit ? 'Stasjonssirkel · roterande stasjonar · fast tal rundar' : isTimedInterval ? 'Arbeid / kvile · samla økttid og tid att' : isCountdown ? 'AMRAP · registrer kvar fullførte runde' : isEMOM ? (emomEvery > 1 ? `E${emomEvery}MOM · arbeid kvart ${emomEvery}. minutt` : 'E1MOM · arbeid kvart minutt') : isDeathBy ? 'Aukande arbeid for kvar minutt' : isForTime ? 'Stoppeklokke med eventuell tidsgrense' : 'Stoppeklokke – tel medgått tid'}</small>
   </div>
+  </div>
 }
 
 export default function Training({ launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, onLaunchConsumed, simpleMode = false, quickStart = false, onQuickStartConsumed, onSaved, onDiscard }) {
