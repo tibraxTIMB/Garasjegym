@@ -108,7 +108,7 @@ const timedFormats=['EMOM','E1MOM','E2MOM','E3MOM']
 const timedEvery=f=>f==='E2MOM'?2:f==='E3MOM'?3:1
 const timedLabel=f=>timedEvery(f)===1?'kvart minutt':`kvart ${timedEvery(f)}. minutt`
 const isRow=x=>x.equipment==='Romaskin'
-const categoryTone=value=>{const v=(value||'').toLowerCase();return v.includes('kond')||v.includes('cardio')?'conditioning':v.includes('kjern')||v.includes('core')?'core':v.includes('styr')||v.includes('strength')?'strength':v.includes('mobil')?'mobility':v.includes('golf')?'golf':v.includes('rehab')||v.includes('fysio')?'rehab':'other'}
+const categoryTone=value=>{const v=(value||'').toLowerCase();return v.includes('kond')||v.includes('cardio')||v.includes('crossfit')?'conditioning':v.includes('kjern')||v.includes('core')||v.includes('pilates')?'core':v.includes('styr')||v.includes('strength')?'strength':v.includes('mobil')?'mobility':v.includes('golf')?'golf':v.includes('rehab')||v.includes('fysio')?'rehab':'other'}
 
 export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=null,onSaved}){
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område'),[equipmentFilter,setEquipmentFilter]=useState('all')
