@@ -3148,3 +3148,137 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
   margin-bottom:8px!important;color:#f2f5f5!important;
  }
 }
+
+
+/* STURMKOPF – second mobile pass: remove nested frames and give controls real width */
+@media(max-width:700px){
+ .wod-builder-step-1 .wod-builder-layout>.wod-composer{
+  padding:8px 0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+ }
+ .wod-builder-step-1 .wod-composer .wizard-format-panel{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:18px!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:8px 2px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  box-sizing:border-box!important;
+ }
+ .wod-builder-step-1 .wod-composer .wod-name-field{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  gap:9px!important;
+  align-items:stretch!important;
+ }
+ .wod-builder-step-1 .wod-composer .wod-name-field label{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+ }
+ .wod-builder-step-1 .wod-composer .wod-name-field input{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+  min-height:54px!important;
+  padding:12px 14px!important;
+  font-size:17px!important;
+  color:#fff!important;
+  background:#1a292e!important;
+  border:1px solid #647980!important;
+  border-radius:11px!important;
+ }
+ .wod-builder-step-1 .wod-composer .wod-name-field .secondary-button{
+  justify-self:start!important;
+  width:auto!important;
+  min-height:42px!important;
+ }
+ .wod-builder-step-1 .wod-composer .wod-setup-format{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+ }
+ .wod-builder-step-1 .wod-composer .wod-setup-field-label{
+  margin:0 0 10px!important;
+  padding:0!important;
+  color:#f5f7f7!important;
+  font-size:16px!important;
+ }
+ .wod-builder-step-1 .wod-composer .wod-format-tiles{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  gap:10px!important;
+  margin:0!important;
+  padding:0!important;
+ }
+ .wod-builder-step-1 .wod-composer .wod-format-tiles button{
+  display:flex!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  min-height:78px!important;
+  height:auto!important;
+  padding:10px 6px!important;
+  gap:7px!important;
+  box-sizing:border-box!important;
+  overflow:visible!important;
+  border:1px solid #40545c!important;
+  border-radius:12px!important;
+  background:#17252a!important;
+  color:#f4f7f7!important;
+  box-shadow:none!important;
+ }
+ .wod-builder-step-1 .wod-composer .wod-format-tiles button strong{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  color:inherit!important;
+  font-size:12px!important;
+  line-height:1.25!important;
+  text-align:center!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  overflow-wrap:break-word!important;
+  word-break:normal!important;
+  hyphens:none!important;
+ }
+ .wod-builder-step-1 .wod-composer .wod-format-tiles button.selected{
+  border:2px solid #f0a12d!important;
+  background:#49301b!important;
+  color:#fff8ed!important;
+  box-shadow:none!important;
+ }
+ .wod-builder-step-1 .wod-composer .wod-format-tiles button .wod-format-icon{
+  color:#ffd08a!important;
+  font-size:21px!important;
+ }
+ .wod-builder-step-1 .wod-composer .engine-fields{
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+ }
+}
