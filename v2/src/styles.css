@@ -4886,3 +4886,20 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .timer-focused .timer-finish-row { width:min(90vw,420px); margin-top:20px; }
 .timer-focused .timer-finish-button { min-height:56px; font-size:17px; }
 @media(max-width:430px) { .timer-finish-row { width:100%; } .timer-finish-button { min-height:50px; } }
+
+/* Timer display customisation */
+.timer-customized { --timer-accent:var(--orange); }
+.timer-topline { width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.timer-context { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.timer-origin-chip { display:inline-flex; align-items:center; padding:7px 11px; border-radius:99px; color:#171819; background:var(--timer-accent); font-size:10px; font-weight:950; letter-spacing:.8px; }
+.timer-format-chip { color:var(--timer-accent); border:1px solid color-mix(in srgb,var(--timer-accent) 45%,transparent); border-radius:99px; padding:6px 10px; font-size:10px; font-weight:900; letter-spacing:1px; }
+.timer-customize-trigger { min-height:36px; padding:0 12px; border:1px solid #55504a; border-radius:8px; color:#eee; background:#24282a; font-size:11px; font-weight:800; cursor:pointer; }
+.timer-customize-panel { width:min(100%,680px); display:grid; gap:12px; padding:16px; border:1px solid #55504a; border-radius:12px; background:#111618; }
+.timer-customize-title { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+.timer-customize-title span { color:var(--muted); font-size:11px; }
+.timer-customize-panel>label { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; color:#ddd; font-size:12px; font-weight:800; }
+.timer-customize-panel input[type=range] { grid-column:1/-1; width:100%; accent-color:var(--timer-accent); }
+.timer-customize-panel input[type=color] { width:42px; height:30px; padding:2px; border:1px solid #555; border-radius:6px; background:transparent; }
+.timer-main-clock { display:block; max-width:100%; color:var(--timer-accent); font-size:clamp(64px, var(--timer-clock-size), 220px); font-weight:950; line-height:.95; letter-spacing:-.055em; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.timer-phase { color:var(--timer-accent); }
+@media(max-width:650px) { .timer-topline { align-items:flex-start; } .timer-context { gap:5px; } .timer-origin-chip,.timer-format-chip { font-size:9px; } .timer-main-clock { font-size:min(var(--timer-clock-size),18vw); } }
