@@ -2739,3 +2739,26 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 @media(max-width:520px){.wod-exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wod-exercise-card{min-height:185px;padding:9px}.wod-exercise-card .wod-add-button{font-size:10px;padding:0 5px}}
 
 .wod-pause-insert{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 12px;padding:11px 13px;background:#202729;border:1px dashed #68777b;border-radius:10px}.wod-pause-insert>div{display:grid;gap:3px}.wod-pause-insert strong{font-size:12px}.wod-pause-insert small{font-size:10px;color:var(--muted)}.wod-rest-dose{align-items:end;padding:10px;background:#182326;border:1px solid #53666b;border-radius:9px}.wod-rest-dose label{display:grid;gap:5px}.wod-rest-preview{font-size:20px;font-weight:900;color:#9dd6e4;padding:8px}
+
+/* WOD Studio module 2 – compact filter toolbar and exercise catalogue */
+.wod-filter-toolbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0 7px}
+.wod-filter-toolbar>button{min-width:0;display:flex;align-items:center;justify-content:space-between;gap:7px;padding:10px 11px;border:1px solid #43565d;border-radius:11px;background:linear-gradient(160deg,#202e33,#172226);color:#e9eeee;cursor:pointer}
+.wod-filter-toolbar>button b{font-size:10px;letter-spacing:.04em;color:#c5d1d4}
+.wod-filter-toolbar>button span{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wod-filter-toolbar>button.active{border:2px solid #efa126;padding:9px 10px;background:#26363b}
+.wod-filter-panel{margin:0 0 10px;padding:10px 12px;border:1px solid #40545c;border-radius:12px;background:#142125}
+.wod-filter-panel .wod-category-filter,.wod-filter-panel .wod-movement-filter,.wod-filter-panel .wod-equipment-filter,.wod-filter-panel .wod-area-filter{margin:0;padding:0;border:0;background:transparent}
+.wod-filter-panel .wod-category-filter button,.wod-filter-panel .wod-movement-filter button,.wod-filter-panel .wod-equipment-filter button,.wod-filter-panel .wod-area-filter button{font-size:11px;padding:7px 11px}
+.wod-filter-panel .wod-equipment-filter>div{display:flex;flex-wrap:wrap;gap:7px}
+.wod-exercise-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.wod-exercise-card{min-width:0;min-height:168px;padding:10px;border-radius:12px}
+.wod-exercise-card .wod-exercise-info>strong{font-size:14px;line-height:1.2}
+.wod-exercise-card .wod-exercise-info>small{font-size:10px;line-height:1.3}
+.wod-exercise-card .wod-exercise-info>p{font-size:10px;line-height:1.35;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.wod-exercise-card .wod-add-button{min-height:30px;font-size:10px}
+.wod-selected-card{background:linear-gradient(160deg,#1c2b30,#172226)}
+.wod-selected-list{display:flex;flex-direction:column;gap:8px}
+.wod-selected-list .wod-selected-card{padding:10px}
+@media(max-width:1200px){.wod-exercise-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:850px){.wod-filter-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}.wod-exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.wod-filter-toolbar{grid-template-columns:1fr 1fr}.wod-filter-toolbar>button{padding:8px}.wod-filter-toolbar>button b{font-size:9px}.wod-exercise-card{min-height:155px;padding:8px}}
