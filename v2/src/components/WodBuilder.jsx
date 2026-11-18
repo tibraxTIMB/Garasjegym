@@ -160,7 +160,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const equipmentOptions=[{value:'all',label:'Alt utstyr'},{value:'manual',label:'🏋️ Manualar'},{value:'kettlebell',label:'🔔 Kettlebell'},{value:'stong',label:'🏋️ Vektstong'},{value:'medisinball',label:'⚽ Medisinball'},{value:'kroppsvekt',label:'🤸 Kroppsvekt'},{value:'strikk',label:'〰️ Strikk'},{value:'romaskin',label:'🚣 Romaskin'},{value:'trx',label:'TRX'},{value:'box',label:'📦 Plyo box'}]
  const filtered=useMemo(()=>[...exercises,...GOLF_EXERCISES,...REHAB_EXERCISES].filter(x=>{
   const rehab=isRehabExercise(x)
-  const matchesCategory=category==='Alle'||(category==='Rehab'?rehab:!rehab&&x.category===category)
+  const exCategory=(x.category||'').toLowerCase();const matchesCategory=category==='Alle'||(category==='Rehab'?rehab:category==='Functional Fitness'?(!rehab&&!['pilates','yoga flow','yoga'].includes(exCategory)):category==='Gymnastikk'?(/pull|push|gymnast|handstand|hang|toes|muscle/.test((x.name||'').toLowerCase())&&!rehab):category==='Yoga Flow'?exCategory==='yoga flow'||exCategory==='yoga':!rehab&&exCategory===category.toLowerCase())
   const searchable=[x.name,x.category,x.equipment,x.body_area,x.description].filter(Boolean).join(' ').toLowerCase()
   const movementTags=movementTagsFor(x);const matchesMovement=movementFilter==='all'||movementTags.includes(movementFilter)
   const matchesSearch=!search||searchable.includes(search.toLowerCase())||movementTags.some(tag=>tag.includes(search.toLowerCase()))
