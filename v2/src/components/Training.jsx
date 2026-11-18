@@ -61,9 +61,11 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     catch{return {}}
   })
   const lastPanelLayoutKey=useRef(deviceProfile.layout)
+  const skipPanelSave=useRef(false)
   useEffect(()=>{
     if(lastPanelLayoutKey.current===deviceProfile.layout)return
     lastPanelLayoutKey.current=deviceProfile.layout
+    skipPanelSave.current=true
     try{
       setPanelLayout({...defaultPanelLayout,...JSON.parse(localStorage.getItem(panelKey('panels'))||'{}')})
       setPanelOrder(JSON.parse(localStorage.getItem(panelKey('panelOrder'))||'["clock","info","laps","music"]'))
@@ -73,6 +75,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     }
   },[deviceProfile.layout])
   useEffect(()=>{
+    if(skipPanelSave.current){skipPanelSave.current=false;return}
     if(lastPanelLayoutKey.current!==deviceProfile.layout)return
     try{
       localStorage.setItem(panelKey('panels'),JSON.stringify(panelLayout))
