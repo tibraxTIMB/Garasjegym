@@ -5296,3 +5296,42 @@ html[data-gg-device="mobile"][data-gg-orientation="landscape"] .timer-panel-cloc
 html[data-gg-device="mobile"][data-gg-orientation="portrait"] .timer-panel-clock {
   min-height: clamp(230px, min(var(--timer-panel-height, 360px), 58dvh), 620px) !important;
 }
+
+
+/* Device profile wins over width-only breakpoints, including wide phones in landscape. */
+html[data-gg-device="mobile"] .app-shell {
+  display: block;
+  min-height: calc(var(--gg-vh, 1vh) * 100);
+}
+html[data-gg-device="mobile"] .sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 8px 10px;
+  border-right: 0;
+  border-bottom: 1px solid var(--line);
+}
+html[data-gg-device="mobile"] .sidebar .brand,
+html[data-gg-device="mobile"] .sidebar .side-label,
+html[data-gg-device="mobile"] .sidebar .sidebar-foot {
+  display: none;
+}
+html[data-gg-device="mobile"] .sidebar nav {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+html[data-gg-device="mobile"] .nav-item {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 9px 11px;
+}
+html[data-gg-device="mobile"] .nav-item svg { display: none; }
+html[data-gg-device="mobile"] .main {
+  padding-left: max(8px, env(safe-area-inset-left));
+  padding-right: max(8px, env(safe-area-inset-right));
+}
+html[data-gg-device="mobile"] .content-card { max-width: none; }
+.content-card { max-width: none; }
