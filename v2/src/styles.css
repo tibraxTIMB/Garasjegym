@@ -2164,3 +2164,45 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 @media(max-width:1180px){.wod-builder-step-2 .wod-builder-layout{grid-template-columns:minmax(0,1fr) 280px!important}.wod-builder-step-2 .wod-exercise-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
 @media(max-width:900px){.wod-builder-step-2 .wod-builder-layout{grid-template-columns:minmax(0,1fr)!important}.wod-builder-step-2 .wod-builder-layout>.wod-composer{grid-column:1!important;grid-row:1!important;position:relative!important;top:auto!important;max-height:none!important;order:-1}.wod-builder-step-2 .wod-composer .admin-create-form{max-height:none!important}.wod-builder-step-2 .wod-composer .wod-selected-list{max-height:300px!important}.wod-builder-step-2 .wod-exercise-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;max-height:55vh!important}}
 @media(max-width:560px){.wod-builder-step-2 .wod-exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;max-height:55vh!important}.wod-builder-step-2 .wod-exercise-card{min-height:155px!important}}
+
+
+/* WOD Studio – full-screen admin workspace, three deliberate canvases. */
+.wod-builder{width:calc(100vw - 48px)!important;max-width:none!important;min-width:0!important;position:relative!important;left:50%!important;transform:translateX(-50%)!important;margin:0!important;padding:14px 18px 18px!important;box-sizing:border-box!important}
+.wod-builder .training-heading{max-width:none!important;width:100%!important;margin:0 auto 10px!important}
+.wod-builder .wod-wizard-steps{width:100%!important;max-width:none!important;margin:0 0 14px!important}
+.wod-builder .pt-wod-builder-form{width:100%!important;max-width:none!important;min-width:0!important}
+.wod-builder .wod-builder-layout{display:grid!important;width:100%!important;max-width:none!important;min-width:0!important;grid-template-columns:minmax(0,1fr)!important;gap:14px!important;align-items:stretch!important}
+.wod-builder .wod-builder-layout>.wod-composer{grid-column:1!important;grid-row:1!important;width:100%!important;max-width:none!important;min-width:0!important;position:relative!important;top:auto!important;max-height:none!important;overflow:visible!important;padding:18px!important;box-sizing:border-box!important}
+.wod-builder .wod-composer .admin-create-form{width:100%!important;max-width:none!important;max-height:none!important;overflow:visible!important}
+.wod-builder .wod-composer .wizard-format-panel{display:grid!important;grid-template-columns:minmax(260px,1.2fr) minmax(500px,2fr)!important;gap:18px 24px!important;align-items:start!important}
+.wod-builder .wod-composer .wod-name-field{grid-column:1/-1!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:end!important;gap:12px!important}
+.wod-builder .wod-composer .engine-fields{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;align-content:start!important}
+.wod-builder .wod-composer .wod-advanced-fields{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;align-content:start!important}
+.wod-builder .wod-composer .wizard-stage-actions{display:flex!important;justify-content:flex-end!important;gap:12px!important;margin-top:18px!important;padding-top:14px!important;border-top:1px solid #3d4b4d!important}
+.wod-builder-step-2 .wod-builder-layout{grid-template-columns:minmax(0,1fr) minmax(330px,390px)!important;gap:14px!important}
+.wod-builder-step-2 .wod-builder-layout>.wod-library{grid-column:1!important;grid-row:1!important;width:100%!important;max-width:none!important;min-width:0!important;overflow:hidden!important;padding:15px!important;box-sizing:border-box!important}
+.wod-builder-step-2 .wod-builder-layout>.wod-composer{grid-column:2!important;grid-row:1!important;position:sticky!important;top:12px!important;max-height:calc(100vh - 30px)!important;overflow:hidden!important;padding:14px!important}
+.wod-builder-step-2 .wod-composer .admin-create-form{max-height:calc(100vh - 110px)!important;overflow-y:auto!important;overflow-x:hidden!important}
+.wod-builder-step-2 .wod-composer .wizard-format-panel{display:none!important}
+.wod-builder-step-2 .wod-composer .wizard-selected-stage{display:grid!important;gap:12px!important}
+.wod-builder-step-2 .wod-composer .wod-selected-list{max-height:calc(100vh - 255px)!important;overflow-y:auto!important;overflow-x:hidden!important}
+.wod-builder-step-2 .wod-exercise-grid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-auto-rows: minmax(0,1fr)!important;gap:10px!important;width:100%!important;max-width:100%!important;min-width:0!important;max-height:calc(100vh - 385px)!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;align-content:start!important;box-sizing:border-box!important}
+.wod-builder-step-2 .wod-exercise-card{aspect-ratio:1/1!important;min-width:0!important;width:100%!important;min-height:0!important;height:auto!important;max-height:none!important;overflow:hidden!important;box-sizing:border-box!important;padding:10px!important;display:flex!important;flex-direction:column!important;justify-content:space-between!important;gap:7px!important}
+.wod-builder-step-2 .wod-exercise-card .wod-exercise-info{display:flex!important;flex-direction:column!important;gap:5px!important;min-width:0!important;overflow:hidden!important}
+.wod-builder-step-2 .wod-exercise-card .wod-exercise-info>strong{font-size:12px!important;line-height:1.2!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important}
+.wod-builder-step-2 .wod-exercise-card .wod-exercise-info>small{font-size:9px!important;line-height:1.25!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important}
+.wod-builder-step-2 .wod-exercise-card .wod-exercise-info>p{font-size:10px!important;line-height:1.3!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;margin:0!important}
+.wod-builder-step-2 .wod-exercise-card .wod-exercise-info>em{display:none!important}
+.wod-builder-step-2 .wod-add-button{width:100%!important;min-height:30px!important;flex:0 0 auto!important;justify-content:center!important;font-size:10px!important}
+.wod-builder-step-2 .wod-library .wod-area-filter{padding:8px 10px!important}
+.wod-builder-step-2 .wod-library .wod-equipment-filter{padding:8px 10px!important}
+.wod-builder-step-3 .wod-builder-layout>.wod-composer{padding:18px 22px!important}
+.wod-builder-step-3 .wod-composer .wizard-publish-stage{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px 22px!important;align-items:start!important}
+.wod-builder-step-3 .wod-composer .wizard-publish-stage>.wizard-stage-intro:first-child,.wod-builder-step-3 .wod-composer .wod-intelligence-report,.wod-builder-step-3 .wod-composer .wizard-stage-actions{grid-column:1/-1!important}
+.wod-builder-step-3 .wod-composer .wizard-rx-scaled{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important}
+.wod-builder-step-3 .wod-composer .wizard-publish-stage textarea{min-height:76px!important}
+.wod-builder-step-3 .wod-composer .wod-intelligence-report{padding:14px 16px!important}
+.wod-builder-step-3 .wod-composer .wizard-stage-actions{justify-content:space-between!important}
+@media(max-width:1250px){.wod-builder-step-2 .wod-builder-layout{grid-template-columns:minmax(0,1fr) 320px!important}.wod-builder-step-2 .wod-exercise-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+@media(max-width:900px){.wod-builder{width:calc(100vw - 24px)!important;padding:10px!important}.wod-builder-step-2 .wod-builder-layout{grid-template-columns:minmax(0,1fr)!important}.wod-builder-step-2 .wod-builder-layout>.wod-composer{grid-column:1!important;grid-row:1!important;position:relative!important;top:auto!important;max-height:none!important}.wod-builder-step-2 .wod-composer .admin-create-form{max-height:none!important}.wod-builder-step-2 .wod-composer .wod-selected-list{max-height:250px!important}.wod-builder-step-2 .wod-exercise-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;max-height:52vh!important}.wod-builder .wod-composer .wizard-format-panel{grid-template-columns:1fr!important}.wod-builder-step-3 .wod-composer .wizard-publish-stage{grid-template-columns:1fr!important}}
+@media(max-width:600px){.wod-builder-step-2 .wod-exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;max-height:48vh!important}.wod-builder-step-2 .wod-exercise-card{aspect-ratio:1/1!important}.wod-builder-step-3 .wod-composer .wizard-rx-scaled{grid-template-columns:1fr!important}}
