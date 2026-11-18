@@ -48,7 +48,6 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
   const [mode, setMode] = useState(recovery ? 'update' : 'login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [displayName, setDisplayName] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -71,19 +70,6 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin })
         if (resetError) throw resetError
         setMessage('Dersom e-postadressa er registrert, får du ei lenkje for å velja nytt passord.')
-      } else if (mode === 'signup') {
-        const { data, error: authError } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: { data: { display_name: displayName.trim() } },
-        })
-        if (authError) throw authError
-        if (data.session) {
-          setMessage('Konto oppretta. Du må venta på at ein administrator godkjenner medlemskapet før du får tilgang.')
-        } else {
-          setMessage('Registreringa er motteken. Stadfest e-postadressa di dersom du får ei lenkje. Deretter må ein administrator godkjenna medlemskapet før du får tilgang.')
-          setMode('login')
-        }
       } else {
         const { error: authError } = await supabase.auth.signInWithPassword({
           email: email.trim(),
@@ -106,15 +92,9 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
           <div><strong>GARASJEGYM</strong><span>STURMKOPF · 2.0</span></div>
         </div>
         <div className="eyebrow"><ShieldCheck size={14} /> MEDLEMSOMRÅDE</div>
-        <h1>{mode === 'login' ? <>Velkomen <em>tilbake.</em></> : mode === 'reset' || mode === 'update' ? <>Nytt <em>passord.</em></> : <>Bli ein <em>del av laget.</em></>}</h1>
-        <p className="auth-intro">{mode === 'reset' ? 'Skriv inn e-postadressa di, så sender me ei lenkje for å nullstilla passordet.' : mode === 'update' ? 'Vel eit nytt passord for GarasjeGym-kontoen din.' : 'Logg inn med GarasjeGym-kontoen din, eller send ein søknad om medlemskap.'}</p>
+        <h1>{mode === 'login' ? <>Velkomen <em>tilbake.</em></> : <>Nytt <em>passord.</em></>}</h1>
+        <p className="auth-intro">{mode === 'reset' ? 'Skriv inn e-postadressa di, så sender me ei lenkje for å nullstilla passordet.' : 'Vel eit nytt passord for GarasjeGym-kontoen din.'}</p>
         <form className="auth-form" onSubmit={submit}>
-          {mode === 'signup' && (
-            <label>
-              Namn
-              <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} autoComplete="name" required placeholder="Namnet ditt" />
-            </label>
-          )}
           {mode !== 'update' && <label>
             E-post
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required placeholder="namn@epost.no" />
@@ -126,17 +106,14 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
           {error && <div className="auth-error" role="alert">{error}</div>}
           {message && <div className="auth-message" role="status">{message}</div>}
           <button className="primary-button" type="submit" disabled={busy}>
-            {busy ? 'Arbeider …' : mode === 'login' ? 'Logg inn' : mode === 'reset' ? 'Send lenkje' : mode === 'update' ? 'Lagra nytt passord' : 'Opprett medlemskonto'}
+            {busy ? 'Arbeider …' : mode === 'login' ? 'Logg inn' : mode === 'reset' ? 'Send lenkje' : 'Lagra nytt passord'}
           </button>
         </form>
         <div className="auth-switch">
-          {mode === 'login' ? 'Har du ikkje konto?' : mode === 'signup' ? 'Har du allereie konto?' : 'Tilbake til innlogging?'}
-          <button type="button" onClick={() => { if (mode === 'update') onRecoveryComplete?.(); setMode(mode === 'login' ? 'signup' : 'login'); setError(''); setMessage('') }}>
-            {mode === 'login' ? 'Registrer deg' : 'Logg inn'}
-          </button>
+          {mode !== 'login' && <button type="button" onClick={() => { if (mode === 'update') onRecoveryComplete?.(); setMode('login'); setError(''); setMessage('') }}>Tilbake til innlogging</button>}
           {mode === 'login' && <button type="button" onClick={() => { setMode('reset'); setError(''); setMessage('') }}>Gløymt passord?</button>}
         </div>
-        <p className="auth-footnote">Nye kontoar må godkjennast av ein administrator før medlemsområdet blir tilgjengeleg.</p>
+        <p className="auth-footnote">Medlemskontoar blir oppretta av administrator.</p>
       </div>
     </main>
   )
