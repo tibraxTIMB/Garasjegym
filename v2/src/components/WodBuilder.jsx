@@ -84,8 +84,8 @@ const CLASSIC_WODS=[
  {name:'Randy',group:'Hero WODs',format:'For Time',minutes:15,items:[['Power snatch','75']],notes:'75 power snatches for time. RX-vekt: 75/55 lb.'},
  {name:'Badger',group:'Hero WODs',format:'For Time',minutes:35,rounds:3,items:[['Squat clean','30'],['Pull-up','30'],['Run','800 m']],notes:'3 rundar: 30 squat cleans, 30 pull-ups, 800 m løp. RX clean: 95/65 lb.'}
 ]
-const nameAdjectives=['Brutale','Wilde','Geile','Scharfe','Eiserne','Explosive','Böse','Dreckige','Donnernde','Panzerstarke','Stählerne','Brachiale','Knallharte','Furchtlose','Massive','Giftige','Hungrige','Brennende','Wuchtige','Legendäre','Gnadenlose','Kraftvolle','Kompromisslose']
-const nameNouns=['Panzer','Granate','Berserker','Keule','Kampfsau','Eber','Bär','Wolf','Gorilla','Mammut','Kobra','Hammer','Amboss','Donnerfaust','Stahlkoloss','Kraftpaket','Schlachtschiff','Sprengkopf','Dampfwalze','Kommandant','Knochenbrecher','Rammbock','Stahlfaust','Kampfhamster','Muskelmonster']
+const nameAdjectives=['Brutale','Wilde','Geile','Scharfe','Eiserne','Explosive','Böse','Dreckige','Donnernde','Panzerstarke','Stählerne','Brachiale','Knallharte','Furchtlose','Massive','Giftige','Hungrige','Brennende','Wuchtige','Legendäre','Gnadenlose','Kraftvolle','Kompromisslose','Jernharde','Svart','Rasande','Dieseldrevne','Elektriske','Høyspent','Ubøyelege','Stålsette','Infernalske']
+const nameNouns=['Panzer','Granate','Berserker','Keule','Kampfsau','Eber','Bär','Wolf','Gorilla','Mammut','Kobra','Hammer','Amboss','Donnerfaust','Stahlkoloss','Kraftpaket','Schlachtschiff','Sprengkopf','Dampfwalze','Kommandant','Knochenbrecher','Rammbock','Stahlfaust','Kampfhamster','Muskelmonster','Stålkjeven','Jernvilje','Betongbass','Dieselherz','Eisenwolf','Panzerpuls','Inferno 808','Hardhaus.exe','Tungt Vær','Svart Stål','Nattoget','Turbohelvete','Stålnakke','Betongbryter']
 const nameNumbers=['1942','1939','69']
 const randomWodName=()=>{
  const base=nameAdjectives[Math.floor(Math.random()*nameAdjectives.length)]+' '+nameNouns[Math.floor(Math.random()*nameNouns.length)]
@@ -111,10 +111,10 @@ const isRow=x=>x.equipment==='Romaskin'
 const categoryTone=value=>{const v=(value||'').toLowerCase();return v.includes('kond')||v.includes('cardio')||v.includes('crossfit')?'conditioning':v.includes('kjern')||v.includes('core')||v.includes('pilates')?'core':v.includes('styr')||v.includes('strength')?'strength':v.includes('mobil')?'mobility':v.includes('golf')?'golf':v.includes('rehab')||v.includes('fysio')?'rehab':'other'}
 
 export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=null,onSaved}){
- const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område'),[equipmentFilter,setEquipmentFilter]=useState('all')
+ const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område'),[equipmentFilter,setEquipmentFilter]=useState('all'),[movementFilter,setMovementFilter]=useState('all')
  const rehabBodyAreas=['hofte','skulder','kne','nakke']
  const isRehabExercise=x=>!!(x.is_rehab||x.category==='Rehab / fysio'||rehabBodyAreas.includes((x.body_area||'').toLowerCase()))
- const [selected,setSelected]=useState([]),[editingWodId,setEditingWodId]=useState(null),[name,setName]=useState(''),[format,setFormat]=useState('AMRAP'),[libraryWods,setLibraryWods]=useState([]),[builderMode,setBuilderMode]=useState(assignedClientId?'library':'build'),[librarySearch,setLibrarySearch]=useState(''),[selectedLibraryWod,setSelectedLibraryWod]=useState(''),[classicChoice,setClassicChoice]=useState(''),[publishToMembers,setPublishToMembers]=useState(false)
+ const [selected,setSelected]=useState([]),[editingWodId,setEditingWodId]=useState(null),[name,setName]=useState(randomWodName()),[format,setFormat]=useState('AMRAP'),[libraryWods,setLibraryWods]=useState([]),[builderMode,setBuilderMode]=useState(assignedClientId?'library':'build'),[librarySearch,setLibrarySearch]=useState(''),[selectedLibraryWod,setSelectedLibraryWod]=useState(''),[classicChoice,setClassicChoice]=useState(''),[publishToMembers,setPublishToMembers]=useState(false)
  const [minutes,setMinutes]=useState('20'),[durationSeconds,setDurationSeconds]=useState('0'),[notes,setNotes]=useState(''),[stimulus,setStimulus]=useState('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
  const [rounds,setRounds]=useState('5'),[workSeconds,setWorkSeconds]=useState('60'),[restSeconds,setRestSeconds]=useState('10'),[timeCap,setTimeCap]=useState('20'),[timeCapSeconds,setTimeCapSeconds]=useState('0'),[stationCount,setStationCount]=useState('4'),[stationWork,setStationWork]=useState('45'),[stationTransition,setStationTransition]=useState('15'),[stationRounds,setStationRounds]=useState('3')
  const [ladderStart,setLadderStart]=useState('2'),[ladderStep,setLadderStep]=useState('2'),[ladderDirection,setLadderDirection]=useState('up')
@@ -160,12 +160,13 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   const rehab=isRehabExercise(x)
   const matchesCategory=category==='Alle'||(category==='Rehab'?rehab:!rehab&&x.category===category)
   const searchable=[x.name,x.category,x.equipment,x.body_area,x.description].filter(Boolean).join(' ').toLowerCase()
-  const matchesSearch=!search||searchable.includes(search.toLowerCase())
+  const movementTags=movementTagsFor(x);const matchesMovement=movementFilter==='all'||movementTags.includes(movementFilter)
+  const matchesSearch=!search||searchable.includes(search.toLowerCase())||movementTags.some(tag=>tag.includes(search.toLowerCase()))
   const tags=(x.body_area||'').toLowerCase(),needle=area==='Mage'?'kjerne':area.toLowerCase()
   const eq=(x.equipment||'').toLowerCase()
   const matchesEquipment=equipmentFilter==='all'||(equipmentFilter==='manual'&&/manual|dumbbell/.test(eq))||(equipmentFilter==='kettlebell'&&/kettlebell/.test(eq))||(equipmentFilter==='stong'&&/stong|barbell|rack/.test(eq))||(equipmentFilter==='medisinball'&&/medisinball|medicine ball/.test(eq))||(equipmentFilter==='kroppsvekt'&&/kroppsvekt/.test(eq))||(equipmentFilter==='strikk'&&/strikk|band/.test(eq))||(equipmentFilter==='apparat'&&/apparat|romaskin|ski erg|bike|ergometer|kabel/.test(eq))
-  return matchesCategory&&matchesSearch&&matchesEquipment&&(category==='Rehab'||area==='Alle område'||tags.includes(needle))
- }),[exercises,category,area,search,equipmentFilter])
+  return matchesCategory&&matchesSearch&&matchesMovement&&matchesEquipment&&(category==='Rehab'||area==='Alle område'||tags.includes(needle))
+ }),[exercises,category,area,search,equipmentFilter,movementFilter])
  const showSets=strengthLike(format)||(format==='Eigen økt'&&customUseSets)
  const isInterval=intervalFormats.includes(format)
  const isTimed=timedFormats.includes(format)
@@ -195,6 +196,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   setPrescription('rx');setClassicChoice('');setNotice(preset.name+' er lasta inn. Kontroller øvingar, RX-belastning og skalering før publisering.');setError('')
  }
  function add(ex){if(isStationCircuit&&selected.length>=Number(stationCount)){setError(`Du har valt ${stationCount} stasjonar. Fjern ei øving eller auk talet på stasjonar før du legg til fleire.`);return}setError('');const item=blankItem(ex);item.prescription=loadPairFor(ex,format,intensity,Number(isAmrap?timeCap:minutes)||0)||{rx_m:null,rx_f:null,scaled_m:null,scaled_f:null,unit:'kg',source:'manual',overridden:false};setSelected(rows=>[...rows,{...item,...(isStationCircuit?{reps:'',repsMode:'amrap'}:{})}])}
+ function suggestUniqueWodName(){const existing=new Set(libraryWods.map(w=>(w.name||'').trim().toLowerCase()));for(let i=0;i<60;i++){const candidate=randomWodName();if(!existing.has(candidate.toLowerCase())&&candidate.toLowerCase()!==name.trim().toLowerCase())return candidate}return randomWodName()+' '+String(Date.now()).slice(-4)}
  function updateItem(key,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,...patch}:x))}
  function recalculateSuggestions(){setSelected(rows=>rows.map(x=>({...x,prescription:loadPairFor(x,format,intensity,Number(isAmrap?timeCap:minutes)||0)})));setNotice('Belastningsforslag rekna ut på nytt. Manuelle verdiar er erstatta etter eksplisitt val.')}
  function updateSet(key,index,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,sets:x.sets.map((s,i)=>i===index?{...s,...patch}:s)}:x))}
@@ -205,12 +207,12 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   const chosen=shuffle(pool).slice(0,3+Math.floor(Math.random()*4))
   setSelected(chosen.map(blankItem));setFormat(['AMRAP','E1MOM','For Time','Chipper','Intervall'][Math.floor(Math.random()*5)])
   setMinutes(String([10,12,15,18,20][Math.floor(Math.random()*5)]));setDurationSeconds('0');setTimeCap('20');setRounds('5')
-  setName(randomWodName());setNotes('');setStimulus('Jamn intensitet · god teknikk · hald att litt kapasitet')
+  setName(suggestUniqueWodName());setNotes('');setStimulus('Jamn intensitet · god teknikk · hald att litt kapasitet')
   setNotice('Ny WOD er generert. Kontroller dosering og stimulus før publisering.');setError('')
  }
  function reset(){
   setSelected([]);setIntensity('2');setNotes('');setCustomInstructions('');setCustomUseSets(false);setCombinationMode('For Time');setStimulus('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
-  setName('');setError('');setNotice('Økta er forkasta. Du kan byrja på nytt.')
+  setName(suggestUniqueWodName());setError('');setNotice('Økta er forkasta. Du kan byrja på nytt.')
  }
  function buildPrescription(x){
   const load=fmtLoad(x)
@@ -280,7 +282,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    if(e)throw e
    if(assignedClientId){const {error:linkError}=await supabase.from('pt_wod_assignments').insert({member_id:assignedClientId,wod_id:savedWod.id,assigned_by:user.id,location:'Valfritt',coach_note:'Tildelt frå PT Studio'});if(linkError)throw new Error('WOD-en vart lagra, men kunne ikkje knytast til kunden: '+linkError.message);onAssigned?.()}
    setNotice(editingWodId?'WOD-en er oppdatert.':publishToMembers?'WOD lagra i biblioteket og publisert for medlemmene.':'WOD lagra i det interne PT-biblioteket.')
-   setSelected([]);setNotes('');setCustomInstructions('');setRxNotes('');setScaledNotes('');setWizardStep(1);setName('');setEditingWodId(null);onSaved?.()
+   setSelected([]);setNotes('');setCustomInstructions('');setRxNotes('');setScaledNotes('');setWizardStep(1);setName(suggestUniqueWodName());setEditingWodId(null);onSaved?.()
   }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{setBusy(false)}
  }
  function goToStep(next){setError('');if(next===2&&isStationCircuit&&selected.length>Number(stationCount))setSelected(rows=>rows.slice(0,Number(stationCount)));if((next===3||next===4)&&!selected.length){setError('Legg minst ei øving til WOD-en før du går vidare.');return}if((next===3||next===4)&&format==='Couplet'&&selected.length!==2){setError('Couplet skal ha nøyaktig to øvingar.');return}if((next===3||next===4)&&format==='Triplet'&&selected.length!==3){setError('Triplet skal ha nøyaktig tre øvingar.');return}setWizardStep(next)}
@@ -304,7 +306,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    <aside className="engine-section wod-composer">
     <div className="engine-section-title"><h4>{wizardStep===1?"1 · Format og tidsramme":wizardStep===2?"2 · Valde øvingar":"3 · RX, skalering og publisering"}</h4><span>{selected.length} øvingar</span></div>
     <form className="admin-create-form" onSubmit={save}>
-     <div className="wizard-format-panel"><div className="wod-name-field"><label>WOD-namn<input value={name} onChange={e=>setName(e.target.value)} required placeholder="Gje økta eit namn …"/></label><button type="button" className="secondary-button" onClick={()=>setName(randomWodName())}>Nytt namn</button></div>
+     <div className="wizard-format-panel"><div className="wod-name-field"><label>WOD-namn<input value={name} onChange={e=>setName(e.target.value)} required placeholder="Gje økta eit namn …"/></label><button type="button" className="secondary-button" onClick={()=>setName(suggestUniqueWodName())}>Nytt namn</button></div>
      
      <div className="wod-setup-format">
       <div className="wod-setup-field-label">Format <span>*</span></div>
