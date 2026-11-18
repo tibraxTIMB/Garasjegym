@@ -3613,3 +3613,36 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 @media(min-width:761px){
  .wizard-stage-actions-sticky{position:static!important}
 }
+
+
+/* STURMKOPF hotfix: keep WOD step controls visible on narrow and scaled mobile viewports */
+@media (max-width: 1024px){
+  .wizard-stage-actions-sticky{
+    position:fixed!important;
+    inset:auto 10px calc(8px + env(safe-area-inset-bottom, 0px)) 10px!important;
+    z-index:2147483000!important;
+    display:grid!important;
+    grid-template-columns:minmax(90px,.78fr) minmax(0,1.42fr)!important;
+    gap:9px!important;
+    width:auto!important;
+    max-width:680px!important;
+    margin:0 auto!important;
+    padding:10px!important;
+    border:1px solid #52656c!important;
+    border-radius:16px!important;
+    background:#061015!important;
+    box-shadow:0 -6px 24px rgba(0,0,0,.7)!important;
+    transform:none!important;
+    visibility:visible!important;
+    opacity:1!important;
+  }
+  .wizard-stage-actions-sticky button{
+    display:flex!important;
+    min-height:54px!important;
+    visibility:visible!important;
+    opacity:1!important;
+    align-items:center!important;
+    justify-content:center!important;
+  }
+  .wizard-selected-stage{padding-bottom:calc(120px + env(safe-area-inset-bottom, 0px))!important}
+}
