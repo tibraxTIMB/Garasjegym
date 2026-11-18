@@ -215,6 +215,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [saving, setSaving] = useState(false)
+  const [saveToken, setSaveToken] = useState(() => crypto.randomUUID())
   const [mode, setMode] = useState('home')
   const [reviewOpen,setReviewOpen]=useState(false)
   const [finishOpen,setFinishOpen]=useState(false)
@@ -312,6 +313,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
 
   function startWorkout(wod = null) {
     setClassSessionId(null)
+    setSaveToken(crypto.randomUUID())
     setSource(wod)
     setWodLevel(wod?.timer_settings?.workout_schema?.prescription||'rx')
     setTitle(wod?.name || (simpleMode ? 'Eiga trening' : ''))
@@ -390,7 +392,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   async function saveWorkout(event) {
     event.preventDefault()
     if (!title.trim()) { setError('Gi økta eit namn før du lagrar.'); return }
-    if ((!simpleMode && !items.length) || items.some(item => !item.exercise_name.trim())) {
+    if (!items.length || items.some(item => !item.exercise_name.trim())) {
       setError('Alle øvingane må ha namn.'); return
     }
     setSaving(true); setError(''); setNotice('')
@@ -418,7 +420,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         exercise_results:items.map(item=>({exercise_name:item.exercise_name,sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null}))}))
       }
       const payload = {
-        member_id:user.id,title:title.trim(),source_wod_id:source?.id||null,
+        member_id:user.id,save_token:saveToken,title:title.trim(),source_wod_id:source?.id||null,
         class_live_session_id:classSessionId||null,workout_date:localDateISO(),format,
         rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):Math.max(1,Number(scoreRounds)||1),
         score_rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):scoreRounds===''?null:Number(scoreRounds),
@@ -453,8 +455,9 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         })
         const sourceWorkoutId = workoutId
         const newPRs = []
-        payload.exercises.forEach(exercise => {
+        payload.exercises.forEach((exercise,index) => {
           const loads = exercise.sets.map(set => set.load_kg).filter(value => Number.isFinite(value) && value > 0)
+          if (payload.exercises.length === 1 && Number.isFinite(payload.score_load_kg) && payload.score_load_kg > 0) loads.push(payload.score_load_kg)
           if (!loads.length) return
           const best = Math.max(...loads)
           const key = exercise.exercise_name.toLowerCase()
@@ -473,6 +476,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       }
       setNotice('Økta er lagra i treningsloggen.' + prMessage)
       setFinishOpen(false); setMode('home'); setReviewOpen(false)
+      setSaveToken(crypto.randomUUID())
       await loadAll()
       onSaved?.()
     } catch (err) {
