@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useState} from 'react'
 import {UserRound,Trophy,Activity,LoaderCircle,Mail,ShieldCheck,ArrowRight,TrendingUp,ToggleLeft,ToggleRight,ChevronLeft,ChevronRight,Trash2,List,Calendar} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
+import GroupClassResults from './GroupClassResults.jsx'
 
 const historyDateKey=value=>{if(!value)return '';if(/^\\d{4}-\\d{2}-\\d{2}$/.test(value))return value;const d=new Date(value);return Number.isNaN(d.getTime())?'':[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
 const historyMonthLabel=date=>date.toLocaleDateString('nn-NO',{month:'long',year:'numeric'})
@@ -33,6 +34,7 @@ export default function MyPage({profile,email,onOpenWorkout,onLaunchWod=()=>{},i
 
  return <div className="my-page">
   <div className="training-heading"><div>{!simpleMode&&<span className="section-kicker">MEDLEMSPROFIL</span>}<h3>{simpleMode?(tab==='history'?'Treningslogg':tab==='records'?'Mine resultat':'Mi side'):'Mi side'}</h3>{!simpleMode&&<p>Personleg treningsprofil, resultat og utvikling.</p>}</div><button type="button" className="count-pill my-profile-shortcut" onClick={()=>setTab('profile')} aria-label="Opne profil"><UserRound size={14}/> Profil <ArrowRight size={13}/></button></div>
+  <GroupClassResults onLaunchWod={(wodId,assignmentId,sessionId)=>onLaunchWod?.(wodId,assignmentId,sessionId)} />
   <div className={simpleMode?"hub-tabs my-page-tabs simple-result-tabs":"hub-tabs my-page-tabs"}><button className={tab==='profile'?'active':''} onClick={()=>setTab('profile')}>Profil</button><button className={tab==='records'?'active':''} onClick={()=>setTab('records')}>{simpleMode?"Resultat":"PR-senter"} ({prs.length})</button><button className={tab==='history'?'active':''} onClick={()=>setTab('history')}>{simpleMode?"Logg":"Økthistorikk"} ({logs.length})</button><button className={tab==='favorites'?'active':''} onClick={()=>setTab('favorites')}>Favoritt-WODs ({favoriteWods.length})</button></div>
   {error&&<div className="auth-error">{error}</div>}
   {loading?<div className="training-state"><LoaderCircle className="spin"/> Hentar treningsprofil …</div>:<>
