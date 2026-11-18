@@ -495,8 +495,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       <div className="engine-fields">
         <label>Namn på økta<input value={title} onChange={e => setTitle(e.target.value)} placeholder="Til dømes Styrke A" required/></label>
         <label>Treningsformat<select value={format} onChange={e => setFormat(e.target.value)}>{FORMATS.map(x => <option key={x}>{x}</option>)}</select></label>
-        <label>Varigheit (min)<input type="number" min="1" max="600" value={duration} onChange={e => setDuration(e.target.value)}/></label>
-        <label>Ekstra sekund<input type="number" min="0" max="59" value={durationSeconds} onChange={e => setDurationSeconds(e.target.value)}/></label>
+        {['AMRAP','Nedteljing','E1MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM'].includes(format) && <label>Øktlengd (minutt)<input type="number" min="1" max="600" value={duration} onChange={e => setDuration(e.target.value)}/></label>}
       </div>
       <Timer format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} exerciseList={items} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen}/>
       {items.length > 0 && format!=='Stasjonssirkel' && <section className="engine-section">
