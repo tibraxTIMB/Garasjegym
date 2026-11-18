@@ -2043,3 +2043,19 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
  .wod-card-actions .favorite-star { margin-left:0; }
  .wod-library-toolbar { align-items:flex-start; flex-direction:column; }
 }
+
+
+/* WOD Intelligence v1 */
+.wod-item-prescription{margin:12px 0;padding:12px;background:#171b1d;border:1px solid #495154;border-radius:10px;display:grid;gap:9px}
+.wod-item-prescription-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.wod-item-prescription-head strong{font-size:12px}.wod-item-prescription-head span,.wod-item-prescription small{font-size:10px;color:var(--muted)}
+.wod-prescription-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.wod-prescription-grid label{font-size:10px;color:var(--muted)}
+.wod-prescription-grid input{width:100%;min-width:0;margin-top:4px;padding:8px;background:#252a2c;border:1px solid #50595b;border-radius:6px;color:#fff}
+.wod-intelligence-report{padding:14px;background:#171b1d;border:1px solid #495154;border-radius:10px;display:grid;gap:8px}
+.wod-intelligence-report>strong{font-size:13px}.wod-intelligence-report p{margin:0;color:var(--muted);font-size:12px}
+.wod-intelligence-warning,.wod-intelligence-ok{padding:9px 10px;border-radius:7px;font-size:11px;line-height:1.5}
+.wod-intelligence-warning{background:#382b1c;border:1px solid #79552a;color:#f3c27b}
+.wod-intelligence-ok{background:#1d3027;border:1px solid #315c45;color:#b5e4c8}
+.wod-intelligence-report small{color:var(--muted);font-size:10px}
+@media(max-width:700px){.wod-prescription-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
