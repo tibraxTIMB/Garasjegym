@@ -195,7 +195,8 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   setPrescription('rx');setClassicChoice('');setNotice(preset.name+' er lasta inn. Kontroller øvingar, RX-belastning og skalering før publisering.');setError('')
  }
  function add(ex){if(isStationCircuit&&selected.length>=Number(stationCount)){setError(`Du har valt ${stationCount} stasjonar. Fjern ei øving eller auk talet på stasjonar før du legg til fleire.`);return}setError('');const item=blankItem(ex);item.prescription=loadPairFor(ex,format,intensity,Number(isAmrap?timeCap:minutes)||0);setSelected(rows=>[...rows,{...item,...(isStationCircuit?{reps:'',repsMode:'amrap'}:{})}])}
- function updateItem(key,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,...patch}:x))}\n function recalculateSuggestions(){setSelected(rows=>rows.map(x=>({...x,prescription:loadPairFor(x,format,intensity,Number(isAmrap?timeCap:minutes)||0)})));setNotice('Belastningsforslag rekna ut på nytt. Manuelle verdiar er erstatta etter eksplisitt val.')}
+ function updateItem(key,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,...patch}:x))}
+ function recalculateSuggestions(){setSelected(rows=>rows.map(x=>({...x,prescription:loadPairFor(x,format,intensity,Number(isAmrap?timeCap:minutes)||0)})));setNotice('Belastningsforslag rekna ut på nytt. Manuelle verdiar er erstatta etter eksplisitt val.')}
  function updateSet(key,index,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,sets:x.sets.map((s,i)=>i===index?{...s,...patch}:s)}:x))}
  function move(i,dir){setSelected(rows=>{const next=[...rows],j=i+dir;if(j<0||j>=next.length)return rows;[next[i],next[j]]=[next[j],next[i]];return next})}
  function randomWod(){
