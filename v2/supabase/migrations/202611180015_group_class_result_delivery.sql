@@ -3,6 +3,10 @@
 alter table public.wods
   add column if not exists category text not null default 'main';
 
+update public.wods
+set category = 'warmup'
+where timer_settings->'workout_schema'->>'library_category' = 'warmup';
+
 alter table public.wods
   drop constraint if exists wods_category_check;
 
