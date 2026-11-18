@@ -4008,3 +4008,115 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
     width:100%!important;max-width:100%!important;
   }
 }
+
+
+/* STURMKOPF – focused mobile WOD list + full-screen exercise picker */
+@media(max-width:760px){
+  /* Main WOD workspace: remove nested frames and keep only exercise names */
+  .wod-builder-step-2:not(.wod-library-open) .wod-composer,
+  .wod-builder-step-2:not(.wod-library-open) .wizard-selected-stage{
+    border:0!important;outline:0!important;box-shadow:none!important;
+    background:transparent!important;border-radius:0!important;
+    padding:8px 0 150px!important;margin:0!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wizard-stage-intro{display:none!important}
+  .wod-builder-step-2:not(.wod-library-open) .wod-open-library{
+    width:100%!important;min-height:48px!important;margin:0 0 12px!important;
+    border-radius:12px!important;font-size:15px!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-list{
+    display:flex!important;flex-direction:column!important;gap:6px!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-card{
+    display:flex!important;align-items:center!important;gap:10px!important;
+    min-height:56px!important;height:auto!important;padding:8px 10px!important;
+    border:1px solid rgba(110,137,145,.35)!important;border-left:3px solid rgba(220,111,18,.8)!important;
+    border-radius:10px!important;background:rgba(10,22,27,.55)!important;
+    box-shadow:none!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-card>.wod-order{
+    flex:0 0 26px!important;width:26px!important;height:26px!important;
+    font-size:12px!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-info{
+    flex:1 1 auto!important;min-width:0!important;padding:0!important;
+    display:block!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-title{
+    display:block!important;margin:0!important;padding:0!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-title strong{
+    display:block!important;font-size:15px!important;font-weight:750!important;
+    line-height:1.25!important;white-space:normal!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-title .wod-stimulus-tag,
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-info>small,
+  .wod-builder-step-2:not(.wod-library-open) .wod-load-summary,
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-editor,
+  .wod-builder-step-2:not(.wod-library-open) .wod-coach-note,
+  .wod-builder-step-2:not(.wod-library-open) .wod-item-prescription,
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-info>a{display:none!important}
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-actions{
+    display:flex!important;flex:0 0 auto!important;flex-direction:row!important;
+    gap:5px!important;width:auto!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-actions button{
+    display:grid!important;width:34px!important;height:34px!important;
+    min-width:34px!important;min-height:34px!important;padding:0!important;
+  }
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-actions button[title="Rediger øving"],
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-actions button[title="Lukk redigering"],
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-actions button[title="Flytt opp"],
+  .wod-builder-step-2:not(.wod-library-open) .wod-selected-actions button[title="Flytt ned"]{display:none!important}
+
+  /* Exercise picker becomes a true full-screen panel */
+  .wod-builder-step-2.wod-library-open .wod-library{
+    position:fixed!important;inset:0!important;z-index:2147482000!important;
+    width:100vw!important;height:100dvh!important;max-height:100dvh!important;
+    overflow-y:auto!important;overscroll-behavior:contain!important;
+    box-sizing:border-box!important;margin:0!important;padding:16px 14px calc(24px + env(safe-area-inset-bottom,0px))!important;
+    border:0!important;border-radius:0!important;background:#030b0f!important;
+    box-shadow:none!important;
+  }
+  .wod-builder-step-2.wod-library-open .wod-library .wod-search,
+  .wod-builder-step-2.wod-library-open .wod-library .wod-filter-toolbar,
+  .wod-builder-step-2.wod-library-open .wod-library .wod-active-filters,
+  .wod-builder-step-2.wod-library-open .wod-library .wod-filter-panel,
+  .wod-builder-step-2.wod-library-open .wod-library .wod-pause-insert,
+  .wod-builder-step-2.wod-library-open .wod-library .wizard-library-actions,
+  .wod-builder-step-2.wod-library-open .wod-library>.engine-section-title{display:none!important}
+  .wod-builder-step-2.wod-library-open .wod-exercise-grid{
+    display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    align-content:start!important;gap:10px!important;width:100%!important;
+    max-width:none!important;max-height:none!important;height:auto!important;
+    overflow:visible!important;margin:0!important;padding:0 0 20px!important;
+  }
+  .wod-builder-step-2.wod-library-open .wod-exercise-card{
+    display:flex!important;flex-direction:row!important;align-items:center!important;
+    justify-content:space-between!important;gap:6px!important;
+    width:100%!important;min-width:0!important;min-height:74px!important;height:auto!important;
+    padding:10px!important;border-radius:12px!important;
+    border:1px solid rgba(116,143,153,.4)!important;box-shadow:none!important;
+  }
+  .wod-builder-step-2.wod-library-open .wod-exercise-info{
+    display:block!important;flex:1 1 auto!important;min-width:0!important;
+    width:auto!important;padding:0!important;
+  }
+  .wod-builder-step-2.wod-library-open .wod-exercise-card-top,
+  .wod-builder-step-2.wod-library-open .wod-exercise-info>small,
+  .wod-builder-step-2.wod-library-open .wod-exercise-info>.wod-equipment-icons,
+  .wod-builder-step-2.wod-library-open .wod-exercise-info>p,
+  .wod-builder-step-2.wod-library-open .wod-exercise-info>a{display:none!important}
+  .wod-builder-step-2.wod-library-open .wod-exercise-info>strong{
+    display:block!important;font-size:13px!important;line-height:1.25!important;
+    white-space:normal!important;overflow-wrap:anywhere!important;
+  }
+  .wod-builder-step-2.wod-library-open .wod-exercise-card .wod-add-button{
+    display:grid!important;flex:0 0 34px!important;width:34px!important;height:34px!important;
+    min-width:34px!important;padding:0!important;border-radius:9px!important;
+  }
+  .wod-builder-step-2.wod-library-open .wod-exercise-card.is-picked{opacity:.8!important}
+  .wod-builder-step-2.wod-library-open .wod-exercise-card.is-picked .wod-add-button{
+    background:#8c3d08!important;
+  }
+}
