@@ -2737,3 +2737,5 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .wod-selected-info{min-width:0;flex:1}
 @media(max-width:1100px){.wod-exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.wod-exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wod-exercise-card{min-height:185px;padding:9px}.wod-exercise-card .wod-add-button{font-size:10px;padding:0 5px}}
+
+.wod-pause-insert{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 12px;padding:11px 13px;background:#202729;border:1px dashed #68777b;border-radius:10px}.wod-pause-insert>div{display:grid;gap:3px}.wod-pause-insert strong{font-size:12px}.wod-pause-insert small{font-size:10px;color:var(--muted)}.wod-rest-dose{align-items:end;padding:10px;background:#182326;border:1px solid #53666b;border-radius:9px}.wod-rest-dose label{display:grid;gap:5px}.wod-rest-preview{font-size:20px;font-weight:900;color:#9dd6e4;padding:8px}
