@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Activity, ArrowRight, CalendarDays, CheckCircle2, ClipboardList, Dumbbell, Flag, MessageSquareText, Plus, RefreshCw, Target, UserRound, X } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
+import Notifications from './Notifications.jsx'
 import { isStaff } from '../lib/auth.js'
 
 const GOALS = ['Bli sterkare','Betre kondisjon og uthald','Auka muskelmasse','Gå ned i vekt','Meir energi og overskot','Betre mobilitet','Betre teknikk','Koma i gang med trening','Førebyggja plager','Prestera betre i idrett']
@@ -12,14 +13,15 @@ function Pill({children,tone=''}) { return <span className={'pt2-pill '+tone}>{c
 function Empty({children}) { return <div className="pt2-empty">{children}</div> }
 function dateLabel(value) { return value ? new Date(value).toLocaleDateString('nn-NO',{day:'numeric',month:'short',year:'numeric'}) : 'Ikkje sett' }
 
-export default function PTStudio({ profile, onLaunchWorkout }) {
+export default function PTStudio({ profile, onLaunchWorkout, initialClientId=null }) {
  const staff = isStaff(profile)
  const [loading,setLoading] = useState(true)
  const [busy,setBusy] = useState(false)
  const [error,setError] = useState('')
  const [notice,setNotice] = useState('')
  const [members,setMembers] = useState([])
- const [clientId,setClientId] = useState('')
+ const [clientId,setClientId] = useState(initialClientId||'')
+ useEffect(()=>{if(initialClientId)setClientId(initialClientId)},[initialClientId])
  const [intakes,setIntakes] = useState([])
  const [goals,setGoals] = useState([])
  const [templates,setTemplates] = useState([])
