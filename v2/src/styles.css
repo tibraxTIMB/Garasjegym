@@ -5271,3 +5271,28 @@ html[data-gg-device="tablet"][data-gg-orientation="landscape"] .timer-panel-cloc
   min-height: 100dvh;
   padding-bottom: max(10px, env(safe-area-inset-bottom));
 }
+
+
+/* Keep panel size controls meaningful while clamping panels to the available viewport. */
+.timer-layout-panel {
+  min-height: min(var(--timer-panel-height, 360px), 70dvh);
+}
+html[data-gg-device="mobile"] .timer-layout-panel {
+  min-height: clamp(150px, min(var(--timer-panel-height, 300px), 58dvh), 620px) !important;
+}
+html[data-gg-device="mobile"] .timer-panel-tools button[title*="smalare"],
+html[data-gg-device="mobile"] .timer-panel-tools button[title*="breiare"] {
+  display: none;
+}
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-layout-panel {
+  min-height: clamp(190px, min(var(--timer-panel-height, 360px), 62dvh), 680px) !important;
+}
+html[data-gg-device="tablet"][data-gg-orientation="landscape"] .timer-layout-panel {
+  min-height: clamp(180px, min(var(--timer-panel-height, 360px), 68dvh), 760px) !important;
+}
+html[data-gg-device="mobile"][data-gg-orientation="landscape"] .timer-panel-clock {
+  min-height: clamp(190px, min(var(--timer-panel-height, 300px), 48dvh), 340px) !important;
+}
+html[data-gg-device="mobile"][data-gg-orientation="portrait"] .timer-panel-clock {
+  min-height: clamp(230px, min(var(--timer-panel-height, 360px), 58dvh), 620px) !important;
+}
