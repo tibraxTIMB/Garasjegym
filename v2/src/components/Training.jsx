@@ -14,8 +14,9 @@ const localDateISO = (date = new Date()) => {
   return local.toISOString().slice(0, 10)
 }
 
-function TimerPanel({id,title,layout,onMove,onResize,onLock,locked,children,wide=false}){
- return <section data-timer-panel={id} className={`timer-layout-panel timer-panel-${id} ${locked?'is-locked':''}`} style={{gridColumn:`span ${layout.span}`,minHeight:layout.height}} draggable={!locked} onDragStart={e=>{e.dataTransfer.setData('text/plain',id);e.dataTransfer.effectAllowed='move'}} onDragOver={e=>{if(!locked)e.preventDefault()}} onDrop={e=>{e.preventDefault();const from=e.dataTransfer.getData('text/plain');if(from&&from!==id)onMove(from,id)}}>
+function TimerPanel({id,title,layout,onMove,onResize,onLock,locked,children,deviceProfile,wide=false}){
+ const gridColumn=deviceProfile.device==='mobile'?'1 / -1':deviceProfile.device==='tablet'&&deviceProfile.orientation==='portrait'?(id==='clock'||id==='music'?'1 / -1':`span ${layout.span>=6?2:1}`):`span ${layout.span}`
+ return <section data-timer-panel={id} className={`timer-layout-panel timer-panel-${id} ${locked?'is-locked':''}`} style={{gridColumn,'--timer-panel-height':`${layout.height}px`}} draggable={!locked} onDragStart={e=>{e.dataTransfer.setData('text/plain',id);e.dataTransfer.effectAllowed='move'}} onDragOver={e=>{if(!locked)e.preventDefault()}} onDrop={e=>{e.preventDefault();const from=e.dataTransfer.getData('text/plain');if(from&&from!==id)onMove(from,id)}}>
   <header className="timer-panel-toolbar"><span className="timer-panel-grip" aria-hidden="true">⠿</span><b>{title}</b><div className="timer-panel-tools">
    <button type="button" title="Flytt panelet opp" aria-label={`Flytt ${title} opp`} disabled={locked} onClick={()=>onMove(id,'up')}>↑</button>
    <button type="button" title="Flytt panelet ned" aria-label={`Flytt ${title} ned`} disabled={locked} onClick={()=>onMove(id,'down')}>↓</button>
@@ -231,7 +232,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     <div className="timer-dashboard timer-dashboard-reflow">
       <div className="timer-layout-toolbar"><strong>Tilpass oppsett</strong><span>Bruk pilene på touch eller dra panela med mus · endra storleik · lås dei når du er nøgd</span><button type="button" className="text-button" onClick={resetPanelLayout}>Tilbakestill panel</button></div>
       <div className="timer-panel-canvas">
-       {panelOrder.map(id=>id==='clock'?<TimerPanel key={id} id="clock" title="HOVUDKLOKKE OG WOD" layout={panelLayout.clock} locked={Boolean(lockedPanels.clock)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}><section className="timer-center">
+       {panelOrder.map(id=>id==='clock'?<TimerPanel key={id} id="clock" title="HOVUDKLOKKE OG WOD" layout={panelLayout.clock} deviceProfile={deviceProfile} locked={Boolean(lockedPanels.clock)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}><section className="timer-center">
         <div className="timer-phase">{phase}</div>
         <strong className="timer-main-clock">{clock(primaryTime)}</strong>
         <div className="timer-round-label">{isStationCircuit ? 'ARBEID / STASJONSBYTE' : isCountdown ? 'GJENSTÅANDE TID' : isEMOM ? 'TIL NESTE ARBEIDSSTART' : isTimedInterval ? 'TID I INTERVALLFASEN' : 'MEDGÅTT TID'}</div>
@@ -252,7 +253,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           </button>
           <small>{hasStarted ? 'Registrer resultat og lagre treningsøkta' : 'Start timeren før du fullfører økta'}</small>
         </div>
-      </section></TimerPanel>:id==='info'?<TimerPanel key={id} id="info" title="ØKTINFORMASJON" layout={panelLayout.info} locked={Boolean(lockedPanels.info)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}><aside className="timer-side timer-side-left">
+      </section></TimerPanel>:id==='info'?<TimerPanel key={id} id="info" title="ØKTINFORMASJON" layout={panelLayout.info} deviceProfile={deviceProfile} locked={Boolean(lockedPanels.info)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}><aside className="timer-side timer-side-left">
         <div className="timer-bottom-heading">ØKTINFORMASJON</div>
         <div className="timer-side-stat"><span>MEDGÅTT TID</span><b>{clock(elapsed)}</b></div>
         {(isCountdown || isStationCircuit) && <div className="timer-side-stat"><span>GJENVERANDE TID</span><b>{clock(remainingTotal)}</b></div>}
@@ -266,10 +267,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           <label>Kvile sek.<input type="number" min="0" max="600" value={restSeconds} onChange={e=>setRestSeconds(Math.max(0,Number(e.target.value)||0))}/></label>
           <label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(Math.max(1,Number(e.target.value)||1))}/></label>
         </div>}
-      </aside></TimerPanel>:id==='laps'?<TimerPanel key={id} id="laps" title="RUNDETIDER" layout={panelLayout.laps} locked={Boolean(lockedPanels.laps)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}><aside className="timer-side timer-side-right">
+      </aside></TimerPanel>:id==='laps'?<TimerPanel key={id} id="laps" title="RUNDETIDER" layout={panelLayout.laps} deviceProfile={deviceProfile} locked={Boolean(lockedPanels.laps)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}><aside className="timer-side timer-side-right">
         <div className="timer-lap-heading">RUNDETIDER <b>{laps.length}</b></div>
         {laps.length ? <ol className="timer-lap-list">{laps.map((lap,index)=><li key={index}><span>Runde {index+1}</span><b>{clock(lap)}</b></li>)}</ol> : <p className="timer-no-laps">Registrer kvar fullførte runde her.</p>}
-      </aside></TimerPanel>:<TimerPanel key={id} id="music" title="MUSIKK" layout={panelLayout.music} locked={Boolean(lockedPanels.music)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}><MusicMiniPlayer /></TimerPanel>)}
+      </aside></TimerPanel>:<TimerPanel key={id} id="music" title="MUSIKK" layout={panelLayout.music} deviceProfile={deviceProfile} locked={Boolean(lockedPanels.music)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}><MusicMiniPlayer /></TimerPanel>)}
       </div>
 
     <small>{isStationCircuit ? 'Stasjonssirkel · roterande stasjonar · fast tal rundar' : isTimedInterval ? 'Arbeid / kvile · samla økttid og tid att' : isCountdown ? 'AMRAP · registrer kvar fullførte runde' : isEMOM ? (emomEvery > 1 ? `E${emomEvery}MOM · arbeid kvart ${emomEvery}. minutt` : 'E1MOM · arbeid kvart minutt') : isDeathBy ? 'Aukande arbeid for kvar minutt' : isForTime ? 'Stoppeklokke med eventuell tidsgrense' : 'Stoppeklokke – tel medgått tid'}</small>
