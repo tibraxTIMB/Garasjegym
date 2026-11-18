@@ -3170,4 +3170,125 @@ body.gg-timer-focus #trainingConsole .timer-face #timerFocusToggle{position:abso
 })();
 </script>
 
+
+<style id="gg-free-panel-layout">
+/* GarasjeGym – freely movable, resizable and lockable training panels */
+body.gg-floating-training #trainingConsole .training-console-grid{inset:58px 8px 8px 8px!important;overflow:hidden!important}
+body.gg-floating-training #trainingConsole .training-module{min-width:190px!important;min-height:145px!important;max-width:none!important;max-height:none!important;overflow:auto!important;box-sizing:border-box!important}
+body.gg-floating-training #trainingConsole .training-module.gg-panel-locked .module-grip{cursor:default!important}
+body.gg-floating-training #trainingConsole .training-module.gg-panel-locked{outline:none!important}
+#trainingConsole .gg-panel-resize{display:none}
+body.gg-panel-edit #trainingConsole .gg-panel-resize{display:block;position:absolute;right:3px;bottom:3px;width:24px;height:24px;border:0;border-radius:6px;background:#e5ad4b;color:#101820;font-size:18px;font-weight:900;line-height:20px;cursor:nwse-resize;touch-action:none;z-index:20}
+body.gg-panel-edit #trainingConsole .training-module{outline:1px dashed #e5ad4b!important}
+body.gg-panel-edit #trainingConsole .module-grip{display:flex!important;cursor:move!important;touch-action:none!important}
+body.gg-panel-edit #trainingConsole .training-module.gg-panel-locked{outline:1px solid #55b98a!important}
+body.gg-panel-edit #trainingConsole .training-module.gg-panel-locked .module-grip{cursor:not-allowed!important}
+body.gg-panel-edit #trainingConsole .training-module.gg-panel-locked .gg-panel-resize{display:none!important}
+#trainingConsole .gg-panel-lock{min-width:32px!important;min-height:28px!important;padding:2px 7px!important;font-size:13px!important}
+body.gg-floating-training #trainingConsole .training-module>*{max-width:100%;min-width:0}
+@media(max-width:650px){
+ body.gg-floating-training #trainingConsole .training-console-grid{inset:58px 5px 5px!important}
+ body.gg-floating-training #trainingConsole .training-module{min-width:145px!important;min-height:125px!important;padding:7px!important}
+}
+</style>
+
+<script id="gg-free-panel-layout-engine">
+(function(){
+ const KEY='gg_training_panels_free_v1';
+ let editing=false,active=null;
+ const $=s=>document.querySelector(s);
+ const grid=()=>$('#trainingConsole .training-console-grid');
+ const modules=()=>Array.from(grid()?.querySelectorAll(':scope > .training-module')||[]);
+ const bounds=()=>grid()?.getBoundingClientRect();
+ const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+ function defaults(){
+  const r=bounds(); if(!r)return;
+  const gap=10,w=(r.width-gap*2)/3,h=r.height-8;
+  return modules().map((el,i)=>({id:el.dataset.module||('panel'+i),x:i*(w+gap),y:0,w,h,locked:false}));
+ }
+ function read(){
+  try{const v=JSON.parse(localStorage.getItem(KEY)||'null');return Array.isArray(v)?v:null}catch(e){return null}
+ }
+ function save(){
+  const r=bounds();if(!r)return;
+  const data=modules().map(el=>({id:el.dataset.module,x:parseFloat(el.style.left)||0,y:parseFloat(el.style.top)||0,w:el.getBoundingClientRect().width,h:el.getBoundingClientRect().height,locked:el.classList.contains('gg-panel-locked')}));
+  try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}
+ }
+ function apply(){
+  const g=grid(),r=bounds();if(!g||!r)return;
+  g.style.setProperty('position','absolute','important');
+  g.style.setProperty('display','block','important');
+  const saved=read()||defaults();
+  modules().forEach((el,i)=>{
+   const id=el.dataset.module||('panel'+i),p=saved.find(x=>x.id===id)||defaults()[i];
+   const minW=window.innerWidth<650?145:190,minH=window.innerWidth<650?125:145;
+   const w=clamp(Number(p.w)||r.width/3,minW,r.width);
+   const h=clamp(Number(p.h)||r.height,minH,r.height);
+   const x=clamp(Number(p.x)||0,0,Math.max(0,r.width-w));
+   const y=clamp(Number(p.y)||0,0,Math.max(0,r.height-h));
+   el.style.setProperty('position','absolute','important');
+   el.style.setProperty('left',x+'px','important');el.style.setProperty('top',y+'px','important');
+   el.style.setProperty('width',w+'px','important');el.style.setProperty('height',h+'px','important');
+   el.style.setProperty('margin','0','important');
+   el.classList.toggle('gg-panel-locked',!!p.locked);
+   let grip=el.querySelector('.module-grip');
+   if(!grip){grip=document.createElement('div');grip.className='module-grip';grip.innerHTML='<span class="module-grip-title"></span><span class="module-size-controls"></span>';el.prepend(grip)}
+   const label=grip.querySelector('.module-grip-title');if(label)label.textContent=el.dataset.module==='timer'?'⏱ TIMER':el.dataset.module==='workout'?'📋 WOD / RESULTAT':el.dataset.module==='music'?'♫ MUSIKK':'PANEL';
+   let controls=grip.querySelector('.module-size-controls');
+   if(controls){controls.innerHTML='';const lock=document.createElement('button');lock.type='button';lock.className='gg-panel-lock';lock.textContent=p.locked?'🔒':'🔓';lock.title=p.locked?'Lås opp panel':'Lås panel';lock.setAttribute('aria-label',lock.title);lock.addEventListener('click',e=>{e.stopPropagation();el.classList.toggle('gg-panel-locked');lock.textContent=el.classList.contains('gg-panel-locked')?'🔒':'🔓';save()});controls.append(lock)}
+   let handle=el.querySelector('.gg-panel-resize');if(!handle){handle=document.createElement('button');handle.type='button';handle.className='gg-panel-resize';handle.textContent='↘';handle.title='Endra storleik';handle.setAttribute('aria-label','Endra storleik');el.append(handle)}
+  });
+  document.body.classList.toggle('gg-panel-edit',editing);
+  document.body.classList.toggle('training-layout-edit',editing);
+ }
+ function toggle(){
+  editing=!editing;document.body.classList.toggle('gg-panel-edit',editing);document.body.classList.toggle('training-layout-edit',editing);
+  const b=$('#ggPanelEditToggle');if(b){b.textContent=editing?'✓ Ferdig':'⚙ Rediger oppsett';b.setAttribute('aria-pressed',String(editing))}
+  modules().forEach(el=>{el.querySelector('.module-grip')?.style.setProperty('display',editing?'flex':'none','important')});
+ }
+ function point(e){const r=bounds();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+ function begin(e,el,mode){
+  if(!editing||el.classList.contains('gg-panel-locked'))return;
+  if(e.target.closest('button')&&!e.target.classList.contains('gg-panel-resize'))return;
+  e.preventDefault();const p=point(e),r=el.getBoundingClientRect(),g=bounds();
+  active={el,mode,startX:e.clientX,startY:e.clientY,x:r.left-g.left,y:r.top-g.top,w:r.width,h:r.height,pointer:e.pointerId};
+  try{e.target.setPointerCapture(e.pointerId)}catch(_){}
+ }
+ document.addEventListener('pointerdown',e=>{
+  const el=e.target.closest('#trainingConsole .training-module');if(!el)return;
+  if(e.target.closest('.gg-panel-resize'))begin(e,el,'resize');
+  else if(e.target.closest('.module-grip'))begin(e,el,'move');
+ });
+ document.addEventListener('pointermove',e=>{
+  if(!active||e.pointerId!==active.pointer)return;
+  const g=bounds();if(!g)return;const dx=e.clientX-active.startX,dy=e.clientY-active.startY;
+  const minW=window.innerWidth<650?145:190,minH=window.innerWidth<650?125:145;
+  let x=active.x,y=active.y,w=active.w,h=active.h;
+  if(active.mode==='move'){x=clamp(x+dx,0,g.width-active.w);y=clamp(y+dy,0,g.height-active.h)}
+  else{w=clamp(w+dx,minW,g.width-x);h=clamp(h+dy,minH,g.height-y)}
+  active.el.style.setProperty('left',x+'px','important');active.el.style.setProperty('top',y+'px','important');
+  active.el.style.setProperty('width',w+'px','important');active.el.style.setProperty('height',h+'px','important');
+ });
+ document.addEventListener('pointerup',e=>{if(active&&e.pointerId===active.pointer){active=null;save()}});
+ function addButton(){
+  const head=$('#trainingConsole .training-head-actions');if(!head||$('#ggPanelEditToggle'))return;
+  const b=document.createElement('button');b.id='ggPanelEditToggle';b.type='button';b.className='secondary';b.textContent='⚙ Rediger oppsett';b.addEventListener('click',toggle);head.append(b);
+ }
+ function init(){
+  const g=grid();if(!g||!modules().length)return;
+  modules().forEach((el,i)=>{if(!el.dataset.module)el.dataset.module=['timer','workout','music'][i]||('panel'+i)});
+  addButton();
+  if(document.body.classList.contains('wod-dashboard-mode')||document.body.classList.contains('gg-floating-training')){document.body.classList.add('gg-floating-training');apply()}
+ }
+ const observer=new MutationObserver(()=>{if($('#trainingConsole')&&!$('#ggPanelEditToggle'))addButton()});
+ observer.observe(document.body,{childList:true,subtree:true});
+ document.addEventListener('click',e=>{
+  if(e.target.closest('#wallModeToggle'))setTimeout(()=>{document.body.classList.add('gg-floating-training');apply()},150);
+ });
+ document.addEventListener('fullscreenchange',()=>{if(document.body.classList.contains('wod-dashboard-mode')){document.body.classList.add('gg-floating-training');setTimeout(apply,80)}});
+ window.addEventListener('resize',()=>{if(document.body.classList.contains('gg-floating-training')){const r=bounds();if(!r)return;modules().forEach(el=>{const x=parseFloat(el.style.left)||0,y=parseFloat(el.style.top)||0,w=el.getBoundingClientRect().width,h=el.getBoundingClientRect().height;el.style.left=clamp(x,0,Math.max(0,r.width-w))+'px';el.style.top=clamp(y,0,Math.max(0,r.height-h))+'px'});save()}});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&editing)toggle()});
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,100));else setTimeout(init,100);
+})();
+</script>
 </body></html>
