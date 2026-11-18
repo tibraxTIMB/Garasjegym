@@ -9,7 +9,7 @@ const priorityMeta={
  normal:{label:'Vanleg',tone:'normal',icon:Info},
  low:{label:'Info',tone:'low',icon:Info}
 }
-const hrefLabel=href=>href?.startsWith('pt-request:')?'Opna PT-førespurnad':href?.startsWith('pt-client:')?'Opna kunde i PT-studio':href?.startsWith('group-class:')?'Opna gruppetime':href?.startsWith('booking:')?'Opna booking':href==='pt-studio'?'Opna PT-studio':href==='booking'?'Opna timeplan':'Opna'
+const hrefLabel=href=>href?.startsWith('pt-request:')?'Opna PT-førespurnad':href?.startsWith('pt-client:')?'Opna kunde i PT-studio':href?.startsWith('group-class:')?'Opna gruppetime':href?.startsWith('booking:')?'Opna booking':href==='pt-studio'?'Opna PT-studio':href==='booking'?'Opna timeplan':href==='kaffi'?'Opna kaffibar':'Opna'
 const isExpired=item=>item.expires_at&&new Date(item.expires_at)<new Date()
 function ageDays(value){return (Date.now()-new Date(value).getTime())/86400000}
 
@@ -30,7 +30,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
   if(tab==='ack')return x.requires_ack&&!x.acknowledged_at&&x.status==='open'
   if(tab==='info')return !x.requires_action&&!x.requires_ack&&x.status==='open'
   if(tab==='history')return x.status!=='open'||x.acknowledged_at
-  return x.status==='open'
+  return x.status==='open'&&(!x.requires_ack||!x.acknowledged_at)
  }).slice(0,showAll?100:30),[items,tab,showAll])
  async function load(){
   const {data:{user}}=await supabase.auth.getUser()
@@ -42,7 +42,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
    const rows=data||[]
    setItems(rows)
    // Automatic housekeeping: expired notices, old read-only information and completed cases leave the active inbox.
-   const archiveIds=rows.filter(x=>isExpired(x)||(!x.requires_action&&!x.requires_ack&&x.is_read&&ageDays(x.created_at)>14)||((x.status==='resolved'||x.status==='dismissed')&&ageDays(x.resolved_at||x.created_at)>30)).map(x=>x.id)
+   const archiveIds=rows.filter(x=>isExpired(x)||(!x.requires_action&&!x.requires_ack&&x.is_read&&ageDays(x.created_at)>14)||(x.requires_ack&&x.acknowledged_at&&ageDays(x.acknowledged_at)>14)||((x.status==='resolved'||x.status==='dismissed')&&ageDays(x.resolved_at||x.created_at)>30)).map(x=>x.id)
    if(archiveIds.length){
     await supabase.from('notifications').update({archived_at:new Date().toISOString()}).in('id',archiveIds).eq('recipient_id',user.id)
     setItems(current=>current.filter(x=>!archiveIds.includes(x.id)))
@@ -96,7 +96,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
   </article>
  }
  if(compact){
-  const rows=items.filter(x=>!x.archived_at&&!isExpired(x)&&x.status==='open').filter(x=>context==='pt-studio'?x.category==='pt'||x.href?.startsWith('pt-'):context==='group'?x.category==='booking'||x.category==='group'||x.href?.startsWith('group-class:'):true).slice(0,4)
+  const rows=items.filter(x=>!x.archived_at&&!isExpired(x)&&x.status==='open'&&(!x.requires_ack||!x.acknowledged_at)).filter(x=>context==='pt-studio'?x.category==='pt'||x.href?.startsWith('pt-'):context==='group'?x.category==='booking'||x.category==='group'||x.href?.startsWith('group-class:'):true).slice(0,4)
   if(!rows.length)return <section className="notification-context"><div className="notification-context-head"><Bell size={16}/><strong>{context==='pt-studio'?'PT-varslingar':context==='group'?'Gruppetime-varslingar':'Varslingar'}</strong><span>0</span></div><p>Ingen oppfølging ventar her.</p></section>
   return <section className="notification-context"><div className="notification-context-head"><Bell size={16}/><strong>{context==='pt-studio'?'PT-varslingar':context==='group'?'Gruppetime-varslingar':'Varslingar'}</strong><span>{rows.length}</span></div>{rows.map(renderItem)}</section>
  }
