@@ -4862,3 +4862,16 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .live-wod-switcher>strong,.live-wod-result-actions>b{flex-basis:100%;font-size:.82rem;color:var(--muted,#8b929d)}
 .live-wod-switcher button.selected{border-color:var(--accent,#d7a84b);background:var(--surface-2,#24272d);color:var(--text,#fff)}
 .live-wod-result-actions button{flex:1 1 180px;justify-content:center;min-height:42px}
+
+
+/* Group-class result handoff */
+.group-class-results{margin-top:18px}
+.group-result-session{display:grid;gap:12px;margin-top:10px}
+.group-result-wod{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--line,#354150);border-radius:12px;background:var(--panel-2,#202c39)}
+.group-result-wod>div{display:grid;gap:4px;min-width:0}
+.group-result-wod small{color:var(--muted,#a5b2c1);font-size:12px}
+.group-result-wod button{flex:0 0 auto}
+.live-session-results .class-attendee-list{display:grid;gap:6px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line,#354150)}
+.live-session-results .class-attendee-list>b{font-size:12px;color:var(--muted,#a5b2c1)}
+.live-session-results .class-attendee-list>span{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+@media(max-width:560px){.group-result-wod{align-items:flex-start;flex-direction:column}.group-result-wod button{width:100%}.live-session-results .class-attendee-list>span{flex-direction:column;gap:2px}}
