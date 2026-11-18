@@ -123,7 +123,7 @@ Tidlegare commit `74ec360a` hadde ein mislykka byggje-/deploykøyring. Feilen va
 
 `v2/package.json` har skripta `dev`, `build`, `preview` og `check:migrations`. Det finst ikkje eit eige unit-, komponent- eller ende-til-ende-testskript i pakken. CI kontrollerer derfor syntaks/bygg og migreringsdelimiterar, ikkje komplette brukararbeidsflytar.
 
-Ingen manuell Android-, nettbrett- eller desktop-ende-til-ende-test er stadfesta i denne revisjonsøkta.\n\nDokumentasjonscommit `620212f3` har òg bestått GitHub Actions `GarasjeGym 2.0 checks` og `Deploy STURMKOPF preview`.
+Kodegjennomgang fann at treningsmotoren ikkje kontrollerte om oppdatering av `pt_wod_assignments` og `pt_program_sessions` faktisk råka ei rad. Supabase kan returnera null feil ved null oppdaterte rader. Dette er no retta i `Training.jsx`: oppdateringane returnerer ID-ar, og manglande oppdatering blir vist som delvis synkroniseringsvarsel medan sjølve treningsloggen blir bevart. Endringa er ikkje manuelt ende-til-ende-testa enno.\n\nIngen manuell Android-, nettbrett- eller desktop-ende-til-ende-test er stadfesta i denne revisjonsøkta.\n\nDokumentasjonscommit `620212f3` har òg bestått GitHub Actions `GarasjeGym 2.0 checks` og `Deploy STURMKOPF preview`.
 
 ## 7. Første prioriterte arbeidsliste
 
@@ -138,7 +138,7 @@ Ingen manuell Android-, nettbrett- eller desktop-ende-til-ende-test er stadfesta
 | AUD-07 | Middels | Revidera 45 RLS initplan-varsel og 7 doble permissive policysett | IKKJE TESTA |
 | AUD-08 | Middels | Vurdera 14 manglande FK-indeksar; ikkje sletta ubruka indeksar utan måling | IKKJE TESTA |
 | AUD-09 | Høg | Byggja automatiserte arbeidsflyttestar for WOD → trening → historikk/PR og PT/gruppetime | IKKJE TESTA |
-| AUD-10 | Høg | Manuell test på Android-telefon, nettbrett ståande/liggjande og desktop | IKKJE TESTA |\n| AUD-11 | Høg | Avgrensa UPDATE på eigne `pt_wod_assignments` til nødvendige fullføringsfelt | FEIL FUNNE – ikkje retta |\n| AUD-12 | Høg | Avgrensa medlems-UPDATE på `pt_program_sessions` slik at coach-styrte felt ikkje kan endrast av kunden | FEIL FUNNE – ikkje retta |
+| AUD-10 | Høg | Manuell test på Android-telefon, nettbrett ståande/liggjande og desktop | IKKJE TESTA |\n| AUD-11 | Høg | Avgrensa UPDATE på eigne `pt_wod_assignments` til nødvendige fullføringsfelt | FEIL FUNNE – ikkje retta |\n| AUD-12 | Høg | Avgrensa medlems-UPDATE på `pt_program_sessions` slik at coach-styrte felt ikkje kan endrast av kunden | FEIL FUNNE – ikkje retta |\n| AUD-13 | Middels | Verifisera at PT-tildeling og PT-program faktisk vart oppdatert etter lagra trening | RETTA I KODE – bygg/test ventar |
 
 ## 8. Status og avgrensingar
 
