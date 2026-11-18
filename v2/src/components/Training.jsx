@@ -244,7 +244,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   </div>
 }
 
-export default function Training({ launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, onLaunchConsumed, simpleMode = false, quickStart = false, onQuickStartConsumed, onSaved, onDiscard }) {
+export default function Training({ launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, launchProgramSessionId = null, onLaunchConsumed, simpleMode = false, quickStart = false, onQuickStartConsumed, onSaved, onDiscard }) {
   const [wods, setWods] = useState([])
   const [dailyWodId,setDailyWodId]=useState(null)
   const [exercises, setExercises] = useState([])
@@ -493,6 +493,10 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       if(launchAssignmentId){
         const {error:assignmentError}=await supabase.from('pt_wod_assignments').update({status:'completed',completed_at:new Date().toISOString(),workout_log_id:workoutId}).eq('id',launchAssignmentId).eq('member_id',user.id)
         if(assignmentError)throw assignmentError
+      }
+      if(launchProgramSessionId){
+        const {error:programError}=await supabase.from('pt_program_sessions').update({status:'completed',completed_at:new Date().toISOString(),workout_log_id:workoutId}).eq('id',launchProgramSessionId)
+        if(programError)prMessage += ' Treningsloggen er lagra, men PT-planen kunne ikkje oppdaterast: '+programError.message
       }
       // Automatically detect new heaviest logged loads and store them as PRs.
       let prMessage = ''
