@@ -168,7 +168,7 @@ export default function App() {
     return()=>{live=false}
   },[session?.user?.id,profile?.role])
   useEffect(()=>{
-    if(simpleMode&&!['oversikt','trening','timeplan','mi-side','mi-trening','mi-historikk','pr-senter','wod'].includes(active))setActive('oversikt')
+    if(simpleMode&&!['oversikt','trening','timeplan','pt-studio','mi-side','mi-trening','mi-historikk','pr-senter','wod'].includes(active))setActive('oversikt')
   },[simpleMode,active])
   useEffect(()=>{let live=true;async function loadDaily(){const {data,error}=await supabase.from('daily_wod').select('wod_id,wods(id,name,format,duration_minutes,movements,notes,timer_settings)').eq('id',true).maybeSingle();if(live&&!error)setDailyWod(data?.wods||null)}if(session?.user?.id){loadDaily();const timer=setInterval(loadDaily,60000);return()=>{live=false;clearInterval(timer)}}return()=>{live=false}},[session?.user?.id])
   useEffect(()=>{
