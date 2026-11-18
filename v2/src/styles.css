@@ -2710,3 +2710,30 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
  .wod-builder-step-1 .wod-composer .wod-format-tiles{grid-template-columns:repeat(2,minmax(0,1fr))!important}
  .wod-builder-step-1 .wod-composer .wod-name-field{grid-template-columns:minmax(0,1fr) auto!important}
 }
+
+/* WOD Studio – richer exercise library cards */
+.wod-exercise-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.wod-exercise-card{align-items:stretch;flex-direction:column;min-height:190px;padding:12px;background:linear-gradient(155deg,#202b30,#182124);border-color:#40515a;transition:border-color .15s,transform .15s}
+.wod-exercise-card:hover{border-color:#82949b;transform:translateY(-1px)}
+.wod-exercise-card.is-picked{border-color:#e9a12d;box-shadow:inset 0 0 0 1px #e9a12d55}
+.wod-exercise-info{display:grid;gap:6px;align-content:start}
+.wod-exercise-card-top{display:flex;align-items:center;gap:6px;min-height:27px}
+.wod-exercise-illustration{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:#31434b;color:#f5f4ed}
+.wod-stimulus-tag{display:inline-flex;align-items:center;width:max-content;max-width:100%;padding:3px 7px;border-radius:20px;font-size:9px;font-weight:850;white-space:nowrap}
+.stimulus-strength{background:#553c24;color:#ffc16c}
+.stimulus-conditioning{background:#263f57;color:#8dcaff}
+.stimulus-core{background:#49334e;color:#e3b1ed}
+.stimulus-mobility{background:#254b43;color:#9be3c9}
+.stimulus-rehab{background:#3e4850;color:#c4d2dc}
+.stimulus-golf{background:#344a35;color:#b9e4a9}
+.stimulus-other{background:#3b4145;color:#d5dcdf}
+.wod-picked-count{margin-left:auto;color:#a8f0bf;font-size:9px;font-weight:900}
+.wod-equipment-icons{display:flex;flex-wrap:wrap;gap:5px}
+.wod-equipment-icons span{padding:3px 6px;background:#11191d;border:1px solid #34434a;border-radius:6px;color:#c2cccf;font-size:9px}
+.wod-exercise-card .wod-add-button{width:100%;margin-top:auto;min-height:34px}
+.wod-selected-title{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.wod-selected-list>article{border-left:3px solid var(--orange)}
+.wod-selected-list>article .wod-order{flex:0 0 27px}
+.wod-selected-info{min-width:0;flex:1}
+@media(max-width:1100px){.wod-exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.wod-exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wod-exercise-card{min-height:185px;padding:9px}.wod-exercise-card .wod-add-button{font-size:10px;padding:0 5px}}
