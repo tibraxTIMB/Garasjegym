@@ -2974,3 +2974,42 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
   box-shadow:none!important;
  }
 }
+
+
+/* STURMKOPF – consistent full-card tint by training category */
+.wod-builder-step-2 .wod-exercise-card.wod-category-strength{
+ background:linear-gradient(135deg,rgba(213,138,50,.20),rgba(35,29,22,.94))!important;
+ border:0!important;box-shadow:inset 3px 0 rgba(213,138,50,.78)!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-conditioning{
+ background:linear-gradient(135deg,rgba(75,155,203,.22),rgba(19,34,46,.96))!important;
+ border:0!important;box-shadow:inset 3px 0 rgba(75,155,203,.8)!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-mobility{
+ background:linear-gradient(135deg,rgba(67,169,154,.20),rgba(20,42,39,.96))!important;
+ border:0!important;box-shadow:inset 3px 0 rgba(67,169,154,.8)!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-core{
+ background:linear-gradient(135deg,rgba(154,128,201,.22),rgba(39,31,53,.96))!important;
+ border:0!important;box-shadow:inset 3px 0 rgba(154,128,201,.8)!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-rehab{
+ background:linear-gradient(135deg,rgba(114,166,110,.20),rgba(29,43,31,.96))!important;
+ border:0!important;box-shadow:inset 3px 0 rgba(114,166,110,.8)!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-golf{
+ background:linear-gradient(135deg,rgba(67,169,154,.15),rgba(20,38,35,.96))!important;
+ border:0!important;box-shadow:inset 3px 0 rgba(67,169,154,.65)!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-other{
+ background:linear-gradient(135deg,rgba(137,150,155,.16),rgba(31,39,42,.96))!important;
+ border:0!important;box-shadow:inset 3px 0 rgba(137,150,155,.65)!important;
+}
+.wod-builder-step-2 .wod-exercise-card .wod-stimulus-tag{
+ border:0!important;border-radius:999px!important;padding:4px 9px!important;
+ background:rgba(0,0,0,.25)!important;color:#f4f1e9!important;
+ font-weight:800!important;
+}
+.wod-builder-step-2 .wod-exercise-card.is-picked{
+ outline:1px solid rgba(233,161,45,.55)!important;
+}
