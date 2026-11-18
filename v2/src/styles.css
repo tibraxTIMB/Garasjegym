@@ -2762,3 +2762,33 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 @media(max-width:1200px){.wod-exercise-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:850px){.wod-filter-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}.wod-exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.wod-filter-toolbar{grid-template-columns:1fr 1fr}.wod-filter-toolbar>button{padding:8px}.wod-filter-toolbar>button b{font-size:9px}.wod-exercise-card{min-height:155px;padding:8px}}
+
+/* WOD Studio Module 2 · compact selected exercise panel */
+.wod-builder-step-2 .wod-selected-list{display:flex!important;flex-direction:column!important;gap:7px!important}
+.wod-builder-step-2 .wod-selected-card{display:flex!important;align-items:center!important;gap:9px!important;padding:9px 10px!important;min-width:0!important;border:1px solid #40545a!important;border-radius:11px!important;background:linear-gradient(145deg,#17272c,#111d21)!important}
+.wod-builder-step-2 .wod-selected-card.is-dragging{opacity:.48;border-style:dashed!important}
+.wod-builder-step-2 .wod-selected-card>.wod-order{flex:0 0 31px!important;width:31px!important;height:31px!important;display:grid!important;place-items:center!important;border:1px solid #62757b!important;border-radius:50%!important;background:#152126!important;font-size:13px!important;font-weight:850!important}
+.wod-builder-step-2 .wod-selected-info{display:flex!important;flex:1 1 auto!important;min-width:0!important;flex-direction:column!important;gap:4px!important}
+.wod-builder-step-2 .wod-selected-title{display:flex!important;align-items:center!important;gap:7px!important;min-width:0!important;flex-wrap:wrap!important}
+.wod-builder-step-2 .wod-selected-title strong{font-size:13px!important;line-height:1.25!important}
+.wod-builder-step-2 .wod-selected-info>small{font-size:10px!important;line-height:1.3!important;color:#c2cecf!important}
+.wod-builder-step-2 .wod-selected-info>.wod-load-summary{font-size:10px!important;color:#eef3f2!important}
+.wod-builder-step-2 .wod-selected-actions{display:flex!important;align-items:center!important;gap:4px!important;flex:0 0 auto!important}
+.wod-builder-step-2 .wod-selected-actions button{display:grid!important;place-items:center!important;width:29px!important;height:29px!important;min-width:29px!important;padding:0!important;border:1px solid #52666c!important;border-radius:8px!important;background:#17262b!important;color:#edf3f3!important}
+.wod-builder-step-2 .wod-selected-actions button:disabled{opacity:.28!important}
+.wod-builder-step-2 .wod-selected-actions button.active{border-color:#f0a32a!important;color:#f0a32a!important;background:#302719!important}
+.wod-builder-step-2 .wod-selected-actions .wod-drag-handle{cursor:grab!important;touch-action:none!important}
+.wod-builder-step-2 .wod-selected-actions .wod-drag-handle:active{cursor:grabbing!important}
+.wod-builder-step-2 .wod-selected-editor{width:100%!important;display:grid!important;gap:10px!important;padding:12px!important;margin-top:8px!important;border:1px solid #465d63!important;border-radius:10px!important;background:#101c20!important}
+.wod-builder-step-2 .wod-selected-editor .wod-dose-grid,
+.wod-builder-step-2 .wod-selected-editor .wod-set-editor,
+.wod-builder-step-2 .wod-selected-editor .wod-item-prescription{margin:0!important}
+.wod-builder-step-2 .wod-selected-editor .wod-coach-note{display:grid!important;gap:5px!important}
+.wod-builder-step-2 .wod-selected-editor input,
+.wod-builder-step-2 .wod-selected-editor select{min-width:0!important}
+@media(max-width:760px){
+ .wod-builder-step-2 .wod-selected-card{align-items:flex-start!important;flex-wrap:wrap!important}
+ .wod-builder-step-2 .wod-selected-info{flex:1 1 calc(100% - 50px)!important}
+ .wod-builder-step-2 .wod-selected-actions{width:100%!important;justify-content:flex-end!important}
+ .wod-builder-step-2 .wod-selected-actions button{width:34px!important;height:34px!important}
+}
