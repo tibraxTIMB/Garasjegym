@@ -4120,3 +4120,18 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
     background:#8c3d08!important;
   }
 }
+
+
+@media(max-width:760px){
+ .wod-builder-step-2.wod-library-open .wod-library-fullscreen-head{
+   display:flex!important;justify-content:flex-end!important;align-items:center!important;
+   position:sticky!important;top:0!important;z-index:5!important;
+   min-height:42px!important;margin:0 0 8px!important;
+   background:#030b0f!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-library-fullscreen-head button{
+   display:grid!important;place-items:center!important;width:40px!important;height:40px!important;
+   border:1px solid rgba(116,143,153,.45)!important;border-radius:10px!important;
+   color:#f3f5f5!important;background:#132127!important;
+ }
+}
