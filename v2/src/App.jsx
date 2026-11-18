@@ -136,7 +136,7 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
           </button>
           {mode === 'login' && <button type="button" onClick={() => { setMode('reset'); setError(''); setMessage('') }}>Gløymt passord?</button>}
         </div>
-        <p className="auth-footnote">Nye kontoar får medlemsrolla automatisk. Tilgang til adminfunksjonar blir styrt av GarasjeGym.</p>
+        <p className="auth-footnote">Nye kontoar må godkjennast av ein administrator før medlemsområdet blir tilgjengeleg.</p>
       </div>
     </main>
   )
