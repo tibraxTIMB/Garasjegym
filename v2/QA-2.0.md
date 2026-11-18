@@ -48,7 +48,7 @@ Dette dokumentet er ein testplan, ikkje dokumentasjon på at testane er køyrde.
 | BOOK-08 | Deltakar lagrar resultat frå live-økt | Resultatet blir knytt til rett live-økt etter migrering 008 |
 | BOOK-09 | Køyr migrering 004 i isolert testdatabase med doble aktive påmeldingar | Migreringa stoppar med tydeleg feil utan å sletta eller endra eksisterande rader |
 | BOOK-10 | To samtidige påmeldingar konkurrerer om siste plass | Triggeren låser gruppetimen og slepper gjennom høgst éi aktiv påmelding |
-| BOOK-11 | Kontroller SQL-syntaks i migrering 004 | `DO`-blokka for duplikatkontroll blir køyrd utan syntaksfeil |
+| BOOK-11 | Kontroller SQL-syntaks i migrering 004 | `DO`-blokka for duplikatkontroll blir køyrd utan syntaksfeil |\n| BOOK-12 | Instruktør avsluttar gruppetime | Varsel blir oppretta éin gong per stadfesta deltakar |\n| BOOK-13 | Medlem opnar varsling frå Mi side | Alle publiserte WOD-ar frå timen blir viste |\n| BOOK-14 | Oppvarming-WOD | Medlem kan markera gjennomført utan å leggja inn score |\n| BOOK-15 | Hovud-WOD | Medlem blir sendt direkte til treningsmotoren og må lagra resultat |\n| BOOK-16 | Instruktør ser deltakarstatus | Viser kor mange WOD-ar kvar deltakar har registrert |\n| BOOK-17 | Publiser same gruppetime på nytt | Ingen doble varsel blir oppretta |
 
 ## 5. PT-studio
 
@@ -157,3 +157,4 @@ Teststatus: Desse testane er lagde til som krav for manuell/ende-til-ende-kontro
 | Strength / Pyramid / Superset / Complex / Eigen økt | Medgått tid | Ingen kunstig tidsgrense |
 
 Manuell test må framleis kontrollera synleg klokke, lydsignal, pause/start, nullstilling og bakgrunnsmodus på mobil. Byggbestått er ikkje det same som fysisk ende-til-ende-test.
+\n\n## 12. Gruppetime-resultat og varsling – 18.11.2026\n- Migrering 015 er installert i `garasjegym-2-test`; kolonnane `wods.category` og `class_live_sessions.results_published_at`, fullføringstabellen og publiseringsfunksjonen er verifiserte.\n- RLS-tabellrettar og EXECUTE-rett for autentiserte brukarar er verifiserte.\n- Security Advisor køyrd; nye funksjonar frå migrering 015 er ikkje rapporterte som SECURITY DEFINER-funn. Eksisterande åtvaringar i andre funksjonar står att.\n- Ende-til-ende-testing med faktiske admin-/medlemskontoar er ikkje utført. Testscenario BOOK-12–BOOK-17 må køyrast manuelt før funksjonen kan reknast som ferdig testa.\n
