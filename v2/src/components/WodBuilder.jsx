@@ -132,11 +132,11 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  async function loadWodForEdit(id){
   if(!id)return
   setLoading(true);setError('')
-  const {data:w,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,is_published,timer_settings').eq('id',id).single()
+  const {data:w,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,is_published,timer_settings,category').eq('id',id).single()
   if(e){setError('Kunne ikkje opna WOD for redigering: '+e.message);setLoading(false);return}
   const schema=w.timer_settings?.workout_schema||{}
   const items=schema.items||[]
-  setEditingWodId(w.id);setName(w.name);const legacyFormat=w.format||'AMRAP';setFormat(/^E[1-7]MOM$/.test(legacyFormat)?'EMOM':legacyFormat==='Triplet'?'Couplet':legacyFormat==='Death By'?'Ladder':legacyFormat==='Pyramid'?'Strength':['Tabata','Row Intervals'].includes(legacyFormat)?'Intervall':legacyFormat);setEmomMinutes(String(schema.interval?.work_every_minutes||(/^E([1-7])MOM$/.test(legacyFormat)?legacyFormat.match(/^E([1-7])MOM$/)[1]:'1')));setComboExerciseCount(legacyFormat==='Triplet'?'3':'2');setProgressionType(legacyFormat==='Death By'?'Death By':'Ladder');setComplexLoad(String(schema.complex?.load_kg??''));setComplexRounds(String(schema.complex?.rounds??schema.rounds??5));setComplexRest(String(schema.complex?.rest_seconds??90));setPublishToMembers(!!w.is_published);setLibraryCategory(schema.library_category||'standard')
+  setEditingWodId(w.id);setName(w.name);const legacyFormat=w.format||'AMRAP';setFormat(/^E[1-7]MOM$/.test(legacyFormat)?'EMOM':legacyFormat==='Triplet'?'Couplet':legacyFormat==='Death By'?'Ladder':legacyFormat==='Pyramid'?'Strength':['Tabata','Row Intervals'].includes(legacyFormat)?'Intervall':legacyFormat);setEmomMinutes(String(schema.interval?.work_every_minutes||(/^E([1-7])MOM$/.test(legacyFormat)?legacyFormat.match(/^E([1-7])MOM$/)[1]:'1')));setComboExerciseCount(legacyFormat==='Triplet'?'3':'2');setProgressionType(legacyFormat==='Death By'?'Death By':'Ladder');setComplexLoad(String(schema.complex?.load_kg??''));setComplexRounds(String(schema.complex?.rounds??schema.rounds??5));setComplexRest(String(schema.complex?.rest_seconds??90));setPublishToMembers(!!w.is_published);setLibraryCategory(w.category==='warmup'?'warmup':schema.library_category||'standard')
   setMinutes(String(schema.duration_seconds?Math.floor(schema.duration_seconds/60):w.duration_minutes||20));setDurationSeconds(String(schema.duration_seconds?schema.duration_seconds%60:0))
   setNotes(schema.coach_notes||w.notes||'');setStimulus(schema.stimulus||'Jamn intensitet · teknisk kvalitet · kontrollert tempo')
   setIntensity(String(schema.intensity||2));setPrescription(schema.prescription||'rx');setCustomInstructions(schema.custom_instructions||'');setRxNotes(schema.rx_notes||'');setScaledNotes(schema.scaled_notes||'');setWizardStep(1)
@@ -293,7 +293,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    const stationDuration=isStationCircuit?(stationSlots*Number(stationWork)+(stationSlots-1)*Number(stationTransition)):schema.duration_seconds
    schema.duration_seconds=stationDuration
    const timer_settings={workout_schema:schema,work_seconds:isStationCircuit?Number(stationWork):Number(workSeconds)||null,rest_seconds:isStationCircuit?Number(stationTransition):Number(restSeconds)||null,rounds:isStationCircuit?Number(stationRounds):Number(rounds)||null,duration_seconds:stationDuration}
-   const wodPayload={name:name.trim(),format:savedFormat,duration_minutes:Math.ceil(stationDuration/60)||null,movements,notes:[stimulus,notes,rxNotes?'RX: '+rxNotes:'',scaledNotes?'Scaled: '+scaledNotes:'',customInstructions].filter(Boolean).join('\n\n'),is_published:publishToMembers,timer_settings}
+   const wodPayload={name:name.trim(),category:libraryCategory==='warmup'?'warmup':'main',format:savedFormat,duration_minutes:Math.ceil(stationDuration/60)||null,movements,notes:[stimulus,notes,rxNotes?'RX: '+rxNotes:'',scaledNotes?'Scaled: '+scaledNotes:'',customInstructions].filter(Boolean).join('\n\n'),is_published:publishToMembers,timer_settings}
    if(!editingWodId)wodPayload.created_by=user.id
    const wodRequest=editingWodId?supabase.from('wods').update(wodPayload).eq('id',editingWodId).select('id').single():supabase.from('wods').insert(wodPayload).select('id').single()
    const {data:savedWod,error:e}=await wodRequest
