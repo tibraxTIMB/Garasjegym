@@ -366,6 +366,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
        <button type="button" className="wizard-dose-card-head" onClick={()=>setEditingSelectedKey(current=>current===ex.key?null:ex.key)}><span className="wod-order">{i+1}</span><strong>{ex.name}</strong><span className="wizard-dose-card-summary">{summary('rx')}</span><span>{editingSelectedKey===ex.key?'⌃':'⌄'}</span></button>
        {editingSelectedKey===ex.key&&<div className="wizard-dose-card-body">
         <div className="wizard-dose-level-tabs">{[{id:'rx',label:'RX'},{id:'scaled',label:'Scaled'},{id:'foundation',label:'Foundation'}].map(x=><button type="button" key={x.id} className={level===x.id?'active':''} onClick={()=>setDoseLevelByKey(v=>({...v,[ex.key]:x.id}))}>{x.label}</button>)}</div>
+        {ex.prescription&&doseFieldsFor(ex).load&&<div className="wizard-dose-suggestion"><strong>Førehandsforslag · kg</strong>{level==='rx'?<span>Menn: {ex.prescription.rx_m??'–'} kg · Kvinner: {ex.prescription.rx_f??'–'} kg</span>:level==='scaled'?<span>Menn: {ex.prescription.scaled_m??'–'} kg · Kvinner: {ex.prescription.scaled_f??'–'} kg</span>:<span>Ingen standardforslag for Foundation. Set individuelt.</span>}<small>Rettleiande forslag – vurder nivå, teknikk og dagsform før bruk.</small></div>}
         <div className="wizard-dose-fields">
           <label>Sett (valfritt)<input type="text" value={dose.sets??''} onChange={e=>update({sets:e.target.value})} placeholder="T.d. 3"/></label>
           <label>Reps / mengd<input type="text" value={dose.reps??''} onChange={e=>update({reps:e.target.value})} placeholder="T.d. 10"/></label>
@@ -376,6 +377,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
           {doseFieldsFor(ex).load&&<label>Belastningsmetode<select value={dose.loadMode||'none'} onChange={e=>update({loadMode:e.target.value})}><option value="none">Ikkje oppgitt</option><option value="kg">Fast vekt (kg)</option><option value="percent">% av 1RM</option><option value="bodyweight">Kroppsvekt</option></select></label>}
           {dose.loadMode==='kg'&&doseFieldsFor(ex).load&&<label>Belastning (kg)<input type="number" min="0" step="0.5" value={dose.loadKg||''} onChange={e=>update({loadKg:e.target.value})}/></label>}
           {dose.loadMode==='percent'&&doseFieldsFor(ex).load&&<label>Prosent av 1RM (%)<input type="number" min="1" max="150" value={dose.percent1rm||''} onChange={e=>update({percent1rm:e.target.value})}/></label>}
+          {(doseFieldsFor(ex).load||/styrke|functional fitness|gymnastikk/i.test(ex.category||''))&&<label>RIR · repetisjonar i reserve<input type="number" min="0" max="10" step="0.5" value={dose.rir??''} onChange={e=>update({rir:e.target.value})} placeholder="T.d. 2"/></label>}
           
           {doseFieldsFor(ex).tempo&&<label>Tempo<input type="text" value={dose.tempo||''} onChange={e=>update({tempo:e.target.value})} placeholder="T.d. 3–1–1–0"/></label>}
           <label>Alternativ øving / variant<input type="text" value={dose.variant||''} onChange={e=>update({variant:e.target.value})} placeholder="Valfri skalering av rørsla"/></label>
