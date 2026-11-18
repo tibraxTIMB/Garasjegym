@@ -4589,3 +4589,83 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
   .wod-builder-step-3 .wizard-dose-fields select{min-height:34px!important;padding:5px 8px!important}
   .wod-builder-step-3 .wizard-stage-actions{padding:6px!important}
 }
+
+
+/* STURMKOPF hotfix: step 3 was inheriting the old two-column WOD builder grid.
+   Make the entire step a single full-width canvas before laying out its cards. */
+.wod-hub:has(.wod-builder-step-3),
+.wod-hub:has(.wod-builder-step-3)>.wod-builder-step-3{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+}
+.wod-builder.wod-builder-step-3{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-auto-flow:row!important;
+  align-items:stretch!important;
+  justify-items:stretch!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  position:static!important;
+  left:auto!important;
+  transform:none!important;
+  margin:0!important;
+  padding:clamp(10px,1.2vw,18px)!important;
+}
+.wod-builder.wod-builder-step-3>*{
+  grid-column:1/-1!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+}
+.wod-builder-step-3 .wod-builder-layout{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+}
+.wod-builder-step-3 .wod-builder-layout>.wod-composer{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin:0!important;
+  position:static!important;
+  inset:auto!important;
+  grid-column:1/-1!important;
+  grid-row:auto!important;
+  overflow:visible!important;
+}
+.wod-builder-step-3 .wod-composer>.engine-section-title,
+.wod-builder-step-3 .wod-composer>.admin-create-form{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+}
+.wod-builder-step-3 .wizard-dose-stage{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  align-self:stretch!important;
+}
+.wod-builder-step-3 .wizard-dose-exercises{
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  align-items:start!important;
+}
+@media(max-width:1000px){
+  .wod-builder-step-3 .wizard-dose-exercises{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:620px){
+  .wod-builder-step-3 .wizard-dose-exercises{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+}
