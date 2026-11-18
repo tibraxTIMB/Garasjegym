@@ -158,3 +158,29 @@ Teststatus: Desse testane er lagde til som krav for manuell/ende-til-ende-kontro
 
 Manuell test må framleis kontrollera synleg klokke, lydsignal, pause/start, nullstilling og bakgrunnsmodus på mobil. Byggbestått er ikkje det same som fysisk ende-til-ende-test.
 \n\n## 12. Gruppetime-resultat og varsling – 18.11.2026\n- Migrering 015 er installert i `garasjegym-2-test`; kolonnane `wods.category` og `class_live_sessions.results_published_at`, fullføringstabellen og publiseringsfunksjonen er verifiserte.\n- RLS-tabellrettar og EXECUTE-rett for autentiserte brukarar er verifiserte.\n- Security Advisor køyrd; nye funksjonar frå migrering 015 er ikkje rapporterte som SECURITY DEFINER-funn. Eksisterande åtvaringar i andre funksjonar står att.\n- Ende-til-ende-testing med faktiske admin-/medlemskontoar er ikkje utført. Testscenario BOOK-12–BOOK-17 må køyrast manuelt før funksjonen kan reknast som ferdig testa.\n
+
+## 13. Timer-kvalitetssjekk – utvida formatmatrise
+| Format | Klokke og stopp | Teljar / fase | Øvingar og informasjon |
+|---|---|---|---|
+| E1–E7MOM | Tel ned til neste start; stoppar ved planlagd øktlengd | Neste arbeidsstart og samla tid att | Viser WOD-plan og neste øving |
+| AMRAP | Tel ned frå tidsgrense til null | Manuell runderegistrering og ekstra reps | Viser alle øvingar og dosering |
+| Nedteljing | Tel ned frå tidsgrense | Medgått tid og attståande tid | Viser heile øvingsrekkja |
+| For Time / Chipper | Tel opp; eventuell tidsgrense stoppar klokka | Mellomtider | Viser heile øvingsrekkja og neste valde øving |
+| Couplet / Triplet | Arvar AMRAP-, For Time- eller open stoppeklokkelogikk | Rundar ved AMRAP | Viser alle øvingar og dosering |
+| Tabata | Arbeid/kvile og automatisk stopp etter alle drag | Drag/runde og total att | Viser øving og neste drag |
+| Intervall / Tilpassa / Row Intervals | Arbeid/kvile per øving og automatisk slutt | Runde, drag og total att | Viser noverande og neste øving |
+| Stasjonssirkel | Arbeid/byte per stasjon; stoppar etter siste arbeidsperiode | Runde, arbeid/byte og total att | Viser alle stasjonar samtidig; ingen felles gjeldande øving |
+| Death By | Tel opp, viser tid til neste minutt; eventuell tidsgrense | Minutt/rep-progresjon | Viser plan og repetisjonsmål |
+| Ladder | Tel opp; eventuell tidsgrense | Ladder-runde og progresjon | Viser øvingsrekkja og dosering |
+| Strength / Pyramid / Superset / Complex | Stoppeklokke, eventuell tidsgrense frå WOD | Sett og rundar blir registrerte i resultatdelen | Viser øvingar, sett og dosering |
+| Eigen økt / Fri trening / Stoppeklokke | Stoppeklokke utan kunstig tidsgrense | Mellomtider | Viser øvingsrekkja |
+
+### Nye kontrollpunkt
+- TIMER-13: Fullskjerm blir forsøkt opna direkte ved val av WOD/start økt; nettlesar kan avvisa fullskjerm og då skal timeren framleis fungera.
+- TIMER-14: «Fullfør økta» er deaktivert fram til timeren faktisk er starta.
+- TIMER-15: Fullskjerm viser timeren som hovudinnhald og skjuler redigerings-/bibliotekspanel.
+- TIMER-16: Alle ikkje-stasjonsformat viser øvingsrekkje og dosering; intervall viser neste drag/øving.
+- TIMER-17: Stasjonssirkel viser alle stasjonar, runde, arbeid og byte utan å velja éi øving som felles aktiv øving.
+- TIMER-18: Pause, nullstilling og gjenstart skal oppdatera fasestatus og fullføringsknapp korrekt.
+
+Status: Kodekontroll og produksjonsbygg kan kontrollera syntaks/kompilering, men fysisk fullskjerm, lyd, bakgrunnsmodus og alle format må framleis testast på PC og Android-nettbrett.
