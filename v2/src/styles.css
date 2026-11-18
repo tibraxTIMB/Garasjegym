@@ -4374,3 +4374,34 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
  .wizard-dose-summary-card ul{display:grid;grid-template-columns:1fr 1fr;gap:6px}
  .wizard-stage-actions{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:30;padding:10px;background:rgba(3,10,14,.97);border:1px solid #425159;border-radius:14px;box-shadow:0 -6px 20px rgba(0,0,0,.4)}
 }
+
+
+/* STURMKOPF – step 3 must use the full mobile content width */
+.wod-builder-step-3,
+.wod-builder-step-3 .wod-builder-layout,
+.wod-builder-step-3 .wod-builder-layout>.wod-composer,
+.wod-builder-step-3 .wod-composer .admin-create-form,
+.wod-builder-step-3 .wod-composer .wizard-dose-stage{
+ width:100%!important;max-width:none!important;min-width:0!important;box-sizing:border-box!important
+}
+.wod-builder-step-3 .wod-composer{margin-inline:0!important}
+.wod-builder-step-3 .wod-composer .wizard-dose-stage{display:flex!important;flex-direction:column!important;align-items:stretch!important}
+.wod-builder-step-3 .wizard-dose-intro{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;flex-wrap:wrap!important;gap:8px 14px!important;width:100%!important}
+.wod-builder-step-3 .wizard-dose-intro>div{flex:1 1 220px!important;min-width:0!important}
+.wod-builder-step-3 .wizard-dose-intro h2{max-width:none!important;width:100%!important}
+.wod-builder-step-3 .wizard-dose-count{flex:0 0 auto!important}
+.wod-builder-step-3 .wizard-dose-exercises,
+.wod-builder-step-3 .wizard-dose-card,
+.wod-builder-step-3 .wizard-dose-method,
+.wod-builder-step-3 .wizard-dose-summary{width:100%!important;max-width:none!important;min-width:0!important;box-sizing:border-box!important}
+@media(max-width:760px){
+ .wod-builder-step-3{width:100%!important;padding-inline:0!important}
+ .wod-builder-step-3 .wod-builder-layout{padding:0!important;margin:0!important}
+ .wod-builder-step-3 .wod-builder-layout>.wod-composer{padding:12px!important;border-radius:14px!important}
+ .wod-builder-step-3 .wizard-dose-intro{align-items:flex-start!important}
+ .wod-builder-step-3 .wizard-dose-intro>div{flex-basis:100%!important}
+ .wod-builder-step-3 .wizard-dose-intro h2{font-size:clamp(24px,7vw,32px)!important;line-height:1.12!important}
+ .wod-builder-step-3 .wizard-dose-count{align-self:flex-start!important}
+ .wod-builder-step-3 .wizard-dose-card-head{width:100%!important}
+ .wod-builder-step-3 .wizard-dose-fields{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
