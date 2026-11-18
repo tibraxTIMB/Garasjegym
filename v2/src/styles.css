@@ -3366,3 +3366,32 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
   min-height:54px!important;
  }
 }
+
+
+/* WOD exercise cards: flat, category-coded surfaces */
+.wod-builder-step-2 .wod-exercise-card.wod-category-conditioning{
+ background:#49371e!important;background-image:none!important;color:#fff3df!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-core{
+ background:#382b49!important;background-image:none!important;color:#f3eaff!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-strength{
+ background:#24394d!important;background-image:none!important;color:#edf5ff!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-mobility{
+ background:#1e403b!important;background-image:none!important;color:#e7fff8!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-rehab{
+ background:#472b32!important;background-image:none!important;color:#ffedf0!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-other,
+.wod-builder-step-2 .wod-exercise-card.wod-category-golf{
+ background:#303a3d!important;background-image:none!important;color:#f0f4f3!important;
+}
+.wod-builder-step-2 .wod-exercise-card .wod-exercise-info>small,
+.wod-builder-step-2 .wod-exercise-card .wod-exercise-info>p{
+ color:rgba(245,249,248,.78)!important;
+}
+.wod-builder-step-2 .wod-exercise-card .wod-exercise-card-top .wod-stimulus-tag{
+ color:inherit!important;
+}
