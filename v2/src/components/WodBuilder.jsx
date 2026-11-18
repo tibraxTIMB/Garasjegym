@@ -158,7 +158,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  async function loadWods(){const {data,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,created_at,is_published').order('created_at',{ascending:false});if(e)setError(e.message);else setLibraryWods(data||[])}
  async function load(){
   setLoading(true)
-  const {data,error:e}=await supabase.from('exercises').select('id,name,category,equipment,video_url,body_area,description,is_rehab').eq('is_active',true).order('name')
+  const {data,error:e}=await supabase.from('exercises').select('id,name,category,equipment,video_url,body_area,description,is_rehab,prescription_profiles').eq('is_active',true).order('name')
   if(e)setError(e.message);else setExercises(data||[])
   setLoading(false)
  }
