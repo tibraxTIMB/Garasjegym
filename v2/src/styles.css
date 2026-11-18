@@ -3646,3 +3646,16 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
   }
   .wizard-selected-stage{padding-bottom:calc(120px + env(safe-area-inset-bottom, 0px))!important}
 }
+
+
+/* Exercise card: selected state offers an obvious remove action */
+.wod-builder-step-2 .wod-exercise-card.is-picked .wod-add-button,
+.wod-exercise-card.is-picked .wod-add-button{
+  background:#6b3028!important;
+  border-color:#bd6657!important;
+  color:#fff!important;
+}
+.wod-builder-step-2 .wod-exercise-card.is-picked .wod-add-button:hover,
+.wod-exercise-card.is-picked .wod-add-button:hover{
+  background:#8a3b30!important;
+}
