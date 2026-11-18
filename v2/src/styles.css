@@ -4915,3 +4915,8 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 :fullscreen .timer-dashboard { width:100%; max-width:1600px; }
 :fullscreen .timer-main-clock { font-size:clamp(100px, var(--timer-clock-size), 24vw); }
 @media(max-width:650px) { :fullscreen .timer-main-clock { font-size:min(23vw,var(--timer-clock-size)); } }
+
+.timer-amrap-exercise-list ol { max-height:32vh; overflow:auto; }
+.timer-amrap-exercise-list li { align-items:flex-start; }
+.timer-amrap-exercise-list li span { display:grid; gap:3px; }
+.timer-amrap-exercise-list li small { color:var(--muted); font-size:11px; }
