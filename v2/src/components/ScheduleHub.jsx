@@ -15,6 +15,6 @@ export default function ScheduleHub({profile,onLogResult,onLaunchWorkout,focusRe
    <button type="button" role="tab" aria-selected={tab==='pt'} className={tab==='pt'?'selected':''} onClick={()=>changeTab('pt')}><UserRound size={16}/> PT-studio</button>
    {isStaff(profile)&&<button type="button" role="tab" aria-selected={tab==='calendar'} className={tab==='calendar'?'selected':''} onClick={()=>changeTab('calendar')}><CalendarDays size={16}/> Kalender</button>}
   </div>
-  {tab==='booking'?<Booking profile={profile} onLogResult={onLogResult}/>:tab==='pt'?<PT profile={profile} focusRequestId={focusRequestId} onFocusConsumed={onFocusConsumed} onLaunchWorkout={onLaunchWorkout}/>:<CalendarAdmin onNavigate={target=>changeTab(target==='pt'?'pt':'booking')}/>}
+  {tab==='booking'?<Booking profile={profile} onLogResult={onLogResult} initialClassId={initialClassId}/>:tab==='pt'?<PT profile={profile} focusRequestId={focusRequestId} onFocusConsumed={onFocusConsumed} onLaunchWorkout={onLaunchWorkout}/>:<CalendarAdmin onNavigate={target=>changeTab(target==='pt'?'pt':'booking')}/>}
  </div>
 }
