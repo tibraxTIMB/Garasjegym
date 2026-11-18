@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react'
+import React,{useEffect,useState} from 'react'
 import {CheckCircle2,LoaderCircle,Plus,ShieldCheck,Users,Trophy,Dumbbell,Coffee,Medal,Search,CalendarDays,ChevronDown,ChevronUp,Filter} from 'lucide-react'
 import {rankForCount,RANK_TITLES} from './Overview.jsx'
 import {supabase} from '../lib/supabase.js'
@@ -9,7 +9,7 @@ export default function Admin({profile}){
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [newUserName,setNewUserName]=useState(''),[newUserEmail,setNewUserEmail]=useState(''),[newUserPassword,setNewUserPassword]=useState(''),[createdUser,setCreatedUser]=useState(null)
  const [wodName,setWodName]=useState(''),[wodFormat,setWodFormat]=useState('AMRAP'),[wodMinutes,setWodMinutes]=useState('20'),[wodMoves,setWodMoves]=useState(''),[wodNotes,setWodNotes]=useState(''),[wodWork,setWodWork]=useState('60'),[wodRest,setWodRest]=useState('0'),[wodRounds,setWodRounds]=useState('5'),[editingWod,setEditingWod]=useState(null)
- const [exerciseName,setExerciseName]=useState(''),[category,setCategory]=useState('Styrke'),[equipment,setEquipment]=useState(''),[videoUrl,setVideoUrl]=useState(''),[bodyArea,setBodyArea]=useState('Fullkropp'),[exerciseDescription,setExerciseDescription]=useState(''),[editingExercise,setEditingExercise]=useState(null),[showExerciseForm,setShowExerciseForm]=useState(false),[exerciseSearch,setExerciseSearch]=useState(''),[exerciseFilter,setExerciseFilter]=useState('all')
+ const [exerciseName,setExerciseName]=useState(''),[category,setCategory]=useState('Styrke'),[equipment,setEquipment]=useState(''),[videoUrl,setVideoUrl]=useState(''),[bodyArea,setBodyArea]=useState('Fullkropp'),[exerciseDescription,setExerciseDescription]=useState(''),[variantLabel,setVariantLabel]=useState(''),[doseDefaults,setDoseDefaults]=useState({rx:{men_kg:'',women_kg:''},scaled:{men_kg:'',women_kg:''},foundation:{men_kg:'',women_kg:''}}),[editingExercise,setEditingExercise]=useState(null),[showExerciseForm,setShowExerciseForm]=useState(false),[exerciseSearch,setExerciseSearch]=useState(''),[exerciseFilter,setExerciseFilter]=useState('all')
  const [wodExerciseSearch,setWodExerciseSearch]=useState(''),[wodSelectedExercises,setWodSelectedExercises]=useState([]),[customWodExercise,setCustomWodExercise]=useState('')
  const [memberSearch,setMemberSearch]=useState(''),[memberFilter,setMemberFilter]=useState('all'),[editingMemberId,setEditingMemberId]=useState(''),[memberNameDraft,setMemberNameDraft]=useState(''),[rankSearch,setRankSearch]=useState(''),[rankCatalogueOpen,setRankCatalogueOpen]=useState(false)
  const filteredMembers=members.filter(m=>{const q=memberSearch.trim().toLowerCase();const matches=!q||(m.display_name||'').toLowerCase().includes(q)||m.role.toLowerCase().includes(q);return matches&&(memberFilter==='all'||(memberFilter==='active'?m.active:!m.active))})
@@ -19,7 +19,7 @@ export default function Admin({profile}){
   if(!silent)setLoading(true);setError('')
   const [m,e,logs]=await Promise.all([
    supabase.from('profiles').select('id,display_name,role,active,created_at').order('created_at',{ascending:false}),
-   supabase.from('exercises').select('id,name,category,equipment,video_url,body_area,description,is_active').order('name'),
+   supabase.from('exercises').select('id,name,category,equipment,video_url,body_area,description,is_active,prescription_profiles').order('name'),
    supabase.from('workout_logs').select('member_id')
   ])
   let w=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,is_published').order('created_at',{ascending:false})
@@ -70,10 +70,10 @@ export default function Admin({profile}){
   event.preventDefault();setBusy('exercise');setError('')
   try{
    const {data:{user}}=await supabase.auth.getUser()
-   const values={name:exerciseName.trim(),category,equipment,video_url:videoUrl.trim()||null,body_area:bodyArea,description:exerciseDescription.trim()}
+   const values={name:exerciseName.trim(),category,equipment,video_url:videoUrl.trim()||null,body_area:bodyArea,description:exerciseDescription.trim(),prescription_profiles:{version:1,variant_label:variantLabel.trim()||equipment.trim()||'Standardvariant',levels:Object.fromEntries(Object.entries(doseDefaults).map(([level,v])=>[level,{men_kg:v.men_kg===''?null:Number(v.men_kg),women_kg:v.women_kg===''?null:Number(v.women_kg)}]))}}
    const result=editingExercise?await supabase.from('exercises').update(values).eq('id',editingExercise.id):await supabase.from('exercises').insert({...values,created_by:user.id})
    if(result.error)throw result.error
-   setExerciseName('');setEquipment('');setVideoUrl('');setBodyArea('Fullkropp');setExerciseDescription('');setEditingExercise(null);setShowExerciseForm(false);setNotice(editingExercise?'Øving oppdatert.':'Øving lagra i biblioteket.');await load()
+   setExerciseName('');setEquipment('');setVideoUrl('');setBodyArea('Fullkropp');setExerciseDescription('');setVariantLabel('');setDoseDefaults({rx:{men_kg:'',women_kg:''},scaled:{men_kg:'',women_kg:''},foundation:{men_kg:'',women_kg:''}});setEditingExercise(null);setShowExerciseForm(false);setNotice(editingExercise?'Øving oppdatert.':'Øving lagra i biblioteket.');await load()
   }catch(e){setError(e.message||'Kunne ikkje lagra øving.')}finally{setBusy('')}
  }
  function canManageMember(member){return isAdmin||(profile.role==='manager'&&(member.role==='member'||member.id===profile.id))}
@@ -103,11 +103,11 @@ export default function Admin({profile}){
   setBusy(wod.id);try{const {error:e}=await supabase.from('wods').update({is_published:!wod.is_published}).eq('id',wod.id);if(e)throw e;await load()}catch(e){setError(e.message)}finally{setBusy('')}
  }
  function editExercise(ex){
-  setEditingExercise(ex);setExerciseName(ex.name||'');setCategory(ex.category||'Styrke');setEquipment(ex.equipment||'');setVideoUrl(ex.video_url||'');setBodyArea(ex.body_area||'Fullkropp');setExerciseDescription(ex.description||'');setShowExerciseForm(true)
+  setEditingExercise(ex);setExerciseName(ex.name||'');setCategory(ex.category||'Styrke');setEquipment(ex.equipment||'');setVideoUrl(ex.video_url||'');setBodyArea(ex.body_area||'Fullkropp');setExerciseDescription(ex.description||'');setVariantLabel(ex.prescription_profiles?.variant_label||ex.equipment||'');setDoseDefaults(Object.fromEntries(['rx','scaled','foundation'].map(level=>[level,{men_kg:ex.prescription_profiles?.levels?.[level]?.men_kg??'',women_kg:ex.prescription_profiles?.levels?.[level]?.women_kg??''}])));setShowExerciseForm(true)
   window.scrollTo({top:0,behavior:'smooth'})
  }
  function cancelExerciseEdit(){
-  setEditingExercise(null);setExerciseName('');setEquipment('');setVideoUrl('');setBodyArea('Fullkropp');setExerciseDescription('');setShowExerciseForm(false)
+  setEditingExercise(null);setExerciseName('');setEquipment('');setVideoUrl('');setBodyArea('Fullkropp');setExerciseDescription('');setVariantLabel('');setDoseDefaults({rx:{men_kg:'',women_kg:''},scaled:{men_kg:'',women_kg:''},foundation:{men_kg:'',women_kg:''}});setShowExerciseForm(false)
  }
  async function toggleExercise(ex){
   setBusy(ex.id);try{const {error:e}=await supabase.from('exercises').update({is_active:!ex.is_active}).eq('id',ex.id);if(e)throw e;await load()}catch(e){setError(e.message)}finally{setBusy('')}
@@ -148,10 +148,16 @@ export default function Admin({profile}){
     <label>Namn på øving<input value={exerciseName} onChange={e=>setExerciseName(e.target.value)} placeholder="T.d. Goblet squat" required/></label>
     <div className="engine-fields"><label>Kategori<select value={category} onChange={e=>setCategory(e.target.value)}>{['Styrke','Mobilitet','Kondisjon','Kjerne','Rehab / fysio'].map(x=><option key={x}>{x}</option>)}</select></label><label>Kroppsdel<select value={bodyArea} onChange={e=>setBodyArea(e.target.value)}>{["Fullkropp","Bein","Mage","Rygg","Overkropp","Hofte","Skulder","Kne"].map(x=><option key={x}>{x}</option>)}</select></label><label>Utstyr<input value={equipment} onChange={e=>setEquipment(e.target.value)} placeholder="T.d. stong, manualar"/></label></div>
     <label>Kort beskriving<textarea rows="2" value={exerciseDescription} onChange={e=>setExerciseDescription(e.target.value)} placeholder="Kort forklart: korleis utfører ein øvinga?"/></label>
+    <section className="admin-dose-profile"><strong>Standard belastningsprofil</strong><p>Opprett éi øving per konkret variant, til dømes «Bench press – stong, flat» og «Bench press – manualar, incline». Verdiane blir førehandsutfylte i WOD Builder. La felt stå tomme dersom de ikkje har ein kvalitetssikra standard.</p>
+     <label>Variantnamn<input value={variantLabel} onChange={e=>setVariantLabel(e.target.value)} placeholder="T.d. Stong · flat benk"/></label>
+     <div className="admin-dose-profile-grid"><span>Nivå</span><span>Menn (kg)</span><span>Kvinner (kg)</span>
+      {['rx','scaled','foundation'].map(level=><React.Fragment key={level}><strong>{level==='rx'?'RX':level==='scaled'?'Scaled':'Foundation'}</strong><input aria-label={level+' menn kg'} type="number" min="0" step="0.5" value={doseDefaults[level].men_kg} onChange={e=>setDoseDefaults(v=>({...v,[level]:{...v[level],men_kg:e.target.value}}))} placeholder="Ikkje sett"/><input aria-label={level+' kvinner kg'} type="number" min="0" step="0.5" value={doseDefaults[level].women_kg} onChange={e=>setDoseDefaults(v=>({...v,[level]:{...v[level],women_kg:e.target.value}}))} placeholder="Ikkje sett"/></React.Fragment>)}
+     </div>
+    </section>
     <label>Videolenke<input type="url" value={videoUrl} onChange={e=>setVideoUrl(e.target.value)} placeholder="https://…"/></label>
     <div className="admin-member-actions"><button className="primary-button" disabled={busy==='exercise'}><Plus size={15}/>{busy==='exercise'?'Lagrar …':editingExercise?'Lagre endring':'Lagre øving'}</button><button type="button" className="secondary-button" onClick={cancelExerciseEdit}>Avbryt</button></div>
    </form>}
-   <div className="admin-exercise-list">{filteredExercises.map(ex=><article className="admin-exercise-item" key={ex.id}><div className="admin-exercise-item-main"><strong>{ex.name}</strong><div className="admin-exercise-tags"><span>{ex.category}</span><span>{ex.body_area||'Fullkropp'}</span>{ex.equipment&&<span>{ex.equipment}</span>}<span className={ex.is_active?'is-active':'is-hidden'}>{ex.is_active?'Aktiv':'Skjult'}</span></div>{ex.description&&<p>{ex.description}</p>}{ex.video_url&&<a href={ex.video_url} target="_blank" rel="noreferrer">Sjå video <span aria-hidden="true">↗</span></a>}</div><div className="admin-exercise-item-actions"><button type="button" className="secondary-button" onClick={()=>editExercise(ex)}>Rediger</button><button type="button" className="secondary-button" onClick={()=>toggleExercise(ex)} disabled={busy===ex.id}>{ex.is_active?'Skjul':'Aktiver'}</button></div></article>)}{!filteredExercises.length&&<div className="empty-state">Ingen øvingar passar søket eller filteret.</div>}</div>
+   <div className="admin-exercise-list">{filteredExercises.map(ex=><article className="admin-exercise-item" key={ex.id}><div className="admin-exercise-item-main"><strong>{ex.name}</strong><div className="admin-exercise-tags"><span>{ex.category}</span><span>{ex.body_area||'Fullkropp'}</span>{ex.equipment&&<span>{ex.equipment}</span>}{ex.prescription_profiles?.variant_label&&<span>{ex.prescription_profiles.variant_label}</span>}<span className={ex.is_active?'is-active':'is-hidden'}>{ex.is_active?'Aktiv':'Skjult'}</span></div>{ex.description&&<p>{ex.description}</p>}{ex.video_url&&<a href={ex.video_url} target="_blank" rel="noreferrer">Sjå video <span aria-hidden="true">↗</span></a>}</div><div className="admin-exercise-item-actions"><button type="button" className="secondary-button" onClick={()=>editExercise(ex)}>Rediger</button><button type="button" className="secondary-button" onClick={()=>toggleExercise(ex)} disabled={busy===ex.id}>{ex.is_active?'Skjul':'Aktiver'}</button></div></article>)}{!filteredExercises.length&&<div className="empty-state">Ingen øvingar passar søket eller filteret.</div>}</div>
   </section>}
 
  </div>
