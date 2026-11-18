@@ -3659,3 +3659,81 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .wod-exercise-card.is-picked .wod-add-button:hover{
   background:#8a3b30!important;
 }
+
+
+/* STURMKOPF – match the compact WOD selection mockup */
+@media(max-width:760px){
+ .wod-builder-step-2 .wod-selected-stage{
+   padding-bottom:calc(118px + env(safe-area-inset-bottom,0px))!important;
+ }
+ .wod-builder-step-2 .wod-selected-list{
+   display:flex!important;flex-direction:column!important;gap:8px!important;
+   max-height:none!important;overflow:visible!important;
+ }
+ .wod-builder-step-2 .wod-selected-card{
+   display:grid!important;
+   grid-template-columns:30px minmax(0,1fr) auto!important;
+   align-items:center!important;
+   gap:9px!important;
+   flex-wrap:nowrap!important;
+   padding:12px 10px!important;
+   min-height:86px!important;
+   border-radius:15px!important;
+ }
+ .wod-builder-step-2 .wod-selected-card>.wod-order{
+   grid-column:1!important;grid-row:1!important;
+   width:30px!important;height:30px!important;
+   display:grid!important;place-items:center!important;
+ }
+ .wod-builder-step-2 .wod-selected-info{
+   grid-column:2!important;grid-row:1!important;
+   min-width:0!important;width:auto!important;flex:initial!important;
+ }
+ .wod-builder-step-2 .wod-selected-info .wod-selected-title{
+   display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:5px!important;
+ }
+ .wod-builder-step-2 .wod-selected-info .wod-selected-title strong{
+   font-size:14px!important;line-height:1.2!important;
+ }
+ .wod-builder-step-2 .wod-selected-info>small{
+   display:block!important;margin-top:4px!important;font-size:11px!important;
+   white-space:normal!important;line-height:1.25!important;
+ }
+ .wod-builder-step-2 .wod-selected-info .wod-load-summary{
+   display:inline-block!important;margin-top:6px!important;padding:5px 9px!important;
+   border-radius:8px!important;background:#210d08!important;color:#fff!important;
+   font-size:11px!important;font-weight:800!important;
+ }
+ .wod-builder-step-2 .wod-selected-actions{
+   grid-column:3!important;grid-row:1!important;
+   width:auto!important;display:flex!important;flex-direction:column!important;
+   align-items:center!important;justify-content:center!important;gap:5px!important;
+ }
+ .wod-builder-step-2 .wod-selected-actions button{
+   width:34px!important;height:34px!important;min-width:34px!important;
+   padding:0!important;border-radius:9px!important;
+ }
+ .wod-builder-step-2 .wod-selected-actions button[title="Flytt opp"],
+ .wod-builder-step-2 .wod-selected-actions button[title="Flytt ned"]{display:none!important}
+ .wod-builder-step-2 .wod-selected-actions .wod-drag-handle{display:grid!important}
+ .wod-builder-step-2 .wod-selected-editor{grid-column:1/-1!important}
+ .wod-builder-step-2 .wizard-stage-actions-sticky{
+   position:fixed!important;
+   left:12px!important;right:12px!important;
+   bottom:calc(12px + env(safe-area-inset-bottom,0px))!important;
+   z-index:2147483000!important;
+   display:grid!important;grid-template-columns:minmax(92px,.78fr) minmax(0,1.42fr)!important;
+   gap:10px!important;width:auto!important;max-width:680px!important;
+   margin:0 auto!important;padding:12px!important;
+   border:1px solid #52656c!important;border-radius:18px!important;
+   background:rgba(3,12,16,.97)!important;
+   box-shadow:0 -8px 28px rgba(0,0,0,.55)!important;
+   transform:translateZ(0)!important;
+   visibility:visible!important;opacity:1!important;
+ }
+ .wod-builder-step-2 .wizard-stage-actions-sticky button{
+   display:flex!important;min-width:0!important;min-height:56px!important;
+   margin:0!important;align-items:center!important;justify-content:center!important;
+   white-space:normal!important;line-height:1.2!important;
+ }
+}
