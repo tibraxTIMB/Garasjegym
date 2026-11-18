@@ -2014,3 +2014,32 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
  .wizard-stage-actions button{flex:1 1 100%}
  .wizard-publish-stage{padding:12px}
 }
+
+
+/* Member WOD library: compact overview with an expandable workout detail */
+.wod-library-screen { gap:14px; }
+.wod-library-search { display:flex; align-items:center; gap:10px; min-height:46px; padding:0 13px; color:var(--muted); background:#111416; border:1px solid #3a4143; border-radius:9px; }
+.wod-library-search input { flex:1; min-width:0; min-height:42px; color:#f2f1ed; background:transparent; border:0; outline:0; font:inherit; }
+.wod-library-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.wod-library-toolbar > span { color:var(--muted); font-size:11px; }
+.wod-card-summary { color:var(--muted); font-size:12px; line-height:1.5; }
+.wod-card-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.wod-card-actions .secondary-button,.wod-card-actions .primary-button { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:38px; margin:0; padding:0 12px; font-size:11px; }
+.wod-card-actions .primary-button { color:#171819; background:var(--orange); border:0; border-radius:8px; font-weight:900; cursor:pointer; }
+.wod-card-actions .favorite-star { margin-left:auto; }
+.wod-detail-panel { display:grid; gap:13px; padding-top:14px; margin-top:4px; border-top:1px solid var(--line); }
+.wod-detail-exercises { display:grid; gap:9px; }
+.wod-detail-exercises > strong,.wod-level-note > strong { color:#f2f1ed; font-size:12px; }
+.wod-detail-exercises ol { display:grid; gap:8px; padding:0; margin:0; list-style:none; counter-reset:wod-exercise; }
+.wod-detail-exercises li { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:3px 10px; padding:9px 10px; background:#111416; border-radius:7px; counter-increment:wod-exercise; }
+.wod-detail-exercises li > span { font-size:12px; font-weight:800; }
+.wod-detail-exercises li > b { color:var(--orange); font-size:11px; }
+.wod-detail-exercises li > small { grid-column:1/-1; color:var(--muted); font-size:11px; line-height:1.45; }
+.wod-detail-exercises p,.wod-level-note p { margin:5px 0 0; color:#c0c5c3; font-size:12px; line-height:1.6; white-space:pre-line; }
+.wod-level-note { padding:11px 12px; background:#202426; border-left:2px solid var(--orange); border-radius:0 7px 7px 0; }
+@media(max-width:520px) {
+ .wod-card { padding:14px; }
+ .wod-card-actions { display:grid; grid-template-columns:1fr 1fr auto; }
+ .wod-card-actions .favorite-star { margin-left:0; }
+ .wod-library-toolbar { align-items:flex-start; flex-direction:column; }
+}
