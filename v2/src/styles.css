@@ -2349,3 +2349,7 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .wod-final-preview li span{font-size:12px!important;color:#bdcbca!important}
 .wod-builder-step-4 .wizard-stage-actions{justify-content:space-between!important}
 @media(max-width:760px){.wod-builder-step-4 .wizard-final-stage{grid-template-columns:minmax(0,1fr)!important}.wod-builder-step-4 .wizard-final-stage>*{grid-column:1!important}.wod-final-preview{padding:15px!important}}
+
+
+.wod-builder-step-3 .wod-composer .wizard-format-panel,.wod-builder-step-4 .wod-composer .wizard-format-panel{display:none!important}
+.wod-builder-step-4 .wod-composer>.engine-section-title{display:none!important}
