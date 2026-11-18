@@ -38,8 +38,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
   const isCountdown = ['AMRAP', 'Nedteljing'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'AMRAP')
   const isForTime = ['For Time', 'Chipper'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'For Time')
   const isDeathBy = format === 'Death By'
-    const fallbackDuration = Math.max(1, (Number(minutes) || 10) * 60 + (Number(seconds) || 0))
-  const target = Math.max(1, (isCountdown || isForTime) && capDuration ? capDuration : savedDuration || fallbackDuration)
+  const isLadder = format === 'Ladder'
+  const hasTimeCap = capDuration > 0 && !isCountdown && !isEMOM && !isTimedInterval && !isStationCircuit
+  const fallbackDuration = Math.max(1, (Number(minutes) || 10) * 60 + (Number(seconds) || 0))
+  const target = Math.max(1, isCountdown && capDuration ? capDuration : hasTimeCap ? capDuration : savedDuration || fallbackDuration)
   const effectiveWorkSeconds = isStationCircuit ? Math.max(1, Number(stationPlan.work_seconds ?? workSeconds)) : Math.max(1, Number(workSeconds))
   const effectiveRestSeconds = isStationCircuit ? Math.max(0, Number(stationPlan.transition_seconds ?? restSeconds)) : Math.max(0, Number(restSeconds))
   const cycle = effectiveWorkSeconds + effectiveRestSeconds
@@ -58,14 +60,14 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
     : isTimedInterval
     ? Math.min(Math.floor(elapsed / cycle) + 1, Math.max(1, Number(rounds) || 1))
     : isEMOM ? Math.floor(elapsed / emomCycle) + 1
-    : isDeathBy ? Math.floor(elapsed / 60) + 1
+    : (isDeathBy || isLadder) ? Math.floor(elapsed / 60) + 1
     : Math.floor(elapsed / 60) + 1
   const currentPhase = isStationCircuit
     ? (inWorkPhase ? 'ARBEID' : 'BYTE STASJON')
     : isTimedInterval
     ? (inWorkPhase ? 'ARBEID' : 'KVILE')
     : isEMOM ? (elapsed === 0 || elapsed % emomCycle === 0 ? 'ARBEID' : 'TIL NESTE START')
-    : isDeathBy ? 'NY RUNDE' : 'PÅGÅR'
+    : (isDeathBy || isLadder) ? 'NY RUNDE' : 'PÅGÅR'
   const primaryTime = isCountdown ? remainingTotal
     : (isTimedInterval || isStationCircuit) ? phaseRemaining
     : isEMOM ? emomNextStart
@@ -109,8 +111,11 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
 
   useEffect(() => {
     if (!running) return
-    if ((isCountdown || isEMOM || isDeathBy || (isForTime && capDuration > 0) || isStationCircuit) && elapsed >= (isStationCircuit ? stationTotal : target)) {
-      setRunning(false); setPhase(isForTime ? 'TIDSGRENSE' : 'FERDIG'); cue(520, 0.5); return
+    if ((isCountdown || isEMOM || isDeathBy || isStationCircuit) && elapsed >= (isStationCircuit ? stationTotal : target)) {
+      setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return
+    }
+    if (hasTimeCap && elapsed >= capDuration) {
+      setRunning(false); setPhase('TIDSGRENSE'); cue(520, 0.5); return
     }
     if (isTimedInterval && elapsed >= intervalTotal) {
       setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return
@@ -118,7 +123,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
     if (((isTimedInterval || isStationCircuit) && (elapsed % cycle === 0 || elapsed % cycle === effectiveWorkSeconds)) ||
       (isEMOM && elapsed > 0 && elapsed % emomCycle === 0) ||
       (isDeathBy && elapsed > 0 && elapsed % 60 === 0)) cue(1040, 0.12)
-  }, [elapsed, running, target, isCountdown, isEMOM, isDeathBy, isForTime, isTimedInterval, isStationCircuit, intervalTotal, stationTotal, cycle, emomCycle, effectiveWorkSeconds])
+  }, [elapsed, running, target, capDuration, hasTimeCap, isCountdown, isEMOM, isDeathBy, isTimedInterval, isStationCircuit, intervalTotal, stationTotal, cycle, emomCycle, effectiveWorkSeconds])
 
   useEffect(() => {
     if (running) setPhase(currentPhase)
@@ -137,7 +142,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
   const isAmrap = format === 'AMRAP' || (['Couplet','Triplet'].includes(format) && schema?.combination_mode === 'AMRAP')
   const isStopwatch = ['Stoppeklokke', 'Fri trening', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt'].includes(format) ||
     (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'Open')
-  const showTimeCap = (isForTime || isDeathBy) && capDuration > 0
+  const showTimeCap = hasTimeCap
   const roundsShown = isTimedInterval ? Math.min(currentRound, Number(rounds)) : currentRound
   const completedRounds = isAmrap ? laps.length : round
   const lapAction = () => { if(!running)return; setLaps(value => [...value, Math.max(0, elapsed - value.reduce((sum, lap) => sum + lap, 0))]); setRound(value => value + 1); cue(1200, 0.1) }
@@ -167,7 +172,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
         {isStationCircuit && <><div className="timer-side-stat"><span>RUNDE</span><b>{Math.min(currentRound,Number(stationPlan.rounds ?? schema?.rounds ?? rounds))}/{stationPlan.rounds ?? schema?.rounds ?? rounds}</b></div><div className="timer-side-stat"><span>ARBEID / BYTE</span><b>{stationPlan.work_seconds ?? workSeconds}s / {stationPlan.transition_seconds ?? restSeconds}s</b></div></>}
         {isTimedInterval && <><div className="timer-side-stat"><span>ØKTA ATT</span><b>{clock(remainingTotal)}</b></div><div className="timer-side-stat"><span>RUNDE</span><b>{roundsShown}/{rounds}</b></div></>}
         {isForTime && showTimeCap && <div className="timer-side-stat"><span>TIDSGRENSE</span><b>{clock(Math.max(0,target-elapsed))}</b></div>}
-        {isDeathBy && <div className="timer-side-stat"><span>NESTE MINUTT</span><b>{clock(elapsed===0?60:60-(elapsed%60||0))}</b></div>}
+        {(isDeathBy || isLadder) && <><div className="timer-side-stat"><span>{isDeathBy?'NESTE MINUTT':'LADDER-RUNDE'}</span><b>{isDeathBy?clock(elapsed===0?60:60-(elapsed%60||0)):currentRound}</b></div>{schema?.ladder&&<div className="timer-side-stat"><span>REPS I RUNDA</span><b>{Math.max(0,Number(schema.ladder.start||2)+(currentRound-1)*Number(schema.ladder.step||2)*(schema.ladder.direction==='down'?-1:1))}</b></div>}</>}
         {isTimedInterval && !running && elapsed===0 && <div className="timer-settings-inline">
           <label>Arbeid sek.<input type="number" min="1" max="600" value={workSeconds} onChange={e=>setWorkSeconds(Math.max(1,Number(e.target.value)||1))}/></label>
           <label>Kvile sek.<input type="number" min="0" max="600" value={restSeconds} onChange={e=>setRestSeconds(Math.max(0,Number(e.target.value)||0))}/></label>
@@ -378,13 +383,14 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user) throw new Error('Innlogginga er utgått. Logg inn på nytt.')
       const normalizedFormat = format.toLowerCase()
-      const isAmrapScore = normalizedFormat === 'amrap'
-      const isForTimeScore = ['for time','chipper','couplet','triplet'].includes(normalizedFormat)
+      const combinationMode = source?.timer_settings?.workout_schema?.combination_mode
+      const isAmrapScore = normalizedFormat === 'amrap' || (['couplet','triplet'].includes(normalizedFormat) && combinationMode === 'AMRAP')
+      const isForTimeScore = ['for time','chipper'].includes(normalizedFormat) || (['couplet','triplet'].includes(normalizedFormat) && combinationMode === 'For Time')
       const elapsedSeconds = Number(timerSnapshot.elapsed)||0
       const parsedTime = scoreTime.trim() ? (()=>{const parts=scoreTime.trim().split(':').map(Number);return parts.length===2?parts[0]*60+parts[1]:parts.length===3?parts[0]*3600+parts[1]*60+parts[2]:NaN})() : (isForTimeScore&&elapsedSeconds>0?elapsedSeconds:null)
       if(scoreTime.trim()&&!Number.isFinite(parsedTime))throw new Error('Tid må skrivast som mm:ss eller tt:mm:ss.')
       const resultData = {
-        version:1,format,elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,
+        version:2,format,elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':'completed',completed:true,time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
         completed_rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):null,
         extra_reps:isAmrapScore?(scoreReps===''?0:Number(scoreReps)):null,
         split_seconds:Array.isArray(timerSnapshot.laps)?timerSnapshot.laps:[],
@@ -526,8 +532,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
           {items.length>0&&<div className="workout-finish-exercises"><strong>Øvingar i økta</strong><ol>{items.map((item,index)=><li key={item.key}>{item.exercise_name||'Øving utan namn'}{item.sets?.some(set=>set.reps||set.load_kg||set.time_text)?<small>{item.sets.map(set=>[set.reps?set.reps+' reps':'',set.load_kg?set.load_kg+' kg':'',set.time_text||''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ')}</small>:null}</li>)}</ol></div>}
           <section className="workout-finish-results"><h4>Registrer resultat</h4><p>Fel ta utgangspunkt i øktforma{source?.name?' og WOD-oppsettet':''}. Fyll berre inn det som manglar.</p>
             <div className="engine-fields three">
-              {format==='AMRAP'&&<><label>Fullførte rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder={String(timerSnapshot.roundsCompleted||0)}/></label><label>Ekstra reps<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="0"/></label></>}
-              {['For Time','Chipper','Couplet','Triplet'].includes(format)&&<label>Sluttid<input value={scoreTime} onChange={e=>setScoreTime(e.target.value)} placeholder={timerSnapshot.elapsed?clock(timerSnapshot.elapsed):'mm:ss'}/></label>}
+              {(format==='AMRAP'||(['Couplet','Triplet'].includes(format)&&source?.timer_settings?.workout_schema?.combination_mode==='AMRAP'))&&<><label>Fullførte rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder={String(timerSnapshot.roundsCompleted||0)}/></label><label>Ekstra reps<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="0"/></label></>}
+              {(['For Time','Chipper'].includes(format)||(['Couplet','Triplet'].includes(format)&&source?.timer_settings?.workout_schema?.combination_mode==='For Time'))&&<label>Sluttid<input value={scoreTime} onChange={e=>setScoreTime(e.target.value)} placeholder={timerSnapshot.elapsed?clock(timerSnapshot.elapsed):'mm:ss'}/></label>}
               {['Strength','Pyramid','Superset','Complex'].includes(format)&&<label>Tungaste løft (kg)<input type="number" min="0" step="0.5" value={scoreLoad} onChange={e=>setScoreLoad(e.target.value)} placeholder="Valfritt"/></label>}
               {['Row Intervals','Intervall','Tabata'].includes(format)&&<><label>Kaloriar<input type="number" min="0" step="0.1" value={scoreCalories} onChange={e=>setScoreCalories(e.target.value)} placeholder="Totalt"/></label><label>Avstand<input type="number" min="0" step="1" value={scoreDistance} onChange={e=>setScoreDistance(e.target.value)} placeholder="Total distanse"/></label><label>Eining<select value={scoreUnit} onChange={e=>setScoreUnit(e.target.value)}><option value="m">Meter</option><option value="km">Kilometer</option><option value="cal">Kaloriar</option></select></label></>}
               {!['AMRAP','For Time','Chipper','Couplet','Triplet','Strength','Pyramid','Superset','Complex','Row Intervals','Intervall','Tabata'].includes(format)&&<><label>Rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder="–"/></label><label>Reps<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="–"/></label><label>Tid / sluttid<input value={scoreTime} onChange={e=>setScoreTime(e.target.value)} placeholder="mm:ss"/></label></>}
