@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { CalendarDays, CheckCircle2, Clock3, LoaderCircle, Plus, Users, Radio, Play, Pause, Square } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { isStaff } from '../lib/auth.js'
+import Notifications from './Notifications.jsx'
 
 const LIVE_SESSION_FIELDS = 'id,class_id,status,started_at,session_title,wod_id,wod_ids,active_wod_index,timer_format,timer_duration_seconds,timer_settings,timer_started_at,timer_elapsed_seconds,timer_status,results_published_at'
 const LIVE_SESSION_BASE_FIELDS = 'id,class_id,status,started_at,session_title,wod_id,wod_ids,active_wod_index'
@@ -26,7 +27,7 @@ async function fetchLiveSessions() {
   return result
 }
 
-export default function Booking({ profile, onLogResult }) {
+export default function Booking({ profile, onLogResult, initialClassId=null }) {
   const [classes,setClasses]=useState([]),[attendance,setAttendance]=useState([])
   const [mine,setMine]=useState([])
   const [loading,setLoading]=useState(true)
@@ -47,6 +48,7 @@ export default function Booking({ profile, onLogResult }) {
   const [selectedWod,setSelectedWod]=useState({}),[createWodIds,setCreateWodIds]=useState([])
   const [clockNow,setClockNow]=useState(Date.now())
   const staff=isStaff(profile)
+  useEffect(()=>{if(initialClassId&&classes.length){const target=classes.find(c=>c.id===initialClassId);if(target)setSelectedClass(target)}},[initialClassId,classes])
 
   async function load(silent=false){
     if(!silent)setLoading(true);setError('')
@@ -204,6 +206,7 @@ export default function Booking({ profile, onLogResult }) {
   }
   if(loading)return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar timeplan …</div>
   return <div className="booking-module">
+    <Notifications compact context="group"/>
     <div className="training-heading"><div><div className="section-kicker">GARASJEGYM · TIMEPLAN</div><h3>Gruppetimar</h3></div>{staff&&<button className="secondary-button" onClick={()=>setShowCreate(v=>!v)}><Plus size={15}/> Ny time</button>}</div>
     {error&&<div className="auth-error" role="alert">{error}</div>}
     {notice&&<div className="auth-message" role="status"><CheckCircle2 size={15}/> {notice}</div>}
