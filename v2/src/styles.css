@@ -4903,3 +4903,15 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .timer-main-clock { display:block; max-width:100%; color:var(--timer-accent); font-size:clamp(64px, var(--timer-clock-size), 220px); font-weight:950; line-height:.95; letter-spacing:-.055em; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .timer-phase { color:var(--timer-accent); }
 @media(max-width:650px) { .timer-topline { align-items:flex-start; } .timer-context { gap:5px; } .timer-origin-chip,.timer-format-chip { font-size:9px; } .timer-main-clock { font-size:min(var(--timer-clock-size),18vw); } }
+
+/* Fullscreen workout mode and finish gating */
+.timer-finish-button:disabled { opacity:.38; filter:grayscale(.6); cursor:not-allowed; }
+.timer-next-exercise { display:grid; gap:5px; margin-top:12px; padding:12px 18px; border:1px solid #475052; border-radius:10px; background:#151a1c; min-width:min(100%,360px); }
+.timer-next-exercise span { color:var(--muted); font-size:10px; font-weight:900; letter-spacing:1px; }
+.timer-next-exercise b { font-size:clamp(16px,2.2vw,24px); }
+:fullscreen .training-heading, :fullscreen .engine-fields, :fullscreen .engine-section, :fullscreen .simple-review-toggle { display:none !important; }
+:fullscreen .engine-form { min-height:100vh; display:flex; flex-direction:column; justify-content:center; }
+:fullscreen .engine-timer { width:100%; min-height:100vh; justify-content:center; border:0; border-radius:0; padding:clamp(12px,3vw,40px); }
+:fullscreen .timer-dashboard { width:100%; max-width:1600px; }
+:fullscreen .timer-main-clock { font-size:clamp(100px, var(--timer-clock-size), 24vw); }
+@media(max-width:650px) { :fullscreen .timer-main-clock { font-size:min(23vw,var(--timer-clock-size)); } }
