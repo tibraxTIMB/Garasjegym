@@ -4855,3 +4855,10 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
   .wod-builder-step-4 .wod-final-preview ol{grid-template-columns:minmax(0,1fr)!important}
   .wod-builder-step-4 .wizard-stage-actions{position:sticky!important;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:30}
 }
+
+
+/* Multi-WOD group session controls */
+.live-wod-switcher,.live-wod-result-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
+.live-wod-switcher>strong,.live-wod-result-actions>b{flex-basis:100%;font-size:.82rem;color:var(--muted,#8b929d)}
+.live-wod-switcher button.selected{border-color:var(--accent,#d7a84b);background:var(--surface-2,#24272d);color:var(--text,#fff)}
+.live-wod-result-actions button{flex:1 1 180px;justify-content:center;min-height:42px}
