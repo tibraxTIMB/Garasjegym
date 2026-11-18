@@ -3395,3 +3395,31 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .wod-builder-step-2 .wod-exercise-card .wod-exercise-card-top .wod-stimulus-tag{
  color:inherit!important;
 }
+
+
+/* Category card fill follows the exact hue of its left marker (solid, not gradient) */
+.wod-builder-step-2 .wod-exercise-card.wod-category-conditioning{
+ background:#203e58!important;background-image:none!important;
+ box-shadow:inset 3px 0 #4b9bcb!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-core{
+ background:#302442!important;background-image:none!important;
+ box-shadow:inset 3px 0 #9a80c9!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-strength{
+ background:#3b2b1b!important;background-image:none!important;
+ box-shadow:inset 3px 0 #d58a32!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-mobility{
+ background:#173b36!important;background-image:none!important;
+ box-shadow:inset 3px 0 #43a99a!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-rehab{
+ background:#253a27!important;background-image:none!important;
+ box-shadow:inset 3px 0 #72a66e!important;
+}
+.wod-builder-step-2 .wod-exercise-card.wod-category-other,
+.wod-builder-step-2 .wod-exercise-card.wod-category-golf{
+ background:#30383b!important;background-image:none!important;
+ box-shadow:inset 3px 0 #89969b!important;
+}
