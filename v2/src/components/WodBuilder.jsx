@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useState} from 'react'
-import {Plus,Search,Trash2,ArrowUp,ArrowDown,Save,LoaderCircle,WandSparkles,Dices,Info,Copy,Dumbbell,GripVertical,Pencil} from 'lucide-react'
+import {Plus,Search,Trash2,ArrowUp,ArrowDown,Save,LoaderCircle,WandSparkles,Dices,Info,Copy,Dumbbell,GripVertical,Pencil,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 
 const categories=['Alle','Functional Fitness','Styrke','Kondisjon','Gymnastikk','Pilates','Yoga Flow','Mobilitet','Rehab','Golf']
@@ -309,7 +309,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   {wizardStep===1&&<div className="wod-studio-tools"><button type="button" className="primary-button" onClick={randomWod}><Dices size={17}/> Generer tilfeldig WOD</button><button type="button" className="secondary-button" onClick={reset}><Trash2 size={15}/> Forkast økt</button></div>}
   <div className="wod-builder-layout">
    {wizardStep===2&&<aside className="wod-setup-summary"><div className="wod-setup-summary-kicker">WOD-OPPSETT</div><h4>{name||'Namlaus WOD'}</h4><div className="wod-setup-summary-row"><span>Format</span><strong>{format}</strong></div><div className="wod-setup-summary-row"><span>Tidsramme</span><strong>{isAmrap?(timeCap?timeCap+' min':'Open AMRAP'):isForTime?(timeCap?timeCap+' min':'Fri tid'):isElapsedFormat?'Medgått tid':minutes+' min'}</strong></div><div className="wod-setup-summary-row"><span>Intensitet</span><strong>{intensity==='1'?'Kontrollert':intensity==='3'?'Høg':'Utfordrande'}</strong></div><button type="button" onClick={()=>setWizardStep(1)}>Endre oppsett</button><div className="wod-setup-summary-hint">Oppsettet er klart. Vel øvingar i biblioteket og legg dei til i ønskt rekkjefølgje.</div></aside>}
-   {wizardStep===2&&libraryOpen&&<section className="engine-section wod-library"><div className="engine-section-title"><h4>Øvingsbibliotek</h4><span>{filtered.length} av {exercises.length+GOLF_EXERCISES.length+REHAB_EXERCISES.length}</span></div>
+   {wizardStep===2&&libraryOpen&&<section className="engine-section wod-library"><div className="wod-library-fullscreen-head"><button type="button" onClick={()=>setLibraryOpen(false)} aria-label="Lukk øvingsbiblioteket" title="Tilbake til WOD-lista"><X size={22}/></button></div><div className="engine-section-title"><h4>Øvingsbibliotek</h4><span>{filtered.length} av {exercises.length+GOLF_EXERCISES.length+REHAB_EXERCISES.length}</span></div>
     <div className="wod-search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Søk øving, kroppsdel eller utstyr …"/></div>
     <div className="wod-filter-toolbar" aria-label="Filtrer øvingar">
       <button type="button" className={openFilter==='category'?'active':''} aria-expanded={openFilter==='category'} onClick={()=>setOpenFilter(openFilter==='category'?'':'category')}><b>KATEGORI</b><span>{category}</span><span>{openFilter==='category'?'−':'+'}</span></button>
