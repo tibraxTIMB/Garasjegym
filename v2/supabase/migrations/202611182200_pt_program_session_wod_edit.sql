@@ -1,0 +1,1 @@
+grant update(title,wod_id,scheduled_date,workout_snapshot,coach_note) on public.pt_program_sessions to authenticated;
