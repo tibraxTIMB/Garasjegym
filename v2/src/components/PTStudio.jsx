@@ -159,7 +159,7 @@ export default function PTStudio({ profile, onLaunchWorkout }) {
   await run(async()=>{const {error:e}=await supabase.from('pt_intakes').update({status:'reviewed',reviewed_by:profile.id,reviewed_at:new Date().toISOString()}).eq('id',row.id);if(e)throw e;setNotice('Innmeldinga er markert som vurdert.')})
  }
  async function reviewCheckin(row) {
-  await run(async()=>{const {error:e}=await supabase.from('pt_checkins').update({status:'reviewed',reviewed_at:new Date().toISOString()}).eq('id',row.id);if(e)throw e;setNotice('Statussvaret er markert som gjennomgått.')})
+  await run(async()=>{const {error:e}=await supabase.from('pt_checkins').update({status:'reviewed'}).eq('id',row.id);if(e)throw e;setNotice('Statussvaret er markert som gjennomgått.')})
  }
  async function moveSession(session,direction) {
   const rows=clientSessions;const index=rows.findIndex(x=>x.id===session.id);const next=rows[index+direction];if(!next)return;
@@ -217,7 +217,7 @@ export default function PTStudio({ profile, onLaunchWorkout }) {
    </section>
   </div>}
   {!staff&&tab==='oversikt'&&<div className="pt2-grid">
-   <section className="pt2-panel"><span className="section-kicker">MI AKTIVE PLAN</span><h3>{myPrograms.find(p=>p.status==='active')?.title||'Ingen aktiv treningsplan enno'}</h3><p>{myPrograms.find(p=>p.status==='active')?.description||'Når PT-en har tildelt deg ein plan, finn du øktene her.'}</p><div className="pt2-stat-row"><div><strong>{myGoals.length}</strong><span>Synlege mål</span></div><div><strong>{myPrograms.filter(p=>p.status==='active').length}</strong><span>Aktive planar</span></div><div><strong>{myCheckins.filter(c=>c.status==='submitted').length}</strong><span>Statussvar</span></div></div></section>
+   <section className="pt2-panel"><span className="section-kicker">MI AKTIVE PLAN</span><h3>{myPrograms.find(p=>p.status==='active')?.title||'Ingen aktiv treningsplan enno'}</h3><p>{myPrograms.find(p=>p.status==='active')?.description||'Når PT-en har tildelt deg ein plan, finn du øktene her.'}</p><div className="pt2-stat-row"><div><strong>{myGoals.length}</strong><span>Synlege mål</span></div><div><strong>{myPrograms.filter(p=>p.status==='active').length}</strong><span>Aktive planar</span></div><div><strong>{myCheckins.filter(c=>c.status==='submitted'||c.status==='reviewed').length}</strong><span>Statussvar</span></div></div></section>
    <section className="pt2-panel"><span className="section-kicker">NESTE STEG</span><h3>{pendingCheckin?'Du har ein statussjekk':'Hald fram med planen'}</h3><p>{pendingCheckin?'PT-en ønskjer ei oppdatering frå deg.':'Opne treningsplanen for å sjå kva som kjem vidare.'}</p><button className="secondary-button" onClick={()=>setTab(pendingCheckin?'status':'plan')}>{pendingCheckin?'Svar på statussjekk':'Sjå treningsplan'} <ArrowRight size={14}/></button></section>
   </div>}
   {staff&&clientId&&tab==='plan'&&<section className="pt2-panel"><div className="pt2-panel-head"><div><span className="section-kicker">PROGRAM OG REKKJEFØLGJE</span><h3>{activeProgram?.title||'Treningsplan'}</h3><p>Øktene ligg i den rekkjefølgja kunden skal gjennomføra dei.</p></div><div className="pt2-inline-actions"><button className="secondary-button" onClick={()=>setShowProgram(true)}><Plus size={15}/> Tildel introprogram</button>{activeProgram&&<button className="secondary-button" onClick={()=>setShowSession(true)}><Plus size={15}/> Legg til økt</button>}</div></div>
