@@ -527,14 +527,14 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       const {data:workoutId,error:saveError}=await supabase.rpc('save_workout_atomic',{p_workout:payload})
       if(saveError)throw saveError
       if(!workoutId)throw new Error('Databasen returnerte ikkje ID for den lagra økta.')
-      if(launchAssignmentId){
-        const {error:assignmentError}=await supabase.from('pt_wod_assignments').update({status:'completed',completed_at:new Date().toISOString(),workout_log_id:workoutId}).eq('id',launchAssignmentId).eq('member_id',user.id)
-        if(assignmentError)throw assignmentError
-      }
       let programSyncMessage = ''
+      if(launchAssignmentId){
+        const {data:assignmentRows,error:assignmentError}=await supabase.from('pt_wod_assignments').update({status:'completed',completed_at:new Date().toISOString(),workout_log_id:workoutId}).eq('id',launchAssignmentId).eq('member_id',user.id).select('id')
+        if(assignmentError||!assignmentRows?.length)programSyncMessage += ' Treningsloggen er lagra, men PT-tildelinga kunne ikkje stadfestast som fullført'+(assignmentError?': '+assignmentError.message:'.')
+      }
       if(launchProgramSessionId){
-        const {error:programError}=await supabase.from('pt_program_sessions').update({status:'completed',completed_at:new Date().toISOString(),workout_log_id:workoutId}).eq('id',launchProgramSessionId)
-        if(programError)programSyncMessage = ' Treningsloggen er lagra, men PT-planen kunne ikkje oppdaterast: '+programError.message
+        const {data:programRows,error:programError}=await supabase.from('pt_program_sessions').update({status:'completed',completed_at:new Date().toISOString(),workout_log_id:workoutId}).eq('id',launchProgramSessionId).select('id')
+        if(programError||!programRows?.length)programSyncMessage += ' Treningsloggen er lagra, men PT-planen kunne ikkje stadfestast som fullført'+(programError?': '+programError.message:'.')
       }
       // Automatically detect new heaviest logged loads and store them as PRs.
       let prMessage = programSyncMessage
