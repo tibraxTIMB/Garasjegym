@@ -196,6 +196,7 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
    <div><div className="section-kicker">GARASJEGYM · {staff?'PT-STUDIO':'MI PT-OPPFØLGING'}</div><h2>{staff?'Kundeoppfølging':'Mi PT-oppfølging'}</h2><p>{staff?'Kundar, mål, introprogram og treningsløp samla.':'Treningsplanen din, måla dine og utviklinga di.'}</p></div>
    {!staff&&<button className="primary-button" onClick={()=>setShowIntake(v=>!v)}><Plus size={16}/> Ny PT-innmelding</button>}
   </header>
+  <Notifications compact context="pt-studio"/>
   {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message"><CheckCircle2 size={15}/> {notice}</div>}
   {!staff&&showIntake&&<form className="pt2-panel pt2-form" onSubmit={submitIntake}>
    <div className="pt2-panel-head"><div><span className="section-kicker">KOM I GANG</span><h3>Fortel oss kva du ønskjer hjelp til</h3><p>Kort innmelding – PT-en går gjennom svara før de lagar ein plan saman.</p></div><button type="button" className="icon-button" onClick={()=>setShowIntake(false)}><X size={17}/></button></div>
