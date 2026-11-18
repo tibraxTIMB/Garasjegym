@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, CheckCircle2, Clock3, Dumbbell, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { MusicMiniPlayer } from './Music.jsx'
+import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '' }] })
@@ -14,8 +15,10 @@ const localDateISO = (date = new Date()) => {
 }
 
 function TimerPanel({id,title,layout,onMove,onResize,onLock,locked,children,wide=false}){
- return <section className={`timer-layout-panel timer-panel-${id} ${locked?'is-locked':''}`} style={{gridColumn:`span ${layout.span}`,minHeight:layout.height}} draggable={!locked} onDragStart={e=>{e.dataTransfer.setData('text/plain',id);e.dataTransfer.effectAllowed='move'}} onDragOver={e=>{if(!locked)e.preventDefault()}} onDrop={e=>{e.preventDefault();const from=e.dataTransfer.getData('text/plain');if(from&&from!==id)onMove(from,id)}}>
+ return <section data-timer-panel={id} className={`timer-layout-panel timer-panel-${id} ${locked?'is-locked':''}`} style={{gridColumn:`span ${layout.span}`,minHeight:layout.height}} draggable={!locked} onDragStart={e=>{e.dataTransfer.setData('text/plain',id);e.dataTransfer.effectAllowed='move'}} onDragOver={e=>{if(!locked)e.preventDefault()}} onDrop={e=>{e.preventDefault();const from=e.dataTransfer.getData('text/plain');if(from&&from!==id)onMove(from,id)}}>
   <header className="timer-panel-toolbar"><span className="timer-panel-grip" aria-hidden="true">⠿</span><b>{title}</b><div className="timer-panel-tools">
+   <button type="button" title="Flytt panelet opp" aria-label={`Flytt ${title} opp`} disabled={locked} onClick={()=>onMove(id,'up')}>↑</button>
+   <button type="button" title="Flytt panelet ned" aria-label={`Flytt ${title} ned`} disabled={locked} onClick={()=>onMove(id,'down')}>↓</button>
    <button type="button" title="Gjer panelet smalare" aria-label="Gjer panelet smalare" disabled={locked||layout.span<=2} onClick={()=>onResize(id,'span',-1)}>−B</button>
    <button type="button" title="Gjer panelet breiare" aria-label="Gjer panelet breiare" disabled={locked||layout.span>=12} onClick={()=>onResize(id,'span',1)}>+B</button>
    <button type="button" title="Gjer panelet lågare" aria-label="Gjer panelet lågare" disabled={locked||layout.height<=120} onClick={()=>onResize(id,'height',-40)}>−H</button>
@@ -38,15 +41,45 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [laps, setLaps] = useState([])
   const [soundOn, setSoundOn] = useState(true)
   const [showTimerSettings, setShowTimerSettings] = useState(false)
+  const deviceProfile = useDeviceProfile()
+  const defaultPanelLayout={clock:{span:6,height:520},info:{span:3,height:360},laps:{span:3,height:360},music:{span:12,height:90}}
+  const panelKey=(kind,layout=deviceProfile.layout)=>`garasjegym.timer.${kind}.${layout}`
   const [panelLayout,setPanelLayout]=useState(()=>{
-    const defaults={clock:{span:6,height:520},info:{span:3,height:360},laps:{span:3,height:360},music:{span:12,height:90}}
-    try{return {...defaults,...JSON.parse(localStorage.getItem('garasjegym.timer.panels')||'{}')}}
-    catch{return defaults}
+    const layout=readDeviceProfile().layout
+    try{return {...defaultPanelLayout,...JSON.parse(localStorage.getItem(`garasjegym.timer.panels.${layout}`)||localStorage.getItem('garasjegym.timer.panels')||'{}')}}
+    catch{return defaultPanelLayout}
   })
-  const [panelOrder,setPanelOrder]=useState(()=>{try{return JSON.parse(localStorage.getItem('garasjegym.timer.panelOrder')||'["clock","info","laps","music"]')}catch{return ['clock','info','laps','music']}})
-  const [lockedPanels,setLockedPanels]=useState(()=>{try{return JSON.parse(localStorage.getItem('garasjegym.timer.panelLocks')||'{}')}catch{return {}}})
-  useEffect(()=>{try{localStorage.setItem('garasjegym.timer.panels',JSON.stringify(panelLayout));localStorage.setItem('garasjegym.timer.panelOrder',JSON.stringify(panelOrder));localStorage.setItem('garasjegym.timer.panelLocks',JSON.stringify(lockedPanels))}catch{}},[panelLayout,panelOrder,lockedPanels])
-  function movePanel(from,to){setPanelOrder(order=>{const next=[...order],a=next.indexOf(from),b=next.indexOf(to);if(a<0||b<0)return order;next.splice(a,1);next.splice(b,0,from);return next})}
+  const [panelOrder,setPanelOrder]=useState(()=>{
+    const layout=readDeviceProfile().layout
+    try{return JSON.parse(localStorage.getItem(`garasjegym.timer.panelOrder.${layout}`)||localStorage.getItem('garasjegym.timer.panelOrder')||'["clock","info","laps","music"]')}
+    catch{return ['clock','info','laps','music']}
+  })
+  const [lockedPanels,setLockedPanels]=useState(()=>{
+    const layout=readDeviceProfile().layout
+    try{return JSON.parse(localStorage.getItem(`garasjegym.timer.panelLocks.${layout}`)||localStorage.getItem('garasjegym.timer.panelLocks')||'{}')}
+    catch{return {}}
+  })
+  const lastPanelLayoutKey=useRef(deviceProfile.layout)
+  useEffect(()=>{
+    if(lastPanelLayoutKey.current===deviceProfile.layout)return
+    lastPanelLayoutKey.current=deviceProfile.layout
+    try{
+      setPanelLayout({...defaultPanelLayout,...JSON.parse(localStorage.getItem(panelKey('panels'))||'{}')})
+      setPanelOrder(JSON.parse(localStorage.getItem(panelKey('panelOrder'))||'["clock","info","laps","music"]'))
+      setLockedPanels(JSON.parse(localStorage.getItem(panelKey('panelLocks'))||'{}'))
+    }catch{
+      setPanelLayout(defaultPanelLayout);setPanelOrder(['clock','info','laps','music']);setLockedPanels({})
+    }
+  },[deviceProfile.layout])
+  useEffect(()=>{
+    if(lastPanelLayoutKey.current!==deviceProfile.layout)return
+    try{
+      localStorage.setItem(panelKey('panels'),JSON.stringify(panelLayout))
+      localStorage.setItem(panelKey('panelOrder'),JSON.stringify(panelOrder))
+      localStorage.setItem(panelKey('panelLocks'),JSON.stringify(lockedPanels))
+    }catch{}
+  },[panelLayout,panelOrder,lockedPanels,deviceProfile.layout])
+  function movePanel(from,to){setPanelOrder(order=>{const next=[...order],a=next.indexOf(from);if(a<0)return order;const b=to==='up'?Math.max(0,a-1):to==='down'?Math.min(next.length-1,a+1):next.indexOf(to);if(b<0||a===b)return order;next.splice(a,1);next.splice(b,0,from);return next})}
   function resizePanel(id,field,delta){setPanelLayout(layout=>({...layout,[id]:{...layout[id],[field]:field==='span'?Math.max(2,Math.min(12,layout[id].span+delta)):Math.max(120,Math.min(900,layout[id].height+delta))}}))}
   function togglePanelLock(id){setLockedPanels(v=>({...v,[id]:!v[id]}))}
   function resetPanelLayout(){setPanelLayout({clock:{span:6,height:520},info:{span:3,height:360},laps:{span:3,height:360},music:{span:12,height:90}});setPanelOrder(['clock','info','laps','music']);setLockedPanels({})}
@@ -196,7 +229,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     </section>}
     <div className="timer-caption"><Clock3 size={15}/> {format.toUpperCase()}</div>
     <div className="timer-dashboard timer-dashboard-reflow">
-      <div className="timer-layout-toolbar"><strong>Tilpass oppsett</strong><span>Dra panela etter handtaket · endra breidd/høgd · lås dei når du er nøgd</span><button type="button" className="text-button" onClick={resetPanelLayout}>Tilbakestill panel</button></div>
+      <div className="timer-layout-toolbar"><strong>Tilpass oppsett</strong><span>Bruk pilene på touch eller dra panela med mus · endra storleik · lås dei når du er nøgd</span><button type="button" className="text-button" onClick={resetPanelLayout}>Tilbakestill panel</button></div>
       <div className="timer-panel-canvas">
        {panelOrder.map(id=>id==='clock'?<TimerPanel key={id} id="clock" title="HOVUDKLOKKE OG WOD" layout={panelLayout.clock} locked={Boolean(lockedPanels.clock)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}><section className="timer-center">
         <div className="timer-phase">{phase}</div>
