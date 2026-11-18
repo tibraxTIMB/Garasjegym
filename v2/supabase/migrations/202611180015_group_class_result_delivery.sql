@@ -53,12 +53,12 @@ with check (
     select 1
     from public.class_live_sessions s
     join public.class_bookings b on b.class_id = s.class_id
-    where s.id = session_id
+    where s.id = class_session_wod_completions.session_id
       and s.status = 'finished'
       and s.results_published_at is not null
       and b.member_id = (select auth.uid())
       and b.status = 'confirmed'
-      and (s.wod_ids @> jsonb_build_array(wod_id::text) or s.wod_id = wod_id)
+      and (s.wod_ids @> jsonb_build_array(class_session_wod_completions.wod_id::text) or s.wod_id = class_session_wod_completions.wod_id)
   )
 );
 
