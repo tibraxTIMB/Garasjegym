@@ -4875,3 +4875,14 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .live-session-results .class-attendee-list>b{font-size:12px;color:var(--muted,#a5b2c1)}
 .live-session-results .class-attendee-list>span{display:flex;justify-content:space-between;gap:10px;font-size:13px}
 @media(max-width:560px){.group-result-wod{align-items:flex-start;flex-direction:column}.group-result-wod button{width:100%}.live-session-results .class-attendee-list>span{flex-direction:column;gap:2px}}
+
+
+/* Clear, persistent finish action inside the workout timer */
+.timer-finish-row { display:grid; justify-items:center; gap:5px; width:min(100%,360px); margin-top:5px; padding-top:13px; border-top:1px solid rgba(255,255,255,.10); }
+.timer-finish-button { display:flex; align-items:center; justify-content:center; gap:9px; width:100%; min-height:48px; padding:11px 18px; color:#171512; background:var(--orange); border:0; border-radius:10px; font:inherit; font-size:15px; font-weight:900; cursor:pointer; transition:filter .15s ease,transform .15s ease; }
+.timer-finish-button:hover { filter:brightness(1.08); transform:translateY(-1px); }
+.timer-finish-button:focus-visible { outline:3px solid #fff; outline-offset:3px; }
+.timer-finish-row small { color:var(--muted); font-size:10px; text-align:center; }
+.timer-focused .timer-finish-row { width:min(90vw,420px); margin-top:20px; }
+.timer-focused .timer-finish-button { min-height:56px; font-size:17px; }
+@media(max-width:430px) { .timer-finish-row { width:100%; } .timer-finish-button { min-height:50px; } }
