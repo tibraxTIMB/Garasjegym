@@ -3577,3 +3577,39 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
   .wod-builder-step-2 .wod-exercise-card{min-height:154px!important;padding:8px!important}
   .wod-builder-step-2 .wod-exercise-card .wod-exercise-info>strong{font-size:11px!important}
 }
+
+
+/* STURMKOPF – fast steg-navigasjon på mobil i WOD-byggaren */
+@media(max-width:760px){
+ .wizard-selected-stage{padding-bottom:calc(112px + env(safe-area-inset-bottom, 0px))!important}
+ .wizard-stage-actions-sticky{
+  position:fixed!important;
+  left:12px!important;
+  right:12px!important;
+  bottom:calc(10px + env(safe-area-inset-bottom, 0px))!important;
+  z-index:1000!important;
+  display:grid!important;
+  grid-template-columns:minmax(92px,.78fr) minmax(0,1.42fr)!important;
+  gap:10px!important;
+  width:auto!important;
+  max-width:680px!important;
+  margin:0 auto!important;
+  padding:12px!important;
+  border:1px solid rgba(116,143,153,.48)!important;
+  border-radius:18px!important;
+  background:rgba(3,12,16,.96)!important;
+  box-shadow:0 -8px 28px rgba(0,0,0,.48)!important;
+  backdrop-filter:blur(14px)!important;
+ }
+ .wizard-stage-actions-sticky button{
+  min-width:0!important;
+  min-height:56px!important;
+  margin:0!important;
+  white-space:normal!important;
+  line-height:1.2!important;
+ }
+ .wizard-stage-actions-sticky .primary-button{padding-left:10px!important;padding-right:10px!important}
+}
+@media(min-width:761px){
+ .wizard-stage-actions-sticky{position:static!important}
+}
