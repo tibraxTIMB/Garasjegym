@@ -3282,3 +3282,87 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
   box-shadow:none!important;
  }
 }
+
+
+/* STURMKOPF – final tidy-up for WOD setup step */
+@media(max-width:700px){
+ .wod-builder-step-1 .wod-builder-layout>.wod-composer,
+ .wod-builder-step-1 .wod-composer{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+ }
+ .wod-builder-step-1 .wod-composer>.engine-section-title{
+  border:0!important;
+  padding:0 2px 8px!important;
+ }
+ .wod-builder-step-1 .wod-composer .admin-create-form{
+  border:0!important;
+  padding:0!important;
+  margin:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+ }
+ .wod-builder-step-1 .wod-composer .wizard-format-panel{
+  gap:14px!important;
+  padding:4px 2px!important;
+ }
+ .wod-builder-step-1 .wod-composer .engine-fields:empty{
+  display:none!important;
+  margin:0!important;
+  padding:0!important;
+  min-height:0!important;
+ }
+ .wod-builder-step-1 .wod-composer .wod-advanced-fields{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:8px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+ }
+ .wod-builder-step-1 .wod-composer .wod-advanced-fields label{
+  display:grid!important;
+  gap:7px!important;
+  color:#e8eeee!important;
+  font-size:14px!important;
+  font-weight:700!important;
+ }
+ .wod-builder-step-1 .wod-composer .wod-advanced-fields input,
+ .wod-builder-step-1 .wod-composer .wod-advanced-fields select{
+  width:100%!important;
+  min-width:0!important;
+  min-height:50px!important;
+  box-sizing:border-box!important;
+  padding:11px 13px!important;
+  border:1px solid #52656b!important;
+  border-radius:10px!important;
+  background:#172328!important;
+  color:#f5f7f7!important;
+  font-size:16px!important;
+  box-shadow:none!important;
+ }
+ .wod-builder-step-1 .wod-composer .wod-help{
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#b7c3c5!important;
+  font-size:13px!important;
+  line-height:1.5!important;
+ }
+ .wod-builder-step-1 .wod-composer .wizard-stage-actions{
+  margin:4px 0 0!important;
+  padding:4px 0 0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+ }
+ .wod-builder-step-1 .wod-composer .wizard-stage-actions button{
+  width:100%!important;
+  min-height:54px!important;
+ }
+}
