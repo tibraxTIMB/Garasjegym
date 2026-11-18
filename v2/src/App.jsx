@@ -79,9 +79,9 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
         })
         if (authError) throw authError
         if (data.session) {
-          setMessage('Konto oppretta. Du er logga inn.')
+          setMessage('Konto oppretta. Du må venta på at ein administrator godkjenner medlemskapet før du får tilgang.')
         } else {
-          setMessage('Registreringa er motteken. Sjekk e-posten din for å stadfesta kontoen før du loggar inn.')
+          setMessage('Registreringa er motteken. Stadfest e-postadressa di dersom du får ei lenkje. Deretter må ein administrator godkjenna medlemskapet før du får tilgang.')
           setMode('login')
         }
       } else {
@@ -107,7 +107,7 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
         </div>
         <div className="eyebrow"><ShieldCheck size={14} /> MEDLEMSOMRÅDE</div>
         <h1>{mode === 'login' ? <>Velkomen <em>tilbake.</em></> : mode === 'reset' || mode === 'update' ? <>Nytt <em>passord.</em></> : <>Bli ein <em>del av laget.</em></>}</h1>
-        <p className="auth-intro">{mode === 'reset' ? 'Skriv inn e-postadressa di, så sender me ei lenkje for å nullstilla passordet.' : mode === 'update' ? 'Vel eit nytt passord for GarasjeGym-kontoen din.' : 'Logg inn med GarasjeGym-kontoen din, eller registrer ein ny medlemskonto.'}</p>
+        <p className="auth-intro">{mode === 'reset' ? 'Skriv inn e-postadressa di, så sender me ei lenkje for å nullstilla passordet.' : mode === 'update' ? 'Vel eit nytt passord for GarasjeGym-kontoen din.' : 'Logg inn med GarasjeGym-kontoen din, eller send ein søknad om medlemskap.'}</p>
         <form className="auth-form" onSubmit={submit}>
           {mode === 'signup' && (
             <label>
@@ -279,12 +279,23 @@ export default function App() {
       </div></main>
     )
   }
-  if (!profile.active) {
+  if (profile.membership_status === 'pending') {
+    return (
+      <main className="auth-shell"><div className="auth-card">
+        <div className="eyebrow"><ShieldCheck size={14} /> MEDLEMSKAP · VENTAR</div>
+        <h1>Søknaden er <em>motteken.</em></h1>
+        <p className="auth-intro">Medlemskapet ditt ventar på godkjenning frå ein administrator. Du får tilgang til GarasjeGym når søknaden er godkjend.</p>
+        <p className="auth-footnote">Du kan logga ut no og logga inn igjen seinare for å sjå om tilgangen er opna.</p>
+        <button className="primary-button" onClick={() => supabase.auth.signOut()}>Logg ut</button>
+      </div></main>
+    )
+  }
+  if (profile.membership_status === 'rejected' || !profile.active) {
     return (
       <main className="auth-shell"><div className="auth-card">
         <div className="eyebrow"><ShieldCheck size={14} /> MEDLEMSKAP</div>
-        <h1>Kontoen er <em>inaktiv.</em></h1>
-        <p className="auth-intro">Ta kontakt med ein administrator i GarasjeGym for å få tilgang.</p>
+        <h1>Kontoen har <em>ikkje tilgang.</em></h1>
+        <p className="auth-intro">Ta kontakt med ein administrator i GarasjeGym dersom du meiner dette er feil.</p>
         <button className="primary-button" onClick={() => supabase.auth.signOut()}>Logg ut</button>
       </div></main>
     )
