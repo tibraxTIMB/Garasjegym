@@ -4738,3 +4738,41 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
   }
   .wod-builder-step-2 .wod-composer .wod-selected-list{max-height:320px!important}
 }
+
+
+/* WOD dosage workspace: responsive full-width cards and compact controls */
+.wod-builder-step-3 .wizard-dose-stage,
+.wod-builder-step-3 .wizard-dose-exercises{
+  width:100%!important;max-width:none!important;min-width:0!important;
+  box-sizing:border-box!important;
+}
+.wod-builder-step-3 .wizard-dose-exercises{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  align-items:start!important;
+  gap:12px!important;
+}
+.wod-builder-step-3 .wizard-dose-card{min-width:0!important;width:100%!important}
+.wod-builder-step-3 .wizard-dose-fields{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:9px!important;
+}
+.wod-builder-step-3 .wizard-dose-fields label{min-width:0!important}
+.wod-builder-step-3 .wizard-dose-fields input,
+.wod-builder-step-3 .wizard-dose-fields select,
+.wod-builder-step-3 .wizard-dose-fields textarea{
+  width:100%!important;min-width:0!important;box-sizing:border-box!important;
+}
+@media(max-width:1100px){
+ .wod-builder-step-3 .wizard-dose-exercises{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:680px){
+ .wod-builder-step-3 .wizard-dose-exercises{grid-template-columns:minmax(0,1fr)!important}
+ .wod-builder-step-3 .wizard-dose-fields{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(orientation:landscape) and (max-height:600px){
+ .wod-builder-step-3 .wizard-dose-exercises{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .wod-builder-step-3 .wizard-dose-card-head{padding:8px 10px!important}
+ .wod-builder-step-3 .wizard-dose-card-body{padding:0 10px 10px!important}
+}
