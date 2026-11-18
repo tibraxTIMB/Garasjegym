@@ -2914,3 +2914,63 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
   min-height:38px!important;padding:6px 10px!important;
  }
 }
+
+
+/* STURMKOPF – declutter exercise picker at real phone/tablet portrait widths */
+@media(max-width:800px){
+ .wod-builder-step-2 .wod-exercise-grid{
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:7px!important;
+  max-height:none!important;
+  overflow:visible!important;
+  padding:0!important;
+ }
+ .wod-builder-step-2 .wod-exercise-card{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:8px!important;
+  min-height:0!important;
+  padding:11px 12px!important;
+  border:0!important;
+  border-radius:8px!important;
+  background:#172226!important;
+  box-shadow:none!important;
+ }
+ .wod-builder-step-2 .wod-exercise-card.is-picked{
+  border:0!important;
+  background:#202723!important;
+  box-shadow:inset 3px 0 #d9962d!important;
+ }
+ .wod-builder-step-2 .wod-exercise-card-top{min-height:0!important;gap:7px!important}
+ .wod-builder-step-2 .wod-exercise-illustration{display:none!important}
+ .wod-builder-step-2 .wod-exercise-info{gap:4px!important}
+ .wod-builder-step-2 .wod-exercise-info>strong{font-size:16px!important;line-height:1.25!important}
+ .wod-builder-step-2 .wod-exercise-info>small{font-size:11px!important;line-height:1.35!important}
+ .wod-builder-step-2 .wod-equipment-icons{gap:6px!important}
+ .wod-builder-step-2 .wod-exercise-card .wod-add-button{min-height:39px!important;font-size:12px!important}
+ .wod-builder-step-2 .wod-builder-layout>.wod-library{
+  padding:8px 0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+ }
+ .wod-builder-step-2 .wod-pause-insert{
+  display:flex!important;
+  border:0!important;
+  border-radius:0!important;
+  border-top:1px solid #344247!important;
+  border-bottom:1px solid #344247!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding:12px 2px!important;
+ }
+ .wod-builder-step-2 .wod-filter-panel{
+  border:0!important;
+  border-radius:8px!important;
+  box-shadow:none!important;
+ }
+ .wod-builder-step-2 .wod-filter-toolbar>button{
+  box-shadow:none!important;
+ }
+}
