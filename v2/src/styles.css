@@ -4405,3 +4405,187 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
  .wod-builder-step-3 .wizard-dose-card-head{width:100%!important}
  .wod-builder-step-3 .wizard-dose-fields{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+
+
+/* GarasjeGym 2.0 — full-width responsive dosing workspace */
+.main:has(.wod-builder-step-3){
+  padding-left:0!important;
+  padding-right:0!important;
+  min-width:0!important;
+}
+.content-card:has(.wod-builder-step-3){
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  padding:clamp(10px,1.35vw,20px)!important;
+  border-left:0!important;
+  border-right:0!important;
+  border-radius:0!important;
+}
+.wod-builder-step-3{
+  position:static!important;
+  left:auto!important;
+  transform:none!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+  box-sizing:border-box!important;
+}
+.wod-builder-step-3 .wod-builder-layout,
+.wod-builder-step-3 .wod-builder-layout>.wod-composer,
+.wod-builder-step-3 .wod-composer .admin-create-form,
+.wod-builder-step-3 .wizard-dose-stage,
+.wod-builder-step-3 .wizard-dose-exercises{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+.wod-builder-step-3 .wod-builder-layout>.wod-composer{
+  padding:clamp(10px,1.3vw,20px)!important;
+}
+.wod-builder-step-3 .wizard-dose-stage{
+  gap:clamp(10px,1.3vw,16px)!important;
+  padding:4px 0 24px!important;
+}
+.wod-builder-step-3 .wizard-dose-exercises{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  align-items:start!important;
+  gap:clamp(8px,1.1vw,14px)!important;
+}
+.wod-builder-step-3 .wizard-dose-card{
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+}
+.wod-builder-step-3 .wizard-dose-card-head{
+  min-width:0!important;
+  padding:10px 12px!important;
+  gap:8px!important;
+}
+.wod-builder-step-3 .wizard-dose-card-head>strong{
+  min-width:0!important;
+  overflow-wrap:anywhere!important;
+  font-size:clamp(13px,1.2vw,16px)!important;
+}
+.wod-builder-step-3 .wizard-dose-card-summary{
+  max-width:34%!important;
+  overflow-wrap:anywhere!important;
+  font-size:11px!important;
+}
+.wod-builder-step-3 .wizard-dose-card-body{
+  min-width:0!important;
+  padding:0 12px 12px!important;
+}
+.wod-builder-step-3 .wizard-dose-level-tabs{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:6px!important;
+  margin:9px 0!important;
+}
+.wod-builder-step-3 .wizard-dose-level-tabs button{
+  min-width:0!important;
+  min-height:36px!important;
+  padding:5px 6px!important;
+  font-size:12px!important;
+  white-space:normal!important;
+}
+.wod-builder-step-3 .wizard-dose-fields{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:8px!important;
+  min-width:0!important;
+}
+.wod-builder-step-3 .wizard-dose-fields label{
+  min-width:0!important;
+  font-size:12px!important;
+  line-height:1.3!important;
+  overflow-wrap:anywhere!important;
+}
+.wod-builder-step-3 .wizard-dose-fields input,
+.wod-builder-step-3 .wizard-dose-fields select,
+.wod-builder-step-3 .wizard-dose-fields textarea{
+  width:100%!important;
+  min-width:0!important;
+  min-height:40px!important;
+  padding:8px 10px!important;
+  font-size:14px!important;
+}
+.wod-builder-step-3 .wizard-dose-fields .wizard-dose-instruction{
+  grid-column:1/-1!important;
+}
+.wod-builder-step-3 .wizard-dose-copy{
+  flex-wrap:wrap!important;
+  margin-top:9px!important;
+}
+.wod-builder-step-3 .wizard-dose-method,
+.wod-builder-step-3 .wizard-dose-summary{
+  width:100%!important;
+  min-width:0!important;
+}
+.wod-builder-step-3 .wizard-stage-actions{
+  position:sticky!important;
+  bottom:0!important;
+  z-index:30!important;
+  display:flex!important;
+  flex-wrap:wrap!important;
+  justify-content:space-between!important;
+  gap:8px!important;
+  margin-top:10px!important;
+  padding:10px!important;
+  background:rgba(3,10,14,.97)!important;
+  border:1px solid #425159!important;
+  border-radius:12px!important;
+  box-shadow:0 -6px 20px rgba(0,0,0,.35)!important;
+}
+.wod-builder-step-3 .wizard-stage-actions button{
+  flex:1 1 180px!important;
+  min-width:0!important;
+  white-space:normal!important;
+}
+@media(min-width:1100px){
+  .wod-builder-step-3 .wizard-dose-exercises{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  .wod-builder-step-3 .wizard-dose-summary-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:600px) and (orientation:portrait){
+  .content-card:has(.wod-builder-step-3){
+    padding:8px!important;
+  }
+  .wod-builder-step-3 .wod-builder-layout>.wod-composer{
+    padding:10px!important;
+  }
+  .wod-builder-step-3 .wizard-dose-exercises{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  .wod-builder-step-3 .wizard-dose-card-head>strong{
+    font-size:15px!important;
+  }
+  .wod-builder-step-3 .wizard-dose-fields{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+@media(orientation:landscape) and (max-height:600px){
+  .main:has(.wod-builder-step-3){padding:0!important}
+  .content-card:has(.wod-builder-step-3){padding:8px!important}
+  .wod-builder-step-3 .wizard-dose-intro{padding:2px 0!important}
+  .wod-builder-step-3 .wizard-dose-intro h2{font-size:22px!important}
+  .wod-builder-step-3 .wizard-dose-exercises{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+  .wod-builder-step-3 .wizard-dose-card-head{padding:7px 9px!important}
+  .wod-builder-step-3 .wizard-dose-card-body{padding:0 9px 9px!important}
+  .wod-builder-step-3 .wizard-dose-level-tabs{margin:6px 0!important}
+  .wod-builder-step-3 .wizard-dose-level-tabs button{min-height:32px!important}
+  .wod-builder-step-3 .wizard-dose-fields{gap:6px!important}
+  .wod-builder-step-3 .wizard-dose-fields input,
+  .wod-builder-step-3 .wizard-dose-fields select{min-height:34px!important;padding:5px 8px!important}
+  .wod-builder-step-3 .wizard-stage-actions{padding:6px!important}
+}
