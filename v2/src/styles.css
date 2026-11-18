@@ -1973,3 +1973,44 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .assign-wod-hint{margin:0;color:#e8c17e;font-size:12px;line-height:1.45}
 .assign-wod-modal .primary-button,.assign-wod-modal .secondary-button{width:100%;justify-content:center;min-height:46px}
 @media(max-width:520px){.modal-backdrop{align-items:flex-end;padding:10px}.assign-wod-modal{max-height:88dvh;border-radius:16px 16px 10px 10px;padding:16px}}
+
+/* WOD Studio: tydeleg stegvis arbeidsflyt */
+.wod-wizard-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:4px 0 12px}
+.wod-wizard-steps button{display:flex;align-items:center;justify-content:center;gap:9px;min-width:0;padding:11px 9px;border:1px solid #3b484b;border-radius:11px;background:#182022;color:#b8c2c2;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.wod-wizard-steps button span{display:grid;place-items:center;flex:0 0 25px;width:25px;height:25px;border-radius:50%;background:#303b3e;color:#e7ece9;font-size:12px}
+.wod-wizard-steps button.active{border-color:var(--orange);background:#2a2923;color:#fff}
+.wod-wizard-steps button.active span{background:var(--orange);color:#17191a}
+.wod-wizard-steps button.complete{border-color:#4c7662;color:#d8eee1}
+.wod-wizard-steps button.complete span{background:#315b46;color:#fff}
+.wod-builder-step-1 .wod-library,.wod-builder-step-1 .wizard-selected-stage,.wod-builder-step-1 .wizard-publish-stage{display:none!important}
+.wod-builder-step-2 .wizard-format-panel,.wod-builder-step-2 .wizard-publish-stage{display:none!important}
+.wod-builder-step-3 .wod-library,.wod-builder-step-3 .wizard-format-panel,.wod-builder-step-3 .wizard-selected-stage{display:none!important}
+.wod-builder-step-1 .wod-builder-layout,.wod-builder-step-3 .wod-builder-layout{grid-template-columns:minmax(0,1fr)}
+.wod-builder-step-1 .wod-composer,.wod-builder-step-3 .wod-composer{width:100%;max-width:820px;margin-inline:auto}
+.wizard-format-panel,.wizard-selected-stage,.wizard-publish-stage{display:grid;gap:13px;min-width:0}
+.wizard-stage-intro{display:grid;gap:4px;padding-bottom:9px;border-bottom:1px solid #394447}
+.wizard-stage-intro strong{font-size:16px;color:#fff}
+.wizard-stage-intro span{font-size:12px;line-height:1.45;color:#b8c2c2}
+.wizard-stage-actions{display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid #394447}
+.wizard-stage-actions button{min-height:44px}
+.wizard-stage-actions button:only-child{margin-left:auto}
+.wizard-rx-scaled{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.wizard-publish-stage{padding:16px;border:1px solid #526164;border-radius:14px;background:linear-gradient(145deg,#20292b,#171d1f);box-shadow:0 14px 36px #0004}
+.wizard-publish-stage>label,.wizard-rx-scaled label{display:grid;gap:6px;color:#e2e5e2;font-size:12px;font-weight:800}
+.wizard-publish-stage textarea{min-height:86px}
+.wizard-publish-stage .wod-programming-note{margin:0}
+.wizard-selected-stage .wod-selected-list{display:grid;gap:10px}
+.wod-builder-step-2 .wod-builder-layout{grid-template-columns:minmax(0,1fr)}
+.wod-builder-step-2 .wod-library{width:100%}
+.wod-builder-step-2 .wod-composer{width:100%;max-width:100%}
+.wod-builder-step-2 .wod-selected-card{background:#20282a}
+.wod-builder-step-1 .wod-composer .engine-section-title,.wod-builder-step-3 .wod-composer .engine-section-title{margin-bottom:12px}
+@media(max-width:600px){
+ .wod-wizard-steps{gap:5px}
+ .wod-wizard-steps button{flex-direction:column;gap:5px;padding:8px 3px;font-size:10px;line-height:1.2;text-align:center}
+ .wod-wizard-steps button span{flex-basis:23px;width:23px;height:23px}
+ .wizard-rx-scaled{grid-template-columns:1fr}
+ .wizard-stage-actions{flex-wrap:wrap}
+ .wizard-stage-actions button{flex:1 1 100%}
+ .wizard-publish-stage{padding:12px}
+}
