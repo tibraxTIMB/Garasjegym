@@ -33,6 +33,7 @@ import ScheduleHub from './components/ScheduleHub.jsx'
 import MyPage from './components/MyPage.jsx'
 import MyTraining from './components/MyTraining.jsx'
 import { Music, MusicProvider } from './components/Music.jsx'
+import { useDeviceProfile } from './lib/deviceLayout.js'
 
 const sections = [
   { id: 'oversikt', label: 'Oversikt', icon: LayoutDashboard, note: 'Dashboard og treningsstatus' },
@@ -126,6 +127,7 @@ function LoadingScreen({ text }) {
 }
 
 export default function App() {
+  const deviceProfile = useDeviceProfile()
   const [session, setSession] = useState(null)
   const [passwordRecovery, setPasswordRecovery] = useState(false)
   const [authReady, setAuthReady] = useState(false)
