@@ -2629,3 +2629,84 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
  .wod-builder-step-1 .wod-composer .wod-name-field{grid-template-columns:minmax(0,1fr) auto!important}
  .wod-builder-step-1 .wod-composer .wod-format-tiles{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+
+
+/* FINAL STEP 1 LAYOUT — one predictable full-width grid */
+.wod-builder.wod-builder-step-1{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+ width:100%!important;max-width:100%!important;min-width:0!important;
+ margin:0!important;padding:12px!important;left:auto!important;transform:none!important;
+ box-sizing:border-box!important;overflow:visible!important
+}
+.wod-builder-step-1>.training-heading,
+.wod-builder-step-1>.wod-wizard-steps,
+.wod-builder-step-1>.pt-wod-builder-form{
+ grid-column:1/-1!important;width:100%!important;max-width:100%!important;
+ min-width:0!important;box-sizing:border-box!important
+}
+.wod-builder-step-1 .pt-wod-builder-form{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+ gap:12px!important;justify-items:stretch!important
+}
+.wod-builder-step-1 .pt-wod-builder-form>.wod-classic-picker,
+.wod-builder-step-1 .pt-wod-builder-form>.wod-studio-tools,
+.wod-builder-step-1 .pt-wod-builder-form>.wod-builder-layout{
+ grid-column:1/-1!important;width:100%!important;max-width:100%!important;
+ min-width:0!important;justify-self:stretch!important;box-sizing:border-box!important
+}
+.wod-builder-step-1 .wod-builder-layout{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+ gap:12px!important;width:100%!important;max-width:100%!important;min-width:0!important
+}
+.wod-builder-step-1 .wod-builder-layout>.wod-composer{
+ display:block!important;grid-column:1/-1!important;grid-row:1!important;
+ width:100%!important;max-width:100%!important;min-width:0!important;
+ justify-self:stretch!important;box-sizing:border-box!important;
+ padding:18px!important;margin:0!important
+}
+.wod-builder-step-1 .wod-composer>.admin-create-form,
+.wod-builder-step-1 .wod-composer .admin-create-form,
+.wod-builder-step-1 .wod-composer .wizard-format-panel{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+ width:100%!important;max-width:100%!important;min-width:0!important;
+ box-sizing:border-box!important
+}
+.wod-builder-step-1 .wod-composer .wizard-format-panel{
+ gap:18px!important;padding:20px!important
+}
+.wod-builder-step-1 .wod-composer .wod-name-field{
+ display:grid!important;grid-template-columns:minmax(220px,520px) auto!important;
+ gap:12px!important;align-items:end!important;width:100%!important;max-width:100%!important
+}
+.wod-builder-step-1 .wod-composer .wod-setup-format{
+ width:100%!important;max-width:100%!important;min-width:0!important
+}
+.wod-builder-step-1 .wod-composer .wod-format-tiles{
+ display:grid!important;grid-template-columns:repeat(auto-fit,minmax(132px,1fr))!important;
+ gap:10px!important;width:100%!important;max-width:100%!important;min-width:0!important
+}
+.wod-builder-step-1 .wod-composer .wod-format-tiles button{
+ display:flex!important;flex-direction:column!important;align-items:center!important;
+ justify-content:center!important;gap:7px!important;width:100%!important;min-width:0!important;
+ min-height:78px!important;height:auto!important;padding:10px 8px!important;
+ white-space:normal!important;overflow:hidden!important;box-sizing:border-box!important;
+ border-radius:12px!important
+}
+.wod-builder-step-1 .wod-composer .wod-format-tiles button .wod-format-icon{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ width:34px!important;height:34px!important;font-size:23px!important;line-height:1!important
+}
+.wod-builder-step-1 .wod-composer .wod-format-tiles button strong{
+ display:block!important;width:100%!important;min-width:0!important;
+ font-size:12px!important;line-height:1.2!important;text-align:center!important;
+ white-space:normal!important;overflow-wrap:anywhere!important
+}
+.wod-builder-step-1 .wod-composer .engine-fields,
+.wod-builder-step-1 .wod-composer .wod-advanced-fields{
+ width:100%!important;max-width:100%!important;min-width:0!important
+}
+@media(max-width:700px){
+ .wod-builder-step-1 .wod-composer .wizard-format-panel{padding:14px!important}
+ .wod-builder-step-1 .wod-composer .wod-format-tiles{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .wod-builder-step-1 .wod-composer .wod-name-field{grid-template-columns:minmax(0,1fr) auto!important}
+}
