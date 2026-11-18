@@ -2333,3 +2333,19 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
  .wod-builder-step-1 .wod-composer .wizard-format-panel,.wod-builder-step-3 .wod-composer .wizard-publish-stage,.wod-builder-step-3 .wod-composer .wizard-rx-scaled{grid-template-columns:minmax(0,1fr)!important}
  .wod-builder-step-3 .wod-composer .wizard-publish-stage>*{grid-column:1!important}
 }
+
+
+/* WOD Studio four-stage finish and responsive preview */
+.wod-builder-step-4 .wod-builder-layout{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:16px!important}
+.wod-builder-step-4 .wod-builder-layout>.wod-composer{display:block!important;grid-column:1!important;grid-row:1!important;width:100%!important;max-width:none!important;max-height:none!important;overflow:visible!important;padding:clamp(16px,2vw,28px)!important}
+.wod-builder-step-4 .wod-composer .admin-create-form{display:block!important;max-height:none!important;overflow:visible!important}
+.wod-builder-step-4 .wizard-final-stage{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(260px,.75fr)!important;gap:18px!important;align-items:start!important}
+.wod-builder-step-4 .wizard-final-stage>.wizard-stage-intro,.wod-builder-step-4 .wizard-final-stage>.wod-final-preview,.wod-builder-step-4 .wizard-final-stage>.wod-publish-toggle,.wod-builder-step-4 .wizard-final-stage>.wizard-stage-actions{grid-column:1/-1!important}
+.wod-final-preview{padding:22px!important;border:1px solid var(--border-color,#3b4b4d)!important;border-radius:16px!important;background:linear-gradient(145deg,#1c2b30,#172124)!important;color:var(--text-color,#f4f6f5)!important}
+.wod-final-preview h2{margin:8px 0 5px!important;font-size:clamp(22px,3vw,32px)!important}
+.wod-final-preview>div>p,.wod-final-preview>p{color:#b9c8c8!important}
+.wod-final-preview ol{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))!important;gap:9px!important;padding:0!important;list-style:none!important;counter-reset:none!important}
+.wod-final-preview li{display:flex!important;flex-direction:column!important;gap:5px!important;padding:12px!important;border:1px solid #40545a!important;border-radius:10px!important;background:#23343a!important}
+.wod-final-preview li span{font-size:12px!important;color:#bdcbca!important}
+.wod-builder-step-4 .wizard-stage-actions{justify-content:space-between!important}
+@media(max-width:760px){.wod-builder-step-4 .wizard-final-stage{grid-template-columns:minmax(0,1fr)!important}.wod-builder-step-4 .wizard-final-stage>*{grid-column:1!important}.wod-final-preview{padding:15px!important}}
