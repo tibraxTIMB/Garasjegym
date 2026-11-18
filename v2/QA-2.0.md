@@ -115,7 +115,7 @@ Ingen ende-til-ende-testar er stadfesta køyrde i denne arbeidsøkta. Migrering 
 
 ## Testmiljø – 16.11.2026
 - Supabase Free: `garasjegym-2-test` (`izwzwvlexqxqewzijhhd`), ACTIVE_HEALTHY.
-- 14 feature-migreringar installerte etter schema-baseline; 24 offentlege tabellar, alle med RLS aktivert.
+- 15 feature-migreringar installerte etter schema-baseline; 24 offentlege tabellar, alle med RLS aktivert.
 - Demo-data: 7 øvingar, 1 WOD, 4 kaffiprodukt og 1 gruppetime.
 - Auth-profiltrigger kontrollert. Testkonto og innlogging må framleis prøvast manuelt.
 - Tryggleiksråd: ingen anon SECURITY DEFINER-funksjonar; 6 SECURITY DEFINER-funksjonar er medvite tilgjengelege for authenticated (rolleoppslag og handlingar/RPC). Ytterlegare RLS-ytelsesvarsel må vurderast før produksjon.
