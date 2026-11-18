@@ -42,7 +42,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
    const rows=data||[]
    setItems(rows)
    // Automatic housekeeping: expired notices, old read-only information and completed cases leave the active inbox.
-   const archiveIds=rows.filter(x=>isExpired(x)||(!x.requires_action&&!x.requires_ack&&x.is_read&&ageDays(x.created_at)>14)||(x.requires_ack&&x.acknowledged_at&&ageDays(x.acknowledged_at)>14)||((x.status==='resolved'||x.status==='dismissed')&&ageDays(x.resolved_at||x.created_at)>30)).map(x=>x.id)
+   const archiveIds=rows.filter(x=>isExpired(x)||(!x.requires_action&&!x.requires_ack&&ageDays(x.created_at)>30)||(x.requires_ack&&x.acknowledged_at&&ageDays(x.acknowledged_at)>14)||((x.status==='resolved'||x.status==='dismissed')&&ageDays(x.resolved_at||x.created_at)>30)).map(x=>x.id)
    if(archiveIds.length){
     await supabase.from('notifications').update({archived_at:new Date().toISOString()}).in('id',archiveIds).eq('recipient_id',user.id)
     setItems(current=>current.filter(x=>!archiveIds.includes(x.id)))
