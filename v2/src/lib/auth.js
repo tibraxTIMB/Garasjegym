@@ -11,7 +11,7 @@ export async function fetchMemberProfile(userId) {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, display_name, role, active, avatar_url')
+    .select('id, display_name, role, active, avatar_url, email, membership_status')
     .eq('id', userId)
     .single()
 
