@@ -127,7 +127,7 @@ function LoadingScreen({ text }) {
 }
 
 export default function App() {
-  const deviceProfile = useDeviceProfile()
+  useDeviceProfile()
   const [session, setSession] = useState(null)
   const [passwordRecovery, setPasswordRecovery] = useState(false)
   const [authReady, setAuthReady] = useState(false)
