@@ -13,7 +13,7 @@ const localDateISO = (date = new Date()) => {
   return local.toISOString().slice(0, 10)
 }
 
-function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList = [], timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {} }) {
+function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList = [], timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, originLabel = 'EIGA ØKT' }) {
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [round, setRound] = useState(1)
@@ -24,6 +24,12 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
   const [phase, setPhase] = useState('Klar')
   const [laps, setLaps] = useState([])
   const [soundOn, setSoundOn] = useState(true)
+  const [showTimerSettings, setShowTimerSettings] = useState(false)
+  const [appearance, setAppearance] = useState(() => {
+    try { return { clockSize: 112, accent: '#f0a33a', ...(JSON.parse(localStorage.getItem('garasjegym.timer.appearance') || '{}')) } }
+    catch { return { clockSize: 112, accent: '#f0a33a' } }
+  })
+  useEffect(() => { try { localStorage.setItem('garasjegym.timer.appearance', JSON.stringify(appearance)) } catch { /* Optional local preference. */ } }, [appearance])
   const schema = timerSettings?.workout_schema
   const savedDuration = Number(schema?.duration_seconds) || 0
   const capDuration = Number(schema?.time_cap_seconds) || (Number(schema?.time_cap_minutes) || 0) * 60
@@ -150,7 +156,17 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
   const roundsShown = isTimedInterval ? Math.min(currentRound, Number(rounds)) : currentRound
   const completedRounds = isAmrap ? laps.length : round
   const lapAction = () => { if(!running)return; setLaps(value => [...value, Math.max(0, elapsed - value.reduce((sum, lap) => sum + lap, 0))]); setRound(value => value + 1); cue(1200, 0.1) }
-  return <div className={focused ? 'engine-timer timer-focused' : 'engine-timer'}>
+  return <div className={focused ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
+    <div className="timer-topline">
+      <div className="timer-context"><span className="timer-origin-chip">{originLabel}</span><span className="timer-format-chip">{format.toUpperCase()}</span></div>
+      <button type="button" className="timer-customize-trigger" onClick={() => setShowTimerSettings(value => !value)} aria-expanded={showTimerSettings}>Tilpass klokke</button>
+    </div>
+    {showTimerSettings && <section className="timer-customize-panel" aria-label="Tilpass timer">
+      <div className="timer-customize-title"><strong>Klokkeuttrykk</strong><span>Lagra på denne eininga</span></div>
+      <label>Storleik på klokketal <b>{appearance.clockSize}px</b><input type="range" min="64" max="220" step="4" value={appearance.clockSize} onChange={e => setAppearance(value => ({ ...value, clockSize: Number(e.target.value) }))}/></label>
+      <label>Farge på klokke og markeringar <input type="color" value={appearance.accent} onChange={e => setAppearance(value => ({ ...value, accent: e.target.value }))}/></label>
+      <button type="button" className="text-button" onClick={() => setAppearance({ clockSize:112, accent:'#f0a33a' })}>Tilbakestill utsjånad</button>
+    </section>}
     <div className="timer-caption"><Clock3 size={15}/> {format.toUpperCase()}</div>
     <div className="timer-dashboard timer-dashboard-reflow">
       <section className="timer-center">
@@ -524,7 +540,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         <label>Treningsformat<select value={format} onChange={e => setFormat(e.target.value)}>{FORMATS.map(x => <option key={x}>{x}</option>)}</select></label>
         {['AMRAP','Nedteljing','E1MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM'].includes(format) && <label>Øktlengd (minutt)<input type="number" min="1" max="600" value={duration} onChange={e => setDuration(e.target.value)}/></label>}
       </div>
-      <Timer format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} exerciseList={items} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={() => setFinishOpen(true)}/>
+      <Timer format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} exerciseList={items} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={() => setFinishOpen(true)} originLabel={classSessionId ? 'GRUPPETIME' : launchAssignmentId ? 'TILDELT FRÅ PT' : source ? 'EIGEN WOD' : 'EIGA ØKT'}/>
       {items.length > 0 && format!=='Stasjonssirkel' && <section className="engine-section">
         <div className="engine-section-title"><h4>{format==='Stasjonssirkel'?'Stasjonane i økta':'WOD / øvingsrekkjefølgje'}</h4><span>{format==='Stasjonssirkel'?'Alle stasjonar – roter etter eiga startplassering':'Vel øvinga du arbeider med'}</span></div>
         <div className={format==='Stasjonssirkel'?'timer-station-grid':'wod-list'}>{items.map((item, index) => format==='Stasjonssirkel' ? <article className="timer-station-card" key={item.key}><span>STASJON {index+1}</span><strong>{item.exercise_name||'Øving'}</strong><small>{item.reps_mode==='amrap'?'AMRAP · maks reps':item.reps?item.reps+' reps':'Valfritt tal reps'}</small></article> : <button type="button" key={item.key} className={index === activeExerciseIndex ? 'secondary-button active' : 'secondary-button'} onClick={() => setActiveExerciseIndex(index)}>{index + 1}. {item.is_rest?'⏸ Pause · '+clock(Number(item.rest_duration_seconds)||30):item.exercise_name || 'Ny øving'}</button>)}</div>
