@@ -3,7 +3,7 @@ import { Activity, CheckCircle2, Clock3, Dumbbell, LoaderCircle, Pause, Play, Pl
 import { supabase } from '../lib/supabase.js'
 import { MusicMiniPlayer } from './Music.jsx'
 
-const FORMATS = ['Fri trening', 'E1MOM', 'E2MOM', 'E3MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
+const FORMATS = ['Fri trening', 'E1MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '' }] })
 const pad = (n) => String(n).padStart(2, '0')
 const clock = (seconds) => `${pad(Math.floor(Math.max(0, seconds) / 60))}:${pad(Math.max(0, seconds) % 60)}`
@@ -26,8 +26,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
   const schema = timerSettings?.workout_schema
   const savedDuration = Number(schema?.duration_seconds) || 0
   const capDuration = Number(schema?.time_cap_seconds) || (Number(schema?.time_cap_minutes) || 0) * 60
-  const isEMOM = ['EMOM', 'EMOM 1', 'EMOM 2', 'E1MOM', 'E2MOM', 'E3MOM'].includes(format)
-  const emomEvery = Math.max(1, Number(schema?.interval?.work_every_minutes) || (format === 'E2MOM' || format === 'EMOM 2' ? 2 : format === 'E3MOM' ? 3 : 1))
+  const isEMOM = /^E[1-7]MOM$/.test(format) || ['EMOM', 'EMOM 1', 'EMOM 2'].includes(format)
+  const emomEvery = Math.max(1, Math.min(7, Number(schema?.interval?.work_every_minutes) || Number(format.match(/^E([1-7])MOM$/)?.[1]) || (format === 'EMOM 2' ? 2 : 1)))
   const emomCycle = emomEvery * 60
   const isTimedInterval = ['Tabata', 'Intervall', 'Tilpassa', 'Row Intervals'].includes(format)
   const isStationCircuit = format === 'Stasjonssirkel' || schema?.structure === 'station_circuit'
