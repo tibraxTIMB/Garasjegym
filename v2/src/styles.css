@@ -5017,3 +5017,44 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
 .pt2-order-button{width:29px;height:29px;border:1px solid #485052;border-radius:7px;background:#202729;color:#e8e7e2;font-weight:900;cursor:pointer}.pt2-order-button:disabled{opacity:.25;cursor:not-allowed}
 
 .pt2-wod-select{width:100%;max-width:360px;min-height:35px;padding:7px 9px;color:#f2f1ed;background:#101416;border:1px solid #3a4143;border-radius:7px;font-size:11px;color-scheme:dark}
+
+/* STURMKOPF notification workflow */
+.notification-panel-v2{width:min(460px,calc(100vw - 24px));right:-44px}
+.notification-panel-v2>header small{display:block;margin-top:5px;color:var(--muted);font-size:10px}
+.notification-summary{display:flex;flex-wrap:wrap;gap:7px;padding:10px 14px;border-bottom:1px solid #303739}
+.notification-summary span{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:7px;background:#252d2f;color:#cdd1cc;font-size:9px;font-weight:800}
+.notification-summary .urgent{background:#492626;color:#ffaaa0}
+.notification-tabs{display:flex;gap:4px;padding:8px 10px;border-bottom:1px solid #303739;overflow-x:auto}
+.notification-tabs button{flex:0 0 auto;padding:7px 9px;border:1px solid transparent;border-radius:7px;background:transparent;color:#aeb5b1;font-size:10px;font-weight:800;cursor:pointer}
+.notification-tabs button.selected{background:#353d3e;border-color:#566061;color:#fff}
+.notification-item-v2{display:flex;align-items:flex-start;gap:9px;padding:12px 8px;border-bottom:1px solid #303739;border-radius:8px}
+.notification-item-v2.priority-urgent{background:#342426;border-left:3px solid #e65d54}
+.notification-item-v2.priority-high{border-left:3px solid #d99a42}
+.notification-item-v2.priority-normal{border-left:3px solid #657477}
+.notification-item-v2.priority-low{border-left:3px solid #52645e}
+.notification-item-v2.read{opacity:.82}
+.notification-item-icon-v2{flex:0 0 32px;height:32px;display:grid;place-items:center;border-radius:8px;background:#30393a;color:#d6d9d4}
+.notification-item-icon-v2.urgent{background:#512d2b;color:#ffaaa0}.notification-item-icon-v2.high{background:#473b2b;color:#edc17d}.notification-item-icon-v2.low{color:#a5c0b2}
+.notification-item-copy-v2{display:grid;gap:5px;flex:1;min-width:0}
+.notification-item-title{display:flex;align-items:center;justify-content:space-between;gap:7px}.notification-item-title strong{font-size:12px;line-height:1.35}
+.notification-priority{display:inline-flex;align-items:center;gap:3px;white-space:nowrap;font-size:8px;font-weight:900;text-transform:uppercase}
+.notification-priority.urgent{color:#ff9288}.notification-priority.high{color:#e7b66e}.notification-priority.low{color:#a4b9ad}
+.notification-item-copy-v2>span{color:#c2c8c3;font-size:10px;line-height:1.5;white-space:pre-line}
+.notification-meta-v2{display:flex;align-items:center;flex-wrap:wrap;gap:7px}.notification-meta-v2 time{font-size:9px;color:var(--muted)}
+.notification-kind{font-size:8px;letter-spacing:.04em}.notification-kind.action{color:#f0b36a}.notification-kind.ack{color:#8fc5ef}.notification-kind.done{color:#8cc7a2}
+.notification-actions-v2{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px}
+.notification-actions-v2 button{display:inline-flex;align-items:center;gap:4px;padding:6px 8px;border:1px solid #465153;border-radius:7px;background:#252d2f;color:#dfe3de;font-size:9px;font-weight:800;cursor:pointer}
+.notification-actions-v2 button:disabled{opacity:.5;cursor:wait}
+.notification-actions-v2 .notification-open-action{background:#394342;border-color:#64716d;color:#fff}
+.notification-actions-v2 .notification-ack-action{border-color:#47677b;color:#a9d7f3}
+.notification-actions-v2 .notification-done-action{border-color:#42664e;color:#a5d6b0}
+.notification-actions-v2 .notification-dismiss-action{color:#bfc5c0}
+.notification-unread-dot{flex:0 0 7px;height:7px;border-radius:50%;background:var(--orange);margin-top:5px}
+.notification-panel-v2>footer{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.notification-panel-v2>footer button{display:inline-flex;align-items:center;gap:4px;border:0;background:transparent;color:#d8a75f;font-size:9px;font-weight:800;cursor:pointer}
+.notification-context{display:grid;gap:8px;padding:12px;margin:10px 0;background:#171e20;border:1px solid #3c4749;border-radius:11px}
+.notification-context-head{display:flex;align-items:center;gap:7px;color:#d6dbd6}.notification-context-head strong{font-size:11px}.notification-context-head span{margin-left:auto;min-width:21px;height:21px;display:grid;place-items:center;border-radius:20px;background:#353e3f;color:#f3f0e8;font-size:10px;font-weight:900}
+.notification-context>p{margin:0;color:var(--muted);font-size:10px}
+.notification-context .notification-item-v2{padding:9px 6px}
+.notification-context .notification-actions-v2{margin-top:2px}
+@media(max-width:620px){.notification-panel-v2{right:-48px}.notification-summary{gap:4px}.notification-summary span{font-size:8px;padding:5px 6px}}
