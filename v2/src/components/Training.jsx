@@ -111,7 +111,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
 
   useEffect(() => {
     if (!running) return
-    if ((isCountdown || isEMOM || isDeathBy || isStationCircuit) && elapsed >= (isStationCircuit ? stationTotal : target)) {
+    if ((isCountdown || isEMOM || isStationCircuit) && elapsed >= (isStationCircuit ? stationTotal : target)) {
       setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return
     }
     if (hasTimeCap && elapsed >= capDuration) {
