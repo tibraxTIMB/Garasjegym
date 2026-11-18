@@ -51,10 +51,22 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
   setLoading(false)
  }
  useEffect(()=>{
-  load()
-  const channel=supabase.channel('notification-inbox-'+context).on('postgres_changes',{event:'*',schema:'public',table:'notifications'},()=>load()).subscribe()
-  return()=>{supabase.removeChannel(channel)}
- },[context])
+  let live=true
+  let channel=null
+  // Compact feeds are read-only summaries; only the main inbox needs a live subscription.
+  // Scope the subscription to the signed-in recipient to avoid refresh storms from other users' notices.
+  async function start(){
+   await load()
+   if(compact||!live)return
+   const {data:{user}}=await supabase.auth.getUser()
+   if(!live||!user)return
+   channel=supabase.channel('notification-inbox-'+user.id)
+    .on('postgres_changes',{event:'*',schema:'public',table:'notifications',filter:'recipient_id=eq.'+user.id},()=>{if(live)load()})
+    .subscribe()
+  }
+  start()
+  return()=>{live=false;if(channel)supabase.removeChannel(channel)}
+ },[context,compact])
  async function patch(id,values){
   setBusy(id);setError('')
   const {data:{user}}=await supabase.auth.getUser()
