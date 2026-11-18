@@ -190,6 +190,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [favoriteNames, setFavoriteNames] = useState([])
   const [favoriteWodIds, setFavoriteWodIds] = useState([])
   const [wodFavoritesOnly, setWodFavoritesOnly] = useState(false)
+  const [wodSearch, setWodSearch] = useState('')
+  const [expandedWodId, setExpandedWodId] = useState(null)
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [libraryQuery,setLibraryQuery]=useState('')
   const [history, setHistory] = useState([])
@@ -544,10 +546,33 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         <button onClick={() => startWorkout()}><Dumbbell size={20}/><strong>{simpleMode ? "Start trening" : "Fri trening"}</strong><small>{simpleMode ? "Start klokka og tren" : "Bygg økta frå botnen"}</small></button>
         <button onClick={() => setMode('wods')}><Activity size={20}/><strong>{simpleMode ? "Følg eit opplegg" : "Start ein WOD"}</strong><small>{simpleMode ? "Vel ei økt som er laga for deg" : "Vel ei publisert økt"}</small></button>
       </div>
-      {mode === 'wods' && <section className="engine-section"><div className="engine-section-title"><h4>Publiserte WOD-ar</h4><button className="text-button" onClick={() => setMode('home')}>Lukk</button></div>
-        <button type="button" className={wodFavoritesOnly?'secondary-button favorite-filter active':'secondary-button favorite-filter'} onClick={()=>setWodFavoritesOnly(v=>!v)}><Star size={14} fill={wodFavoritesOnly?'currentColor':'none'}/>{wodFavoritesOnly?'Vis alle publiserte WOD-ar':'Favoritt-WODs'}</button>
-        {wods.filter(wod=>!wodFavoritesOnly||favoriteWodIds.includes(wod.id)).length ? <div className="wod-list">{wods.filter(wod=>!wodFavoritesOnly||favoriteWodIds.includes(wod.id)).map(wod => <article className="wod-card" key={wod.id}><div className="wod-top"><span>{wod.format}</span><span>{wod.duration_minutes ? wod.duration_minutes + ' MIN' : ''}</span></div><h4>{wod.name}</h4>{wod.movements && <p className="wod-movements">{wod.movements}</p>}{wod.notes && <p className="wod-note">{wod.notes}</p>}<div className="wod-card-actions"><button type="button" className="secondary-button" onClick={() => startWorkout(wod)}>Start WOD</button><button type="button" className={favoriteWodIds.includes(wod.id)?'favorite-star selected':'favorite-star'} onClick={()=>toggleWodFavorite(wod)} aria-label={favoriteWodIds.includes(wod.id)?'Fjern WOD-favoritt':'Merk WOD som favoritt'}><Star size={17} fill={favoriteWodIds.includes(wod.id)?'currentColor':'none'}/></button></div></article>)}</div> : <div className="empty-state">{wodFavoritesOnly?'Du har ikkje merkt nokon WOD-ar som favoritt.':'Ingen publiserte WOD-ar enno.'}</div>}
-       </section>}
+      {mode === 'wods' && <section className="engine-section wod-library-screen">
+        <div className="engine-section-title"><div><h4>WOD-bibliotek</h4><span>{wods.length} publiserte økter</span></div><button className="text-button" onClick={() => setMode('home')}>Lukk</button></div>
+        <label className="wod-library-search"><Search size={16}/><input value={wodSearch} onChange={e=>setWodSearch(e.target.value)} placeholder="Søk etter WOD, format eller øving …"/></label>
+        <div className="wod-library-toolbar"><button type="button" className={wodFavoritesOnly?'secondary-button favorite-filter active':'secondary-button favorite-filter'} onClick={()=>setWodFavoritesOnly(v=>!v)}><Star size={14} fill={wodFavoritesOnly?'currentColor':'none'}/>{wodFavoritesOnly?'Vis alle publiserte WOD-ar':'Favoritt-WODs'}</button><span>{wods.filter(wod=>(!wodFavoritesOnly||favoriteWodIds.includes(wod.id))&&(!wodSearch.trim()||[wod.name,wod.format,wod.movements,wod.notes].some(value=>(value||'').toLowerCase().includes(wodSearch.trim().toLowerCase())))).length} treff</span></div>
+        {wods.filter(wod=>(!wodFavoritesOnly||favoriteWodIds.includes(wod.id))&&(!wodSearch.trim()||[wod.name,wod.format,wod.movements,wod.notes].some(value=>(value||'').toLowerCase().includes(wodSearch.trim().toLowerCase())))).length ? <div className="wod-list">{wods.filter(wod=>(!wodFavoritesOnly||favoriteWodIds.includes(wod.id))&&(!wodSearch.trim()||[wod.name,wod.format,wod.movements,wod.notes].some(value=>(value||'').toLowerCase().includes(wodSearch.trim().toLowerCase())))).map(wod => {
+          const schema=wod.timer_settings?.workout_schema||{}
+          const wodItems=Array.isArray(schema.items)?schema.items:[]
+          const isExpanded=expandedWodId===wod.id
+          return <article className={isExpanded?'wod-card wod-card-expanded':'wod-card'} key={wod.id}>
+            <div className="wod-top"><span>{wod.format||'WOD'}</span><span>{schema.duration_seconds?clock(schema.duration_seconds):wod.duration_minutes?wod.duration_minutes+' MIN':''}</span></div>
+            <h4>{wod.name}</h4>
+            <div className="wod-card-summary">{wodItems.length?String(wodItems.length)+' øvingar':wod.movements?'Øvingar og instruksjon':'Opna for detaljar'}{schema.stimulus?' · '+schema.stimulus:''}</div>
+            <div className="wod-card-actions">
+              <button type="button" className="secondary-button" onClick={()=>setExpandedWodId(isExpanded?null:wod.id)}>{isExpanded?'Skjul detaljar':'Sjå detaljar'}</button>
+              <button type="button" className="primary-button" onClick={()=>startWorkout(wod)}>Utfør WOD</button>
+              <button type="button" className={favoriteWodIds.includes(wod.id)?'favorite-star selected':'favorite-star'} onClick={()=>toggleWodFavorite(wod)} aria-label={favoriteWodIds.includes(wod.id)?'Fjern WOD-favoritt':'Merk WOD som favoritt'}><Star size={17} fill={favoriteWodIds.includes(wod.id)?'currentColor':'none'}/></button>
+            </div>
+            {isExpanded&&<div className="wod-detail-panel">
+              {wodItems.length?<div className="wod-detail-exercises"><strong>Øvingar og dosering</strong><ol>{wodItems.map((item,index)=><li key={item.exercise_id||item.exercise_name||index}><span>{item.exercise_name||'Øving '+(index+1)}</span><b>{item.reps_mode==='amrap'?'AMRAP':item.reps!=null&&item.reps!==''?item.reps+' reps':(item.sets||[]).map(set=>set.reps+' reps').filter(Boolean).join(' / ')||'Etter plan'}</b>{item.load_label&&<small>{item.load_label}</small>}{item.coach_note&&<small>{item.coach_note}</small>}</li>)}</ol></div>:wod.movements&&<div className="wod-detail-exercises"><strong>Øvingar</strong><p>{wod.movements}</p></div>}
+              {schema.rx_notes&&<div className="wod-level-note"><strong>RX</strong><p>{schema.rx_notes}</p></div>}
+              {schema.scaled_notes&&<div className="wod-level-note"><strong>Scaled</strong><p>{schema.scaled_notes}</p></div>}
+              {schema.coach_notes&&<div className="wod-level-note"><strong>Coach-notat</strong><p>{schema.coach_notes}</p></div>}
+              {!schema.rx_notes&&!schema.scaled_notes&&!schema.coach_notes&&wod.notes&&<div className="wod-level-note"><strong>Instruksjon</strong><p>{wod.notes}</p></div>}
+            </div>}
+          </article>
+        })}</div> : <div className="empty-state">{wodFavoritesOnly?'Du har ikkje merkt nokon WOD-ar som favoritt.':wodSearch?'Ingen WOD-ar passar søket.':'Ingen publiserte WOD-ar enno.'}</div>}
+      </section>}
       <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
         <div className="training-heading"><div><div className="section-kicker">HISTORIKK</div><h3>Siste økter</h3></div><span className="count-pill">{history.length} økter</span></div>
         {history.length ? <div className="history-list">{history.map(log => <article className="history-card" key={log.id}><div className="history-card-top"><strong>{log.title}</strong><span>{log.workout_date}</span></div><small>{log.format} · {log.workout_exercises?.length || 0} øvingar</small>{log.workout_exercises?.sort((a,b)=>a.sort_order-b.sort_order).map(ex => <div className="history-exercise" key={ex.id}><b>{ex.exercise_name}</b><span>{(ex.workout_sets || []).map(s => [s.reps ? s.reps+' reps' : '', s.load_kg ? s.load_kg+' kg' : '', s.time_text || ''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ') || 'Ingen sett registrert'}</span></div>)}{log.note && <p>{log.note}</p>}</article>)}</div> : <div className="empty-state">Du har ikkje lagra økter enno.</div>}
