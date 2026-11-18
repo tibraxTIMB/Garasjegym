@@ -2792,3 +2792,48 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
  .wod-builder-step-2 .wod-selected-actions{width:100%!important;justify-content:flex-end!important}
  .wod-builder-step-2 .wod-selected-actions button{width:34px!important;height:34px!important}
 }
+
+
+/* WOD Studio Module 2 – exercise picker redesign */
+.wod-builder-step-2 .wod-library{min-width:0}
+.wod-builder-step-2 .wod-library>.engine-section-title{align-items:center;margin-bottom:12px}
+.wod-builder-step-2 .wod-library>.engine-section-title span{padding:5px 9px;border:1px solid #43565d;border-radius:999px;background:#17252a;color:#e6eeee;font-size:11px;font-weight:800}
+.wod-builder-step-2 .wod-library .wod-search{min-height:48px;border:1px solid #52636a;border-radius:12px;background:#101b1f}
+.wod-builder-step-2 .wod-filter-toolbar{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:10px 0 6px}
+.wod-builder-step-2 .wod-filter-toolbar>button{min-height:54px;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;align-content:center;gap:3px 7px;padding:8px 9px;border-radius:10px;text-align:left}
+.wod-builder-step-2 .wod-filter-toolbar>button b{grid-column:1;grid-row:1;font-size:9px;letter-spacing:.08em;color:#aebdc0}
+.wod-builder-step-2 .wod-filter-toolbar>button span:nth-of-type(1){grid-column:1;grid-row:2;font-size:11px;font-weight:750;color:#f3f5f4}
+.wod-builder-step-2 .wod-filter-toolbar>button span:nth-of-type(2){grid-column:2;grid-row:1/3;align-self:center;font-size:17px;color:#e8a02a}
+.wod-builder-step-2 .wod-filter-toolbar>button.active{border:1px solid #efa126;background:#2a2b25;box-shadow:0 0 0 1px #efa12625}
+.wod-builder-step-2 .wod-filter-panel{padding:8px;margin-bottom:8px;background:#111e22}
+.wod-builder-step-2 .wod-filter-panel .wod-category-filter,
+.wod-builder-step-2 .wod-filter-panel .wod-movement-filter,
+.wod-builder-step-2 .wod-filter-panel .wod-area-filter{display:flex;flex-wrap:wrap;gap:6px}
+.wod-builder-step-2 .wod-filter-panel .wod-category-filter button,
+.wod-builder-step-2 .wod-filter-panel .wod-movement-filter button,
+.wod-builder-step-2 .wod-filter-panel .wod-equipment-filter button,
+.wod-builder-step-2 .wod-filter-panel .wod-area-filter button{min-height:30px;padding:6px 9px;border-radius:8px;font-size:10px}
+.wod-builder-step-2 .wod-active-filters{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:5px 0 10px;color:#aebdc0;font-size:10px}
+.wod-builder-step-2 .wod-active-filters button{display:flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid #6b5432;border-radius:999px;background:#2a241a;color:#ffc16c;font-size:10px;font-weight:800}
+.wod-builder-step-2 .wod-pause-insert{margin:10px 0;padding:9px 11px}
+.wod-builder-step-2 .wod-pause-insert small{font-size:10px}
+.wod-builder-step-2 .wod-exercise-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.wod-builder-step-2 .wod-exercise-card{min-height:160px;padding:10px}
+.wod-builder-step-2 .wod-exercise-card .wod-exercise-info>strong{font-size:13px}
+.wod-builder-step-2 .wod-exercise-card .wod-exercise-info>p{font-size:10px}
+@media(max-width:900px){
+ .wod-builder-step-2 .wod-exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+ .wod-builder-step-2 .wod-filter-toolbar{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .wod-builder-step-2 .wod-filter-toolbar>button{min-height:48px;padding:7px 8px}
+ .wod-builder-step-2 .wod-filter-toolbar>button b{font-size:8px}
+ .wod-builder-step-2 .wod-filter-toolbar>button span:nth-of-type(1){font-size:10px}
+ .wod-builder-step-2 .wod-filter-panel{padding:7px}
+ .wod-builder-step-2 .wod-exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .wod-builder-step-2 .wod-exercise-card{min-height:148px;padding:8px}
+ .wod-builder-step-2 .wod-exercise-card .wod-exercise-info>strong{font-size:12px}
+ .wod-builder-step-2 .wod-exercise-card .wod-exercise-info>small,
+ .wod-builder-step-2 .wod-exercise-card .wod-exercise-info>p{font-size:9px}
+ .wod-builder-step-2 .wod-exercise-card .wod-add-button{min-height:32px;font-size:9px}
+}
