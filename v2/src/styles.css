@@ -3737,3 +3737,49 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
    white-space:normal!important;line-height:1.2!important;
  }
 }
+
+
+/* WOD Studio – dedicated exercise library screen and compact workout workspace */
+@media(max-width:760px){
+ .wod-builder-step-2.wod-library-open .wod-setup-summary,
+ .wod-builder-step-2.wod-library-open .wod-composer{display:none!important}
+ .wod-builder-step-2.wod-library-open .wod-builder-layout{
+   display:block!important;width:100%!important;max-width:none!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-library{
+   display:block!important;width:100%!important;max-width:none!important;
+   max-height:none!important;grid-column:1/-1!important;
+   padding:14px!important;margin:0!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-exercise-grid{
+   max-height:calc(100dvh - 390px)!important;
+   overflow-y:auto!important;overscroll-behavior:contain!important;
+   padding-bottom:12px!important;
+ }
+ .wod-builder-step-2.wod-library-open .wizard-library-actions{
+   position:sticky!important;bottom:calc(8px + env(safe-area-inset-bottom,0px))!important;
+   z-index:20!important;padding:10px!important;margin:10px -2px 0!important;
+   border:1px solid #52656c!important;border-radius:14px!important;
+   background:rgba(3,12,16,.97)!important;
+ }
+ .wod-builder-step-2.wod-library-open .wizard-library-actions button{
+   width:100%!important;min-height:52px!important;
+ }
+ .wod-builder-step-2:not(.wod-library-open) .wod-builder-layout{
+   display:block!important;width:100%!important;
+ }
+ .wod-builder-step-2:not(.wod-library-open) .wod-setup-summary{display:none!important}
+ .wod-builder-step-2:not(.wod-library-open) .wod-composer{
+   display:block!important;width:100%!important;max-width:none!important;
+   padding:14px!important;margin:0!important;
+ }
+ .wod-builder-step-2:not(.wod-library-open) .wod-composer>.engine-section-title{display:none!important}
+ .wod-builder-step-2 .wod-open-library{
+   display:flex!important;width:100%!important;min-height:54px!important;
+   align-items:center!important;justify-content:center!important;
+   gap:8px!important;margin:12px 0 16px!important;
+ }
+ .wod-builder-step-2:not(.wod-library-open) .wod-selected-list{
+   max-height:none!important;overflow:visible!important;
+ }
+}
