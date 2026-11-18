@@ -13,14 +13,15 @@ const localDateISO = (date = new Date()) => {
   return local.toISOString().slice(0, 10)
 }
 
-function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList = [], timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, originLabel = 'EIGA ØKT' }) {
+function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, originLabel = 'EIGA ØKT' }) {
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [round, setRound] = useState(1)
   const [workSeconds, setWorkSeconds] = useState(timerSettings?.work_seconds ?? timerSettings?.workout_schema?.interval?.work_seconds ?? (format === 'Tabata' ? 20 : 60))
   const [restSeconds, setRestSeconds] = useState(timerSettings?.rest_seconds ?? timerSettings?.workout_schema?.interval?.rest_seconds ?? (format === 'Tabata' ? 10 : 60))
   const [rounds, setRounds] = useState(timerSettings?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
-  const [focused, setFocused] = useState(false)
+  const [focused, setFocused] = useState(Boolean(document.fullscreenElement))
+  const [hasStarted, setHasStarted] = useState(false)
   const [phase, setPhase] = useState('Klar')
   const [laps, setLaps] = useState([])
   const [soundOn, setSoundOn] = useState(true)
@@ -110,6 +111,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
   }, [format, minutes, seconds, timerSettings?.work_seconds, timerSettings?.rest_seconds, timerSettings?.rounds, timerSettings?.workout_schema?.duration_seconds, timerSettings?.workout_schema?.time_cap_seconds, timerSettings?.workout_schema?.station_circuit?.work_seconds, timerSettings?.workout_schema?.station_circuit?.transition_seconds, timerSettings?.workout_schema?.station_circuit?.rounds])
 
   useEffect(() => { if (stop) setRunning(false) }, [stop])
+  useEffect(() => { const sync = () => setFocused(Boolean(document.fullscreenElement)); document.addEventListener('fullscreenchange', sync); return () => document.removeEventListener('fullscreenchange', sync) }, [])
 
   useEffect(() => {
     if (!running) return undefined
@@ -175,19 +177,20 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', exerciseList
         <div className="timer-round-label">{isStationCircuit ? 'ARBEID / STASJONSBYTE' : isCountdown ? 'GJENSTÅANDE TID' : isEMOM ? 'TIL NESTE ARBEIDSSTART' : isTimedInterval ? 'TID I INTERVALLFASEN' : 'MEDGÅTT TID'}</div>
         {isStationCircuit ? <div className="timer-station-plan"><div className="timer-station-plan-heading"><span>STASJONANE I SIRKELEN</span><b>{stationPlan.rounds ?? schema?.rounds ?? rounds} rundar</b></div><div className="timer-station-grid">{stationList.map((station,index)=><article className="timer-station-card" key={station.station_number||index}><span>STASJON {station.station_number||index+1}</span><strong>{station.exercise_name||station.name||'Øving'}</strong><small>{station.reps_mode==='amrap'?'AMRAP · så mange som mogleg':station.reps!=null&&station.reps!==''?`${station.reps} reps`:'Vel sjølv tal reps'}{station.load_label?' · '+station.load_label:''}</small>{station.description&&<p>{station.description}</p>}{station.coach_note&&<p>{station.coach_note}</p>}</article>)}</div></div> : isAmrap ? <div className="timer-amrap-exercise-list"><span>ØVINGAR I WOD-EN</span>{exerciseList.length ? <ol>{exerciseList.map((exercise,index)=>{const setReps=(exercise.sets||[]).map(set=>String(set.reps??'').trim()).filter(Boolean);const uniqueReps=[...new Set(setReps)];const repsLabel=uniqueReps.length===1?(setReps.length>1?`${setReps.length} × ${uniqueReps[0]}`:uniqueReps[0]):uniqueReps.length>1?uniqueReps.join(' / '):String(exercise.reps??'').trim();return <li key={exercise.key||index} className={exercise.is_rest?'timer-rest-item':''}><b>{index+1}.</b><span>{exercise.is_rest?<><strong>PAUSE</strong><small> {clock(Number(exercise.rest_duration_seconds)||30)}</small></>:<>{repsLabel&&<strong className="timer-amrap-reps">{repsLabel} × </strong>}{exercise.exercise_name||'Øving utan namn'}</>}</span></li>})}</ol> : <p>Ingen øvingar er lagde til.</p>}</div> : !isStationCircuit && activeExercise && <div className="timer-active-under-clock"><span>{isTimedInterval ? `DRAG ${intervalExerciseIndex+1} / ${intervalExerciseCount}` : 'GJELDANDE ØVING'}</span><b>{isTimedInterval ? currentIntervalExercise : activeExercise}</b></div>}
         {isAmrap && <div className="timer-round-total"><span>RUNDER FULLFØRT</span><b>{completedRounds}</b></div>}
+        {!isStationCircuit && !isAmrap && (isTimedInterval ? (exerciseList[intervalExerciseIndex + 1]?.exercise_name || exerciseList[0]?.exercise_name) : nextExercise) && <div className="timer-next-exercise"><span>NESTE ØVING</span><b>{isTimedInterval ? (exerciseList[intervalExerciseIndex + 1]?.exercise_name || exerciseList[0]?.exercise_name) : nextExercise}</b></div>}
         <div className="timer-actions">
-          <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) setPhase('PÅGÅR'); setRunning(value => !value) }} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
+          <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) { setPhase('PÅGÅR'); setHasStarted(true) } setRunning(value => !value) }} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
           {isAmrap && <button type="button" className="timer-lap-button" onClick={lapAction} disabled={!running}>+ REGISTRER RUNDE</button>}
-          <button type="button" className="secondary-button" onClick={() => { setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar') }}><RotateCcw size={14}/> Nullstill</button>
+          <button type="button" className="secondary-button" onClick={() => { setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar'); setHasStarted(false) }}><RotateCcw size={14}/> Nullstill</button>
           {(isStopwatch || isForTime) && <button type="button" className="secondary-button" onClick={() => setLaps(value => [...value, elapsed])}>Mellomtid</button>}
           <button type="button" className="secondary-button" onClick={() => setSoundOn(value => !value)}>{soundOn ? 'Lyd på' : 'Lyd av'}</button>
           <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
         </div>
         <div className="timer-finish-row">
-          <button type="button" className="timer-finish-button" onClick={onFinish}>
+          <button type="button" className="timer-finish-button" onClick={onFinish} disabled={!hasStarted}>
             <CheckCircle2 size={18}/><span>Fullfør økta</span>
           </button>
-          <small>Registrer resultat og lagre treningsøkta</small>
+          <small>{hasStarted ? 'Registrer resultat og lagre treningsøkta' : 'Start timeren før du fullfører økta'}</small>
         </div>
       </section>
       <aside className="timer-side timer-side-left">
@@ -334,6 +337,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   }
 
   function startWorkout(wod = null) {
+    try { document.documentElement.requestFullscreen?.().catch(() => {}) } catch { /* Fullscreen er valfri på eininga. */ }
     setClassSessionId(null)
     setSaveToken(crypto.randomUUID())
     setSource(wod)
@@ -540,7 +544,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         <label>Treningsformat<select value={format} onChange={e => setFormat(e.target.value)}>{FORMATS.map(x => <option key={x}>{x}</option>)}</select></label>
         {['AMRAP','Nedteljing','E1MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM'].includes(format) && <label>Øktlengd (minutt)<input type="number" min="1" max="600" value={duration} onChange={e => setDuration(e.target.value)}/></label>}
       </div>
-      <Timer format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} exerciseList={items} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={() => setFinishOpen(true)} originLabel={classSessionId ? 'GRUPPETIME' : launchAssignmentId ? 'TILDELT FRÅ PT' : source ? 'EIGEN WOD' : 'EIGA ØKT'}/>
+      <Timer format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} nextExercise={items[activeExerciseIndex + 1]?.exercise_name || ''} exerciseList={items} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={() => setFinishOpen(true)} originLabel={classSessionId ? 'GRUPPETIME' : launchAssignmentId ? 'TILDELT FRÅ PT' : source ? 'EIGEN WOD' : 'EIGA ØKT'}/>
       {items.length > 0 && format!=='Stasjonssirkel' && <section className="engine-section">
         <div className="engine-section-title"><h4>{format==='Stasjonssirkel'?'Stasjonane i økta':'WOD / øvingsrekkjefølgje'}</h4><span>{format==='Stasjonssirkel'?'Alle stasjonar – roter etter eiga startplassering':'Vel øvinga du arbeider med'}</span></div>
         <div className={format==='Stasjonssirkel'?'timer-station-grid':'wod-list'}>{items.map((item, index) => format==='Stasjonssirkel' ? <article className="timer-station-card" key={item.key}><span>STASJON {index+1}</span><strong>{item.exercise_name||'Øving'}</strong><small>{item.reps_mode==='amrap'?'AMRAP · maks reps':item.reps?item.reps+' reps':'Valfritt tal reps'}</small></article> : <button type="button" key={item.key} className={index === activeExerciseIndex ? 'secondary-button active' : 'secondary-button'} onClick={() => setActiveExerciseIndex(index)}>{index + 1}. {item.is_rest?'⏸ Pause · '+clock(Number(item.rest_duration_seconds)||30):item.exercise_name || 'Ny øving'}</button>)}</div>
