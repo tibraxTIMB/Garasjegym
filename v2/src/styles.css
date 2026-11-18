@@ -4135,3 +4135,101 @@ button.history-card:hover,button.history-card:focus-visible{background:#293236;b
    color:#f3f5f5!important;background:#132127!important;
  }
 }
+
+
+/* STURMKOPF – full-screen multi-add picker with quick category filter and OK */
+@media(max-width:760px){
+ .wod-builder-step-2.wod-library-open .wod-library{
+   position:fixed!important;inset:0!important;z-index:2147483000!important;
+   width:100vw!important;height:100vh!important;height:100dvh!important;
+   max-height:none!important;overflow-x:hidden!important;overflow-y:auto!important;
+   box-sizing:border-box!important;margin:0!important;padding:12px 12px calc(104px + env(safe-area-inset-bottom,0px))!important;
+   border:0!important;border-radius:0!important;background:#03090d!important;
+   box-shadow:none!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-library-fullscreen-head{
+   position:sticky!important;top:0!important;z-index:15!important;
+   display:flex!important;align-items:center!important;justify-content:space-between!important;
+   min-height:48px!important;margin:-2px 0 8px!important;padding:4px 2px!important;
+   background:#03090d!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-library-fullscreen-head>strong{
+   display:flex!important;align-items:center!important;gap:10px!important;
+   color:#f5f5f3!important;font-size:17px!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-library-fullscreen-head>strong span{
+   font-size:12px!important;color:#d69a43!important;font-weight:700!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-library-fullscreen-head button{
+   display:grid!important;place-items:center!important;width:40px!important;height:40px!important;
+   border:1px solid rgba(116,143,153,.45)!important;border-radius:10px!important;
+   color:#f3f5f5!important;background:#132127!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-library>.engine-section-title,
+ .wod-builder-step-2.wod-library-open .wod-library .wod-filter-toolbar,
+ .wod-builder-step-2.wod-library-open .wod-library .wod-active-filters,
+ .wod-builder-step-2.wod-library-open .wod-library .wod-filter-panel,
+ .wod-builder-step-2.wod-library-open .wod-library .wod-pause-insert,
+ .wod-builder-step-2.wod-library-open .wod-library .wizard-library-actions{display:none!important}
+ .wod-builder-step-2.wod-library-open .wod-search{
+   display:flex!important;position:sticky!important;top:48px!important;z-index:12!important;
+   margin:0 0 9px!important;padding:0!important;background:#03090d!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-search input{
+   min-height:44px!important;font-size:14px!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-library-quickfilters{
+   display:flex!important;gap:7px!important;overflow-x:auto!important;
+   padding:2px 0 11px!important;margin:0 0 4px!important;
+   position:sticky!important;top:94px!important;z-index:11!important;
+   background:#03090d!important;scrollbar-width:none!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-library-quickfilters button{
+   flex:0 0 auto!important;min-height:34px!important;padding:6px 12px!important;
+   border:1px solid #43545b!important;border-radius:999px!important;
+   background:#142126!important;color:#dce3e4!important;font-size:12px!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-library-quickfilters button.active{
+   background:#9a4509!important;border-color:#e17b18!important;color:white!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-exercise-grid{
+   display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+   align-content:start!important;gap:9px!important;width:100%!important;
+   max-width:none!important;height:auto!important;max-height:none!important;
+   overflow:visible!important;margin:0!important;padding:0 0 24px!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-exercise-card{
+   display:flex!important;flex-direction:row!important;align-items:center!important;
+   justify-content:space-between!important;gap:6px!important;width:100%!important;
+   min-width:0!important;min-height:66px!important;height:auto!important;
+   padding:9px!important;border-radius:12px!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-exercise-info{
+   display:block!important;flex:1 1 auto!important;min-width:0!important;width:auto!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-exercise-card-top,
+ .wod-builder-step-2.wod-library-open .wod-exercise-info>small,
+ .wod-builder-step-2.wod-library-open .wod-exercise-info>.wod-equipment-icons,
+ .wod-builder-step-2.wod-library-open .wod-exercise-info>p,
+ .wod-builder-step-2.wod-library-open .wod-exercise-info>a{display:none!important}
+ .wod-builder-step-2.wod-library-open .wod-exercise-info>strong{
+   display:block!important;font-size:13px!important;line-height:1.25!important;
+   white-space:normal!important;overflow-wrap:anywhere!important;
+ }
+ .wod-builder-step-2.wod-library-open .wod-exercise-card .wod-add-button{
+   display:grid!important;flex:0 0 34px!important;width:34px!important;height:34px!important;
+   min-width:34px!important;padding:0!important;border-radius:9px!important;
+ }
+ .wod-builder-step-2.wod-library-open .wizard-stage-actions.wizard-library-actions{
+   display:block!important;position:fixed!important;left:0!important;right:0!important;
+   bottom:0!important;z-index:2147483001!important;margin:0!important;
+   padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px))!important;
+   border:0!important;border-top:1px solid #405158!important;border-radius:0!important;
+   background:rgba(3,9,13,.98)!important;box-shadow:0 -6px 22px rgba(0,0,0,.5)!important;
+ }
+ .wod-builder-step-2.wod-library-open .wizard-stage-actions.wizard-library-actions .primary-button{
+   display:flex!important;width:100%!important;min-height:54px!important;
+   align-items:center!important;justify-content:center!important;
+   border-radius:12px!important;font-size:15px!important;
+ }
+}
