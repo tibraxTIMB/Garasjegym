@@ -37,7 +37,7 @@ Bruk aldri service_role eller ein secret key i nettlesarkode. Ikkje legg .env.lo
 - Kaffibaradministrasjon med oppretting, redigering og publisering/skjuling av menyprodukt.
 
 ## Database-migreringar
-SQL-filene ligg i supabase/migrations/. Dei er staged i GitHub. I eit separat Supabase Free-testprosjekt er ein tom baseline utan produksjonsdata og migreringane 001–013 installerte. Supabase sin aktive migreringslogg må kontrollerast før kvar utrulling. Prosjektbudsjettet er 0 kroner: ikkje opprett betalte databasegreiner, oppgrader abonnement eller utløyse andre kostnader. Ingen migrering skal køyrast mot produksjon utan trygg gjennomgang og uttrykkeleg godkjenning.
+SQL-filene ligg i supabase/migrations/. Dei er staged i GitHub. I eit separat Supabase Free-testprosjekt er ein tom baseline utan produksjonsdata og migreringane 001–015 installerte. Supabase sin aktive migreringslogg må kontrollerast før kvar utrulling. Prosjektbudsjettet er 0 kroner: ikkje opprett betalte databasegreiner, oppgrader abonnement eller utløyse andre kostnader. Ingen migrering skal køyrast mot produksjon utan trygg gjennomgang og uttrykkeleg godkjenning.
 
 1. 202611160001_save_workout_atomic.sql – atomisk lagring av økt, øvingar og sett.
 2. 202611160002_coffee_bar.sql – kaffiprodukt, ordre, ordrelinjer, RLS og bestillings-RPC.
