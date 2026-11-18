@@ -236,8 +236,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       </aside></TimerPanel>:id==='laps'?<TimerPanel key={id} id="laps" title="RUNDETIDER" layout={panelLayout.laps} locked={Boolean(lockedPanels.laps)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}><aside className="timer-side timer-side-right">
         <div className="timer-lap-heading">RUNDETIDER <b>{laps.length}</b></div>
         {laps.length ? <ol className="timer-lap-list">{laps.map((lap,index)=><li key={index}><span>Runde {index+1}</span><b>{clock(lap)}</b></li>)}</ol> : <p className="timer-no-laps">Registrer kvar fullførte runde her.</p>}
-      </aside>
-    </div></TimerPanel>:<TimerPanel key={id} id="music" title="MUSIKK" layout={panelLayout.music} locked={Boolean(lockedPanels.music)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}><MusicMiniPlayer /></TimerPanel>)}
+      </aside></TimerPanel>:<TimerPanel key={id} id="music" title="MUSIKK" layout={panelLayout.music} locked={Boolean(lockedPanels.music)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock}><MusicMiniPlayer /></TimerPanel>)}
       </div>
 
     <small>{isStationCircuit ? 'Stasjonssirkel · roterande stasjonar · fast tal rundar' : isTimedInterval ? 'Arbeid / kvile · samla økttid og tid att' : isCountdown ? 'AMRAP · registrer kvar fullførte runde' : isEMOM ? (emomEvery > 1 ? `E${emomEvery}MOM · arbeid kvart ${emomEvery}. minutt` : 'E1MOM · arbeid kvart minutt') : isDeathBy ? 'Aukande arbeid for kvar minutt' : isForTime ? 'Stoppeklokke med eventuell tidsgrense' : 'Stoppeklokke – tel medgått tid'}</small>
