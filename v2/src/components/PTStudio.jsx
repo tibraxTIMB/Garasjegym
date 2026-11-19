@@ -124,7 +124,7 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
   })
  }
  function applyIntroWithInfo() {
-  setTemplateDraft({title:'PT-start – introduksjon og treningsplan',description:'Eit praktisk oppstartsløp med kartlegging, informasjon om treningsprinsipp, teknikk, tilpassa trening og evaluering.',weeks:'3',sessions_per_week:'2',focus_areas:['Generell helse','Teknikk','Styrke','Mobilitet'],session_titles:'INFO: Oppstartssamtale, mål og forventningar\\nØkt 1 – Grunnteknikk og trygg utføring\\nØkt 2 – Styrke og bevegelseskvalitet\\nINFO: Gjennomgang av treningsplan og sjølvstendig trening\\nØkt 3 – Kondisjon og arbeidskapasitet\\nTEST: Evaluering og vegen vidare'})
+  setTemplateDraft({title:'PT-start – introduksjon og treningsplan',description:'Eit praktisk oppstartsløp med kartlegging, informasjon om treningsprinsipp, teknikk, tilpassa trening og evaluering.',weeks:'3',sessions_per_week:'2',focus_areas:['Generell helse','Teknikk','Styrke','Mobilitet'],session_titles:'INFO: Oppstartssamtale, mål og forventningar\nØkt 1 – Grunnteknikk og trygg utføring\nØkt 2 – Styrke og bevegelseskvalitet\nINFO: Gjennomgang av treningsplan og sjølvstendig trening\nØkt 3 – Kondisjon og arbeidskapasitet\nTEST: Evaluering og vegen vidare'})
  }
  function applyRehabPreset() {
   setTemplateDraft({
@@ -187,6 +187,8 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
   e.preventDefault()
   await run(async()=>{
    if(!activeProgram)throw new Error('Kunden må ha ein aktiv treningsplan.')
+   if(!sessionDraft.title.trim()&&!sessionDraft.wod_id)throw new Error('Gi økta eit namn eller vel ein WOD.')
+   if(sessionDraft.session_kind==='information'&&!sessionDraft.title.trim())throw new Error('Infotimen må ha eit namn eller tema.')
    const wod=sessionDraft.session_kind==='information'?null:wods.find(w=>w.id===sessionDraft.wod_id)
    const existing=sessions.filter(s=>s.program_id===activeProgram.id)
    const snapshot=wod?{id:wod.id,title:wod.name,format:wod.format,duration_minutes:wod.duration_minutes,movements:wod.movements,notes:wod.notes}:sessionDraft.session_kind==='information'?{title:sessionDraft.title,format:'Informasjonstime',agenda:sessionDraft.agenda,materials:sessionDraft.materials,preparation:sessionDraft.preparation,notes:sessionDraft.notes}:{title:sessionDraft.title,format:'Eigen økt',movements:[],notes:sessionDraft.notes}
