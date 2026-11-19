@@ -359,7 +359,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
     <div className="wizard-stage-actions wizard-library-actions"><button type="button" className="primary-button" onClick={()=>setLibraryOpen(false)}>Ferdig med øvingsval · tilbake til WOD-bygging ({selected.length})</button></div>
    </section>,document.body)}
    <aside className="engine-section wod-composer">
-    <div className="engine-section-title"><h4>{wizardStep===1?"1 · Format og tidsramme":wizardStep===2?"2 · Valde øvingar":"3 · RX, skalering og publisering"}</h4><span>{isInterval?selected.length+'/'+intervalExerciseCount+' øvingar':selected.length+' øvingar'}</span></div>
+    <div className="engine-section-title"><h4>{wizardStep===1?"1 · Format og tidsramme":wizardStep===2?"2 · Valde øvingar":wizardStep===3?"3 · Dosering":"4 · Ferdigstilling og publisering"}</h4><span>{isInterval?selected.length+'/'+intervalExerciseCount+' øvingar':selected.length+' øvingar'}</span></div>
     <form className="admin-create-form" onSubmit={save}>
      {wizardStep===1&&<div className="wizard-format-panel"><div className="wod-name-field"><label>WOD-namn<input value={name} onChange={e=>setName(e.target.value)} required placeholder="Gje økta eit namn …"/></label><button type="button" className="secondary-button" onClick={()=>setName(suggestUniqueWodName())}>Nytt namn</button></div>
      
