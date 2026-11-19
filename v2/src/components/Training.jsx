@@ -298,7 +298,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   </div>
 }
 
-export default function Training({ launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, simpleMode = false, quickStart = false, onQuickStartConsumed, onSaved, onDiscard }) {
+export default function Training({ launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, onTimerSnapshot, simpleMode = false, quickStart = false, onQuickStartConsumed, onSaved, onDiscard }) {
   const [wods, setWods] = useState([])
   const [dailyWodId,setDailyWodId]=useState(null)
   const [exercises, setExercises] = useState([])
@@ -344,6 +344,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(0)
   const [timerSnapshot, setTimerSnapshot] = useState({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
   const [timerLaunchId, setTimerLaunchId] = useState(0)
+  useEffect(()=>{onTimerSnapshot?.({...timerSnapshot,title,format})},[timerSnapshot,title,format,onTimerSnapshot])
 
   async function loadAll(silent=false) {
     if (!silent) setLoading(true); setError('')
