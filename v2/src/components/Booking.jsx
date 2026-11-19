@@ -55,9 +55,11 @@ export default function Booking({ profile, onLogResult, initialClassId=null }) {
     if(!silent)setLoading(true);setError('')
     const [{data:userData,error:userError}]=await Promise.all([supabase.auth.getUser()])
     if(userError||!userData.user){setError('Logg inn på nytt.');setLoading(false);return}
-    const {data:classRows,error:classError}=await supabase.from('classes')
+    let classQuery=supabase.from('classes')
       .select('id,title,type,capacity,starts_at,duration_minutes,description,workout_text,wod_ids')
       .gte('starts_at',new Date(Date.now()-86400000).toISOString()).order('starts_at').limit(50)
+    if(!staff)classQuery=classQuery.eq('published',true)
+    const {data:classRows,error:classError}=await classQuery
     // The base booking calendar must remain usable before optional live-session migrations are installed.
     if(classError)setError(classError.message);else setClasses(classRows||[])
     const classIds=(classRows||[]).map(row=>row.id)
