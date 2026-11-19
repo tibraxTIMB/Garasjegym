@@ -76,7 +76,17 @@ export default function Admin({profile}){
   setBusy(member.id);setError('');setNotice('')
   try{
    const {data,error:invokeError}=await supabase.functions.invoke('admin-delete-user',{body:{user_id:member.id}})
-   if(invokeError)throw invokeError
+   if(invokeError){
+    let message=invokeError.message||'Kunne ikkje sletta brukaren.'
+    try{
+     const payload=await invokeError.context?.json?.()
+     if(payload?.error)message=payload.error
+     if(payload?.linked_history?.length){
+      message+=' Knytte data: '+payload.linked_history.map(row=>row.area+(row.count>1?' ('+row.count+')':'')).join(', ')+'.'
+     }
+    }catch{/* Vis standardfeilen dersom Edge Function-svaret ikkje kan lesast. */}
+    throw new Error(message)
+   }
    if(data?.error)throw new Error(data.error)
    setNotice('Brukaren er sletta.')
    await load()
