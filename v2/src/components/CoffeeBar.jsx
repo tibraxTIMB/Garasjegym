@@ -93,8 +93,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
   if(!focusReviewId||!staff)return
   setActiveTab('reviews')
   const review=reviews.find(row=>row.id===focusReviewId)
-  if(review)setSelectedReview(review)
-  onFocusReviewConsumed?.()
+  if(review){setSelectedReview(review);onFocusReviewConsumed?.()}
  },[focusReviewId,staff,reviews])
 
  const categories=useMemo(()=>['Alle',...new Set(products.map(p=>p.category||'Kaffi').filter(Boolean))],[products])
