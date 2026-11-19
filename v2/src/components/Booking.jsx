@@ -111,7 +111,18 @@ export default function Booking({ profile, onLogResult, initialClassId=null, onI
       if(!staff)fallback=fallback.eq('is_published',true)
       wResult=await fallback
     }
-    if(!wResult.error)setWods(wResult.data||[])
+    if(!wResult.error){
+      let visibleWods=wResult.data||[]
+      // Members can see private WODs explicitly assigned to their published group class, without exposing the rest of the PT library.
+      if(!staff){
+        const assignedIds=[...new Set((classRows||[]).flatMap(row=>Array.isArray(row.wod_ids)?row.wod_ids:[]))]
+        if(assignedIds.length){
+          const {data:assigned,error:assignedError}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,category,is_published,is_archived').in('id',assignedIds).eq('is_archived',false)
+          if(!assignedError)visibleWods=[...new Map([...visibleWods,...(assigned||[])].map(row=>[row.id,row])).values()]
+        }
+      }
+      setWods(visibleWods)
+    }
 
     setLoading(false)
   }
