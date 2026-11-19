@@ -282,7 +282,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   
   if(selected.some(x=>x.is_rest&&(!Number(x.pauseSeconds)||Number(x.pauseSeconds)<1||Number(x.pauseSeconds)>3600))){setError('Alle pausar må ha ei varigheit mellom 1 og 3600 sekund.');return}
   if(!name.trim()){setError('Gi WOD-en eit namn.');return}
-   if(selected.some(x=>!x.is_rest&&!(isStationCircuit&&x.repsMode==='amrap')&&!(isRow(x)?Number(x.rowValue)>0:(Number(doseForItem(x).reps)>0||/^\\d+(?:[-–/]\\d+)+$/.test(String(doseForItem(x).reps||'').trim()))))){setError('Alle øvingar må ha gyldig mengd, reps eller distanse i RX-nivået.');setWizardStep(3);return}
+   if(selected.some(x=>!x.is_rest&&!(isStationCircuit&&x.repsMode==='amrap')&&!(isRow(x)?Number(x.rowValue)>0:(Number(doseForItem(x).reps)>0||/^\d+(?:[-–/]\d+)+$/.test(String(doseForItem(x).reps||'').trim()))))){setError('Alle øvingar må ha gyldig mengd, reps eller distanse i RX-nivået.');setWizardStep(3);return}
    if(selected.some(x=>x.is_rest&&(!Number(x.pauseSeconds)||Number(x.pauseSeconds)<1||Number(x.pauseSeconds)>3600))){setError('Alle pausar må ha ei varigheit mellom 1 og 3600 sekund.');return}
   if(isStationCircuit&&(Number(stationCount)<2||Number(stationCount)>8||selected.length!==Number(stationCount))){setError(`Stasjonssirkel krev ${stationCount} øvingar – éi per stasjon. Vel mellom 2 og 8 stasjonar.`);return}
   if(isStationCircuit&&(!Number(stationWork)||Number(stationWork)<1||Number(stationTransition)<0||!Number(stationRounds))){setError('Kontroller arbeidstid, bytettid og tal rundar.');return}
