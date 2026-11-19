@@ -433,7 +433,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     const [e, h, pr] = await Promise.all([
       supabase.from('exercises').select('id,name,category,equipment,description,video_url').eq('is_active', true).order('name'),
       supabase.from('workout_logs').select('id,title,workout_date,format,rounds,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,result_data,note,created_at,workout_exercises(id,exercise_name,sort_order,workout_sets(id,set_number,reps,load_kg,time_text,time_seconds,height_cm))').order('workout_date', { ascending: false }).limit(500),
-      supabase.from('personal_records').select('id,exercise_name,result,unit,note,record_date').order('record_date', { ascending: false }).limit(50),
+      supabase.from('personal_records').select('id,exercise_name,result,unit,note,record_date').order('record_date', { ascending: false }).limit(500),
     ])
     if (w.error) setError(w.error.message); else setWods(w.data || [])
     const now=new Date(),today=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')
