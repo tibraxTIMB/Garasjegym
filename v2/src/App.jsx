@@ -35,6 +35,7 @@ import ScheduleHub from './components/ScheduleHub.jsx'
 import MyPage from './components/MyPage.jsx'
 import MyTraining from './components/MyTraining.jsx'
 import Infotainment from './components/Infotainment.jsx'
+import AppMobileNavigation from './components/AppMobileNavigation.jsx'
 import { Music, MusicProvider } from './components/Music.jsx'
 import { useDeviceProfile } from './lib/deviceLayout.js'
 
@@ -166,6 +167,7 @@ export default function App() {
   const handleTimerSnapshot=useCallback(snapshot=>setTimerSnapshot(snapshot),[])
   function navigateTo(next){if(!next||next===active)return;setNavigationStack(stack=>[...stack,active].slice(-12));setActive(next)}
   function navigateRoot(next){setNavigationStack([]);setActive(next)}
+  function handleSectionNavigate(id){if(id==='pt-studio'){setPTStudioWorkspace('studio');setPTStudioInitialTab('oversikt')}navigateRoot(id)}
   function navigateBack(fallback='oversikt'){const previous=navigationStack[navigationStack.length-1]||fallback;setNavigationStack(stack=>stack.slice(0,-1));setActive(previous)}
   useEffect(()=>{const sync=()=>setAppFullscreen(Boolean(document.fullscreenElement));document.addEventListener('fullscreenchange',sync);return()=>document.removeEventListener('fullscreenchange',sync)},[])
   useEffect(()=>{
@@ -302,6 +304,7 @@ export default function App() {
   if (!simpleModeReady) return <LoadingScreen text="Hentar medlemsinnstillingar …" />
 
   const visibleSections = (simpleMode ? [] : sections.filter(item=>item.id!=='pt-info'&&!(isStaff(profile)&&item.id==='timeplan'))).concat(isStaff(profile)?[{id:'admin',label:'Administrasjon',icon:Settings,note:'Medlemmer og drift'}]:[])
+  const mobileNavItems = simpleMode ? [...sections.filter(item=>['oversikt','trening','wod','timeplan'].includes(item.id)),{id:'mi-trening',label:'Mi trening',icon:Dumbbell,note:'Øktene PT har tildelt deg'}] : visibleSections
   const current = visibleSections.find((item) => item.id === active) || sections[0]
   const Icon = current.icon
 
@@ -316,7 +319,7 @@ export default function App() {
         <div className="side-label">HOVUDMENY</div>
         <nav aria-label="Hovudmeny">
           {visibleSections.map(({ id, label, icon: ItemIcon }) => (
-            <button key={id} className={active === id ? 'nav-item selected' : 'nav-item'} onClick={() => {if(id==='pt-studio'){setPTStudioWorkspace('studio');setPTStudioInitialTab('oversikt')}navigateRoot(id)}}>
+            <button key={id} className={active === id ? 'nav-item selected' : 'nav-item'} onClick={() => handleSectionNavigate(id)}>
               <ItemIcon size={18} /><span>{label}</span>
             </button>
           ))}
@@ -366,6 +369,7 @@ export default function App() {
         {selectedWorkout&&<div className="modal-backdrop" role="presentation" onClick={()=>setSelectedWorkout(null)}><section className="booking-create workout-detail-modal" role="dialog" aria-modal="true" aria-label="Treningsresultat" onClick={e=>e.stopPropagation()}><div className="training-heading"><div><span className="section-kicker">GJENNOMFØRT ØKT</span><h3>{selectedWorkout.title||'Treningsøkt'}</h3><p>{selectedWorkout.workout_date||''}</p></div><button className="secondary-button" onClick={()=>setSelectedWorkout(null)}>Lukk</button></div><div className="workout-detail-score"><strong>{selectedWorkout.score_rounds??'–'}</strong><span>Rundar</span><strong>{selectedWorkout.score_reps??'–'}</strong><span>Ekstra reps</span>{selectedWorkout.score_time_seconds!=null&&<><strong>{Math.floor(selectedWorkout.score_time_seconds/60)}:{String(Math.floor(selectedWorkout.score_time_seconds%60)).padStart(2,'0')}</strong><span>Sluttid</span></>}{selectedWorkout.score_load_kg!=null&&<><strong>{selectedWorkout.score_load_kg} kg</strong><span>Tungaste løft</span></>}{selectedWorkout.score_calories!=null&&<><strong>{selectedWorkout.score_calories}</strong><span>Kaloriar</span></>}{selectedWorkout.score_distance!=null&&<><strong>{selectedWorkout.score_distance} {selectedWorkout.score_unit||'m'}</strong><span>Avstand</span></>}</div><p>{selectedWorkout.format||'Trening'}</p>{selectedWorkout.result_data?.split_seconds?.length>0&&<p>Rundetider: {selectedWorkout.result_data.split_seconds.map((seconds,index)=>`${index+1}: ${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,'0')}`).join(' · ')}</p>}<p>{selectedWorkout.note||'Ingen notat registrert.'}</p>{selectedWorkout.detailLoading&&<div className="training-state">Hentar resultat og øvingsanalyse …</div>}{selectedWorkout.detailError&&<div className="auth-error" role="alert">{selectedWorkout.detailError}</div>}{selectedWorkout.exercises?.length>0&&<section className="workout-exercise-detail"><h4>Øvingar og sett</h4>{selectedWorkout.exercises.map(ex=><article className="history-card" key={ex.id}><strong>{ex.exercise_name}</strong>{ex.source_text&&<small>{ex.source_text}</small>}{(ex.workout_sets||[]).sort((x,y)=>x.set_number-y.set_number).map(set=><div className="workout-set-detail" key={set.id}><span>Sett {set.set_number}</span><b>{set.reps!=null?set.reps+' reps':''}{set.load_kg!=null?' · '+set.load_kg+' kg':''}{set.time_text?' · '+set.time_text:''}{set.time_seconds!=null?' · '+set.time_seconds+' sek':''}</b></div>)}</article>)}</section>}{selectedWorkout.exercises?.length===0&&!selectedWorkout.detailLoading&&<small>Ingen øvingsdetaljar er lagra på denne økta.</small>}</section></div>}
         <footer>GARASJEGYM 2.0 · STURMKOPF</footer>
       </main>
+      <AppMobileNavigation items={mobileNavItems} active={active} staff={!simpleMode&&isStaff(profile)} onNavigate={handleSectionNavigate}/>
       {infotainmentActive&&isStaff(profile)&&<Infotainment onExit={()=>setInfotainmentActive(false)} timerSnapshot={timerSnapshot}/>}
     </div>
     </MusicProvider>
