@@ -715,6 +715,11 @@ footer {
 .wod-selected-actions{display:flex;gap:3px}
 .wod-selected-actions button{width:27px;height:27px;display:grid;place-items:center;border:1px solid #465052;border-radius:6px;background:#151a1c;color:#eee;cursor:pointer}
 .wod-selected-actions button:disabled{opacity:.3;cursor:default}
+.wod-order-picker{display:flex;align-items:center;gap:3px;padding:0 4px;border:1px solid #465052;border-radius:6px;background:#151a1c;color:#b8c2c2;font-size:10px}
+.wod-order-picker select{width:34px;height:32px;padding:0 2px;border:0;background:transparent;color:#f2f1ed;font:inherit;cursor:pointer}
+.wod-order-picker select:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.wod-order-picker select option{background:#151a1c;color:#f2f1ed}
+
 .pt-request-card.focused{outline:2px solid var(--orange);box-shadow:0 0 0 5px #f59e0b22}
 .pt-request-decision{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0}
 .pt-request-decision>div{display:flex;gap:7px}
