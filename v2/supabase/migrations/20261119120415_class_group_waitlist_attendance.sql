@@ -23,6 +23,8 @@ alter table public.class_bookings
 
 create index if not exists class_bookings_class_status_queue_idx
   on public.class_bookings(class_id, status, created_at, id);
+create index if not exists class_bookings_attendance_marked_by_idx
+  on public.class_bookings(attendance_marked_by);
 create index if not exists classes_instructor_id_idx
   on public.classes(instructor_id);
 create index if not exists class_session_wod_completions_wod_id_idx
