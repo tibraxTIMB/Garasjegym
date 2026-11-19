@@ -16,6 +16,7 @@ import {
   Minimize,
   Users as UsersIcon,
   UserRound as UserRoundIcon,
+  MessageSquareText,
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from './lib/supabase.js'
 import { fetchMemberProfile, isStaff } from './lib/auth.js'
@@ -41,6 +42,7 @@ const sections = [
   { id: 'trening', label: 'Trening', icon: Dumbbell, note: 'WOD, fri trening, logg og PR' },
   { id: 'timeplan', label: 'Timeplan og booking', icon: CalendarDays, note: 'Gruppetimar og PT-avtalar' },
   { id: 'pt-studio', label: 'PT-oppfølging', icon: UserRound, note: 'Personleg treningsplan og mål' },
+  { id: 'pt-info', label: 'Meldingar frå PT', icon: MessageSquareText, note: 'Meldingar og planlagde infotimar' },
   { id: 'wod', label: 'WOD', icon: Dumbbell, note: 'WOD-bibliotek og programmering' },
   { id: 'fellesskap', label: 'Fellesskap', icon: Users, note: 'Garasjeprat' },
   { id: 'kaffi', label: 'Kaffebar', icon: Coffee, note: 'Meny og bestillingar' },
