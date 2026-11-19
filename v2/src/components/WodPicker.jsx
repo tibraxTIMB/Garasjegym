@@ -1,13 +1,16 @@
-import {useMemo,useState} from 'react'
+import {useEffect,useMemo,useState} from 'react'
 import {Check,Search,Clock3,Dumbbell,Layers} from 'lucide-react'
 
 const categoryLabel=value=>({warmup:'Oppvarming',daily:'Dagens WOD',standard:'Standard-WOD',benchmark:'Benchmark',assessment:'Test og evaluering',rehab:'Rehabilitering',recovery:'Restitusjon',other:'Anna / spesialøkt'}[value]||value||'Standard-WOD')
 
-export default function WodPicker({wods=[],selectedIds=[],onChange,multiple=true,title='Vel WOD frå biblioteket',hint='Søk, filtrer og vel øktene som skal brukast.',compact=false}){
+export default function WodPicker({wods=[],selectedIds=[],onChange,onCancel,multiple=true,title='Vel WOD frå biblioteket',hint='Søk, filtrer og vel øktene som skal brukast.',compact=false}){
  const [query,setQuery]=useState('')
  const [format,setFormat]=useState('all')
  const [visibility,setVisibility]=useState('all')
  const [category,setCategory]=useState('all')
+ const [draftIds,setDraftIds]=useState(selectedIds)
+ const selectedKey=selectedIds.join('|')
+ useEffect(()=>setDraftIds(selectedIds),[selectedKey])
  const rows=useMemo(()=>wods.filter(w=>{
   const text=[w.name,w.format,w.movements,w.notes,w.category].filter(Boolean).join(' ').toLowerCase()
   const kind=w.timer_settings?.workout_schema?.library_category||(w.category==='warmup'?'warmup':'standard')
@@ -16,11 +19,13 @@ export default function WodPicker({wods=[],selectedIds=[],onChange,multiple=true
  const formats=useMemo(()=>[...new Set(wods.filter(w=>!w.is_archived).map(w=>w.format).filter(Boolean))].sort(),[wods])
  const categories=useMemo(()=>{const base=['warmup','daily','standard','benchmark','assessment','rehab','recovery','other'];return [...base,...new Set(wods.filter(w=>!w.is_archived).map(w=>w.timer_settings?.workout_schema?.library_category||(w.category==='warmup'?'warmup':'standard')).filter(v=>!base.includes(v)))]},[wods])
  function toggle(id){
-  if(multiple)onChange(selectedIds.includes(id)?selectedIds.filter(x=>x!==id):[...selectedIds,id])
-  else onChange(selectedIds[0]===id?[]:[id])
+  if(multiple)setDraftIds(draftIds.includes(id)?draftIds.filter(x=>x!==id):[...draftIds,id])
+  else setDraftIds(draftIds[0]===id?[]:[id])
  }
+ function cancelSelection(){setDraftIds(selectedIds);onCancel?.()}
+ async function confirmSelection(){await onChange?.(draftIds)}
  return <section className={compact?'wod-picker compact':'wod-picker'}>
-  <div className="wod-picker-heading"><div><strong>{title}</strong><small>{hint}</small></div><span className="count-pill">{selectedIds.length} valde</span></div>
+  <div className="wod-picker-heading"><div><strong>{title}</strong><small>{hint}</small></div><span className="count-pill">{draftIds.length} valde</span></div>
   <div className="wod-picker-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Søk på namn, øving, format eller innhald …"/></div>
   <div className="wod-picker-filters">
    <select value={format} onChange={e=>setFormat(e.target.value)} aria-label="Filtrer på WOD-format"><option value="all">Alle format</option>{formats.map(x=><option key={x} value={x}>{x}</option>)}</select>
@@ -29,7 +34,8 @@ export default function WodPicker({wods=[],selectedIds=[],onChange,multiple=true
   </div>
   <div className="wod-picker-results">
    {rows.length?rows.map(w=>{
-    const active=selectedIds.includes(w.id)
+    const active=draftIds.includes(w.id)
+    const kind=w.timer_settings?.workout_schema?.library_category||(w.category==='warmup'?'warmup':'standard')
     const count=(w.timer_settings?.workout_schema?.items||[]).length||w.movements?.split('\\n').filter(Boolean).length||0
     return <button type="button" key={w.id} className={active?'wod-picker-option selected':'wod-picker-option'} onClick={()=>toggle(w.id)} aria-pressed={active}>
      <span className="wod-picker-check">{active?<Check size={15}/>:null}</span>
@@ -38,6 +44,6 @@ export default function WodPicker({wods=[],selectedIds=[],onChange,multiple=true
     </button>
    }):<div className="wod-picker-empty">Ingen WOD-ar treff søket. Prøv eit anna søk eller opprett ein ny WOD i WOD-biblioteket.</div>}
   </div>
-  {selectedIds.length>0&&<div className="wod-picker-selected"><Layers size={14}/>{selectedIds.map(id=>wods.find(w=>w.id===id)?.name).filter(Boolean).join(' → ')}<button type="button" onClick={()=>onChange([])}>Tøm val</button></div>}
+  {draftIds.length>0&&<div className="wod-picker-selected"><Layers size={14}/>{draftIds.map(id=>wods.find(w=>w.id===id)?.name).filter(Boolean).join(' → ')}<button type="button" onClick={()=>setDraftIds([])}>Tøm val</button></div>}<div className="wod-picker-actions"><button type="button" className="secondary-button" onClick={cancelSelection}>Avbryt</button><button type="button" className="primary-button" onClick={confirmSelection}>Bruk val ({draftIds.length})</button></div>
  </section>
 }
