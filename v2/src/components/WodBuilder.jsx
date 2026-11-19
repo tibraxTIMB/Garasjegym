@@ -10,7 +10,7 @@ import './wod-ordering.css'
 
 const categories=['Alle','Functional Fitness','Styrke','Complex','Kondisjon','Gymnastikk','Pilates','Yoga Flow','Mobilitet','Rehab','Golf']
 const areas=['Alle område','Heile kroppen','Overkropp','Underkropp','Kjerne','Hofte og sete','Rygg','Skuldrer og armar','Bryst','Fullkropp','Bein','Mage']
-const formatIcons={'AMRAP':'⏱','For Time':'🏁','Chipper':'☷','Couplet':'2×','Triplet':'3×','Ladder':'↗','Death By':'↘','Stasjonssirkel':'⌘','E1MOM':'◷','E2MOM':'◷','E3MOM':'◷','E4MOM':'◷','E5MOM':'◷','E6MOM':'◷','E7MOM':'◷','Intervall':'▥','Tabata':'▥','Row Intervals':'🚣','Strength':'🏋','Superset':'⇄','Complex':'▤','Eigen økt':'✳'}
+const formatIcons={'AMRAP':'⏱','For Time':'🏁','Chipper':'☷','Couplet':'2×','Triplet':'3×','Ladder':'↗','Death By':'↘','Stasjonssirkel':'⌘','E1MOM':'◷','E1.25MOM':'◷','E2MOM':'◷','E3MOM':'◷','E4MOM':'◷','E5MOM':'◷','E6MOM':'◷','E7MOM':'◷','Intervall':'▥','Tabata':'▥','Row Intervals':'🚣','Strength':'🏋','Superset':'⇄','Complex':'▤','Eigen økt':'✳'}
 const formats=[
  {group:'Metcon',items:['AMRAP','For Time','Chipper','Couplet','Triplet','Ladder','Death By']},
  {group:'Gruppetime',items:['Stasjonssirkel','E1MOM','E1.25MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM']},
