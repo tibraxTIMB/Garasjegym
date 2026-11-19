@@ -305,7 +305,9 @@ export default function App() {
 
   if (!simpleModeReady) return <LoadingScreen text="Hentar medlemsinnstillingar …" />
 
-  const visibleSections = (simpleMode ? [] : sections.filter(item=>item.id!=='pt-info'&&!(isStaff(profile)&&item.id==='timeplan'))).concat(isStaff(profile)?[{id:'admin',label:'Administrasjon',icon:Settings,note:'Medlemmer og drift'}]:[])
+  const staffNavigation=sections.filter(item=>item.id!=='pt-info'&&item.id!=='timeplan')
+  const memberNavigation=[sections[0],sections[1],sections[4],sections[2],{...sections[3],label:'PT-oppfølging',note:'Dine program, mål og kontakt med PT'},sections[8],sections[5],sections[6],sections[7]]
+  const visibleSections = simpleMode ? [] : (isStaff(profile) ? staffNavigation.concat([{id:'admin',label:'Administrasjon',icon:Settings,note:'Medlemmer og drift'}]) : memberNavigation)
   const mobileNavItems = simpleMode ? [...sections.filter(item=>['oversikt','trening','wod','timeplan'].includes(item.id)),{id:'mi-trening',label:'Mi trening',icon:Dumbbell,note:'Øktene PT har tildelt deg'}] : visibleSections
   const current = visibleSections.find((item) => item.id === active) || sections[0]
   const Icon = current.icon
