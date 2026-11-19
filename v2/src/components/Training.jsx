@@ -166,7 +166,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
    const currentIntervalExercise = exerciseList[intervalExerciseIndex]?.exercise_name || exerciseList[intervalExerciseIndex]?.name || activeExercise
   const currentEmomRound = Math.floor(elapsed/emomCycle)+1
   const hasExplicitEmomSlots = exerciseList.some(item=>String(item.minute_slot??item.minuteSlot??'').trim()!=='')
-  const currentEmomExercises = exerciseList.filter(item=>String(item.minute_slot??item.minuteSlot??'').split(/[ ,;\s/]+/).some(slot=>Number(slot)===currentEmomRound))
+  const currentEmomExercises = exerciseList.filter(item=>String(item.minute_slot??item.minuteSlot??'').split(/[,\s;\/]+/).some(slot=>Number(slot)===currentEmomRound))
   const currentEmomExercise = currentEmomExercises.length
     ? currentEmomExercises.map(item=>item.is_rest?'Pause':item.exercise_name||item.name||'Øving').join(' + ')
     : hasExplicitEmomSlots ? 'Ingen øving for denne runden'
