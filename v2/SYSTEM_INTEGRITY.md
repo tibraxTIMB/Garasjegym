@@ -2,10 +2,10 @@
 ## SYSTEM_INTEGRITY.md – systemintegritet og revisjonslogg
 
 **Sist oppdatert:** 19.11.2026  
-**Revisjonsstatus:** Database-, tilgangs- og PT/WOD-integrasjon – tekniske rettingar implementerte, SQL-testar bestått  
+**Revisjonsstatus:** Database-, tilgangs- og PT/WOD-integrasjon – nye WOD-synlegheits- og atomisk tildelingsrettingar implementerte; SQL-testar bestått  
 **GitHub-repo:** tibraxTIMB/Garasjegym  
 **Arbeidsbranch:** garasjegym-2.0-sturm­kopf  
-**Kontrollert kodecommit før denne dokumentoppdateringa:** 70e8a02750098e5bb12149269b9da739268a93a9  
+**Kontrollert kodecommit før denne dokumentoppdateringa:** ea580975135d2b64b59d8bbe02588335f39ff3e8  
 **Supabase testprosjekt:** garasjegym-2-test / izwzwvlexqxqewzijhhd
 
 > Dette dokumentet skil mellom statisk kodegjennomgang, databasekontroll, SQL-rollesimulering, automatiske bygg og manuell ende-til-ende-testing. SQL-testar vart køyrde med mellombelse data i transaksjonar som vart rulla tilbake. Dei er ikkje det same som testing i autentisert nettlesar.
@@ -82,8 +82,8 @@ Det finst éin aktiv admin og to aktive medlemsprofilar i testprosjektet. Det fi
 
 ### Migreringsspor – framleis eit avvik
 
-- GitHub-branch inneheld **45 SQL-filer**.
-- Supabase-testprosjektet rapporterer **56 installerte migreringar**.
+- GitHub-branch inneheld **47 SQL-filer**.
+- Supabase-testprosjektet rapporterer **58 installerte migreringar**.
 - **15 installerte migreringsnamn manglar tilsvarande SQL-fil i repoet**. Éi er baseline frå produksjonsskjema utan data; 14 er funksjons-/skjemamigreringar.
 - **4 SQL-filer i repoet finst ikkje som installerte migreringar** i Supabase sin migreringslogg.
 
@@ -140,12 +140,16 @@ Nye migreringar på STURMKOPF:
 - 202611191040_grant_pt_workflow_updates.sql
 - 202611191050_allow_waitlist_trigger_updates.sql
 - 202611191100_atomic_workout_pt_linkage.sql
+- 202611191200_wod_member_assigned_visibility.sql
+- 202611191210_wod_assignment_atomic_save.sql
 
 Kodeendringar:
 - PTManagement.jsx: PT-kundetildeling og godkjenning av tenestebestilling nyttar no atomisk assign_pt_coach RPC. Tidlegare aktiv tilknyting blir ikkje avslutta dersom ny tildeling feilar. Kapasiteten til PT blir kontrollert med transaksjonslås.
 - PTStudio.jsx: oppretting av PT-program og alle programøkter skjer no gjennom create_pt_program_with_sessions i éi transaksjon.
 - Training.jsx: treningslogg, PT-WOD-tildeling og PT-programøkt blir no lagra gjennom save_workout_with_pt_links i same transaksjon. Feil i PT-kopling rullar tilbake heile lagringa i staden for å etterlata ei treningslogg utan korrekt PT-status.
 - WodLibrary.jsx: WOD blir arkivert dersom det finst referansar i dei kontrollerte PT-, trenings-, favoritt- og gruppetimekoplingane. Permanent sletting skjer berre når ingen slike referansar finst.
+- WOD-lesepolicy: `wods_read_assigned` er retta slik at privat WOD blir synleg for rett medlem ved direkte PT-tildeling, PT-programøkt eller PT-time med WOD-ID i `wod_ids`. Andre medlemmer får ikkje tilgang.
+- WodBuilder.jsx: ny WOD som blir bygd og tildelt frå PT Studio blir no lagra gjennom `save_wod_with_pt_assignment`. Oppretting/redigering og tildeling skjer i éi transaksjon; feil i tildeling rullar tilbake WOD-operasjonen.
 - pt_bookings: direkte medlems-INSERT er blokkert. Medlemsbooking går gjennom kapasitetssjekka RPC. Avlysing triggar ventelisteopprykk; ein intern nested-triggeroppdatering er eksplisitt tillaten utan å opna for direkte medlemsendring av andre felt.
 
 Alle nye RPC-ar som utfører administrative handlingar er SECURITY INVOKER og brukar eksisterande RLS-policyar. Triggerfunksjonar har avgrensa EXECUTE-rettar.
@@ -170,6 +174,11 @@ Følgjande transaksjonstestar vart køyrde mot testdatabasen. Mellombelse rader 
 | Atomisk oppretting av PT-program og økter | BESTÅTT |
 | Atomisk tildeling av PT-coach og behandling av bestilling | BESTÅTT |
 | Treningslogg + WOD-tildeling + PT-programøkt blir kopla atomisk | BESTÅTT |
+| Privat WOD tildelt direkte er synleg for rett medlem, ikkje for annan medlem | BESTÅTT |
+| Privat WOD knytt til eige PT-program er synleg for medlemmet | BESTÅTT |
+| Ny privat WOD + PT-tildeling blir oppretta atomisk via RPC | BESTÅTT |
+| Medlem kan ikkje endra coach_note på eiga WOD-tildeling | BESTÅTT |
+| Medlem kan ikkje kalla admin-RPC for å oppretta/tildela WOD | BESTÅTT – avvist i SQL-rollesimulering |
 | Testdata frå alle transaksjonstestane vart rulla tilbake | BESTÅTT |
 
 Desse testane kontrollerer databasefunksjonar, RLS og tabellprivilegium. Dei dokumenterer ikkje at alle knappar, visingar eller navigasjonsflytar fungerer i nettlesaren.
@@ -194,12 +203,10 @@ Ubrukte indeksar er ikkje sletta. Testdatabasen har låg datamengd og kort histo
 
 ## 8. CI, bygg og publisering
 
-- Siste applikasjonskodecommit: 70e8a02750098e5bb12149269b9da739268a93a9.
-- Siste dokumentasjonscommit ved kontroll: d6318b8a86f22e01fefdd6b53a24da9b242e1e4b.
-- GarasjeGym 2.0 checks for applikasjonskodecommit 70e8a027: BESTÅTT.
-- Deploy STURMKOPF preview for applikasjonskodecommit 70e8a027: BESTÅTT.
-- GarasjeGym 2.0 checks for dokumentasjonscommit d6318b8a: BESTÅTT.
-- Deploy STURMKOPF preview for dokumentasjonscommit d6318b8a: BESTÅTT.
+- Siste applikasjonskodecommit: ea580975135d2b64b59d8bbe02588335f39ff3e8.
+- GarasjeGym 2.0 checks, run 44509569917: BESTÅTT.
+- Deploy STURMKOPF preview, run 44509569921: BESTÅTT.
+- Preview er oppdatert med den siste WOD/PT-rettinga.
 - Preview: https://tibraxtimb.github.io/Garasjegym/
 
 CI kontrollerer installasjon, migreringsdelimiterar og Vite production build. Det finst ikkje eit eige unit-, komponent- eller ende-til-ende-testskript i pakken.
@@ -214,7 +221,7 @@ CI kontrollerer installasjon, migreringsdelimiterar og Vite production build. De
 | Høg | Manuell nettlesartest av PT-program, PT-tildeling, booking, statusoppfølging og medlemsvising | IKKJE TESTA |
 | Høg | Manuell rollebasert test med reelle admin-, manager- og medlemskontoar | DELVIS – SQL-simulering bestått, UI ikkje testa |
 | Høg | Manuell Android-/nettbretttest, ståande og liggjande | IKKJE TESTA |
-| Middels | Avklara WOD-builder si separate lagring av WOD og eventuell kundetildeling; ved feil kan WOD bli lagra utan tildeling, men feilen blir vist | OPEN |
+| Middels | Verifisera WOD-builder sin nye atomiske WOD-/tildelingsflyt i autentisert nettlesar | IKKJE MANUELT TESTA |
 | Middels | Vurdera dei 20 manglande FK-indeksane og 43 RLS-initplan-varsla | OPEN |
 | Middels | Vurdera 8 doble permissive policysett | OPEN |
 | Middels | Avklara leaked password protection i Auth | OPEN |
@@ -227,7 +234,7 @@ CI kontrollerer installasjon, migreringsdelimiterar og Vite production build. De
 - **WOD/TRENING:** Atomisk kopling mellom treningslogg, PT-WOD-tildeling og programøkt er SQL-testa.
 - **WOD-SLETTING:** Historiske koplingar blir kontrollerte før permanent sletting; brukte WOD-ar blir arkiverte.
 - **SECURITY ADVISOR:** Dei ni offentleg tilgjengelege triggerfunksjonane er lukka for klientkall; seks tilsikta authenticated SECURITY DEFINER-funksjonar står att.
-- **CI/PREVIEW:** Endeleg status for siste commit må stadfestast i GitHub Actions.
+- **CI/PREVIEW:** BESTÅTT for commit ea580975135d2b64b59d8bbe02588335f39ff3e8 (checks og deploy).
 - **MANUELL TEST:** Ikkje utført i autentisert nettlesar eller på fysisk Android-/nettbrett.
 
 **Produksjon og main:** Ingen endringar er utførte i main eller produksjonsdatabasen.
