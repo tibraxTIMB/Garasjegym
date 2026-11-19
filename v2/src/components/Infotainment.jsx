@@ -55,7 +55,7 @@ function DemoClock({onClose}){
  const emomRest=!emomWork&&(emomElapsed-safeWork)<safeRest
  const emomRound=Math.min(Math.floor(elapsed/intervalSeconds)+1,Math.max(1,Number(rounds)||1))
  const intervalRound=Math.min(Math.floor(elapsed/Math.max(1,cycleSeconds))+1,Math.max(1,Number(rounds)||1))
- const phase=isEmom?(emomWork?'ARBEID':emomRest?'PAUSE':'VENTETID'):isIntervals?(intervalWork?'ARBEID':'PAUSE'):isCountdown?'GJENSTÅANDE TID':format==='fortime'?'MEDGÅTT TID':'STOPPEKLOKKE'
+ const phase=isEmom?(emomWork?'ARBEID':emomRest?'PAUSE':'VENTETID'):isIntervals?(intervalWork?'ARBEID':'PAUSE'):format==='amrap'?'AMRAP · TID ATT':format==='countdown'?'NEDTELJING':format==='fortime'?'MEDGÅTT TID':'STOPPEKLOKKE'
  const displayTime=isCountdown?remaining:isEmom?Math.max(0,emomWork?safeWork-emomElapsed:emomRest?safeRest-(emomElapsed-safeWork):intervalSeconds-emomElapsed):isIntervals?Math.max(0,intervalWork?safeWork-intervalElapsed:cycleSeconds-intervalElapsed):elapsed
  const roundLabel=isEmom?'RUNDE '+emomRound+' / '+rounds:isIntervals?'RUNDE '+intervalRound+' / '+rounds:''
  const formatInfo=DEMO_FORMATS.find(item=>item.id===format)
@@ -69,10 +69,16 @@ function DemoClock({onClose}){
  },[running,limited,elapsed,totalSeconds])
  useEffect(()=>{
   const sync=()=>setFullscreen(Boolean(document.fullscreenElement))
+  const keyboard=event=>{if(event.key==='Escape')closeDemo()}
   document.addEventListener('fullscreenchange',sync)
-  return()=>document.removeEventListener('fullscreenchange',sync)
+  window.addEventListener('keydown',keyboard)
+  return()=>{document.removeEventListener('fullscreenchange',sync);window.removeEventListener('keydown',keyboard)}
  },[])
  function reset(){setRunning(false);setElapsed(0)}
+ async function closeDemo(){
+  try{if(document.fullscreenElement)await document.exitFullscreen?.()}catch{/* Lukking skal fungera også utan støtte for fullskjerm. */}
+  onClose?.()
+ }
  function chooseFormat(next){
   if(formatLocked)return
   setFormat(next)
@@ -91,13 +97,13 @@ function DemoClock({onClose}){
   }catch{/* Fullscreen er valfri på eininga. */}
  }
  const stageClass='infotainment-demo-stage'+(screenFormat==='landscape'?' is-landscape':screenFormat==='portrait'?' is-portrait':'')
- return <div className="infotainment-demo-overlay" role="presentation" onClick={onClose}>
+ return <div className="infotainment-demo-overlay" role="presentation" onClick={closeDemo}>
   <section className={stageClass} role="dialog" aria-modal="true" aria-label="Demoklokke for intro og teori" onClick={event=>event.stopPropagation()}>
    <header className="infotainment-demo-header">
     <div><span className="infotainment-kicker">INTRO · TEORI · DEMONSTRASJON</span><h2><TimerReset size={22}/> Demoklokke</h2><p>Vis tidstypane utan å påverka ei aktiv treningsøkt eller treningsloggen.</p></div>
     <div className="infotainment-demo-header-actions">
      <button type="button" onClick={toggleFullscreen} aria-label={fullscreen?'Avslutt fullskjerm':'Vis i fullskjerm'} title={fullscreen?'Avslutt fullskjerm':'Vis i fullskjerm'}>{fullscreen?<Minimize2 size={18}/>:<Maximize2 size={18}/>}</button>
-     <button type="button" onClick={onClose} aria-label="Lukk demoklokka" title="Lukk"><X size={20}/></button>
+     <button type="button" onClick={closeDemo} aria-label="Lukk demoklokka" title="Lukk"><X size={20}/></button>
     </div>
    </header>
    <div className="infotainment-demo-body">
