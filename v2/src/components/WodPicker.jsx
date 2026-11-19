@@ -14,6 +14,7 @@ export default function WodPicker({wods=[],selectedIds=[],onChange,multiple=true
   return !w.is_archived&&text.includes(query.trim().toLowerCase())&&(format==='all'||w.format===format)&&(visibility==='all'||(visibility==='published'?w.is_published:!w.is_published))&&(category==='all'||kind===category)
  }),[wods,query,format,visibility,category])
  const formats=useMemo(()=>[...new Set(wods.filter(w=>!w.is_archived).map(w=>w.format).filter(Boolean))].sort(),[wods])
+ const categories=useMemo(()=>{const base=['warmup','daily','standard','benchmark','assessment','rehab','recovery','other'];return [...base,...new Set(wods.filter(w=>!w.is_archived).map(w=>w.timer_settings?.workout_schema?.library_category||(w.category==='warmup'?'warmup':'standard')).filter(v=>!base.includes(v)))]},[wods])
  function toggle(id){
   if(multiple)onChange(selectedIds.includes(id)?selectedIds.filter(x=>x!==id):[...selectedIds,id])
   else onChange(selectedIds[0]===id?[]:[id])
@@ -23,7 +24,7 @@ export default function WodPicker({wods=[],selectedIds=[],onChange,multiple=true
   <div className="wod-picker-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Søk på namn, øving, format eller innhald …"/></div>
   <div className="wod-picker-filters">
    <select value={format} onChange={e=>setFormat(e.target.value)} aria-label="Filtrer på WOD-format"><option value="all">Alle format</option>{formats.map(x=><option key={x} value={x}>{x}</option>)}</select>
-   <select value={category} onChange={e=>setCategory(e.target.value)} aria-label="Filtrer på WOD-type"><option value="all">Alle kategoriar</option><option value="warmup">Oppvarming</option><option value="daily">Dagens WOD</option><option value="standard">Standard-WOD</option><option value="benchmark">Benchmark</option><option value="assessment">Test og evaluering</option><option value="rehab">Rehabilitering</option><option value="recovery">Restitusjon / mobilitet</option><option value="other">Anna / spesialøkt</option></select>
+   <select value={category} onChange={e=>setCategory(e.target.value)} aria-label="Filtrer på WOD-type"><option value="all">Alle kategoriar</option>{categories.map(value=><option key={value} value={value}>{categoryLabel(value)}</option>)}</select>
    <select value={visibility} onChange={e=>setVisibility(e.target.value)} aria-label="Filtrer publisering"><option value="all">Publiserte og private</option><option value="published">Publiserte</option><option value="private">Private PT-WOD-ar</option></select>
   </div>
   <div className="wod-picker-results">
