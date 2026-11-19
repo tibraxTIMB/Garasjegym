@@ -75,8 +75,9 @@ Workflowen `.github/workflows/deploy-sturmkopf-pages.yml` byggjer på push til S
 ## Nyleg kvalitetssikra
 
 - WOD Builder brukar éin felles ordensfunksjon for flytting, posisjonsval, dra/slipp, lagring og gjenopning.
-- Seks automatiske testar dekkjer rekkjefølgje og `sort_order`; migreringskontroll og Vite-bygg er stadfesta grøne i GitHub Actions.
+- Elleve automatiske testar dekkjer WOD-rekkjefølgje og appens base-URL for Auth-redirectar; migreringskontroll og Vite-bygg er stadfesta grøne i GitHub Actions.
 - PT-meldingar har slettemoglegheit i PT-dialogen og på medlemssida, under eksisterande RLS-reglar.
+- Passordreset brukar Vite sin `BASE_URL`, slik at e-postlenkja returnerer til `/Garasjegym/` på GitHub Pages.
 - SECURITY DEFINER-funksjonane i testdatabasen har eksplisitt `search_path = pg_catalog, public, pg_temp`, med unntak av funksjonen som allereie brukar tomt search path.
 - Ingen av desse endringane er køyrde mot produksjonsdatabasen.
 
