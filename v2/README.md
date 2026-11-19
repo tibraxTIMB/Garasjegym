@@ -76,6 +76,7 @@ Workflowen `.github/workflows/deploy-sturmkopf-pages.yml` byggjer på push til S
 
 - WOD Builder brukar éin felles ordensfunksjon for flytting, posisjonsval, dra/slipp, lagring og gjenopning.
 - Elleve automatiske testar dekkjer WOD-rekkjefølgje og appens base-URL for Auth-redirectar; migreringskontroll og Vite-bygg er stadfesta grøne i GitHub Actions.
+- Hovudmodular blir no lazy-lasta. I byggloggen gjekk første JavaScript-bundle frå 947,53 kB til 463,08 kB (gzip 251,60 → 130,79 kB). PT Studio, WOD Builder, trening, timeplan, kaffibar, admin og infotainment blir lasta ved behov.
 - PT-meldingar har slettemoglegheit i PT-dialogen og på medlemssida, under eksisterande RLS-reglar.
 - Passordreset brukar Vite sin `BASE_URL`, slik at e-postlenkja returnerer til `/Garasjegym/` på GitHub Pages.
 - SECURITY DEFINER-funksjonane i testdatabasen har eksplisitt `search_path = pg_catalog, public, pg_temp`, med unntak av funksjonen som allereie brukar tomt search path.
