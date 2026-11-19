@@ -81,7 +81,7 @@
 
 Dagens frontend bruker aktive admin- og managerprofilar som staff. PT-coach blir registrert i pt_coaches, men må vera ein eksisterande admin-/managerbrukar. Det finst ikkje ein separat coach-autentiseringsrolle i auth.js.
 
-Testdatabasen har 1 admin og 3 medlemmer, men ingen managerprofil, ingen coach-rader i `pt_coaches` og ingen kundetildelingar i `pt_client_assignments`. Coach-sporet er derfor eit inaktivt/delvis datamodellspor og ikkje ein ferdig testbar brukarrolle.
+Testdatabasen har 1 admin og 3 medlemmer, men ingen varig managerprofil, ingen coach-rader i `pt_coaches` og ingen kundetildelingar i `pt_client_assignments`. Managerrettar er likevel testa ved å simulera managerrolla på ein testprofil inne i ein transaksjon som vart rulla tilbake. Coach-sporet er eit inaktivt/delvis datamodellspor og ikkje ein ferdig testbar brukarrolle.
 
 Database- og frontendtilgang for admin/manager er brei staff-tilgang. Systemet avgrensar ikkje PT-coach til berre eigne kundar. Dersom dette er eit krav, må det etablerast ei eksplisitt rolle-/tilgangsavklaring før ny policy og UI-tilpassing. Ikkje gje ein medlemsprofil coach-rettar berre ved å leggja inn ein rad i pt_coaches.
 
