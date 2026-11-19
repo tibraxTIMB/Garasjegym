@@ -21,7 +21,7 @@ function TimerPanel({id,title,layout,onMove,onResize,onLock,locked,children,devi
    ? (id==='clock'||id==='music'?'1 / -1':`span ${layout.span>=6?2:1}`)
    : `span ${layout.span}`
  return <section data-timer-panel={id} className={`timer-layout-panel timer-panel-${id} ${locked?'is-locked':''} ${designMode?'is-editable':''}`} style={{'--timer-grid-column':gridColumn,'--timer-panel-height':`${layout.height}px`}} draggable={designMode&&!locked} onDragStart={e=>{if(!designMode||locked)return;e.dataTransfer.setData('text/plain',id);e.dataTransfer.effectAllowed='move'}} onDragOver={e=>{if(designMode&&!locked)e.preventDefault()}} onDrop={e=>{if(!designMode)return;e.preventDefault();const from=e.dataTransfer.getData('text/plain');if(from&&from!==id)onMove(from,id)}}>
-  <header className="timer-panel-toolbar">{designMode&&<span className="timer-panel-grip" aria-hidden="true">⠿</span>}<b>{title}</b>{designMode&&<div className="timer-panel-tools">
+  {designMode&&<header className="timer-panel-toolbar">{designMode&&<span className="timer-panel-grip" aria-hidden="true">⠿</span>}<b>{title}</b>{designMode&&<div className="timer-panel-tools">
    <button type="button" title="Flytt panelet opp" aria-label={`Flytt ${title} opp`} disabled={locked} onClick={()=>onMove(id,'up')}>↑</button>
    <button type="button" title="Flytt panelet ned" aria-label={`Flytt ${title} ned`} disabled={locked} onClick={()=>onMove(id,'down')}>↓</button>
    <button type="button" title="Gjer panelet smalare" aria-label="Gjer panelet smalare" disabled={locked||layout.span<=2} onClick={()=>onResize(id,'span',-1)}>−B</button>
@@ -29,7 +29,7 @@ function TimerPanel({id,title,layout,onMove,onResize,onLock,locked,children,devi
    <button type="button" title="Gjer panelet lågare" aria-label="Gjer panelet lågare" disabled={locked||layout.height<=120} onClick={()=>onResize(id,'height',-40)}>−H</button>
    <button type="button" title="Gjer panelet høgare" aria-label="Gjer panelet høgare" disabled={locked||layout.height>=900} onClick={()=>onResize(id,'height',40)}>+H</button>
    <button type="button" className={locked?'is-locked':''} onClick={()=>onLock(id)} title={locked?'Lås opp panelet':'Lås panelet'}>{locked?'Låst':'Lås'}</button>
-  </div>}</header>
+  </div>}</header>}
   <div className="timer-panel-content">{children}</div>
  </section>
 }
@@ -39,7 +39,9 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [round, setRound] = useState(1)
   const [workSeconds, setWorkSeconds] = useState(timerSettings?.work_seconds ?? timerSettings?.workout_schema?.interval?.work_seconds ?? (format === 'Tabata' ? 20 : 60))
   const [restSeconds, setRestSeconds] = useState(timerSettings?.rest_seconds ?? timerSettings?.workout_schema?.interval?.rest_seconds ?? (format === 'Tabata' ? 10 : 60))
-  const [rounds, setRounds] = useState(timerSettings?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
+  const [rounds, setRounds] = useState(timerSettings?.rounds ?? timerSettings?.workout_schema?.station_circuit?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
+  const [durationOverride, setDurationOverride] = useState(null)
+  const [emomEveryOverride, setEmomEveryOverride] = useState(null)
   const [focused, setFocused] = useState(Boolean(document.fullscreenElement))
   const [hasStarted, setHasStarted] = useState(false)
   const [phase, setPhase] = useState('Klar')
@@ -92,6 +94,19 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   function resizePanel(id,field,delta){setPanelLayout(layout=>({...layout,[id]:{...layout[id],[field]:field==='span'?Math.max(2,Math.min(12,layout[id].span+delta)):Math.max(120,Math.min(900,layout[id].height+delta))}}))}
   function togglePanelLock(id){setLockedPanels(v=>({...v,[id]:!v[id]}))}
   function resetPanelLayout(){setPanelLayout({clock:{span:6,height:520},info:{span:3,height:360},laps:{span:3,height:360},music:{span:12,height:90}});setPanelOrder(['clock','info','laps','music']);setLockedPanels({})}
+  function applyLayoutPreset(preset){
+    const presets={
+      standard:{order:['clock','info','laps','music'],layout:{clock:{span:8,height:520},info:{span:4,height:360},laps:{span:4,height:300},music:{span:12,height:90}}},
+      minimal:{order:['clock'],layout:{clock:{span:12,height:620},info:{span:4,height:300},laps:{span:4,height:260},music:{span:12,height:90}}},
+      group:{order:['clock','info','laps','music'],layout:{clock:{span:8,height:600},info:{span:4,height:360},laps:{span:4,height:260},music:{span:12,height:90}}},
+      pt:{order:['clock','info','laps'],layout:{clock:{span:7,height:520},info:{span:5,height:420},laps:{span:5,height:260},music:{span:12,height:90}}}
+    }
+    const selected=presets[preset]||presets.standard
+    setPanelOrder(selected.order)
+    setPanelLayout({...defaultPanelLayout,...selected.layout})
+    setLockedPanels({})
+    setDesignMode(false)
+  }
 
   const [appearance, setAppearance] = useState(() => {
     try { return { clockSize: 112, accent: '#f0a33a', ...(JSON.parse(localStorage.getItem('garasjegym.timer.appearance') || '{}')) } }
@@ -102,23 +117,24 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const savedDuration = Number(schema?.duration_seconds) || 0
   const capDuration = Number(schema?.time_cap_seconds) || (Number(schema?.time_cap_minutes) || 0) * 60
   const isEMOM = /^E[1-7]MOM$/.test(format) || ['EMOM', 'EMOM 1', 'EMOM 2'].includes(format)
-  const emomEvery = Math.max(1, Math.min(7, Number(schema?.interval?.work_every_minutes) || Number(format.match(/^E([1-7])MOM$/)?.[1]) || (format === 'EMOM 2' ? 2 : 1)))
+  const emomEvery = Math.max(1, Math.min(7, Number(emomEveryOverride) || Number(schema?.interval?.work_every_minutes) || Number(format.match(/^E([1-7])MOM$/)?.[1]) || (format === 'EMOM 2' ? 2 : 1)))
   const emomCycle = emomEvery * 60
   const isTimedInterval = ['Tabata', 'Intervall', 'Tilpassa', 'Row Intervals'].includes(format)
   const isStationCircuit = format === 'Stasjonssirkel' || schema?.structure === 'station_circuit'
   const stationPlan = schema?.station_circuit || {}
   const stationList = Array.isArray(stationPlan.stations) && stationPlan.stations.length ? stationPlan.stations : (schema?.items || []).map((item,index)=>({...item,station_number:index+1}))
   const stationCount = Math.max(1, Number(stationPlan.station_count) || stationList.length || 1)
-  const stationSlots = Math.max(1, Number(stationPlan.rounds ?? schema?.rounds ?? rounds) || 1) * stationCount
+  const stationSlots = Math.max(1, Number(rounds) || 1) * stationCount
   const isCountdown = ['AMRAP', 'Nedteljing'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'AMRAP')
   const isForTime = ['For Time', 'Chipper'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'For Time')
   const isDeathBy = format === 'Death By'
   const isLadder = format === 'Ladder'
   const hasTimeCap = capDuration > 0 && !isCountdown && !isEMOM && !isTimedInterval && !isStationCircuit
   const fallbackDuration = Math.max(1, (Number(minutes) || 10) * 60 + (Number(seconds) || 0))
-  const target = Math.max(1, isCountdown && capDuration ? capDuration : hasTimeCap ? capDuration : savedDuration || fallbackDuration)
-  const effectiveWorkSeconds = isStationCircuit ? Math.max(1, Number(stationPlan.work_seconds ?? workSeconds)) : Math.max(1, Number(workSeconds))
-  const effectiveRestSeconds = isStationCircuit ? Math.max(0, Number(stationPlan.transition_seconds ?? restSeconds)) : Math.max(0, Number(restSeconds))
+  const defaultTarget = Math.max(1, isCountdown && capDuration ? capDuration : hasTimeCap ? capDuration : savedDuration || fallbackDuration)
+  const target = Math.max(1, Number(durationOverride) || defaultTarget)
+  const effectiveWorkSeconds = Math.max(1, Number(workSeconds) || 1)
+  const effectiveRestSeconds = Math.max(0, Number(restSeconds) || 0)
   const cycle = effectiveWorkSeconds + effectiveRestSeconds
   const intervalExerciseCount = Math.max(1, exerciseList.length || Number(schema?.interval_exercise_count) || 1)
    const intervalTotal = cycle * Math.max(1, Number(rounds) || 1) * intervalExerciseCount
@@ -134,7 +150,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     : Math.max(0, emomCycle - (elapsed % emomCycle || 0))
   const emomNextStart = elapsed % emomCycle === 0 ? 0 : emomCycle - (elapsed % emomCycle)
   const currentRound = isStationCircuit
-    ? Math.min(Math.floor(elapsed / (cycle * stationCount)) + 1, Math.max(1, Number(stationPlan.rounds ?? schema?.rounds ?? rounds) || 1))
+    ? Math.min(Math.floor(elapsed / (cycle * stationCount)) + 1, Math.max(1, Number(rounds)||1 || 1))
     : isTimedInterval
     ? Math.min(Math.floor(elapsed / (cycle * intervalExerciseCount)) + 1, Math.max(1, Number(rounds) || 1))
     : isEMOM ? Math.floor(elapsed / emomCycle) + 1
@@ -175,7 +191,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     setWorkSeconds(timerSettings?.work_seconds ?? timerSettings?.workout_schema?.station_circuit?.work_seconds ?? timerSettings?.workout_schema?.interval?.work_seconds ?? (format === 'Tabata' ? 20 : 60))
     setRestSeconds(timerSettings?.rest_seconds ?? timerSettings?.workout_schema?.station_circuit?.transition_seconds ?? timerSettings?.workout_schema?.interval?.rest_seconds ?? (format === 'Tabata' ? 10 : 60))
     setRounds(timerSettings?.rounds ?? timerSettings?.workout_schema?.station_circuit?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
-  }, [format, minutes, seconds, timerSettings?.work_seconds, timerSettings?.rest_seconds, timerSettings?.rounds, timerSettings?.workout_schema?.duration_seconds, timerSettings?.workout_schema?.time_cap_seconds, timerSettings?.workout_schema?.station_circuit?.work_seconds, timerSettings?.workout_schema?.station_circuit?.transition_seconds, timerSettings?.workout_schema?.station_circuit?.rounds])
+    setDurationOverride(null); setEmomEveryOverride(null)
+  }, [format, minutes, seconds, timerSettings?.work_seconds, timerSettings?.workout_schema?.station_circuit?.work_seconds, timerSettings?.workout_schema?.station_circuit?.transition_seconds, timerSettings?.rest_seconds, timerSettings?.rounds, timerSettings?.workout_schema?.duration_seconds, timerSettings?.workout_schema?.time_cap_seconds, timerSettings?.workout_schema?.interval?.work_seconds, timerSettings?.workout_schema?.interval?.work_every_minutes, timerSettings?.workout_schema?.interval?.rest_seconds, timerSettings?.workout_schema?.rounds, timerSettings?.workout_schema?.station_circuit?.rounds])
 
   // Starting a WOD from the library or a PT assignment launches the timer
   // immediately. The token also retriggers this when the Timer component stays mounted.
@@ -184,6 +201,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     setElapsed(0)
     setRound(1)
     setLaps([])
+    setDurationOverride(null); setEmomEveryOverride(null)
+    setWorkSeconds(timerSettings?.work_seconds ?? timerSettings?.workout_schema?.station_circuit?.work_seconds ?? timerSettings?.workout_schema?.interval?.work_seconds ?? (format === 'Tabata' ? 20 : 60))
+    setRestSeconds(timerSettings?.rest_seconds ?? timerSettings?.workout_schema?.station_circuit?.transition_seconds ?? timerSettings?.workout_schema?.interval?.rest_seconds ?? (format === 'Tabata' ? 10 : 60))
+    setRounds(timerSettings?.rounds ?? timerSettings?.workout_schema?.station_circuit?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
     setHasStarted(true)
     setPhase('PÅGÅR')
     setRunning(true)
@@ -198,15 +219,12 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     return () => window.clearInterval(id)
   }, [running])
 
-  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isStationCircuit ? Math.min(Math.floor(elapsed / (cycle * stationCount)), Number(stationPlan.rounds ?? schema?.rounds ?? rounds)) : isAmrap ? laps.length : round, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isTimedInterval||isStationCircuit||hasTimeCap, currentRound }) }, [elapsed, laps, round, phase, running, isCountdown, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, currentRound])
+  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isStationCircuit ? Math.min(Math.floor(elapsed / (cycle * stationCount)), Number(rounds)||1) : isAmrap ? laps.length : round, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isTimedInterval||isStationCircuit||hasTimeCap, currentRound }) }, [elapsed, laps, round, phase, running, isCountdown, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, currentRound])
 
   useEffect(() => {
     if (!running) return
-    if ((isCountdown || isEMOM || isStationCircuit) && elapsed >= (isStationCircuit ? stationTotal : target)) {
-      setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return
-    }
-    if (hasTimeCap && elapsed >= capDuration) {
-      setRunning(false); setPhase('TIDSGRENSE'); cue(520, 0.5); return
+    if ((isCountdown || isEMOM || isStationCircuit || hasTimeCap) && elapsed >= (isStationCircuit ? stationTotal : target)) {
+      setRunning(false); setPhase(hasTimeCap ? 'TIDSGRENSE' : 'FERDIG'); cue(520, 0.5); return
     }
     if (isTimedInterval && elapsed >= intervalTotal) {
       setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return
@@ -240,23 +258,45 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   return <div className={focused ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
     <div className="timer-topline">
       <div className="timer-context"><span className="timer-origin-chip">{originLabel}</span><span className="timer-format-chip">{format.toUpperCase()}</span></div>
-      <button type="button" className="timer-customize-trigger" onClick={() => setShowTimerSettings(value => !value)} aria-expanded={showTimerSettings}>Tilpass klokke</button>
+      <button type="button" className="timer-customize-trigger" onClick={() => setShowTimerSettings(value => !value)} aria-expanded={showTimerSettings}>{showTimerSettings ? 'Lukk oppsett' : 'Timeroppsett'}</button>
     </div>
-    {showTimerSettings && <section className="timer-customize-panel" aria-label="Tilpass timer">
-      <div className="timer-customize-title"><strong>Klokkeuttrykk</strong><span>Lagra på denne eininga</span></div>
-      <label>Storleik på klokketal <b>{appearance.clockSize}px</b><input type="range" min="64" max="220" step="4" value={appearance.clockSize} onChange={e => setAppearance(value => ({ ...value, clockSize: Number(e.target.value) }))}/></label>
-      <label>Farge på klokke og markeringar <input type="color" value={appearance.accent} onChange={e => setAppearance(value => ({ ...value, accent: e.target.value }))}/></label>
-      <button type="button" className="text-button" onClick={() => setAppearance({ clockSize:112, accent:'#f0a33a' })}>Tilbakestill utsjånad</button>
+    {showTimerSettings && <section className="timer-customize-panel timer-setup-drawer" aria-label="Timeroppsett">
+      <div className="timer-customize-title"><strong>Tilpass denne økta</strong><span>Endringane gjeld berre denne gjennomføringa.</span></div>
+      {(isTimedInterval || isStationCircuit) && <div className="timer-setup-section">
+        <strong>{isStationCircuit ? 'Stasjonssirkel' : format==='Tabata' ? 'Tabata-intervall' : 'Intervall'}</strong>
+        <div className="timer-settings-inline">
+          <label>Arbeid · sek<input type="number" min="1" max="600" value={workSeconds} onChange={e=>setWorkSeconds(Math.max(1,Number(e.target.value)||1))}/></label>
+          <label>{isStationCircuit?'Stasjonsbyte · sek':'Pause · sek'}<input type="number" min="0" max="600" value={restSeconds} onChange={e=>setRestSeconds(Math.max(0,Number(e.target.value)||0))}/></label>
+          <label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(Math.max(1,Number(e.target.value)||1))}/></label>
+        </div>
+        <div className="timer-setup-presets"><span>Snøggval:</span><button type="button" onClick={()=>{setWorkSeconds(20);setRestSeconds(10);setRounds(8)}}>20 / 10 · Tabata</button><button type="button" onClick={()=>{setWorkSeconds(40);setRestSeconds(20);setRounds(8)}}>40 / 20</button><button type="button" onClick={()=>{setWorkSeconds(45);setRestSeconds(15);setRounds(6)}}>45 / 15</button><button type="button" onClick={()=>{setWorkSeconds(60);setRestSeconds(30);setRounds(5)}}>60 / 30</button></div>
+      </div>}
+      {(isCountdown || isEMOM || hasTimeCap) && <div className="timer-setup-section">
+        <strong>Varigheit</strong><div className="timer-setup-duration">
+          <label>Minutt<input type="number" min="0" max="240" value={Math.floor((durationOverride??target)/60)} onChange={e=>setDurationOverride(Math.max(1,(Math.max(0,Number(e.target.value)||0)*60)+((durationOverride??target)%60)))}/></label>
+          <label>Sekund<input type="number" min="0" max="59" value={(durationOverride??target)%60} onChange={e=>setDurationOverride(Math.max(1,Math.floor((durationOverride??target)/60)*60+Math.max(0,Math.min(59,Number(e.target.value)||0))))}/></label>
+        </div>
+      </div>}
+      {isEMOM && <div className="timer-setup-section"><strong>Arbeidsstart</strong><label className="timer-setup-select">Start arbeid kvart <select value={emomEvery} onChange={e=>setEmomEveryOverride(Number(e.target.value))}>{[1,2,3,4,5,6,7].map(value=><option key={value} value={value}>{value===1?'minutt':value+' minutt'}</option>)}</select></label></div>}
+      <div className="timer-setup-section"><strong>Skjermoppsett</strong><div className="timer-layout-presets">
+        <button type="button" onClick={()=>applyLayoutPreset('standard')}>Standard</button><button type="button" onClick={()=>applyLayoutPreset('minimal')}>Minimal</button><button type="button" onClick={()=>applyLayoutPreset('group')}>Gruppetime</button><button type="button" onClick={()=>applyLayoutPreset('pt')}>PT</button>
+      </div></div>
+      <div className="timer-setup-section"><strong>Klokkevising</strong>
+        <label>Storleik på klokketal <b>{appearance.clockSize}px</b><input type="range" min="64" max="220" step="4" value={appearance.clockSize} onChange={e => setAppearance(value => ({ ...value, clockSize: Number(e.target.value) }))}/></label>
+        <label>Farge på klokke og markeringar <input type="color" value={appearance.accent} onChange={e => setAppearance(value => ({ ...value, accent: e.target.value }))}/></label>
+        <button type="button" className="text-button" onClick={() => setAppearance({ clockSize:112, accent:'#f0a33a' })}>Tilbakestill klokkevising</button>
+      </div>
+      <div className="timer-setup-actions"><button type="button" className="secondary-button" onClick={()=>setDesignMode(value=>!value)}>{designMode?'Avslutt avansert redigering':'Avansert skjermredigering'}</button><button type="button" className="primary-button" onClick={()=>{setDesignMode(false);setShowTimerSettings(false)}}>Ferdig</button></div>
     </section>}
     <div className="timer-caption"><Clock3 size={15}/> {format.toUpperCase()}</div>
     <div className={`timer-dashboard timer-dashboard-reflow ${designMode ? "is-designing" : ""}`}>
-      <div className="timer-layout-toolbar"><strong>Paneloppsett</strong><span>{designMode ? "Flytt, endra breidde og høgd, eller lås panel. Endringane blir lagra for denne skjermretninga." : "Oppsettet tilpassar seg skjermen automatisk."}</span><button type="button" className="secondary-button" onClick={()=>setDesignMode(value=>!value)}>{designMode ? "Ferdig" : "Rediger oppsett"}</button>{designMode&&<button type="button" className="text-button" onClick={resetPanelLayout}>Tilbakestill</button>}</div>
+      {designMode&&<div className="timer-layout-toolbar"><strong>Avansert skjermredigering</strong><span>Flytt, endra breidde og høgd, eller lås panel. Oppsettet blir lagra på denne eininga.</span><button type="button" className="secondary-button" onClick={()=>setDesignMode(false)}>Ferdig</button><button type="button" className="text-button" onClick={resetPanelLayout}>Tilbakestill</button></div>}
       <div className="timer-panel-canvas">
        {panelOrder.map(id=>id==='clock'?<TimerPanel key={id} id="clock" title="HOVUDKLOKKE OG WOD" layout={panelLayout.clock} deviceProfile={deviceProfile} locked={Boolean(lockedPanels.clock)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock} designMode={designMode}><section className="timer-center">
         <div className="timer-phase">{phase}</div>
         <strong className="timer-main-clock">{clock(primaryTime)}</strong>
         <div className="timer-round-label">{isStationCircuit ? 'ARBEID / STASJONSBYTE' : isCountdown ? 'GJENSTÅANDE TID' : isEMOM ? 'TIL NESTE ARBEIDSSTART' : isTimedInterval ? 'TID I INTERVALLFASEN' : 'MEDGÅTT TID'}</div>
-        {isStationCircuit ? <div className="timer-station-plan"><div className="timer-station-plan-heading"><span>STASJONANE I SIRKELEN</span><b>{stationPlan.rounds ?? schema?.rounds ?? rounds} rundar</b></div><div className="timer-station-grid">{stationList.map((station,index)=><article className="timer-station-card" key={station.station_number||index}><span>STASJON {station.station_number||index+1}</span><strong>{station.exercise_name||station.name||'Øving'}</strong><small>{station.reps_mode==='amrap'?'AMRAP · så mange som mogleg':station.reps!=null&&station.reps!==''?`${station.reps} reps`:'Vel sjølv tal reps'}{station.height_cm?' · '+station.height_cm+' cm':''}{station.load_label?' · '+station.load_label:''}</small>{station.description&&<p>{station.description}</p>}{station.coach_note&&<p>{station.coach_note}</p>}</article>)}</div></div> : isAmrap ? <div className="timer-amrap-exercise-list"><span>ØVINGAR I WOD-EN</span>{exerciseList.length ? <ol>{exerciseList.map((exercise,index)=>{const setReps=(exercise.sets||[]).map(set=>String(set.reps??'').trim()).filter(Boolean);const uniqueReps=[...new Set(setReps)];const repsLabel=uniqueReps.length===1?(setReps.length>1?`${setReps.length} × ${uniqueReps[0]}`:uniqueReps[0]):uniqueReps.length>1?uniqueReps.join(' / '):String(exercise.reps??'').trim();return <li key={exercise.key||index} className={exercise.is_rest?'timer-rest-item':''}><b>{index+1}.</b><span>{exercise.is_rest?<><strong>PAUSE</strong><small> {clock(Number(exercise.rest_duration_seconds)||30)}</small></>:<>{repsLabel&&<strong className="timer-amrap-reps">{repsLabel} × </strong>}{exercise.exercise_name||'Øving utan namn'}</>}</span></li>})}</ol> : <p>Ingen øvingar er lagde til.</p>}</div> : <><div className="timer-active-under-clock"><span>{isTimedInterval ? `DRAG ${intervalExerciseIndex+1} / ${intervalExerciseCount}` : activeExercise ? 'GJELDANDE ØVING' : 'WOD-OVERSIKT'}</span><b>{isTimedInterval ? currentIntervalExercise : activeExercise || 'Sjå øvingsrekkjefølgja'}</b></div><div className="timer-amrap-exercise-list"><span>ØVINGAR I WOD-EN · {exerciseList.length}</span>{exerciseList.length ? <ol>{exerciseList.map((exercise,index)=>{const dose=(exercise.sets||[]).map(set=>[set.reps?set.reps+' reps':'',set.load_kg?set.load_kg+' kg':'',set.time_text||''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ');return <li key={exercise.key||index} className={exercise.is_rest?'timer-rest-item':''}><b>{index+1}.</b><span><strong>{exercise.is_rest?'PAUSE':exercise.exercise_name||'Øving utan namn'}</strong>{dose&&<small>{dose}</small>}{exercise.prescription_label&&<small>{exercise.prescription_label}</small>}</span></li>})}</ol> : <p>Ingen øvingar er lagde til.</p>}</div></>}
+        {isStationCircuit ? <div className="timer-station-plan"><div className="timer-station-plan-heading"><span>STASJONANE I SIRKELEN</span><b>{rounds} rundar</b></div><div className="timer-station-grid">{stationList.map((station,index)=><article className="timer-station-card" key={station.station_number||index}><span>STASJON {station.station_number||index+1}</span><strong>{station.exercise_name||station.name||'Øving'}</strong><small>{station.reps_mode==='amrap'?'AMRAP · så mange som mogleg':station.reps!=null&&station.reps!==''?`${station.reps} reps`:'Vel sjølv tal reps'}{station.height_cm?' · '+station.height_cm+' cm':''}{station.load_label?' · '+station.load_label:''}</small>{station.description&&<p>{station.description}</p>}{station.coach_note&&<p>{station.coach_note}</p>}</article>)}</div></div> : isAmrap ? <div className="timer-amrap-exercise-list"><span>ØVINGAR I WOD-EN</span>{exerciseList.length ? <ol>{exerciseList.map((exercise,index)=>{const setReps=(exercise.sets||[]).map(set=>String(set.reps??'').trim()).filter(Boolean);const uniqueReps=[...new Set(setReps)];const repsLabel=uniqueReps.length===1?(setReps.length>1?`${setReps.length} × ${uniqueReps[0]}`:uniqueReps[0]):uniqueReps.length>1?uniqueReps.join(' / '):String(exercise.reps??'').trim();return <li key={exercise.key||index} className={exercise.is_rest?'timer-rest-item':''}><b>{index+1}.</b><span>{exercise.is_rest?<><strong>PAUSE</strong><small> {clock(Number(exercise.rest_duration_seconds)||30)}</small></>:<>{repsLabel&&<strong className="timer-amrap-reps">{repsLabel} × </strong>}{exercise.exercise_name||'Øving utan namn'}</>}</span></li>})}</ol> : <p>Ingen øvingar er lagde til.</p>}</div> : <><div className="timer-active-under-clock"><span>{isTimedInterval ? `DRAG ${intervalExerciseIndex+1} / ${intervalExerciseCount}` : activeExercise ? 'GJELDANDE ØVING' : 'WOD-OVERSIKT'}</span><b>{isTimedInterval ? currentIntervalExercise : activeExercise || 'Sjå øvingsrekkjefølgja'}</b></div><div className="timer-amrap-exercise-list"><span>ØVINGAR I WOD-EN · {exerciseList.length}</span>{exerciseList.length ? <ol>{exerciseList.map((exercise,index)=>{const dose=(exercise.sets||[]).map(set=>[set.reps?set.reps+' reps':'',set.load_kg?set.load_kg+' kg':'',set.time_text||''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ');return <li key={exercise.key||index} className={exercise.is_rest?'timer-rest-item':''}><b>{index+1}.</b><span><strong>{exercise.is_rest?'PAUSE':exercise.exercise_name||'Øving utan namn'}</strong>{dose&&<small>{dose}</small>}{exercise.prescription_label&&<small>{exercise.prescription_label}</small>}</span></li>})}</ol> : <p>Ingen øvingar er lagde til.</p>}</div></>}
         {isAmrap && <div className="timer-round-total"><span>RUNDER FULLFØRT</span><b>{completedRounds}</b></div>}
         {!isStationCircuit && !isAmrap && (isTimedInterval ? (exerciseList[intervalExerciseIndex + 1]?.exercise_name || exerciseList[0]?.exercise_name) : nextExercise) && <div className="timer-next-exercise"><span>NESTE ØVING</span><b>{isTimedInterval ? (exerciseList[intervalExerciseIndex + 1]?.exercise_name || exerciseList[0]?.exercise_name) : nextExercise}</b></div>}
         <div className="timer-actions">
@@ -278,15 +318,11 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         <div className="timer-side-stat"><span>MEDGÅTT TID</span><b>{clock(elapsed)}</b></div>
         {(isCountdown || isStationCircuit) && <div className="timer-side-stat"><span>GJENVERANDE TID</span><b>{clock(remainingTotal)}</b></div>}
         {isEMOM && <><div className="timer-side-stat"><span>GJENSTÅANDE ØKTTID</span><b>{clock(remainingTotal)}</b></div><div className="timer-side-stat"><span>NESTE ARBEIDSSTART</span><b>{clock(emomNextStart)}</b></div></>}
-        {isStationCircuit && <><div className="timer-side-stat"><span>RUNDE</span><b>{Math.min(currentRound,Number(stationPlan.rounds ?? schema?.rounds ?? rounds))}/{stationPlan.rounds ?? schema?.rounds ?? rounds}</b></div><div className="timer-side-stat"><span>ARBEID / BYTE</span><b>{stationPlan.work_seconds ?? workSeconds}s / {stationPlan.transition_seconds ?? restSeconds}s</b></div></>}
+        {isStationCircuit && <><div className="timer-side-stat"><span>RUNDE</span><b>{Math.min(currentRound,Number(rounds)||1)}/{rounds}</b></div><div className="timer-side-stat"><span>ARBEID / BYTE</span><b>{effectiveWorkSeconds}s / {effectiveRestSeconds}s</b></div></>}
         {isTimedInterval && <><div className="timer-side-stat"><span>ØKTA ATT</span><b>{clock(remainingTotal)}</b></div><div className="timer-side-stat"><span>RUNDE</span><b>{roundsShown}/{rounds}</b></div></>}
         {isForTime && showTimeCap && <div className="timer-side-stat"><span>TIDSGRENSE</span><b>{clock(Math.max(0,target-elapsed))}</b></div>}
         {(isDeathBy || isLadder) && <><div className="timer-side-stat"><span>{isDeathBy?'TID TIL NESTE MINUTT':'LADDER-RUNDE'}</span><b>{isDeathBy?clock(elapsed===0?60:60-(elapsed%60||0)):currentRound}</b></div>{schema?.ladder&&<div className="timer-side-stat"><span>REPS I RUNDA</span><b>{Math.max(0,Number(schema.ladder.start||2)+(currentRound-1)*Number(schema.ladder.step||2)*(schema.ladder.direction==='down'?-1:1))}</b></div>}</>}
-        {isTimedInterval && !running && elapsed===0 && <div className="timer-settings-inline">
-          <label>Arbeid sek.<input type="number" min="1" max="600" value={workSeconds} onChange={e=>setWorkSeconds(Math.max(1,Number(e.target.value)||1))}/></label>
-          <label>Kvile sek.<input type="number" min="0" max="600" value={restSeconds} onChange={e=>setRestSeconds(Math.max(0,Number(e.target.value)||0))}/></label>
-          <label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(Math.max(1,Number(e.target.value)||1))}/></label>
-        </div>}
+
       </aside></TimerPanel>:id==='laps'?<TimerPanel key={id} id="laps" title="RUNDETIDER" layout={panelLayout.laps} deviceProfile={deviceProfile} locked={Boolean(lockedPanels.laps)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock} designMode={designMode}><aside className="timer-side timer-side-right">
         <div className="timer-lap-heading">RUNDETIDER <b>{laps.length}</b></div>
         {laps.length ? <ol className="timer-lap-list">{laps.map((lap,index)=><li key={index}><span>Runde {index+1}</span><b>{clock(lap)}</b></li>)}</ol> : <p className="timer-no-laps">Registrer kvar fullførte runde her.</p>}
