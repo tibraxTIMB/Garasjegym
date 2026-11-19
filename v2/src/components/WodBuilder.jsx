@@ -325,21 +325,35 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    const timer_settings={workout_schema:schema,work_seconds:isStationCircuit?Number(stationWork):Number(workSeconds)||null,rest_seconds:isStationCircuit?Number(stationTransition):Number(restSeconds)||null,rounds:isStationCircuit?Number(stationRounds):Number(rounds)||null,duration_seconds:stationDuration}
    const wodPayload={name:name.trim(),category:libraryCategory==='warmup'?'warmup':'main',format:savedFormat,duration_minutes:Math.ceil(stationDuration/60)||null,movements,notes:[stimulus,notes,rxNotes?'RX: '+rxNotes:'',scaledNotes?'Scaled: '+scaledNotes:'',customInstructions].filter(Boolean).join('\n\n'),is_published:publishToMembers,timer_settings}
    if(!editingWodId)wodPayload.created_by=user.id
+   let savedWodId=editingWodId||null
    if(assignedClientId){
-    const {data:savedWodId,error:e}=await supabase.rpc('save_wod_with_pt_assignment',{
+    const {data:assignedWodId,error:e}=await supabase.rpc('save_wod_with_pt_assignment',{
      p_wod:wodPayload,
      p_member_id:assignedClientId,
      p_wod_id:editingWodId||null
     })
     if(e)throw e
-    if(!savedWodId)throw new Error('WOD og PT-tildeling vart ikkje stadfesta av databasen.')
+    if(!assignedWodId)throw new Error('WOD og PT-tildeling vart ikkje stadfesta av databasen.')
+    savedWodId=assignedWodId
     onAssigned?.()
    }else{
     const wodRequest=editingWodId?supabase.from('wods').update(wodPayload).eq('id',editingWodId).select('id').single():supabase.from('wods').insert(wodPayload).select('id').single()
-    const {error:e}=await wodRequest
+    const {data:savedWod,error:e}=await wodRequest
     if(e)throw e
+    savedWodId=savedWod?.id||savedWodId
    }
-   setNotice(editingWodId?'WOD-en er oppdatert.':publishToMembers?'WOD lagra i biblioteket og publisert for medlemmene.':'WOD lagra i det interne PT-biblioteket.')
+   let dailyScheduleWarning=''
+   if(libraryCategory==='daily'&&savedWodId){
+    try{
+     const now=new Date(),today=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')
+     const {data:existing,error:lookupError}=await supabase.from('wod_daily_schedules').select('id').eq('scheduled_date',today).is('target_class_id',null).maybeSingle()
+     if(lookupError)throw lookupError
+     const schedulePayload={wod_id:savedWodId,scheduled_date:today,target_class_id:null,is_published:publishToMembers,created_by:user.id,updated_at:new Date().toISOString()}
+     const scheduleResult=existing?.id?await supabase.from('wod_daily_schedules').update(schedulePayload).eq('id',existing.id):await supabase.from('wod_daily_schedules').insert(schedulePayload)
+     if(scheduleResult.error)throw scheduleResult.error
+    }catch(scheduleError){dailyScheduleWarning=' WOD-en er lagra, men publisering som Dagens WOD feila: '+(scheduleError.message||'ukjend feil')+'. Du kan prøve frå WOD-biblioteket.'}
+   }
+   setNotice((editingWodId?'WOD-en er oppdatert.':publishToMembers?'WOD lagra i biblioteket og publisert for medlemmene.':'WOD lagra i det interne PT-biblioteket.')+dailyScheduleWarning)
    setSelected([]);setNotes('');setLibraryCategory('standard');setCustomInstructions('');setRxNotes('');setScaledNotes('');setWizardStep(1);setName(suggestUniqueWodName());setEditingWodId(null);onSaved?.()
   }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{setBusy(false)}
  }
