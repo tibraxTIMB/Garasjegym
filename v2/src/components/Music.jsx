@@ -381,7 +381,7 @@ export function MusicProvider({ children, memberId = null }) {
     }
   },[spotifyDeviceId,spotifyRequest,refreshPlayback,requirePersonalPhone])
 
-  const playTrack = useCallback(async track=>{
+  const playTrack = useCallback(async(track,genreId='')=>{
     if (!track?.uri) return
     setSpotifyBusy(true)
     setSpotifyError('')
@@ -392,7 +392,7 @@ export function MusicProvider({ children, memberId = null }) {
         method:'PUT',
         body:JSON.stringify({uris:[track.uri],position_ms:0}),
       })
-      setActiveGenre('')
+      setActiveGenre(genreId)
       await new Promise(resolve=>window.setTimeout(resolve,450))
       await refreshPlayback()
     } catch(error) {
@@ -435,12 +435,26 @@ export function MusicProvider({ children, memberId = null }) {
 
   const playGenre = useCallback(async genreId=>{
     const uri=genrePlaylists[genreId]
-    if (!uri) {
-      setSpotifyError('Vel ei speleliste for '+(SPOTIFY_GENRES.find(item=>item.id===genreId)?.label||'denne sjangeren')+' først.')
-      return
+    if (uri) { await playPlaylist(uri,genreId); return }
+    const queries={
+      'hard-rock':'hard rock',
+      'turbo-balkan':'turbo folk balkan',
+      '90s-indie':'1990s indie rock',
+      '90s-dance':'1990s dance eurodance',
+      trance:'trance',
+      relax:'ambient chillout relaxation'
     }
-    await playPlaylist(uri,genreId)
-  },[genrePlaylists,playPlaylist])
+    const genre=SPOTIFY_GENRES.find(item=>item.id===genreId)
+    setSpotifyBusy(true);setSpotifyError('')
+    try{
+      const result=await searchSpotify(queries[genreId]||genre?.label||genreId)
+      if(!result.tracks.length)throw new Error('Fann ingen tilgjengelege låtar i '+(genre?.label||'denne sjangeren')+'.')
+      const candidates=result.tracks.slice(0,Math.min(10,result.tracks.length))
+      const selected=candidates[Math.floor(Math.random()*candidates.length)]
+      await playTrack(selected,genreId)
+    }catch(error){setSpotifyError(error.message||'Klarte ikkje finna ein låt i sjangeren.')}
+    finally{setSpotifyBusy(false)}
+  },[genrePlaylists,playPlaylist,searchSpotify,playTrack])
 
   const value = useMemo(()=>({
     clientId,
@@ -566,7 +580,7 @@ function GenreButtons({music,compact=false}) {
       const Icon=genre.Icon
       const configured=Boolean(music.genrePlaylists[genre.id])
       const active=music.activeGenre===genre.id
-      return <button type="button" key={genre.id} className={active?'selected':''} title={configured?genre.label:genre.label+' – vel speleliste først'} aria-label={genre.label} aria-pressed={active} disabled={!music.spotifyConnected||music.spotifyBusy||!configured} onClick={()=>music.playGenre(genre.id)}>
+      return <button type="button" key={genre.id} className={active?'selected':''} title={configured?genre.label:genre.label+' – finn og start ein låt automatisk'} aria-label={genre.label} aria-pressed={active} disabled={!music.spotifyConnected||music.spotifyBusy} onClick={()=>music.playGenre(genre.id)}>
         <Icon size={compact?13:16}/><span>{genre.label}</span>
       </button>
     })}
