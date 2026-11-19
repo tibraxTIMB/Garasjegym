@@ -1,7 +1,8 @@
 # PT / WOD – integrasjons- og funksjonsstatus
 
 **Dato:** 19.11.2026  
-**Branch:** garasjegym-2.0-sturm­kopf  
+**Branch:** garasjegym-2.0-sturm­kopf
+**Kontrollert kodecommit:** ea580975135d2b64b59d8bbe02588335f39ff3e8  
 **Testprosjekt:** garasjegym-2-test (izwzwvlexqxqewzijhhd)
 
 ## Statusnøkkel
@@ -23,13 +24,16 @@
 | Plyo box målt i cm | DELvis IMPLEMENTERT | Datamodell og vising må kontrollerast mot øvingsbiblioteket i nettlesar. |
 | Stasjonssirkel 2–8 stasjonar | IMPLEMENTERT – IKKJE MANUELT TESTA | Timerlogikk og stasjonsoppsett må testast med fleire deltakarar. |
 | WOD-sletting/arkivering | IMPLEMENTERT – IKKJE MANUELT TESTA | Sletting kontrollerer no referansar i PT, trening, favorittar, live gruppetime, JSON-/array-koplingar og dagens WOD. Brukte WOD-ar blir arkiverte. |
-| WOD + PT-kundetildeling i éi transaksjon | OPEN | WodBuilder lagrar først WOD og opprettar deretter tildeling. Feil blir vist, men WOD-en kan bli lagra utan tildeling. |
+| Privat WOD synleg ved direkte PT-tildeling | FERDIG OG SQL-TESTA | `wods_read_assigned` gir tilgang til rett medlem, men ikkje andre medlemmer. |
+| Privat WOD synleg frå PT-program | FERDIG OG SQL-TESTA | Policyen kontrollerer `pt_program_sessions` og eigarskap gjennom `pt_programs`. |
+| WOD + PT-kundetildeling i éi transaksjon | FERDIG OG SQL-TESTA | `save_wod_with_pt_assignment` lagrar WOD og kundetildeling i same transaksjon. Feil rullar tilbake heile operasjonen. WodBuilder brukar RPC-en når WOD blir bygd frå PT Studio. |
 
 ## 2. WOD-utføring og treningshistorikk
 
 | Funksjon | Status | Merknad |
 |---|---|---|
 | WOD-kort → start trening | IMPLEMENTERT – IKKJE MANUELT TESTA | Appen sender WOD-kontekst til Training.jsx. |
+| Privat PT-WOD → medlemskort med WOD-data | FERDIG OG SQL-TESTA | SQL-rollesimulering stadfesta at rett medlem ser WOD-data, medan annan medlem ikkje ser den private WOD-en. |
 | Lagre treningslogg og øvingar atomisk | FERDIG OG SQL-TESTA | save_workout_atomic. |
 | Idempotent lagring | FERDIG OG SQL-TESTA | save_token hindrar dobbeltlagring ved gjenteken innsending. |
 | Treningslogg → PT-WOD-tildeling | FERDIG OG SQL-TESTA | save_workout_with_pt_links koplar loggen og fullfører tildeling i same transaksjon. |
@@ -83,10 +87,17 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 8. PT-coach og service request blir kopla atomisk.
 9. Treningslogg, PT-WOD-tildeling og PT-programøkt blir fullførte og kopla i same transaksjon.
 10. Alle mellombelse testdata vart rulla tilbake.
+11. Medlem ser privat WOD ved direkte PT-tildeling, men ikkje WOD tildelt til annan medlem.
+12. Medlem ser privat WOD kopla til eige PT-program.
+13. `save_wod_with_pt_assignment` opprettar WOD og PT-tildeling atomisk for staff; den private WOD-en blir deretter synleg for kunden.
+14. Medlem blir avvist ved forsøk på å endra coach-notat på eiga WOD-tildeling.
+15. Medlem blir avvist ved forsøk på å kalla `save_wod_with_pt_assignment`.
 
 ## 7. Manuelle testar som står att
 
 - Admin opprettar WOD, publiserer og redigerer.
+- PT byggjer ny privat WOD og tildeler han frå PT Studio; stadfest at WOD og tildeling kjem fram samla.
+- Medlem opnar privat WOD frå «Mi trening» og ser øvingar, dosering og timeroppsett.
 - Medlem ser berre publiserte eller tildelte WOD-ar.
 - Medlem startar WOD og fullfører AMRAP, EMOM, For Time, Tabata og stasjonssirkel.
 - WOD-resultat, historikk og PR blir viste med korrekt eining.
@@ -97,5 +108,7 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 - Gruppetime med fleire WOD-ar og individuell registrering.
 - Medlem kan ikkje sjå eller endra andre medlemmers data.
 - Mobil og nettbrett i ståande og liggjande modus.
+
+**CI:** Checks og preview deploy for commit ea580975 er bestått.
 
 **Viktig:** Ingen av desse nettlesar-/fysiske einingstestane er rapporterte som gjennomførte i denne revisjonsøkta.
