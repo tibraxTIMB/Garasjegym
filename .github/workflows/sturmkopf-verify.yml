@@ -25,6 +25,8 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Check SQL migrations
+        run: npm run check:migrations
       - name: Test WOD ordering
         run: npm run test:wod-order
       - name: Build application
