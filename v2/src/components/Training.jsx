@@ -614,7 +614,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       const hasRecordedScore=[scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||items.some(item=>item.sets?.some(set=>String(set.height_cm??'').trim()!==''))
       if(classSessionId&&source?.category!=='warmup'&&!hasRecordedScore)throw new Error('Hovud-WOD må ha minst eitt registrert resultat før du kan lagra.')
       const resultData = {
-        version:2,format,elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':'completed',completed:true,time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
+        version:2,format,prescription_level:wodLevel,elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':'completed',completed:true,time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
         completed_rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):null,
         extra_reps:isAmrapScore?(scoreReps===''?0:Number(scoreReps)):null,
         split_seconds:Array.isArray(timerSnapshot.laps)?timerSnapshot.laps:[],
@@ -648,49 +648,56 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       if(saveError)throw saveError
       if(!workoutId)throw new Error('Databasen returnerte ikkje ID for den lagra økta.')
       const programSyncMessage = ''
-      // Automatically detect new heaviest logged loads and store them as PRs.
+      // Derive automatic PRs from actual logged sets and the workout result, separated by RX/Scaled/Foundation.
       let prMessage = programSyncMessage
       try {
         const { data: existingPRs, error: prReadError } = await supabase.from('personal_records')
-          .select('exercise_name,result,unit').eq('member_id', user.id).in('unit', ['kg','cm'])
+          .select('exercise_name,result,unit,note').eq('member_id', user.id).in('unit', ['kg','cm','reps','sek','meter','cal'])
         if (prReadError) throw prReadError
+        const levelKey=String(wodLevel||'rx').toLowerCase()
         const bestByNameUnit = new Map()
         ;(existingPRs || []).forEach(record => {
           const value = Number(String(record.result).replace(',', '.'))
-          const key = record.exercise_name.toLowerCase() + '|' + record.unit
-          if (Number.isFinite(value)) bestByNameUnit.set(key, Math.max(bestByNameUnit.get(key) || 0, value))
+          const recordLevel=(String(record.note||'').match(/^(RX|SCALED|FOUNDATION)\s*[·:-]/i)?.[1]||'RX').toLowerCase()
+          const key = record.exercise_name.toLowerCase() + '|' + record.unit + '|' + recordLevel
+          if (Number.isFinite(value)) {
+            const current=bestByNameUnit.get(key)
+            bestByNameUnit.set(key,record.unit==='sek'?(current==null?value:Math.min(current,value)):(current==null?value:Math.max(current,value)))
+          }
         })
-        const sourceWorkoutId = workoutId
         const newPRs = []
+        const addCandidate=(exercise,unit,values,direction='max')=>{
+          const numbers=values.map(Number).filter(value=>Number.isFinite(value)&&value>0)
+          if(!numbers.length)return
+          const candidate=direction==='min'?Math.min(...numbers):Math.max(...numbers)
+          const key=exercise.exercise_name.toLowerCase()+'|'+unit+'|'+levelKey
+          const current=bestByNameUnit.get(key)
+          const improved=direction==='min'?(current==null||candidate<current):(current==null||candidate>current)
+          if(!improved)return
+          newPRs.push({member_id:user.id,workout_log_id:workoutId,exercise_name:exercise.exercise_name,result:String(candidate),unit,record_date:payload.workout_date,note:levelKey.toUpperCase()+' · Automatisk PR frå økta «'+payload.title+'»'})
+          bestByNameUnit.set(key,candidate)
+        }
         payload.exercises.forEach(exercise => {
-          const nameKey = exercise.exercise_name.toLowerCase()
-          const loads = exercise.sets.map(set => set.load_kg).filter(value => Number.isFinite(value) && value > 0)
-          if (payload.exercises.length === 1 && Number.isFinite(payload.score_load_kg) && payload.score_load_kg > 0) loads.push(payload.score_load_kg)
-          if (loads.length) {
-            const bestLoad = Math.max(...loads)
-            const loadKey = nameKey + '|kg'
-            if (bestLoad > (bestByNameUnit.get(loadKey) || 0)) {
-              newPRs.push({ member_id: user.id, workout_log_id: sourceWorkoutId, exercise_name: exercise.exercise_name, result: String(bestLoad), unit: 'kg', record_date: payload.workout_date, note: 'Automatisk PR frå økta «' + payload.title + '»' })
-              bestByNameUnit.set(loadKey, bestLoad)
-            }
-          }
-          const heights = exercise.sets.map(set => set.height_cm).filter(value => Number.isFinite(value) && value > 0)
-          if (heights.length) {
-            const bestHeight = Math.max(...heights)
-            const heightKey = nameKey + '|cm'
-            if (bestHeight > (bestByNameUnit.get(heightKey) || 0)) {
-              newPRs.push({ member_id: user.id, workout_log_id: sourceWorkoutId, exercise_name: exercise.exercise_name, result: String(bestHeight), unit: 'cm', record_date: payload.workout_date, note: 'Automatisk høgde-PR frå økta «' + payload.title + '»' })
-              bestByNameUnit.set(heightKey, bestHeight)
-            }
+          addCandidate(exercise,'kg',exercise.sets.map(set=>set.load_kg))
+          addCandidate(exercise,'cm',exercise.sets.map(set=>set.height_cm))
+          addCandidate(exercise,'reps',exercise.sets.map(set=>set.reps))
+          addCandidate(exercise,'sek',exercise.sets.map(set=>set.time_seconds),'min')
+          if(payload.exercises.length===1){
+            addCandidate(exercise,'kg',[payload.score_load_kg])
+            addCandidate(exercise,'reps',[payload.score_reps])
+            addCandidate(exercise,'sek',[payload.score_time_seconds],'min')
+            addCandidate(exercise,'cal',[payload.score_calories])
+            const distance=Number(payload.score_distance)
+            if(distance>0)addCandidate(exercise,'meter',[payload.score_unit==='km'?distance*1000:distance])
           }
         })
-        if (newPRs.length) {
-          const { error: prWriteError } = await supabase.from('personal_records').insert(newPRs)
-          if (prWriteError) throw prWriteError
-          prMessage = ' Ny PR registrert: ' + newPRs.map(pr => pr.exercise_name + ' ' + pr.result + ' ' + pr.unit).join(', ')
+        if(newPRs.length){
+          const {error:prWriteError}=await supabase.from('personal_records').insert(newPRs)
+          if(prWriteError)throw prWriteError
+          prMessage=' Nye PR-ar registrerte ('+levelKey.toUpperCase()+'): '+newPRs.map(pr=>pr.exercise_name+' '+pr.result+' '+pr.unit).join(', ')
         }
-      } catch (prError) {
-        prMessage = ' Automatisk PR-kontroll kunne ikkje fullførast: ' + (prError.message || 'ukjend feil')
+      } catch(prError) {
+        prMessage=' Automatisk PR-kontroll kunne ikkje fullførast: '+(prError.message||'ukjend feil')
       }
       setNotice('Økta er lagra i treningsloggen.' + prMessage)
       setFinishOpen(false); setMode('home'); setReviewOpen(false)
