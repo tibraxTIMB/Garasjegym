@@ -16,7 +16,33 @@ export default function WodLibrary({onLaunchWod,onEditWod,staff=true,isAdmin=fal
  async function addToClass(){if(!classWod||!classId)return;setBusy('class');const target=classes.find(x=>x.id===classId);const ids=Array.isArray(target?.wod_ids)?target.wod_ids:[];const next=[...new Set([...ids,classWod.id])];const {error:e}=await supabase.from('classes').update({wod_ids:next}).eq('id',classId);if(e)setError(e.message);else{setClasses(rows=>rows.map(x=>x.id===classId?{...x,wod_ids:next}:x));setNotice(classWod.name+' er lagt til i gruppetimen.');setClassWod(null);setClassId('')}setBusy('')}
  async function assign(){if(!assignWod||!customerId||busy==='assign')return;setBusy('assign');setError('');setNotice('');try{const {data:{user},error:authError}=await supabase.auth.getUser();if(authError||!user)throw authError||new Error('Du må vere innlogga for å tildele ein WOD.');const {data:created,error:e}=await supabase.from('pt_wod_assignments').insert({member_id:customerId,wod_id:assignWod.id,assigned_by:user.id,due_date:dueDate||null,coach_note:coachNote.trim(),status:'assigned'}).select('id').single();if(e)throw e;if(!created?.id)throw new Error('Tildelinga blei ikkje stadfesta av databasen.');const selectedCustomer=customers.find(c=>c.id===customerId);setNotice(assignWod.name+' er tildelt '+(selectedCustomer?.display_name||'kunden')+'.');setAssignWod(null);setCustomerId('');setDueDate('');setCoachNote('')}catch(e){setError('Kunne ikkje tildele WOD: '+(e?.message||'Ukjend feil'))}finally{setBusy('')}}
  async function createSession(){if(!sessionWods.length)return;setBusy('session');setError('');const {data:{user}}=await supabase.auth.getUser();const {data:s,error:e}=await supabase.from('training_sessions').insert({name:sessionName.trim()||'Treningsøkt',created_by:user.id,session_date:sessionDate||null}).select('id').single();if(e){setError(e.message);setBusy('');return}const rows=sessionWods.map((id,i)=>({session_id:s.id,wod_id:id,sort_order:i}));const {error:ie}=await supabase.from('training_session_wods').insert(rows);if(ie){await supabase.from('training_sessions').delete().eq('id',s.id);setError(ie.message)}else{setNotice('Treningsøkta er oppretta med '+sessionWods.length+' WOD-ar.');setShowSession(false);setSessionWods([]);setSessionName('')}setBusy('')}
- async function removeWod(w){if(!confirm('Slett «'+w.name+'»? WOD-ar som er brukte blir arkiverte for å ta vare på historikk.'))return;setBusy(w.id);setError('');const checks=await Promise.all([supabase.from('pt_wod_assignments').select('id',{count:'exact',head:true}).eq('wod_id',w.id),supabase.from('workout_logs').select('id',{count:'exact',head:true}).eq('source_wod_id',w.id),supabase.from('wod_favorites').select('id',{count:'exact',head:true}).eq('wod_id',w.id),supabase.from('class_live_sessions').select('id',{count:'exact',head:true}).eq('wod_id',w.id)]);if(checks.some(x=>x.error)){setError(checks.find(x=>x.error).error.message);setBusy('');return}const used=checks.some(x=>(x.count||0)>0);if(used){const {error:e}=await supabase.from('wods').update({is_archived:true,is_published:false}).eq('id',w.id);if(e)setError(e.message);else{setWods(rows=>rows.filter(x=>x.id!==w.id));setNotice('WOD-en er arkivert. Historikk og resultat er bevart.')}}else{const {error:e}=await supabase.from('wods').delete().eq('id',w.id);if(e)setError(e.message);else{setWods(rows=>rows.filter(x=>x.id!==w.id));setNotice('WOD-en er sletta permanent.')}}setBusy('')}
+  async function removeWod(w){
+   if(!confirm('Slett «'+w.name+'»? WOD-ar som er brukte blir arkiverte for å ta vare på historikk.'))return;
+   setBusy(w.id);setError('');
+   const checks=await Promise.all([
+    supabase.from('pt_wod_assignments').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
+    supabase.from('workout_logs').select('id',{count:'exact',head:true}).eq('source_wod_id',w.id),
+    supabase.from('wod_favorites').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
+    supabase.from('class_live_sessions').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
+    supabase.from('class_live_sessions').select('id',{count:'exact',head:true}).contains('wod_ids',[w.id]),
+    supabase.from('classes').select('id',{count:'exact',head:true}).contains('wod_ids',[w.id]),
+    supabase.from('pt_sessions').select('id',{count:'exact',head:true}).contains('wod_ids',[w.id]),
+    supabase.from('pt_program_sessions').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
+    supabase.from('training_session_wods').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
+    supabase.from('class_session_wod_completions').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
+    supabase.from('daily_wod').select('id',{count:'exact',head:true}).eq('wod_id',w.id)
+   ]);
+   if(checks.some(x=>x.error)){setError('Kunne ikkje kontrollera alle WOD-koplingane: '+checks.find(x=>x.error).error.message);setBusy('');return}
+   const used=checks.some(x=>(x.count||0)>0);
+   if(used){
+    const {error:e}=await supabase.from('wods').update({is_archived:true,is_published:false}).eq('id',w.id);
+    if(e)setError(e.message);else{setWods(rows=>rows.filter(x=>x.id!==w.id));setNotice('WOD-en er arkivert. Alle koplingar og historikk er bevarte.')}
+   }else{
+    const {error:e}=await supabase.from('wods').delete().eq('id',w.id);
+    if(e)setError('WOD-en kunne ikkje slettast: '+e.message);else{setWods(rows=>rows.filter(x=>x.id!==w.id));setNotice('WOD-en er sletta permanent.')}
+   }
+   setBusy('')
+  }
  function toggleSession(id){setSessionWods(v=>v.includes(id)?v.filter(x=>x!==id):[...v,id])}
  return <div className="wod-library-page"><div className="training-heading"><div><div className="section-kicker">GARASJEGYM · PT / ADMIN</div><h3>WOD-bibliotek</h3><p>Same WOD kan brukast i eiga trening, PT og gruppetimar.</p></div><span className="count-pill">{filtered.length} WOD-ar</span></div>
  {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message">{notice}</div>}
