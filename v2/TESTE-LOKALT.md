@@ -26,7 +26,7 @@ Før registrering: opne Supabase Dashboard → Authentication → URL Configurat
 
 ## Test på Android og Pages
 
-Testbygget er tilgjengeleg på https://tibraxtimb.github.io/Garasjegym/. Det brukar berre testprosjektet `garasjegym-2-test`. Bruk testkontoar og testdata.
+Ei tidlegare testutgåve er tilgjengeleg på https://tibraxtimb.github.io/Garasjegym/. Ho brukar testprosjektet `garasjegym-2-test`, men er ikkje oppdatert med alle endringane på siste STURMKOPF-grein. Siste kode må byggjast og publiserast særskilt; Pages-adressa er delt og blir ikkje oppdatert automatisk. Bruk berre testkontoar og testdata.
 
 For at passordreset skal kunna returnera til appen, må testprosjektet ha denne adressa under Supabase Dashboard → Authentication → URL Configuration → Redirect URLs:
 
