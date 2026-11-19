@@ -76,9 +76,12 @@ export default function PTManagement({ profile }) {
     e.preventDefault()
     await act(async()=>{
       if(!assignDraft.member_id||!assignDraft.coach_user_id)throw new Error('Vel både kunde og PT.')
-      const {error:endError}=await supabase.from('pt_client_assignments').update({status:'ended',ended_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('member_id',assignDraft.member_id).eq('status','active')
-      if(endError)throw endError
-      const {error}=await supabase.from('pt_client_assignments').insert({member_id:assignDraft.member_id,coach_user_id:assignDraft.coach_user_id,assigned_by:profile.id,admin_note:assignDraft.admin_note})
+      const {error}=await supabase.rpc('assign_pt_coach',{
+        p_member_id:assignDraft.member_id,
+        p_coach_user_id:assignDraft.coach_user_id,
+        p_admin_note:assignDraft.admin_note,
+        p_service_request_id:null
+      })
       if(error)throw error
       setAssignDraft({member_id:'',coach_user_id:'',admin_note:''})
     },'Kunden har fått tildelt PT. Tidlegare tilknyting er teken vare på i historikken.')
@@ -86,11 +89,12 @@ export default function PTManagement({ profile }) {
   async function handleRequest(row,coachId) {
     await act(async()=>{
       if(!coachId)throw new Error('Vel PT før du godkjenner bestillinga.')
-      const {error:endError}=await supabase.from('pt_client_assignments').update({status:'ended',ended_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('member_id',row.member_id).eq('status','active')
-      if(endError)throw endError
-      const {error:assignError}=await supabase.from('pt_client_assignments').insert({member_id:row.member_id,coach_user_id:coachId,assigned_by:profile.id,admin_note:'Tildelt via PT-bestilling'})
-      if(assignError)throw assignError
-      const {error}=await supabase.from('pt_service_requests').update({status:'assigned',assigned_coach_id:coachId,handled_by:profile.id,handled_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',row.id)
+      const {error}=await supabase.rpc('assign_pt_coach',{
+        p_member_id:row.member_id,
+        p_coach_user_id:coachId,
+        p_admin_note:'Tildelt via PT-bestilling',
+        p_service_request_id:row.id
+      })
       if(error)throw error
     },'Bestillinga er behandla og PT er tildelt.')
   }
