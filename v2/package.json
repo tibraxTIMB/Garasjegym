@@ -11,7 +11,9 @@
     "test:wod-order": "node --test scripts/wod-order.test.mjs",
     "test:app-base-url": "node --test scripts/app-base-url.test.mjs",
     "test:infotainment": "node --test scripts/infotainment-events.test.mjs",
-    "test:wod-complexes": "node --test scripts/wod-complexes.test.mjs"
+    "test:wod-complexes": "node --test scripts/wod-complexes.test.mjs",
+    "test:wod-import": "node --test scripts/wod-import.test.mjs",
+    "test": "npm run test:wod-order && npm run test:app-base-url && npm run test:infotainment && npm run test:wod-complexes && npm run test:wod-import"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
