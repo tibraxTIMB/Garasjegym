@@ -3,6 +3,7 @@ import { Activity, CheckCircle2, Clock3, Dumbbell, LoaderCircle, Pause, Play, Pl
 import { supabase } from '../lib/supabase.js'
 import { MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
+import { sortWodItems } from '../lib/wodOrdering.js'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', uses_height: false, sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] })
@@ -509,8 +510,9 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
     setScoreRounds(''); setScoreReps(''); setScoreTime('')
     const schema = wod?.timer_settings?.workout_schema
-    if (Array.isArray(schema?.items) && schema.items.length) {
-      setItems(schema.items.map(item => ({
+    const orderedSchemaItems = sortWodItems(schema?.items || [])
+    if (orderedSchemaItems.length) {
+      setItems(orderedSchemaItems.map(item => ({
         ...emptyExercise(),
         exercise_id: item.exercise_id || '',
         exercise_name: item.exercise_name || '',
@@ -778,7 +780,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         <div className="wod-library-toolbar"><button type="button" className={wodFavoritesOnly?'secondary-button favorite-filter active':'secondary-button favorite-filter'} onClick={()=>setWodFavoritesOnly(v=>!v)}><Star size={14} fill={wodFavoritesOnly?'currentColor':'none'}/>{wodFavoritesOnly?'Vis alle publiserte WOD-ar':'Favoritt-WODs'}</button><span>{availableWods.filter(wod=>(!wodFavoritesOnly||favoriteWodIds.includes(wod.id))&&(!wodSearch.trim()||[wod.name,wod.format,wod.movements,wod.notes].some(value=>(value||'').toLowerCase().includes(wodSearch.trim().toLowerCase())))).length} treff</span></div>
         {availableWods.filter(wod=>(!wodFavoritesOnly||favoriteWodIds.includes(wod.id))&&(!wodSearch.trim()||[wod.name,wod.format,wod.movements,wod.notes].some(value=>(value||'').toLowerCase().includes(wodSearch.trim().toLowerCase())))).length ? <div className="wod-list">{availableWods.filter(wod=>(!wodFavoritesOnly||favoriteWodIds.includes(wod.id))&&(!wodSearch.trim()||[wod.name,wod.format,wod.movements,wod.notes].some(value=>(value||'').toLowerCase().includes(wodSearch.trim().toLowerCase())))).sort((a,b)=>(a.id===dailyWodId?-1:0)-(b.id===dailyWodId?-1:0)).map(wod => {
           const schema=wod.timer_settings?.workout_schema||{}
-          const wodItems=Array.isArray(schema.items)?schema.items:[]
+          const wodItems=sortWodItems(schema.items||[])
           const isExpanded=expandedWodId===wod.id
           return <article className={isExpanded?'wod-card wod-card-expanded':'wod-card'} key={wod.id}>
             <div className="wod-top"><span>{wod.id===dailyWodId?'DAGENS WOD · ':''}{wod.timer_settings?.workout_schema?.library_category==='warmup'?'OPPVARMING':wod.timer_settings?.workout_schema?.library_category==='standard'?'STANDARD':'WOD'} · {wod.format||'WOD'}</span><span>{schema.duration_seconds?clock(schema.duration_seconds):wod.duration_minutes?wod.duration_minutes+' MIN':''}</span></div>
