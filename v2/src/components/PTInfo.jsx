@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react'
-import {MessageSquareText,CalendarDays,RefreshCw,LoaderCircle,Info} from 'lucide-react'
+import {MessageSquareText,CalendarDays,RefreshCw,LoaderCircle,Info,Trash2} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 
 export default function PTInfo(){
@@ -9,6 +9,7 @@ export default function PTInfo(){
  const [information,setInformation]=useState([])
  const [loading,setLoading]=useState(true)
  const [error,setError]=useState('')
+ const [deletingId,setDeletingId]=useState('')
  async function load(){
   setLoading(true);setError('')
   const {data:{user},error:authError}=await supabase.auth.getUser()
@@ -31,13 +32,25 @@ export default function PTInfo(){
   }else setInformation([])
   setLoading(false)
  }
+ async function removeMessage(message){
+  if(!message?.id||!currentUserId)return
+  if(!window.confirm('Sletta denne meldinga frå PT?'))return
+  setDeletingId(message.id);setError('')
+  try{
+   const {data,error:e}=await supabase.from('pt_messages').delete().eq('id',message.id).eq('client_id',currentUserId).select('id')
+   if(e)throw e
+   if(!data?.length)throw new Error('Meldinga vart ikkje sletta. Ho kan alt vera fjerna eller du manglar tilgang.')
+   setMessages(rows=>rows.filter(row=>row.id!==message.id))
+  }catch(e){setError(e.message||'Kunne ikkje sletta meldinga.')}
+  finally{setDeletingId('')}
+ }
  useEffect(()=>{load()},[])
  return <div className="pt-info-simple">
   <div className="training-heading"><div><span className="section-kicker">PERSONLEG OPPFØLGING</span><h3>Frå PT</h3><p>Meldingar, beskjedar og planlagde infotimar.</p></div><button type="button" className="secondary-button" onClick={load} disabled={loading}><RefreshCw size={15}/> Oppdater</button></div>
   {error&&<div className="auth-error" role="alert">{error}</div>}
   {loading?<div className="training-state"><LoaderCircle className="spin"/> Hentar informasjon frå PT …</div>:<>
    <section className="engine-section pt-info-section"><div className="engine-section-title"><h4><MessageSquareText size={17}/> Meldingar</h4><span>{messages.length}</span></div>
-    {messages.length?messages.map(m=><article className="pt-info-card" key={m.id}><div className="pt-info-card-meta"><strong>{m.sender_id===currentUserId?'Du':'PT'}</strong><time>{new Date(m.created_at).toLocaleString('nn-NO',{dateStyle:'medium',timeStyle:'short'})}</time></div><p>{m.body}</p></article>):<div className="empty-state">Du har ingen meldingar frå PT enno.</div>}
+    {messages.length?messages.map(m=><article className="pt-info-card" key={m.id}><div className="pt-info-card-meta"><strong>{m.sender_id===currentUserId?'Du':'PT'}</strong><div className="pt-info-message-actions"><time>{new Date(m.created_at).toLocaleString('nn-NO',{dateStyle:'medium',timeStyle:'short'})}</time><button type="button" className="icon-button" aria-label="Slett melding" title="Slett melding" disabled={deletingId===m.id} onClick={()=>removeMessage(m)}><Trash2 size={14}/></button></div></div><p>{m.body}</p></article>):<div className="empty-state">Du har ingen meldingar frå PT enno.</div>}
    </section>
    <section className="engine-section pt-info-section"><div className="engine-section-title"><h4><CalendarDays size={17}/> Avtalar og infotimar</h4><span>{sessions.length+information.length}</span></div>
     {sessions.length||information.length?<>{information.map(s=><article className="pt-info-card" key={s.id}><div className="pt-info-card-meta"><strong>{s.title}</strong><span>Infotime · {s.status==='completed'?'Gjennomført':'Planlagd'}</span></div><p>{s.program_title}{s.scheduled_date?' · '+new Date(s.scheduled_date+'T12:00:00').toLocaleDateString('nn-NO',{dateStyle:'full'}):''}{s.estimated_minutes?' · '+s.estimated_minutes+' min':''}</p>{s.workout_snapshot?.agenda&&<p>{s.workout_snapshot.agenda}</p>}{s.workout_snapshot?.preparation&&<p className="pt-info-prep"><Info size={14}/>{s.workout_snapshot.preparation}</p>}{s.workout_snapshot?.materials&&<p>Ta med: {s.workout_snapshot.materials}</p>}</article>)}{sessions.map(s=><article className="pt-info-card" key={s.id}><div className="pt-info-card-meta"><strong>{s.title}</strong><span>{s.status==='completed'?'Gjennomført':'Planlagd'}</span></div><p>{new Date(s.starts_at).toLocaleString('nn-NO',{dateStyle:'full',timeStyle:'short'})} · {s.duration_minutes} min</p>{s.message&&<p>{s.message}</p>}{s.prep&&<p className="pt-info-prep"><Info size={14}/>{s.prep}</p>}</article>)}</>:<div className="empty-state">Ingen planlagde PT-avtalar eller infotimar.</div>}
