@@ -194,10 +194,13 @@ Ubrukte indeksar er ikkje sletta. Testdatabasen har låg datamengd og kort histo
 
 ## 8. CI, bygg og publisering
 
-- Kontrollert branch-commit: 70e8a02750098e5bb12149269b9da739268a93a9.
-- Tidlegare kontrollar på commit 3722bb6a bestod både GarasjeGym 2.0 checks og Deploy STURMKOPF preview.
-- Commit 45fc0ec2 bestod checks; deploy vart avbroten av ei nyare køyring.
-- For commit 70e8a027 var CI og preview-deploy framleis under køyring då denne dokumentasjonen vart oppdatert. Endeleg status må hentast frå GitHub Actions før publisering kan kallast stadfesta.
+- Siste applikasjonskodecommit: 70e8a02750098e5bb12149269b9da739268a93a9.
+- Siste dokumentasjonscommit ved kontroll: d6318b8a86f22e01fefdd6b53a24da9b242e1e4b.
+- GarasjeGym 2.0 checks for applikasjonskodecommit 70e8a027: BESTÅTT.
+- Deploy STURMKOPF preview for applikasjonskodecommit 70e8a027: BESTÅTT.
+- GarasjeGym 2.0 checks for dokumentasjonscommit d6318b8a: BESTÅTT.
+- Deploy STURMKOPF preview for dokumentasjonscommit d6318b8a: BESTÅTT.
+- Preview: https://tibraxtimb.github.io/Garasjegym/
 
 CI kontrollerer installasjon, migreringsdelimiterar og Vite production build. Det finst ikkje eit eige unit-, komponent- eller ende-til-ende-testskript i pakken.
 
