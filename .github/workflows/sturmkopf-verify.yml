@@ -35,5 +35,7 @@ jobs:
         run: npm run test:wod-complexes
       - name: Test WOD ordering
         run: npm run test:wod-order
+      - name: Test WOD text import parser
+        run: npm run test:wod-import
       - name: Build application
         run: npm run build
