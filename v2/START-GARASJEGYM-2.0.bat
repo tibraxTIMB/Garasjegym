@@ -34,8 +34,8 @@ if not exist "node_modules" (
 )
 
 echo.
-echo GarasjeGym 2.0 startar pa http://localhost:5173
+echo GarasjeGym 2.0 startar pa http://localhost:5173/Garasjegym/
 echo Lat dette vindauget sta ope medan du testar.
-start "" cmd /c "timeout /t 3 >nul & start http://localhost:5173"
+start "" cmd /c "timeout /t 3 >nul & start http://localhost:5173/Garasjegym/"
 call npm run dev -- --host 0.0.0.0
 pause
