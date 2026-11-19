@@ -399,6 +399,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [classSessionId, setClassSessionId] = useState(null)
   const [title, setTitle] = useState('')
   const [workoutDate,setWorkoutDate]=useState(()=>localDateISO())
+  const [manualWodIds,setManualWodIds]=useState([])
+  const [manualWodSelect,setManualWodSelect]=useState('')
   const [format, setFormat] = useState('Fri trening')
   const [duration, setDuration] = useState('10')
   const [durationSeconds, setDurationSeconds] = useState('0')
@@ -487,6 +489,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   }, [quickStart, simpleMode, loading, mode])
 
   const availableWods=wods.filter(wod=>wod.is_published&&!wod.is_archived)
+  const manualWodOptions=wods.filter(wod=>!wod.is_archived&&(staff||wod.is_published))
 
   const filteredExercises = useMemo(() => exercises.filter(e => e.name.toLowerCase().includes(query.toLowerCase()) || (e.category || '').toLowerCase().includes(query.toLowerCase())), [exercises, query])
 
@@ -505,6 +508,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     setSource(wod)
     setWodLevel(wod?.timer_settings?.workout_schema?.prescription||'rx')
     setTitle(wod?.name || (simpleMode ? 'Eiga trening' : ''))
+    setManualWodIds(wod?.id?[wod.id]:[]);setManualWodSelect('')
     setWorkoutDate(localDateISO())
     setFormat(wod?.format || 'Fri trening')
     setDuration(String(wod?.timer_settings?.workout_schema?.duration_seconds ? Math.floor(wod.timer_settings.workout_schema.duration_seconds / 60) : (wod?.duration_minutes || 10)))
@@ -558,7 +562,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   function startManualWorkout(){
     setTimerLaunchId(0);setClassSessionId(null);setSaveToken(crypto.randomUUID());setSource(null);setWodLevel('rx')
     setTitle('Manuell trening');setFormat('Fri trening');setDuration('0');setDurationSeconds('0');setWorkoutDate(localDateISO())
-    setNote('');setItems([]);setQuery('');setActiveExerciseIndex(0)
+    setNote('');setItems([]);setQuery('');setActiveExerciseIndex(0);setManualWodIds([]);setManualWodSelect('')
     setTimerSnapshot({elapsed:0,laps:[],roundsCompleted:0,phase:'Klar',running:false})
     setFinishOpen(false);setReviewOpen(true);setMode('active');setError('');setNotice('Legg til øvingar og resultat frå økta du allereie har gjennomført.')
   }
@@ -586,6 +590,16 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     setItems(current => [...current, { ...emptyExercise(), exercise_id: exercise.id, exercise_name: exercise.name, uses_height: usesHeight }])
     setQuery('')
   }
+  function addManualWod(){
+    const wod=manualWodOptions.find(item=>item.id===manualWodSelect)
+    if(!wod)return
+    if(manualWodIds.includes(wod.id)){setNotice('Denne WOD-en er allereie lagt til.');return}
+    const schemaItems=sortWodItems(wod.timer_settings?.workout_schema?.items||[])
+    const additions=schemaItems.length?schemaItems.map(item=>({...emptyExercise(),exercise_id:item.exercise_id||'',exercise_name:item.exercise_name||item.name||'',uses_height:Boolean(item.height_cm||Object.values(item.levels||{}).some(level=>level?.heightCm!=null)||/box|boks/i.test(item.exercise_name||item.name||'')),is_rest:!!item.is_rest,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps:[],rest_duration_seconds:item.rest_duration_seconds??null,prescription_levels:item.levels||null,prescription_label:doseLabel(item,wodLevel),rowUnit:item.row_unit||'m'})):(wod.movements||'').split(/\\n|,/).map(name=>name.trim()).filter(Boolean).map(name=>({...emptyExercise(),exercise_name:name}))
+    if(!additions.length){setError('WOD-en har ingen registrerte øvingar å leggje til.');return}
+    setItems(rows=>[...rows,...additions]);setManualWodIds(ids=>[...ids,wod.id]);setManualWodSelect('');setNotice(wod.name+' er lagt til i den manuelle økta.')
+  }
+
   function updateExercise(key, patch) {
     setItems(current => current.map(item => item.key === key ? { ...item, ...patch } : item))
   }
@@ -616,7 +630,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       const hasRecordedScore=[scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||items.some(item=>Number(item.rowValue)>0||item.sets?.some(set=>String(set.height_cm??'').trim()!==''))
       if(classSessionId&&source?.category!=='warmup'&&!hasRecordedScore)throw new Error('Hovud-WOD må ha minst eitt registrert resultat før du kan lagra.')
       const resultData = {
-        version:2,format,prescription_level:wodLevel,elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':'completed',completed:true,time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
+        version:2,format,prescription_level:wodLevel,wod_ids:source?.id?[source.id]:manualWodIds,wod_names:(source?.id?[source.id]:manualWodIds).map(id=>wods.find(w=>w.id===id)?.name).filter(Boolean),elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':'completed',completed:true,time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
         completed_rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):null,
         extra_reps:isAmrapScore?(scoreReps===''?0:Number(scoreReps)):null,
         split_seconds:Array.isArray(timerSnapshot.laps)?timerSnapshot.laps:[],
@@ -627,7 +641,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         exercise_results:items.map(item=>({exercise_name:item.exercise_name,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps.map(step=>({name:step.name,reps:Number(step.reps)||1})):[],row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm)}))}))
       }
       const payload = {
-        member_id:user.id,save_token:saveToken,title:title.trim(),source_wod_id:source?.id||null,
+        member_id:user.id,save_token:saveToken,title:title.trim(),source_wod_id:source?.id||manualWodIds[0]||null,
         class_live_session_id:classSessionId||null,workout_date:workoutDate||localDateISO(),format,
         rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):Math.max(1,Number(scoreRounds)||1),
         score_rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):scoreRounds===''?null:Number(scoreRounds),
@@ -756,6 +770,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         <div className="engine-section-title"><h4>{format==='Stasjonssirkel'?'Stasjonane i økta':'WOD / øvingsrekkjefølgje'}</h4><span>{format==='Stasjonssirkel'?'Alle stasjonar – roter etter eiga startplassering':'Vel øvinga du arbeider med'}</span></div>
         <div className={format==='Stasjonssirkel'?'timer-station-grid':'wod-list'}>{items.map((item, index) => format==='Stasjonssirkel' ? <article className="timer-station-card" key={item.key}><span>STASJON {index+1}</span><strong>{item.exercise_name||'Øving'}</strong><small>{item.reps_mode==='amrap'?'AMRAP · maks reps':item.reps?item.reps+' reps':'Valfritt tal reps'}</small></article> : <button type="button" key={item.key} className={index === activeExerciseIndex ? 'secondary-button active' : 'secondary-button'} onClick={() => setActiveExerciseIndex(index)}>{index + 1}. {item.is_rest?'⏸ Pause · '+clock(Number(item.rest_duration_seconds)||30):item.exercise_name || 'Ny øving'}</button>)}</div>
       </section>}
+      {!source&&<section className="engine-section manual-wod-picker"><div className="engine-section-title"><h4>Legg til WOD i økta</h4><span>Du kan kombinere fleire WOD-ar og enkeltøvingar</span></div><div className="manual-wod-picker-row"><select value={manualWodSelect} onChange={e=>setManualWodSelect(e.target.value)}><option value="">Vel WOD frå biblioteket …</option>{manualWodOptions.map(wod=><option key={wod.id} value={wod.id}>{wod.name} · {wod.format}</option>)}</select><button type="button" className="secondary-button" disabled={!manualWodSelect} onClick={addManualWod}><Plus size={15}/> Legg til WOD</button></div>{manualWodIds.length>0&&<div className="manual-wod-chips">{manualWodIds.map(id=>{const wod=manualWodOptions.find(item=>item.id===id);return <span key={id}>{wod?.name||'WOD'}<button type="button" aria-label={'Fjern '+(wod?.name||'WOD')} onClick={()=>setManualWodIds(rows=>rows.filter(value=>value!==id))}>×</button></span>})}</div>}</section>}
       <section className="engine-section">
         <div className="engine-section-title"><h4>Øvingar og sett</h4><span>Legg inn resultat per sett</span></div>
         <div className="exercise-search"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Søk i øvingsbiblioteket …"/></div>
