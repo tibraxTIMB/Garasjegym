@@ -1,8 +1,6 @@
--- Prevent multiple live bookings by the same member for one group class.
--- Historical cancelled/declined rows remain intact and a member may book again.
-create unique index if not exists class_bookings_one_active_per_member_idx
-  on public.class_bookings(class_id, member_id)
-  where status in ('confirmed','pending','waitlist');
+-- Multiple active bookings are already prevented by the existing
+-- class_bookings_one_active_per_member unique partial index.
+-- Keep historical cancelled/declined rows intact and allow rebooking.
 
 -- Members may only cancel their own PT booking through direct table access.
 -- The SECURITY DEFINER book_pt_session() RPC is allowed to reactivate a previously
