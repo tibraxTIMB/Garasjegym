@@ -555,7 +555,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   }
 
   function startManualWorkout(){
-    setClassSessionId(null);setSaveToken(crypto.randomUUID());setSource(null);setWodLevel('rx')
+    setTimerLaunchId(0);setClassSessionId(null);setSaveToken(crypto.randomUUID());setSource(null);setWodLevel('rx')
     setTitle('Manuell trening');setFormat('Fri trening');setDuration('0');setDurationSeconds('0');setWorkoutDate(localDateISO())
     setNote('');setItems([]);setQuery('');setActiveExerciseIndex(0)
     setTimerSnapshot({elapsed:0,laps:[],roundsCompleted:0,phase:'Klar',running:false})
