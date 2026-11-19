@@ -55,3 +55,10 @@ export function sortWodItems(items) {
     })
     .map(entry => entry.item);
 }
+
+/** Read ordered WOD items from the legacy schema or engine-only block payload. */
+export function getWodSchemaItems(schema = {}) {
+  if (Array.isArray(schema.items) && schema.items.length) return schema.items;
+  if (!Array.isArray(schema.wod_engine?.blocks)) return [];
+  return schema.wod_engine.blocks.flatMap(block => Array.isArray(block?.items) ? block.items : []);
+}
