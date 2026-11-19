@@ -29,6 +29,8 @@ jobs:
         run: npm run check:migrations
       - name: Test app base URL and auth redirects
         run: npm run test:app-base-url
+      - name: Test infotainment calendar grouping
+        run: npm run test:infotainment
       - name: Test WOD ordering
         run: npm run test:wod-order
       - name: Build application
