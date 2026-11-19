@@ -2,7 +2,7 @@ import {useEffect,useMemo,useState} from 'react'
 import {createPortal} from 'react-dom'
 import {Plus,Search,Trash2,ArrowUp,ArrowDown,Save,LoaderCircle,WandSparkles,Dices,Info,Copy,Dumbbell,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
-import {addWodSortOrder,moveWodItemByKey,moveWodItemToPosition,sortWodItems} from '../lib/wodOrdering.js'
+import {addWodSortOrder,getWodSchemaItems,moveWodItemByKey,moveWodItemToPosition,sortWodItems} from '../lib/wodOrdering.js'
 import {COMPLEX_EXERCISES,formatComplexSequence} from '../lib/wodComplexes.js'
 import WodImportPanel from './WodImportPanel.jsx'
 import { createWodEngineConfig, buildLegacyCompatibleBlock, normalizeWodEngine, PARTICIPATION_MODES, COLLABORATION_MODES, SCORE_TYPES } from '../lib/wodEngine.js'
@@ -140,12 +140,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   const {data:w,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,is_published,timer_settings,category').eq('id',id).single()
   if(e){setError('Kunne ikkje opna WOD for redigering: '+e.message);setLoading(false);return}
   const schema=w.timer_settings?.workout_schema||{}
-  // The legacy item list is canonical when present. Older/newer engine-only
-  // payloads may keep the ordered exercises inside the first workout block.
-  const schemaItems=Array.isArray(schema.items)&&schema.items.length
-   ?schema.items
-   :(Array.isArray(schema.wod_engine?.blocks)?schema.wod_engine.blocks.flatMap(block=>Array.isArray(block?.items)?block.items:[]):[])
-  const items=sortWodItems(schemaItems)
+  const items=sortWodItems(getWodSchemaItems(schema))
   const engine=normalizeWodEngine(schema,{format:w.format});setParticipation(engine.participation);setCollaboration(engine.collaboration);setPartnerCount(String(engine.participant_count||3));setScoreType(engine.scoring?.type||'reps');setScoreFields(engine.scoring?.fields||['reps']);setEditingWodId(w.id);setName(w.name);const legacyFormat=w.format||'AMRAP';const emomMatch=/^EMOM(?: ([1-7]))?$/.exec(legacyFormat);const mappedFormat=emomMatch?'E'+Math.max(1,Math.min(7,Number(emomMatch[1]||schema.interval?.work_every_minutes)||1))+'MOM':legacyFormat==='Pyramid'?'Strength':legacyFormat==='Couplet / Triplet'?(schema.items?.filter(item=>!item.is_rest).length>=3?'Triplet':'Couplet'):legacyFormat==='Ladder / Death By'?(schema.ladder?.type==='Death By'?'Death By':'Ladder'):legacyFormat==='Intervall / Tabata'?(schema.interval?.work_seconds===20&&schema.interval?.rest_seconds===10?'Tabata':'Intervall'):legacyFormat;setFormat(mappedFormat);setPublishToMembers(!!w.is_published);const storedLibraryCategory=schema.library_category||(w.category==='warmup'?'warmup':'standard');const knownLibraryCategories=['warmup','daily','standard','benchmark','assessment','rehab','recovery','other'];setLibraryCategory(knownLibraryCategories.includes(storedLibraryCategory)?storedLibraryCategory:'custom');setCustomLibraryCategory(knownLibraryCategories.includes(storedLibraryCategory)?'':storedLibraryCategory)
   setMinutes(String(schema.duration_seconds?Math.floor(schema.duration_seconds/60):w.duration_minutes||20));setDurationSeconds(String(schema.duration_seconds?schema.duration_seconds%60:0))
   setNotes(schema.coach_notes||w.notes||'');setStimulus(schema.stimulus||'Jamn intensitet · teknisk kvalitet · kontrollert tempo')
