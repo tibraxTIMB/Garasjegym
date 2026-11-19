@@ -82,8 +82,8 @@ Det finst éin aktiv admin og to aktive medlemsprofilar i testprosjektet. Det fi
 
 ### Migreringsspor – framleis eit avvik
 
-- GitHub-branch inneheld **47 SQL-filer**.
-- Supabase-testprosjektet rapporterer **58 installerte migreringar**.
+- GitHub-branch inneheld **49 SQL-filer**.
+- Supabase-testprosjektet rapporterer **60 installerte migreringar**.
 - **15 installerte migreringsnamn manglar tilsvarande SQL-fil i repoet**. Éi er baseline frå produksjonsskjema utan data; 14 er funksjons-/skjemamigreringar.
 - **4 SQL-filer i repoet finst ikkje som installerte migreringar** i Supabase sin migreringslogg.
 
@@ -142,13 +142,16 @@ Nye migreringar på STURMKOPF:
 - 202611191100_atomic_workout_pt_linkage.sql
 - 202611191200_wod_member_assigned_visibility.sql
 - 202611191210_wod_assignment_atomic_save.sql
+- 202611191220_wod_group_class_visibility.sql
+- 202611191230_notification_group_category.sql
 
 Kodeendringar:
 - PTManagement.jsx: PT-kundetildeling og godkjenning av tenestebestilling nyttar no atomisk assign_pt_coach RPC. Tidlegare aktiv tilknyting blir ikkje avslutta dersom ny tildeling feilar. Kapasiteten til PT blir kontrollert med transaksjonslås.
 - PTStudio.jsx: oppretting av PT-program og alle programøkter skjer no gjennom create_pt_program_with_sessions i éi transaksjon.
 - Training.jsx: treningslogg, PT-WOD-tildeling og PT-programøkt blir no lagra gjennom save_workout_with_pt_links i same transaksjon. Feil i PT-kopling rullar tilbake heile lagringa i staden for å etterlata ei treningslogg utan korrekt PT-status.
 - WodLibrary.jsx: WOD blir arkivert dersom det finst referansar i dei kontrollerte PT-, trenings-, favoritt- og gruppetimekoplingane. Permanent sletting skjer berre når ingen slike referansar finst.
-- WOD-lesepolicy: `wods_read_assigned` er retta slik at privat WOD blir synleg for rett medlem ved direkte PT-tildeling, PT-programøkt eller PT-time med WOD-ID i `wod_ids`. Andre medlemmer får ikkje tilgang.
+- WOD-lesepolicy: `wods_read_assigned` er retta slik at privat WOD blir synleg for rett medlem ved direkte PT-tildeling, PT-programøkt, PT-time eller gruppetime/live-økt. Gruppetime-WOD krev stadfesta booking; andre medlemmer får ikkje tilgang.
+- Varseltrigger for gruppetime: `notifications_category_check` tillèt no `group`, som allereie er støtta av varselkomponenten. Dette rettar ein feil der ein ny gruppetimebooking kunne bli avvist når triggeren prøvde å oppretta varsel.
 - WodBuilder.jsx: ny WOD som blir bygd og tildelt frå PT Studio blir no lagra gjennom `save_wod_with_pt_assignment`. Oppretting/redigering og tildeling skjer i éi transaksjon; feil i tildeling rullar tilbake WOD-operasjonen.
 - pt_bookings: direkte medlems-INSERT er blokkert. Medlemsbooking går gjennom kapasitetssjekka RPC. Avlysing triggar ventelisteopprykk; ein intern nested-triggeroppdatering er eksplisitt tillaten utan å opna for direkte medlemsendring av andre felt.
 
@@ -180,6 +183,9 @@ Følgjande transaksjonstestar vart køyrde mot testdatabasen. Mellombelse rader 
 | Ny privat WOD + PT-tildeling blir oppretta atomisk via RPC | BESTÅTT |
 | Medlem kan ikkje endra coach_note på eiga WOD-tildeling | BESTÅTT |
 | Medlem kan ikkje kalla admin-RPC for å oppretta/tildela WOD | BESTÅTT – avvist i SQL-rollesimulering |
+| Privat WOD i publisert gruppetime er synleg for stadfesta deltakar, ikkje annan medlem | BESTÅTT |
+| Privat WOD i ferdig live gruppetime er synleg for stadfesta deltakar | BESTÅTT |
+| Ny gruppetimebooking opprettar varsel med category `group` utan å feila | BESTÅTT |
 | Testdata frå alle transaksjonstestane vart rulla tilbake | BESTÅTT |
 
 Desse testane kontrollerer databasefunksjonar, RLS og tabellprivilegium. Dei dokumenterer ikkje at alle knappar, visingar eller navigasjonsflytar fungerer i nettlesaren.
