@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from './lib/supabase.js'
 import { fetchMemberProfile, isStaff } from './lib/auth.js'
+import { getAppBaseUrl } from './lib/appBaseUrl.js'
 import Training from './components/Training.jsx'
 import Booking from './components/Booking.jsx'
 import PT from './components/PT.jsx'
@@ -74,7 +75,8 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
         onRecoveryComplete?.()
         await supabase.auth.signOut()
       } else if (mode === 'reset') {
-        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin })
+        const redirectTo = getAppBaseUrl(window.location.origin, import.meta.env.BASE_URL)
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo })
         if (resetError) throw resetError
         setMessage('Dersom e-postadressa er registrert, får du ei lenkje for å velja nytt passord.')
       } else {
