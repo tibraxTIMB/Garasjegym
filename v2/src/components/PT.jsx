@@ -1,5 +1,5 @@
 import { useEffect,useState } from 'react'
-import { CalendarClock,CheckCircle2,LoaderCircle,Plus,UserRound } from 'lucide-react'
+import { CalendarClock,CheckCircle2,LoaderCircle,Plus,Trash2,UserRound } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { isStaff } from '../lib/auth.js'
 import WodBuilder from './WodBuilder.jsx'
@@ -175,6 +175,19 @@ export default function PT({profile,focusRequestId,onFocusConsumed,onLaunchWorko
    setMessageText('');setNotice('Meldinga er sendt.');await load()
   }catch(e){setError(e.message||'Kunne ikkje senda meldinga.')}finally{setBusy('')}
  }
+  async function removeMessage(message){
+   if(!message?.id)return
+   if(!window.confirm('Sletta denne meldinga frå PT-dialogen?'))return
+   setBusy('message-delete-'+message.id);setError('');setNotice('')
+   try{
+    const {data,error:e}=await supabase.from('pt_messages').delete().eq('id',message.id).select('id')
+    if(e)throw e
+    if(!data?.length)throw new Error('Meldinga vart ikkje sletta. Ho kan alt vera fjerna eller du manglar tilgang.')
+    setMessages(rows=>rows.filter(row=>row.id!==message.id))
+    setNotice('Meldinga er sletta.')
+   }catch(e){setError(e.message||'Kunne ikkje sletta meldinga.')}
+   finally{setBusy('')}
+  }
  async function saveNote(event){
   event.preventDefault();setBusy('note');setError('');setNotice('')
   try{
@@ -200,7 +213,7 @@ export default function PT({profile,focusRequestId,onFocusConsumed,onLaunchWorko
   {(!staff||activePanel==='dialog')&&<section className="engine-section">
    <div className="engine-section-title"><h4>PT-dialog</h4><span>Privat mellom medlem og trenar</span></div>
 
-   <div className="pt-message-list">{messages.filter(m=>staff?m.client_id===messageClient:m.client_id===profile.id).map(m=><article className="history-card" key={m.id}><div className="history-card-top"><strong>{m.sender_id===profile.id?'Du':members.find(x=>x.id===m.sender_id)?.display_name||(m.sender_id===m.client_id?'Medlem':'Trenar')}</strong><small>{new Date(m.created_at).toLocaleString('nn-NO')}</small></div><p>{m.body}</p></article>)}</div>
+   <div className="pt-message-list">{messages.filter(m=>staff?m.client_id===messageClient:m.client_id===profile.id).map(m=><article className="history-card pt-message-card" key={m.id}><div className="history-card-top"><strong>{m.sender_id===profile.id?'Du':members.find(x=>x.id===m.sender_id)?.display_name||(m.sender_id===m.client_id?'Medlem':'Trenar')}</strong><div className="pt-message-meta"><small>{new Date(m.created_at).toLocaleString('nn-NO')}</small><button type="button" className="icon-button" aria-label="Slett melding" title="Slett melding" disabled={busy==='message-delete-'+m.id} onClick={()=>removeMessage(m)}><Trash2 size={14}/></button></div></div><p>{m.body}</p></article>)}</div>
    <form className="admin-create-form" onSubmit={sendMessage}><textarea rows="2" value={messageText} onChange={e=>setMessageText(e.target.value)} required maxLength="3000" placeholder="Skriv ei melding …"/><button className="primary-button" disabled={busy==='message'||!messageText.trim()}>Send melding</button></form>
   </section>}
   {false&&staff&&<section className="engine-section"><h4>Foreskriv WOD til PT-klient</h4><form className="admin-create-form" onSubmit={prescribeWorkout}><label>PT-klient<select required value={prescribeClient} onChange={e=>setPrescribeClient(e.target.value)}><option value="">Vel klient</option>{members.map(m=><option key={m.id} value={m.id}>{m.display_name||'Utan namn'}</option>)}</select></label><label>WOD<select required value={prescribeWod} onChange={e=>setPrescribeWod(e.target.value)}><option value="">Vel WOD</option>{wodLibrary.map(w=><option key={w.id} value={w.id}>{w.name} · {w.format}</option>)}</select></label><label>Dato / tidspunkt (valfritt)<input type="datetime-local" value={prescribeAt} onChange={e=>setPrescribeAt(e.target.value)}/></label><button className="primary-button" disabled={busy==='prescribe'||!prescribeClient||!prescribeWod}>Foreskriv WOD</button></form></section>}
