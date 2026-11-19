@@ -5,6 +5,12 @@ import App from './App.jsx'
 import './styles.css'
 import './app-shell-mobile.css'
 
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/Garasjegym/sw.js', { scope: '/Garasjegym/' }).catch(() => {})
+  })
+}
+
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
