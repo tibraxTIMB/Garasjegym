@@ -199,6 +199,7 @@ Følgjande transaksjonstestar vart køyrde mot testdatabasen. Mellombelse rader 
 | Medlem kan ikkje fullføra PT-WOD utan treningslogg | BESTÅTT |
 | Medlem kan ikkje knyta PT-WOD til treningslogg for annan WOD | BESTÅTT |
 | Medlem kan fullføra PT-programøkt berre med eigen logg for rett WOD | BESTÅTT |
+| `save_workout_with_pt_links` lagrar éin treningslogg og fullfører både WOD-tildeling og PT-programøkt med same logg | BESTÅTT – SQL-transaksjonstest |
 | Medlem kan ikkje lesa upublisert gruppetime, medan staff kan | BESTÅTT |
 | Testdata frå alle transaksjonstestane vart rulla tilbake | BESTÅTT |
 
