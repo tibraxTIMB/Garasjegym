@@ -65,7 +65,8 @@ export default function WodLibrary({onLaunchWod,onEditWod,staff=true,isAdmin=fal
     supabase.from('pt_program_sessions').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
     supabase.from('training_session_wods').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
     supabase.from('class_session_wod_completions').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
-    supabase.from('daily_wod').select('id',{count:'exact',head:true}).eq('wod_id',w.id)
+    supabase.from('daily_wod').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
+    supabase.from('wod_daily_schedules').select('id',{count:'exact',head:true}).eq('wod_id',w.id)
    ]);
    if(checks.some(x=>x.error)){setError('Kunne ikkje kontrollera alle WOD-koplingane: '+checks.find(x=>x.error).error.message);setBusy('');return}
    const used=checks.some(x=>(x.count||0)>0);
