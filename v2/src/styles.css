@@ -5503,3 +5503,24 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
  .pt2-week .pt2-session { align-items:flex-start; }
  .pt2-week .pt2-inline-actions { flex-wrap:wrap; }
 }
+
+
+/* PT template quick-start preset */
+.pt2-preset-callout {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:13px 14px;
+  border:1px solid color-mix(in srgb,var(--accent) 38%,var(--line));
+  border-radius:12px;
+  background:color-mix(in srgb,var(--accent) 8%,var(--panel));
+}
+.pt2-preset-callout > div { min-width:0; }
+.pt2-preset-callout strong { display:block; font-size:13px; }
+.pt2-preset-callout p { margin:4px 0 0; color:var(--muted); font-size:12px; }
+.pt2-preset-callout button { flex:0 0 auto; }
+@media(max-width:600px) {
+  .pt2-preset-callout { align-items:stretch; flex-direction:column; }
+  .pt2-preset-callout button { width:100%; }
+}
