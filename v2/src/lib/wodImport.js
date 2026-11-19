@@ -20,7 +20,7 @@ export function parseWodImport(source,exerciseCatalog=[]){
  const name=!firstIsMetadata&&first.length<=48&&!/^\d/.test(first)?first:'Importert WOD'
  const minutesMatch=whole.match(/\b(\d{1,3})\s*(?:min(?:utt)?|minutes?)\b/i)
  const minutes=minutesMatch?Number(minutesMatch[1]):null
- const roundsMatch=whole.match(/\\b(\\d{1,2})\\s*(?:rounds?|rundar)\\b/i)
+ const roundsMatch=whole.match(/\b(\d{1,2})\s*(?:rounds?|rundar)\b/i)
  const rounds=roundsMatch?Number(roundsMatch[1]):1
  const items=[]
  for(const line of lines){
