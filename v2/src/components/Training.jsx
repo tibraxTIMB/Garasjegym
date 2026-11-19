@@ -422,12 +422,12 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   async function loadAll(silent=false) {
     if (!silent) setLoading(true); setError('')
     let w = await supabase.from('wods')
-      .select('id,name,format,duration_minutes,movements,notes,audience,is_published,created_at,timer_settings,category')
+      .select('id,name,format,duration_minutes,movements,notes,audience,is_published,is_archived,created_at,timer_settings,category')
       .order('created_at', { ascending: false })
     // Keep the WOD library usable while the optional timer-settings migration is staged.
     if (w.error && /timer_settings|column .* does not exist/i.test(w.error.message || '')) {
       w = await supabase.from('wods')
-        .select('id,name,format,duration_minutes,movements,notes,audience,is_published,created_at,category')
+        .select('id,name,format,duration_minutes,movements,notes,audience,is_published,is_archived,created_at,category')
         .eq('is_published', true).order('created_at', { ascending: false })
     }
     const [e, h, pr] = await Promise.all([
