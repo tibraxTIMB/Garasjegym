@@ -8,7 +8,7 @@ import { formatComplexSequence } from '../lib/wodComplexes.js'
 import PerformanceCenter from './PerformanceCenter.jsx'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
-const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', uses_height: false, sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] })
+const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', uses_height: false, rowValue:'', rowUnit:'m', workSeconds:'', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] })
 const pad = (n) => String(n).padStart(2, '0')
 const clock = (seconds) => `${pad(Math.floor(Math.max(0, seconds) / 60))}:${pad(Math.max(0, seconds) % 60)}`
 const doseLabel=(item,level='rx')=>{const d=item?.levels?.[level]||{};const parts=[];if(d.sets)parts.push(d.sets+' sett');if(d.reps)parts.push(d.reps+' reps');if(d.heightCm)parts.push(d.heightCm+' cm');if(d.durationSeconds)parts.push(d.durationSeconds+' sek');if(d.distanceMeters)parts.push(d.distanceMeters+' m');if(d.calories)parts.push(d.calories+' cal');if(d.loadMode==='kg'){const loads=[d.loadKgMen!==''&&d.loadKgMen!=null?'M '+d.loadKgMen+' kg':'',d.loadKgWomen!==''&&d.loadKgWomen!=null?'K '+d.loadKgWomen+' kg':''].filter(Boolean);if(loads.length)parts.push(loads.join(' / '))}else if(d.loadMode==='percent'&&d.percent1rm)parts.push(d.percent1rm+' % 1RM');else if(d.loadMode==='rir'&&d.rir!=='')parts.push('RIR '+d.rir);else if(d.loadMode==='bodyweight')parts.push('Kroppsvekt');if(d.tempo)parts.push('Tempo '+d.tempo);if(d.variant)parts.push('Variant: '+d.variant);if(d.instruction)parts.push(d.instruction);return parts.join(' · ')||''};
@@ -530,6 +530,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         reps_mode: item.reps_mode || 'fixed',
         prescription_levels: item.levels || null,
         prescription_label: doseLabel(item,'rx'),
+        rowValue:'',rowUnit:item.row_unit||'m',workSeconds:'',
         uses_height: Boolean(item.height_cm || Object.values(item.levels||{}).some(level=>level?.heightCm!=null) || /box|boks/i.test(item.exercise_name||'')),
         sets: Array.isArray(item.sets) && item.sets.length ? item.sets.map(set => ({
           reps: set.reps == null ? '' : String(set.reps),
@@ -540,8 +541,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         })) : [{
           reps: item.reps == null ? '' : String(item.reps),
           load_kg: item.load_kg == null ? '' : String(item.load_kg),
-          time_text: item.row_value != null ? String(item.row_value)+' '+(item.row_unit||'') : '',
-          time_seconds: item.work_seconds == null ? '' : String(item.work_seconds),
+          time_text: '',
+          time_seconds: '',
           height_cm: String(item.height_cm ?? item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? Object.values(item.levels||{}).find(level=>level?.heightCm!=null)?.heightCm ?? ''),
         }],
       })))
@@ -612,7 +613,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       const elapsedSeconds = Number(timerSnapshot.elapsed)||0
       const parsedTime = scoreTime.trim() ? (()=>{const parts=scoreTime.trim().split(':').map(Number);return parts.length===2?parts[0]*60+parts[1]:parts.length===3?parts[0]*3600+parts[1]*60+parts[2]:NaN})() : (isForTimeScore&&elapsedSeconds>0?elapsedSeconds:null)
       if(scoreTime.trim()&&!Number.isFinite(parsedTime))throw new Error('Tid må skrivast som mm:ss eller tt:mm:ss.')
-      const hasRecordedScore=[scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||items.some(item=>item.sets?.some(set=>String(set.height_cm??'').trim()!==''))
+      const hasRecordedScore=[scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||items.some(item=>Number(item.rowValue)>0||item.sets?.some(set=>String(set.height_cm??'').trim()!==''))
       if(classSessionId&&source?.category!=='warmup'&&!hasRecordedScore)throw new Error('Hovud-WOD må ha minst eitt registrert resultat før du kan lagra.')
       const resultData = {
         version:2,format,prescription_level:wodLevel,elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':'completed',completed:true,time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
@@ -623,7 +624,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         load_kg:scoreLoad===''?null:Number(scoreLoad),
         calories:scoreCalories===''?null:Number(scoreCalories),
         distance:scoreDistance===''?null:Number(scoreDistance),distance_unit:scoreUnit,
-        exercise_results:items.map(item=>({exercise_name:item.exercise_name,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps.map(step=>({name:step.name,reps:Number(step.reps)||1})):[],row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.meters===''?null:Number(item.meters),calories:item.calories===''?null:Number(item.calories),work_seconds:item.workSeconds===''?null:Number(item.workSeconds),sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm)}))}))
+        exercise_results:items.map(item=>({exercise_name:item.exercise_name,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps.map(step=>({name:step.name,reps:Number(step.reps)||1})):[],row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm)}))}))
       }
       const payload = {
         member_id:user.id,save_token:saveToken,title:title.trim(),source_wod_id:source?.id||null,
@@ -638,7 +639,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         note:[note.trim(),scoreTime?'Tid: '+scoreTime:'',`Timer: ${format} · ${clock(elapsedSeconds)} · ${timerSnapshot.phase}`,timerSnapshot.laps.length?'Mellomtider: '+timerSnapshot.laps.map((lap,i)=>`${i+1}: ${clock(lap)}`).join(', '):''].filter(Boolean).join('\\n')
       }
       payload.exercises=items.map((item,index)=>({
-        exercise_id:item.exercise_id||null,exercise_name:item.exercise_name.trim(),sort_order:index+1,row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.meters===''?null:Number(item.meters),calories:item.calories===''?null:Number(item.calories),work_seconds:item.workSeconds===''?null:Number(item.workSeconds),
+        exercise_id:item.exercise_id||null,exercise_name:item.exercise_name.trim(),sort_order:index+1,row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,
         sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_text:s.time_text.trim()||null,time_seconds:s.time_seconds===''?null:Number(s.time_seconds),height_cm:s.height_cm===''?null:Number(s.height_cm)}))
       }))
       const {data:workoutId,error:saveError}=await supabase.rpc('save_workout_with_pt_links',{
@@ -685,7 +686,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
           addCandidate(exercise,'sek',exercise.sets.map(set=>set.time_seconds),'min')
           if(exercise.row_unit==='m'||exercise.row_unit==='km')addCandidate(exercise,'meter',[exercise.row_unit==='km'?Number(exercise.row_value)*1000:exercise.row_value])
           if(exercise.row_unit==='cal')addCandidate(exercise,'cal',[exercise.row_value])
-          if(exercise.work_seconds)addCandidate(exercise,'sek',[exercise.work_seconds],'min')
+          if(exercise.row_unit==='s')addCandidate(exercise,'sek',[exercise.row_value],'min')
+          if(exercise.row_unit==='min')addCandidate(exercise,'sek',[Number(exercise.row_value)*60],'min')
           if(payload.exercises.length===1){
             addCandidate(exercise,'kg',[payload.score_load_kg])
             addCandidate(exercise,'reps',[payload.score_reps])
@@ -766,6 +768,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
             <span>{item.is_complex?`Syklus ${i+1}`:`Sett ${i+1}`}</span><input type="number" min="0" step="1" value={set.reps} onChange={e => updateSet(item.key,i,{reps:e.target.value})} placeholder={item.is_complex?"Syklusar":"Reps"}/>
             {item.uses_height ? <input type="number" min="1" step="1" value={set.height_cm||''} onChange={e=>updateSet(item.key,i,{height_cm:e.target.value})} placeholder="Høgd (cm)" aria-label={`Høgd i centimeter, sett ${i+1}`}/> : <><input type="number" min="0" step="0.5" value={set.load_kg} onChange={e => updateSet(item.key,i,{load_kg:e.target.value})} placeholder="Kg"/><input value={set.time_text} onChange={e => updateSet(item.key,i,{time_text:e.target.value})} placeholder="Tid"/></>}
           </div>)}
+          <details className="exercise-extra-result"><summary>Registrer distanse, kaloriar eller tid</summary><div className="exercise-extra-result-grid"><label>Resultat<input type="number" min="0" step="0.1" value={item.rowValue??''} onChange={e=>updateExercise(item.key,{rowValue:e.target.value})} placeholder="T.d. 500"/></label><label>Eining<select value={item.rowUnit||'m'} onChange={e=>updateExercise(item.key,{rowUnit:e.target.value})}><option value="m">Meter</option><option value="km">Kilometer</option><option value="cal">Kaloriar</option><option value="s">Sekund</option><option value="min">Minutt</option></select></label></div></details>
           <button type="button" className="text-button add-set" onClick={() => addSet(item.key)}><Plus size={14}/> Legg til sett</button>
         </article>)}
         <button type="button" className="secondary-button" onClick={() => setItems(current => [...current, emptyExercise()])}><Plus size={15}/> Legg til eiga øving</button>
