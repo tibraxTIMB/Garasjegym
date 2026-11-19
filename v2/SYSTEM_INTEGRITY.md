@@ -176,6 +176,7 @@ Følgjande transaksjonstestar vart køyrde mot testdatabasen. Mellombelse rader 
 | Treningslogg + WOD-tildeling + PT-programøkt blir kopla atomisk | BESTÅTT |
 | Privat WOD tildelt direkte er synleg for rett medlem, ikkje for annan medlem | BESTÅTT |
 | Privat WOD knytt til eige PT-program er synleg for medlemmet | BESTÅTT |
+| Privat WOD i `pt_sessions.wod_ids` er synleg for rett PT-kunde | BESTÅTT |
 | Ny privat WOD + PT-tildeling blir oppretta atomisk via RPC | BESTÅTT |
 | Medlem kan ikkje endra coach_note på eiga WOD-tildeling | BESTÅTT |
 | Medlem kan ikkje kalla admin-RPC for å oppretta/tildela WOD | BESTÅTT – avvist i SQL-rollesimulering |
