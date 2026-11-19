@@ -552,30 +552,42 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       let prMessage = programSyncMessage
       try {
         const { data: existingPRs, error: prReadError } = await supabase.from('personal_records')
-          .select('exercise_name,result,unit').eq('member_id', user.id).eq('unit', 'kg')
+          .select('exercise_name,result,unit').eq('member_id', user.id).in('unit', ['kg','cm'])
         if (prReadError) throw prReadError
-        const bestByName = new Map()
+        const bestByNameUnit = new Map()
         ;(existingPRs || []).forEach(record => {
           const value = Number(String(record.result).replace(',', '.'))
-          if (Number.isFinite(value)) bestByName.set(record.exercise_name.toLowerCase(), Math.max(bestByName.get(record.exercise_name.toLowerCase()) || 0, value))
+          const key = record.exercise_name.toLowerCase() + '|' + record.unit
+          if (Number.isFinite(value)) bestByNameUnit.set(key, Math.max(bestByNameUnit.get(key) || 0, value))
         })
         const sourceWorkoutId = workoutId
         const newPRs = []
-        payload.exercises.forEach((exercise,index) => {
+        payload.exercises.forEach(exercise => {
+          const nameKey = exercise.exercise_name.toLowerCase()
           const loads = exercise.sets.map(set => set.load_kg).filter(value => Number.isFinite(value) && value > 0)
           if (payload.exercises.length === 1 && Number.isFinite(payload.score_load_kg) && payload.score_load_kg > 0) loads.push(payload.score_load_kg)
-          if (!loads.length) return
-          const best = Math.max(...loads)
-          const key = exercise.exercise_name.toLowerCase()
-          if (best > (bestByName.get(key) || 0)) {
-            newPRs.push({ member_id: user.id, workout_log_id: sourceWorkoutId, exercise_name: exercise.exercise_name, result: String(best), unit: 'kg', record_date: payload.workout_date, note: 'Automatisk PR frå økta «' + payload.title + '»' })
-            bestByName.set(key, best)
+          if (loads.length) {
+            const bestLoad = Math.max(...loads)
+            const loadKey = nameKey + '|kg'
+            if (bestLoad > (bestByNameUnit.get(loadKey) || 0)) {
+              newPRs.push({ member_id: user.id, workout_log_id: sourceWorkoutId, exercise_name: exercise.exercise_name, result: String(bestLoad), unit: 'kg', record_date: payload.workout_date, note: 'Automatisk PR frå økta «' + payload.title + '»' })
+              bestByNameUnit.set(loadKey, bestLoad)
+            }
+          }
+          const heights = exercise.sets.map(set => set.height_cm).filter(value => Number.isFinite(value) && value > 0)
+          if (heights.length) {
+            const bestHeight = Math.max(...heights)
+            const heightKey = nameKey + '|cm'
+            if (bestHeight > (bestByNameUnit.get(heightKey) || 0)) {
+              newPRs.push({ member_id: user.id, workout_log_id: sourceWorkoutId, exercise_name: exercise.exercise_name, result: String(bestHeight), unit: 'cm', record_date: payload.workout_date, note: 'Automatisk høgde-PR frå økta «' + payload.title + '»' })
+              bestByNameUnit.set(heightKey, bestHeight)
+            }
           }
         })
         if (newPRs.length) {
           const { error: prWriteError } = await supabase.from('personal_records').insert(newPRs)
           if (prWriteError) throw prWriteError
-          prMessage = ' Ny PR registrert: ' + newPRs.map(pr => pr.exercise_name + ' ' + pr.result + ' kg').join(', ')
+          prMessage = ' Ny PR registrert: ' + newPRs.map(pr => pr.exercise_name + ' ' + pr.result + ' ' + pr.unit).join(', ')
         }
       } catch (prError) {
         prMessage = ' Automatisk PR-kontroll kunne ikkje fullførast: ' + (prError.message || 'ukjend feil')
@@ -713,7 +725,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         <form className="pr-form" onSubmit={savePersonalRecord}>
           <input value={prName} onChange={e => setPrName(e.target.value)} placeholder="Øving, t.d. Markløft" required/>
           <input value={prResult} onChange={e => setPrResult(e.target.value)} placeholder="Resultat, t.d. 120" required/>
-          <select value={prUnit} onChange={e => setPrUnit(e.target.value)}><option value="kg">kg</option><option value="reps">reps</option><option value="sek">sek</option><option value="min">min</option><option value="meter">meter</option><option value="watt">watt</option></select>
+          <select value={prUnit} onChange={e => setPrUnit(e.target.value)}><option value="kg">kg</option><option value="cm">cm</option><option value="reps">reps</option><option value="sek">sek</option><option value="min">min</option><option value="meter">meter</option><option value="watt">watt</option></select>
           <input value={prNote} onChange={e => setPrNote(e.target.value)} placeholder="Notat (valfritt)"/>
           <button className="secondary-button" type="submit" disabled={prSaving}>{prSaving ? 'Lagrar …' : 'Registrer PR'}</button>
         </form>
