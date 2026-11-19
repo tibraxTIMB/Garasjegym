@@ -14,6 +14,6 @@ export default function WodHub({onLaunchWod,staff,isAdmin=false,focusWodId=null,
    <button type="button" role="tab" aria-selected={tab==='library'} className={tab==='library'?'selected':''} onClick={()=>{setTab('library');setEditWodId(null)}}><BookOpen size={16}/> Bibliotek</button>
    {staff&&<button type="button" role="tab" aria-selected={tab==='builder'} className={tab==='builder'?'selected':''} onClick={()=>{setTab('builder');setEditWodId(null)}}><WandSparkles size={16}/> {editWodId?'Rediger WOD':'Bygg WOD'}</button>}
   </div>}
-  {tab==='library'?<WodLibrary key="library" staff={staff} isAdmin={isAdmin} simpleMode={simpleMode} onLaunchWod={(wodId)=>onLaunchWod?.(wodId,launchAssignmentId)} onEditWod={editWod} focusWodId={focusWodId} onFocusConsumed={onFocusConsumed}/>:<WodBuilder key={editWodId||'new'} editWodId={editWodId} onSaved={saved}/>}
+  {tab==='library'?<WodLibrary key="library" staff={staff} isAdmin={isAdmin} simpleMode={simpleMode} onLaunchWod={(wodId)=>onLaunchWod?.(wodId,launchAssignmentId)} onEditWod={editWod} focusWodId={focusWodId} onFocusConsumed={onFocusConsumed}/>:<WodBuilder key={editWodId||'new'} editWodId={editWodId} onSaved={saved} onCancel={()=>{setEditWodId(null);setTab('library')}}/>}
  </div>
 }
