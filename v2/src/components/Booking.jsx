@@ -32,7 +32,7 @@ async function fetchLiveSessions() {
   return result
 }
 
-export default function Booking({ profile, onLogResult, initialClassId=null }) {
+export default function Booking({ profile, onLogResult, initialClassId=null, onInitialClassConsumed=()=>{} }) {
   const [classes,setClasses]=useState([]),[attendance,setAttendance]=useState([])
   const [mine,setMine]=useState([])
   const [loading,setLoading]=useState(true)
@@ -58,7 +58,7 @@ export default function Booking({ profile, onLogResult, initialClassId=null }) {
   const staff=isStaff(profile)
   const attendeeCountFor=classId=>staff?attendance.filter(row=>row.class_id===classId&&row.status==='confirmed').length:Number(attendance.find(row=>row.class_id===classId)?.confirmed_count||0)
   const instructorNameFor=id=>instructors.find(person=>person.id===id)?.display_name||'Ikkje tildelt'
-  useEffect(()=>{if(initialClassId&&classes.length){const target=classes.find(c=>c.id===initialClassId);if(target)setSelectedClass(target)}},[initialClassId,classes])
+  useEffect(()=>{if(initialClassId&&classes.length){const target=classes.find(c=>c.id===initialClassId);if(target){setSelectedClass(target);onInitialClassConsumed()}}},[initialClassId,classes,onInitialClassConsumed])
 
   async function load(silent=false){
     if(!silent)setLoading(true);setError('')
