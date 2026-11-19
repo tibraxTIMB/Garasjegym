@@ -27,6 +27,8 @@
 | Privat WOD synleg ved direkte PT-tildeling | FERDIG OG SQL-TESTA | `wods_read_assigned` gir tilgang til rett medlem, men ikkje andre medlemmer. |
 | Privat WOD synleg frå PT-program | FERDIG OG SQL-TESTA | Policyen kontrollerer `pt_program_sessions` og eigarskap gjennom `pt_programs`. |
 | Privat WOD synleg frå PT-time (`wod_ids`) | FERDIG OG SQL-TESTA | Testa med `pt_sessions.wod_ids`; berre den tilknytte kunden fekk lese WOD-en. |
+| Privat WOD synleg i gruppetime | FERDIG OG SQL-TESTA | Stadfesta deltakar kan lesa WOD i publisert gruppetime; annan medlem får ikkje tilgang. |
+| Privat WOD synleg i live gruppetime | FERDIG OG SQL-TESTA | Stadfesta deltakar kan lesa WOD frå `class_live_sessions.wod_ids`. |
 | WOD + PT-kundetildeling i éi transaksjon | FERDIG OG SQL-TESTA | `save_wod_with_pt_assignment` lagrar WOD og kundetildeling i same transaksjon. Feil rullar tilbake heile operasjonen. WodBuilder brukar RPC-en når WOD blir bygd frå PT Studio. |
 
 ## 2. WOD-utføring og treningshistorikk
@@ -94,6 +96,9 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 13. `save_wod_with_pt_assignment` opprettar WOD og PT-tildeling atomisk for staff; den private WOD-en blir deretter synleg for kunden.
 14. Medlem blir avvist ved forsøk på å endra coach-notat på eiga WOD-tildeling.
 15. Medlem blir avvist ved forsøk på å kalla `save_wod_with_pt_assignment`.
+16. Privat WOD i publisert gruppetime er synleg for stadfesta deltakar, ikkje annan medlem.
+17. Privat WOD i ferdig live gruppetime er synleg for stadfesta deltakar.
+18. Gruppetimebooking opprettar varsel med kategorien `group`; den tidlegare constraint-feilen er retta.
 
 ## 7. Manuelle testar som står att
 
@@ -110,6 +115,8 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 - Gruppetime med fleire WOD-ar og individuell registrering.
 - Medlem kan ikkje sjå eller endra andre medlemmers data.
 - Mobil og nettbrett i ståande og liggjande modus.
+
+**Database:** 60 installerte migreringar; 49 SQL-filer i branch. Dei eldre manglande migreringsfilene er framleis eit reproduksjonsavvik.
 
 **CI:** Checks og preview deploy for commit ea580975 er bestått.
 
