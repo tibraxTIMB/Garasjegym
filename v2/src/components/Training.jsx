@@ -437,19 +437,19 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         reps_mode: item.reps_mode || 'fixed',
         prescription_levels: item.levels || null,
         prescription_label: doseLabel(item,'rx'),
-        uses_height: Boolean(item.height_cm || item.levels?.[wodLevel]?.heightCm || item.levels?.rx?.heightCm || /box|boks/i.test(item.exercise_name||'')),
+        uses_height: Boolean(item.height_cm || Object.values(item.levels||{}).some(level=>level?.heightCm!=null) || /box|boks/i.test(item.exercise_name||'')),
         sets: Array.isArray(item.sets) && item.sets.length ? item.sets.map(set => ({
           reps: set.reps == null ? '' : String(set.reps),
           load_kg: set.load_kg == null ? '' : String(set.load_kg),
           time_text: set.tempo || '',
           time_seconds: '',
-          height_cm: set.height_cm == null ? String(item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? item.height_cm ?? '') : String(set.height_cm),
+          height_cm: set.height_cm == null ? String(item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? Object.values(item.levels||{}).find(level=>level?.heightCm!=null)?.heightCm ?? item.height_cm ?? '') : String(set.height_cm),
         })) : [{
           reps: item.reps == null ? '' : String(item.reps),
           load_kg: item.load_kg == null ? '' : String(item.load_kg),
           time_text: item.row_value != null ? String(item.row_value)+' '+(item.row_unit||'') : '',
           time_seconds: item.work_seconds == null ? '' : String(item.work_seconds),
-          height_cm: String(item.height_cm ?? item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? ''),
+          height_cm: String(item.height_cm ?? item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? Object.values(item.levels||{}).find(level=>level?.heightCm!=null)?.heightCm ?? ''),
         }],
       })))
     } else if (wod?.movements) {
