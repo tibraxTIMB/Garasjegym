@@ -5486,3 +5486,20 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
  .pt-admin-row > button,.pt-admin-row > select { width:100%; }
  .pt-admin-stats article { padding:13px; }
 }
+
+
+/* PT programme builder: weekly timeline */
+.pt2-week-list { display:grid; gap:14px; margin-top:14px; }
+.pt2-week { border:1px solid var(--line); border-radius:14px; padding:12px; background:color-mix(in srgb,var(--panel) 82%,transparent); min-width:0; }
+.pt2-week > header { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:2px 2px 10px; }
+.pt2-week > header strong { font-size:15px; }
+.pt2-week > header span,.pt2-week-empty { color:var(--muted); font-size:12px; }
+.pt2-week .pt2-session { border-top:1px solid var(--line); }
+.pt2-session-main > small { display:block; margin-top:4px; color:var(--muted); }
+.pt2-week-empty { padding:12px 4px 4px; }
+.pt2-wod-select { max-width:100%; margin-top:8px; }
+@media(max-width:600px) {
+ .pt2-week { padding:9px; }
+ .pt2-week .pt2-session { align-items:flex-start; }
+ .pt2-week .pt2-inline-actions { flex-wrap:wrap; }
+}
