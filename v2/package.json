@@ -10,7 +10,8 @@
     "check:migrations": "node scripts/check-migrations.mjs",
     "test:wod-order": "node --test scripts/wod-order.test.mjs",
     "test:app-base-url": "node --test scripts/app-base-url.test.mjs",
-    "test:infotainment": "node --test scripts/infotainment-events.test.mjs"
+    "test:infotainment": "node --test scripts/infotainment-events.test.mjs",
+    "test:wod-complexes": "node --test scripts/wod-complexes.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
