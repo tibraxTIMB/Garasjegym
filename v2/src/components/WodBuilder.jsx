@@ -13,7 +13,7 @@ const areas=['Alle område','Heile kroppen','Overkropp','Underkropp','Kjerne','H
 const formatIcons={'AMRAP':'⏱','For Time':'🏁','Chipper':'☷','Couplet':'2×','Triplet':'3×','Ladder':'↗','Death By':'↘','Stasjonssirkel':'⌘','E1MOM':'◷','E2MOM':'◷','E3MOM':'◷','E4MOM':'◷','E5MOM':'◷','E6MOM':'◷','E7MOM':'◷','Intervall':'▥','Tabata':'▥','Row Intervals':'🚣','Strength':'🏋','Superset':'⇄','Complex':'▤','Eigen økt':'✳'}
 const formats=[
  {group:'Metcon',items:['AMRAP','For Time','Chipper','Couplet','Triplet','Ladder','Death By']},
- {group:'Gruppetime',items:['Stasjonssirkel','E1MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM']},
+ {group:'Gruppetime',items:['Stasjonssirkel','E1MOM','E1.25MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM']},
  {group:'Intervall',items:['Intervall','Tabata','Row Intervals']},
  {group:'Styrke',items:['Strength','Superset','Complex']},
  {group:'Anna',items:['Eigen økt']}
@@ -112,9 +112,9 @@ const analyseWorkout=(items,minutes)=>{const tags=items.flatMap(movementTagsFor)
 const strengthFormats=['Strength','Pyramid','Superset','Complex']
 const strengthLike=f=>strengthFormats.includes(f)
 const intervalFormats=['Intervall','Tabata','Row Intervals']
-const timedFormats=['EMOM','E1MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM']
-const timedEvery=f=>{const match=String(f||'').match(/^E([1-7])MOM$/);return match?Number(match[1]):1}
-const timedLabel=f=>timedEvery(f)===1?'kvart minutt':`kvart ${timedEvery(f)}. minutt`
+const timedFormats=['EMOM','E1MOM','E1.25MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM']
+const timedEvery=f=>{const match=String(f||'').match(/^E(\d+(?:\.\d+)?)MOM$/);return match?Number(match[1]):1}
+const timedLabel=f=>{const seconds=Math.round(timedEvery(f)*60);return seconds%60===0?'kvart '+seconds/60+'. minutt':'kvart '+Math.floor(seconds/60)+' minutt og '+seconds%60+' sekund'}
 const isRow=x=>x.equipment==='Romaskin'
 const equipmentIcon=value=>{const v=(value||'').toLowerCase();if(/power.?rack|squat.?rack|rig|rack/.test(v))return '🏗️';if(/bike|sykkel|spinning|ergometersykkel|air.?bike|echo.?bike|assault.?bike/.test(v))return '🚴';if(/ski.?erg|skierg/.test(v))return '🎿';if(/row|romaskin|ro.?erg|rowing/.test(v))return '🚣';if(/mølle|tredemølle|treadmill|løping|running/.test(v))return '🏃';if(/hoppetau|jump.?rope|skipping/.test(v))return '🪢';if(/ringar|ringar|gymnastic.?rings/.test(v))return '⭕';if(/klatretau|tau|rope climb/.test(v))return '🧗';if(/manual/.test(v))return '💪';if(/kettlebell/.test(v))return '🔔';if(/stong|stang|barbell|vektskive|bumper/.test(v))return '🏋️';if(/medisinball|medicine.?ball/.test(v))return '🏐';if(/strikk|band/.test(v))return '〰️';if(/trx|slynge/.test(v))return '⛓';if(/box|kasse|step.?kasse/.test(v))return '📦';if(/vegg|wall/.test(v))return '🧱';if(/matte|kroppsvekt/.test(v))return '🤸';if(/kabel|cable/.test(v))return '🛠️';if(/benk|bench/.test(v))return '🪑';if(/stige|agility/.test(v))return '🪜';if(/ball/.test(v))return '🏐';return '•'}
 const equipmentItems=value=>(value||'Kroppsvekt').split(/[,;+\\/\\n]+/).map(x=>x.trim()).filter(Boolean);
