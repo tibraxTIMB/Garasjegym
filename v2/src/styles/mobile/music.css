@@ -1,0 +1,83 @@
+/* Music browser: touch targets and one-column playlist navigation */
+.music-page,
+.spotify-content-panel,
+.spotify-playlist-browser,
+.spotify-playlist-detail {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.music-tabs {
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  flex-wrap: nowrap !important;
+  scrollbar-width: thin;
+}
+
+.music-tabs button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.spotify-search-field { min-height: 48px; }
+.spotify-search-field input { min-height: 46px; font-size: 14px; }
+.spotify-search-field button { width: 40px; height: 40px; flex-basis: 40px; }
+.spotify-row-play,
+.spotify-row-link { width: 42px; height: 42px; flex-basis: 42px; }
+.spotify-playlist-row { min-height: 54px; }
+.spotify-playlist-open { min-height: 44px; }
+.spotify-playlist-open strong { font-size: 12px; }
+.spotify-playlist-open small { font-size: 10px; }
+
+@media (max-width: 900px) {
+  .music-page { gap: 13px; }
+  .music-tabs {
+    position: sticky;
+    top: 62px;
+    z-index: 42;
+    width: calc(100% + 2px);
+    margin-inline: -1px;
+    padding: 7px 1px 9px;
+    background: rgba(16, 20, 22, .96);
+    border-bottom: 1px solid var(--gg-shell-border);
+    backdrop-filter: blur(12px);
+  }
+  .spotify-content-panel { padding: 12px; }
+  .spotify-playlist-browser { grid-template-columns: minmax(0, 1fr) !important; gap: 10px; }
+  .spotify-playlist-list {
+    display: flex !important;
+    gap: 7px;
+    max-height: none !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 2px 1px 7px;
+    overscroll-behavior-x: contain;
+  }
+  .spotify-playlist-row {
+    flex: 0 0 min(78vw, 240px);
+    min-width: 0;
+  }
+  .spotify-playlist-detail {
+    max-height: min(48dvh, 440px) !important;
+    overflow: auto;
+  }
+  .spotify-track-row { min-height: 54px; padding: 7px; }
+  .spotify-row-play,
+  .spotify-row-link { min-width: 42px; min-height: 42px; }
+  .spotify-genre-settings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .spotify-genre-buttons button { min-height: 44px; font-size: 11px; }
+}
+
+@media (max-width: 560px) {
+  .spotify-content-panel { padding: 9px; }
+  .spotify-genre-settings { grid-template-columns: minmax(0, 1fr) !important; }
+  .spotify-genre-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .spotify-genre-buttons.compact { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .spotify-playlist-row { flex-basis: min(82vw, 270px); }
+  .spotify-playlist-detail { max-height: 42dvh !important; }
+  .spotify-track-copy strong { font-size: 12px; }
+  .spotify-track-copy small { font-size: 10px; }
+}
+
