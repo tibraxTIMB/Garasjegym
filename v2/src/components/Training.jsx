@@ -623,7 +623,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         load_kg:scoreLoad===''?null:Number(scoreLoad),
         calories:scoreCalories===''?null:Number(scoreCalories),
         distance:scoreDistance===''?null:Number(scoreDistance),distance_unit:scoreUnit,
-        exercise_results:items.map(item=>({exercise_name:item.exercise_name,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps.map(step=>({name:step.name,reps:Number(step.reps)||1})):[],sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm)}))}))
+        exercise_results:items.map(item=>({exercise_name:item.exercise_name,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps.map(step=>({name:step.name,reps:Number(step.reps)||1})):[],row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.meters===''?null:Number(item.meters),calories:item.calories===''?null:Number(item.calories),work_seconds:item.workSeconds===''?null:Number(item.workSeconds),sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm)}))}))
       }
       const payload = {
         member_id:user.id,save_token:saveToken,title:title.trim(),source_wod_id:source?.id||null,
@@ -638,7 +638,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         note:[note.trim(),scoreTime?'Tid: '+scoreTime:'',`Timer: ${format} · ${clock(elapsedSeconds)} · ${timerSnapshot.phase}`,timerSnapshot.laps.length?'Mellomtider: '+timerSnapshot.laps.map((lap,i)=>`${i+1}: ${clock(lap)}`).join(', '):''].filter(Boolean).join('\\n')
       }
       payload.exercises=items.map((item,index)=>({
-        exercise_id:item.exercise_id||null,exercise_name:item.exercise_name.trim(),sort_order:index+1,
+        exercise_id:item.exercise_id||null,exercise_name:item.exercise_name.trim(),sort_order:index+1,row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.meters===''?null:Number(item.meters),calories:item.calories===''?null:Number(item.calories),work_seconds:item.workSeconds===''?null:Number(item.workSeconds),
         sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_text:s.time_text.trim()||null,time_seconds:s.time_seconds===''?null:Number(s.time_seconds),height_cm:s.height_cm===''?null:Number(s.height_cm)}))
       }))
       const {data:workoutId,error:saveError}=await supabase.rpc('save_workout_with_pt_links',{
@@ -683,6 +683,9 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
           addCandidate(exercise,'cm',exercise.sets.map(set=>set.height_cm))
           addCandidate(exercise,'reps',exercise.sets.map(set=>set.reps))
           addCandidate(exercise,'sek',exercise.sets.map(set=>set.time_seconds),'min')
+          if(exercise.row_unit==='m'||exercise.row_unit==='km')addCandidate(exercise,'meter',[exercise.row_unit==='km'?Number(exercise.row_value)*1000:exercise.row_value])
+          if(exercise.row_unit==='cal')addCandidate(exercise,'cal',[exercise.row_value])
+          if(exercise.work_seconds)addCandidate(exercise,'sek',[exercise.work_seconds],'min')
           if(payload.exercises.length===1){
             addCandidate(exercise,'kg',[payload.score_load_kg])
             addCandidate(exercise,'reps',[payload.score_reps])
