@@ -9,15 +9,21 @@ function collectExerciseHistory(history){
  const map=new Map()
  for(const log of history||[]){
   const date=log.workout_date||String(log.created_at||'').slice(0,10)
-  for(const exercise of [...(log.workout_exercises||[])].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))){
+  const exercises=[...(log.workout_exercises||[])].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))
+  const exerciseResults=log.result_data?.exercise_results||[]
+  for(const [exerciseIndex,exercise] of exercises.entries()){
    const name=(exercise.exercise_name||'').trim()
    if(!name)continue
    const key=name.toLocaleLowerCase('nn-NO')
    if(!map.has(key))map.set(key,{name,points:[]})
    const sets=exercise.workout_sets||[]
-   const singleExercise=(log.workout_exercises||[]).length===1
+   const result=exerciseResults[exerciseIndex]||{}
+   const singleExercise=exercises.length===1
    const distanceUnit=log.score_unit||'m'
-   const point={date,title:log.title,level:String(log.result_data?.prescription_level||'rx').toLowerCase(),load:Math.max(0,...sets.map(s=>asNumber(s.load_kg)||0),singleExercise?asNumber(log.score_load_kg)||0:0),height:Math.max(0,...sets.map(s=>asNumber(s.height_cm)||0)),reps:Math.max(0,...sets.map(s=>asNumber(s.reps)||0),singleExercise?asNumber(log.score_reps)||0:0),time:Math.min(...[...sets.map(s=>asNumber(s.time_seconds)),singleExercise?asNumber(log.score_time_seconds):null].filter(Boolean)),distance:Math.max(0,distanceUnit==='km'?(asNumber(log.score_distance)||0)*1000:distanceUnit==='cal'?0:asNumber(log.score_distance)||0),calories:Math.max(0,asNumber(log.score_calories)||0,distanceUnit==='cal'?asNumber(log.score_distance)||0:0)}
+   const rowDistance=result.row_unit==='km'?(asNumber(result.row_value)||0)*1000:result.row_unit==='m'?(asNumber(result.row_value)||0):asNumber(result.meters)||0
+   const rowCalories=result.row_unit==='cal'?asNumber(result.row_value)||0:asNumber(result.calories)||0
+   const rowSeconds=result.row_unit==='s'?asNumber(result.row_value):result.row_unit==='min'?(asNumber(result.row_value)||0)*60:asNumber(result.work_seconds)
+   const point={date,title:log.title,level:String(log.result_data?.prescription_level||'rx').toLowerCase(),load:Math.max(0,...sets.map(s=>asNumber(s.load_kg)||0),singleExercise?asNumber(log.score_load_kg)||0:0),height:Math.max(0,...sets.map(s=>asNumber(s.height_cm)||0)),reps:Math.max(0,...sets.map(s=>asNumber(s.reps)||0),singleExercise?asNumber(log.score_reps)||0:0),time:Math.min(...[...sets.map(s=>asNumber(s.time_seconds)),rowSeconds,singleExercise?asNumber(log.score_time_seconds):null].filter(Boolean)),distance:Math.max(0,rowDistance,distanceUnit==='km'?(asNumber(log.score_distance)||0)*1000:distanceUnit==='cal'?0:singleExercise?asNumber(log.score_distance)||0:0),calories:Math.max(0,rowCalories,asNumber(log.score_calories)||0,distanceUnit==='cal'&&singleExercise?asNumber(log.score_distance)||0:0)}
    if(point.load||point.height||point.reps||point.distance||point.calories||Number.isFinite(point.time))map.get(key).points.push(point)
   }
  }
