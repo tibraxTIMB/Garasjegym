@@ -2426,3 +2426,825 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .app-more-backdrop
     min-height: 46px;
   }
 }
+
+
+/* Community feed: readable cards, compact reactions and full-width reply actions */
+.community-module {
+  display: grid;
+  gap: 13px;
+  min-width: 0;
+}
+
+.community-compose,
+.community-post {
+  min-width: 0;
+  padding: clamp(12px, 2.5vw, 18px);
+  border-radius: 14px;
+}
+
+.community-compose textarea,
+.community-reply input {
+  min-height: 48px;
+  font-size: 14px;
+}
+
+.community-post-head {
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.community-author-identity,
+.community-author-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.community-author-identity {
+  flex: 1;
+}
+
+.community-author-line strong {
+  overflow-wrap: anywhere;
+}
+
+.community-post-head > .icon-button {
+  flex: 0 0 44px;
+  width: 44px;
+  min-height: 44px;
+  height: 44px;
+}
+
+.community-post-image,
+.community-image-preview img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.community-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.community-reactions button {
+  min-height: 42px;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.community-comment {
+  grid-template-columns: minmax(0, 1fr) 40px;
+  align-items: start;
+  gap: 5px 8px;
+}
+
+.community-comment strong,
+.community-comment span {
+  min-width: 0;
+  grid-column: 1;
+  overflow-wrap: anywhere;
+}
+
+.community-comment .icon-button {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+}
+
+@media (max-width: 900px) {
+  .community-module { gap: 11px; }
+  .community-compose { padding: 13px; }
+  .community-compose label { font-size: 13px; }
+  .community-compose textarea { min-height: 104px; padding: 12px; }
+  .community-compose-foot {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+  .community-compose-foot select,
+  .community-compose-foot label,
+  .community-compose-foot button {
+    min-width: 0;
+    min-height: 46px;
+    width: 100%;
+    justify-content: center;
+  }
+  .community-compose-foot select { grid-column: 1 / -1; }
+  .community-compose-foot .primary-button { grid-column: 1 / -1; }
+  .community-post { padding: 13px; }
+  .community-post > p { margin: 12px 0; font-size: 14px; line-height: 1.55; }
+  .community-reactions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .community-reactions button { justify-content: center; min-width: 0; }
+  .community-reply { display: grid; grid-template-columns: minmax(0, 1fr) 74px; gap: 7px; }
+  .community-reply input { min-width: 0; min-height: 48px; padding: 10px; }
+  .community-reply button { min-height: 48px; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .community-compose-foot { display: grid !important; grid-template-columns: minmax(0, 1fr); }
+  .community-compose-foot select,
+  .community-compose-foot label,
+  .community-compose-foot button { grid-column: auto; }
+  .community-reactions { gap: 6px; }
+  .community-reactions button { padding-inline: 6px; font-size: 11px; }
+  .community-comment { padding: 9px; }
+  .community-reply { grid-template-columns: minmax(0, 1fr) 66px; }
+}
+
+/* Coffee bar: order cards, product choices and barista actions */
+.coffee-module,
+.coffee-orders-section,
+.coffee-menu-admin,
+.coffee-review-admin,
+.coffee-stats-view {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.coffee-tabs {
+  min-width: 0;
+  scrollbar-width: thin;
+}
+
+.coffee-tabs button,
+.coffee-order-views button,
+.coffee-category-filters button {
+  min-height: 44px;
+}
+
+.coffee-order-card,
+.coffee-product,
+.coffee-admin-product-row,
+.coffee-review-row {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.coffee-order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.coffee-order-actions button {
+  min-height: 42px !important;
+}
+
+.coffee-stats-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.coffee-stat {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.coffee-quantity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coffee-quantity button {
+  min-width: 42px;
+  min-height: 42px;
+}
+
+.coffee-product-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.coffee-product-admin-actions button {
+  min-height: 42px;
+}
+
+@media (max-width: 900px) {
+  .coffee-module { gap: 13px; }
+  .coffee-heading { align-items: flex-start; flex-wrap: wrap; }
+  .coffee-tabs {
+    position: sticky;
+    top: 62px;
+    z-index: 42;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 7px;
+    width: calc(100% + 2px);
+    margin-inline: -1px;
+    padding: 7px 1px 9px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    background: rgba(16, 20, 22, .96);
+    backdrop-filter: blur(12px);
+  }
+  .coffee-tabs button {
+    flex: 0 0 auto;
+    min-height: 46px;
+    white-space: nowrap;
+  }
+  .coffee-admin-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+  .coffee-admin-toolbar span { grid-column: 1 / -1; }
+  .coffee-admin-toolbar button { min-height: 46px; justify-content: center; }
+  .coffee-order-views {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .coffee-order-views button { min-width: 0; padding: 8px 4px; font-size: 11px; }
+  .coffee-product-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .coffee-product {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 9px;
+    align-items: start;
+    padding: 12px;
+  }
+  .coffee-product-icon,
+  .coffee-product-image { grid-column: 1; grid-row: 1; }
+  .coffee-product-info { grid-column: 2; grid-row: 1; }
+  .coffee-product-options,
+  .coffee-product-admin-actions,
+  .coffee-quantity {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: none;
+  }
+  .coffee-product-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .coffee-product-options select { min-height: 44px; font-size: 13px; }
+  .coffee-product-admin-actions button,
+  .coffee-quantity button { min-height: 46px; }
+  .coffee-quantity { justify-content: flex-end; }
+  .coffee-quantity .primary-button { flex: 1; justify-content: center; }
+  .coffee-checkout { padding: 14px; }
+  .coffee-checkout textarea { min-height: 76px; font-size: 14px; }
+  .coffee-checkout > .primary-button { width: 100%; min-height: 54px; justify-content: center; }
+  .coffee-cart-lines { display: grid; gap: 8px; }
+  .coffee-cart-lines > div { gap: 8px; align-items: flex-start; }
+  .coffee-order-card { padding: 12px !important; }
+  .coffee-order-card .history-card-top { flex-wrap: wrap; align-items: flex-start; gap: 8px; }
+  .coffee-order-card .history-card-top > span { white-space: normal; }
+  .coffee-order-actions button { flex: 1 1 130px; justify-content: center; }
+  .coffee-staff-comment-editor { display: grid; gap: 7px; }
+  .coffee-staff-comment-editor textarea { min-height: 76px; font-size: 14px; }
+  .coffee-staff-comment-editor button { min-height: 44px; justify-content: center; }
+  .coffee-stats-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .coffee-review-layout { grid-template-columns: minmax(0, 1fr) !important; }
+  .coffee-review-list { max-height: none !important; overflow: visible; }
+  .coffee-review-detail { position: static !important; }
+  .coffee-review-row { min-height: 66px; }
+  .coffee-review-detail { padding: 13px; }
+  .coffee-admin-product-row { align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+  .coffee-admin-product-row > div { flex-basis: 100%; }
+  .coffee-admin-product-row button { min-height: 44px; }
+}
+
+@media (max-width: 560px) {
+  .coffee-product-options { grid-template-columns: minmax(0, 1fr); }
+  .coffee-stats-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .coffee-review-filters { grid-template-columns: minmax(0, 1fr) !important; }
+  .coffee-review-filters select { min-height: 46px; font-size: 13px; }
+  .coffee-review-prompt { align-items: stretch; }
+  .coffee-review-prompt > div { flex-basis: 100%; }
+  .coffee-review-prompt button { min-height: 44px; flex: 1; }
+  .coffee-star-select button { min-width: 44px; min-height: 44px; }
+}
+
+/* Admin control panel: touch-friendly filters, member actions and exercise tools */
+.admin-module,
+.admin-dashboard-grid,
+.admin-exercises-panel,
+.admin-member,
+.admin-exercise-item {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.admin-tabs {
+  min-width: 0;
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-tabs button {
+  flex: 0 0 auto;
+  min-height: 46px;
+  white-space: nowrap;
+}
+
+.admin-dashboard-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-member-actions button,
+.admin-member-actions select,
+.admin-exercise-item-actions button {
+  min-height: 44px;
+}
+
+.rank-catalogue-row {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .admin-module { gap: 13px; }
+  .admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .admin-tabs {
+    position: sticky;
+    top: 62px;
+    z-index: 42;
+    width: calc(100% + 2px);
+    margin: 0 -1px 10px;
+    padding: 7px 1px 9px;
+    background: rgba(16, 20, 22, .96);
+    border-bottom: 1px solid var(--gg-shell-border);
+    backdrop-filter: blur(12px);
+  }
+  .admin-dashboard-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .admin-achievement-summary { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .admin-member-enhanced {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 13px 0;
+  }
+  .admin-member-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    width: 100%;
+  }
+  .admin-member-actions button,
+  .admin-member-actions select {
+    min-width: 0;
+    min-height: 46px;
+    flex: 1 1 130px;
+    max-width: none !important;
+  }
+  .admin-member-actions select { font-size: 13px; }
+  .admin-exercise-toolbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .admin-exercise-search { min-width: 0 !important; min-height: 48px; }
+  .admin-exercise-search input { min-height: 46px; font-size: 14px; }
+  .admin-exercise-filter { min-height: 46px; }
+  .admin-exercise-filter select { min-height: 44px; font-size: 13px; }
+  .admin-exercise-list { grid-template-columns: minmax(0, 1fr) !important; }
+  .admin-exercise-item {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .admin-exercise-item-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+  .admin-exercise-item-actions button { min-height: 46px; justify-content: center; }
+  .admin-exercise-heading-actions { width: 100%; }
+  .admin-exercise-heading-actions button { min-height: 46px; flex: 1; justify-content: center; }
+  .admin-create-form label { min-width: 0; }
+  .admin-create-form input,
+  .admin-create-form select,
+  .admin-create-form textarea { min-height: 46px; font-size: 14px; }
+  .admin-dose-profile-grid {
+    grid-template-columns: 58px repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px;
+  }
+  .admin-dose-profile-grid input { min-height: 44px; padding-inline: 6px; }
+  .rank-catalogue-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 34px !important;
+    gap: 7px;
+    padding-block: 10px;
+  }
+  .rank-catalogue-row strong { overflow-wrap: anywhere; line-height: 1.3; }
+  .rank-catalogue-row span { overflow-wrap: anywhere; line-height: 1.3; }
+}
+
+@media (max-width: 560px) {
+  .admin-stats > div { padding: 11px; }
+  .admin-stats strong { font-size: 21px; }
+  .admin-member-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .admin-member-actions button,
+  .admin-member-actions select { width: 100%; }
+  .admin-exercise-item-actions { grid-template-columns: minmax(0, 1fr); }
+  .rank-catalogue-row { grid-template-columns: minmax(0, 1fr) 32px !important; }
+  .rank-catalogue-row span { grid-column: 1; grid-row: 2; }
+  .rank-catalogue-row b { grid-column: 2; grid-row: 1 / span 2; }
+}
+
+/* Member profile and training history: date list instead of tiny calendar cells */
+.my-page,
+.my-page > *,
+.my-pr-grid,
+.my-profile-facts {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.my-page-tabs {
+  min-width: 0;
+  display: flex !important;
+  gap: 6px;
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.my-page-tabs button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.my-page .my-pr-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.my-profile-card {
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.my-profile-card > div:last-child { min-width: 0; }
+.my-profile-card h3 { overflow-wrap: anywhere; }
+
+.history-toolbar {
+  min-width: 0;
+  gap: 9px;
+}
+
+.history-view-toggle button {
+  min-height: 42px;
+}
+
+.history-calendar .calendar-toolbar button {
+  min-width: 42px;
+  min-height: 42px;
+}
+
+.history-calendar .calendar-day-events {
+  min-width: 0;
+}
+
+.history-mobile-agenda {
+  display: none;
+}
+
+.my-page-log {
+  min-width: 0;
+}
+
+.history-delete {
+  min-width: 70px;
+  min-height: 48px;
+}
+
+@media (max-width: 900px) {
+  .my-page { gap: 13px; }
+  .my-page-tabs {
+    position: sticky;
+    top: 62px;
+    z-index: 42;
+    width: calc(100% + 2px);
+    margin-inline: -1px;
+    padding: 7px 1px 9px;
+    background: rgba(16, 20, 22, .96);
+    border-bottom: 1px solid var(--gg-shell-border);
+    backdrop-filter: blur(12px);
+  }
+  .my-page .my-pr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .my-page .my-profile-card { padding: 13px; }
+  .my-page .my-profile-facts { grid-template-columns: minmax(0, 1fr); }
+  .my-page .my-profile-facts > div { min-width: 0; }
+  .history-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .history-view-toggle { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .history-view-toggle button { justify-content: center; min-height: 46px; }
+  .history-month { gap: 8px; }
+  .my-page-log {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .history-log-main { padding: 12px; }
+  .history-log-main .history-card-top {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .history-delete {
+    display: flex;
+    width: 100%;
+    min-height: 44px;
+    align-self: auto;
+    border-left: 0;
+    border-top: 1px solid rgba(185,65,58,.18);
+  }
+  .history-calendar .calendar-grid { display: none !important; }
+  .history-mobile-agenda {
+    display: grid !important;
+    gap: 7px;
+    max-height: 34dvh;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 2px 2px 5px;
+  }
+  .history-mobile-day {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+    gap: 3px 10px;
+    min-width: 0;
+    min-height: 54px;
+    padding: 8px 10px;
+    border: 1px solid var(--gg-shell-border);
+    border-radius: 10px;
+    background: #1a2022;
+    color: var(--gg-shell-text);
+    text-align: left;
+  }
+  .history-mobile-day.selected {
+    border-color: rgba(240, 163, 58, .62);
+    background: rgba(240, 163, 58, .09);
+  }
+  .history-mobile-day.today .history-mobile-day-date { color: var(--gg-shell-accent); }
+  .history-mobile-day-date {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    font-size: 17px;
+    font-weight: 900;
+    text-align: center;
+  }
+  .history-mobile-day-meta {
+    grid-column: 2;
+    color: var(--gg-shell-muted);
+    font-size: 10px;
+  }
+  .history-mobile-day-tags {
+    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-width: 0;
+  }
+  .history-mobile-day-tags small {
+    max-width: 100%;
+    padding: 3px 6px;
+    border-radius: 6px;
+    background: #27312c;
+    color: #b8e0c5;
+    font-size: 9px;
+    overflow-wrap: anywhere;
+  }
+  .history-mobile-day-tags small.planned {
+    background: #202f3a;
+    color: #afd6f6;
+  }
+  .calendar-day-events { gap: 7px; }
+  .calendar-event-row {
+    min-height: 58px;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px;
+  }
+  .calendar-event-row b { max-width: 92px; text-align: right; white-space: normal; }
+}
+
+@media (max-width: 480px) {
+  .my-page .my-pr-grid { grid-template-columns: minmax(0, 1fr); }
+  .my-page .pr-detail-panel { padding: 13px; }
+  .history-mobile-agenda { max-height: 30dvh; }
+  .history-mobile-day { min-height: 50px; padding: 7px 9px; }
+}
+
+/* Assigned and favourite WOD cards */
+.my-training,
+.my-training-card,
+.wod-library-grid,
+.wod-library-card,
+.wod-card-detail {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.my-training .my-training-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.my-training .my-training-actions button {
+  min-width: 0;
+  min-height: 48px;
+  justify-content: center;
+}
+
+.wod-library-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wod-library-card .wod-library-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: auto;
+}
+
+.wod-library-card .wod-library-actions button {
+  min-height: 44px;
+}
+
+@media (max-width: 900px) {
+  .my-training { gap: 13px; }
+  .my-training .training-heading { align-items: flex-start; flex-wrap: wrap; }
+  .my-training .training-heading > button { min-height: 44px; }
+  .my-training-card {
+    display: grid;
+    gap: 8px;
+    padding: 13px !important;
+  }
+  .my-training-card .history-card-top {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .my-training-card .history-card-top strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+  }
+  .my-training .my-training-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .my-training .my-training-actions button {
+    width: 100%;
+    min-height: 50px;
+    justify-content: center;
+  }
+  .wod-library-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .wod-library-card { padding: 14px; }
+  .wod-library-card h4 { font-size: 16px; line-height: 1.3; }
+  .wod-library-card .wod-library-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wod-library-card .wod-library-actions button {
+    min-height: 46px;
+    width: 100%;
+    justify-content: center;
+  }
+  .wod-card-detail { max-height: 92dvh; overflow: auto; }
+  .wod-card-detail-list { min-width: 0; overflow-wrap: anywhere; }
+}
+
+/* Music browser: touch targets and one-column playlist navigation */
+.music-page,
+.spotify-content-panel,
+.spotify-playlist-browser,
+.spotify-playlist-detail {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.music-tabs {
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  flex-wrap: nowrap !important;
+  scrollbar-width: thin;
+}
+
+.music-tabs button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.spotify-search-field { min-height: 48px; }
+.spotify-search-field input { min-height: 46px; font-size: 14px; }
+.spotify-search-field button { width: 40px; height: 40px; flex-basis: 40px; }
+.spotify-row-play,
+.spotify-row-link { width: 42px; height: 42px; flex-basis: 42px; }
+.spotify-playlist-row { min-height: 54px; }
+.spotify-playlist-open { min-height: 44px; }
+.spotify-playlist-open strong { font-size: 12px; }
+.spotify-playlist-open small { font-size: 10px; }
+
+@media (max-width: 900px) {
+  .music-page { gap: 13px; }
+  .music-tabs {
+    position: sticky;
+    top: 62px;
+    z-index: 42;
+    width: calc(100% + 2px);
+    margin-inline: -1px;
+    padding: 7px 1px 9px;
+    background: rgba(16, 20, 22, .96);
+    border-bottom: 1px solid var(--gg-shell-border);
+    backdrop-filter: blur(12px);
+  }
+  .spotify-content-panel { padding: 12px; }
+  .spotify-playlist-browser { grid-template-columns: minmax(0, 1fr) !important; gap: 10px; }
+  .spotify-playlist-list {
+    display: flex !important;
+    gap: 7px;
+    max-height: none !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 2px 1px 7px;
+    overscroll-behavior-x: contain;
+  }
+  .spotify-playlist-row {
+    flex: 0 0 min(78vw, 240px);
+    min-width: 0;
+  }
+  .spotify-playlist-detail {
+    max-height: min(48dvh, 440px) !important;
+    overflow: auto;
+  }
+  .spotify-track-row { min-height: 54px; padding: 7px; }
+  .spotify-row-play,
+  .spotify-row-link { min-width: 42px; min-height: 42px; }
+  .spotify-genre-settings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .spotify-genre-buttons button { min-height: 44px; font-size: 11px; }
+}
+
+@media (max-width: 560px) {
+  .spotify-content-panel { padding: 9px; }
+  .spotify-genre-settings { grid-template-columns: minmax(0, 1fr) !important; }
+  .spotify-genre-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .spotify-genre-buttons.compact { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .spotify-playlist-row { flex-basis: min(82vw, 270px); }
+  .spotify-playlist-detail { max-height: 42dvh !important; }
+  .spotify-track-copy strong { font-size: 12px; }
+  .spotify-track-copy small { font-size: 10px; }
+}
+
+/* Shared controls and responsive data-safe defaults */
+@media (max-width: 900px) {
+  .app-shell .engine-section {
+    min-width: 0;
+    padding: clamp(12px, 2.2vw, 16px);
+  }
+  .app-shell .training-heading {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .app-shell .training-heading h3,
+  .app-shell .training-heading h4 {
+    overflow-wrap: anywhere;
+  }
+  .app-shell input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  .app-shell select,
+  .app-shell textarea {
+    max-width: 100%;
+    min-width: 0;
+    font-size: 14px;
+  }
+  .app-shell button {
+    max-width: 100%;
+  }
+}
+
+@media (pointer: coarse), (hover: none) {
+  .community-module button,
+  .coffee-module button,
+  .admin-module button,
+  .my-page button,
+  .my-training button,
+  .wod-library-grid button,
+  .music-page button {
+    touch-action: manipulation;
+  }
+}
