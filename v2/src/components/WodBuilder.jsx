@@ -2,7 +2,7 @@ import {useEffect,useMemo,useState} from 'react'
 import {createPortal} from 'react-dom'
 import {Plus,Search,Trash2,ArrowUp,ArrowDown,Save,LoaderCircle,WandSparkles,Dices,Info,Copy,Dumbbell,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
-import {addWodSortOrder,moveWodItemByKey,sortWodItems} from '../lib/wodOrdering.js'
+import {addWodSortOrder,moveWodItemByKey,moveWodItemToPosition,sortWodItems} from '../lib/wodOrdering.js'
 import {COMPLEX_EXERCISES,formatComplexSequence} from '../lib/wodComplexes.js'
 import WodImportPanel from './WodImportPanel.jsx'
 
@@ -411,6 +411,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
          <div className="wod-reorder-controls">
           <button type="button" title="Flytt opp" aria-label={`Flytt ${ex.name} opp`} disabled={!i} onClick={()=>moveByKey(ex.key,-1)}><ArrowUp size={16}/></button>
           <button type="button" title="Flytt ned" aria-label={`Flytt ${ex.name} ned`} disabled={i===selected.length-1} onClick={()=>moveByKey(ex.key,1)}><ArrowDown size={16}/></button>
+          <label className="wod-position-control" title="Vel plassering"><span>Pos.</span><select aria-label={`Flytt ${ex.name} til posisjon`} value={i+1} onChange={event=>{const position=Number(event.target.value);setSelected(rows=>moveWodItemToPosition(rows,ex.key,position));setNotice(ex.name+' er flytta til plass '+position+'.')}}>{selected.map((_,position)=><option key={position+1} value={position+1}>{position+1}</option>)}</select></label>
           <button type="button" title="Fjern øving" aria-label={`Fjern ${ex.name}`} onClick={()=>setSelected(rows=>rows.filter(x=>x.key!==ex.key))}><Trash2 size={16}/></button>
          </div>
         </article>):<div className="empty-state">Vel «Legg til øving» for å byggja WOD-en.</div>}
