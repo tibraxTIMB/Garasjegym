@@ -19,7 +19,7 @@ export default function CalendarAdmin({onNavigate=()=>{}}){
   const [e,p,c,m]=await Promise.all([
    supabase.from('calendar_events').select('id,title,event_type,starts_at,ends_at,all_day,description,client_id,pt_session_id,class_id').gte('starts_at',new Date(from.getFullYear(),from.getMonth()-1,1).toISOString()).lt('starts_at',new Date(to.getFullYear(),to.getMonth()+1,1).toISOString()).order('starts_at'),
    supabase.from('pt_sessions').select('id,title,client_id,starts_at,duration_minutes,status,profiles:profiles!pt_sessions_client_id_fkey(display_name)').gte('starts_at',new Date(from.getFullYear(),from.getMonth()-1,1).toISOString()).lt('starts_at',new Date(to.getFullYear(),to.getMonth()+1,1).toISOString()).order('starts_at'),
-   supabase.from('classes').select('id,title,type,starts_at,duration_minutes').gte('starts_at',new Date(from.getFullYear(),from.getMonth()-1,1).toISOString()).lt('starts_at',new Date(to.getFullYear(),to.getMonth()+1,1).toISOString()).order('starts_at'),
+   supabase.from('classes').select('id,title,type,starts_at,duration_minutes,published,cancelled_at,cancellation_note,description').gte('starts_at',new Date(from.getFullYear(),from.getMonth()-1,1).toISOString()).lt('starts_at',new Date(to.getFullYear(),to.getMonth()+1,1).toISOString()).order('starts_at'),
    supabase.from('profiles').select('id,display_name').eq('active',true).order('display_name')
   ])
   if(e.error)setError(e.error.message);else setEvents(e.data||[])
@@ -32,7 +32,7 @@ export default function CalendarAdmin({onNavigate=()=>{}}){
  const rows=useMemo(()=>[
   ...events.map(x=>({...x,source:'manual',type:x.event_type})),
   ...sessions.map(x=>({id:'pt-'+x.id,title:x.title||'PT-time',type:'pt',starts_at:x.starts_at,ends_at:new Date(new Date(x.starts_at).getTime()+(x.duration_minutes||60)*60000).toISOString(),source:'pt',status:x.status,client_name:x.profiles?.display_name})),
-  ...classes.map(x=>({id:'class-'+x.id,title:x.title,type:'class',starts_at:x.starts_at,ends_at:new Date(new Date(x.starts_at).getTime()+(x.duration_minutes||60)*60000).toISOString(),source:'class'}))
+  ...classes.map(x=>({id:'class-'+x.id,title:x.cancelled_at?'AVLYST · '+x.title:x.published===false?'UTKAST · '+x.title:x.title,type:'class',starts_at:x.starts_at,ends_at:new Date(new Date(x.starts_at).getTime()+(x.duration_minutes||60)*60000).toISOString(),description:x.cancellation_note||x.description,published:x.published,cancelled_at:x.cancelled_at,source:'class'}))
  ].sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at)),[events,sessions,classes])
  const days=mode==='day'?1:mode==='week'?7:new Date(month.getFullYear(),month.getMonth()+1,0).getDate()
  const startDay=mode==='week'?((new Date().getDay()+6)%7):((from.getDay()+6)%7)
@@ -71,7 +71,7 @@ export default function CalendarAdmin({onNavigate=()=>{}}){
   <section className="engine-section"><h4>Komande avtalar</h4>{rows.filter(x=>new Date(x.starts_at)>=new Date()&&new Date(x.starts_at)<new Date(Date.now()+7*86400000)).slice(0,12).map(e=><article className="calendar-upcoming" key={e.id}><div><strong>{e.title}</strong><small>{new Date(e.starts_at).toLocaleString('nn-NO',{dateStyle:'medium',timeStyle:'short'})}{e.client_name?' · '+e.client_name:''}</small></div><span>{types.find(t=>t[0]===e.type)?.[1]||'Anna'}</span></article>)}</section>
   {detail&&<div className="calendar-modal-backdrop" onClick={()=>setDetail(null)}><section className="calendar-modal calendar-detail-modal" role="dialog" aria-modal="true" aria-label="Avtaledetaljar" onClick={e=>e.stopPropagation()}>
     <div className="training-heading"><div><div className="section-kicker">KALENDER · DETALJAR</div><h3>{detail.title}</h3></div><button type="button" className="secondary-button" onClick={()=>setDetail(null)}>Lukk</button></div>
-    <div className="calendar-detail-type">{types.find(t=>t[0]===detail.type)?.[1]||'Avtale'}</div>
+    <div className="calendar-detail-type">{detail.cancelled_at?'Avlyst gruppetime':detail.published===false?'Utkast gruppetime':types.find(t=>t[0]===detail.type)?.[1]||'Avtale'}</div>
     <div className="calendar-detail-row"><Clock3 size={16}/><span><b>{new Date(detail.starts_at).toLocaleDateString('nn-NO',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</b><small>{new Date(detail.starts_at).toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'})} – {new Date(detail.ends_at).toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'})}</small></span></div>
     {detail.client_name&&<div className="calendar-detail-row"><span><b>Kunde</b><small>{detail.client_name}</small></span></div>}
     {detail.status&&<div className="calendar-detail-row"><span><b>Status</b><small>{detail.status}</small></span></div>}
