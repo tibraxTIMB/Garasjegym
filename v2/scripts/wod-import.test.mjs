@@ -21,6 +21,11 @@ test('marker ukjende øvingar for manuell kontroll',()=>{
  assert.equal(result.items[0].matched,false);assert.deepEqual(result.unmatched,['Mystery movement']);
 });
 
+test('marker format som uavklart når teksten ikkje gir grunnlag for val',()=>{
+ const result=parseWodImport('Eigen økt\\n12 Air squats');
+ assert.equal(result.format,null);
+});
+
 test('avvis tom tekst og tekst utan øvingar',()=>{
  assert.throws(()=>parseWodImport('  '),/Lim inn WOD-tekst/);
  assert.throws(()=>parseWodImport('AMRAP 20 min'),/Fann ingen sikre øvingslinjer/);
