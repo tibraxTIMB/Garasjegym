@@ -5954,3 +5954,23 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
   height:36px!important;min-height:36px!important;width:44px!important;font-size:14px!important;
  }
 }
+
+/* Samla timeroppsett – lett standardvising, avansert oppsett berre ved behov. */
+.timer-setup-drawer{width:min(100%,900px);max-height:min(72vh,720px);overflow:auto;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+.timer-setup-drawer>.timer-customize-title,.timer-setup-actions{grid-column:1/-1}
+.timer-setup-section{display:grid;gap:10px;min-width:0;padding:12px;border:1px solid #ffffff1b;border-radius:10px;background:#171e21}
+.timer-setup-section>strong{font-size:12px;letter-spacing:.04em;color:#f1f2ef}
+.timer-setup-section>label{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;color:#ddd;font-size:12px;font-weight:800}
+.timer-setup-section input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--timer-accent)}
+.timer-setup-section input[type=color]{width:42px;height:30px;padding:2px;border:1px solid #555;border-radius:6px;background:transparent}
+.timer-setup-duration{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.timer-setup-duration label,.timer-setup-select{display:grid;gap:5px;color:var(--muted);font-size:11px;font-weight:800}
+.timer-setup-duration input,.timer-setup-select select{min-width:0;width:100%;padding:9px;color:#f2f1ed;background:#111416;border:1px solid #3a4143;border-radius:7px}
+.timer-setup-presets,.timer-layout-presets{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.timer-setup-presets>span{font-size:11px;color:var(--muted);font-weight:800}
+.timer-setup-presets button,.timer-layout-presets button{padding:8px 10px;border:1px solid #465258;border-radius:8px;background:#253136;color:#f3f5f5;font-size:11px;font-weight:800}
+.timer-setup-presets button:focus-visible,.timer-layout-presets button:focus-visible{outline:2px solid var(--timer-accent);outline-offset:2px}
+.timer-setup-actions{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.timer-setup-actions button{min-height:38px}
+.timer-dashboard-reflow .timer-main-clock{font-size:clamp(64px,min(14vw,var(--timer-clock-size)),220px)}
+@media(max-width:760px){.timer-setup-drawer{grid-template-columns:minmax(0,1fr);max-height:65vh}.timer-setup-drawer>.timer-customize-title,.timer-setup-actions{grid-column:auto}.timer-setup-actions{flex-direction:column}.timer-setup-actions button{width:100%}}
