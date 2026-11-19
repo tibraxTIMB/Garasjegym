@@ -40,9 +40,9 @@ export default function Infotainment({onExit,timerSnapshot=null}){
   events.forEach(item=>{const key=dateKey(item.starts_at);if(!result.has(key))result.set(key,[]);result.get(key).push(item)})
   return [...result.entries()]
  },[events])
- const trainingActive=Boolean(timerSnapshot?.running)
- const timerValue=trainingActive?(timerSnapshot?.remaining>0?timerSnapshot.remaining:timerSnapshot?.elapsed||0):elapsed
- const timerCaption=trainingActive?'AKTIV TRENINGSØKT':'GARASJEKLKOKKE'
+ const trainingActive=Boolean(timerSnapshot?.title)
+ const timerValue=trainingActive?(Number(timerSnapshot?.displayTime)||0):elapsed
+ const timerCaption=trainingActive?'AKTIV TRENINGSØKT':'GARASJEKLOKKE'
  const dayLabel=now.toLocaleDateString('nn-NO',{weekday:'long',day:'numeric',month:'long'})
  const timeLabel=now.toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit',second:'2-digit'})
 
@@ -71,9 +71,9 @@ export default function Infotainment({onExit,timerSnapshot=null}){
      <div className="infotainment-panel-head"><div><span className="infotainment-kicker">TID OG INTERVALL</span><h2><TimerReset size={19}/> Timer</h2></div><span className={'infotainment-live '+(trainingActive?'active':'')}>{trainingActive?'TRENING PÅGÅR':'KLAR'}</span></div>
      <div className="infotainment-timer-caption">{trainingActive?(timerSnapshot?.title||'Aktiv treningsøkt'):timerCaption}</div>
      <strong className="infotainment-timer-value">{clock(timerValue)}</strong>
-     <div className="infotainment-timer-state">{trainingActive?(timerSnapshot?.phase||'PÅGÅR'):running?'STOPPEKLOKKE GÅR':'STOPPEKLOKKE PAUSA'}</div>
+     <div className="infotainment-timer-state">{trainingActive?(timerSnapshot?.running?'TRENING PÅGÅR':timerSnapshot?.phase||'PAUSA'):running?'STOPPEKLOKKE GÅR':'STOPPEKLOKKE PAUSA'}</div>
      {!trainingActive&&<div className="infotainment-timer-actions"><button type="button" onClick={()=>setRunning(value=>!value)}>{running?<Pause size={15}/>:<Play size={15}/>} {running?'Pause':'Start'}</button><button type="button" onClick={()=>{setRunning(false);setElapsed(0)}}><RotateCcw size={15}/> Nullstill</button></div>}
-     {trainingActive&&<p className="infotainment-note">Den aktive WOD-timeren held fram i treningsmodus.</p>}
+     {trainingActive&&<p className="infotainment-note">{timerSnapshot?.running?'Den aktive WOD-timeren held fram i treningsmodus.':'Treningsøkta er pausa eller ferdig i treningsmodus.'}</p>}
     </section>
    </div>
   </div>
