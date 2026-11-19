@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { CalendarDays, Clock3, MonitorUp, Play, Pause, RotateCcw, TimerReset, Music2, LoaderCircle, Lock, Unlock, Maximize2, Minimize2, X } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
+import { groupEventsByLocalDay } from '../lib/infotainmentEvents.js'
 import { MusicMiniPlayer } from './Music.jsx'
 import './infotainment.css'
 
@@ -171,11 +172,7 @@ export default function Infotainment({onExit,timerSnapshot=null}){
   return()=>{live=false;window.clearInterval(id)}
  },[])
 
- const groups=useMemo(()=>{
-  const result=new Map()
-  events.forEach(item=>{const key=dateKey(item.starts_at);if(!result.has(key))result.set(key,[]);result.get(key).push(item)})
-  return [...result.entries()]
- },[events])
+ const groups=useMemo(()=>groupEventsByLocalDay(events),[events])
  const trainingActive=Boolean(timerSnapshot?.title)
  const timerValue=trainingActive?(Number(timerSnapshot?.displayTime)||0):elapsed
  const timerCaption=trainingActive?'AKTIV TRENINGSØKT':'GARASJEKLOKKE'
