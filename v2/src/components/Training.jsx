@@ -489,6 +489,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     onQuickStartConsumed?.()
   }, [quickStart, simpleMode, loading, mode])
 
+  const activeWodEngine=normalizeWodEngine(source?.timer_settings?.workout_schema||{},{format:source?.format||format})
   const availableWods=wods.filter(wod=>wod.is_published&&!wod.is_archived)
   const manualWodOptions=wods.filter(wod=>!wod.is_archived)
 
@@ -758,6 +759,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16}/> {notice}</div>}
     {mode === 'active' ? <form className={simpleMode ? `engine-form gg-training-session simple-quick-form${reviewOpen?" review-open":""}` : "engine-form gg-training-session"} onSubmit={saveWorkout}>
       <div className="training-heading"><div><div className="section-kicker">TRENING · AKTIV ØKT</div><h3>{source?.name||'Bygg økta di'}</h3></div><span className="count-pill">{items.length} øvingar</span></div>
+      {source&&activeWodEngine.participation!=='individual'&&<section className="wod-execution-partner"><div><strong>{formatParticipation(activeWodEngine)}</strong><span>{({free_split:'Del arbeidet fritt',you_go_i_go:'You go – I go',alternate:'Annankvar / vekselvis',synchronized:'Synkroniserte repetisjonar',parallel:'Parallelt arbeid'})[activeWodEngine.collaboration]||'Felles gjennomføring'}</span></div><small>Resultat blir lagra med partner-/teamoppsettet frå WOD-kortet. Scoring: {(activeWodEngine.scoring?.fields||[]).join(' + ')}</small></section>}
       {source?.timer_settings?.workout_schema?.items?.some(item=>item.levels)&&<section className="wod-execution-level"><strong>Vel doseringsnivå</strong><div className="hub-tabs" role="group" aria-label="Doseringsnivå">{[{id:'rx',label:'RX'},{id:'scaled',label:'Scaled'},{id:'foundation',label:'Foundation'}].map(level=><button type="button" key={level.id} className={wodLevel===level.id?'selected':''} aria-pressed={wodLevel===level.id} onClick={()=>setWodLevel(level.id)}>{level.label}</button>)}</div></section>}
       <div className="engine-fields">
         <label>Namn på økta<input value={title} onChange={e => setTitle(e.target.value)} placeholder="Til dømes Styrke A" required/></label>
