@@ -24,6 +24,18 @@ Før registrering: opne Supabase Dashboard → Authentication → URL Configurat
 6. Start BAT-fila på nytt. Appen opnar på http://localhost:5173.
 7. Vel «Registrer deg» og opprett ein testkonto. Nye kontoar får medlemsrolle. Administratorrettar blir tildelte separat etter at testkontoen er oppretta.
 
+## Test på Android og Pages
+
+Testbygget er tilgjengeleg på https://tibraxtimb.github.io/Garasjegym/. Det brukar berre testprosjektet `garasjegym-2-test`. Bruk testkontoar og testdata.
+
+For at passordreset skal kunna returnera til appen, må testprosjektet ha denne adressa under Supabase Dashboard → Authentication → URL Configuration → Redirect URLs:
+
+`https://tibraxtimb.github.io/Garasjegym/`
+
+Behald òg `http://localhost:5173/**` for lokal testing. Ikkje endra innstillingar i produksjonsprosjektet. Passordreset i klienten brukar no Vite sin `BASE_URL`, slik at Pages-stien blir med i redirecten.
+
+På Android: opne Pages-adressa i Chrome. Appen kan leggjast til på startskjermen via nettlesarmenyen dersom nettlesaren tilbyr «Installer app» eller «Legg til på startsida».
+
 ## Viktig
 - Ikkje bruk URL eller nøkkel frå produksjonsprosjektet.
 - Bruk berre testkontoar og testdata. Testprosjektet inneheld demoøvingar, ein demo-WOD, kaffiprodukt og ei testgruppeøkt.
