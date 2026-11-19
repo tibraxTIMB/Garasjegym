@@ -42,6 +42,7 @@
 | Idempotent lagring | FERDIG OG SQL-TESTA | save_token hindrar dobbeltlagring ved gjenteken innsending. |
 | Treningslogg → PT-WOD-tildeling | FERDIG OG SQL-TESTA | `save_workout_with_pt_links` koplar loggen og fullfører tildeling i same transaksjon. Triggeren krev eigen logg for nøyaktig tildelt WOD. |
 | Treningslogg → PT-programøkt | FERDIG OG SQL-TESTA | Same RPC koplar loggen og fullfører programøkta atomisk. |
+| Full PT/WOD-arbeidsflyt via `save_workout_with_pt_links` | FERDIG OG SQL-TESTA | Ein reell SQL-rollesimulering lagra éin workout_log og kopla same logg til både PT-WOD-tildeling og PT-programøkt. Begge fekk status `completed`. |
 | Treningshistorikk og PR | DELvis IMPLEMENTERT | Historikk blir lagra; PR-logikken må testast manuelt med ulike einingar og øvingstypar. |
 | Resultat med kg, tid, distanse, kaloriar og høgde | DELvis IMPLEMENTERT | Datamodell har resultatfelt, men alle måleeiningar må gjennomgåast manuelt. |
 
@@ -112,6 +113,7 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 25. Medlem kan ikkje knyta PT-WOD til treningslogg for feil WOD.
 26. Medlem kan ikkje fullføra PT-programøkt utan logg eller med logg for feil WOD.
 27. Riktig eigen treningslogg for rett WOD fullfører både WOD-tildeling og PT-programøkt.
+28. Full `save_workout_with_pt_links`-transaksjon lagrar workout_log og oppdaterer begge PT-koplingane til `completed` med same logg-ID.
 
 ## 7. Manuelle testar som står att
 
