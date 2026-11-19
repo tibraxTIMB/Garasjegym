@@ -26,6 +26,7 @@
 | WOD-sletting/arkivering | IMPLEMENTERT – IKKJE MANUELT TESTA | Sletting kontrollerer no referansar i PT, trening, favorittar, live gruppetime, JSON-/array-koplingar og dagens WOD. Brukte WOD-ar blir arkiverte. |
 | Privat WOD synleg ved direkte PT-tildeling | FERDIG OG SQL-TESTA | `wods_read_assigned` gir tilgang til rett medlem, men ikkje andre medlemmer. |
 | Privat WOD synleg frå PT-program | FERDIG OG SQL-TESTA | Policyen kontrollerer `pt_program_sessions` og eigarskap gjennom `pt_programs`. |
+| Privat WOD synleg frå PT-time (`wod_ids`) | FERDIG OG SQL-TESTA | Testa med `pt_sessions.wod_ids`; berre den tilknytte kunden fekk lese WOD-en. |
 | WOD + PT-kundetildeling i éi transaksjon | FERDIG OG SQL-TESTA | `save_wod_with_pt_assignment` lagrar WOD og kundetildeling i same transaksjon. Feil rullar tilbake heile operasjonen. WodBuilder brukar RPC-en når WOD blir bygd frå PT Studio. |
 
 ## 2. WOD-utføring og treningshistorikk
@@ -89,6 +90,7 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 10. Alle mellombelse testdata vart rulla tilbake.
 11. Medlem ser privat WOD ved direkte PT-tildeling, men ikkje WOD tildelt til annan medlem.
 12. Medlem ser privat WOD kopla til eige PT-program.
+12a. Medlem ser privat WOD kopla til eiga PT-time via `pt_sessions.wod_ids`.
 13. `save_wod_with_pt_assignment` opprettar WOD og PT-tildeling atomisk for staff; den private WOD-en blir deretter synleg for kunden.
 14. Medlem blir avvist ved forsøk på å endra coach-notat på eiga WOD-tildeling.
 15. Medlem blir avvist ved forsøk på å kalla `save_wod_with_pt_assignment`.
