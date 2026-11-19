@@ -536,18 +536,14 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         exercise_id:item.exercise_id||null,exercise_name:item.exercise_name.trim(),sort_order:index+1,
         sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_text:s.time_text.trim()||null,time_seconds:s.time_seconds===''?null:Number(s.time_seconds)}))
       }))
-      const {data:workoutId,error:saveError}=await supabase.rpc('save_workout_atomic',{p_workout:payload})
+      const {data:workoutId,error:saveError}=await supabase.rpc('save_workout_with_pt_links',{
+        p_workout:payload,
+        p_assignment_id:launchAssignmentId||null,
+        p_program_session_id:launchProgramSessionId||null
+      })
       if(saveError)throw saveError
       if(!workoutId)throw new Error('Databasen returnerte ikkje ID for den lagra økta.')
-      let programSyncMessage = ''
-      if(launchAssignmentId){
-        const {data:assignmentRows,error:assignmentError}=await supabase.from('pt_wod_assignments').update({status:'completed',completed_at:new Date().toISOString(),workout_log_id:workoutId}).eq('id',launchAssignmentId).eq('member_id',user.id).select('id')
-        if(assignmentError||!assignmentRows?.length)programSyncMessage += ' Treningsloggen er lagra, men PT-tildelinga kunne ikkje stadfestast som fullført'+(assignmentError?': '+assignmentError.message:'.')
-      }
-      if(launchProgramSessionId){
-        const {data:programRows,error:programError}=await supabase.from('pt_program_sessions').update({status:'completed',completed_at:new Date().toISOString(),workout_log_id:workoutId}).eq('id',launchProgramSessionId).select('id')
-        if(programError||!programRows?.length)programSyncMessage += ' Treningsloggen er lagra, men PT-planen kunne ikkje stadfestast som fullført'+(programError?': '+programError.message:'.')
-      }
+      const programSyncMessage = ''
       // Automatically detect new heaviest logged loads and store them as PRs.
       let prMessage = programSyncMessage
       try {
