@@ -5994,3 +5994,9 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
 .wod-engine-card-meta strong{font-size:.68rem;letter-spacing:.06em;padding:5px 8px;border:1px solid var(--accent,rgba(148,163,184,.45));border-radius:6px}
 .wod-engine-card-meta span{font-size:.78rem;color:var(--muted,#94a3b8)}
 @media(max-width:640px){.wod-engine-setup{padding:14px}.wod-engine-setup .engine-section-title{display:grid}.wod-engine-fields{grid-template-columns:1fr}}
+
+
+.wod-execution-partner{display:grid;gap:6px;padding:13px 15px;margin:10px 0 16px;border:1px solid var(--line,rgba(148,163,184,.28));border-left:3px solid var(--accent,#f0a33a);border-radius:12px;background:var(--panel,rgba(15,23,42,.28))}
+.wod-execution-partner>div{display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+.wod-execution-partner strong{font-size:.76rem;letter-spacing:.06em}
+.wod-execution-partner span,.wod-execution-partner small{color:var(--muted,#94a3b8);font-size:.82rem}
