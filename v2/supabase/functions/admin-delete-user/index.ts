@@ -53,6 +53,58 @@ Deno.serve(async (req: Request) => {
     if (!target) return reply({ error: "Brukaren finst ikkje." }, 404)
     if (target.role === "admin") return reply({ error: "Admin-kontoar kan ikkje slettast frå medlemsregisteret." }, 403)
 
+    // Some historical rows must remain linked to their author/customer.
+    // Check these relationships before attempting the irreversible Auth deletion.
+    const blockingReferences = [
+      { table: "pt_sessions", column: "created_by", label: "PT-timar oppretta" },
+      { table: "pt_messages", column: "sender_id", label: "PT-meldingar sende" },
+      { table: "pt_client_notes", column: "coach_id", label: "PT-kundenotat" },
+      { table: "classes", column: "created_by", label: "Gruppetimar oppretta" },
+      { table: "coffee_orders", column: "member_id", label: "Kaffebestillingar" },
+      { table: "class_live_sessions", column: "started_by", label: "Gjennomførte gruppetimar starta" },
+      { table: "challenges", column: "created_by", label: "Utfordringar oppretta" },
+      { table: "pt_programs", column: "created_by", label: "PT-program oppretta" },
+      { table: "calendar_events", column: "created_by", label: "Kalenderhendingar oppretta" },
+      { table: "pt_wod_assignments", column: "assigned_by", label: "WOD-tildelingar utførte" },
+      { table: "training_sessions", column: "created_by", label: "Treningsøkter oppretta" },
+      { table: "training_sessions", column: "member_id", label: "Treningsøkter eigde" },
+      { table: "pt_client_goals", column: "created_by", label: "PT-mål oppretta" },
+      { table: "pt_program_templates", column: "created_by", label: "PT-programmalar oppretta" },
+      { table: "pt_checkins", column: "created_by", label: "PT-statuskontrollar oppretta" },
+      { table: "pt_coaches", column: "created_by", label: "PT-coachar registrerte" },
+      { table: "pt_client_assignments", column: "coach_user_id", label: "PT-kundar tildelte" },
+      { table: "pt_client_assignments", column: "assigned_by", label: "PT-kundetildelingar utførte" },
+      { table: "pt_services", column: "created_by", label: "PT-tenester oppretta" },
+      { table: "pt_service_requests", column: "assigned_coach_id", label: "PT-førespurnader tildelte" },
+      { table: "pt_service_requests", column: "handled_by", label: "PT-førespurnader behandla" },
+      { table: "coffee_settings", column: "updated_by", label: "Kaffebarinnstillingar endra" },
+      { table: "coffee_product_reviews", column: "member_id", label: "Kaffevurderingar" },
+    ]
+
+    const referenceChecks = await Promise.all(blockingReferences.map(async reference => {
+      const { count, error } = await adminClient
+        .from(reference.table)
+        .select("id", { count: "exact", head: true })
+        .eq(reference.column, userId)
+      if (error) return { ...reference, error: true }
+      return { ...reference, count: count ?? 0 }
+    }))
+
+    if (referenceChecks.some(reference => reference.error)) {
+      return reply({ error: "Kunne ikkje kontrollera all historikk. Ingen konto er sletta." }, 500)
+    }
+
+    const linkedHistory = referenceChecks
+      .filter(reference => (reference.count ?? 0) > 0)
+      .map(reference => ({ area: reference.label, count: reference.count }))
+
+    if (linkedHistory.length) {
+      return reply({
+        error: "Brukaren har historikk eller ansvarlege oppføringar som må bevarast. Kontoen kan ikkje slettast permanent. Deaktiver kontoen i medlemsregisteret i staden.",
+        linked_history: linkedHistory,
+      }, 409)
+    }
+
     const { error: deleteError } = await adminClient.auth.admin.deleteUser(userId)
     if (deleteError) {
       console.error("admin-delete-user delete failed", deleteError)
