@@ -5976,3 +5976,21 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
 @media(max-width:760px){.timer-setup-drawer{grid-template-columns:minmax(0,1fr);max-height:65vh}.timer-setup-drawer>.timer-customize-title,.timer-setup-actions{grid-column:auto}.timer-setup-actions{flex-direction:column}.timer-setup-actions button{width:100%}}
 
 .timer-settings-inline.timer-settings-emom{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+
+/* WOD Engine 2.0 — structured participation and scoring */
+.wod-engine-setup{display:grid;gap:14px;padding:18px;margin:16px 0;border:1px solid var(--line,rgba(148,163,184,.22));border-radius:16px;background:var(--panel,rgba(15,23,42,.28))}
+.wod-engine-setup .engine-section-title{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.wod-engine-setup .engine-section-title h4{margin:0 0 4px;font-size:1rem}
+.wod-engine-setup .engine-section-title p{margin:0;color:var(--muted,#94a3b8);font-size:.84rem}
+.wod-engine-setup .engine-section-title>span{font-size:.68rem;letter-spacing:.08em;color:var(--muted,#94a3b8);white-space:nowrap}
+.wod-engine-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.wod-engine-fields label{display:grid;gap:6px;font-size:.82rem;font-weight:650}
+.wod-engine-fields select,.wod-engine-fields input{width:100%;min-height:42px}
+.wod-engine-score-fields{display:flex;flex-wrap:wrap;gap:10px 16px;border:1px solid var(--line,rgba(148,163,184,.22));border-radius:12px;padding:12px}
+.wod-engine-score-fields legend{padding:0 6px;font-size:.8rem;font-weight:700}
+.wod-engine-score-fields label{display:flex;align-items:center;gap:7px;font-size:.82rem}
+.wod-engine-card-meta{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:7px 0 10px}
+.wod-engine-card-meta strong{font-size:.68rem;letter-spacing:.06em;padding:5px 8px;border:1px solid var(--accent,rgba(148,163,184,.45));border-radius:6px}
+.wod-engine-card-meta span{font-size:.78rem;color:var(--muted,#94a3b8)}
+@media(max-width:640px){.wod-engine-setup{padding:14px}.wod-engine-setup .engine-section-title{display:grid}.wod-engine-fields{grid-template-columns:1fr}}
