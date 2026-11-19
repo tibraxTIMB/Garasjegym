@@ -1,0 +1,189 @@
+/* Member profile and training history: date list instead of tiny calendar cells */
+.my-page,
+.my-page > *,
+.my-pr-grid,
+.my-profile-facts {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.my-page-tabs {
+  min-width: 0;
+  display: flex !important;
+  gap: 6px;
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.my-page-tabs button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.my-page .my-pr-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.my-profile-card {
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.my-profile-card > div:last-child { min-width: 0; }
+.my-profile-card h3 { overflow-wrap: anywhere; }
+
+.history-toolbar {
+  min-width: 0;
+  gap: 9px;
+}
+
+.history-view-toggle button {
+  min-height: 42px;
+}
+
+.history-calendar .calendar-toolbar button {
+  min-width: 42px;
+  min-height: 42px;
+}
+
+.history-calendar .calendar-day-events {
+  min-width: 0;
+}
+
+.history-mobile-agenda {
+  display: none;
+}
+
+.my-page-log {
+  min-width: 0;
+}
+
+.history-delete {
+  min-width: 70px;
+  min-height: 48px;
+}
+
+@media (max-width: 900px) {
+  .my-page { gap: 13px; }
+  .my-page-tabs {
+    position: sticky;
+    top: 62px;
+    z-index: 42;
+    width: calc(100% + 2px);
+    margin-inline: -1px;
+    padding: 7px 1px 9px;
+    background: rgba(16, 20, 22, .96);
+    border-bottom: 1px solid var(--gg-shell-border);
+    backdrop-filter: blur(12px);
+  }
+  .my-page .my-pr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .my-page .my-profile-card { padding: 13px; }
+  .my-page .my-profile-facts { grid-template-columns: minmax(0, 1fr); }
+  .my-page .my-profile-facts > div { min-width: 0; }
+  .history-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .history-view-toggle { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .history-view-toggle button { justify-content: center; min-height: 46px; }
+  .history-month { gap: 8px; }
+  .my-page-log {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .history-log-main { padding: 12px; }
+  .history-log-main .history-card-top {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .history-delete {
+    display: flex;
+    width: 100%;
+    min-height: 44px;
+    align-self: auto;
+    border-left: 0;
+    border-top: 1px solid rgba(185,65,58,.18);
+  }
+  .history-calendar .calendar-grid { display: none !important; }
+  .history-mobile-agenda {
+    display: grid !important;
+    gap: 7px;
+    max-height: 34dvh;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 2px 2px 5px;
+  }
+  .history-mobile-day {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+    gap: 3px 10px;
+    min-width: 0;
+    min-height: 54px;
+    padding: 8px 10px;
+    border: 1px solid var(--gg-shell-border);
+    border-radius: 10px;
+    background: #1a2022;
+    color: var(--gg-shell-text);
+    text-align: left;
+  }
+  .history-mobile-day.selected {
+    border-color: rgba(240, 163, 58, .62);
+    background: rgba(240, 163, 58, .09);
+  }
+  .history-mobile-day.today .history-mobile-day-date { color: var(--gg-shell-accent); }
+  .history-mobile-day-date {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    font-size: 17px;
+    font-weight: 900;
+    text-align: center;
+  }
+  .history-mobile-day-meta {
+    grid-column: 2;
+    color: var(--gg-shell-muted);
+    font-size: 10px;
+  }
+  .history-mobile-day-tags {
+    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-width: 0;
+  }
+  .history-mobile-day-tags small {
+    max-width: 100%;
+    padding: 3px 6px;
+    border-radius: 6px;
+    background: #27312c;
+    color: #b8e0c5;
+    font-size: 9px;
+    overflow-wrap: anywhere;
+  }
+  .history-mobile-day-tags small.planned {
+    background: #202f3a;
+    color: #afd6f6;
+  }
+  .calendar-day-events { gap: 7px; }
+  .calendar-event-row {
+    min-height: 58px;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px;
+  }
+  .calendar-event-row b { max-width: 92px; text-align: right; white-space: normal; }
+}
+
+@media (max-width: 480px) {
+  .my-page .my-pr-grid { grid-template-columns: minmax(0, 1fr); }
+  .my-page .pr-detail-panel { padding: 13px; }
+  .history-mobile-agenda { max-height: 30dvh; }
+  .history-mobile-day { min-height: 50px; padding: 7px 9px; }
+}
+
