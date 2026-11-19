@@ -7,7 +7,7 @@ const formatFrom=text=>{
  if(/\bstation|stasjonssirkel\b/.test(value))return 'Stasjonssirkel'
  if(/\bcomplex\b|kompleks/.test(value))return 'Complex'
  if(/\bintervall|intervals\b/.test(value))return 'Intervall'
- return 'For Time'
+ return null
 }
 export function parseWodImport(source,exerciseCatalog=[]){
  const lines=String(source||'').split(/\r?\n/).map(line=>line.replace(/[•·]/g,' ').trim()).filter(Boolean)
@@ -40,6 +40,6 @@ export function parseWodImport(source,exerciseCatalog=[]){
   items.push({name:match?.name||exerciseText,exercise:match||null,reps:reps||'10',loadKg:load,matched:Boolean(match)})
  }
  if(!items.length)throw new Error('Fann ingen sikre øvingslinjer. Kontroller teksten og prøv igjen.')
- const format=formatFrom(whole)
+ const format=formatFrom(whole)||(scheme?'For Time':null)
  return {name,format,minutes:minutes||20,items,notes:'Importert kjeldetekst:\n'+whole,unmatched:items.filter(item=>!item.matched).map(item=>item.name)}
 }
