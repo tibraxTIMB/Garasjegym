@@ -200,13 +200,15 @@ export default function Booking({ profile, onLogResult, initialClassId=null, onI
     if(!window.confirm('Sletta «'+item.title+'» permanent? Dette er berre mogleg når timen ikkje har påmeldingar eller treningshistorikk.'))return
     setBusy('delete-'+item.id);setError('');setNotice('')
     try{
-      const [bookings,sessions]=await Promise.all([
+      const [bookings,sessions,calendarLinks]=await Promise.all([
         supabase.from('class_bookings').select('id',{count:'exact',head:true}).eq('class_id',item.id),
-        supabase.from('class_live_sessions').select('id',{count:'exact',head:true}).eq('class_id',item.id)
+        supabase.from('class_live_sessions').select('id',{count:'exact',head:true}).eq('class_id',item.id),
+        supabase.from('calendar_events').select('id',{count:'exact',head:true}).eq('class_id',item.id)
       ])
       if(bookings.error)throw bookings.error
       if(sessions.error&&!/could not find the table|relation .* does not exist|PGRST205/i.test(sessions.error.message||''))throw sessions.error
-      if((bookings.count||0)>0||(sessions.count||0)>0)throw new Error('Timen har påmeldingar eller treningshistorikk. Avlys han i staden, så blir historikken bevart.')
+      if(calendarLinks.error)throw calendarLinks.error
+      if((bookings.count||0)>0||(sessions.count||0)>0||(calendarLinks.count||0)>0)throw new Error('Timen har påmeldingar, kalenderkoplingar eller treningshistorikk. Avlys han i staden, så blir historikken bevart.')
       const {error:e}=await supabase.from('classes').delete().eq('id',item.id)
       if(e)throw e
       setNotice('Gruppetimen er sletta.');setEditClass(null);setSelectedClass(null);await load()
