@@ -4,6 +4,7 @@ alter table public.classes
   add column if not exists cancellation_note text;
 
 create index if not exists classes_cancelled_at_idx on public.classes(cancelled_at);
+create index if not exists classes_cancelled_by_idx on public.classes(cancelled_by);
 
 create or replace function public.book_class(p_class_id uuid)
 returns table(booking_id uuid, booking_status text)
