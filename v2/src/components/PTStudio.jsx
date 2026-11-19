@@ -108,7 +108,9 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
   e.preventDefault()
   await run(async()=>{
    const lines=templateDraft.session_titles.split('\n').map(x=>x.trim()).filter(Boolean)
+   const capacity=Number(templateDraft.weeks)*Number(templateDraft.sessions_per_week)
    if(!templateDraft.title.trim()||!lines.length)throw new Error('Programmet må ha namn og minst éi økt.')
+   if(!Number.isFinite(capacity)||capacity<1||lines.length>capacity)throw new Error('Programmet har plass til '+capacity+' økter. Reduser øktlista eller auk veker / økter per veke.')
    const {error:e}=await supabase.from('pt_program_templates').insert({title:templateDraft.title.trim(),description:templateDraft.description,weeks:Number(templateDraft.weeks),sessions_per_week:Number(templateDraft.sessions_per_week),focus_areas:templateDraft.focus_areas,sessions:lines.map((title,index)=>({title,sequence_no:index+1,week_no:Math.floor(index/Number(templateDraft.sessions_per_week))+1,day_no:(index%Number(templateDraft.sessions_per_week))+1,session_kind:'training',focus_area:'',estimated_minutes:45})),created_by:profile.id})
    if(e)throw e
    setShowTemplate(false);setNotice('Introprogrammet er lagra i biblioteket.')
