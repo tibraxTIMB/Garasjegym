@@ -5,7 +5,7 @@ import PT from './PT.jsx'
 import CalendarAdmin from './CalendarAdmin.jsx'
 import {isStaff} from '../lib/auth.js'
 
-export default function ScheduleHub({profile,onLogResult,onLaunchWorkout,onOpenWod,focusRequestId,onFocusConsumed,initialClassId=null,initialTab='booking',onTabChange=()=>{},simpleMode=false}){
+export default function ScheduleHub({profile,onLogResult,onLaunchWorkout,onOpenWod,focusRequestId,onFocusConsumed,initialClassId=null,initialTab='booking',onTabChange=()=>{},simpleMode=false,hidePTTab=false}){
  const [tab,setTab]=useState(initialTab)
  const [focusClassId,setFocusClassId]=useState(initialClassId)
  useEffect(()=>{setTab(simpleMode?'booking':initialTab)},[initialTab,simpleMode])
