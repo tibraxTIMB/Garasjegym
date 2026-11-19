@@ -3,7 +3,7 @@
 **Dato:** 19.11.2026  
 **Branch:** garasjegym-2.0-sturm­kopf
 **Kontrollert kodecommit:** 07f2159a0cde35bf101905c8f495eb3fb15c7d77
-**Siste migreringscommit:** 8ddf520e057cb6eb4b859d59b71380dfab43cb60  
+**Siste migreringscommit:** 85fc79c27aaaeefa8b8b08af28647eb677d86b87  
 **Testprosjekt:** garasjegym-2-test (izwzwvlexqxqewzijhhd)
 
 ## Statusnøkkel
@@ -74,10 +74,13 @@
 | Medlem kan berre lesa eigne gruppetimepåmeldingar | FERDIG OG SQL-TESTA | RLS er avgrensa til eigne rader; aggregert deltakarantal kjem frå `get_class_attendance_counts`. Staff ser framleis full deltakaroversikt. |
 | Gruppetimebooking og varseltrigger | FERDIG OG SQL-TESTA | Ny booking opprettar `group`-varsel utan at kategorikontrollen avviser transaksjonen. |
 | Medlem ser berre publiserte gruppetimar | FERDIG OG SQL-TESTA | RLS skjuler upubliserte timar for medlemmer; admin/manager kan framleis sjå utkast. |
+| Medlem kan berre booka publisert framtidig gruppetime | FERDIG OG SQL-TESTA | Direkte INSERT for upublisert eller starta time blir avvist; publisert framtidig time blir godteken. |
 
 ## 5. Tilgangsmodell – viktig avgrensing
 
 Dagens frontend bruker aktive admin- og managerprofilar som staff. PT-coach blir registrert i pt_coaches, men må vera ein eksisterande admin-/managerbrukar. Det finst ikkje ein separat coach-autentiseringsrolle i auth.js.
+
+Testdatabasen har 1 admin og 3 medlemmer, men ingen managerprofil, ingen coach-rader i `pt_coaches` og ingen kundetildelingar i `pt_client_assignments`. Coach-sporet er derfor eit inaktivt/delvis datamodellspor og ikkje ein ferdig testbar brukarrolle.
 
 Database- og frontendtilgang for admin/manager er brei staff-tilgang. Systemet avgrensar ikkje PT-coach til berre eigne kundar. Dersom dette er eit krav, må det etablerast ei eksplisitt rolle-/tilgangsavklaring før ny policy og UI-tilpassing. Ikkje gje ein medlemsprofil coach-rettar berre ved å leggja inn ein rad i pt_coaches.
 
@@ -114,6 +117,8 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 26. Medlem kan ikkje fullføra PT-programøkt utan logg eller med logg for feil WOD.
 27. Riktig eigen treningslogg for rett WOD fullfører både WOD-tildeling og PT-programøkt.
 28. Full `save_workout_with_pt_links`-transaksjon lagrar workout_log og oppdaterer begge PT-koplingane til `completed` med same logg-ID.
+29. Medlem kan ikkje oppretta gruppetimebooking direkte mot upublisert eller allereie starta time.
+30. Medlem kan oppretta booking på publisert framtidig gruppetime.
 
 ## 7. Manuelle testar som står att
 
@@ -131,8 +136,8 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 - Medlem kan ikkje sjå eller endra andre medlemmers data.
 - Mobil og nettbrett i ståande og liggjande modus.
 
-**Database:** 63 installerte migreringar; 52 SQL-filer i branch. Dei eldre manglande migreringsfilene er framleis eit reproduksjonsavvik.
+**Database:** 64 installerte migreringar; 53 SQL-filer i branch. 15 installerte migreringar manglar framleis SQL-fil i repoet, og 4 repo-filer er ikkje installerte; detaljane står i `SYSTEM_INTEGRITY.md`.
 
-**CI:** Checks for migreringscommit 8ddf520e er bestått. Preview deploy for same commit var under gjennomføring ved siste kontroll.
+**CI:** Checks for migreringscommit 85fc79c2 er bestått. Preview deploy for same commit er bestått.
 
 **Viktig:** Ingen av desse nettlesar-/fysiske einingstestane er rapporterte som gjennomførte i denne revisjonsøkta.
