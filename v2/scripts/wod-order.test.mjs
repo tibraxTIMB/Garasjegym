@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   addWodSortOrder,
+  getWodSchemaItems,
   moveWodItemByKey,
   moveWodItemToKey,
   moveWodItemToPosition,
@@ -56,4 +57,13 @@ test('gjenopning sorterer lagra nummer og bevarer rekkjefølgja for eldre elemen
   assert.deepEqual(sortWodItems(saved).map(x => x.key), [
     'a', 'b', 'c', 'legacy-1', 'legacy-2',
   ]);
+});
+
+
+test('redigering hentar rekkjefølgje frå legacy items eller engine-blokk når legacy-lista manglar', () => {
+  const legacy = [{ key: 'legacy', sort_order: 1 }];
+  assert.deepEqual(getWodSchemaItems({ items: legacy, wod_engine: { blocks: [{ items: [{ key: 'engine' }] }] } }), legacy);
+  const engineOnly = { wod_engine: { blocks: [{ items: [{ key: 'b', sort_order: 2 }, { key: 'a', sort_order: 1 }] }] } };
+  assert.deepEqual(sortWodItems(getWodSchemaItems(engineOnly)).map(x => x.key), ['a', 'b']);
+  assert.deepEqual(getWodSchemaItems({ wod_engine: { blocks: [{ items: [{ key: 'x' }] }, { items: [{ key: 'y' }] }] } }).map(x => x.key), ['x', 'y']);
 });
