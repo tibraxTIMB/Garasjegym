@@ -295,10 +295,20 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    const timer_settings={workout_schema:schema,work_seconds:isStationCircuit?Number(stationWork):Number(workSeconds)||null,rest_seconds:isStationCircuit?Number(stationTransition):Number(restSeconds)||null,rounds:isStationCircuit?Number(stationRounds):Number(rounds)||null,duration_seconds:stationDuration}
    const wodPayload={name:name.trim(),category:libraryCategory==='warmup'?'warmup':'main',format:savedFormat,duration_minutes:Math.ceil(stationDuration/60)||null,movements,notes:[stimulus,notes,rxNotes?'RX: '+rxNotes:'',scaledNotes?'Scaled: '+scaledNotes:'',customInstructions].filter(Boolean).join('\n\n'),is_published:publishToMembers,timer_settings}
    if(!editingWodId)wodPayload.created_by=user.id
-   const wodRequest=editingWodId?supabase.from('wods').update(wodPayload).eq('id',editingWodId).select('id').single():supabase.from('wods').insert(wodPayload).select('id').single()
-   const {data:savedWod,error:e}=await wodRequest
-   if(e)throw e
-   if(assignedClientId){const {error:linkError}=await supabase.from('pt_wod_assignments').insert({member_id:assignedClientId,wod_id:savedWod.id,assigned_by:user.id,location:'Valfritt',coach_note:'Tildelt frå PT Studio'});if(linkError)throw new Error('WOD-en vart lagra, men kunne ikkje knytast til kunden: '+linkError.message);onAssigned?.()}
+   if(assignedClientId){
+    const {data:savedWodId,error:e}=await supabase.rpc('save_wod_with_pt_assignment',{
+     p_wod:wodPayload,
+     p_member_id:assignedClientId,
+     p_wod_id:editingWodId||null
+    })
+    if(e)throw e
+    if(!savedWodId)throw new Error('WOD og PT-tildeling vart ikkje stadfesta av databasen.')
+    onAssigned?.()
+   }else{
+    const wodRequest=editingWodId?supabase.from('wods').update(wodPayload).eq('id',editingWodId).select('id').single():supabase.from('wods').insert(wodPayload).select('id').single()
+    const {error:e}=await wodRequest
+    if(e)throw e
+   }
    setNotice(editingWodId?'WOD-en er oppdatert.':publishToMembers?'WOD lagra i biblioteket og publisert for medlemmene.':'WOD lagra i det interne PT-biblioteket.')
    setSelected([]);setNotes('');setLibraryCategory('standard');setCustomInstructions('');setRxNotes('');setScaledNotes('');setWizardStep(1);setName(suggestUniqueWodName());setEditingWodId(null);onSaved?.()
   }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{setBusy(false)}
