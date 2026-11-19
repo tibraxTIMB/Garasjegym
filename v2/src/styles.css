@@ -5541,3 +5541,12 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
 .pt2-progress-track { width:100%; height:9px; overflow:hidden; border-radius:20px; background:color-mix(in srgb,var(--muted) 22%,transparent); }
 .pt2-progress-track span { display:block; height:100%; border-radius:inherit; background:var(--accent); transition:width .2s ease; }
 .pt2-progress-card small { color:var(--muted); font-size:12px; }
+
+
+.pt2-goal .pt2-inline-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:6px; }
+.pt2-goal .pt2-inline-actions button { min-height:36px; padding:7px 10px; font-size:12px; }
+@media(max-width:680px) {
+ .pt2-goal { align-items:flex-start; flex-direction:column; }
+ .pt2-goal .pt2-inline-actions { width:100%; justify-content:flex-start; }
+ .pt2-goal .pt2-inline-actions button { flex:1 1 auto; }
+}
