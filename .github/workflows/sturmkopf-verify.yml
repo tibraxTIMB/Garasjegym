@@ -31,6 +31,8 @@ jobs:
         run: npm run test:app-base-url
       - name: Test infotainment calendar grouping
         run: npm run test:infotainment
+      - name: Test built-in WOD complex exercises
+        run: npm run test:wod-complexes
       - name: Test WOD ordering
         run: npm run test:wod-order
       - name: Build application
