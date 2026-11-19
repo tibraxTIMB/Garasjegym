@@ -5651,3 +5651,7 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
 .wod-picker-actions button{min-height:42px}
 .wod-picker-actions .primary-button{min-width:136px;justify-content:center}
 @media(max-width:520px){.wod-picker-actions button{flex:1}}
+
+.wod-library-advanced-filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%}
+.wod-library-advanced-filters select{min-width:145px;min-height:40px;padding:8px 10px;border:1px solid #3d494b;border-radius:9px;background:#171d1f;color:#eef1ee;font:inherit;font-size:12px}
+@media(max-width:620px){.wod-library-advanced-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.wod-library-advanced-filters select{min-width:0;width:100%}}
