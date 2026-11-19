@@ -18,3 +18,97 @@
 .infotainment-footer{display:flex;justify-content:space-between;gap:12px;color:#788593;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
 @media(max-width:900px){.infotainment-grid{grid-template-columns:minmax(0,1fr) minmax(280px,.85fr)}.infotainment-calendar{max-height:calc(100vh - 280px)}.infotainment-music .timer-spotify-mini-track small{max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 @media(max-width:680px){.infotainment-header{align-items:flex-start;flex-wrap:wrap}.infotainment-clock-head{order:3;width:100%;text-align:left}.infotainment-welcome{align-items:flex-start}.infotainment-date{display:none}.infotainment-grid{grid-template-columns:minmax(0,1fr)}.infotainment-side{grid-template-rows:auto auto}.infotainment-calendar{max-height:none}.infotainment-footer{flex-direction:column}.infotainment-event{grid-template-columns:52px minmax(0,1fr) auto}}
+
+
+/* Independent demo clock – mobile and tablet first, with bounded layout regions. */
+.infotainment-timer-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.infotainment-demo-open{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:9px 13px;border:1px solid #e6a23a66;border-radius:10px;background:#e6a23a;color:#17191c;font-size:12px;font-weight:900;cursor:pointer;touch-action:manipulation}
+.infotainment-demo-overlay{position:fixed;inset:0;z-index:11000;display:flex;align-items:center;justify-content:center;padding:clamp(0px,1.5vh,16px);overflow:auto;background:rgba(5,8,12,.94);color:#f4f5f6}
+.infotainment-demo-stage{width:min(100%,1600px);height:min(100%,100dvh);min-height:0;display:flex;flex-direction:column;gap:clamp(10px,1.4vh,18px);padding:clamp(12px,1.6vw,24px);overflow:hidden;border:1px solid #ffffff20;border-radius:18px;background:radial-gradient(circle at 12% 0%,#303b49 0%,#151a20 45%,#0d1116 100%);box-shadow:0 20px 80px #0008}
+.infotainment-demo-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex:0 0 auto;min-width:0;padding-bottom:12px;border-bottom:1px solid #ffffff20}
+.infotainment-demo-header>div:first-child{min-width:0}
+.infotainment-demo-header h2{display:flex;align-items:center;gap:9px;margin:5px 0;font-size:clamp(19px,2.1vw,28px)}
+.infotainment-demo-header p{margin:0;color:#aeb8c4;font-size:12px;line-height:1.4}
+.infotainment-demo-header-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.infotainment-demo-header-actions button{display:grid;place-items:center;width:44px;height:44px;border:1px solid #ffffff26;border-radius:11px;background:#ffffff0b;color:#fff;cursor:pointer;touch-action:manipulation}
+.infotainment-demo-body{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:clamp(12px,1.5vw,22px);flex:1 1 auto;min-height:0;overflow:hidden}
+.infotainment-demo-display{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,1.8vh,22px);min-width:0;min-height:0;padding:clamp(12px,2vw,30px);overflow:hidden;border:1px solid #ffffff1c;border-radius:16px;background:linear-gradient(145deg,#222a33,#151b22);text-align:center}
+.infotainment-demo-display-top{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;color:#e6a23a;font-size:11px;font-weight:900;letter-spacing:.13em}
+.infotainment-demo-display-top span:last-child{color:#abb6c2}
+.infotainment-demo-display-top .is-running{color:#a9f0c2!important}
+.infotainment-demo-phase{font-size:clamp(13px,1.4vw,20px);font-weight:900;letter-spacing:.15em;color:#e6a23a}
+.infotainment-demo-clock{display:block;width:100%;font-size:clamp(54px,11vw,clamp(100px,15vh,190px));font-weight:900;line-height:1;letter-spacing:-.045em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:clip}
+.infotainment-demo-caption{max-width:100%;color:#c3ccd6;font-size:clamp(12px,1.3vw,17px);line-height:1.35;overflow-wrap:anywhere}
+.infotainment-demo-progress{width:min(100%,680px);height:8px;overflow:hidden;border-radius:999px;background:#ffffff18}
+.infotainment-demo-progress span{display:block;height:100%;border-radius:inherit;background:#e6a23a;transition:width .25s linear}
+.infotainment-demo-actions{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;width:100%}
+.infotainment-demo-actions button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:124px;min-height:48px;padding:10px 17px;border:1px solid #ffffff32;border-radius:11px;background:#ffffff0d;color:#fff;font-weight:900;cursor:pointer;touch-action:manipulation}
+.infotainment-demo-actions button.primary{border-color:#e6a23a;background:#e6a23a;color:#17191c}
+.infotainment-demo-actions button:disabled{opacity:.48;cursor:not-allowed}
+.infotainment-demo-description{max-width:680px;color:#aeb8c4;font-size:12px;line-height:1.45}
+.infotainment-demo-controls{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0;padding:clamp(10px,1.4vw,18px);overflow:auto;overscroll-behavior:contain;border:1px solid #ffffff1c;border-radius:16px;background:#151c24}
+.infotainment-demo-control-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.infotainment-demo-control-head>div{display:grid;gap:3px;min-width:0}
+.infotainment-demo-control-head strong,.infotainment-demo-setup>strong,.infotainment-demo-screen-lock strong{font-size:13px}
+.infotainment-demo-control-head small,.infotainment-demo-screen-lock small{color:#aeb8c4;font-size:10px;line-height:1.35}
+.infotainment-demo-control-head>button,.infotainment-demo-screen-lock>button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;padding:8px 10px;border:1px solid #ffffff2a;border-radius:9px;background:#ffffff0b;color:#f4f5f6;font-size:11px;font-weight:800;white-space:nowrap;cursor:pointer;touch-action:manipulation}
+.infotainment-demo-control-head>button.is-locked{border-color:#e6a23a99;color:#ffd28d}
+.infotainment-demo-format-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.infotainment-demo-format-list button{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;min-width:0;min-height:54px;padding:9px 11px;border:1px solid #ffffff20;border-radius:10px;background:#ffffff08;color:#f4f5f6;text-align:left;cursor:pointer;touch-action:manipulation}
+.infotainment-demo-format-list button.selected{border-color:#e6a23a;background:#e6a23a1c;box-shadow:inset 0 0 0 1px #e6a23a55}
+.infotainment-demo-format-list button:disabled{opacity:.58;cursor:not-allowed}
+.infotainment-demo-format-list strong{font-size:12px}
+.infotainment-demo-format-list small{color:#aeb8c4;font-size:10px;line-height:1.3}
+.infotainment-demo-setup{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:11px;border:1px solid #ffffff18;border-radius:11px;background:#ffffff06}
+.infotainment-demo-setup>strong,.infotainment-demo-setup>small{grid-column:1/-1}
+.infotainment-demo-setup label{display:grid;gap:5px;min-width:0;color:#bdc7d1;font-size:10px;font-weight:800}
+.infotainment-demo-setup input,.infotainment-demo-setup select,.infotainment-demo-screen-lock select{width:100%;min-width:0;min-height:40px;padding:8px 10px;border:1px solid #ffffff29;border-radius:8px;background:#101720;color:#f4f5f6;font:inherit;font-size:12px}
+.infotainment-demo-setup>small{color:#aeb8c4;font-size:10px;line-height:1.4}
+.infotainment-demo-screen-lock{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:center;padding:11px;border:1px solid #ffffff18;border-radius:11px;background:#ffffff06}
+.infotainment-demo-screen-lock>div{display:grid;gap:3px;min-width:0}
+.infotainment-demo-screen-lock select{grid-column:1/-1}
+.infotainment-demo-screen-lock>button{grid-column:1/-1}
+.infotainment-demo-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:0 0 auto;color:#8894a2;font-size:10px;line-height:1.3}
+.infotainment-demo-stage.is-landscape{max-width:1600px}
+.infotainment-demo-stage.is-landscape .infotainment-demo-body{grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr)}
+.infotainment-demo-stage.is-portrait{max-width:900px}
+.infotainment-demo-stage.is-portrait .infotainment-demo-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(230px,.8fr) minmax(0,1fr);overflow:auto}
+.infotainment-demo-stage.is-portrait .infotainment-demo-display{min-height:230px}
+.infotainment-demo-stage.is-portrait .infotainment-demo-controls{overflow:visible}
+@media(max-width:900px){
+ .infotainment-demo-overlay{padding:0}
+ .infotainment-demo-stage{width:100%;height:100dvh;max-height:none;border-radius:0;border:0}
+ .infotainment-demo-body,.infotainment-demo-stage.is-landscape .infotainment-demo-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(230px,.8fr) minmax(0,1fr);overflow:auto}
+ .infotainment-demo-display{min-height:230px}
+ .infotainment-demo-controls{overflow:visible}
+}
+@media(max-width:560px){
+ .infotainment-demo-stage{gap:9px;padding:10px}
+ .infotainment-demo-header{gap:8px;padding-bottom:9px}
+ .infotainment-demo-header p{max-width:42ch;font-size:10px}
+ .infotainment-demo-header-actions{gap:5px}
+ .infotainment-demo-header-actions button{width:42px;height:42px}
+ .infotainment-demo-body,.infotainment-demo-stage.is-portrait .infotainment-demo-body{grid-template-rows:minmax(190px,.55fr) auto;gap:9px}
+ .infotainment-demo-display{min-height:190px;padding:12px;gap:9px}
+ .infotainment-demo-clock{font-size:clamp(48px,16vw,82px)}
+ .infotainment-demo-phase{font-size:12px}
+ .infotainment-demo-actions button{flex:1;min-width:0;min-height:46px;padding:9px}
+ .infotainment-demo-controls{gap:9px;padding:10px}
+ .infotainment-demo-format-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .infotainment-demo-format-list button{min-height:50px;padding:8px}
+ .infotainment-demo-setup{gap:7px;padding:9px}
+ .infotainment-demo-screen-lock{grid-template-columns:minmax(0,1fr)}
+ .infotainment-demo-screen-lock select,.infotainment-demo-screen-lock>button{grid-column:auto}
+ .infotainment-demo-footer{align-items:flex-start;flex-direction:column}
+}
+@media(max-height:620px) and (min-width:901px){
+ .infotainment-demo-stage{gap:7px;padding:10px}
+ .infotainment-demo-header{padding-bottom:7px}
+ .infotainment-demo-header p{display:none}
+ .infotainment-demo-display{gap:8px;padding:10px}
+ .infotainment-demo-clock{font-size:clamp(48px,11vh,100px)}
+ .infotainment-demo-controls{gap:7px;padding:9px}
+ .infotainment-demo-format-list button{min-height:44px;padding:6px 8px}
+ .infotainment-demo-setup{padding:8px;gap:6px}
+ .infotainment-demo-footer{display:none}
+}
