@@ -63,7 +63,7 @@ function trackFromPlayback(data) {
   }
 }
 function isPersonalPhone(device) {
-  return String(device?.type || '').toLowerCase() === 'smartphone'
+  return String(device?.type || '').toLowerCase() === 'smartphone' && !device?.is_restricted
 }
 function shortSpotifyError(data, status, response) {
   if (status === 429) {
@@ -322,10 +322,7 @@ export function MusicProvider({ children, memberId = null }) {
     if (!spotifyDeviceId || !spotifyDevices.some(device=>device.id===spotifyDeviceId)) {
       throw new Error('Opna Spotify på din eigen mobil, start appen og trykk Oppdater einingar.')
     }
-    if (spotifyProfile?.product !== 'premium') {
-      throw new Error('Spotify Premium krevst for å styra avspeling frå GarasjeGym.')
-    }
-  },[spotifyDeviceId,spotifyDevices,spotifyProfile])
+  },[spotifyDeviceId,spotifyDevices])
 
   const refreshPlayback = useCallback(async()=>{
     const [playback,devices] = await Promise.all([
@@ -460,7 +457,7 @@ export function MusicProvider({ children, memberId = null }) {
     spotifyBusy,
     spotifyError,
     setSpotifyError,
-    spotifyCanControl:spotifyProfile?.product==='premium',
+    spotifyCanControl:Boolean(spotifyDeviceId && spotifyDevices.some(device=>device.id===spotifyDeviceId)),
     connectSpotify,
     disconnectSpotify,
     spotifyAction,
@@ -515,7 +512,6 @@ function SpotifyConnectCard({compact=false}) {
       {!compact&&<div className="personal-spotify-selects">
         <label><span><Smartphone size={12}/> Personleg mobil</span><select value={music.spotifyDeviceId} onChange={event=>music.setSpotifyDeviceId(event.target.value)}><option value="">Vel mobil …</option>{music.spotifyDevices.map(device=><option key={device.id} value={device.id}>{device.name}{device.is_active?' · aktiv':''}</option>)}</select></label>
       </div>}
-      {!music.spotifyCanControl&&<p className="spotify-hint">Spotify Premium krevst for å styra avspeling. Søk og spelelister er framleis tilgjengelege.</p>}
       {!music.spotifyDeviceId&&<p className="spotify-hint">Opna Spotify på din eigen mobil og trykk Oppdater einingar. Berre personlege mobil-einingar blir viste.</p>}
     </> : <div className="personal-spotify-connect">
       {!compact&&<p>Kople til din eigen Spotify-profil. GarasjeGym lagrar ikkje Spotify-passord eller deler kontoen med andre.</p>}
@@ -534,14 +530,14 @@ function TrackRow({track,onPlay,busy=false,compact=false}) {
   </article>
 }
 
-function useDebouncedSpotifySearch(music,query,active=true) {
+function useDebouncedSpotifySearch(searchSpotify,connected,query,active=true) {
   const [results,setResults]=useState({tracks:[],artists:[]})
   const [busy,setBusy]=useState(false)
   const [error,setError]=useState('')
   useEffect(()=>{
     let live=true
     const value=query.trim()
-    if (!active||!music.spotifyConnected||value.length<2) {
+    if (!active||!connected||value.length<2) {
       setResults({tracks:[],artists:[]})
       setBusy(false)
       setError('')
@@ -551,7 +547,7 @@ function useDebouncedSpotifySearch(music,query,active=true) {
     setError('')
     const timer=window.setTimeout(async()=>{
       try {
-        const next=await music.searchSpotify(value)
+        const next=await searchSpotify(value)
         if (live) setResults(next)
       } catch(err) {
         if (live) setError(err.message||'Søket feila.')
@@ -560,7 +556,7 @@ function useDebouncedSpotifySearch(music,query,active=true) {
       }
     },350)
     return ()=>{live=false;window.clearTimeout(timer)}
-  },[music,query,active])
+  },[searchSpotify,connected,query,active])
   return {results,busy,error}
 }
 
@@ -587,7 +583,7 @@ export function Music() {
   const [playlistItemsBusy,setPlaylistItemsBusy]=useState(false)
   const [playlistItemsError,setPlaylistItemsError]=useState('')
   const [savingGenre,setSavingGenre]=useState('')
-  const search=useDebouncedSpotifySearch(music,query,tab==='search')
+  const search=useDebouncedSpotifySearch(music.searchSpotify,music.spotifyConnected,query,tab==='search')
   const visiblePlaylists=useMemo(()=>music.spotifyPlaylists.filter(playlist=>(playlist.name||'').toLowerCase().includes(playlistQuery.toLowerCase())),[music.spotifyPlaylists,playlistQuery])
   const selectedPlaylist=music.spotifyPlaylists.find(playlist=>playlist.id===selectedPlaylistId)
 
@@ -674,7 +670,7 @@ export function MusicMiniPlayer() {
   const [toolsTab,setToolsTab]=useState('search')
   const [query,setQuery]=useState('')
   const [playlistQuery,setPlaylistQuery]=useState('')
-  const search=useDebouncedSpotifySearch(music,query,toolsOpen&&toolsTab==='search')
+  const search=useDebouncedSpotifySearch(music.searchSpotify,music.spotifyConnected,query,toolsOpen&&toolsTab==='search')
   const visiblePlaylists=music.spotifyPlaylists.filter(playlist=>(playlist.name||'').toLowerCase().includes(playlistQuery.toLowerCase()))
 
   return <div className="timer-music-stack">
