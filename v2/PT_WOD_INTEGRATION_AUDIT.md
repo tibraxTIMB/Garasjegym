@@ -3,7 +3,7 @@
 **Dato:** 19.11.2026  
 **Branch:** garasjegym-2.0-sturm­kopf
 **Kontrollert kodecommit:** 07f2159a0cde35bf101905c8f495eb3fb15c7d77
-**Siste migreringscommit:** 85fc79c27aaaeefa8b8b08af28647eb677d86b87  
+**Siste migreringscommit:** 34acd8f910892ecb593a3b7362b93fb8a09f3e7a  
 **Testprosjekt:** garasjegym-2-test (izwzwvlexqxqewzijhhd)
 
 ## Statusnøkkel
@@ -75,6 +75,7 @@
 | Gruppetimebooking og varseltrigger | FERDIG OG SQL-TESTA | Ny booking opprettar `group`-varsel utan at kategorikontrollen avviser transaksjonen. |
 | Medlem ser berre publiserte gruppetimar | FERDIG OG SQL-TESTA | RLS skjuler upubliserte timar for medlemmer; admin/manager kan framleis sjå utkast. |
 | Medlem kan berre booka publisert framtidig gruppetime | FERDIG OG SQL-TESTA | Direkte INSERT for upublisert eller starta time blir avvist; publisert framtidig time blir godteken. |
+| Manager har same klassetime-administrasjon som admin | FERDIG OG SQL-TESTA | Manager kan sjå upubliserte timar, oppdatera/sletta påmeldingar og oppretta PT-WOD-tildeling. |
 
 ## 5. Tilgangsmodell – viktig avgrensing
 
@@ -119,6 +120,7 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 28. Full `save_workout_with_pt_links`-transaksjon lagrar workout_log og oppdaterer begge PT-koplingane til `completed` med same logg-ID.
 29. Medlem kan ikkje oppretta gruppetimebooking direkte mot upublisert eller allereie starta time.
 30. Medlem kan oppretta booking på publisert framtidig gruppetime.
+31. Manager-rollesimulering stadfestar staff-tilgang til gruppetimeutkast, påmeldingsadministrasjon og PT-WOD-tildeling; profilen vart rulla tilbake til member.
 
 ## 7. Manuelle testar som står att
 
@@ -136,8 +138,8 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 - Medlem kan ikkje sjå eller endra andre medlemmers data.
 - Mobil og nettbrett i ståande og liggjande modus.
 
-**Database:** 64 installerte migreringar; 53 SQL-filer i branch. 15 installerte migreringar manglar framleis SQL-fil i repoet, og 4 repo-filer er ikkje installerte; detaljane står i `SYSTEM_INTEGRITY.md`.
+**Database:** 65 installerte migreringar; 54 SQL-filer i branch. 15 installerte migreringar manglar framleis SQL-fil i repoet, og 4 repo-filer er ikkje installerte; detaljane står i `SYSTEM_INTEGRITY.md`.
 
-**CI:** Checks for migreringscommit 85fc79c2 er bestått. Preview deploy for same commit er bestått.
+**CI:** Checks for migreringscommit 34acd8f9 er bestått. Preview deploy for same commit er bestått.
 
 **Viktig:** Ingen av desse nettlesar-/fysiske einingstestane er rapporterte som gjennomførte i denne revisjonsøkta.
