@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Activity, ArrowRight, CalendarDays, CheckCircle2, ClipboardList, Dumbbell, Flag, MessageSquareText, Plus, RefreshCw, Target, UserRound, X } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import Notifications from './Notifications.jsx'
+import PTManagement from './PTManagement.jsx'
 import { isStaff } from '../lib/auth.js'
 
 const GOALS = ['Bli sterkare','Betre kondisjon og uthald','Auka muskelmasse','Gå ned i vekt','Meir energi og overskot','Betre mobilitet','Betre teknikk','Koma i gang med trening','Førebyggja plager','Prestera betre i idrett']
@@ -198,6 +199,7 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
   </header>
   <Notifications compact context="pt-studio"/>
   {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message"><CheckCircle2 size={15}/> {notice}</div>}
+  {(staff&&tab==='administrasjon'||!staff&&(tab==='tenester'||tab==='mine-bestillingar'))&&<PTManagement profile={profile}/>} 
   {!staff&&showIntake&&<form className="pt2-panel pt2-form" onSubmit={submitIntake}>
    <div className="pt2-panel-head"><div><span className="section-kicker">KOM I GANG</span><h3>Fortel oss kva du ønskjer hjelp til</h3><p>Kort innmelding – PT-en går gjennom svara før de lagar ein plan saman.</p></div><button type="button" className="icon-button" onClick={()=>setShowIntake(false)}><X size={17}/></button></div>
    <div className="pt2-form-grid">
@@ -217,8 +219,8 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
    <div className="pt2-form-actions"><button className="primary-button" disabled={busy}>{busy?'Sender …':'Send innmelding'}</button><span>Opplysningane blir lagra i PT-studioet og er berre tilgjengelege for deg og autorisert PT-personell.</span></div>
   </form>}
   {staff&&<section className="pt2-panel pt2-customer-bar"><Field label="Vel kunde"><select value={clientId} onChange={e=>{setClientId(e.target.value);setTab('oversikt')}}><option value="">Vel kunde …</option>{members.map(m=><option key={m.id} value={m.id}>{m.display_name||'Utan namn'} · {m.role}</option>)}</select></Field><div className="pt2-customer-actions"><Pill tone="success">{members.length} medlemmar</Pill><button className="secondary-button" onClick={()=>setShowTemplate(true)}><Plus size={15}/> Nytt introprogram</button></div></section>}
-  {staff&&clientId&&<nav className="pt2-tabs">{[['oversikt','Oversikt'],['plan','Treningsplan'],['mål','Mål og fokus'],['kartlegging','Kartlegging'],['status','Statussjekk']].map(([id,label])=><button key={id} className={tab===id?'selected':''} onClick={()=>setTab(id)}>{label}</button>)}</nav>}
-  {!staff&&<nav className="pt2-tabs">{[['oversikt','Oversikt'],['plan','Treningsplan'],['mål','Mine mål'],['status','Statussjekk']].map(([id,label])=><button key={id} className={tab===id?'selected':''} onClick={()=>setTab(id)}>{label}</button>)}</nav>}
+  {staff&&clientId&&<nav className="pt2-tabs">{[['oversikt','Oversikt'],['plan','Treningsplan'],['mål','Mål og fokus'],['kartlegging','Kartlegging'],['status','Statussjekk'],['administrasjon','PT-administrasjon']].map(([id,label])=><button key={id} className={tab===id?'selected':''} onClick={()=>setTab(id)}>{label}</button>)}</nav>}
+  {!staff&&<nav className="pt2-tabs">{[['oversikt','Oversikt'],['plan','Treningsplan'],['mål','Mine mål'],['status','Statussjekk'],['tenester','PT-tenester'],['mine-bestillingar','Mine bestillingar']].map(([id,label])=><button key={id} className={tab===id?'selected':''} onClick={()=>setTab(id)}>{label}</button>)}</nav>}
   {staff&&clientId&&tab==='oversikt'&&<div className="pt2-grid">
    <section className="pt2-panel"><div className="pt2-panel-head"><div><span className="section-kicker">KUNDEPROFIL</span><h3>{selectedMember?.display_name||'Kunde'}</h3></div><Pill>{selectedMember?.role||'medlem'}</Pill></div>
     <div className="pt2-stat-row"><div><strong>{clientGoals.length}</strong><span>Aktive mål</span></div><div><strong>{activeProgram?clientSessions.length:0}</strong><span>Planøkter</span></div><div><strong>{intakes.filter(i=>i.member_id===clientId).length}</strong><span>Innmeldingar</span></div></div>
