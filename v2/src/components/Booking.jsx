@@ -80,9 +80,20 @@ export default function Booking({ profile, onLogResult, initialClassId=null, onI
       .gte('starts_at',new Date(Date.now()-86400000).toISOString()).order('starts_at').limit(50)
     if(!staff)classQuery=classQuery.eq('published',true).is('cancelled_at',null)
     const {data:classRows,error:classError}=await classQuery
-    // The base booking calendar must remain usable before optional live-session migrations are installed.
-    if(classError)setError(classError.message);else setClasses(classRows||[])
-    const classIds=(classRows||[]).map(row=>row.id)
+    // Include dated WOD plans only for classes this member is allowed to see (schedule RLS handles this).
+    const rawClassRows=classRows||[]
+    const classIds=rawClassRows.map(row=>row.id)
+    let visibleClassRows=rawClassRows
+    if(!classError&&classIds.length){
+      const {data:scheduled,error:scheduleError}=await supabase.from('wod_daily_schedules')
+        .select('target_class_id,wod_id').in('target_class_id',classIds).eq('is_published',true)
+      if(scheduleError)setError(scheduleError.message)
+      else if(scheduled?.length){
+        const byClass=scheduled.reduce((acc,row)=>{(acc[row.target_class_id] ||= []).push(row.wod_id);return acc},{})
+        visibleClassRows=rawClassRows.map(row=>({...row,wod_ids:[...new Set([...(Array.isArray(row.wod_ids)?row.wod_ids:[]),...(byClass[row.id]||[])])]}))
+      }
+    }
+    if(classError)setError(classError.message);else setClasses(visibleClassRows)
     const [b,a,live,instructorRows]=await Promise.all([
       supabase.from('class_bookings').select('id,class_id,status,created_at').eq('member_id',userData.user.id),
       staff
@@ -104,18 +115,16 @@ export default function Booking({ profile, onLogResult, initialClassId=null, onI
     }
     if(live.error)setError(live.error.message);else setLiveSessions(live.data||[])
     let w=supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,category,is_published,is_archived').eq('is_archived',false).order('name')
-    if(!staff)w=w.eq('is_published',true)
     let wResult=await w
     if(wResult.error && /timer_settings|column .* does not exist/i.test(wResult.error.message||'')){
       let fallback=supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,category,is_published,is_archived').eq('is_archived',false).order('name')
-      if(!staff)fallback=fallback.eq('is_published',true)
       wResult=await fallback
     }
     if(!wResult.error){
       let visibleWods=wResult.data||[]
       // Members can see private WODs explicitly assigned to their published group class, without exposing the rest of the PT library.
       if(!staff){
-        const assignedIds=[...new Set((classRows||[]).flatMap(row=>Array.isArray(row.wod_ids)?row.wod_ids:[]))]
+        const assignedIds=[...new Set(visibleClassRows.flatMap(row=>Array.isArray(row.wod_ids)?row.wod_ids:[]))]
         if(assignedIds.length){
           const {data:assigned,error:assignedError}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,category,is_published,is_archived').in('id',assignedIds).eq('is_archived',false)
           if(!assignedError)visibleWods=[...new Map([...visibleWods,...(assigned||[])].map(row=>[row.id,row])).values()]
