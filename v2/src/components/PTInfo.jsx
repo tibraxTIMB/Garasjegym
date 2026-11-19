@@ -6,6 +6,7 @@ export default function PTInfo(){
  const [messages,setMessages]=useState([])
  const [currentUserId,setCurrentUserId]=useState('')
  const [sessions,setSessions]=useState([])
+ const [information,setInformation]=useState([])
  const [loading,setLoading]=useState(true)
  const [error,setError]=useState('')
  async function load(){
@@ -21,6 +22,13 @@ export default function PTInfo(){
   else setMessages(messageRows.data||[])
   if(sessionRows.error)setError(v=>v?v+' · '+sessionRows.error.message:'Avtalar kunne ikkje hentast: '+sessionRows.error.message)
   else setSessions(sessionRows.data||[])
+  const {data:programs,error:programError}=await supabase.from('pt_programs').select('id,title').eq('client_id',user.id)
+  if(programError)setError(v=>v?v+' · '+programError.message:'Programinformasjon kunne ikkje hentast: '+programError.message)
+  else if(programs?.length){
+   const {data:infoRows,error:infoError}=await supabase.from('pt_program_sessions').select('id,program_id,title,scheduled_date,estimated_minutes,workout_snapshot,status').in('program_id',programs.map(x=>x.id)).eq('session_kind','information').order('scheduled_date',{ascending:true,nullsFirst:false})
+   if(infoError)setError(v=>v?v+' · '+infoError.message:'Infotimar kunne ikkje hentast: '+infoError.message)
+   else setInformation((infoRows||[]).map(x=>({...x,program_title:programs.find(program=>program.id===x.program_id)?.title||'PT-program'})))
+  }else setInformation([])
   setLoading(false)
  }
  useEffect(()=>{load()},[])
@@ -31,8 +39,8 @@ export default function PTInfo(){
    <section className="engine-section pt-info-section"><div className="engine-section-title"><h4><MessageSquareText size={17}/> Meldingar</h4><span>{messages.length}</span></div>
     {messages.length?messages.map(m=><article className="pt-info-card" key={m.id}><div className="pt-info-card-meta"><strong>{m.sender_id===currentUserId?'Du':'PT'}</strong><time>{new Date(m.created_at).toLocaleString('nn-NO',{dateStyle:'medium',timeStyle:'short'})}</time></div><p>{m.body}</p></article>):<div className="empty-state">Du har ingen meldingar frå PT enno.</div>}
    </section>
-   <section className="engine-section pt-info-section"><div className="engine-section-title"><h4><CalendarDays size={17}/> Avtalar og infotimar</h4><span>{sessions.length}</span></div>
-    {sessions.length?sessions.map(s=><article className="pt-info-card" key={s.id}><div className="pt-info-card-meta"><strong>{s.title}</strong><span>{s.status==='completed'?'Gjennomført':'Planlagd'}</span></div><p>{new Date(s.starts_at).toLocaleString('nn-NO',{dateStyle:'full',timeStyle:'short'})} · {s.duration_minutes} min</p>{s.message&&<p>{s.message}</p>}{s.prep&&<p className="pt-info-prep"><Info size={14}/>{s.prep}</p>}</article>):<div className="empty-state">Ingen planlagde PT-avtalar eller infotimar.</div>}
+   <section className="engine-section pt-info-section"><div className="engine-section-title"><h4><CalendarDays size={17}/> Avtalar og infotimar</h4><span>{sessions.length+information.length}</span></div>
+    {sessions.length||information.length?<>{information.map(s=><article className="pt-info-card" key={s.id}><div className="pt-info-card-meta"><strong>{s.title}</strong><span>Infotime · {s.status==='completed'?'Gjennomført':'Planlagd'}</span></div><p>{s.program_title}{s.scheduled_date?' · '+new Date(s.scheduled_date+'T12:00:00').toLocaleDateString('nn-NO',{dateStyle:'full'}):''}{s.estimated_minutes?' · '+s.estimated_minutes+' min':''}</p>{s.workout_snapshot?.agenda&&<p>{s.workout_snapshot.agenda}</p>}{s.workout_snapshot?.preparation&&<p className="pt-info-prep"><Info size={14}/>{s.workout_snapshot.preparation}</p>}{s.workout_snapshot?.materials&&<p>Ta med: {s.workout_snapshot.materials}</p>}</article>)}{sessions.map(s=><article className="pt-info-card" key={s.id}><div className="pt-info-card-meta"><strong>{s.title}</strong><span>{s.status==='completed'?'Gjennomført':'Planlagd'}</span></div><p>{new Date(s.starts_at).toLocaleString('nn-NO',{dateStyle:'full',timeStyle:'short'})} · {s.duration_minutes} min</p>{s.message&&<p>{s.message}</p>}{s.prep&&<p className="pt-info-prep"><Info size={14}/>{s.prep}</p>}</article>)}</>:<div className="empty-state">Ingen planlagde PT-avtalar eller infotimar.</div>}
    </section>
   </>}
  </div>
