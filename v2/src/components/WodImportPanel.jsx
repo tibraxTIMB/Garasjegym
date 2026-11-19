@@ -1,4 +1,4 @@
-import {useMemo,useState} from 'react'
+import {useEffect,useMemo,useState} from 'react'
 import {FileImage,FileText,Upload,ClipboardPaste,CheckCircle2,AlertTriangle} from 'lucide-react'
 import {parseWodImport} from '../lib/wodImport.js'
 import './wod-import.css'
@@ -7,12 +7,14 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
  const [source,setSource]=useState('')
  const [fileName,setFileName]=useState('')
  const [filePreview,setFilePreview]=useState('')
+ const [isPdf,setIsPdf]=useState(false)
  const [error,setError]=useState('')
  const [parsed,setParsed]=useState(null)
  const preview=useMemo(()=>parsed?.items||[],[parsed])
+ useEffect(()=>()=>{if(filePreview)URL.revokeObjectURL(filePreview)},[filePreview])
  async function readFile(file){
   if(!file)return
-  setFileName(file.name);setError('');setParsed(null)
+  setFileName(file.name);setError('');setParsed(null);setIsPdf(file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf'))
   if(file.type.startsWith('text/')||/\.(txt|csv|md)$/i.test(file.name)){setSource(await file.text());setFilePreview('')}
   else if(file.type.startsWith('image/')||file.type==='application/pdf'||/\.(png|jpe?g|webp|pdf)$/i.test(file.name)){
    setFilePreview(URL.createObjectURL(file))
@@ -24,7 +26,7 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
   <div className="wod-import-head"><div><span className="wod-classic-kicker">KOPIER TIL BIBLIOTEKET</span><strong>Importer WOD</strong><small>Lim inn tekst eller bruk ei fil som kjelde. Kontroller alltid dosering og øvingsnamn.</small></div><ClipboardPaste size={22}/></div>
   <label className="wod-import-file"><Upload size={16}/> Last opp kjelde<input type="file" accept=".txt,.csv,.md,.pdf,image/*" onChange={event=>readFile(event.target.files?.[0])}/></label>
   {fileName&&<div className="wod-import-file-name">{filePreview?<FileImage size={15}/>:<FileText size={15}/>} {fileName}</div>}
-  {filePreview&&<div className="wod-import-source-preview">{filePreview.toLowerCase().endsWith('.pdf')?<iframe title="PDF-kjelde" src={filePreview}/>:<img src={filePreview} alt="Opplasta WOD-kjelde"/>}</div>}
+  {filePreview&&<div className="wod-import-source-preview">{isPdf?<iframe title="PDF-kjelde" src={filePreview}/>:<img src={filePreview} alt="Opplasta WOD-kjelde"/>}</div>}
   <label className="wod-import-text-label">WOD-tekst<textarea rows="6" value={source} onChange={event=>{setSource(event.target.value);setParsed(null)}} placeholder={'FRAN\n21-15-9\nThrusters 43 kg\nPull-ups'} /></label>
   {error&&<div className="wod-import-message"><AlertTriangle size={15}/>{error}</div>}
   <div className="wod-import-actions"><button type="button" className="secondary-button" onClick={parse} disabled={!source.trim()}>Analyser tekst</button></div>
