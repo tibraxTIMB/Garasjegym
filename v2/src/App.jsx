@@ -295,7 +295,7 @@ export default function App() {
 
   return (
     <MusicProvider memberId={session.user.id}>
-    <div className="app-shell">
+    <div className={simpleMode?"app-shell simple-app-shell":"app-shell"}>
       {!simpleMode&&<aside className="sidebar">
         <div className="brand">
           <div className="brand-mark"><Wrench size={22} /></div>
