@@ -12,7 +12,7 @@ function CalendarSelect({value,onChange,label='Vel dato'}) {
  const dateKey=d=>year+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0')
  return <div className="pt-calendar-picker"><strong>{label}</strong><button type="button" className="pt-calendar-toggle" onClick={()=>setOpen(v=>!v)}><CalendarClock size={16}/>{value?new Date(value).toLocaleString('nn-NO',{dateStyle:'medium',timeStyle:'short'}):'Vel dato og klokkeslett'}<span>{open?'Lukk':'Opne kalender'}</span></button>{open&&<div className="pt-calendar"><div className="pt-calendar-head"><strong>{month.toLocaleDateString('nn-NO',{month:'long',year:'numeric'})}</strong><div><button type="button" onClick={()=>setMonth(new Date(year,m-1,1))}>‹</button><button type="button" onClick={()=>setMonth(new Date(year,m+1,1))}>›</button></div></div><div className="pt-calendar-grid">{['M','T','O','T','F','L','S'].map((d,i)=><span className="pt-calendar-weekday" key={i}>{d}</span>)}{Array.from({length:offset},(_,i)=><span key={'blank'+i}/>)}{Array.from({length:days},(_,i)=>i+1).map(d=><button type="button" key={d} className={selected===dateKey(d)?'selected':''} onClick={()=>onChange(dateKey(d)+'T'+time)}>{d}</button>)}</div><label className="pt-calendar-time">Klokkeslett<input type="time" value={time} onChange={e=>onChange((selected||dateKey(new Date().getDate()))+'T'+e.target.value)}/></label><button type="button" className="primary-button" onClick={()=>setOpen(false)}>Bruk tidspunkt</button></div>}</div>
 }
-export default function PT({profile,focusRequestId,onFocusConsumed,onLaunchWorkout,controlledClientId,hideCustomerPicker=false}){
+export default function PT({profile,focusRequestId,onFocusConsumed,onLaunchWorkout,controlledClientId,hideCustomerPicker=false,onClientChange}){
   useEffect(()=>{if(controlledClientId){setActiveClient(controlledClientId);setCustomerDraft(controlledClientId)}},[controlledClientId])
  const staff=isStaff(profile)
  const [sessions,setSessions]=useState([]),[bookings,setBookings]=useState([]),[requests,setRequests]=useState([])
@@ -41,7 +41,7 @@ export default function PT({profile,focusRequestId,onFocusConsumed,onLaunchWorko
   if(s.error)setError(s.error.message);else setSessions(s.data||[])
   if(b.error)setError(b.error.message);else setBookings(b.data||[])
   if(r.error)setError(r.error.message);else setRequests(r.data||[])
-  if(m.error)setError(m.error.message);else {setMembers(m.data||[]);if(m.data?.length){setActiveClient(v=>v||m.data[0].id);setCustomerDraft(v=>v||m.data[0].id);setMessageClient(v=>v||m.data[0].id);setNoteClient(v=>v||m.data[0].id)}}
+  if(m.error)setError(m.error.message);else {setMembers(m.data||[]);if(m.data?.length){if(!hideCustomerPicker)setActiveClient(v=>v||m.data[0].id);setCustomerDraft(v=>v||m.data[0].id);setMessageClient(v=>v||m.data[0].id);setNoteClient(v=>v||m.data[0].id)}}
   if(p.error)setError(p.error.message);else setMessages(p.data||[])
   if(n.error)setError(n.error.message);else setNotes(n.data||[])
   if(pe.error)setError(pe.error.message);else setPlans((pe.data||[]).reduce((acc,row)=>{(acc[row.session_id] ||= []).push(row);return acc},{}))
@@ -52,7 +52,7 @@ export default function PT({profile,focusRequestId,onFocusConsumed,onLaunchWorko
  useEffect(()=>{load();const refresh=setInterval(()=>load(true),60000);return()=>clearInterval(refresh)},[])
  const hasUnsavedWork=Boolean(showWodBuilder||messageText.trim()||noteGoals.trim()||noteText.trim()||followUp||Object.values(planDrafts).some(d=>d&&Object.values(d).some(v=>String(v||'').trim())));
  useEffect(()=>{if(!hasUnsavedWork)return;const warn=e=>{e.preventDefault();e.returnValue='Du har endringar som ikkje er lagra.'};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn)},[hasUnsavedWork]);
- useEffect(()=>{if(!staff||!focusRequestId||!requests.length)return;const target=requests.find(row=>row.id===focusRequestId);if(target)setActiveClient(target.member_id);const timer=setTimeout(()=>{document.getElementById('pt-request-'+focusRequestId)?.scrollIntoView({behavior:'smooth',block:'center'});onFocusConsumed?.()},120);return()=>clearTimeout(timer)},[staff,focusRequestId,requests])
+ useEffect(()=>{if(!staff||!focusRequestId||!requests.length)return;const target=requests.find(row=>row.id===focusRequestId);if(target){setActiveClient(target.member_id);setCustomerDraft(target.member_id);onClientChange?.(target.member_id)}const timer=setTimeout(()=>{document.getElementById('pt-request-'+focusRequestId)?.scrollIntoView({behavior:'smooth',block:'center'});onFocusConsumed?.()},120);return()=>clearTimeout(timer)},[staff,focusRequestId,requests])
  async function prescribeWorkout(event){
   event.preventDefault();setBusy('prescribe');setError('');setNotice('')
   try{
