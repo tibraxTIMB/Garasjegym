@@ -49,7 +49,8 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
  const [showCheckin,setShowCheckin] = useState(false)
  const [intake,setIntake] = useState({goals:[],primary_goal:'',reason:'',level:'Noko erfaring',frequency:'1–2 dagar',preferred_training:[],avoid:'',weekly_days:'3',constraints:'',commitment:'',expectations:'',desired_outcome:''})
  const [goalDraft,setGoalDraft] = useState({area:'Styrke',title:'',baseline:'',target:'',unit:'',target_date:''})
- const [templateDraft,setTemplateDraft] = useState({title:'',description:'',weeks:'6',sessions_per_week:'3',focus_areas:[],session_titles:'Økt 1 – Introduksjon\nØkt 2 – Grunnstyrke\nØkt 3 – Kondisjon'})
+ const [templateDraft,setTemplateDraft] = useState({title:'',description:'',template_type:'intro',weeks:'6',sessions_per_week:'3',focus_areas:[],session_titles:'Økt 1 – Introduksjon\nØkt 2 – Grunnstyrke\nØkt 3 – Kondisjon'})
+ const [progressionSteps,setProgressionSteps] = useState([{title:'Grepsstyrke og heng',description:'Bygg trygg hengposisjon og grepsuthald.',exercises:'Aktivt heng\nGrepsheng',criteria:'Kontrollert heng i 20–30 sekund.',wod_id:''}])
  const [programDraft,setProgramDraft] = useState({template_id:'',title:'',start_date:new Date().toISOString().slice(0,10),notes:''})
  const [sessionDraft,setSessionDraft] = useState({title:'',wod_id:'',scheduled_date:'',week_no:'1',day_no:'1',session_kind:'training',focus_area:'',estimated_minutes:'45',notes:'',agenda:'',materials:'',preparation:''})
  const [checkinAnswers,setCheckinAnswers] = useState({})
@@ -124,7 +125,7 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
  }
  function applySixSessionIntro() {
   setTemplateDraft({
-   title:'Introduksjonskurs – 6 økter',
+   template_type:'intro',title:'Introduksjonskurs – 6 økter',
    description:'Eit strukturert introduksjonsløp som gjev medlemmen tryggleik i treningsrommet, grunnleggande teknikk, innføring i styrke og kondisjon, individuell tilpassing og ein plan for vegen vidare. Tilpass alltid innhald og belastning til personen.',
    weeks:'3',
    sessions_per_week:'2',
@@ -133,11 +134,11 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
   })
  }
  function applyIntroWithInfo() {
-  setTemplateDraft({title:'PT-start – introduksjon og treningsplan',description:'Eit praktisk oppstartsløp med kartlegging, informasjon om treningsprinsipp, teknikk, tilpassa trening og evaluering.',weeks:'3',sessions_per_week:'2',focus_areas:['Generell helse','Teknikk','Styrke','Mobilitet'],session_titles:'INFO: Oppstartssamtale, mål og forventningar\nØkt 1 – Grunnteknikk og trygg utføring\nØkt 2 – Styrke og bevegelseskvalitet\nINFO: Gjennomgang av treningsplan og sjølvstendig trening\nØkt 3 – Kondisjon og arbeidskapasitet\nTEST: Evaluering og vegen vidare'})
+  setTemplateDraft({template_type:'intro',title:'PT-start – introduksjon og treningsplan',description:'Eit praktisk oppstartsløp med kartlegging, informasjon om treningsprinsipp, teknikk, tilpassa trening og evaluering.',weeks:'3',sessions_per_week:'2',focus_areas:['Generell helse','Teknikk','Styrke','Mobilitet'],session_titles:'INFO: Oppstartssamtale, mål og forventningar\nØkt 1 – Grunnteknikk og trygg utføring\nØkt 2 – Styrke og bevegelseskvalitet\nINFO: Gjennomgang av treningsplan og sjølvstendig trening\nØkt 3 – Kondisjon og arbeidskapasitet\nTEST: Evaluering og vegen vidare'})
  }
  function applyRehabPreset() {
   setTemplateDraft({
-   title:'Gradvis opptrapping – rehabilitering',
+   template_type:'training_plan',title:'Gradvis opptrapping – rehabilitering',
    description:'Ein generell, individuelt tilpassa plan for gradvis retur til trening. PT-en tilpassar øvingar, rørsleutslag, belastning og progresjon etter medlemmen sine føresetnader. Dette er ikkje ein medisinsk behandlingsplan.',
    weeks:'4',
    sessions_per_week:'2',
@@ -145,23 +146,38 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
    session_titles:'Økt 1 – Kartlegging og toleranse\nØkt 2 – Kontrollert rørsle og grunnteknikk\nØkt 3 – Lett styrke og bevegelseskvalitet\nØkt 4 – Stabilitet og kontroll\nØkt 5 – Gradvis auka belastning\nØkt 6 – Kapasitet og funksjon\nØkt 7 – Eigenøkt og sjølvregulering\nØkt 8 – Evaluering og vidare plan'
   })
  }
+ function applyPullupPreset(){
+  setTemplateDraft({template_type:'progression',title:'Vegen til din første pull-up',description:'Eit stegvis utviklingsløp frå grunnleggjande heng og skulderkontroll til første kontrollerte pull-up. Tilpass stega etter kunden sitt nivå.',weeks:'8',sessions_per_week:'1',focus_areas:['Styrke','Teknikk','Kjernestabilitet'],session_titles:''})
+  setProgressionSteps([
+   {title:'Grepsstyrke og grunnleggjande heng',description:'Bygg trygg hengposisjon og grepsuthald.',exercises:'Aktivt heng\nGrepsheng',criteria:'Kontrollert heng i 20–30 sekund.',wod_id:''},
+   {title:'Aktivt heng og skulderkontroll',description:'Lær å stabilisera skulderblada utan å bøya albogane.',exercises:'Scapular pull-ups\nHeng med skulderdepresjon',criteria:'10 kontrollerte skuldertrekk utan smerte.',wod_id:''},
+   {title:'Horisontal trekkstyrke',description:'Bygg trekkstyrke gjennom kontrollert roing.',exercises:'Ring rows\nSittande roing med strikk',criteria:'3 × 10 kontrollerte repetisjonar.',wod_id:''},
+   {title:'Assisterte pull-ups',description:'Bruk strikk eller fotstøtte for å trena heile rørsla.',exercises:'Pull-up med strikk\nIsometrisk hald i topposisjon',criteria:'3 × 5 med jamn rørsle og kontroll.',wod_id:''},
+   {title:'Negative pull-ups',description:'Start i topposisjon og senk kroppen kontrollert.',exercises:'Negative pull-ups\nEksentrisk hald',criteria:'3 kontrollerte senkingar på 4–6 sekund.',wod_id:''},
+   {title:'Delvise pull-ups',description:'Arbeid gjennom stadig større rørsleutslag.',exercises:'Pull-up frå halv posisjon\nAssistert full rørsle',criteria:'Fleire repetisjonar med kontrollert rørsle.',wod_id:''},
+   {title:'Første fullstendige pull-up',description:'Test full rørsle utan assistanse når kunden er klar.',exercises:'Pull-up\nAktivt heng mellom forsøka',criteria:'Éi full repetisjon frå strake armar til haka over stanga.',wod_id:''},
+   {title:'Bygg vidare på pull-up',description:'Utvikle repetisjonskapasitet og teknisk kvalitet.',exercises:'Pull-ups i kontrollerte sett\nEksentrisk arbeid ved behov',criteria:'Auka tal gode repetisjonar utan å mista teknikken.',wod_id:''}
+  ])
+ }
+ function updateProgressionStep(index,patch){setProgressionSteps(rows=>rows.map((row,i)=>i===index?{...row,...patch}:row))}
  async function saveTemplate(e) {
   e.preventDefault()
   await run(async()=>{
-   const lines=templateDraft.session_titles.split('\n').map(x=>x.trim()).filter(Boolean).map(raw=>({title:raw.replace(/^(INFO|TEST):\s*/i,''),session_kind:/^INFO:/i.test(raw)?'information':/^TEST:/i.test(raw)?'assessment':'training'}))
+   const isProgression=templateDraft.template_type==='progression'
+   const lines=isProgression?progressionSteps.filter(step=>step.title.trim()).map((step,index)=>({title:step.title.trim(),sequence_no:index+1,week_no:index+1,day_no:1,session_kind:'progression_step',focus_area:'Styrke',estimated_minutes:45,wod_id:step.wod_id||null,workout_snapshot:{description:step.description.trim(),exercises:step.exercises.split('\n').map(x=>x.trim()).filter(Boolean),advancement_criteria:step.criteria.trim()}})):templateDraft.session_titles.split('\n').map(x=>x.trim()).filter(Boolean).map(raw=>({title:raw.replace(/^(INFO|TEST):\s*/i,''),session_kind:/^INFO:/i.test(raw)?'information':/^TEST:/i.test(raw)?'assessment':'training'}))
    const capacity=Number(templateDraft.weeks)*Number(templateDraft.sessions_per_week)
-   if(!templateDraft.title.trim()||!lines.length)throw new Error('Programmet må ha namn og minst éi økt.')
-   if(!Number.isFinite(capacity)||capacity<1||lines.length>capacity)throw new Error('Programmet har plass til '+capacity+' økter. Reduser øktlista eller auk veker / økter per veke.')
-   const {error:e}=await supabase.from('pt_program_templates').insert({title:templateDraft.title.trim(),description:templateDraft.description,weeks:Number(templateDraft.weeks),sessions_per_week:Number(templateDraft.sessions_per_week),focus_areas:templateDraft.focus_areas,sessions:lines.map((item,index)=>({title:item.title,sequence_no:index+1,week_no:Math.floor(index/Number(templateDraft.sessions_per_week))+1,day_no:(index%Number(templateDraft.sessions_per_week))+1,session_kind:item.session_kind,focus_area:'',estimated_minutes:item.session_kind==='information'?30:45})),created_by:profile.id})
+   if(!templateDraft.title.trim()||!lines.length)throw new Error('Programmet må ha namn og minst eitt steg eller éi økt.')
+   if(!isProgression&&(!Number.isFinite(capacity)||capacity<1||lines.length>capacity))throw new Error('Programmet har plass til '+capacity+' økter. Reduser øktlista eller auk veker / økter per veke.')
+   const {error:e}=await supabase.from('pt_program_templates').insert({title:templateDraft.title.trim(),description:templateDraft.description,template_type:templateDraft.template_type,weeks:isProgression?Math.max(1,lines.length):Number(templateDraft.weeks),sessions_per_week:isProgression?1:Number(templateDraft.sessions_per_week),focus_areas:templateDraft.focus_areas,sessions:lines.map((item,index)=>({...item,sequence_no:index+1,week_no:item.week_no||Math.floor(index/Number(templateDraft.sessions_per_week))+1,day_no:item.day_no||(index%Number(templateDraft.sessions_per_week))+1,focus_area:item.focus_area||'',estimated_minutes:item.estimated_minutes||(item.session_kind==='information'?30:45)})),created_by:profile.id})
    if(e)throw e
-   setShowTemplate(false);setNotice('Introprogrammet er lagra i biblioteket.')
+   setShowTemplate(false);setNotice('Kurs- eller planmalen er lagra i biblioteket.')
   })
  }
  async function createProgram(e) {
   e.preventDefault()
   await run(async()=>{
    const template=templates.find(t=>t.id===programDraft.template_id)
-   if(!template||!clientId)throw new Error('Vel kunde og introprogram.')
+   if(!template||!clientId)throw new Error('Vel aktiv kunde og kurs-/planmal.')
    const title=programDraft.title.trim()||template.title
    const rows=(template.sessions||[]).map((s,index)=>({
     sequence_no:index+1,
@@ -171,13 +187,15 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
     session_kind:s.session_kind||'training',
     focus_area:s.focus_area||'',
     estimated_minutes:Number(s.estimated_minutes)||45,
-    workout_snapshot:s.session_kind==='information'?{title:s.title,format:'Informasjonstime',agenda:s.title,materials:'',preparation:'Ta med spørsmål og relevante treningsmål'}:{title:s.title,format:'',movements:[],notes:'Tilpass økta for kunden'},
+    wod_id:s.wod_id||null,
+    workout_snapshot:s.workout_snapshot||(s.session_kind==='information'?{title:s.title,format:'Informasjonstime',agenda:s.title,materials:'',preparation:'Ta med spørsmål og relevante treningsmål'}:{title:s.title,format:s.session_kind==='progression_step'?'Progresjonssteg':'',description:s.description||'',exercises:s.exercises||[],advancement_criteria:s.advancement_criteria||'',movements:[],notes:'Tilpass økta for kunden'}),
     status:'planned'
    }))
    const {data:programId,error:e}=await supabase.rpc('create_pt_program_with_sessions',{
     p_program:{
      client_id:clientId,
      template_id:template.id,
+     program_type:template.template_type||'intro',
      title,
      description:template.description,
      start_date:programDraft.start_date||null,
@@ -200,7 +218,7 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
    if(sessionDraft.session_kind==='information'&&!sessionDraft.title.trim())throw new Error('Infotimen må ha eit namn eller tema.')
    const wod=sessionDraft.session_kind==='information'?null:wods.find(w=>w.id===sessionDraft.wod_id)
    const existing=sessions.filter(s=>s.program_id===activeProgram.id)
-   const snapshot=wod?{id:wod.id,title:wod.name,format:wod.format,duration_minutes:wod.duration_minutes,movements:wod.movements,notes:wod.notes}:sessionDraft.session_kind==='information'?{title:sessionDraft.title,format:'Informasjonstime',agenda:sessionDraft.agenda,materials:sessionDraft.materials,preparation:sessionDraft.preparation,notes:sessionDraft.notes}:{title:sessionDraft.title,format:'Eigen økt',movements:[],notes:sessionDraft.notes}
+   const snapshot=wod?{...(session.workout_snapshot||{}),id:wod.id,wod_title:wod.name,format:wod.format,duration_minutes:wod.duration_minutes,movements:wod.movements,notes:wod.notes}:{...(session.workout_snapshot||{}),title:session.title,format:'Eigen økt',movements:[],notes:session.coach_note||''}
    const {error:e}=await supabase.from('pt_program_sessions').insert({program_id:activeProgram.id,sequence_no:existing.length+1,title:sessionDraft.title.trim()||wod?.name||'Ny økt',wod_id:wod?.id||null,scheduled_date:sessionDraft.scheduled_date||null,week_no:Number(sessionDraft.week_no)||1,day_no:Number(sessionDraft.day_no)||1,session_kind:sessionDraft.session_kind,focus_area:sessionDraft.focus_area,estimated_minutes:sessionDraft.estimated_minutes?Number(sessionDraft.estimated_minutes):null,workout_snapshot:snapshot,coach_note:sessionDraft.notes,status:'planned'})
    if(e)throw e
    setShowSession(false);setSessionDraft({title:'',wod_id:'',scheduled_date:'',week_no:'1',day_no:'1',session_kind:'training',focus_area:'',estimated_minutes:'45',notes:'',agenda:'',materials:'',preparation:''});setNotice('Økta er lagt sist i treningsrekkja.')
