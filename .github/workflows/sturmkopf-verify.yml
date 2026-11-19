@@ -1,0 +1,31 @@
+name: STURMKOPF · build and test
+
+on:
+  push:
+    branches:
+      - 'garasjegym-2.0-sturm­kopf'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: WOD order tests and Vite build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - name: Check out STURMKOPF
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Test WOD ordering
+        run: npm run test:wod-order
+      - name: Build application
+        run: npm run build
