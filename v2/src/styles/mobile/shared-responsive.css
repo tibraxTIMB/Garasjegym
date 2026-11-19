@@ -1,0 +1,37 @@
+/* Shared controls and responsive data-safe defaults */
+@media (max-width: 900px) {
+  .app-shell .engine-section {
+    min-width: 0;
+    padding: clamp(12px, 2.2vw, 16px);
+  }
+  .app-shell .training-heading {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .app-shell .training-heading h3,
+  .app-shell .training-heading h4 {
+    overflow-wrap: anywhere;
+  }
+  .app-shell input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  .app-shell select,
+  .app-shell textarea {
+    max-width: 100%;
+    min-width: 0;
+    font-size: 14px;
+  }
+  .app-shell button {
+    max-width: 100%;
+  }
+}
+
+@media (pointer: coarse), (hover: none) {
+  .community-module button,
+  .coffee-module button,
+  .admin-module button,
+  .my-page button,
+  .my-training button,
+  .wod-library-grid button,
+  .music-page button {
+    touch-action: manipulation;
+  }
+}
