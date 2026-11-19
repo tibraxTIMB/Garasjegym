@@ -2,7 +2,8 @@
 
 **Dato:** 19.11.2026  
 **Branch:** garasjegym-2.0-sturm­kopf
-**Kontrollert kodecommit:** 1e47ad6c43c09534cd75f4e11946d4bf724464d9  
+**Kontrollert kodecommit:** 07f2159a0cde35bf101905c8f495eb3fb15c7d77
+**Siste migreringscommit:** 8ddf520e057cb6eb4b859d59b71380dfab43cb60  
 **Testprosjekt:** garasjegym-2-test (izwzwvlexqxqewzijhhd)
 
 ## Statusnøkkel
@@ -21,7 +22,7 @@
 | Favoritt per brukar | IMPLEMENTERT – IKKJE MANUELT TESTA | wod_favorites er knytt til user_id. |
 | AMRAP, EMOM, For Time, Tabata og stasjonssirkel | IMPLEMENTERT – IKKJE MANUELT TESTA | Timer-/WOD-konfigurasjon ligg i timer_settings og movements. |
 | Pause som øving | DELvis IMPLEMENTERT | Må stadfestast manuelt i builder og treningsmodus. |
-| Plyo box målt i cm | DELvis IMPLEMENTERT | Datamodell og vising må kontrollerast mot øvingsbiblioteket i nettlesar. |
+| Plyo box målt i cm | IMPLEMENTERT – IKKJE MANUELT TESTA | WodBuilder lagrar høgde i cm; stasjonssirkel lagrar `height_cm` per stasjon. Training og live gruppetime viser høgda. Manuell nettlesartest står att. |
 | Stasjonssirkel 2–8 stasjonar | IMPLEMENTERT – IKKJE MANUELT TESTA | Timerlogikk og stasjonsoppsett må testast med fleire deltakarar. |
 | WOD-sletting/arkivering | IMPLEMENTERT – IKKJE MANUELT TESTA | Sletting kontrollerer no referansar i PT, trening, favorittar, live gruppetime, JSON-/array-koplingar og dagens WOD. Brukte WOD-ar blir arkiverte. |
 | Privat WOD synleg ved direkte PT-tildeling | FERDIG OG SQL-TESTA | `wods_read_assigned` gir tilgang til rett medlem, men ikkje andre medlemmer. |
@@ -39,7 +40,7 @@
 | Privat PT-WOD → medlemskort med WOD-data | FERDIG OG SQL-TESTA | SQL-rollesimulering stadfesta at rett medlem ser WOD-data, medan annan medlem ikkje ser den private WOD-en. |
 | Lagre treningslogg og øvingar atomisk | FERDIG OG SQL-TESTA | save_workout_atomic. |
 | Idempotent lagring | FERDIG OG SQL-TESTA | save_token hindrar dobbeltlagring ved gjenteken innsending. |
-| Treningslogg → PT-WOD-tildeling | FERDIG OG SQL-TESTA | save_workout_with_pt_links koplar loggen og fullfører tildeling i same transaksjon. |
+| Treningslogg → PT-WOD-tildeling | FERDIG OG SQL-TESTA | `save_workout_with_pt_links` koplar loggen og fullfører tildeling i same transaksjon. Triggeren krev eigen logg for nøyaktig tildelt WOD. |
 | Treningslogg → PT-programøkt | FERDIG OG SQL-TESTA | Same RPC koplar loggen og fullfører programøkta atomisk. |
 | Treningshistorikk og PR | DELvis IMPLEMENTERT | Historikk blir lagra; PR-logikken må testast manuelt med ulike einingar og øvingstypar. |
 | Resultat med kg, tid, distanse, kaloriar og høgde | DELvis IMPLEMENTERT | Datamodell har resultatfelt, men alle måleeiningar må gjennomgåast manuelt. |
@@ -52,7 +53,7 @@
 | Opprette program med fleire økter | FERDIG OG SQL-TESTA | create_pt_program_with_sessions opprettar program og økter atomisk. |
 | Leggje WOD til programøkt | IMPLEMENTERT – IKKJE MANUELT TESTA | pt_program_sessions.wod_id og workout_snapshot blir oppdaterte av staff. |
 | Flytte/endre rekkjefølgje | IMPLEMENTERT – IKKJE MANUELT TESTA | Staff-flyt; må testast i UI. |
-| Medlem fullfører programøkt | FERDIG OG SQL-TESTA | Medlem kan oppdatera status og eiga treningslogg, ikkje programstruktur. |
+| Medlem fullfører programøkt | FERDIG OG SQL-TESTA | Medlem kan berre fullføra med eigen treningslogg for rett WOD; direkte fullføring utan logg eller med logg for feil WOD blir avvist. |
 | Mål og progresjon | IMPLEMENTERT – IKKJE MANUELT TESTA | pt_client_goals og programprogress er kopla i PTStudio. |
 | Statussjekk | FERDIG OG SQL-TESTA | Medlem kan senda eigne svar; staff kan markera gjennomgått. |
 | PT-notat og meldingar | DELvis IMPLEMENTERT | RLS og tabellar finst; coach-scope og full meldingsflyt må testast manuelt. |
@@ -107,6 +108,10 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 21. Admin kan framleis lesa full deltakaroversikt.
 22. Medlem kan ikkje lesa upublisert gruppetime, medan staff kan.
 23. Medlem kan lesa eiga bookingrad, men ikkje andre sine; aggregert kapasitetstal er korrekt.
+24. Medlem kan ikkje fullføra PT-WOD utan treningslogg.
+25. Medlem kan ikkje knyta PT-WOD til treningslogg for feil WOD.
+26. Medlem kan ikkje fullføra PT-programøkt utan logg eller med logg for feil WOD.
+27. Riktig eigen treningslogg for rett WOD fullfører både WOD-tildeling og PT-programøkt.
 
 ## 7. Manuelle testar som står att
 
@@ -126,6 +131,6 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 
 **Database:** 63 installerte migreringar; 52 SQL-filer i branch. Dei eldre manglande migreringsfilene er framleis eit reproduksjonsavvik.
 
-**CI:** Checks og preview deploy for kodecommit 1e47ad6c er under kontroll; endeleg resultat skal stadfestast i GitHub Actions.
+**CI:** Checks for migreringscommit 8ddf520e er bestått. Preview deploy for same commit var under gjennomføring ved siste kontroll.
 
 **Viktig:** Ingen av desse nettlesar-/fysiske einingstestane er rapporterte som gjennomførte i denne revisjonsøkta.
