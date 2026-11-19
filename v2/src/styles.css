@@ -5524,3 +5524,10 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
   .pt2-preset-callout { align-items:stretch; flex-direction:column; }
   .pt2-preset-callout button { width:100%; }
 }
+
+
+.pt2-preset-actions { display:flex; flex-wrap:wrap; gap:8px; flex:0 0 auto; }
+@media(max-width:600px) {
+ .pt2-preset-actions { display:grid; grid-template-columns:1fr; }
+ .pt2-preset-actions button { width:100%; }
+}
