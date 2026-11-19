@@ -20,6 +20,6 @@ export default function ScheduleHub({profile,onLogResult,onLaunchWorkout,focusRe
    <button type="button" role="tab" aria-selected={activeTab==='pt'} className={activeTab==='pt'?'selected':''} onClick={()=>changeTab('pt')}><UserRound size={16}/> PT-studio</button>
    {isStaff(profile)&&<button type="button" role="tab" aria-selected={activeTab==='calendar'} className={activeTab==='calendar'?'selected':''} onClick={()=>changeTab('calendar')}><CalendarDays size={16}/> Kalender</button>}
   </div>
-  {activeTab==='booking'?<Booking profile={profile} onLogResult={onLogResult} initialClassId={focusClassId}/>:activeTab==='pt'?<PT profile={profile} focusRequestId={focusRequestId} onFocusConsumed={onFocusConsumed} onLaunchWorkout={onLaunchWorkout}/>:<CalendarAdmin onNavigate={(target,classId)=>{changeTab(target==='pt'?'pt':'booking');if(target!=='pt'&&classId)setFocusClassId(classId)}}/>}
+  {activeTab==='booking'?<Booking profile={profile} onLogResult={onLogResult} initialClassId={focusClassId} onInitialClassConsumed={()=>setFocusClassId(null)}/>:activeTab==='pt'?<PT profile={profile} focusRequestId={focusRequestId} onFocusConsumed={onFocusConsumed} onLaunchWorkout={onLaunchWorkout}/>:<CalendarAdmin onNavigate={(target,classId)=>{changeTab(target==='pt'?'pt':'booking');if(target!=='pt'&&classId)setFocusClassId(classId)}}/>}
  </div>
 }
