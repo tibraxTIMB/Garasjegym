@@ -1,0 +1,128 @@
+/* Admin control panel: touch-friendly filters, member actions and exercise tools */
+.admin-module,
+.admin-dashboard-grid,
+.admin-exercises-panel,
+.admin-member,
+.admin-exercise-item {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.admin-tabs {
+  min-width: 0;
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-tabs button {
+  flex: 0 0 auto;
+  min-height: 46px;
+  white-space: nowrap;
+}
+
+.admin-dashboard-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-member-actions button,
+.admin-member-actions select,
+.admin-exercise-item-actions button {
+  min-height: 44px;
+}
+
+.rank-catalogue-row {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .admin-module { gap: 13px; }
+  .admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .admin-tabs {
+    position: sticky;
+    top: 62px;
+    z-index: 42;
+    width: calc(100% + 2px);
+    margin: 0 -1px 10px;
+    padding: 7px 1px 9px;
+    background: rgba(16, 20, 22, .96);
+    border-bottom: 1px solid var(--gg-shell-border);
+    backdrop-filter: blur(12px);
+  }
+  .admin-dashboard-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .admin-achievement-summary { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .admin-member-enhanced {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 13px 0;
+  }
+  .admin-member-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    width: 100%;
+  }
+  .admin-member-actions button,
+  .admin-member-actions select {
+    min-width: 0;
+    min-height: 46px;
+    flex: 1 1 130px;
+    max-width: none !important;
+  }
+  .admin-member-actions select { font-size: 13px; }
+  .admin-exercise-toolbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .admin-exercise-search { min-width: 0 !important; min-height: 48px; }
+  .admin-exercise-search input { min-height: 46px; font-size: 14px; }
+  .admin-exercise-filter { min-height: 46px; }
+  .admin-exercise-filter select { min-height: 44px; font-size: 13px; }
+  .admin-exercise-list { grid-template-columns: minmax(0, 1fr) !important; }
+  .admin-exercise-item {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .admin-exercise-item-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+  .admin-exercise-item-actions button { min-height: 46px; justify-content: center; }
+  .admin-exercise-heading-actions { width: 100%; }
+  .admin-exercise-heading-actions button { min-height: 46px; flex: 1; justify-content: center; }
+  .admin-create-form label { min-width: 0; }
+  .admin-create-form input,
+  .admin-create-form select,
+  .admin-create-form textarea { min-height: 46px; font-size: 14px; }
+  .admin-dose-profile-grid {
+    grid-template-columns: 58px repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px;
+  }
+  .admin-dose-profile-grid input { min-height: 44px; padding-inline: 6px; }
+  .rank-catalogue-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 34px !important;
+    gap: 7px;
+    padding-block: 10px;
+  }
+  .rank-catalogue-row strong { overflow-wrap: anywhere; line-height: 1.3; }
+  .rank-catalogue-row span { overflow-wrap: anywhere; line-height: 1.3; }
+}
+
+@media (max-width: 560px) {
+  .admin-stats > div { padding: 11px; }
+  .admin-stats strong { font-size: 21px; }
+  .admin-member-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .admin-member-actions button,
+  .admin-member-actions select { width: 100%; }
+  .admin-exercise-item-actions { grid-template-columns: minmax(0, 1fr); }
+  .rank-catalogue-row { grid-template-columns: minmax(0, 1fr) 32px !important; }
+  .rank-catalogue-row span { grid-column: 1; grid-row: 2; }
+  .rank-catalogue-row b { grid-column: 2; grid-row: 1 / span 2; }
+}
+
