@@ -13,7 +13,7 @@ Dette er ei mellombels testutgåve. Ho brukar eit eige Supabase-testprosjekt, al
 - URL: `https://izwzwvlexqxqewzijhhd.supabase.co`
 - Bruk berre publishable key frå prosjektet. Ikkje bruk produksjonsnøklar.
 
-Før registrering: opne Supabase Dashboard → Authentication → URL Configuration. Set Site URL til `http://localhost:5173` og legg til `http://localhost:5173/**` under Redirect URLs. Dette er berre testprosjektet.
+Før registrering: opne Supabase Dashboard → Authentication → URL Configuration. Set Site URL til `http://localhost:5173/Garasjegym/` og legg til `http://localhost:5173/Garasjegym/**` under Redirect URLs. Dette er berre testprosjektet.
 
 ## Start
 1. Last ned ZIP frå utviklingsgreina: https://github.com/tibraxTIMB/Garasjegym/archive/refs/heads/garasjegym-2.0-sturm%C2%ADkopf.zip
@@ -21,7 +21,7 @@ Før registrering: opne Supabase Dashboard → Authentication → URL Configurat
 3. Opne mappa `v2`.
 4. Dobbeltklikk `START-GARASJEGYM-2.0.bat`.
 5. Første gong blir `.env.local` oppretta og opna i Notisblokk. Fyll inn URL og publishable key frå det dedikerte testprosjektet i Supabase. Lagre.
-6. Start BAT-fila på nytt. Appen opnar på http://localhost:5173.
+6. Start BAT-fila på nytt. Appen opnar på http://localhost:5173/Garasjegym/.
 7. Vel «Registrer deg» og opprett ein testkonto. Nye kontoar får medlemsrolle. Administratorrettar blir tildelte separat etter at testkontoen er oppretta.
 
 ## Test på Android og Pages
@@ -32,7 +32,7 @@ For at passordreset skal kunna returnera til appen, må testprosjektet ha denne 
 
 `https://tibraxtimb.github.io/Garasjegym/`
 
-Behald òg `http://localhost:5173/**` for lokal testing. Ikkje endra innstillingar i produksjonsprosjektet. Passordreset i klienten brukar no Vite sin `BASE_URL`, slik at Pages-stien blir med i redirecten.
+Behald òg `http://localhost:5173/Garasjegym/**` for lokal testing. Ikkje endra innstillingar i produksjonsprosjektet. Passordreset i klienten brukar no Vite sin `BASE_URL`, slik at Pages-stien blir med i redirecten.
 
 På Android: opne Pages-adressa i Chrome. Appen kan leggjast til på startskjermen via nettlesarmenyen dersom nettlesaren tilbyr «Installer app» eller «Legg til på startsida».
 
