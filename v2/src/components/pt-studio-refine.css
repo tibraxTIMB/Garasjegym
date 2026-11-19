@@ -24,3 +24,8 @@
 .pt2-template-card>.secondary-button{width:100%;justify-content:center;margin-top:3px}
 @media(max-width:900px){.pt2-template-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.pt2-template-controls{grid-template-columns:minmax(0,1fr)}.pt2-template-grid{grid-template-columns:minmax(0,1fr)}.pt2-template-controls select{width:100%}.pt2-template-count{justify-self:end}}
+
+.pt2-custom-focus{display:flex;gap:8px;align-items:center;margin-top:10px}
+.pt2-custom-focus input{flex:1;min-width:0}
+.pt2-custom-focus button{white-space:nowrap}
+@media(max-width:560px){.pt2-custom-focus{align-items:stretch;flex-direction:column}.pt2-custom-focus button{width:100%}}
