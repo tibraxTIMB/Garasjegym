@@ -5550,3 +5550,16 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
  .pt2-goal .pt2-inline-actions { width:100%; justify-content:flex-start; }
  .pt2-goal .pt2-inline-actions button { flex:1 1 auto; }
 }
+
+
+/* Group-class attendance and waitlist controls */
+.class-attendance-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center;padding:9px 0;border-top:1px solid var(--line);min-width:0}
+.class-attendance-row>span{min-width:0;overflow-wrap:anywhere;color:#e5e8e4;font-size:12px}
+.class-attendance-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}
+.class-attendance-actions .secondary-button{padding:7px 9px;font-size:11px}
+.class-attendance-actions .text-button{font-size:11px}
+@media(max-width:620px){
+ .class-attendance-row{grid-template-columns:minmax(0,1fr);align-items:start}
+ .class-attendance-actions{justify-content:flex-start}
+ .class-detail-facts>span{max-width:100%}
+}
