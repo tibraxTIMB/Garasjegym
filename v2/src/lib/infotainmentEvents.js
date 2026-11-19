@@ -3,6 +3,7 @@
  * Starts-at values are timestamptz strings returned by Supabase.
  */
 export function localDateKey(value) {
+  if (value == null || value === '') return null;
   const date = value instanceof Date ? value : new Date(value);
   if (!Number.isFinite(date.getTime())) return null;
 
