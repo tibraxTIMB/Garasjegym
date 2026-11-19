@@ -8,6 +8,8 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
  const [fileName,setFileName]=useState('')
  const [filePreview,setFilePreview]=useState('')
  const [isPdf,setIsPdf]=useState(false)
+ const [ocrBusy,setOcrBusy]=useState(false)
+ const [ocrProgress,setOcrProgress]=useState(0)
  const [error,setError]=useState('')
  const [parsed,setParsed]=useState(null)
  const preview=useMemo(()=>parsed?.items||[],[parsed])
@@ -16,9 +18,18 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
   if(!file)return
   setFileName(file.name);setError('');setParsed(null);setIsPdf(file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf'))
   if(file.type.startsWith('text/')||/\.(txt|csv|md)$/i.test(file.name)){setSource(await file.text());setFilePreview('')}
-  else if(file.type.startsWith('image/')||file.type==='application/pdf'||/\.(png|jpe?g|webp|pdf)$/i.test(file.name)){
-   setFilePreview(URL.createObjectURL(file))
-   setError('Fila er lasta inn som kjeldereferanse. Automatisk OCR er ikkje aktivert i gratisoppsettet; lim inn eller skriv av teksten i feltet under, og kontroller tolkinga før import.')
+  else if(file.type.startsWith('image/')){
+   setFilePreview(URL.createObjectURL(file));setOcrBusy(true);setOcrProgress(0)
+   try{
+    const {createWorker}=await import('tesseract.js')
+    const worker=await createWorker('eng',1,{logger:message=>{if(message.status==='recognizing text')setOcrProgress(Math.round((message.progress||0)*100))}})
+    try{const result=await worker.recognize(file);setSource(result.data.text||'');setError(result.data.text?.trim()?'OCR-tekst er henta ut. Kontroller namn, format, øvingar og tal før import.':'OCR fann ikkje lesbar tekst. Skriv inn teksten manuelt.')}
+    finally{await worker.terminate()}
+   }catch(error){setError('Biletet er lasta inn, men OCR feila: '+(error.message||'ukjend feil')+'. Du kan framleis skrive eller lime inn teksten manuelt.')}
+   finally{setOcrBusy(false)}
+  }else if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){
+   setFilePreview(URL.createObjectURL(file));setIsPdf(true)
+   setError('PDF-en er lasta inn som kjeldereferanse. Kopier teksten frå PDF-en og lim han inn i feltet under; automatisk PDF-tekstuttrekk er ikkje aktivert.')
   }else setError('Denne filtypen kan ikkje lesast direkte. Bruk TXT, CSV, Markdown, bilete eller PDF.')
  }
  function parse(){setError('');try{setParsed(parseWodImport(source,exerciseCatalog))}catch(e){setParsed(null);setError(e.message||'Kunne ikkje tolka WOD-teksten.')}}
@@ -28,8 +39,9 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
   {fileName&&<div className="wod-import-file-name">{filePreview?<FileImage size={15}/>:<FileText size={15}/>} {fileName}</div>}
   {filePreview&&<div className="wod-import-source-preview">{isPdf?<iframe title="PDF-kjelde" src={filePreview}/>:<img src={filePreview} alt="Opplasta WOD-kjelde"/>}</div>}
   <label className="wod-import-text-label">WOD-tekst<textarea rows="6" value={source} onChange={event=>{setSource(event.target.value);setParsed(null)}} placeholder={'FRAN\n21-15-9\nThrusters 43 kg\nPull-ups'} /></label>
+  {ocrBusy&&<div className="wod-import-message"><FileImage size={15}/> Les bilete med OCR … {ocrProgress}%</div>}
   {error&&<div className="wod-import-message"><AlertTriangle size={15}/>{error}</div>}
-  <div className="wod-import-actions"><button type="button" className="secondary-button" onClick={parse} disabled={!source.trim()}>Analyser tekst</button></div>
+  <div className="wod-import-actions"><button type="button" className="secondary-button" onClick={parse} disabled={!source.trim()||ocrBusy}>Analyser tekst</button></div>
   {parsed&&<div className="wod-import-result">
    <div className="wod-import-result-head"><CheckCircle2 size={17}/><strong>Kontroller importen</strong></div>
    <div className="wod-import-meta"><span>{parsed.name}</span><span>{parsed.format||'Format uavklart'}</span><span>{parsed.minutes?parsed.minutes+' min':'Varigheit uavklart'}</span></div>
