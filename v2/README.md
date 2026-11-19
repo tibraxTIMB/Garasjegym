@@ -66,6 +66,20 @@ Migrering 008 byggjer vidare på 001 og krev at 005 har oppretta `class_live_ses
 - Admin manglar full drift for booking, PT, kaffibar, varsling og innstillingar.
 - Jamleg oppfrisking er lagt til for sentrale moduldata. Full ende-til-ende-testing med medlem, manager, admin og fleire einingar er ikkje utført.
 
+## Test-URL og publisering
+
+Testbygget ligg på `https://tibraxtimb.github.io/Garasjegym/` og brukar berre det isolerte Supabase-testprosjektet `garasjegym-2-test`. Dette er den delte GitHub Pages-adressa for repoet, ikkje ein eigen preview-host. Ei ny Pages-publisering erstattar innhaldet på denne adressa.
+
+Workflowen `.github/workflows/deploy-sturmkopf-pages.yml` byggjer på push til STURMKOPF-greina, men publiseringsjobben er no hoppa over ved vanlege push. Han krev eit eksplisitt manuelt `publish_preview=true`-val. Ikkje endra dette til automatisk publisering utan uttrykkeleg klarsignal.
+
+## Nyleg kvalitetssikra
+
+- WOD Builder brukar éin felles ordensfunksjon for flytting, posisjonsval, dra/slipp, lagring og gjenopning.
+- Seks automatiske testar dekkjer rekkjefølgje og `sort_order`; migreringskontroll og Vite-bygg er stadfesta grøne i GitHub Actions.
+- PT-meldingar har slettemoglegheit i PT-dialogen og på medlemssida, under eksisterande RLS-reglar.
+- SECURITY DEFINER-funksjonane i testdatabasen har eksplisitt `search_path = pg_catalog, public, pg_temp`, med unntak av funksjonen som allereie brukar tomt search path.
+- Ingen av desse endringane er køyrde mot produksjonsdatabasen.
+
 ## Kvalitetssikring
 Testplanen ligg i QA-2.0.md. GitHub Actions køyrer òg `npm run check:migrations`, som kontrollerer migreringsfilnamn og balanserte dollar-quote-delimiterar, før Vite-bygginga. Han skil mellom planlagde testar og testar som faktisk er stadfesta køyrde.
 
