@@ -2,7 +2,7 @@
 
 **Dato:** 19.11.2026  
 **Branch:** garasjegym-2.0-sturm­kopf
-**Kontrollert kodecommit:** 16bbfd564b19ee99c6e722e01bb0cdbd6da94db9  
+**Kontrollert kodecommit:** 1e47ad6c43c09534cd75f4e11946d4bf724464d9  
 **Testprosjekt:** garasjegym-2-test (izwzwvlexqxqewzijhhd)
 
 ## Statusnøkkel
@@ -71,6 +71,7 @@
 | PT-booking i autentisert UI | IMPLEMENTERT – IKKJE MANUELT TESTA | Krev manuell test med medlem og staff. |
 | Medlem kan berre lesa eigne gruppetimepåmeldingar | FERDIG OG SQL-TESTA | RLS er avgrensa til eigne rader; aggregert deltakarantal kjem frå `get_class_attendance_counts`. Staff ser framleis full deltakaroversikt. |
 | Gruppetimebooking og varseltrigger | FERDIG OG SQL-TESTA | Ny booking opprettar `group`-varsel utan at kategorikontrollen avviser transaksjonen. |
+| Medlem ser berre publiserte gruppetimar | FERDIG OG SQL-TESTA | RLS skjuler upubliserte timar for medlemmer; admin/manager kan framleis sjå utkast. |
 
 ## 5. Tilgangsmodell – viktig avgrensing
 
@@ -104,6 +105,8 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 19. Medlem kan berre lesa eiga `class_bookings`-rad, ikkje andre medlemmers påmeldingar.
 20. `get_class_attendance_counts` returnerer berre aggregert tal for publiserte gruppetimar.
 21. Admin kan framleis lesa full deltakaroversikt.
+22. Medlem kan ikkje lesa upublisert gruppetime, medan staff kan.
+23. Medlem kan lesa eiga bookingrad, men ikkje andre sine; aggregert kapasitetstal er korrekt.
 
 ## 7. Manuelle testar som står att
 
@@ -121,8 +124,8 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 - Medlem kan ikkje sjå eller endra andre medlemmers data.
 - Mobil og nettbrett i ståande og liggjande modus.
 
-**Database:** 61 installerte migreringar; 50 SQL-filer i branch. Dei eldre manglande migreringsfilene er framleis eit reproduksjonsavvik.
+**Database:** 63 installerte migreringar; 52 SQL-filer i branch. Dei eldre manglande migreringsfilene er framleis eit reproduksjonsavvik.
 
-**CI:** Checks og preview deploy for kodecommit 16bbfd56 er under kontroll; endeleg resultat skal stadfestast i GitHub Actions.
+**CI:** Checks og preview deploy for kodecommit 1e47ad6c er under kontroll; endeleg resultat skal stadfestast i GitHub Actions.
 
 **Viktig:** Ingen av desse nettlesar-/fysiske einingstestane er rapporterte som gjennomførte i denne revisjonsøkta.
