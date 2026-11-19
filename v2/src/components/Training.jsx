@@ -5,7 +5,7 @@ import { MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
-const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '' }] })
+const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', uses_height: false, sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] })
 const pad = (n) => String(n).padStart(2, '0')
 const clock = (seconds) => `${pad(Math.floor(Math.max(0, seconds) / 60))}:${pad(Math.max(0, seconds) % 60)}`
 const doseLabel=(item,level='rx')=>{const d=item?.levels?.[level]||{};const parts=[];if(d.sets)parts.push(d.sets+' sett');if(d.reps)parts.push(d.reps+' reps');if(d.heightCm)parts.push(d.heightCm+' cm');if(d.durationSeconds)parts.push(d.durationSeconds+' sek');if(d.distanceMeters)parts.push(d.distanceMeters+' m');if(d.calories)parts.push(d.calories+' cal');if(d.loadMode==='kg'){const loads=[d.loadKgMen!==''&&d.loadKgMen!=null?'M '+d.loadKgMen+' kg':'',d.loadKgWomen!==''&&d.loadKgWomen!=null?'K '+d.loadKgWomen+' kg':''].filter(Boolean);if(loads.length)parts.push(loads.join(' / '))}else if(d.loadMode==='percent'&&d.percent1rm)parts.push(d.percent1rm+' % 1RM');else if(d.loadMode==='rir'&&d.rir!=='')parts.push('RIR '+d.rir);else if(d.loadMode==='bodyweight')parts.push('Kroppsvekt');if(d.tempo)parts.push('Tempo '+d.tempo);if(d.variant)parts.push('Variant: '+d.variant);if(d.instruction)parts.push(d.instruction);return parts.join(' · ')||''};
@@ -345,7 +345,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     }
     const [e, h, pr] = await Promise.all([
       supabase.from('exercises').select('id,name,category,equipment,description,video_url').eq('is_active', true).order('name'),
-      supabase.from('workout_logs').select('id,title,workout_date,format,rounds,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,result_data,note,created_at,workout_exercises(id,exercise_name,sort_order,workout_sets(id,set_number,reps,load_kg,time_text,time_seconds))').order('workout_date', { ascending: false }).limit(30),
+      supabase.from('workout_logs').select('id,title,workout_date,format,rounds,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,result_data,note,created_at,workout_exercises(id,exercise_name,sort_order,workout_sets(id,set_number,reps,load_kg,time_text,time_seconds,height_cm))').order('workout_date', { ascending: false }).limit(30),
       supabase.from('personal_records').select('id,exercise_name,result,unit,note,record_date').order('record_date', { ascending: false }).limit(50),
     ])
     if (w.error) setError(w.error.message); else setWods(w.data || [])
@@ -437,16 +437,19 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         reps_mode: item.reps_mode || 'fixed',
         prescription_levels: item.levels || null,
         prescription_label: doseLabel(item,'rx'),
+        uses_height: Boolean(item.height_cm || item.levels?.[wodLevel]?.heightCm || item.levels?.rx?.heightCm || /box|boks/i.test(item.exercise_name||'')),
         sets: Array.isArray(item.sets) && item.sets.length ? item.sets.map(set => ({
           reps: set.reps == null ? '' : String(set.reps),
           load_kg: set.load_kg == null ? '' : String(set.load_kg),
           time_text: set.tempo || '',
           time_seconds: '',
+          height_cm: set.height_cm == null ? String(item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? item.height_cm ?? '') : String(set.height_cm),
         })) : [{
           reps: item.reps == null ? '' : String(item.reps),
           load_kg: item.load_kg == null ? '' : String(item.load_kg),
           time_text: item.row_value != null ? String(item.row_value)+' '+(item.row_unit||'') : '',
           time_seconds: item.work_seconds == null ? '' : String(item.work_seconds),
+          height_cm: String(item.height_cm ?? item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? ''),
         }],
       })))
     } else if (wod?.movements) {
@@ -477,7 +480,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   }
 
   function addExercise(exercise) {
-    setItems(current => [...current, { ...emptyExercise(), exercise_id: exercise.id, exercise_name: exercise.name }])
+    const usesHeight=/box|boks/i.test(exercise.name||'')
+    setItems(current => [...current, { ...emptyExercise(), exercise_id: exercise.id, exercise_name: exercise.name, uses_height: usesHeight }])
     setQuery('')
   }
   function updateExercise(key, patch) {
@@ -487,7 +491,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     setItems(current => current.map(item => item.key === key ? { ...item, sets: item.sets.map((s, i) => i === index ? { ...s, ...patch } : s) } : item))
   }
   function addSet(key) {
-    setItems(current => current.map(item => item.key === key ? { ...item, sets: [...item.sets, { reps: '', load_kg: '', time_text: '', time_seconds: '' }] } : item))
+    setItems(current => current.map(item => item.key === key ? { ...item, sets: [...item.sets, { reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] } : item))
   }
 
   async function saveWorkout(event) {
@@ -507,7 +511,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       const elapsedSeconds = Number(timerSnapshot.elapsed)||0
       const parsedTime = scoreTime.trim() ? (()=>{const parts=scoreTime.trim().split(':').map(Number);return parts.length===2?parts[0]*60+parts[1]:parts.length===3?parts[0]*3600+parts[1]*60+parts[2]:NaN})() : (isForTimeScore&&elapsedSeconds>0?elapsedSeconds:null)
       if(scoreTime.trim()&&!Number.isFinite(parsedTime))throw new Error('Tid må skrivast som mm:ss eller tt:mm:ss.')
-      const hasRecordedScore=[scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null
+      const hasRecordedScore=[scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||items.some(item=>item.sets?.some(set=>String(set.height_cm??'').trim()!==''))
       if(classSessionId&&source?.category!=='warmup'&&!hasRecordedScore)throw new Error('Hovud-WOD må ha minst eitt registrert resultat før du kan lagra.')
       const resultData = {
         version:2,format,elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':'completed',completed:true,time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
@@ -518,7 +522,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         load_kg:scoreLoad===''?null:Number(scoreLoad),
         calories:scoreCalories===''?null:Number(scoreCalories),
         distance:scoreDistance===''?null:Number(scoreDistance),distance_unit:scoreUnit,
-        exercise_results:items.map(item=>({exercise_name:item.exercise_name,sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null}))}))
+        exercise_results:items.map(item=>({exercise_name:item.exercise_name,sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm)}))}))
       }
       const payload = {
         member_id:user.id,save_token:saveToken,title:title.trim(),source_wod_id:source?.id||null,
@@ -534,7 +538,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       }
       payload.exercises=items.map((item,index)=>({
         exercise_id:item.exercise_id||null,exercise_name:item.exercise_name.trim(),sort_order:index+1,
-        sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_text:s.time_text.trim()||null,time_seconds:s.time_seconds===''?null:Number(s.time_seconds)}))
+        sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_text:s.time_text.trim()||null,time_seconds:s.time_seconds===''?null:Number(s.time_seconds),height_cm:s.height_cm===''?null:Number(s.height_cm)}))
       }))
       const {data:workoutId,error:saveError}=await supabase.rpc('save_workout_with_pt_links',{
         p_workout:payload,
@@ -634,8 +638,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
           {!item.exercise_id && <input aria-label="Namn på øving" value={item.exercise_name} onChange={e => updateExercise(item.key,{exercise_name:e.target.value})} placeholder="Namn på øving"/>}
           {item.prescription_levels&&<div className="wod-prescription-target"><strong>Planlagt dosering · {wodLevel.toUpperCase()}</strong><span>{doseLabel({levels:item.prescription_levels},wodLevel)||'Ikkje dosert på dette nivået'}</span></div>}{item.sets.map((set, i) => <div className="set-grid" key={i}>
             <span>Sett {i + 1}</span><input type="number" min="0" step="1" value={set.reps} onChange={e => updateSet(item.key,i,{reps:e.target.value})} placeholder="Reps"/>
-            <input type="number" min="0" step="0.5" value={set.load_kg} onChange={e => updateSet(item.key,i,{load_kg:e.target.value})} placeholder="Kg"/>
-            <input value={set.time_text} onChange={e => updateSet(item.key,i,{time_text:e.target.value})} placeholder="Tid"/>
+            {item.uses_height ? <input type="number" min="0" step="1" value={set.height_cm||''} onChange={e=>updateSet(item.key,i,{height_cm:e.target.value})} placeholder="Høgd (cm)" aria-label={`Høgd i centimeter, sett ${i+1}`}/> : <><input type="number" min="0" step="0.5" value={set.load_kg} onChange={e => updateSet(item.key,i,{load_kg:e.target.value})} placeholder="Kg"/><input value={set.time_text} onChange={e => updateSet(item.key,i,{time_text:e.target.value})} placeholder="Tid"/></>}
           </div>)}
           <button type="button" className="text-button add-set" onClick={() => addSet(item.key)}><Plus size={14}/> Legg til sett</button>
         </article>)}
@@ -651,7 +654,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
             <div><span>ØVINGAR</span><strong>{items.length}</strong></div>
             {timerSnapshot.roundsCompleted>0&&<div><span>RUNDER</span><strong>{timerSnapshot.roundsCompleted}</strong></div>}
           </div>
-          {items.length>0&&<div className="workout-finish-exercises"><strong>Øvingar i økta</strong><ol>{items.map((item,index)=><li key={item.key}>{item.exercise_name||'Øving utan namn'}{item.sets?.some(set=>set.reps||set.load_kg||set.time_text)?<small>{item.sets.map(set=>[set.reps?set.reps+' reps':'',set.load_kg?set.load_kg+' kg':'',set.time_text||''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ')}</small>:null}</li>)}</ol></div>}
+          {items.length>0&&<div className="workout-finish-exercises"><strong>Øvingar i økta</strong><ol>{items.map((item,index)=><li key={item.key}>{item.exercise_name||'Øving utan namn'}{item.sets?.some(set=>set.reps||set.load_kg||set.time_text||set.height_cm)?<small>{item.sets.map(set=>[set.reps?set.reps+' reps':'',item.uses_height&&set.height_cm?set.height_cm+' cm':'',set.load_kg?set.load_kg+' kg':'',set.time_text||''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ')}</small>:null}</li>)}</ol></div>}
           <section className="workout-finish-results"><h4>Registrer resultat</h4><p>Fel ta utgangspunkt i øktforma{source?.name?' og WOD-oppsettet':''}. Fyll berre inn det som manglar.</p>
             <div className="engine-fields three">
               {(format==='AMRAP'||(['Couplet','Triplet'].includes(format)&&source?.timer_settings?.workout_schema?.combination_mode==='AMRAP'))&&<><label>Fullførte rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder={String(timerSnapshot.roundsCompleted||0)}/></label><label>Ekstra reps<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="0"/></label></>}
@@ -703,7 +706,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       </section>}
       <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
         <div className="training-heading"><div><div className="section-kicker">HISTORIKK</div><h3>Siste økter</h3></div><span className="count-pill">{history.length} økter</span></div>
-        {history.length ? <div className="history-list">{history.map(log => <article className="history-card" key={log.id}><div className="history-card-top"><strong>{log.title}</strong><span>{log.workout_date}</span></div><small>{log.format} · {log.workout_exercises?.length || 0} øvingar</small>{log.workout_exercises?.sort((a,b)=>a.sort_order-b.sort_order).map(ex => <div className="history-exercise" key={ex.id}><b>{ex.exercise_name}</b><span>{(ex.workout_sets || []).map(s => [s.reps ? s.reps+' reps' : '', s.load_kg ? s.load_kg+' kg' : '', s.time_text || ''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ') || 'Ingen sett registrert'}</span></div>)}{log.note && <p>{log.note}</p>}</article>)}</div> : <div className="empty-state">Du har ikkje lagra økter enno.</div>}
+        {history.length ? <div className="history-list">{history.map(log => <article className="history-card" key={log.id}><div className="history-card-top"><strong>{log.title}</strong><span>{log.workout_date}</span></div><small>{log.format} · {log.workout_exercises?.length || 0} øvingar</small>{log.workout_exercises?.sort((a,b)=>a.sort_order-b.sort_order).map(ex => <div className="history-exercise" key={ex.id}><b>{ex.exercise_name}</b><span>{(ex.workout_sets || []).map(s => [s.reps ? s.reps+' reps' : '', s.height_cm ? s.height_cm+' cm' : '', s.load_kg ? s.load_kg+' kg' : '', s.time_text || ''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ') || 'Ingen sett registrert'}</span></div>)}{log.note && <p>{log.note}</p>}</article>)}</div> : <div className="empty-state">Du har ikkje lagra økter enno.</div>}
       </section>
       <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
         <div className="training-heading"><div><div className="section-kicker">PROGRESJON</div><h3>Personlege rekordar</h3></div><span className="count-pill">{records.length} PR</span></div>
