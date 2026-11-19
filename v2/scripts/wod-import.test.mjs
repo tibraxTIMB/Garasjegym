@@ -21,6 +21,11 @@ test('marker ukjende øvingar for manuell kontroll',()=>{
  assert.equal(result.items[0].matched,false);assert.deepEqual(result.unmatched,['Mystery movement']);
 });
 
+test('les rundetal frå WOD-tekst',()=>{
+ const result=parseWodImport('5 rounds\n10 Air squats');
+ assert.equal(result.rounds,5);
+});
+
 test('marker format som uavklart når teksten ikkje gir grunnlag for val',()=>{
  const result=parseWodImport('Eigen økt\n12 Air squats');
  assert.equal(result.format,null);
