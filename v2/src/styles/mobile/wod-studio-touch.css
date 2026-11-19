@@ -1,0 +1,243 @@
+
+/* Single-action WOD workflow: the step indicator is progress, not navigation. */
+.wod-wizard-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.wod-wizard-steps > span {
+  display: flex;
+  min-width: 0;
+  min-height: 42px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--gg-shell-border, rgba(255,255,255,.12));
+  border-radius: 10px;
+  color: var(--gg-shell-muted, #9aa5af);
+  font-size: 12px;
+}
+.wod-wizard-steps > span b {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255,255,255,.08);
+}
+.wod-wizard-steps > span.active {
+  border-color: var(--gg-accent, #d99c42);
+  color: var(--gg-shell-text, #fff);
+  background: rgba(217,156,66,.1);
+}
+.wod-wizard-steps > span.complete b {
+  background: rgba(65,160,110,.18);
+}
+.wod-format-group {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin-top: 12px;
+}
+.wod-format-group-label {
+  color: var(--gg-shell-muted, #9aa5af);
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.wod-format-group-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.wod-format-group-options button {
+  display: flex;
+  min-width: 0;
+  min-height: 54px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid var(--gg-shell-border, rgba(255,255,255,.12));
+  border-radius: 12px;
+  background: var(--gg-shell-panel, rgba(255,255,255,.035));
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.wod-format-group-options button.selected {
+  border-color: var(--gg-accent, #d99c42);
+  background: rgba(217,156,66,.13);
+  box-shadow: inset 0 0 0 1px rgba(217,156,66,.25);
+}
+.wod-format-group-options button strong {
+  font-size: 12px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.wod-format-icon {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(255,255,255,.08);
+}
+.wod-complex-sequence,
+.wod-library-complex-sequence,
+.training-complex-sequence {
+  display: block;
+  margin-top: 8px;
+  color: var(--gg-shell-muted, #aab4bd);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.wizard-dose-complex-sequence {
+  margin: 8px 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--gg-shell-border, rgba(255,255,255,.12));
+  border-radius: 10px;
+  background: rgba(255,255,255,.035);
+}
+.wizard-dose-complex-sequence ol,
+.training-complex-sequence ol {
+  display: grid;
+  gap: 5px;
+  margin: 7px 0 0;
+  padding-left: 20px;
+}
+.wizard-dose-complex-sequence li,
+.training-complex-sequence li {
+  padding-left: 3px;
+}
+.wod-pause-dose {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(100px, 120px);
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.wod-pause-dose input,
+.wizard-dose-pause input {
+  min-height: 44px;
+}
+.wod-reorder-controls {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(44px, 1fr)) !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+}
+.wod-reorder-controls > button {
+  min-width: 44px !important;
+  min-height: 44px !important;
+}
+.training-complex-tag {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: rgba(217,156,66,.14);
+  color: var(--gg-accent, #d99c42);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.wod-library-complex-sequence {
+  font-size: 11px;
+}
+@media (max-width: 900px) {
+  .wod-wizard-steps {
+    position: sticky;
+    top: 62px;
+    z-index: 45;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    padding: 7px 0;
+    background: rgba(16,20,22,.97);
+    backdrop-filter: blur(12px);
+  }
+  .wod-wizard-steps > span {
+    min-height: 46px;
+    justify-content: center;
+    padding: 7px 5px;
+    gap: 5px;
+    font-size: 10px;
+  }
+  .wod-wizard-steps > span b {
+    width: 22px;
+    height: 22px;
+    flex-basis: 22px;
+  }
+  .wod-format-group-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .wod-builder-step-2 .wod-reorder-controls {
+    grid-template-columns: repeat(3, minmax(44px, 1fr)) !important;
+  }
+}
+@media (min-width: 700px) and (max-width: 1100px) {
+  .wod-builder-step-3 .wizard-dose-exercises {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-items: start;
+  }
+  .wod-library-portal .wod-exercise-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .wod-builder-step-2 .wod-selected-card {
+    display: grid !important;
+    grid-template-columns: 34px minmax(0, 1fr) 148px;
+    align-items: center !important;
+  }
+  .wod-builder-step-2 .wod-reorder-controls {
+    grid-template-columns: repeat(3, minmax(44px, 1fr)) !important;
+  }
+}
+@media (max-width: 560px) {
+  .wod-wizard-steps {
+    top: 55px;
+    gap: 4px;
+  }
+  .wod-wizard-steps > span {
+    flex-direction: column;
+    gap: 3px;
+    min-height: 54px;
+    padding: 5px 2px;
+    font-size: 9px;
+    text-align: center;
+    line-height: 1.1;
+  }
+  .wod-format-group-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .wod-format-group-options button {
+    min-height: 50px;
+    padding: 8px;
+  }
+  .wod-format-group-options button strong {
+    font-size: 11px;
+  }
+  .wod-builder-step-2 .wod-reorder-controls {
+    grid-template-columns: repeat(3, minmax(44px, 1fr)) !important;
+  }
+  .wod-builder-step-2 .wod-reorder-controls .wod-order-picker {
+    display: none !important;
+  }
+  .wod-pause-dose {
+    grid-template-columns: minmax(0, 1fr) minmax(90px, 112px);
+  }
+}
+@media (pointer: coarse), (hover: none) {
+  .wod-format-group-options button,
+  .wod-reorder-controls button,
+  .wizard-dose-level-tabs button,
+  .wizard-stage-actions button,
+  .wod-open-library {
+    min-height: 48px;
+    touch-action: manipulation;
+  }
+}
