@@ -26,7 +26,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
  const [settings,setSettings]=useState({is_open:true,closed_message:'Kaffebaren er stengd akkurat no.'})
  const [reviews,setReviews]=useState([]),[reviewNotifications,setReviewNotifications]=useState([])
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
- const [activeTab,setActiveTab]=useState(staff?'orders':'menu'),[orderView,setOrderView]=useState('active')
+ const [activeTab,setActiveTab]=useState(staff?'orders':'menu'),[orderView,setOrderView]=useState(staff?'active':'all')
  const [categoryFilter,setCategoryFilter]=useState('Alle'),[reviewFilter,setReviewFilter]=useState('unread'),[reviewProductFilter,setReviewProductFilter]=useState('Alle'),[reviewRatingFilter,setReviewRatingFilter]=useState('Alle'),[selectedReview,setSelectedReview]=useState(null)
  const [note,setNote]=useState(''),[milk,setMilk]=useState('Vanleg mjølk'),[syrup,setSyrup]=useState('Ingen')
  const [optionSelections,setOptionSelections]=useState({})
@@ -61,7 +61,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
    setReviews(reviewRows)
    const byItem=new Map(reviewRows.map(review=>[review.order_item_id,review]))
    const allOrders=(o.data||[]).map(order=>({...order,coffee_order_items:(order.coffee_order_items||[]).map(item=>({...item,review:byItem.get(item.id)||null}))}))
-   setOrders(allOrders.filter(row=>orderView==='archive'?!!row.archived_at:!row.archived_at&&(orderView==='completed'?['collected','cancelled'].includes(row.status):!['collected','cancelled'].includes(row.status))))
+   setOrders(allOrders.filter(row=>orderView==='archive'?!!row.archived_at:!row.archived_at&&(orderView==='all'?true:orderView==='completed'?['collected','cancelled'].includes(row.status):!['collected','cancelled'].includes(row.status))))
    if(!stats.error){
     const rows=(stats.data||[]).filter(row=>staff||row.member_id===user.id)
     const qty=row=>(row.coffee_order_items||[]).reduce((n,item)=>n+Number(item.quantity||0),0)
@@ -259,6 +259,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
   </>}
   {!staff&&activeTab==='orders'&&<section className="engine-section coffee-orders-section">
    <div className="training-heading"><div><span className="section-kicker">MI SIDE</span><h3>Mine bestillingar</h3></div><button type="button" className="secondary-button" onClick={()=>load()}><RefreshCw size={13}/> Oppdater</button></div>
+   <div className="calendar-view-switch coffee-order-views"><button type="button" className={orderView==='all'?'selected':''} onClick={()=>setOrderView('all')}>Alle</button><button type="button" className={orderView==='active'?'selected':''} onClick={()=>setOrderView('active')}>Pågåande</button><button type="button" className={orderView==='completed'?'selected':''} onClick={()=>setOrderView('completed')}>Ferdige</button></div>
    {orders.length?orders.map(orderRow=><article className="history-card coffee-order-card" key={orderRow.id}>
     <div className="history-card-top"><div><strong>Bestilling #{orderRow.id.replaceAll('-','').slice(0,8).toUpperCase()}</strong><small>{formatDate(orderRow.created_at)}</small></div><span className={'coffee-status status-'+(statusMeta[orderRow.status]?.className||orderRow.status)}>{statusMeta[orderRow.status]?.label||orderRow.status}</span></div>
     {(orderRow.coffee_order_items||[]).map(item=><div className="coffee-member-item" key={item.id}><div className="history-exercise coffee-order-item"><div><b>{item.product_name} × {item.quantity}</b>{item.options?.length>0&&<small>{optionSummary(item.options)}</small>}</div><span>{formatMoney(Number(item.unit_price)*Number(item.quantity))}</span></div>
