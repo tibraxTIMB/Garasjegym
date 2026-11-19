@@ -5,6 +5,7 @@ import { MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
 import { sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
+import { formatParticipation, normalizeWodEngine } from '../lib/wodEngine.js'
 import PerformanceCenter from './PerformanceCenter.jsx'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
@@ -630,7 +631,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       const hasRecordedScore=[scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||items.some(item=>Number(item.rowValue)>0||item.sets?.some(set=>String(set.height_cm??'').trim()!==''))
       if(classSessionId&&source?.category!=='warmup'&&!hasRecordedScore)throw new Error('Hovud-WOD må ha minst eitt registrert resultat før du kan lagra.')
       const resultData = {
-        version:2,format,prescription_level:wodLevel,wod_ids:source?.id?[source.id]:manualWodIds,wod_names:(source?.id?[source.id]:manualWodIds).map(id=>wods.find(w=>w.id===id)?.name).filter(Boolean),elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':'completed',completed:true,time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
+        version:3,format,prescription_level:wodLevel,wod_engine:source?.timer_settings?.workout_schema?.wod_engine||null,wod_ids:source?.id?[source.id]:manualWodIds,wod_names:(source?.id?[source.id]:manualWodIds).map(id=>wods.find(w=>w.id===id)?.name).filter(Boolean),elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':'completed',completed:true,time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
         completed_rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):null,
         extra_reps:isAmrapScore?(scoreReps===''?0:Number(scoreReps)):null,
         split_seconds:Array.isArray(timerSnapshot.laps)?timerSnapshot.laps:[],
@@ -828,11 +829,13 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         <div className="wod-library-toolbar"><button type="button" className={wodFavoritesOnly?'secondary-button favorite-filter active':'secondary-button favorite-filter'} onClick={()=>setWodFavoritesOnly(v=>!v)}><Star size={14} fill={wodFavoritesOnly?'currentColor':'none'}/>{wodFavoritesOnly?'Vis alle publiserte WOD-ar':'Favoritt-WODs'}</button><span>{availableWods.filter(wod=>(!wodFavoritesOnly||favoriteWodIds.includes(wod.id))&&(!wodSearch.trim()||[wod.name,wod.format,wod.movements,wod.notes].some(value=>(value||'').toLowerCase().includes(wodSearch.trim().toLowerCase())))).length} treff</span></div>
         {availableWods.filter(wod=>(!wodFavoritesOnly||favoriteWodIds.includes(wod.id))&&(!wodSearch.trim()||[wod.name,wod.format,wod.movements,wod.notes].some(value=>(value||'').toLowerCase().includes(wodSearch.trim().toLowerCase())))).length ? <div className="wod-list">{availableWods.filter(wod=>(!wodFavoritesOnly||favoriteWodIds.includes(wod.id))&&(!wodSearch.trim()||[wod.name,wod.format,wod.movements,wod.notes].some(value=>(value||'').toLowerCase().includes(wodSearch.trim().toLowerCase())))).sort((a,b)=>(a.id===dailyWodId?-1:0)-(b.id===dailyWodId?-1:0)).map(wod => {
           const schema=wod.timer_settings?.workout_schema||{}
+          const engine=normalizeWodEngine(schema,{format:wod.format})
           const wodItems=sortWodItems(schema.items||[])
           const isExpanded=expandedWodId===wod.id
           return <article className={isExpanded?'wod-card wod-card-expanded':'wod-card'} key={wod.id}>
             <div className="wod-top"><span>{wod.id===dailyWodId?'DAGENS WOD · ':''}{wod.timer_settings?.workout_schema?.library_category==='warmup'?'OPPVARMING':wod.timer_settings?.workout_schema?.library_category==='standard'?'STANDARD':'WOD'} · {wod.format||'WOD'}</span><span>{schema.duration_seconds?clock(schema.duration_seconds):wod.duration_minutes?wod.duration_minutes+' MIN':''}</span></div>
             <h4>{wod.name}</h4>
+            {engine.participation!=='individual'&&<div className="wod-engine-card-meta"><strong>{formatParticipation(engine)}</strong><span>{({free_split:'Del arbeidet fritt',you_go_i_go:'You go – I go',alternate:'Annankvar / vekselvis',synchronized:'Synkroniserte reps',parallel:'Parallelt arbeid'})[engine.collaboration]||'Samarbeidsøkt'}</span></div>}
             <div className="wod-card-summary">{wodItems.length?String(wodItems.length)+' øvingar':wod.movements?'Øvingar og instruksjon':'Opna for detaljar'}{schema.stimulus?' · '+schema.stimulus:''}</div>
             <div className="wod-card-actions">
               <button type="button" className="secondary-button" onClick={()=>setExpandedWodId(isExpanded?null:wod.id)}>{isExpanded?'Skjul detaljar':'Sjå detaljar'}</button>
@@ -840,6 +843,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
               <button type="button" className={favoriteWodIds.includes(wod.id)?'favorite-star selected':'favorite-star'} onClick={()=>toggleWodFavorite(wod)} aria-label={favoriteWodIds.includes(wod.id)?'Fjern WOD-favoritt':'Merk WOD som favoritt'}><Star size={17} fill={favoriteWodIds.includes(wod.id)?'currentColor':'none'}/></button>
             </div>
             {isExpanded&&<div className="wod-detail-panel">
+              {engine.participation!=='individual'&&<div className="wod-level-note"><strong>{formatParticipation(engine)}</strong><p>{({free_split:'Paret/laget fordeler arbeidet fritt.',you_go_i_go:'Ein utøvar jobbar medan den andre kviler.',alternate:'Utøvarane byter på arbeidet.',synchronized:'Repetisjonane skal utførast synkront.',parallel:'Utøvarane arbeider parallelt.'})[engine.collaboration]||'Felles gjennomføring.'}</p><small>Scoring: {(engine.scoring?.fields||[]).join(' + ')}</small></div>}
               {wodItems.length?<div className="wod-detail-exercises"><strong>Øvingar og dosering</strong><ol>{wodItems.map((item,index)=><li key={item.exercise_id||item.exercise_name||index}><span>{item.exercise_name||'Øving '+(index+1)}</span><b>{item.levels?['rx','scaled','foundation'].map(level=>{const value=doseLabel(item,level);return value?<span key={level}>{level.toUpperCase()}: {value} </span>:null}):item.reps_mode==='amrap'?'AMRAP':item.reps!=null&&item.reps!==''?item.reps+' reps':(item.sets||[]).map(set=>set.reps+' reps').filter(Boolean).join(' / ')||'Etter plan'}</b>{item.load_label&&<small>{item.load_label}</small>}{item.coach_note&&<small>{item.coach_note}</small>}</li>)}</ol></div>:wod.movements&&<div className="wod-detail-exercises"><strong>Øvingar</strong><p>{wod.movements}</p></div>}
               {schema.rx_notes&&<div className="wod-level-note"><strong>RX</strong><p>{schema.rx_notes}</p></div>}
               {schema.scaled_notes&&<div className="wod-level-note"><strong>Scaled</strong><p>{schema.scaled_notes}</p></div>}
