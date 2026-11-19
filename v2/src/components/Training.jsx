@@ -294,8 +294,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     {showTimerSettings && <section className="timer-customize-panel timer-setup-drawer" aria-label="Timeroppsett">
       <div className="timer-customize-title"><strong>Tilpass denne økta</strong><span>Endringane gjeld berre denne gjennomføringa.</span></div>
       {(isTimedInterval || isStationCircuit || isEMOM) && <div className="timer-setup-section">
-        <strong>{isStationCircuit ? 'Stasjonssirkel' : format==='Tabata' ? 'Tabata-intervall' : 'Intervall'}</strong>
-        <div className="timer-settings-inline">
+        <strong>{isStationCircuit ? 'Stasjonssirkel' : isEMOM ? 'EMOM' : format==='Tabata' ? 'Tabata-intervall' : 'Intervall'}</strong>
+        <div className={`timer-settings-inline ${isEMOM?"timer-settings-emom":""}`}>
           <label>Arbeid · sek<input type="number" min="1" max="600" value={workSeconds} onChange={e=>setWorkSeconds(Math.max(1,Number(e.target.value)||1))}/></label>
           <label>{isStationCircuit?'Stasjonsbyte · sek':'Pause · sek'}<input type="number" min="0" max="600" value={restSeconds} onChange={e=>setRestSeconds(Math.max(0,Number(e.target.value)||0))}/></label>
           {!isEMOM&&<label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(Math.max(1,Number(e.target.value)||1))}/></label>}
