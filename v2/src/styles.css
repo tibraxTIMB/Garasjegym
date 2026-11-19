@@ -5867,3 +5867,42 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
   .timer-spotify-mini-track{flex-basis:calc(100% - 8px)}
   .timer-spotify-mini-controls{margin-left:auto}
 }
+
+
+/* STURMKOPF fix · WOD Builder ordering must work on touchscreens */
+@media (max-width: 1100px) {
+  .wod-builder-step-2 .wod-selected-actions {
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:5px!important;
+  }
+  .wod-builder-step-2 .wod-selected-actions button[title="Flytt opp"],
+  .wod-builder-step-2 .wod-selected-actions button[title="Flytt ned"] {
+    display:grid!important;
+    place-items:center!important;
+    width:36px!important;
+    min-width:36px!important;
+    height:36px!important;
+    min-height:36px!important;
+    touch-action:manipulation!important;
+    opacity:1!important;
+    visibility:visible!important;
+  }
+  .wod-builder-step-2 .wod-selected-actions .wod-drag-handle {
+    display:none!important;
+  }
+}
+.wod-builder-step-2 .wod-selected-actions button[title="Flytt opp"],
+.wod-builder-step-2 .wod-selected-actions button[title="Flytt ned"] {
+  cursor:pointer!important;
+  touch-action:manipulation;
+}
+.wod-builder-step-2 .wod-selected-actions button[title="Flytt opp"]:active,
+.wod-builder-step-2 .wod-selected-actions button[title="Flytt ned"]:active {
+  border-color:#f0a32a!important;
+  background:#302719!important;
+  color:#f0a32a!important;
+  transform:translateY(1px);
+}
