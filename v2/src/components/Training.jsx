@@ -5,7 +5,7 @@ import { MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
 import { sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
-import { formatParticipation, normalizeWodEngine } from '../lib/wodEngine.js'
+import { formatParticipation, normalizeWodEngine, parseIntervalNotation } from '../lib/wodEngine.js'
 import PerformanceCenter from './PerformanceCenter.jsx'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
@@ -13,8 +13,8 @@ const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exerci
 const pad = (n) => String(n).padStart(2, '0')
 const clock = (seconds) => `${pad(Math.floor(Math.max(0, seconds) / 60))}:${pad(Math.max(0, seconds) % 60)}`
 const doseLabel=(item,level='rx')=>{const d=item?.levels?.[level]||{};const parts=[];if(d.sets)parts.push(d.sets+' sett');if(d.reps)parts.push(d.reps+' reps');if(d.heightCm)parts.push(d.heightCm+' cm');if(d.durationSeconds)parts.push(d.durationSeconds+' sek');if(d.distanceMeters)parts.push(d.distanceMeters+' m');if(d.calories)parts.push(d.calories+' cal');if(d.loadMode==='kg'){const loads=[d.loadKgMen!==''&&d.loadKgMen!=null?'M '+d.loadKgMen+' kg':'',d.loadKgWomen!==''&&d.loadKgWomen!=null?'K '+d.loadKgWomen+' kg':''].filter(Boolean);if(loads.length)parts.push(loads.join(' / '))}else if(d.loadMode==='percent'&&d.percent1rm)parts.push(d.percent1rm+' % 1RM');else if(d.loadMode==='rir'&&d.rir!=='')parts.push('RIR '+d.rir);else if(d.loadMode==='bodyweight')parts.push('Kroppsvekt');if(d.tempo)parts.push('Tempo '+d.tempo);if(d.variant)parts.push('Variant: '+d.variant);if(d.instruction)parts.push(d.instruction);return parts.join(' · ')||''};
-const isEmomFormat = format => /^E[1-7]MOM$/.test(format||'') || ['EMOM','EMOM 1','EMOM 2'].includes(format)
-const getEmomIntervalMinutes = (format, timerSettings) => Math.max(1,Math.min(7,Number(timerSettings?.workout_schema?.interval?.work_every_minutes)||Number((format||'').match(/^E([1-7])MOM$/)?.[1])||(format==='EMOM 2'?2:1)))
+const isEmomFormat = format => /^E\d+(?:\.\d+)?MOM$/.test(format||'') || ['EMOM','EMOM 1','EMOM 2'].includes(format)
+const getEmomIntervalMinutes = (format, timerSettings) => Math.max(0.25,Math.min(60,Number(timerSettings?.workout_schema?.interval?.work_every_minutes)||parseIntervalNotation(format)?.intervalMinutes||(format==='EMOM 2'?2:1)))
 const getDefaultWorkSeconds = (format, timerSettings) => {
  const saved=timerSettings?.work_seconds ?? timerSettings?.workout_schema?.station_circuit?.work_seconds ?? timerSettings?.workout_schema?.interval?.work_seconds
  if(saved!=null&&Number(saved)>0)return Number(saved)
@@ -137,7 +137,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const schema = timerSettings?.workout_schema
   const savedDuration = Number(schema?.duration_seconds) || 0
   const capDuration = Number(schema?.time_cap_seconds) || (Number(schema?.time_cap_minutes) || 0) * 60
-  const isEMOM = /^E[1-7]MOM$/.test(format) || ['EMOM', 'EMOM 1', 'EMOM 2'].includes(format)
+  const isEMOM = /^E\d+(?:\.\d+)?MOM$/.test(format) || ['EMOM', 'EMOM 1', 'EMOM 2'].includes(format)
   const emomEvery = Math.max(1,Math.min(7,Number(emomEveryOverride)||getEmomIntervalMinutes(format,timerSettings)))
   const emomCycle = emomEvery * 60
   const effectiveEmomWorkSeconds = Math.max(1,Math.min(emomCycle,Number(workSeconds)||emomCycle))
