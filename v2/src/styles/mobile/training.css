@@ -1,0 +1,483 @@
+/* Training workspace: timer-led, touch-first layout */
+.gg-training-session {
+  display: grid;
+  gap: clamp(14px, 2vw, 20px);
+  min-width: 0;
+}
+
+.gg-training-session > .training-heading {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.gg-training-session > .training-heading h3 {
+  font-size: clamp(22px, 3vw, 30px);
+  line-height: 1.12;
+}
+
+.gg-training-session > .engine-fields {
+  min-width: 0;
+}
+
+.gg-training-session .engine-exercise {
+  min-width: 0;
+  padding: clamp(12px, 2vw, 16px);
+  border-radius: 13px;
+}
+
+.gg-training-session .engine-exercise-head strong {
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.gg-training-session .exercise-search {
+  min-height: 48px;
+}
+
+.gg-training-session .exercise-search input {
+  min-height: 46px;
+}
+
+.gg-training-session .set-grid input {
+  min-width: 0;
+  min-height: 46px;
+  font-size: 14px;
+}
+
+.gg-training-session .add-set,
+.gg-training-session > .engine-section > .secondary-button {
+  min-height: 44px;
+}
+
+.gg-training-session .workout-finish-dialog {
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.gg-training-session .timer-panel-canvas {
+  align-items: stretch;
+}
+
+.gg-training-session .timer-layout-panel {
+  min-width: 0;
+}
+
+.gg-training-session .timer-panel-clock .timer-panel-content {
+  overflow: visible;
+}
+
+.gg-training-session .timer-panel-clock .timer-center {
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+}
+
+.gg-training-session .timer-panel-clock .timer-main-clock {
+  max-width: 100%;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.gg-training-session .timer-panel-clock .timer-finish-row {
+  width: min(100%, 440px);
+}
+
+.gg-training-session .timer-panel-clock .timer-finish-button {
+  min-height: 54px;
+  font-size: 15px;
+}
+
+@media (max-width: 900px) {
+  .gg-training-session { gap: 14px; }
+
+  .gg-training-session > .training-heading {
+    align-items: flex-start;
+  }
+
+  .gg-training-session > .engine-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .gg-training-session > .engine-fields > label:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .gg-training-session .engine-timer {
+    width: 100%;
+    min-width: 0;
+    padding: clamp(10px, 2vw, 16px);
+    gap: 10px;
+    border-radius: 15px;
+  }
+
+  .gg-training-session .timer-topline {
+    align-items: center;
+    gap: 8px;
+  }
+
+  .gg-training-session .timer-customize-trigger {
+    min-height: 44px;
+  }
+
+  .gg-training-session .timer-panel-canvas {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 9px;
+  }
+
+  .gg-training-session .timer-layout-panel {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    grid-column: 1 / -1 !important;
+    overflow: visible;
+  }
+
+  .gg-training-session .timer-panel-clock {
+    grid-column: 1 / -1 !important;
+    order: 0;
+  }
+
+  .gg-training-session .timer-panel-info {
+    grid-column: 1 / 2 !important;
+    order: 1;
+  }
+
+  .gg-training-session .timer-panel-laps {
+    grid-column: 2 / 3 !important;
+    order: 2;
+  }
+
+  .gg-training-session .timer-panel-music {
+    grid-column: 1 / -1 !important;
+    order: 3;
+  }
+
+  .gg-training-session .timer-panel-toolbar {
+    position: static;
+  }
+
+  .gg-training-session .timer-panel-content {
+    overflow: visible;
+    padding: 11px;
+  }
+
+  .gg-training-session .timer-panel-clock .timer-panel-content {
+    padding: 0;
+  }
+
+  .gg-training-session .timer-panel-clock .timer-center {
+    gap: 10px;
+    padding: clamp(12px, 2.5vw, 20px) 8px;
+  }
+
+  .gg-training-session .timer-panel-clock .timer-main-clock {
+    font-size: clamp(64px, 15vw, 126px) !important;
+    line-height: .98;
+    letter-spacing: -.055em;
+  }
+
+  .gg-training-session .timer-amrap-exercise-list ol {
+    max-height: 19dvh;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  .gg-training-session .timer-panel-clock .timer-actions {
+    gap: 7px;
+  }
+
+  .gg-training-session .timer-panel-clock .timer-actions button {
+    min-height: 46px;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .gg-training-session .timer-panel-clock .timer-finish-row {
+    width: 100%;
+    margin-top: 3px;
+    padding-top: 10px;
+  }
+
+  .gg-training-session .timer-panel-info .timer-side {
+    gap: 10px;
+  }
+
+  .gg-training-session .timer-panel-laps .timer-lap-list {
+    max-height: 180px;
+  }
+
+  .gg-training-session .timer-setup-drawer {
+    width: 100%;
+    max-height: min(62dvh, 620px);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gg-training-session .timer-setup-drawer > .timer-customize-title,
+  .gg-training-session .timer-setup-drawer > .timer-setup-actions {
+    grid-column: auto;
+  }
+
+  .gg-training-session .timer-setup-actions {
+    flex-direction: column;
+  }
+
+  .gg-training-session .timer-setup-actions button {
+    width: 100%;
+    min-height: 46px;
+  }
+
+  .gg-training-session > .engine-section {
+    gap: 12px;
+  }
+
+  .gg-training-session > .engine-section .wod-list {
+    display: flex;
+    gap: 8px;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 2px 1px 8px;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+  }
+
+  .gg-training-session > .engine-section .wod-list > button {
+    flex: 0 0 auto;
+    min-height: 46px;
+    max-width: min(78vw, 320px);
+    white-space: normal;
+    scroll-snap-align: start;
+  }
+
+  .gg-training-session .timer-station-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gg-training-session .timer-station-card {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .gg-training-session .engine-exercise {
+    gap: 12px;
+  }
+
+  .gg-training-session .engine-exercise .add-set {
+    justify-self: stretch;
+    justify-content: center;
+    padding: 10px;
+    border: 1px solid var(--gg-shell-border);
+    border-radius: 10px;
+  }
+
+  .gg-training-session .workout-finish-backdrop {
+    align-items: flex-end;
+    padding: 8px 8px max(8px, env(safe-area-inset-bottom));
+  }
+
+  .gg-training-session .workout-finish-dialog {
+    width: 100%;
+    max-height: 94dvh;
+    border-radius: 18px 18px 12px 12px;
+    padding: 16px;
+  }
+
+  .gg-training-session .workout-finish-actions {
+    bottom: -16px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 560px) {
+  .gg-training-session { gap: 12px; }
+
+  .gg-training-session > .engine-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gg-training-session > .engine-fields > label:first-child {
+    grid-column: auto;
+  }
+
+  .gg-training-session .timer-topline {
+    align-items: flex-start;
+  }
+
+  .gg-training-session .timer-context {
+    max-width: calc(100% - 112px);
+  }
+
+  .gg-training-session .timer-customize-trigger {
+    flex: 0 0 auto;
+    padding-inline: 9px;
+    font-size: 10px;
+  }
+
+  .gg-training-session .timer-panel-canvas {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 8px;
+  }
+
+  .gg-training-session .timer-panel-clock,
+  .gg-training-session .timer-panel-music {
+    grid-column: 1 / -1 !important;
+  }
+
+  .gg-training-session .timer-panel-info {
+    grid-column: 1 / 2 !important;
+  }
+
+  .gg-training-session .timer-panel-laps {
+    grid-column: 2 / 3 !important;
+  }
+
+  .gg-training-session .timer-panel-clock .timer-center {
+    padding: 12px 3px;
+  }
+
+  .gg-training-session .timer-panel-clock .timer-main-clock {
+    font-size: clamp(58px, 18vw, 98px) !important;
+    letter-spacing: -.06em;
+  }
+
+  .gg-training-session .timer-panel-clock .timer-phase {
+    font-size: 10px;
+    letter-spacing: 1.3px;
+  }
+
+  .gg-training-session .timer-panel-clock .timer-round-label {
+    font-size: 10px;
+    text-align: center;
+  }
+
+  .gg-training-session .timer-panel-clock .timer-active-under-clock b {
+    font-size: 15px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .gg-training-session .timer-panel-clock .timer-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .gg-training-session .timer-panel-clock .timer-actions button {
+    justify-content: center;
+    min-width: 0;
+    min-height: 46px;
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+
+  .gg-training-session .timer-panel-clock .timer-lap-button {
+    min-height: 46px;
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+
+  .gg-training-session .timer-panel-info .timer-side {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding: 8px 5px;
+  }
+
+  .gg-training-session .timer-panel-info .timer-bottom-heading {
+    font-size: 9px;
+    line-height: 1.3;
+  }
+
+  .gg-training-session .timer-panel-info .timer-side-stat b {
+    font-size: 16px;
+  }
+
+  .gg-training-session .timer-panel-laps .timer-lap-list {
+    max-height: 150px;
+  }
+
+  .gg-training-session .timer-panel-laps .timer-lap-list li {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 10px;
+  }
+
+  .gg-training-session > .engine-section .wod-list > button {
+    max-width: 82vw;
+  }
+
+  .gg-training-session .timer-station-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gg-training-session .set-grid,
+  .gg-training-session .set-grid.height-set-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--gg-shell-border);
+    border-radius: 11px;
+    background: #121819;
+  }
+
+  .gg-training-session .set-grid > span {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    font-weight: 850;
+  }
+
+  .gg-training-session .set-grid input {
+    min-height: 48px;
+    padding: 10px;
+    font-size: 15px;
+  }
+
+  .gg-training-session .engine-exercise-head {
+    align-items: center;
+  }
+
+  .gg-training-session .engine-exercise-head .danger-icon {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+  }
+
+  .gg-training-session .workout-finish-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gg-training-session .workout-finish-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gg-training-session .workout-finish-actions button {
+    min-height: 50px;
+  }
+}
+
+@media (max-width: 360px) {
+  .gg-training-session .timer-panel-clock .timer-main-clock {
+    font-size: clamp(52px, 17vw, 72px) !important;
+  }
+
+  .gg-training-session .timer-panel-clock .timer-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (pointer: coarse), (hover: none) {
+  .gg-training-session .timer-actions button,
+  .gg-training-session .timer-finish-button,
+  .gg-training-session .workout-finish-actions button,
+  .gg-training-session .engine-exercise button,
+  .gg-training-session .set-grid input,
+  .gg-training-session .exercise-search input {
+    min-height: 48px;
+    touch-action: manipulation;
+  }
+}
+
+
