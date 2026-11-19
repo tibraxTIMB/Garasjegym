@@ -2,7 +2,7 @@
 
 **Dato:** 19.11.2026  
 **Branch:** garasjegym-2.0-sturm­kopf
-**Kontrollert kodecommit:** ea580975135d2b64b59d8bbe02588335f39ff3e8  
+**Kontrollert kodecommit:** 16bbfd564b19ee99c6e722e01bb0cdbd6da94db9  
 **Testprosjekt:** garasjegym-2-test (izwzwvlexqxqewzijhhd)
 
 ## Statusnøkkel
@@ -69,6 +69,8 @@
 | Avlysing og ventelisteopprykk | FERDIG OG SQL-TESTA | Avlysing av første booking flytta neste medlem til booka. |
 | Direkte medlems-INSERT i pt_bookings | FERDIG OG SQL-TESTA | RLS avviser direkte INSERT; booking må gå gjennom RPC. |
 | PT-booking i autentisert UI | IMPLEMENTERT – IKKJE MANUELT TESTA | Krev manuell test med medlem og staff. |
+| Medlem kan berre lesa eigne gruppetimepåmeldingar | FERDIG OG SQL-TESTA | RLS er avgrensa til eigne rader; aggregert deltakarantal kjem frå `get_class_attendance_counts`. Staff ser framleis full deltakaroversikt. |
+| Gruppetimebooking og varseltrigger | FERDIG OG SQL-TESTA | Ny booking opprettar `group`-varsel utan at kategorikontrollen avviser transaksjonen. |
 
 ## 5. Tilgangsmodell – viktig avgrensing
 
@@ -99,6 +101,9 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 16. Privat WOD i publisert gruppetime er synleg for stadfesta deltakar, ikkje annan medlem.
 17. Privat WOD i ferdig live gruppetime er synleg for stadfesta deltakar.
 18. Gruppetimebooking opprettar varsel med kategorien `group`; den tidlegare constraint-feilen er retta.
+19. Medlem kan berre lesa eiga `class_bookings`-rad, ikkje andre medlemmers påmeldingar.
+20. `get_class_attendance_counts` returnerer berre aggregert tal for publiserte gruppetimar.
+21. Admin kan framleis lesa full deltakaroversikt.
 
 ## 7. Manuelle testar som står att
 
@@ -116,8 +121,8 @@ Alle testane under vart køyrde på testprosjektet med mellombelse data og rulla
 - Medlem kan ikkje sjå eller endra andre medlemmers data.
 - Mobil og nettbrett i ståande og liggjande modus.
 
-**Database:** 60 installerte migreringar; 49 SQL-filer i branch. Dei eldre manglande migreringsfilene er framleis eit reproduksjonsavvik.
+**Database:** 61 installerte migreringar; 50 SQL-filer i branch. Dei eldre manglande migreringsfilene er framleis eit reproduksjonsavvik.
 
-**CI:** Checks og preview deploy for commit ea580975 er bestått.
+**CI:** Checks og preview deploy for kodecommit 16bbfd56 er under kontroll; endeleg resultat skal stadfestast i GitHub Actions.
 
 **Viktig:** Ingen av desse nettlesar-/fysiske einingstestane er rapporterte som gjennomførte i denne revisjonsøkta.
