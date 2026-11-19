@@ -5,7 +5,7 @@
 **Revisjonsstatus:** Database-, tilgangs- og PT/WOD-integrasjon – nye WOD-synlegheits- og atomisk tildelingsrettingar implementerte; SQL-testar bestått  
 **GitHub-repo:** tibraxTIMB/Garasjegym  
 **Arbeidsbranch:** garasjegym-2.0-sturm­kopf  
-**Kontrollert kodecommit før denne dokumentoppdateringa:** ea580975135d2b64b59d8bbe02588335f39ff3e8  
+**Kontrollert kodecommit før denne dokumentoppdateringa:** 16bbfd564b19ee99c6e722e01bb0cdbd6da94db9  
 **Supabase testprosjekt:** garasjegym-2-test / izwzwvlexqxqewzijhhd
 
 > Dette dokumentet skil mellom statisk kodegjennomgang, databasekontroll, SQL-rollesimulering, automatiske bygg og manuell ende-til-ende-testing. SQL-testar vart køyrde med mellombelse data i transaksjonar som vart rulla tilbake. Dei er ikkje det same som testing i autentisert nettlesar.
@@ -82,8 +82,8 @@ Det finst éin aktiv admin og to aktive medlemsprofilar i testprosjektet. Det fi
 
 ### Migreringsspor – framleis eit avvik
 
-- GitHub-branch inneheld **49 SQL-filer**.
-- Supabase-testprosjektet rapporterer **60 installerte migreringar**.
+- GitHub-branch inneheld **50 SQL-filer**.
+- Supabase-testprosjektet rapporterer **61 installerte migreringar**.
 - **15 installerte migreringsnamn manglar tilsvarande SQL-fil i repoet**. Éi er baseline frå produksjonsskjema utan data; 14 er funksjons-/skjemamigreringar.
 - **4 SQL-filer i repoet finst ikkje som installerte migreringar** i Supabase sin migreringslogg.
 
@@ -144,6 +144,7 @@ Nye migreringar på STURMKOPF:
 - 202611191210_wod_assignment_atomic_save.sql
 - 202611191220_wod_group_class_visibility.sql
 - 202611191230_notification_group_category.sql
+- 202611191250_class_booking_attendance_privacy.sql
 
 Kodeendringar:
 - PTManagement.jsx: PT-kundetildeling og godkjenning av tenestebestilling nyttar no atomisk assign_pt_coach RPC. Tidlegare aktiv tilknyting blir ikkje avslutta dersom ny tildeling feilar. Kapasiteten til PT blir kontrollert med transaksjonslås.
@@ -152,6 +153,7 @@ Kodeendringar:
 - WodLibrary.jsx: WOD blir arkivert dersom det finst referansar i dei kontrollerte PT-, trenings-, favoritt- og gruppetimekoplingane. Permanent sletting skjer berre når ingen slike referansar finst.
 - WOD-lesepolicy: `wods_read_assigned` er retta slik at privat WOD blir synleg for rett medlem ved direkte PT-tildeling, PT-programøkt, PT-time eller gruppetime/live-økt. Gruppetime-WOD krev stadfesta booking; andre medlemmer får ikkje tilgang.
 - Varseltrigger for gruppetime: `notifications_category_check` tillèt no `group`, som allereie er støtta av varselkomponenten. Dette rettar ein feil der ein ny gruppetimebooking kunne bli avvist når triggeren prøvde å oppretta varsel.
+- Booking.jsx og `class_bookings` RLS: medlemmer kan no berre lesa eigne påmeldingsrader. Gruppetimetalet blir henta via `get_class_attendance_counts`, som berre returnerer aggregert tal for publiserte timar. Admin/manager beheld deltakarlista.
 - WodBuilder.jsx: ny WOD som blir bygd og tildelt frå PT Studio blir no lagra gjennom `save_wod_with_pt_assignment`. Oppretting/redigering og tildeling skjer i éi transaksjon; feil i tildeling rullar tilbake WOD-operasjonen.
 - pt_bookings: direkte medlems-INSERT er blokkert. Medlemsbooking går gjennom kapasitetssjekka RPC. Avlysing triggar ventelisteopprykk; ein intern nested-triggeroppdatering er eksplisitt tillaten utan å opna for direkte medlemsendring av andre felt.
 
@@ -186,6 +188,9 @@ Følgjande transaksjonstestar vart køyrde mot testdatabasen. Mellombelse rader 
 | Privat WOD i publisert gruppetime er synleg for stadfesta deltakar, ikkje annan medlem | BESTÅTT |
 | Privat WOD i ferdig live gruppetime er synleg for stadfesta deltakar | BESTÅTT |
 | Ny gruppetimebooking opprettar varsel med category `group` utan å feila | BESTÅTT |
+| Medlem kan berre lesa eigne `class_bookings`-rader | BESTÅTT |
+| Medlem får berre aggregert påmeldingstal frå `get_class_attendance_counts` | BESTÅTT |
+| Admin kan framleis lesa full deltakaroversikt | BESTÅTT |
 | Testdata frå alle transaksjonstestane vart rulla tilbake | BESTÅTT |
 
 Desse testane kontrollerer databasefunksjonar, RLS og tabellprivilegium. Dei dokumenterer ikkje at alle knappar, visingar eller navigasjonsflytar fungerer i nettlesaren.
@@ -196,13 +201,13 @@ Desse testane kontrollerer databasefunksjonar, RLS og tabellprivilegium. Dei dok
 
 - 0 offentleg/anon EXECUTE-funn for SECURITY DEFINER-funksjonar etter at ni triggerfunksjonar fekk avgrensa rettar.
 - public.set_notification_read_at har no fast search_path = pg_catalog, public.
-- 6 SECURITY DEFINER-funksjonar er framleis tilgjengelege for authenticated: book_pt_session, is_active_user, is_admin, is_admin_or_manager, place_coffee_order og toggle_social_reaction. Desse er vurderte som medvite eksponerte RPC-/rollefunksjonar; dei må framleis haldast under kontroll.
+- 7 SECURITY DEFINER-funksjonar er framleis tilgjengelege for authenticated: book_pt_session, get_class_attendance_counts, is_active_user, is_admin, is_admin_or_manager, place_coffee_order og toggle_social_reaction. `get_class_attendance_counts` returnerer berre aggregert kapasitetstal, krev aktiv brukar og er avgrensa til publiserte timar for medlemmer. Desse må framleis haldast under kontroll.
 - Leaked Password Protection er framleis deaktivert i Supabase Auth-testprosjektet. Dette er ikkje endra.
 
 ### Performance Advisor – siste kontroll
 
 - 20 framandnøklar utan dekkjande indeks.
-- 43 RLS initplan-varsel.
+- 42 RLS initplan-varsel.
 - 32 indeksar rapporterte som ubruka.
 - 8 tilfelle med fleire permissive policyar.
 
@@ -210,10 +215,8 @@ Ubrukte indeksar er ikkje sletta. Testdatabasen har låg datamengd og kort histo
 
 ## 8. CI, bygg og publisering
 
-- Siste applikasjonskodecommit: ea580975135d2b64b59d8bbe02588335f39ff3e8.
-- GarasjeGym 2.0 checks, run 44509569917: BESTÅTT.
-- Deploy STURMKOPF preview, run 44509569921: BESTÅTT.
-- Preview er oppdatert med den siste WOD/PT-rettinga.
+- Siste applikasjonskodecommit: 16bbfd564b19ee99c6e722e01bb0cdbd6da94db9.
+- CI og preview-deploy for denne koden køyrer no; endeleg resultat skal stadfestast etter GitHub Actions.
 - Preview: https://tibraxtimb.github.io/Garasjegym/
 
 CI kontrollerer installasjon, migreringsdelimiterar og Vite production build. Det finst ikkje eit eige unit-, komponent- eller ende-til-ende-testskript i pakken.
