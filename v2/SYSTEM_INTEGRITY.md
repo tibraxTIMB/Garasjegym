@@ -5,7 +5,7 @@
 **Revisjonsstatus:** Database-, tilgangs- og PT/WOD-integrasjon – nye WOD-synlegheits- og atomisk tildelingsrettingar implementerte; SQL-testar bestått  
 **GitHub-repo:** tibraxTIMB/Garasjegym  
 **Arbeidsbranch:** garasjegym-2.0-sturm­kopf  
-**Kontrollert kodecommit før denne dokumentoppdateringa:** 85fc79c27aaaeefa8b8b08af28647eb677d86b87  
+**Kontrollert kodecommit før denne dokumentoppdateringa:** 34acd8f910892ecb593a3b7362b93fb8a09f3e7a  
 **Supabase testprosjekt:** garasjegym-2-test / izwzwvlexqxqewzijhhd
 
 > Dette dokumentet skil mellom statisk kodegjennomgang, databasekontroll, SQL-rollesimulering, automatiske bygg og manuell ende-til-ende-testing. SQL-testar vart køyrde med mellombelse data i transaksjonar som vart rulla tilbake. Dei er ikkje det same som testing i autentisert nettlesar.
@@ -82,8 +82,8 @@ Det finst éin aktiv admin og to aktive medlemsprofilar i testprosjektet. Det fi
 
 ### Migreringsspor – framleis eit avvik
 
-- GitHub-branch inneheld **53 SQL-filer**.
-- Supabase-testprosjektet rapporterer **64 installerte migreringar**.
+- GitHub-branch inneheld **54 SQL-filer**.
+- Supabase-testprosjektet rapporterer **65 installerte migreringar**.
 - **15 installerte migreringsnamn manglar tilsvarande SQL-fil i repoet**. Éi er baseline frå produksjonsskjema utan data; 14 er funksjons-/skjemamigreringar.
 - **4 SQL-filer i repoet finst ikkje som installerte migreringar** i Supabase sin migreringslogg.
 
@@ -130,7 +130,7 @@ RLS er aktivert på alle 43 public-tabellane. Gjennomgangen har i tillegg kontro
 
 Frontend sin isStaff() reknar aktive admin- og managerprofilar som staff. PT-registeret koplar PT-coach til eksisterande admin-/managerbrukar; det finst ikkje ein separat autentiseringsrolle coach i dagens frontend. Admin/manager har brei staff-tilgang, ikkje avgrensa tilgang berre til eigne PT-kundar. Dette er ein reell avgrensing dersom PT-coach skal ha eit separat, avgrensa kundeområde. Ikkje endra rollemodellen automatisk, sidan det krev ei eksplisitt avgjerd om korleis manager og PT-coach skal skiljast.
 
-I testprosjektet finst 1 admin og 3 medlemmer, men ingen managerprofil. `pt_coaches` og `pt_client_assignments` har ingen aktive rader. Admin-/medlemsrettar er SQL-testbare; manager- og coach-spesifikke rettar kunne ikkje testast med eksisterande testkontoar. Eit separat coach-kundeområde er derfor ikkje rekna som ferdigstilt.
+I testprosjektet finst 1 admin og 3 medlemmer, men ingen varig managerprofil. `pt_coaches` og `pt_client_assignments` har ingen aktive rader. Managerrettar er likevel testa ved å endra ein testprofil til manager inne i ein transaksjon som vart rulla tilbake: manager fekk staff-tilgang til klassar, påmeldingsadministrasjon og PT-WOD-tildeling. Coach-spesifikke rettar kunne ikkje testast; eit separat coach-kundeområde er ikkje ferdigstilt.
 
 ## 5. PT/WOD-rettingane som er implementerte
 
@@ -150,6 +150,7 @@ Nye migreringar på STURMKOPF:
 - 202611191300_class_published_visibility.sql
 - 202611191310_pt_completion_link_guard.sql
 - 202611191320_class_booking_published_future_only.sql
+- 202611191330_class_booking_manager_staff.sql
 
 Kodeendringar:
 - PTManagement.jsx: PT-kundetildeling og godkjenning av tenestebestilling nyttar no atomisk assign_pt_coach RPC. Tidlegare aktiv tilknyting blir ikkje avslutta dersom ny tildeling feilar. Kapasiteten til PT blir kontrollert med transaksjonslås.
@@ -161,6 +162,7 @@ Kodeendringar:
 - Booking.jsx og `class_bookings` RLS: medlemmer kan no berre lesa eigne påmeldingsrader. Gruppetimetalet blir henta via `get_class_attendance_counts`, som berre returnerer aggregert tal for publiserte timar. Admin/manager beheld deltakarlista.
 - `classes_read_members`: vanlege medlemmer kan berre lesa publiserte gruppetimar; admin/manager kan framleis sjå upubliserte utkast. Booking.jsx filtrerer eksplisitt på `published=true` for medlemmer.
 - `class_bookings_insert_own`: medlemsbooking krev no publisert framtidig gruppetime; direkte INSERT mot upubliserte eller allereie starta timar blir avvist.
+- `class_bookings` staff policies: admin og manager har no same rett til å oppdatera og sletta gruppetimepåmeldingar, i samsvar med `isStaff()` i frontend.
 - PT-gjennomføringstriggarar: `pt_wod_assignments` og `pt_program_sessions` krev no at medlem fullfører med ein eigen treningslogg for rett WOD. Direkte statusendring til `completed` utan logg, eller kopling til feil WOD-logg, blir avvist.
 - WOD stasjonssirkel: dosering for plyo-boks blir lagra som `height_cm` i kvar stasjon og vist i treningsmodus og live gruppetimevising.
 - WodBuilder.jsx: ny WOD som blir bygd og tildelt frå PT Studio blir no lagra gjennom `save_wod_with_pt_assignment`. Oppretting/redigering og tildeling skjer i éi transaksjon; feil i tildeling rullar tilbake WOD-operasjonen.
@@ -207,6 +209,7 @@ Følgjande transaksjonstestar vart køyrde mot testdatabasen. Mellombelse rader 
 | Medlem kan ikkje lesa upublisert gruppetime, medan staff kan | BESTÅTT |
 | Medlem kan ikkje melda seg på upublisert eller allereie starta gruppetime via direkte INSERT | BESTÅTT |
 | Medlem kan melda seg på publisert framtidig gruppetime | BESTÅTT |
+| Manager kan sjå upubliserte timar, oppdatera/sletta påmeldingar og oppretta PT-WOD-tildeling | BESTÅTT – transaksjonell rollesimulering |
 | Testdata frå alle transaksjonstestane vart rulla tilbake | BESTÅTT |
 
 Desse testane kontrollerer databasefunksjonar, RLS og tabellprivilegium. Dei dokumenterer ikkje at alle knappar, visingar eller navigasjonsflytar fungerer i nettlesaren.
@@ -223,7 +226,7 @@ Desse testane kontrollerer databasefunksjonar, RLS og tabellprivilegium. Dei dok
 ### Performance Advisor – siste kontroll
 
 - 20 framandnøklar utan dekkjande indeks.
-- 41 RLS initplan-varsel.
+- 40 RLS initplan-varsel.
 - 31 indeksar rapporterte som ubruka.
 - 8 tilfelle med fleire permissive policyar.
 
@@ -231,9 +234,9 @@ Ubrukte indeksar er ikkje sletta. Testdatabasen har låg datamengd og kort histo
 
 ## 8. CI, bygg og publisering
 
-- Siste applikasjonskodecommit: 07f2159a0cde35bf101905c8f495eb3fb15c7d77 (stasjonshøgde/booking UI); siste migreringscommit: 85fc79c27aaaeefa8b8b08af28647eb677d86b87.
-- Checks for siste migreringscommit, run 44511831822: BESTÅTT.
-- Preview deploy, run 44511831826: BESTÅTT.
+- Siste applikasjonskodecommit: 07f2159a0cde35bf101905c8f495eb3fb15c7d77 (stasjonshøgde/booking UI); siste migreringscommit: 34acd8f910892ecb593a3b7362b93fb8a09f3e7a.
+- Checks for siste migreringscommit, run 44512775278: BESTÅTT.
+- Preview deploy, run 44512775242: BESTÅTT.
 - Preview: https://tibraxtimb.github.io/Garasjegym/
 
 CI kontrollerer installasjon, migreringsdelimiterar og Vite production build. Det finst ikkje eit eige unit-, komponent- eller ende-til-ende-testskript i pakken.
