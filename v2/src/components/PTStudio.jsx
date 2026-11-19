@@ -373,8 +373,3 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
   {showCheckin&&staff&&<div className="pt2-modal-backdrop"><form className="pt2-modal pt2-form" onSubmit={sendCheckin}><div className="pt2-panel-head"><h3>Send statussjekk</h3><button type="button" className="icon-button" onClick={()=>setShowCheckin(false)}><X size={16}/></button></div><Field label="Tittel på skjema"><input value={checkinTitle} onChange={e=>setCheckinTitle(e.target.value)} required/></Field><div className="pt2-detail"><b>Spørsmål som blir sende</b>{CHECK_QUESTIONS.map(q=><p key={q}>• {q}</p>)}</div><div className="pt2-modal-actions"><button type="button" className="secondary-button" onClick={()=>setShowCheckin(false)}>Avbryt</button><button className="primary-button" disabled={busy}>Send til kunden</button></div></form></div>}
  </div>
 }
-
-.pt2-custom-focus{display:flex;gap:8px;align-items:center;margin-top:10px}
-.pt2-custom-focus input{flex:1;min-width:0}
-.pt2-custom-focus button{white-space:nowrap}
-@media(max-width:560px){.pt2-custom-focus{align-items:stretch;flex-direction:column}.pt2-custom-focus button{width:100%}}
