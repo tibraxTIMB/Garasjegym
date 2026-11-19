@@ -1,0 +1,853 @@
+/* PT Studio and schedule: single-column, thumb-first workspaces */
+.pt2,
+.pt2-group-workspace,
+.schedule-hub,
+.booking-module,
+.calendar-admin {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pt2-panel,
+.pt2-detail,
+.pt2-session,
+.pt2-goal,
+.class-card,
+.calendar-agenda-day {
+  overflow-wrap: anywhere;
+}
+
+.pt2-workspace-head {
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pt2-workspace-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.pt2-workspace-switch button {
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 1px solid var(--gg-shell-border);
+  border-radius: 10px;
+  background: #202729;
+  color: var(--gg-shell-text);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.pt2-workspace-switch button.selected {
+  border-color: rgba(240, 163, 58, .55);
+  background: rgba(240, 163, 58, .12);
+  color: var(--gg-shell-accent);
+}
+
+.pt2-customer-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.pt2-customer-avatar {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.pt2-customer-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pt2-customer-rank {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.pt2-customer-identity > div:nth-child(2) {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pt2-customer-identity > div:nth-child(2) strong {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.pt2-customer-identity > div:nth-child(2) small {
+  color: var(--gg-shell-muted);
+  font-size: 11px;
+}
+
+.pt2-customer-identity > button {
+  flex: 0 0 auto;
+  min-height: 44px;
+}
+
+.pt2-rank-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 9px;
+  width: 100%;
+}
+
+.pt2-rank-editor label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  color: var(--gg-shell-muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.pt2-rank-editor input {
+  min-width: 0;
+  min-height: 44px;
+  padding: 9px 11px;
+}
+
+.pt2-customer-actions {
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pt2-customer-actions button {
+  min-height: 44px;
+}
+
+.pt2-tabs {
+  min-width: 0;
+  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pt2-tabs button {
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.pt2-session {
+  min-width: 0;
+}
+
+.pt2-session-main {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pt2-session-main strong {
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.pt2-order-button {
+  min-width: 40px;
+  min-height: 40px;
+  touch-action: manipulation;
+}
+
+.pt2-template-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pt2-template-card > button {
+  min-height: 46px;
+}
+
+.pt2-modal-backdrop {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+.pt2-modal {
+  overscroll-behavior: contain;
+}
+
+.booking-module {
+  display: grid;
+  gap: 14px;
+}
+
+.booking-module .class-card {
+  min-width: 0;
+}
+
+.booking-module .class-action button {
+  min-height: 44px;
+}
+
+.booking-module .class-card-clickable:focus-visible {
+  outline: 2px solid var(--gg-shell-accent);
+  outline-offset: 2px;
+}
+
+.booking-module .class-wizard-progress {
+  min-width: 0;
+}
+
+.booking-module .class-wizard-progress button {
+  min-height: 44px;
+}
+
+.booking-module .class-detail-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.booking-module .class-detail-facts > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.booking-module .live-session-banner,
+.booking-module .live-session-results,
+.booking-module .class-program-detail {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.calendar-mobile-agenda {
+  display: none;
+}
+
+.calendar-admin .calendar-toolbar {
+  min-width: 0;
+}
+
+.calendar-admin .calendar-view-switch button,
+.calendar-admin .calendar-month-nav button {
+  min-height: 44px;
+}
+
+.calendar-admin .calendar-month-nav strong {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .pt2,
+  .pt2-group-workspace,
+  .schedule-hub,
+  .booking-module,
+  .calendar-admin {
+    gap: 13px;
+  }
+
+  .pt2-workspace-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pt2-workspace-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .pt2-workspace-switch button {
+    min-width: 0;
+    min-height: 48px;
+    padding: 9px;
+    line-height: 1.25;
+  }
+
+  .pt2-customer-bar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch !important;
+    gap: 12px;
+    padding: 14px !important;
+  }
+
+  .pt2-customer-identity {
+    display: grid !important;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 9px 11px;
+    align-items: center;
+  }
+
+  .pt2-customer-identity > div:nth-child(2) {
+    grid-column: 2;
+  }
+
+  .pt2-customer-rank {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .pt2-customer-rank span {
+    color: var(--gg-shell-muted);
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: .08em;
+  }
+
+  .pt2-customer-rank b {
+    font-size: 12px;
+  }
+
+  .pt2-customer-identity > button {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+  }
+
+  .pt2-rank-editor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pt2-rank-editor button {
+    width: 100%;
+    min-height: 46px;
+    justify-content: center;
+  }
+
+  .pt2-customer-actions {
+    display: flex;
+    width: 100%;
+  }
+
+  .pt2-tabs {
+    position: sticky;
+    top: 62px;
+    z-index: 42;
+    display: flex !important;
+    width: calc(100% + 2px);
+    margin-inline: -1px;
+    padding: 7px 1px !important;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--gg-shell-border);
+    background: rgba(16, 20, 22, .96);
+    backdrop-filter: blur(12px);
+  }
+
+  .pt2-tabs button {
+    flex: 0 0 auto;
+    min-height: 46px;
+    padding: 9px 13px;
+    font-size: 12px;
+  }
+
+  .pt2-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 11px;
+  }
+
+  .pt2-panel {
+    padding: 15px !important;
+    border-radius: 14px;
+  }
+
+  .pt2-panel-head {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .pt2-panel-head h3 {
+    font-size: 18px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .pt2-stat-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    margin: 13px 0;
+  }
+
+  .pt2-stat-row > div {
+    min-width: 0;
+    padding: 10px 8px;
+  }
+
+  .pt2-stat-row strong {
+    font-size: clamp(17px, 3.5vw, 22px);
+  }
+
+  .pt2-stat-row span {
+    font-size: 10px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .pt2-session {
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    align-items: start;
+    gap: 9px;
+    padding: 11px;
+  }
+
+  .pt2-session-main {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .pt2-session > .pt2-inline-actions,
+  .pt2-session > .pt2-pill,
+  .pt2-session > .secondary-button {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+
+  .pt2-session > .pt2-inline-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .pt2-session .pt2-inline-actions button {
+    min-width: 42px;
+    min-height: 42px;
+  }
+
+  .pt2-goal {
+    align-items: flex-start !important;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .pt2-goal > span { white-space: normal; }
+
+  .pt2-goal .pt2-inline-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .pt2-goal .pt2-inline-actions button {
+    min-height: 44px;
+    flex: 1 1 120px;
+  }
+
+  .pt2-template-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .pt2-template-controls > * { min-width: 0; width: 100%; }
+  .pt2-template-controls select { min-height: 46px; }
+
+  .pt2-template-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px;
+  }
+
+  .pt2-template-card {
+    padding: 14px;
+    border-radius: 13px;
+  }
+
+  .pt2-template-card > button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pt2-week-list { gap: 10px; }
+  .pt2-week { padding: 10px; }
+
+  .pt2-modal-backdrop {
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center;
+    padding: 8px 8px max(8px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .pt2-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 93dvh !important;
+    padding: 16px !important;
+    border-radius: 18px 18px 12px 12px;
+  }
+
+  .pt2-modal .primary-button,
+  .pt2-modal .secondary-button {
+    min-height: 46px;
+  }
+
+  .pt2-form-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px;
+  }
+
+  .pt2-field input,
+  .pt2-field select,
+  .pt2-field textarea {
+    min-height: 48px;
+    font-size: 14px;
+  }
+
+  .pt2-check-grid { grid-template-columns: minmax(0, 1fr); }
+  .pt2-check { min-height: 46px; }
+
+  .pt2-form-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .pt2-form-actions button {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  .booking-module .class-card {
+    grid-template-columns: 52px minmax(0, 1fr) !important;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .booking-module .class-action {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+    width: 100%;
+  }
+
+  .booking-module .class-action button {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  .booking-module .class-info h4 {
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  .booking-module .class-wizard {
+    padding: 13px;
+  }
+
+  .booking-module .class-wizard-progress {
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    padding-bottom: 7px;
+  }
+
+  .booking-module .class-wizard-progress button {
+    flex: 0 0 auto;
+    min-width: 110px;
+    min-height: 46px;
+    justify-content: flex-start;
+  }
+
+  .booking-module .class-wizard-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .booking-module .class-wizard-actions button {
+    min-height: 48px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .booking-module .class-detail-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .booking-module .class-detail-modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: 93dvh;
+    overflow: auto;
+    border-radius: 18px 18px 12px 12px;
+  }
+
+  .booking-module .class-program-detail > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .booking-module .class-attendance-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .booking-module .class-attendance-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .booking-module .class-attendance-actions button {
+    min-height: 42px;
+  }
+
+  .booking-module .live-station-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .calendar-admin .calendar-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .calendar-admin .calendar-month-nav {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .calendar-admin .calendar-month-nav strong {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    text-align: center;
+    font-size: 15px;
+  }
+
+  .calendar-admin .calendar-month-nav button:first-child { grid-column: 1; grid-row: 2; }
+  .calendar-admin .calendar-month-nav button:nth-child(2) { grid-column: 3; grid-row: 2; }
+  .calendar-admin .calendar-month-nav button:nth-child(3) { grid-column: 2; grid-row: 2; }
+  .calendar-admin .calendar-month-nav button { min-height: 44px; justify-content: center; }
+
+  .calendar-admin .calendar-view-switch {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .calendar-admin .calendar-view-switch button {
+    min-height: 46px;
+    padding: 8px;
+  }
+
+  .calendar-admin .calendar-legend {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 12px;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    font-size: 11px;
+  }
+
+  .calendar-admin .calendar-grid { display: none !important; }
+
+  .calendar-admin .calendar-mobile-agenda {
+    display: grid;
+    gap: 10px;
+  }
+
+  .calendar-agenda-day {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--gg-shell-border);
+    border-radius: 13px;
+    background: var(--gg-shell-panel);
+  }
+
+  .calendar-agenda-day.today {
+    border-color: rgba(240, 163, 58, .55);
+    box-shadow: inset 0 0 0 1px rgba(240, 163, 58, .12);
+  }
+
+  .calendar-agenda-day > header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .calendar-agenda-day > header > div {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .calendar-agenda-day > header strong {
+    color: var(--gg-shell-text);
+    font-size: 14px;
+    text-transform: capitalize;
+  }
+
+  .calendar-agenda-day > header small,
+  .calendar-agenda-empty {
+    color: var(--gg-shell-muted);
+    font-size: 11px;
+  }
+
+  .calendar-agenda-add {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 42px;
+    padding: 7px 10px;
+    border: 1px solid var(--gg-shell-border);
+    border-radius: 10px;
+    background: #242c2e;
+    color: var(--gg-shell-accent);
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .calendar-agenda-event {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 10px;
+    width: 100%;
+    min-height: 58px;
+    align-items: center;
+    margin-top: 7px;
+    padding: 9px;
+    border: 1px solid var(--gg-shell-border);
+    border-left: 4px solid #aeb8b6;
+    border-radius: 10px;
+    background: #1e2729;
+    color: var(--gg-shell-text);
+    text-align: left;
+  }
+
+  .calendar-agenda-event.pt { border-left-color: #56b987; }
+  .calendar-agenda-event.class { border-left-color: #e3a33c; }
+  .calendar-agenda-event.meeting { border-left-color: #6fa6e8; }
+  .calendar-agenda-event.maintenance { border-left-color: #b78ae0; }
+
+  .calendar-agenda-time {
+    color: var(--gg-shell-accent);
+    font-size: 12px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .calendar-agenda-main {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .calendar-agenda-main strong {
+    font-size: 13px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .calendar-agenda-main small {
+    color: var(--gg-shell-muted);
+    font-size: 10px;
+  }
+
+  .calendar-modal-backdrop {
+    align-items: flex-end !important;
+    padding: 8px 8px max(8px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .calendar-modal {
+    width: 100% !important;
+    max-height: 93dvh !important;
+    padding: 16px !important;
+    border-radius: 18px 18px 12px 12px !important;
+  }
+
+  .calendar-modal input,
+  .calendar-modal select,
+  .calendar-modal textarea {
+    min-height: 46px;
+    font-size: 14px;
+  }
+
+  .calendar-modal-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .calendar-modal-actions button {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 560px) {
+  .pt2-stat-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .pt2-stat-row > div { padding: 9px 6px; }
+  .pt2-stat-row span { font-size: 9px; }
+
+  .pt2-session {
+    grid-template-columns: 30px minmax(0, 1fr) !important;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .pt2-seq {
+    width: 30px;
+    height: 30px;
+  }
+
+  .pt2-session > .pt2-inline-actions {
+    gap: 6px;
+  }
+
+  .pt2-customer-actions {
+    align-items: stretch;
+  }
+
+  .pt2-customer-actions > button {
+    flex: 1 1 100%;
+    min-height: 46px;
+    justify-content: center;
+  }
+
+  .booking-module .class-detail-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .calendar-agenda-event {
+    grid-template-columns: 66px minmax(0, 1fr);
+    gap: 8px;
+    padding: 9px 8px;
+  }
+}
+
+@media (pointer: coarse), (hover: none) {
+  .pt2 button,
+  .booking-module button,
+  .calendar-admin button {
+    touch-action: manipulation;
+  }
+
+  .pt2-tabs button,
+  .pt2-workspace-switch button,
+  .booking-module .class-action button,
+  .calendar-admin .calendar-view-switch button,
+  .calendar-admin .calendar-month-nav button,
+  .calendar-agenda-event,
+  .calendar-agenda-add {
+    min-height: 46px;
+  }
+}
+
+
