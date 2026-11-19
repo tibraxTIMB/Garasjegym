@@ -32,7 +32,7 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
   <div className="wod-import-actions"><button type="button" className="secondary-button" onClick={parse} disabled={!source.trim()}>Analyser tekst</button></div>
   {parsed&&<div className="wod-import-result">
    <div className="wod-import-result-head"><CheckCircle2 size={17}/><strong>Kontroller importen</strong></div>
-   <div className="wod-import-meta"><span>{parsed.name}</span><span>{parsed.format||'Format uavklart'}</span><span>{parsed.minutes} min</span></div>
+   <div className="wod-import-meta"><span>{parsed.name}</span><span>{parsed.format||'Format uavklart'}</span><span>{parsed.minutes?parsed.minutes+' min':'Varigheit uavklart'}</span></div>
    <ol>{preview.map((item,index)=><li key={index}><strong>{item.name}</strong><span>{item.reps} reps{item.loadKg?' · Importert last ca. '+item.loadKg.toFixed(1)+' kg – må stadfestast':''}</span>{!item.matched&&<small>Finst ikkje i øvingsbiblioteket – blir lagt inn som tekstnamn</small>}</li>)}</ol>
    {parsed.unmatched.length>0&&<p className="wod-import-warning">Nye/ukjende øvingar: {parsed.unmatched.join(', ')}.</p>}
    <button type="button" className="primary-button" onClick={()=>onApply?.(parsed)}>Bruk i WOD Builder</button>
