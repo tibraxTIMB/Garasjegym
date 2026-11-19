@@ -29,3 +29,17 @@
 .pt2-custom-focus input{flex:1;min-width:0}
 .pt2-custom-focus button{white-space:nowrap}
 @media(max-width:560px){.pt2-custom-focus{align-items:stretch;flex-direction:column}.pt2-custom-focus button{width:100%}}
+
+/* PT dialog message moderation: compact, keyboard/touch-friendly actions. */
+.pt-message-card .history-card-top{align-items:center;gap:10px}
+.pt-message-meta,.pt-info-message-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;min-width:0}
+.pt-message-meta small,.pt-info-message-actions time{font-size:11px;opacity:.68;white-space:nowrap}
+.pt-message-meta .icon-button,.pt-info-message-actions .icon-button{width:34px;height:34px;min-width:34px;flex:0 0 34px}
+.pt-message-card>p{margin:8px 0 0;overflow-wrap:anywhere}
+.pt-info-message-actions{flex:0 0 auto}
+@media(max-width:560px){
+ .pt-message-card .history-card-top{align-items:flex-start}
+ .pt-message-meta,.pt-info-message-actions{gap:4px}
+ .pt-message-meta small,.pt-info-message-actions time{white-space:normal;text-align:right;font-size:10px}
+ .pt-message-meta .icon-button,.pt-info-message-actions .icon-button{width:38px;height:38px;min-width:38px;flex-basis:38px}
+}
