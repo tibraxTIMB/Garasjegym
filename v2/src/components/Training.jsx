@@ -286,7 +286,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   </div>
 }
 
-export default function Training({ launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, launchProgramSessionId = null, onLaunchConsumed, simpleMode = false, quickStart = false, onQuickStartConsumed, onSaved, onDiscard }) {
+export default function Training({ launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, simpleMode = false, quickStart = false, onQuickStartConsumed, onSaved, onDiscard }) {
   const [wods, setWods] = useState([])
   const [dailyWodId,setDailyWodId]=useState(null)
   const [exercises, setExercises] = useState([])
@@ -386,6 +386,13 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     const wod = wods.find(item => item.id === launchWodId)
     if (wod) { startWorkout(wod); setClassSessionId(launchClassSessionId || null); onLaunchConsumed?.() }
   }, [launchWodId, loading, wods])
+
+  useEffect(() => {
+    if (!launchProgramSessionId || launchWodId || loading) return
+    startWorkout()
+    setTitle(launchProgramSessionTitle || 'Eigen PT-økt')
+    onLaunchConsumed?.()
+  }, [launchProgramSessionId, launchWodId, loading])
 
   useEffect(() => {
     if (!quickStart || !simpleMode || loading || mode !== 'home') return
