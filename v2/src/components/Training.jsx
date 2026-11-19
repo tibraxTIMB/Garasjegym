@@ -688,7 +688,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
             addCandidate(exercise,'sek',[payload.score_time_seconds],'min')
             addCandidate(exercise,'cal',[payload.score_calories])
             const distance=Number(payload.score_distance)
-            if(distance>0)addCandidate(exercise,'meter',[payload.score_unit==='km'?distance*1000:distance])
+            if(distance>0){if(payload.score_unit==='cal')addCandidate(exercise,'cal',[distance]);else addCandidate(exercise,'meter',[payload.score_unit==='km'?distance*1000:distance])}
           }
         })
         if(newPRs.length){
