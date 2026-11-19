@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase.js'
 import { MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
 import { sortWodItems } from '../lib/wodOrdering.js'
+import { formatComplexSequence } from '../lib/wodComplexes.js'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', uses_height: false, sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] })
@@ -518,6 +519,9 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         exercise_name: item.exercise_name || '',
         minute_slot: item.minute_slot ?? '',
         is_rest: !!item.is_rest,
+        is_complex: !!item.is_complex,
+        complex_family: item.complex_family || null,
+        complex_steps: Array.isArray(item.complex_steps) ? item.complex_steps : [],
         rest_duration_seconds: item.rest_duration_seconds == null ? null : Number(item.rest_duration_seconds),
         reps_mode: item.reps_mode || 'fixed',
         prescription_levels: item.levels || null,
@@ -731,7 +735,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         <div className="exercise-search"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Søk i øvingsbiblioteket …"/></div>
         {query && <div className="exercise-pick-list">{filteredExercises.slice(0,8).map(ex => <button type="button" key={ex.id} onClick={() => addExercise(ex)}><Plus size={14}/><span>{ex.name}</span><small>{ex.category}</small></button>)}</div>}
         {items.map((item, index) => <article className="engine-exercise" key={item.key}>
-          <div className="engine-exercise-head"><strong>{index + 1}. {item.exercise_name || 'Ny øving'}</strong><button type="button" className="danger-icon" aria-label="Fjern øving" onClick={() => setItems(current => current.filter(x => x.key !== item.key))}><Trash2 size={16}/></button></div>
+          <div className="engine-exercise-head"><strong>{index + 1}. {item.exercise_name || 'Ny øving'}</strong>{item.is_complex&&<span className="training-complex-tag">COMPLEX</span>}<button type="button" className="danger-icon" aria-label="Fjern øving" onClick={() => setItems(current => current.filter(x => x.key !== item.key))}><Trash2 size={16}/></button></div>
+          {item.is_complex&&Array.isArray(item.complex_steps)&&<div className="training-complex-sequence"><strong>Rørslesekvens</strong><ol>{item.complex_steps.map((step,stepIndex)=><li key={stepIndex}><span>{step.name}</span><b>{step.reps} ×</b></li>)}</ol></div>}
           {!item.exercise_id && <input aria-label="Namn på øving" value={item.exercise_name} onChange={e => updateExercise(item.key,{exercise_name:e.target.value})} placeholder="Namn på øving"/>}
           {item.prescription_levels&&<div className="wod-prescription-target"><strong>Planlagt dosering · {wodLevel.toUpperCase()}</strong><span>{doseLabel({levels:item.prescription_levels},wodLevel)||'Ikkje dosert på dette nivået'}</span></div>}{item.sets.map((set, i) => <div className={item.uses_height?"set-grid height-set-grid":"set-grid"} key={i}>
             <span>Sett {i + 1}</span><input type="number" min="0" step="1" value={set.reps} onChange={e => updateSet(item.key,i,{reps:e.target.value})} placeholder="Reps"/>
