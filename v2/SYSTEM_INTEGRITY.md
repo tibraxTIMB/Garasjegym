@@ -5,7 +5,7 @@
 **Revisjonsstatus:** Database-, tilgangs- og PT/WOD-integrasjon – nye WOD-synlegheits- og atomisk tildelingsrettingar implementerte; SQL-testar bestått  
 **GitHub-repo:** tibraxTIMB/Garasjegym  
 **Arbeidsbranch:** garasjegym-2.0-sturm­kopf  
-**Kontrollert kodecommit før denne dokumentoppdateringa:** 1e47ad6c43c09534cd75f4e11946d4bf724464d9  
+**Kontrollert kodecommit før denne dokumentoppdateringa:** 8ddf520e057cb6eb4b859d59b71380dfab43cb60  
 **Supabase testprosjekt:** garasjegym-2-test / izwzwvlexqxqewzijhhd
 
 > Dette dokumentet skil mellom statisk kodegjennomgang, databasekontroll, SQL-rollesimulering, automatiske bygg og manuell ende-til-ende-testing. SQL-testar vart køyrde med mellombelse data i transaksjonar som vart rulla tilbake. Dei er ikkje det same som testing i autentisert nettlesar.
@@ -146,6 +146,7 @@ Nye migreringar på STURMKOPF:
 - 202611191230_notification_group_category.sql
 - 202611191250_class_booking_attendance_privacy.sql
 - 202611191300_class_published_visibility.sql
+- 202611191310_pt_completion_link_guard.sql
 
 Kodeendringar:
 - PTManagement.jsx: PT-kundetildeling og godkjenning av tenestebestilling nyttar no atomisk assign_pt_coach RPC. Tidlegare aktiv tilknyting blir ikkje avslutta dersom ny tildeling feilar. Kapasiteten til PT blir kontrollert med transaksjonslås.
@@ -156,6 +157,8 @@ Kodeendringar:
 - Varseltrigger for gruppetime: `notifications_category_check` tillèt no `group`, som allereie er støtta av varselkomponenten. Dette rettar ein feil der ein ny gruppetimebooking kunne bli avvist når triggeren prøvde å oppretta varsel.
 - Booking.jsx og `class_bookings` RLS: medlemmer kan no berre lesa eigne påmeldingsrader. Gruppetimetalet blir henta via `get_class_attendance_counts`, som berre returnerer aggregert tal for publiserte timar. Admin/manager beheld deltakarlista.
 - `classes_read_members`: vanlege medlemmer kan berre lesa publiserte gruppetimar; admin/manager kan framleis sjå upubliserte utkast. Booking.jsx filtrerer eksplisitt på `published=true` for medlemmer.
+- PT-gjennomføringstriggarar: `pt_wod_assignments` og `pt_program_sessions` krev no at medlem fullfører med ein eigen treningslogg for rett WOD. Direkte statusendring til `completed` utan logg, eller kopling til feil WOD-logg, blir avvist.
+- WOD stasjonssirkel: dosering for plyo-boks blir lagra som `height_cm` i kvar stasjon og vist i treningsmodus og live gruppetimevising.
 - WodBuilder.jsx: ny WOD som blir bygd og tildelt frå PT Studio blir no lagra gjennom `save_wod_with_pt_assignment`. Oppretting/redigering og tildeling skjer i éi transaksjon; feil i tildeling rullar tilbake WOD-operasjonen.
 - pt_bookings: direkte medlems-INSERT er blokkert. Medlemsbooking går gjennom kapasitetssjekka RPC. Avlysing triggar ventelisteopprykk; ein intern nested-triggeroppdatering er eksplisitt tillaten utan å opna for direkte medlemsendring av andre felt.
 
@@ -193,6 +196,9 @@ Følgjande transaksjonstestar vart køyrde mot testdatabasen. Mellombelse rader 
 | Medlem kan berre lesa eigne `class_bookings`-rader | BESTÅTT |
 | Medlem får berre aggregert påmeldingstal frå `get_class_attendance_counts` | BESTÅTT |
 | Admin kan framleis lesa full deltakaroversikt | BESTÅTT |
+| Medlem kan ikkje fullføra PT-WOD utan treningslogg | BESTÅTT |
+| Medlem kan ikkje knyta PT-WOD til treningslogg for annan WOD | BESTÅTT |
+| Medlem kan fullføra PT-programøkt berre med eigen logg for rett WOD | BESTÅTT |
 | Medlem kan ikkje lesa upublisert gruppetime, medan staff kan | BESTÅTT |
 | Testdata frå alle transaksjonstestane vart rulla tilbake | BESTÅTT |
 
@@ -218,8 +224,9 @@ Ubrukte indeksar er ikkje sletta. Testdatabasen har låg datamengd og kort histo
 
 ## 8. CI, bygg og publisering
 
-- Siste applikasjonskodecommit: 1e47ad6c43c09534cd75f4e11946d4bf724464d9.
-- CI og preview-deploy for denne koden køyrer no; endeleg resultat skal stadfestast etter GitHub Actions.
+- Siste applikasjonskodecommit: 07f2159a0cde35bf101905c8f495eb3fb15c7d77 (stasjonshøgde/booking UI); siste migreringscommit: 8ddf520e057cb6eb4b859d59b71380dfab43cb60.
+- Checks for siste migreringscommit, run 44511402662: BESTÅTT.
+- Preview deploy, run 44511402660: framleis under gjennomføring ved siste kontroll.
 - Preview: https://tibraxtimb.github.io/Garasjegym/
 
 CI kontrollerer installasjon, migreringsdelimiterar og Vite production build. Det finst ikkje eit eige unit-, komponent- eller ende-til-ende-testskript i pakken.
