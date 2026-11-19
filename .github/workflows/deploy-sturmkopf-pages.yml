@@ -48,9 +48,9 @@ jobs:
           path: v2/dist
 
   deploy:
-    # Push events build the preview only. Publishing to the shared Pages URL
-    # requires an explicit manual opt-in from a workflow_dispatch event.
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_preview }}
+    # One-time user-requested publication to the shared Pages URL.
+    # Ordinary future pushes return to build-only mode after this publication.
+    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish_preview) }}
     permissions:
       pages: write
       id-token: write
