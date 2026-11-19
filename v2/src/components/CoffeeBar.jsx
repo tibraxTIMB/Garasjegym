@@ -5,10 +5,10 @@ import {isStaff} from '../lib/auth.js'
 
 const statusMeta={
  new:{label:'Motteken',className:'new',next:'confirmed',nextLabel:'Stadfest'},
- confirmed:{label:'Stadfesta',className:'confirmed',next:'preparing',nextLabel:'Start tilbereding'},
- preparing:{label:'Under tilbereding',className:'preparing',next:'ready',nextLabel:'Klar til henting'},
- ready:{label:'Klar til henting',className:'ready',next:'collected',nextLabel:'Marker utlevert'},
- collected:{label:'Utlevert',className:'collected'},
+ confirmed:{label:'Stadfesta',className:'confirmed',previous:'new',next:'preparing',nextLabel:'Start tilbereding'},
+ preparing:{label:'Under tilbereding',className:'preparing',previous:'confirmed',next:'ready',nextLabel:'Klar til henting'},
+ ready:{label:'Klar til henting',className:'ready',previous:'preparing',next:'collected',nextLabel:'Marker utlevert'},
+ collected:{label:'Utlevert',className:'collected',previous:'ready'},
  cancelled:{label:'Avbestilt',className:'cancelled'}
 }
 const formatMoney=value=>Number(value||0).toLocaleString('nn-NO',{minimumFractionDigits:0,maximumFractionDigits:2})+' kr'
@@ -30,7 +30,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
  const [categoryFilter,setCategoryFilter]=useState('Alle'),[reviewFilter,setReviewFilter]=useState('unread'),[reviewProductFilter,setReviewProductFilter]=useState('Alle'),[reviewRatingFilter,setReviewRatingFilter]=useState('Alle'),[selectedReview,setSelectedReview]=useState(null)
  const [note,setNote]=useState(''),[milk,setMilk]=useState('Vanleg mjølk'),[syrup,setSyrup]=useState('Ingen')
  const [optionSelections,setOptionSelections]=useState({})
- const [newName,setNewName]=useState(''),[newPrice,setNewPrice]=useState(''),[newDesc,setNewDesc]=useState(''),[newCategory,setNewCategory]=useState('Kaffi'),[newOptions,setNewOptions]=useState(''),[newPrepMinutes,setNewPrepMinutes]=useState('')
+ const [newName,setNewName]=useState(''),[newPrice,setNewPrice]=useState(''),[newDesc,setNewDesc]=useState(''),[newCategory,setNewCategory]=useState('Kaffi'),[newOptions,setNewOptions]=useState(''),[newPrepMinutes,setNewPrepMinutes]=useState(''),[newImageUrl,setNewImageUrl]=useState('')
  const [editingProduct,setEditingProduct]=useState(null),[staffComments,setStaffComments]=useState({})
  const [reviewDrafts,setReviewDrafts]=useState({})
  const [orderRequestId,setOrderRequestId]=useState(null)
@@ -105,7 +105,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
 
  function change(id,delta){setCart(v=>({...v,[id]:Math.max(0,Math.min(20,(v[id]||0)+delta))}))}
  function setOption(productId,group,choice){setOptionSelections(current=>({...current,[productId]:{...(current[productId]||{}),[group]:choice}}))}
- function resetProductForm(){setNewName('');setNewPrice('');setNewDesc('');setNewCategory('Kaffi');setNewOptions('');setNewPrepMinutes('');setEditingProduct(null)}
+ function resetProductForm(){setNewName('');setNewPrice('');setNewDesc('');setNewCategory('Kaffi');setNewOptions('');setNewPrepMinutes('');setNewImageUrl('');setEditingProduct(null)}
  async function order(){
   if(busy==='order'||!cartItems.length)return
   setBusy('order');setError('');setNotice('')
@@ -125,7 +125,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
   if(busy==='product')return
   setBusy('product');setError('');setNotice('')
   try{
-   const values={name:newName.trim(),price:Number(newPrice),description:newDesc.trim(),category:newCategory.trim()||'Kaffi',option_groups:parseOptionGroups(newOptions),prep_minutes:newPrepMinutes?Number(newPrepMinutes):null}
+   const values={name:newName.trim(),price:Number(newPrice),description:newDesc.trim(),category:newCategory.trim()||'Kaffi',option_groups:parseOptionGroups(newOptions),prep_minutes:newPrepMinutes?Number(newPrepMinutes):null,image_url:newImageUrl.trim()||null}
    if(values.prep_minutes!==null&&(values.prep_minutes<1||values.prep_minutes>120))throw new Error('Førebuingstid må vera mellom 1 og 120 minutt.')
    const result=editingProduct?await supabase.from('coffee_products').update(values).eq('id',editingProduct.id):await supabase.from('coffee_products').insert(values)
    if(result.error)throw result.error
@@ -135,7 +135,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
  }
  function editProduct(product){
   setEditingProduct(product);setNewName(product.name||'');setNewPrice(String(product.price??''));setNewDesc(product.description||'')
-  setNewCategory(product.category||'Kaffi');setNewOptions(optionText(product.option_groups));setNewPrepMinutes(product.prep_minutes?String(product.prep_minutes):'')
+  setNewCategory(product.category||'Kaffi');setNewOptions(optionText(product.option_groups));setNewPrepMinutes(product.prep_minutes?String(product.prep_minutes):'');setNewImageUrl(product.image_url||'')
  }
  async function toggleProduct(product){
   setBusy('product-'+product.id);setError('');setNotice('')
@@ -147,7 +147,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
   setBusy(orderRow.id);setError('');setNotice('')
   try{
    const now=new Date().toISOString()
-   const timestamps={confirmed:{confirmed_at:now},preparing:{preparing_at:now},ready:{ready_at:now},collected:{collected_at:now}}
+   const timestamps={new:{confirmed_at:null,preparing_at:null,ready_at:null,collected_at:null},confirmed:{confirmed_at:now,preparing_at:null,ready_at:null,collected_at:null},preparing:{preparing_at:now,ready_at:null,collected_at:null},ready:{ready_at:now,collected_at:null},collected:{collected_at:now}}
    const {error:e}=await supabase.from('coffee_orders').update({status,...(timestamps[status]||{}),updated_at:now}).eq('id',orderRow.id)
    if(e)throw e
    setNotice('Ordrestatus oppdatert.');await load(true)
@@ -220,12 +220,12 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
    <section className="engine-section coffee-orders-section"><div className="training-heading"><div><div className="section-kicker">BARISTAPANEL</div><h3>Bestillingskø</h3></div><span className="count-pill">{orders.length} {orderView==='active'?'aktive':orderView==='completed'?'ferdige':'arkiverte'}</span></div>
     <div className="calendar-view-switch coffee-order-views"><button type="button" className={orderView==='active'?'selected':''} onClick={()=>setOrderView('active')}>Aktiv kø</button><button type="button" className={orderView==='completed'?'selected':''} onClick={()=>setOrderView('completed')}>Ferdige</button><button type="button" className={orderView==='archive'?'selected':''} onClick={()=>setOrderView('archive')}>Arkiv</button></div>
     {orders.length?orders.map(orderRow=><article className={'history-card coffee-order-card '+(orderRow.status==='new'?'is-new-order':'')} key={orderRow.id}>
-     <div className="history-card-top"><div><strong>{orderRow.profiles?.display_name||'Medlem'} · #{orderRow.id.replaceAll('-','').slice(0,8).toUpperCase()}</strong><small>{formatDate(orderRow.created_at)}</small></div><span className={'coffee-status status-'+(statusMeta[orderRow.status]?.className||orderRow.status)}>{statusMeta[orderRow.status]?.label||orderRow.status}</span></div>
+     <div className="history-card-top"><div><strong>{orderRow.profiles?.display_name||'Medlem'} · #{orderRow.id.replaceAll('-','').slice(0,8).toUpperCase()}</strong><small>{formatDate(orderRow.created_at)} · Venta {Math.max(0,Math.floor((Date.now()-new Date(orderRow.created_at).getTime())/60000))} min</small></div><span className={'coffee-status status-'+(statusMeta[orderRow.status]?.className||orderRow.status)}>{statusMeta[orderRow.status]?.label||orderRow.status}</span></div>
      {(orderRow.coffee_order_items||[]).map(item=><div className="history-exercise coffee-order-item" key={item.id}><div><b>{item.product_name} × {item.quantity}</b>{item.options?.length>0&&<small>{optionSummary(item.options)}</small>}</div><span>{formatMoney(Number(item.unit_price)*Number(item.quantity))}</span></div>)}
      <div className="coffee-total"><span>Sum</span><strong>{formatMoney(orderRow.total)}</strong></div>
      {orderRow.note&&<div className="coffee-customer-note"><strong>Ønskje frå kunden</strong><p>{orderRow.note}</p></div>}
      <div className="coffee-staff-comment-editor"><label>Kommentar frå kaffibaren<textarea rows="2" value={staffComments[orderRow.id]??orderRow.staff_comment??''} onChange={e=>setStaffComments(v=>({...v,[orderRow.id]:e.target.value}))} placeholder="Kort melding til kunden …"/></label><button className="secondary-button" disabled={busy==='comment-'+orderRow.id} onClick={()=>saveStaffComment(orderRow)}>{busy==='comment-'+orderRow.id?'Lagrar …':'Lagre kommentar'}</button></div>
-     <div className="coffee-order-actions">{statusMeta[orderRow.status]?.next&&<button type="button" className="primary-button" disabled={busy===orderRow.id} onClick={()=>updateStatus(orderRow,statusMeta[orderRow.status].next)}>{statusMeta[orderRow.status].nextLabel}</button>}{!['collected','cancelled'].includes(orderRow.status)&&<button type="button" className="secondary-button" disabled={busy===orderRow.id} onClick={()=>{if(window.confirm('Avbestilla bestillinga?'))updateStatus(orderRow,'cancelled')}}>Avbestill</button>}<button type="button" className="secondary-button" disabled={busy==='archive-'+orderRow.id} onClick={()=>archiveOrder(orderRow)}>{orderRow.archived_at?'Gjenopprett':'Arkiver'}</button></div>
+     <div className="coffee-order-actions">{statusMeta[orderRow.status]?.previous&&<button type="button" className="secondary-button" disabled={busy===orderRow.id} onClick={()=>updateStatus(orderRow,statusMeta[orderRow.status].previous)}>Angre siste steg</button>}{statusMeta[orderRow.status]?.next&&<button type="button" className="primary-button" disabled={busy===orderRow.id} onClick={()=>updateStatus(orderRow,statusMeta[orderRow.status].next)}>{statusMeta[orderRow.status].nextLabel}</button>}{!['collected','cancelled'].includes(orderRow.status)&&<button type="button" className="secondary-button" disabled={busy===orderRow.id} onClick={()=>{if(window.confirm('Avbestilla bestillinga?'))updateStatus(orderRow,'cancelled')}}>Avbestill</button>}<button type="button" className="secondary-button" disabled={busy==='archive-'+orderRow.id} onClick={()=>archiveOrder(orderRow)}>{orderRow.archived_at?'Gjenopprett':'Arkiver'}</button></div>
     </article>):<div className="empty-state">{orderView==='active'?'Ingen aktive bestillingar.':orderView==='completed'?'Ingen ferdige bestillingar enno.':'Arkivet er tomt.'}</div>}
    </section>
   </>}
@@ -236,6 +236,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
     <input type="number" min="0" step="0.5" value={newPrice} onChange={e=>setNewPrice(e.target.value)} placeholder="Pris i kr" required/>
     <input value={newCategory} onChange={e=>setNewCategory(e.target.value)} placeholder="Kategori (t.d. Espresso)"/>
     <input value={newPrepMinutes} onChange={e=>setNewPrepMinutes(e.target.value)} type="number" min="1" max="120" placeholder="Minutt"/>
+    <input value={newImageUrl} onChange={e=>setNewImageUrl(e.target.value)} type="url" placeholder="Bilete-URL (valfri)"/>
     <input value={newDesc} onChange={e=>setNewDesc(e.target.value)} placeholder="Kort skildring"/>
     <label className="coffee-option-config">Tilval – eitt per linje, t.d. «Mjølk: Vanleg, Havre, Ingen»<textarea rows="2" value={newOptions} onChange={e=>setNewOptions(e.target.value)} placeholder={'Mjølk: Vanleg mjølk, Havremjølk, Ingen\nShot: Enkel, Dobbel'}/></label>
     <div className="coffee-form-actions"><button className="primary-button" disabled={busy==='product'}>{busy==='product'?'Lagrar …':editingProduct?'Lagre produkt':'Legg til produkt'}</button>{editingProduct&&<button type="button" className="secondary-button" onClick={resetProductForm}>Avbryt</button>}</div>
