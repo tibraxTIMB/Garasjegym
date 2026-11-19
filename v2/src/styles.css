@@ -5974,3 +5974,5 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
 .timer-setup-actions button{min-height:38px}
 .timer-dashboard-reflow .timer-main-clock{font-size:clamp(64px,min(14vw,var(--timer-clock-size)),220px)}
 @media(max-width:760px){.timer-setup-drawer{grid-template-columns:minmax(0,1fr);max-height:65vh}.timer-setup-drawer>.timer-customize-title,.timer-setup-actions{grid-column:auto}.timer-setup-actions{flex-direction:column}.timer-setup-actions button{width:100%}}
+
+.timer-settings-inline.timer-settings-emom{grid-template-columns:repeat(2,minmax(0,1fr))}
