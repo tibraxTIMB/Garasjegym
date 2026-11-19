@@ -181,7 +181,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     ? Math.max(0, (inWorkPhase ? effectiveWorkSeconds : cycle) - phaseElapsed)
     : Math.max(0, emomCycle - (elapsed % emomCycle || 0))
   const currentRound = isStationCircuit
-    ? Math.min(Math.floor(elapsed / (cycle * stationCount)) + 1, Math.max(1, Number(rounds)||1 || 1))
+    ? Math.min(Math.floor(elapsed / (cycle * stationCount)) + 1, Math.max(1, Number(rounds)||1))
     : isTimedInterval
     ? Math.min(Math.floor(elapsed / (cycle * intervalExerciseCount)) + 1, Math.max(1, Number(rounds) || 1))
     : isEMOM ? Math.floor(elapsed / emomCycle) + 1
