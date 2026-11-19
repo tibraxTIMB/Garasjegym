@@ -5646,3 +5646,8 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
  .pt-info-simple .training-heading{align-items:flex-start;flex-direction:column}
 }
 @media(max-width:380px){.simple-home-grid{grid-template-columns:1fr}.simple-home-grid .simple-home-action{min-height:84px;flex-direction:row;align-items:center}.simple-home-grid .simple-home-action:last-child{min-height:84px}}
+
+.wod-picker-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;padding-top:4px}
+.wod-picker-actions button{min-height:42px}
+.wod-picker-actions .primary-button{min-width:136px;justify-content:center}
+@media(max-width:520px){.wod-picker-actions button{flex:1}}
