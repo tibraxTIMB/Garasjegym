@@ -5655,3 +5655,97 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
 .wod-library-advanced-filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%}
 .wod-library-advanced-filters select{min-width:145px;min-height:40px;padding:8px 10px;border:1px solid #3d494b;border-radius:9px;background:#171d1f;color:#eef1ee;font:inherit;font-size:12px}
 @media(max-width:620px){.wod-library-advanced-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.wod-library-advanced-filters select{min-width:0;width:100%}}
+
+
+/* STURMKOPF coffee bar: member checkout, barista queue and voluntary product reviews */
+.coffee-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:2px 0 6px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.coffee-tabs button{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:8px 13px;border:1px solid var(--line);border-radius:9px;background:#171d1f;color:#d9dfdc;font-weight:750;font-size:12px}
+.coffee-tabs button.selected{border-color:var(--orange);background:rgba(235,155,57,.12);color:#ffd08d}
+.coffee-tab-count{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:20px;background:#a94a37;color:#fff;font-size:10px}
+.coffee-closed-banner{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid #73512b;border-radius:12px;background:rgba(190,130,50,.12);color:#f5d5a1}
+.coffee-closed-banner div{display:grid;gap:3px}.coffee-closed-banner span{font-size:12px;color:var(--muted)}
+.coffee-add-product-extended{grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
+.coffee-add-product-extended strong{grid-column:1/-1}
+.coffee-option-config{grid-column:1/-1;display:grid;gap:6px;color:var(--muted);font-size:11px;font-weight:700}
+.coffee-option-config textarea{width:100%;padding:10px;color:#f2f1ed;background:#111416;border:1px solid #3a4143;border-radius:8px;font:inherit;resize:vertical}
+.coffee-form-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.coffee-form-actions button{margin:0}
+.coffee-product-options{display:grid;gap:7px;min-width:120px;max-width:190px}
+.coffee-product-options label{display:grid;gap:3px;font-size:10px;color:var(--muted)}
+.coffee-product-options select,.coffee-review-filters select{width:100%;min-width:0;padding:7px 9px;border:1px solid #3a4143;border-radius:8px;background:#111719;color:#f2f1ed;font:inherit;font-size:11px}
+.coffee-product-image{width:46px;height:46px;flex:0 0 46px;border-radius:10px;object-fit:cover}
+.coffee-product.is-inactive{opacity:.78;border-style:dashed}
+.coffee-product-info small{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:10px;margin-top:5px}
+.coffee-category-filters{display:flex;flex-wrap:wrap;gap:7px}
+.coffee-admin-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#171d1f}
+.coffee-admin-toolbar span{color:var(--muted);font-size:11px;margin-right:auto}
+.coffee-open-toggle{margin:0}
+.coffee-order-card.is-new-order{border-color:rgba(226,151,59,.7);box-shadow:0 0 0 1px rgba(226,151,59,.13)}
+.coffee-order-card .history-card-top>div{display:grid;gap:4px}
+.coffee-order-card .history-card-top small{font-size:10px;color:var(--muted)}
+.coffee-order-item{align-items:flex-start;padding:7px 0}
+.coffee-order-item>div{display:grid;gap:4px}
+.coffee-order-item small{font-size:10px;color:var(--muted)}
+.coffee-review-prompt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;margin:8px 0 4px;border:1px solid rgba(219,154,70,.27);border-radius:9px;background:rgba(219,154,70,.06)}
+.coffee-review-prompt>div{display:grid;gap:3px;margin-right:auto}
+.coffee-review-prompt strong{font-size:12px}
+.coffee-review-prompt small{font-size:10px;color:var(--muted)}
+.coffee-review-prompt button{margin:0;min-height:34px}
+.coffee-review-editor{display:grid;gap:9px;padding:12px;margin:7px 0 10px;border:1px solid rgba(219,154,70,.4);border-radius:10px;background:#1d2425}
+.coffee-review-editor>strong{font-size:13px}
+.coffee-review-editor label{display:grid;gap:5px;font-size:11px;color:var(--muted)}
+.coffee-review-editor textarea{width:100%;padding:9px;color:#f2f1ed;background:#111416;border:1px solid #3a4143;border-radius:8px;font:inherit;resize:vertical}
+.coffee-review-editor>small{font-size:10px;color:var(--muted)}
+.coffee-star-select{display:flex;gap:5px}
+.coffee-star-select button{display:grid;place-items:center;width:42px;height:42px;border:1px solid #5b482d;border-radius:9px;background:#2a251e;color:#f4b447;cursor:pointer}
+.coffee-star-select button[aria-pressed="true"]{background:rgba(245,180,71,.15);border-color:#d99d45}
+.coffee-review-thanks{display:flex;align-items:center;gap:9px;margin:6px 0;padding:8px 10px;background:rgba(70,150,95,.09);border-radius:8px}
+.coffee-review-thanks span{color:#f4b447;letter-spacing:2px}
+.coffee-review-thanks small{color:#a7d4b1;font-size:11px}
+.coffee-review-admin{display:grid;gap:13px}
+.coffee-average-rating{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border:1px solid #70552c;border-radius:10px;color:#f4b447;font-weight:900}
+.coffee-review-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.coffee-review-layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(250px,.8fr);gap:12px;align-items:start}
+.coffee-review-list{display:grid;gap:7px;max-height:620px;overflow:auto}
+.coffee-review-row{position:relative;display:grid;gap:5px;padding:11px 13px;text-align:left;border:1px solid var(--line);border-radius:10px;background:#171d1f;color:inherit;cursor:pointer}
+.coffee-review-row.selected{border-color:var(--orange);background:rgba(235,155,57,.08)}
+.coffee-review-row.unread:before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--orange)}
+.coffee-review-row>div{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.coffee-review-row>div strong{font-size:12px}
+.coffee-review-row>div span{color:#f4b447;letter-spacing:1px;white-space:nowrap}
+.coffee-review-row small{color:var(--muted);font-size:10px}
+.coffee-review-row p{margin:0;font-size:11px;line-height:1.4;white-space:pre-wrap}
+.coffee-review-row em{font-size:9px;color:var(--muted);font-style:normal;text-transform:uppercase;letter-spacing:.06em}
+.coffee-review-detail{position:sticky;top:12px;display:grid;gap:10px;padding:15px;border:1px solid var(--line);border-radius:12px;background:#171d1f}
+.coffee-review-detail-stars{color:#f4b447;font-size:22px;letter-spacing:3px}
+.coffee-review-detail p{margin:0;line-height:1.5;white-space:pre-wrap}
+.coffee-review-detail small,.coffee-review-detail time{font-size:10px;color:var(--muted)}
+.coffee-product-rating-row,.coffee-admin-product-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.coffee-product-rating-row strong,.coffee-admin-product-row>div{flex:1;min-width:0}
+.coffee-product-rating-row span{font-weight:800;color:#f4b447}
+.coffee-product-rating-row small{color:var(--muted);font-size:10px}
+.coffee-admin-product-row small{display:block;margin-top:3px;color:var(--muted);font-size:10px}
+.coffee-product-active,.coffee-product-off{font-size:10px;color:#9bd5a8;white-space:nowrap}
+.coffee-product-off{color:#e3aa88}
+.coffee-admin-product-row button{margin:0}
+.simple-coffee-link{display:inline-flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:12px;min-height:54px;border:1px solid rgba(227,160,77,.38);border-radius:12px;background:#232522;color:#f5cf98;font-size:16px;font-weight:850}
+.route-back-button{margin-right:auto;min-height:40px;padding:8px 12px;border:1px solid var(--line);border-radius:9px;background:#202628;color:#f2f1ed;font-weight:800;cursor:pointer}
+@media(max-width:760px){
+ .coffee-add-product-extended{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .coffee-add-product-extended>input:nth-of-type(3),.coffee-add-product-extended>input:nth-of-type(6){grid-column:1/-1}
+ .coffee-review-layout{grid-template-columns:minmax(0,1fr)}
+ .coffee-review-detail{position:static}
+ .coffee-review-list{max-height:none}
+}
+@media(max-width:560px){
+ .coffee-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .coffee-tabs button{justify-content:center}
+ .coffee-add-product-extended{grid-template-columns:minmax(0,1fr)}
+ .coffee-add-product-extended>input{grid-column:1/-1}
+ .coffee-review-filters{grid-template-columns:1fr}
+ .coffee-product{flex-wrap:wrap}
+ .coffee-product-options{width:100%;max-width:none;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .coffee-admin-product-row{align-items:flex-start;flex-wrap:wrap}
+ .coffee-admin-product-row>div{flex-basis:100%}
+ .coffee-product-rating-row{flex-wrap:wrap}
+}
