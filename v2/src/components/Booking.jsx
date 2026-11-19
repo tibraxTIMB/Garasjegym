@@ -175,6 +175,9 @@ export default function Booking({ profile, onLogResult, initialClassId=null, onI
   async function create(event){
     event.preventDefault();setBusy('create');setError('');setNotice('')
     try{
+      if(!title.trim()||!startsAt)throw new Error('Fyll ut namn, dato og klokkeslett før du opprettar timen.')
+      if(Number(duration)<5||Number(duration)>300||Number(capacity)<1||Number(capacity)>100)throw new Error('Kontroller varigheit og kapasitet.')
+      if(new Date(startsAt)<=new Date())throw new Error('Gruppetimen må leggjast fram i tid.')
       const {data:{user}}=await supabase.auth.getUser()
       const {error:e}=await supabase.from('classes').insert({
         title:title.trim(),type,starts_at:new Date(startsAt).toISOString(),
