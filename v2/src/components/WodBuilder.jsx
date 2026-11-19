@@ -187,7 +187,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const isRowIntervals=format==='Row Intervals'
  const isStationCircuit=format==='Stasjonssirkel'
  const isCustom=format==='Eigen økt'
-  const isElapsedFormat=showSets||isLadder||isForTime||(isCoupletTriplet&&combinationMode!=='AMRAP')||isCustom
+  const isElapsedFormat=showSets||isLadder||isForTime||(isCoupletTriplet&&combinationMode!=='AMRAP')||isCustom||format==='Complex'
  function loadClassicWod(){
   const preset=CLASSIC_WODS.find(x=>x.name===classicChoice)
   if(!preset)return
@@ -283,7 +283,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    if(!user)throw new Error('Du må vera innlogga for å publisera WOD.')
     const savedFormat=format
    const schema={
-    version:5,format:savedFormat,library_category:libraryCategory==='custom'?(customLibraryCategory.trim()||'other'):libraryCategory,intensity:Number(intensity),analysis:analyseWorkout(selected,Number(isAmrap?timeCap:minutes)||0),structure:isStationCircuit?'station_circuit':showSets?'strength':isTimed?'interval_clock':isInterval?'interval':isAmrap||isForTime||isLadder?'metcon':'custom',
+    version:5,format:savedFormat,library_category:libraryCategory==='custom'?(customLibraryCategory.trim()||'other'):libraryCategory,intensity:Number(intensity),analysis:analyseWorkout(selected,Number(isAmrap?timeCap:minutes)||0),structure:isStationCircuit?'station_circuit':(showSets||format==='Complex')?'strength':isTimed?'interval_clock':isInterval?'interval':isAmrap||isForTime||isLadder?'metcon':'custom',
     duration_minutes:(isAmrap||isTimed)?(isAmrap?Number(timeCap):Number(minutes))||null:null,time_cap_minutes:isAmrap?(Number(timeCap)||null):((isForTime||isLadder||showSets||(isCoupletTriplet&&combinationMode==='For Time'))&&Number(timeCap)>0?Number(timeCap):null),time_cap_seconds:isAmrap?(Number(timeCap)>0?Number(timeCap)*60:null):((isForTime||isLadder||showSets||(isCoupletTriplet&&combinationMode==='For Time'))&&Number(timeCap)>0?Number(timeCap)*60:null),combination_mode:isCoupletTriplet?combinationMode:null,
     rounds:isStationCircuit?Number(stationRounds):isInterval?Number(rounds):isLadder||isForTime?Number(rounds)||null:null,
      interval_exercise_count:isInterval?Number(intervalExerciseCount):null,
@@ -298,7 +298,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
     complex:format==='Complex'?{rest_seconds:Number(complexRest)||0}:null,
     stimulus,coach_notes:notes,prescription,custom_instructions:customInstructions,rx_notes:rxNotes,scaled_notes:scaledNotes,
     superset_groups:showSets&&format==='Superset'?Array.from(new Set(selected.map(x=>x.group))):[],
-    complex_order:showSets&&format==='Complex'?selected.map(x=>x.name):[],
+    complex_order:format==='Complex'?selected.map(x=>x.name):[],
     items:addWodSortOrder(selected).map(x=>({
        sort_order:x.sort_order,exercise_id:x.is_rest||x.is_golf||x.is_complex?null:(x.id||null),exercise_name:x.name,category:x.is_rest?'Pause':x.is_complex?'Complex':isRehabExercise(x)?'Rehab':x.category,body_area:x.body_area,equipment:x.equipment,golf_focus:x.golf_focus||null,is_rest:!!x.is_rest,rest_duration_seconds:x.is_rest?Number(x.pauseSeconds):null,is_complex:!!x.is_complex,complex_family:x.complex_family||null,complex_steps:Array.isArray(x.complex_steps)?x.complex_steps:[],
       sets:showSets?Array.from({length:Math.max(1,Math.min(30,Number(doseForItem(x).sets)||1))},()=>({reps:Number(doseForItem(x).reps)||null,load_mode:doseForItem(x).loadMode,load_kg:doseForItem(x).loadKgMen?Number(doseForItem(x).loadKgMen):(doseForItem(x).loadKgWomen?Number(doseForItem(x).loadKgWomen):null),percent_1rm:doseForItem(x).percent1rm?Number(doseForItem(x).percent1rm):null,rir:doseForItem(x).rir!==''?Number(doseForItem(x).rir):null,rpe:null,rest_seconds:0,tempo:doseForItem(x).tempo||null})):null,
