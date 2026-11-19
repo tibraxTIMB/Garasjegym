@@ -5531,3 +5531,13 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
  .pt2-preset-actions { display:grid; grid-template-columns:1fr; }
  .pt2-preset-actions button { width:100%; }
 }
+
+
+/* PT programme completion indicators */
+.pt2-progress-card { display:grid; gap:8px; margin:12px 0 16px; padding:13px 14px; border:1px solid var(--line); border-radius:12px; background:var(--panel); }
+.pt2-progress-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.pt2-progress-head strong { font-size:13px; }
+.pt2-progress-head b { font-size:20px; font-variant-numeric:tabular-nums; }
+.pt2-progress-track { width:100%; height:9px; overflow:hidden; border-radius:20px; background:color-mix(in srgb,var(--muted) 22%,transparent); }
+.pt2-progress-track span { display:block; height:100%; border-radius:inherit; background:var(--accent); transition:width .2s ease; }
+.pt2-progress-card small { color:var(--muted); font-size:12px; }
