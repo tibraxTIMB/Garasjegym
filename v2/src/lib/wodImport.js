@@ -41,5 +41,5 @@ export function parseWodImport(source,exerciseCatalog=[]){
  }
  if(!items.length)throw new Error('Fann ingen sikre øvingslinjer. Kontroller teksten og prøv igjen.')
  const format=formatFrom(whole)||(scheme?'For Time':null)
- return {name,format,minutes:minutes||20,items,notes:'Importert kjeldetekst:\n'+whole,unmatched:items.filter(item=>!item.matched).map(item=>item.name)}
+ return {name,format,minutes,items,notes:'Importert kjeldetekst:\n'+whole,unmatched:items.filter(item=>!item.matched).map(item=>item.name)}
 }
