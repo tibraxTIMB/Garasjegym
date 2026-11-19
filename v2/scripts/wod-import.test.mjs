@@ -22,7 +22,7 @@ test('marker ukjende øvingar for manuell kontroll',()=>{
 });
 
 test('marker format som uavklart når teksten ikkje gir grunnlag for val',()=>{
- const result=parseWodImport('Eigen økt\\n12 Air squats');
+ const result=parseWodImport('Eigen økt\n12 Air squats');
  assert.equal(result.format,null);
 });
 
