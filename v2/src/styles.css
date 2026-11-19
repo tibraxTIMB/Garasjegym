@@ -5449,3 +5449,11 @@ html[data-gg-device="tablet"][data-gg-orientation="landscape"] .timer-layout-pan
   .timer-panel-toolbar { touch-action: pan-y; }
   .timer-layout-toolbar button { min-height: 46px; }
 }
+
+/* Height is content-driven in stacked layouts; hide controls that cannot apply there. */
+html[data-gg-device="mobile"] .timer-panel-tools button[title*="lågare"],
+html[data-gg-device="mobile"] .timer-panel-tools button[title*="høgare"],
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools button[title*="lågare"],
+html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools button[title*="høgare"] {
+  display: none !important;
+}
