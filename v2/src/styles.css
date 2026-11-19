@@ -5567,3 +5567,6 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
 .booking-cancelled,.booking-draft{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.03em}
 .booking-cancelled{color:#ffd4ce;background:rgba(180,70,58,.18);border:1px solid rgba(220,110,95,.35)}
 .booking-draft{color:#e5d4aa;background:rgba(160,125,60,.16);border:1px solid rgba(190,155,85,.3)}
+
+.set-grid.height-set-grid{grid-template-columns:52px repeat(2,minmax(0,1fr))}
+@media(max-width:620px){.set-grid.height-set-grid{grid-template-columns:44px repeat(2,minmax(0,1fr))}}
