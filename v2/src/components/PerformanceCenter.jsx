@@ -1,5 +1,6 @@
 import {useEffect,useMemo,useState} from 'react'
 import {Activity,TrendingUp,Trophy} from 'lucide-react'
+import './performance-center.css'
 
 const dateLabel=value=>value?new Date(value+'T12:00:00').toLocaleDateString('nn-NO',{day:'numeric',month:'short',year:'numeric'}):'Ukjend dato'
 const asNumber=value=>{const n=Number(String(value??'').replace(',','.'));return Number.isFinite(n)&&n>0?n:null}
