@@ -434,7 +434,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       supabase.from('personal_records').select('id,exercise_name,result,unit,note,record_date').order('record_date', { ascending: false }).limit(50),
     ])
     if (w.error) setError(w.error.message); else setWods(w.data || [])
-    const daily=await supabase.from('daily_wod').select('wod_id').eq('id',true).maybeSingle()
+    const now=new Date(),today=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')
+    const daily=await supabase.from('wod_daily_schedules').select('wod_id').eq('scheduled_date',today).is('target_class_id',null).eq('is_published',true).maybeSingle()
     if(!daily.error)setDailyWodId(daily.data?.wod_id||null)
     if (e.error && !w.error) setError('Øvingsbibliotek: ' + e.error.message); else setExercises(e.data || [])
     if (h.error && !w.error && !e.error) setError('Treningslogg: ' + h.error.message); else setHistory(h.data || [])
