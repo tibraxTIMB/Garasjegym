@@ -148,10 +148,33 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
   await run(async()=>{
    const template=templates.find(t=>t.id===programDraft.template_id)
    if(!template||!clientId)throw new Error('Vel kunde og introprogram.')
-   const {data:program,error:e}=await supabase.from('pt_programs').insert({client_id:clientId,template_id:template.id,title:programDraft.title.trim()||template.title,description:template.description,start_date:programDraft.start_date||null,weeks:template.weeks,focus_areas:template.focus_areas,status:'active',created_by:profile.id,coach_notes:programDraft.notes}).select().single()
+   const title=programDraft.title.trim()||template.title
+   const rows=(template.sessions||[]).map((s,index)=>({
+    sequence_no:index+1,
+    title:s.title,
+    week_no:Number(s.week_no)||Math.floor(index/Math.max(1,Number(template.sessions_per_week)||3))+1,
+    day_no:Number(s.day_no)||((index%Math.max(1,Number(template.sessions_per_week)||3))+1),
+    session_kind:s.session_kind||'training',
+    focus_area:s.focus_area||'',
+    estimated_minutes:Number(s.estimated_minutes)||45,
+    workout_snapshot:{title:s.title,format:'',movements:[],notes:'Tilpass økta for kunden'},
+    status:'planned'
+   }))
+   const {data:programId,error:e}=await supabase.rpc('create_pt_program_with_sessions',{
+    p_program:{
+     client_id:clientId,
+     template_id:template.id,
+     title,
+     description:template.description,
+     start_date:programDraft.start_date||null,
+     weeks:template.weeks,
+     focus_areas:template.focus_areas,
+     coach_notes:programDraft.notes
+    },
+    p_sessions:rows
+   })
    if(e)throw e
-   const rows=(template.sessions||[]).map((s,index)=>({program_id:program.id,sequence_no:index+1,title:s.title,week_no:Number(s.week_no)||Math.floor(index/Math.max(1,Number(template.sessions_per_week)||3))+1,day_no:Number(s.day_no)||((index%Math.max(1,Number(template.sessions_per_week)||3))+1),session_kind:s.session_kind||'training',focus_area:s.focus_area||'',estimated_minutes:Number(s.estimated_minutes)||45,workout_snapshot:{title:s.title,format:'',movements:[],notes:'Tilpass økta for kunden'},status:'planned'}))
-   if(rows.length){const {error:se}=await supabase.from('pt_program_sessions').insert(rows);if(se)throw se}
+   if(!programId)throw new Error('Databasen stadfesta ikkje at PT-programmet vart oppretta.')
    setShowProgram(false);setProgramDraft({template_id:'',title:'',start_date:new Date().toISOString().slice(0,10),notes:''});setNotice('Treningsplanen er oppretta og tildelt kunden.')
   })
  }
