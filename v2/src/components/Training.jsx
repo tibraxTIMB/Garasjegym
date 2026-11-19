@@ -5,6 +5,7 @@ import { MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
 import { sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
+import PerformanceCenter from './PerformanceCenter.jsx'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', uses_height: false, sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] })
@@ -397,6 +398,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [wodLevel,setWodLevel]=useState('rx')
   const [classSessionId, setClassSessionId] = useState(null)
   const [title, setTitle] = useState('')
+  const [workoutDate,setWorkoutDate]=useState(()=>localDateISO())
   const [format, setFormat] = useState('Fri trening')
   const [duration, setDuration] = useState('10')
   const [durationSeconds, setDurationSeconds] = useState('0')
@@ -428,7 +430,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     }
     const [e, h, pr] = await Promise.all([
       supabase.from('exercises').select('id,name,category,equipment,description,video_url').eq('is_active', true).order('name'),
-      supabase.from('workout_logs').select('id,title,workout_date,format,rounds,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,result_data,note,created_at,workout_exercises(id,exercise_name,sort_order,workout_sets(id,set_number,reps,load_kg,time_text,time_seconds,height_cm))').order('workout_date', { ascending: false }).limit(30),
+      supabase.from('workout_logs').select('id,title,workout_date,format,rounds,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,result_data,note,created_at,workout_exercises(id,exercise_name,sort_order,workout_sets(id,set_number,reps,load_kg,time_text,time_seconds,height_cm))').order('workout_date', { ascending: false }).limit(500),
       supabase.from('personal_records').select('id,exercise_name,result,unit,note,record_date').order('record_date', { ascending: false }).limit(50),
     ])
     if (w.error) setError(w.error.message); else setWods(w.data || [])
@@ -502,6 +504,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     setSource(wod)
     setWodLevel(wod?.timer_settings?.workout_schema?.prescription||'rx')
     setTitle(wod?.name || (simpleMode ? 'Eiga trening' : ''))
+    setWorkoutDate(localDateISO())
     setFormat(wod?.format || 'Fri trening')
     setDuration(String(wod?.timer_settings?.workout_schema?.duration_seconds ? Math.floor(wod.timer_settings.workout_schema.duration_seconds / 60) : (wod?.duration_minutes || 10)))
     setDurationSeconds(String(wod?.timer_settings?.workout_schema?.duration_seconds ? wod.timer_settings.workout_schema.duration_seconds % 60 : 0))
@@ -548,6 +551,14 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     setReviewOpen(false)
     setMode('active')
     setError(''); setNotice('')
+  }
+
+  function startManualWorkout(){
+    setClassSessionId(null);setSaveToken(crypto.randomUUID());setSource(null);setWodLevel('rx')
+    setTitle('Manuell trening');setFormat('Fri trening');setDuration('0');setDurationSeconds('0');setWorkoutDate(localDateISO())
+    setNote('');setItems([]);setQuery('');setActiveExerciseIndex(0)
+    setTimerSnapshot({elapsed:0,laps:[],roundsCompleted:0,phase:'Klar',running:false})
+    setFinishOpen(false);setReviewOpen(true);setMode('active');setError('');setNotice('Legg til øvingar og resultat frå økta du allereie har gjennomført.')
   }
 
   async function toggleFavorite(exercise) {
@@ -615,7 +626,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       }
       const payload = {
         member_id:user.id,save_token:saveToken,title:title.trim(),source_wod_id:source?.id||null,
-        class_live_session_id:classSessionId||null,workout_date:localDateISO(),format,
+        class_live_session_id:classSessionId||null,workout_date:workoutDate||localDateISO(),format,
         rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):Math.max(1,Number(scoreRounds)||1),
         score_rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):scoreRounds===''?null:Number(scoreRounds),
         score_reps:scoreReps===''?(isAmrapScore?0:null):Number(scoreReps),
@@ -723,9 +734,11 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       <div className="engine-fields">
         <label>Namn på økta<input value={title} onChange={e => setTitle(e.target.value)} placeholder="Til dømes Styrke A" required/></label>
         <label>Treningsformat<select value={format} onChange={e => setFormat(e.target.value)}>{FORMATS.map(x => <option key={x}>{x}</option>)}</select></label>
+        <label>Treningsdato<input type="date" value={workoutDate} max={localDateISO()} disabled={Boolean(classSessionId)} onChange={e=>setWorkoutDate(e.target.value)}/></label>
         {['AMRAP','Nedteljing','E1MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM'].includes(format) && <label>Øktlengd (minutt)<input type="number" min="1" max="600" value={duration} onChange={e => setDuration(e.target.value)}/></label>}
       </div>
       <Timer autoStartToken={timerLaunchId} format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} nextExercise={items[activeExerciseIndex + 1]?.exercise_name || ''} exerciseList={items} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={() => setFinishOpen(true)} originLabel={classSessionId ? 'GRUPPETIME' : launchAssignmentId ? 'TILDELT FRÅ PT' : source ? 'EIGEN WOD' : 'EIGA ØKT'}/>
+      <div className="workout-finish-actions"><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Gå til resultat og lagre økt</button></div>
       {items.length > 0 && format!=='Stasjonssirkel' && <section className="engine-section">
         <div className="engine-section-title"><h4>{format==='Stasjonssirkel'?'Stasjonane i økta':'WOD / øvingsrekkjefølgje'}</h4><span>{format==='Stasjonssirkel'?'Alle stasjonar – roter etter eiga startplassering':'Vel øvinga du arbeider med'}</span></div>
         <div className={format==='Stasjonssirkel'?'timer-station-grid':'wod-list'}>{items.map((item, index) => format==='Stasjonssirkel' ? <article className="timer-station-card" key={item.key}><span>STASJON {index+1}</span><strong>{item.exercise_name||'Øving'}</strong><small>{item.reps_mode==='amrap'?'AMRAP · maks reps':item.reps?item.reps+' reps':'Valfritt tal reps'}</small></article> : <button type="button" key={item.key} className={index === activeExerciseIndex ? 'secondary-button active' : 'secondary-button'} onClick={() => setActiveExerciseIndex(index)}>{index + 1}. {item.is_rest?'⏸ Pause · '+clock(Number(item.rest_duration_seconds)||30):item.exercise_name || 'Ny øving'}</button>)}</div>
@@ -776,8 +789,9 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     </form> : <>
       <div className="training-heading"><div><div className="section-kicker">{simpleMode ? "SUPERENKEL MODUS · TRENING" : "TRENING · MOTOR"}</div><h3>{simpleMode ? "Kva vil du gjera i dag?" : "Vel øktform"}</h3>{simpleMode&&<p>Vel ei ferdig økt eller start di eiga. Resultatet blir lagra på profilen din.</p>}</div>{!simpleMode&&<span className="count-pill">STURMKOPF</span>}</div>
       <div className={simpleMode ? "engine-entry-grid simple-entry-grid" : "engine-entry-grid"}>
-        <button onClick={() => startWorkout()}><Dumbbell size={20}/><strong>{simpleMode ? "Start trening" : "Fri trening"}</strong><small>{simpleMode ? "Start klokka og tren" : "Bygg økta frå botnen"}</small></button>
-        <button onClick={() => setMode('wods')}><Activity size={20}/><strong>{simpleMode ? "Følg eit opplegg" : "Start ein WOD"}</strong><small>{simpleMode ? "Vel ei økt som er laga for deg" : "Vel ei publisert økt"}</small></button>
+        <button type="button" onClick={() => startWorkout()}><Dumbbell size={20}/><strong>{simpleMode ? "Start trening" : "Fri trening"}</strong><small>{simpleMode ? "Start klokka og tren" : "Bygg økta frå botnen"}</small></button>
+        <button type="button" onClick={() => setMode('wods')}><Activity size={20}/><strong>{simpleMode ? "Følg eit opplegg" : "Start ein WOD"}</strong><small>{simpleMode ? "Vel ei økt som er laga for deg" : "Vel ei publisert økt"}</small></button>
+        <button type="button" onClick={startManualWorkout}><Activity size={20}/><strong>Registrer i ettertid</strong><small>Legg inn ei økt du alt har gjennomført</small></button>
       </div>
       {mode === 'wods' && <section className="engine-section wod-library-screen">
         <div className="engine-section-title"><div><h4>WOD-bibliotek</h4><span>{wods.length} publiserte økter</span></div><button className="text-button" onClick={() => setMode('home')}>Lukk</button></div>
@@ -811,15 +825,17 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         {history.length ? <div className="history-list">{history.map(log => <article className="history-card" key={log.id}><div className="history-card-top"><strong>{log.title}</strong><span>{log.workout_date}</span></div><small>{log.format} · {log.workout_exercises?.length || 0} øvingar</small>{log.workout_exercises?.sort((a,b)=>a.sort_order-b.sort_order).map((ex,index) => {const result=log.result_data?.exercise_results?.[index];return <div className="history-exercise" key={ex.id}><b>{ex.exercise_name}</b><span>{(ex.workout_sets || []).map(s => [s.reps ? (result?.is_complex?'syklusar ':'')+s.reps+(result?.is_complex?'':' reps') : '', s.height_cm ? s.height_cm+' cm' : '', s.load_kg ? s.load_kg+' kg' : '', s.time_text || ''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ') || 'Ingen sett registrert'}</span>{result?.is_complex&&Array.isArray(result.complex_steps)&&<small className="training-complex-sequence"><strong>Komplekssekvens</strong><ol>{result.complex_steps.map((step,stepIndex)=><li key={stepIndex}>{step.reps} × {step.name}</li>)}</ol></small>}</div>})}{log.note && <p>{log.note}</p>}</article>)}</div> : <div className="empty-state">Du har ikkje lagra økter enno.</div>}
       </section>
       <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
-        <div className="training-heading"><div><div className="section-kicker">PROGRESJON</div><h3>Personlege rekordar</h3></div><span className="count-pill">{records.length} PR</span></div>
-        <form className="pr-form" onSubmit={savePersonalRecord}>
-          <input value={prName} onChange={e => setPrName(e.target.value)} placeholder="Øving, t.d. Markløft" required/>
-          <input value={prResult} onChange={e => setPrResult(e.target.value)} placeholder="Resultat, t.d. 120" required/>
-          <select value={prUnit} onChange={e => setPrUnit(e.target.value)}><option value="kg">kg</option><option value="cm">cm</option><option value="reps">reps</option><option value="sek">sek</option><option value="min">min</option><option value="meter">meter</option><option value="watt">watt</option></select>
-          <input value={prNote} onChange={e => setPrNote(e.target.value)} placeholder="Notat (valfritt)"/>
-          <button className="secondary-button" type="submit" disabled={prSaving}>{prSaving ? 'Lagrar …' : 'Registrer PR'}</button>
-        </form>
-        {records.length ? <div className="history-list">{records.map(record => <article className="history-card" key={record.id}><div className="history-card-top"><strong>{record.exercise_name}</strong><span>{record.record_date}</span></div><div className="pr-result">{record.result} {record.unit}</div>{record.note && <small>{record.note}</small>}</article>)}</div> : <div className="empty-state">Ingen personlege rekordar registrerte enno.</div>}
+        <PerformanceCenter history={history} records={records}/>
+        <div className="engine-section pr-manual-entry">
+          <div className="training-heading"><div><div className="section-kicker">MANUELL REGISTRERING</div><h3>Legg inn ein PR</h3></div></div>
+          <form className="pr-form" onSubmit={savePersonalRecord}>
+            <input value={prName} onChange={e => setPrName(e.target.value)} placeholder="Øving, t.d. Markløft" required/>
+            <input value={prResult} onChange={e => setPrResult(e.target.value)} placeholder="Resultat, t.d. 120" required/>
+            <select value={prUnit} onChange={e => setPrUnit(e.target.value)}><option value="kg">kg</option><option value="cm">cm</option><option value="reps">reps</option><option value="sek">sek</option><option value="min">min</option><option value="meter">meter</option><option value="watt">watt</option></select>
+            <input value={prNote} onChange={e => setPrNote(e.target.value)} placeholder="Notat (valfritt)"/>
+            <button className="secondary-button" type="submit" disabled={prSaving}>{prSaving ? 'Lagrar …' : 'Registrer PR'}</button>
+          </form>
+        </div>
       </section>
       <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
         <div className="training-heading"><div><div className="section-kicker">BIBLIOTEK</div><h3>Øvingsbibliotek</h3></div><span className="count-pill">{exercises.length} øvingar</span></div>
