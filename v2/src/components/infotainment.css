@@ -112,3 +112,10 @@
  .infotainment-demo-setup{padding:8px;gap:6px}
  .infotainment-demo-footer{display:none}
 }
+
+
+/* Touch, keyboard focus and device safe-area refinements. */
+.infotainment-demo-stage button:focus-visible,.infotainment-demo-stage input:focus-visible,.infotainment-demo-stage select:focus-visible{outline:3px solid #ffd28d;outline-offset:2px}
+@media(max-width:900px){.infotainment-demo-stage{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}}
+@media(max-width:560px){.infotainment-demo-stage{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}}
+@media(prefers-reduced-motion:reduce){.infotainment-demo-progress span{transition:none}}
