@@ -1,0 +1,169 @@
+/* Coffee bar: order cards, product choices and barista actions */
+.coffee-module,
+.coffee-orders-section,
+.coffee-menu-admin,
+.coffee-review-admin,
+.coffee-stats-view {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.coffee-tabs {
+  min-width: 0;
+  scrollbar-width: thin;
+}
+
+.coffee-tabs button,
+.coffee-order-views button,
+.coffee-category-filters button {
+  min-height: 44px;
+}
+
+.coffee-order-card,
+.coffee-product,
+.coffee-admin-product-row,
+.coffee-review-row {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.coffee-order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.coffee-order-actions button {
+  min-height: 42px !important;
+}
+
+.coffee-stats-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.coffee-stat {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.coffee-quantity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coffee-quantity button {
+  min-width: 42px;
+  min-height: 42px;
+}
+
+.coffee-product-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.coffee-product-admin-actions button {
+  min-height: 42px;
+}
+
+@media (max-width: 900px) {
+  .coffee-module { gap: 13px; }
+  .coffee-heading { align-items: flex-start; flex-wrap: wrap; }
+  .coffee-tabs {
+    position: sticky;
+    top: 62px;
+    z-index: 42;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 7px;
+    width: calc(100% + 2px);
+    margin-inline: -1px;
+    padding: 7px 1px 9px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    background: rgba(16, 20, 22, .96);
+    backdrop-filter: blur(12px);
+  }
+  .coffee-tabs button {
+    flex: 0 0 auto;
+    min-height: 46px;
+    white-space: nowrap;
+  }
+  .coffee-admin-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+  .coffee-admin-toolbar span { grid-column: 1 / -1; }
+  .coffee-admin-toolbar button { min-height: 46px; justify-content: center; }
+  .coffee-order-views {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .coffee-order-views button { min-width: 0; padding: 8px 4px; font-size: 11px; }
+  .coffee-product-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .coffee-product {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 9px;
+    align-items: start;
+    padding: 12px;
+  }
+  .coffee-product-icon,
+  .coffee-product-image { grid-column: 1; grid-row: 1; }
+  .coffee-product-info { grid-column: 2; grid-row: 1; }
+  .coffee-product-options,
+  .coffee-product-admin-actions,
+  .coffee-quantity {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: none;
+  }
+  .coffee-product-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .coffee-product-options select { min-height: 44px; font-size: 13px; }
+  .coffee-product-admin-actions button,
+  .coffee-quantity button { min-height: 46px; }
+  .coffee-quantity { justify-content: flex-end; }
+  .coffee-quantity .primary-button { flex: 1; justify-content: center; }
+  .coffee-checkout { padding: 14px; }
+  .coffee-checkout textarea { min-height: 76px; font-size: 14px; }
+  .coffee-checkout > .primary-button { width: 100%; min-height: 54px; justify-content: center; }
+  .coffee-cart-lines { display: grid; gap: 8px; }
+  .coffee-cart-lines > div { gap: 8px; align-items: flex-start; }
+  .coffee-order-card { padding: 12px !important; }
+  .coffee-order-card .history-card-top { flex-wrap: wrap; align-items: flex-start; gap: 8px; }
+  .coffee-order-card .history-card-top > span { white-space: normal; }
+  .coffee-order-actions button { flex: 1 1 130px; justify-content: center; }
+  .coffee-staff-comment-editor { display: grid; gap: 7px; }
+  .coffee-staff-comment-editor textarea { min-height: 76px; font-size: 14px; }
+  .coffee-staff-comment-editor button { min-height: 44px; justify-content: center; }
+  .coffee-stats-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .coffee-review-layout { grid-template-columns: minmax(0, 1fr) !important; }
+  .coffee-review-list { max-height: none !important; overflow: visible; }
+  .coffee-review-detail { position: static !important; }
+  .coffee-review-row { min-height: 66px; }
+  .coffee-review-detail { padding: 13px; }
+  .coffee-admin-product-row { align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+  .coffee-admin-product-row > div { flex-basis: 100%; }
+  .coffee-admin-product-row button { min-height: 44px; }
+}
+
+@media (max-width: 560px) {
+  .coffee-product-options { grid-template-columns: minmax(0, 1fr); }
+  .coffee-stats-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .coffee-review-filters { grid-template-columns: minmax(0, 1fr) !important; }
+  .coffee-review-filters select { min-height: 46px; font-size: 13px; }
+  .coffee-review-prompt { align-items: stretch; }
+  .coffee-review-prompt > div { flex-basis: 100%; }
+  .coffee-review-prompt button { min-height: 44px; flex: 1; }
+  .coffee-star-select button { min-width: 44px; min-height: 44px; }
+}
+
