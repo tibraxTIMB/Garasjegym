@@ -499,6 +499,15 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     setItems(current => [...current, { ...emptyExercise(), exercise_id: exercise.id, exercise_name: exercise.name, uses_height: usesHeight }])
     setQuery('')
   }
+  function moveExercise(index, direction) {
+    setItems(current => {
+      const target = index + direction
+      if (target < 0 || target >= current.length) return current
+      const next = [...current]
+      ;[next[index], next[target]] = [next[target], next[index]]
+      return next
+    })
+  }
   function updateExercise(key, patch) {
     setItems(current => current.map(item => item.key === key ? { ...item, ...patch } : item))
   }
@@ -661,7 +670,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         <div className="exercise-search"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Søk i øvingsbiblioteket …"/></div>
         {query && <div className="exercise-pick-list">{filteredExercises.slice(0,8).map(ex => <button type="button" key={ex.id} onClick={() => addExercise(ex)}><Plus size={14}/><span>{ex.name}</span><small>{ex.category}</small></button>)}</div>}
         {items.map((item, index) => <article className="engine-exercise" key={item.key}>
-          <div className="engine-exercise-head"><strong>{index + 1}. {item.exercise_name || 'Ny øving'}</strong><button type="button" className="danger-icon" aria-label="Fjern øving" onClick={() => setItems(current => current.filter(x => x.key !== item.key))}><Trash2 size={16}/></button></div>
+          <div className="engine-exercise-head"><strong>{index + 1}. {item.exercise_name || 'Ny øving'}</strong><div className="engine-exercise-actions"><button type="button" className="text-button" aria-label={`Flytt ${item.exercise_name || 'øving'} opp`} title="Flytt opp" disabled={index===0} onClick={() => moveExercise(index,-1)}>↑</button><button type="button" className="text-button" aria-label={`Flytt ${item.exercise_name || 'øving'} ned`} title="Flytt ned" disabled={index===items.length-1} onClick={() => moveExercise(index,1)}>↓</button><button type="button" className="danger-icon" aria-label="Fjern øving" onClick={() => setItems(current => current.filter(x => x.key !== item.key))}><Trash2 size={16}/></button></div></div>
           {!item.exercise_id && <input aria-label="Namn på øving" value={item.exercise_name} onChange={e => updateExercise(item.key,{exercise_name:e.target.value})} placeholder="Namn på øving"/>}
           {item.prescription_levels&&<div className="wod-prescription-target"><strong>Planlagt dosering · {wodLevel.toUpperCase()}</strong><span>{doseLabel({levels:item.prescription_levels},wodLevel)||'Ikkje dosert på dette nivået'}</span></div>}{item.sets.map((set, i) => <div className={item.uses_height?"set-grid height-set-grid":"set-grid"} key={i}>
             <span>Sett {i + 1}</span><input type="number" min="0" step="1" value={set.reps} onChange={e => updateSet(item.key,i,{reps:e.target.value})} placeholder="Reps"/>
