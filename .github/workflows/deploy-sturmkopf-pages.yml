@@ -17,8 +17,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: sturm­kopf-pages
@@ -53,6 +51,9 @@ jobs:
     # Push events build the preview only. Publishing to the shared Pages URL
     # requires an explicit manual opt-in from a workflow_dispatch event.
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_preview }}
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
