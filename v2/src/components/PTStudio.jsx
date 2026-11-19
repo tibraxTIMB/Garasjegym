@@ -41,7 +41,7 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
  const [goalDraft,setGoalDraft] = useState({area:'Styrke',title:'',baseline:'',target:'',unit:'',target_date:''})
  const [templateDraft,setTemplateDraft] = useState({title:'',description:'',weeks:'6',sessions_per_week:'3',focus_areas:[],session_titles:'Økt 1 – Introduksjon\nØkt 2 – Grunnstyrke\nØkt 3 – Kondisjon'})
  const [programDraft,setProgramDraft] = useState({template_id:'',title:'',start_date:new Date().toISOString().slice(0,10),notes:''})
- const [sessionDraft,setSessionDraft] = useState({title:'',wod_id:'',scheduled_date:'',notes:''})
+ const [sessionDraft,setSessionDraft] = useState({title:'',wod_id:'',scheduled_date:'',week_no:'1',day_no:'1',session_kind:'training',focus_area:'',estimated_minutes:'45',notes:''})
  const [checkinAnswers,setCheckinAnswers] = useState({})
  const [checkinTitle,setCheckinTitle] = useState('Status etter treningsperiode')
  const [clientNote,setClientNote] = useState('')
@@ -50,7 +50,7 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
  const currentIntake = intakes.filter(x=>x.member_id===clientId).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0]
  const activeProgram = programs.filter(p=>p.client_id===clientId&&p.status==='active').sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0]
  const clientGoals = goals.filter(g=>g.member_id===clientId)
- const clientSessions = sessions.filter(s=>s.program_id===activeProgram?.id).sort((a,b)=>a.sequence_no-b.sequence_no)
+ const clientSessions = sessions.filter(s=>s.program_id===activeProgram?.id).sort((a,b)=>(a.week_no||1)-(b.week_no||1)||(a.day_no||1)-(b.day_no||1)||a.sequence_no-b.sequence_no)
  const pendingCheckin = checkins.find(c=>c.member_id===profile.id&&c.status==='pending')
  const myPrograms = programs.filter(p=>p.client_id===profile.id)
  const myGoals = goals.filter(g=>g.member_id===profile.id&&g.is_visible)
@@ -109,7 +109,7 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
   await run(async()=>{
    const lines=templateDraft.session_titles.split('\n').map(x=>x.trim()).filter(Boolean)
    if(!templateDraft.title.trim()||!lines.length)throw new Error('Programmet må ha namn og minst éi økt.')
-   const {error:e}=await supabase.from('pt_program_templates').insert({title:templateDraft.title.trim(),description:templateDraft.description,weeks:Number(templateDraft.weeks),sessions_per_week:Number(templateDraft.sessions_per_week),focus_areas:templateDraft.focus_areas,sessions:lines.map((title,index)=>({title,sequence_no:index+1})),created_by:profile.id})
+   const {error:e}=await supabase.from('pt_program_templates').insert({title:templateDraft.title.trim(),description:templateDraft.description,weeks:Number(templateDraft.weeks),sessions_per_week:Number(templateDraft.sessions_per_week),focus_areas:templateDraft.focus_areas,sessions:lines.map((title,index)=>({title,sequence_no:index+1,week_no:Math.floor(index/Number(templateDraft.sessions_per_week))+1,day_no:(index%Number(templateDraft.sessions_per_week))+1,session_kind:'training',focus_area:'',estimated_minutes:45})),created_by:profile.id})
    if(e)throw e
    setShowTemplate(false);setNotice('Introprogrammet er lagra i biblioteket.')
   })
@@ -121,7 +121,7 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
    if(!template||!clientId)throw new Error('Vel kunde og introprogram.')
    const {data:program,error:e}=await supabase.from('pt_programs').insert({client_id:clientId,template_id:template.id,title:programDraft.title.trim()||template.title,description:template.description,start_date:programDraft.start_date||null,weeks:template.weeks,focus_areas:template.focus_areas,status:'active',created_by:profile.id,coach_notes:programDraft.notes}).select().single()
    if(e)throw e
-   const rows=(template.sessions||[]).map((s,index)=>({program_id:program.id,sequence_no:index+1,title:s.title,workout_snapshot:{title:s.title,format:'',movements:[],notes:'Tilpass økta for kunden'},status:'planned'}))
+   const rows=(template.sessions||[]).map((s,index)=>({program_id:program.id,sequence_no:index+1,title:s.title,week_no:Number(s.week_no)||Math.floor(index/Math.max(1,Number(template.sessions_per_week)||3))+1,day_no:Number(s.day_no)||((index%Math.max(1,Number(template.sessions_per_week)||3))+1),session_kind:s.session_kind||'training',focus_area:s.focus_area||'',estimated_minutes:Number(s.estimated_minutes)||45,workout_snapshot:{title:s.title,format:'',movements:[],notes:'Tilpass økta for kunden'},status:'planned'}))
    if(rows.length){const {error:se}=await supabase.from('pt_program_sessions').insert(rows);if(se)throw se}
    setShowProgram(false);setProgramDraft({template_id:'',title:'',start_date:new Date().toISOString().slice(0,10),notes:''});setNotice('Treningsplanen er oppretta og tildelt kunden.')
   })
@@ -133,9 +133,9 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
    const wod=wods.find(w=>w.id===sessionDraft.wod_id)
    const existing=sessions.filter(s=>s.program_id===activeProgram.id)
    const snapshot=wod?{id:wod.id,title:wod.name,format:wod.format,duration_minutes:wod.duration_minutes,movements:wod.movements,notes:wod.notes}: {title:sessionDraft.title,format:'Eigen økt',movements:[],notes:sessionDraft.notes}
-   const {error:e}=await supabase.from('pt_program_sessions').insert({program_id:activeProgram.id,sequence_no:existing.length+1,title:sessionDraft.title.trim()||wod?.name||'Ny økt',wod_id:wod?.id||null,scheduled_date:sessionDraft.scheduled_date||null,workout_snapshot:snapshot,coach_note:sessionDraft.notes,status:'planned'})
+   const {error:e}=await supabase.from('pt_program_sessions').insert({program_id:activeProgram.id,sequence_no:existing.length+1,title:sessionDraft.title.trim()||wod?.name||'Ny økt',wod_id:wod?.id||null,scheduled_date:sessionDraft.scheduled_date||null,week_no:Number(sessionDraft.week_no)||1,day_no:Number(sessionDraft.day_no)||1,session_kind:sessionDraft.session_kind,focus_area:sessionDraft.focus_area,estimated_minutes:sessionDraft.estimated_minutes?Number(sessionDraft.estimated_minutes):null,workout_snapshot:snapshot,coach_note:sessionDraft.notes,status:'planned'})
    if(e)throw e
-   setShowSession(false);setSessionDraft({title:'',wod_id:'',scheduled_date:'',notes:''});setNotice('Økta er lagt sist i treningsrekkja.')
+   setShowSession(false);setSessionDraft({title:'',wod_id:'',scheduled_date:'',week_no:'1',day_no:'1',session_kind:'training',focus_area:'',estimated_minutes:'45',notes:''});setNotice('Økta er lagt sist i treningsrekkja.')
   })
  }
  async function sendCheckin(e) {
