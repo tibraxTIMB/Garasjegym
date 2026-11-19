@@ -198,7 +198,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     return () => window.clearInterval(id)
   }, [running])
 
-  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isStationCircuit ? Math.min(Math.floor(elapsed / (cycle * stationCount)), Number(stationPlan.rounds ?? schema?.rounds ?? rounds)) : isAmrap ? laps.length : round, phase, running, remaining:remainingTotal, currentRound }) }, [elapsed, laps, round, phase, running, isCountdown, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, currentRound])
+  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isStationCircuit ? Math.min(Math.floor(elapsed / (cycle * stationCount)), Number(stationPlan.rounds ?? schema?.rounds ?? rounds)) : isAmrap ? laps.length : round, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isTimedInterval||isStationCircuit||hasTimeCap, currentRound }) }, [elapsed, laps, round, phase, running, isCountdown, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, currentRound])
 
   useEffect(() => {
     if (!running) return
