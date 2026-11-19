@@ -489,7 +489,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   }, [quickStart, simpleMode, loading, mode])
 
   const availableWods=wods.filter(wod=>wod.is_published&&!wod.is_archived)
-  const manualWodOptions=wods.filter(wod=>!wod.is_archived&&(staff||wod.is_published))
+  const manualWodOptions=wods.filter(wod=>!wod.is_archived)
 
   const filteredExercises = useMemo(() => exercises.filter(e => e.name.toLowerCase().includes(query.toLowerCase()) || (e.category || '').toLowerCase().includes(query.toLowerCase())), [exercises, query])
 
