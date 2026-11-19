@@ -68,9 +68,9 @@ Migrering 008 byggjer vidare på 001 og krev at 005 har oppretta `class_live_ses
 
 ## Test-URL og publisering
 
-Testbygget ligg på `https://tibraxtimb.github.io/Garasjegym/` og brukar berre det isolerte Supabase-testprosjektet `garasjegym-2-test`. Dette er den delte GitHub Pages-adressa for repoet, ikkje ein eigen preview-host. Ei ny Pages-publisering erstattar innhaldet på denne adressa.
+Ei tidlegare STURMKOPF-testutgåve ligg på `https://tibraxtimb.github.io/Garasjegym/` og brukar berre det isolerte Supabase-testprosjektet `garasjegym-2-test`. Den publiserte sida svarar til commit `dd1fdc0d9d691c973857ba743745336252b9166d`, ikkje siste kode på utviklingsgreina. Adressa er delt med repoet si eksisterande GitHub Pages-side, ikkje ein eigen preview-host. Ei ny Pages-publisering erstattar innhaldet på denne adressa.
 
-Workflowen `.github/workflows/deploy-sturmkopf-pages.yml` byggjer på push til STURMKOPF-greina, men publiseringsjobben er no hoppa over ved vanlege push. Han krev eit eksplisitt manuelt `publish_preview=true`-val. Ikkje endra dette til automatisk publisering utan uttrykkeleg klarsignal.
+Workflowen `.github/workflows/deploy-sturmkopf-pages.yml` byggjer på push til STURMKOPF-greina, men publiseringsjobben er no hoppa over ved vanlege push. Han krev eit eksplisitt manuelt `publish_preview=true`-val. Ikkje endra dette til automatisk publisering utan uttrykkeleg klarsignal. Den nyaste byggpakka er verifisert i Actions, men ikkje publisert til den delte sida.
 
 ## Nyleg kvalitetssikra
 
