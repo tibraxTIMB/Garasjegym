@@ -56,7 +56,7 @@ export default function PT({profile,coachMode=false,focusRequestId,onFocusConsum
     (()=>{let query=supabase.from('pt_messages').select('id,client_id,sender_id,body,created_at').order('created_at',{ascending:false}).limit(200);if(targetClientId)query=query.eq('client_id',targetClientId);else query=query.limit(0);return query})(),
     staff&&targetClientId ? supabase.from('pt_client_notes').select('id,client_id,coach_id,goals,note,follow_up_at,created_at').eq('client_id',targetClientId).order('updated_at',{ascending:false}).limit(100) : Promise.resolve({data:[],error:null}),
     supabase.from('exercises').select('id,name,category,video_url').eq('is_active',true).order('name'),
-    supabase.from('wods').select('id,name,format,duration_minutes,movements,notes').eq('is_published',true).order('created_at',{ascending:false}),
+    supabase.from('wods').select('id,name,format,duration_minutes,movements,notes').eq('is_archived',false).order('created_at',{ascending:false}),
    ])
    if(requestId!==loadSequence.current)return
    const visibleSessionIds=(s.data||[])
