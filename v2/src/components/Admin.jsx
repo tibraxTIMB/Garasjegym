@@ -3,6 +3,7 @@ import {CheckCircle2,LoaderCircle,Plus,ShieldCheck,Users,Trophy,Dumbbell,Coffee,
 import {rankForCount,RANK_TITLES} from './Overview.jsx'
 import {supabase} from '../lib/supabase.js'
 import CoffeeBar from './CoffeeBar.jsx'
+import { RELEASE_NAME } from '../lib/release.js'
 
 export default function Admin({profile}){
  const [members,setMembers]=useState([]),[wods,setWods]=useState([]),[exercises,setExercises]=useState([]),[rankCounts,setRankCounts]=useState({}),[adminTab,setAdminTab]=useState('oversikt')
@@ -121,7 +122,7 @@ export default function Admin({profile}){
  }
  if(loading)return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar administrasjon …</div>
  return <div className="admin-module">
-  <div className="training-heading"><div><div className="section-kicker">STURMKOPF · KONTROLLPANEL</div><h3>Administrasjon</h3></div><span className="count-pill">{profile.role.toUpperCase()}</span></div>
+  <div className="training-heading"><div><div className="section-kicker">{RELEASE_NAME} · KONTROLLPANEL</div><h3>Administrasjon</h3></div><span className="count-pill">{profile.role.toUpperCase()}</span></div>
   {error&&<div className="auth-error" role="alert">{error}</div>}{notice&&<div className="auth-message" role="status"><CheckCircle2 size={15}/>{notice}</div>}
   <div className="admin-stats"><div><Users size={17}/><strong>{members.length}</strong><span>Medlemmar</span></div><div><ShieldCheck size={17}/><strong>{members.filter(m=>m.active).length}</strong><span>Aktive</span></div><div><Dumbbell size={17}/><strong>{wods.length}</strong><span>WOD-ar</span></div><div><Plus size={17}/><strong>{exercises.length}</strong><span>Øvingar</span></div></div>
   <nav className="admin-tabs" aria-label="Administrasjonsområde">
