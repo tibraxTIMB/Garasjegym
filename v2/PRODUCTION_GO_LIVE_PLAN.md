@@ -621,3 +621,12 @@ Updated owner backup instructions to current Supabase CLI --remote syntax; --db-
 Detailed owner runbook: [GO_LIVE_PHASE_B28_OWNER_BACKUP_RESTORE_EXECUTION_RUNBOOK_2026-11-20.md](./GO_LIVE_PHASE_B28_OWNER_BACKUP_RESTORE_EXECUTION_RUNBOOK_2026-11-20.md).
 
 **B28 outcome:** Current CLI instructions and project recovery inventory reconciled. No export, restore, production change, deployment or cost. Wave 0 remains NOT PASSED; production remains NO-GO.
+
+
+## 28. Phase B29 – post-recovery-runbook production security revalidation (2026-11-20)
+
+Fresh production advisors: 4 authenticated-callable SECURITY DEFINER warnings; leaked-password protection disabled; performance findings 14 unindexed FKs, 34 RLS initplan warnings, 10 unused indexes, 3 multiple-permissive-policy tables; health advisor clear. Read-only inspection confirms all four flagged RPCs have fixed search_path pg_catalog, public, pg_temp; anon cannot execute; authenticated can. is_active_user/is_admin/is_admin_or_manager enforce caller UUID + active profile and role checks. book_pt_session enforces active caller, published/future slot, row lock, duplicate guard and capacity/waitlist assignment. No blanket privilege revokes or SECURITY INVOKER changes are justified without regression testing. Leaked-password protection remains a genuine hardening item to address after recovery readiness.
+
+Detailed evidence: [GO_LIVE_PHASE_B29_PRODUCTION_SECURITY_REVALIDATION_2026-11-20.md](./GO_LIVE_PHASE_B29_PRODUCTION_SECURITY_REVALIDATION_2026-11-20.md).
+
+**B29 outcome:** Function access paths and advisor warnings reviewed; no production changes. Wave 0 remains NOT PASSED; production remains NO-GO.
