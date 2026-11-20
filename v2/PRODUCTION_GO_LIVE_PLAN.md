@@ -482,3 +482,14 @@ Wave 0 remains blocked until the owner supplies the latest completed production 
 The exact evidence checklist and stop conditions are in [GO_LIVE_PHASE_B16_WAVE0_RECOVERY_GATE_REVALIDATION_2026-11-20.md](./GO_LIVE_PHASE_B16_WAVE0_RECOVERY_GATE_REVALIDATION_2026-11-20.md).
 
 **B16 outcome:** Recovery gate revalidated and still NOT PASSED. No production/test database changes, restore, Auth/Edge Function changes or deployment were performed. Release remains **NO-GO**.
+
+
+## 16. Phase B17 – executable read-only production preflight (2026-11-20)
+
+Added `v2/supabase/preflight/production_wave_preflight_read_only.sql`, a SELECT-only preflight for required table/column presence and RLS enablement. Executed the query against production.
+
+It confirms core membership/class/PT legacy/WOD/workout/social tables exist, but the V2 PT Studio, notifications, coffee, calendar and WOD favorites tables are absent. The contract columns `profiles.email`, `profiles.membership_status`, `classes.published`, `classes.instructor_id` and `class_bookings.attendance_status` are absent. `workout_logs.result_data` is present. RLS is enabled on all public base tables returned, but this does not establish policy correctness.
+
+The full result and consequences are in [GO_LIVE_PHASE_B17_EXECUTABLE_PRODUCTION_PREFLIGHT_2026-11-20.md](./GO_LIVE_PHASE_B17_EXECUTABLE_PRODUCTION_PREFLIGHT_2026-11-20.md).
+
+**B17 outcome:** A reproducible production schema gate is now committed and executed. No DDL/DML, Auth, Edge Function, secret or deployment changes were made. Backup/PITR and isolated restore remain hard blockers. Release remains **NO-GO**.
