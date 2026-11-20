@@ -60,7 +60,7 @@ export default function Admin({profile}){
    setExerciseName('');setEquipment('');setVideoUrl('');setBodyArea('Fullkropp');setExerciseDescription('');setVariantLabel('');setDoseDefaults({rx:{men_kg:'',women_kg:''},scaled:{men_kg:'',women_kg:''},foundation:{men_kg:'',women_kg:''}});setEditingExercise(null);setShowExerciseForm(false);setNotice(editingExercise?'Øving oppdatert.':'Øving lagra i biblioteket.');await load()
   }catch(e){setError(e.message||'Kunne ikkje lagra øving.')}finally{setBusy('')}
  }
- function canManageMember(member){return isAdmin||(profile.role==='manager'&&member.membership_status==='approved'&&(member.role==='member'||member.id===profile.id))}
+ function canManageMember(member){return isAdmin||(profile.role==='manager'&&member.id!==profile.id&&member.membership_status==='approved'&&member.active===true&&member.role==='member')}
  function startMemberRename(member){setEditingMemberId(member.id);setMemberNameDraft(member.display_name||'')}
  function cancelMemberRename(){setEditingMemberId('');setMemberNameDraft('')}
  async function saveMemberName(member){
