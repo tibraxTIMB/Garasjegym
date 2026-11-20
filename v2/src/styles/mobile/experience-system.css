@@ -68,7 +68,6 @@ button, [role="button"], summary { touch-action: manipulation; }
   }
   html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .sidebar .brand > div:last-child,
   html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .sidebar .side-label,
-  html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .sidebar .nav-item span,
   html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .sidebar .sidebar-foot { display:none; }
   html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .sidebar .nav-item {
     justify-content:center; min-height:50px; padding:10px 6px;
@@ -261,4 +260,33 @@ button, [role="button"], summary { touch-action: manipulation; }
 .app-more-sheet-grabber:active { cursor: grabbing; }
 @media (prefers-reduced-motion: reduce) {
   .app-more-sheet, .app-more-backdrop { transition-duration: 0.01ms !important; }
+}
+
+
+/* Keep compact tablet-landscape navigation understandable without relying on icon memory. */
+@media (min-width: 901px) and (max-width: 1180px) {
+  html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .sidebar nav {
+    gap: 6px;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+  html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .sidebar nav .nav-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-height: 58px;
+    padding: 6px 3px;
+    text-align: center;
+  }
+  html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .sidebar nav .nav-item span {
+    display: block;
+    max-width: 100%;
+    font-size: 9px;
+    line-height: 1.1;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }
