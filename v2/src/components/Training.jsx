@@ -461,6 +461,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(0)
   const [timerSnapshot, setTimerSnapshot] = useState({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
   const [timerLaunchId, setTimerLaunchId] = useState(0)
+  const loadSequence = useRef(0)
   useEffect(()=>{onTimerSnapshot?.({...timerSnapshot,title,format})},[timerSnapshot,title,format,onTimerSnapshot])
   useEffect(()=>()=>onTimerSnapshot?.({
     elapsed:0,laps:[],roundsCompleted:0,phase:'Klar',running:false,
@@ -475,40 +476,70 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   }
 
   async function loadAll(silent=false) {
-    if (!silent) setLoading(true); setError('')
-    let w = await supabase.from('wods')
-      .select('id,name,format,duration_minutes,movements,notes,audience,is_published,is_archived,created_at,timer_settings,category')
-      .order('created_at', { ascending: false })
-    // Keep the WOD library usable while the optional timer-settings migration is staged.
-    if (w.error && /timer_settings|column .* does not exist/i.test(w.error.message || '')) {
-      w = await supabase.from('wods')
-        .select('id,name,format,duration_minutes,movements,notes,audience,is_published,is_archived,created_at,category')
-        .eq('is_published', true).order('created_at', { ascending: false })
-    }
-    const [e, h, pr] = await Promise.all([
-      supabase.from('exercises').select('id,name,category,equipment,description,video_url').eq('is_active', true).order('name'),
-      supabase.from('workout_logs').select('id,title,workout_date,format,rounds,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,result_data,note,created_at,workout_exercises(id,exercise_name,sort_order,workout_sets(id,set_number,reps,load_kg,time_text,time_seconds,height_cm))').order('workout_date', { ascending: false }).limit(500),
-      supabase.from('personal_records').select('id,exercise_name,result,unit,note,record_date').order('record_date', { ascending: false }).limit(500),
-    ])
-    if (w.error) setError(w.error.message); else setWods(w.data || [])
-    const now=new Date(),today=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')
-    const daily=await supabase.from('wod_daily_schedules').select('wod_id').eq('scheduled_date',today).is('target_class_id',null).eq('is_published',true).maybeSingle()
-    if(!daily.error)setDailyWodId(daily.data?.wod_id||null)
-    if (e.error && !w.error) setError('Øvingsbibliotek: ' + e.error.message); else setExercises(e.data || [])
-    if (h.error && !w.error && !e.error) setError('Treningslogg: ' + h.error.message); else setHistory(h.data || [])
-    if (pr.error && !w.error && !e.error && !h.error) setError('Personlege rekordar: ' + pr.error.message); else setRecords(pr.data || [])
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      const [fav, wodFav] = await Promise.all([
-        supabase.from('exercise_favorites').select('exercise_name').eq('user_id', user.id),
-        supabase.from('wod_favorites').select('wod_id').eq('user_id', user.id)
+    const requestId=++loadSequence.current
+    if (!silent) setLoading(true)
+    setError('')
+    try {
+      let w = await supabase.from('wods')
+        .select('id,name,format,duration_minutes,movements,notes,audience,is_published,is_archived,created_at,timer_settings,category')
+        .order('created_at', { ascending: false })
+      if (w.error && /timer_settings|column .* does not exist/i.test(w.error.message || '')) {
+        w = await supabase.from('wods')
+          .select('id,name,format,duration_minutes,movements,notes,audience,is_published,is_archived,created_at,category')
+          .order('created_at', { ascending: false })
+      }
+      if(requestId!==loadSequence.current)return
+
+      const [e,h,pr,auth] = await Promise.all([
+        supabase.from('exercises').select('id,name,category,equipment,description,video_url').eq('is_active', true).order('name'),
+        supabase.from('workout_logs').select('id,title,workout_date,format,rounds,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,result_data,note,created_at,workout_exercises(id,exercise_name,sort_order,workout_sets(id,set_number,reps,load_kg,time_text,time_seconds,height_cm))').order('workout_date', { ascending: false }).limit(500),
+        supabase.from('personal_records').select('id,exercise_name,result,unit,note,record_date').order('record_date', { ascending: false }).limit(500),
+        supabase.auth.getUser()
       ])
-      if (!fav.error) setFavoriteNames((fav.data || []).map(x => x.exercise_name))
-      if (!wodFav.error) setFavoriteWodIds((wodFav.data || []).map(x => x.wod_id))
+      if(requestId!==loadSequence.current)return
+
+      const failures=[]
+      if(w.error)failures.push('WOD-bibliotek: '+w.error.message)
+      else setWods(w.data||[])
+      if(e.error)failures.push('Øvingsbibliotek: '+e.error.message)
+      else setExercises(e.data||[])
+      if(h.error)failures.push('Treningslogg: '+h.error.message)
+      else setHistory(h.data||[])
+      if(pr.error)failures.push('Personlege rekordar: '+pr.error.message)
+      else setRecords(pr.data||[])
+      if(auth.error)failures.push('Innlogging: '+auth.error.message)
+
+      const user=auth.data?.user
+      if(user){
+        const [daily,fav,wodFav]=await Promise.all([
+          supabase.from('wod_daily_schedules').select('wod_id').eq('scheduled_date',localDateISO()).is('target_class_id',null).eq('is_published',true).maybeSingle(),
+          supabase.from('exercise_favorites').select('exercise_name').eq('user_id',user.id),
+          supabase.from('wod_favorites').select('wod_id').eq('user_id',user.id)
+        ])
+        if(requestId!==loadSequence.current)return
+        if(daily.error)failures.push('Dagens WOD: '+daily.error.message)
+        else setDailyWodId(daily.data?.wod_id||null)
+        if(fav.error)failures.push('Favorittøvingar: '+fav.error.message)
+        else setFavoriteNames((fav.data||[]).map(x=>x.exercise_name))
+        if(wodFav.error)failures.push('WOD-favorittar: '+wodFav.error.message)
+        else setFavoriteWodIds((wodFav.data||[]).map(x=>x.wod_id))
+      }else{
+        setFavoriteNames([])
+        setFavoriteWodIds([])
+        setDailyWodId(null)
+      }
+      if(requestId===loadSequence.current)setError(failures.join(' · '))
+    } catch(err) {
+      if(requestId===loadSequence.current)setError('Kunne ikkje oppdatera treningsdata: '+(err?.message||'Ukjend feil'))
+    } finally {
+      if(requestId===loadSequence.current)setLoading(false)
     }
-    setLoading(false)
   }
-  useEffect(() => { loadAll(); const refresh=setInterval(()=>loadAll(true),60000); return()=>clearInterval(refresh) }, [])
+  useEffect(() => {
+    loadAll()
+    const refresh=setInterval(()=>loadAll(true),60000)
+    return()=>{clearInterval(refresh);loadSequence.current++}
+  }, [])
   async function toggleWodFavorite(wod){
     const {data:{user}}=await supabase.auth.getUser()
     if(!user)return
