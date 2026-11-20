@@ -93,7 +93,7 @@ export default function HeartRateSettings() {
 
   return <section className="engine-section hr-settings">
     <div className="engine-section-title"><h4><HeartPulse size={17}/> Puls under trening</h4><span>Valfritt</span></div>
-    <p className="hr-settings-intro">Bruk ditt eige Bluetooth-pulsbelte. Pulsmåling er heilt frivillig og påverkar ikkje vanleg trening.</p>
+    <p className="hr-settings-intro">Bruk ei Garmin-klokke som sender puls via Bluetooth, eller eit BLE-pulsbelte. Pulsmåling er heilt frivillig og påverkar ikkje vanleg trening.</p>
     {loading ? <div className="training-state"><LoaderCircle className="spin"/> Hentar innstillingar …</div> : <>
       <div className="hr-setting-row">
         <div><strong>Bruk puls under trening</strong><small>Gjer pulsmåling tilgjengeleg i treningsmodus.</small></div>
@@ -106,7 +106,7 @@ export default function HeartRateSettings() {
           <button type="button" className="secondary-button" disabled={!preferences.hr_enabled || sensor.status === 'connecting'} onClick={pairSensor}><BluetoothConnected size={15}/> {sensor.status === 'connecting' ? 'Koplar til …' : connected ? 'Byte pulsbelte' : 'Kople til pulsbelte'}</button>
           {connected && <button type="button" className="secondary-button" onClick={disconnectHeartRateSensor}><BluetoothOff size={15}/> Kople frå</button>}
         </div>
-        {!isHeartRateBluetoothAvailable() && <small className="hr-compatibility">Bluetooth-tilkopling krev HTTPS og ein nettlesar med Web Bluetooth-støtte, til dømes Chrome på Android.</small>}
+        {!isHeartRateBluetoothAvailable() && <small className="hr-compatibility">Krev HTTPS og Web Bluetooth, til dømes Chrome på Android. iPhone/Safari og ANT+ direkte er ikkje støtta i denne første versjonen. Garmin-klokka må ha pulssending via Bluetooth aktivert.</small>}
       </div>
       <div className="hr-setting-row"><div><strong>Del puls med PT</strong><small>Føretrekt val. Deling frå kundetelefon til PT-nettbrett blir kopla til i neste byggjesteg.</small></div><button type="button" className={preferences.hr_share_with_pt ? 'simple-mode-toggle enabled' : 'simple-mode-toggle'} aria-pressed={preferences.hr_share_with_pt} disabled={Boolean(saving) || !preferences.hr_enabled} onClick={() => updatePreference('hr_share_with_pt', !preferences.hr_share_with_pt)}>{preferences.hr_share_with_pt ? 'På' : 'Av'}</button></div>
       <div className="hr-setting-row"><div><strong>Del puls på storskjerm</strong><small>Føretrekt val. Storskjermdeling blir kopla til i neste byggjesteg.</small></div><button type="button" className={preferences.hr_share_on_screen ? 'simple-mode-toggle enabled' : 'simple-mode-toggle'} aria-pressed={preferences.hr_share_on_screen} disabled={Boolean(saving) || !preferences.hr_enabled} onClick={() => updatePreference('hr_share_on_screen', !preferences.hr_share_on_screen)}>{preferences.hr_share_on_screen ? 'På' : 'Av'}</button></div>
