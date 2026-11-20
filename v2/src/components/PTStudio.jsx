@@ -109,7 +109,7 @@ export default function PTStudio({ profile, coachMode=false, onLaunchWorkout, in
     supabase.from('pt_programs').select('*').order('created_at',{ascending:false}),
     supabase.from('pt_program_sessions').select('*').order('sequence_no'),
     supabase.from('pt_checkins').select('*').order('created_at',{ascending:false}),
-    (()=>{let q=supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,is_published,is_archived').eq('is_archived',false).order('name');if(!canManageClients)q=q.eq('is_published',true);return q})()
+    (()=>{let q=supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,is_published,is_archived').eq('is_archived',false).order('name');return q})()
    ])
    if(requestId!==loadSequence.current)return
    const labels=['medlemslista','innmeldingar','mål','programmalbibliotek','kundeprogram','programøkter','statussjekkar','WOD-bibliotek']
