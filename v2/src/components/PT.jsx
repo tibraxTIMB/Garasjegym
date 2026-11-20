@@ -49,7 +49,7 @@ export default function PT({profile,coachMode=false,focusRequestId,onFocusConsum
   if(wd.error)setError(wd.error.message);else setWodLibrary(wd.data||[])
   setLoading(false)
  }
- useEffect(()=>{load();const refresh=setInterval(()=>load(true),60000);return()=>clearInterval(refresh)},[])
+ useEffect(()=>{load();const refresh=setInterval(()=>load(true),60000);return()=>clearInterval(refresh)},[staff])
  const hasUnsavedWork=Boolean(showWodBuilder||messageText.trim()||noteGoals.trim()||noteText.trim()||followUp||Object.values(planDrafts).some(d=>d&&Object.values(d).some(v=>String(v||'').trim())));
  useEffect(()=>{if(!hasUnsavedWork)return;const warn=e=>{e.preventDefault();e.returnValue='Du har endringar som ikkje er lagra.'};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn)},[hasUnsavedWork]);
  useEffect(()=>{if(!staff||!focusRequestId||!requests.length)return;const target=requests.find(row=>row.id===focusRequestId);if(target){setActiveClient(target.member_id);setCustomerDraft(target.member_id);onClientChange?.(target.member_id)}const timer=setTimeout(()=>{document.getElementById('pt-request-'+focusRequestId)?.scrollIntoView({behavior:'smooth',block:'center'});onFocusConsumed?.()},120);return()=>clearTimeout(timer)},[staff,focusRequestId,requests])
