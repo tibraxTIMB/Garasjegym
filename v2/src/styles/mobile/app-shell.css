@@ -321,3 +321,34 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .app-mobile-nav { 
 html[data-gg-device="tablet"][data-gg-orientation="portrait"] .app-more-backdrop { display: flex; }
 
 
+
+
+/* Accessible non-gesture alternative for expanding the mobile More sheet. */
+@media (max-width: 900px) {
+  .app-more-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: 0 0 auto;
+  }
+  .app-more-expand {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 0 10px;
+    border: 1px solid var(--gg-shell-border);
+    border-radius: 11px;
+    background: #252d2f;
+    color: var(--gg-shell-text);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 750;
+    white-space: nowrap;
+  }
+  .app-more-expand:focus-visible {
+    outline: 2px solid var(--gg-shell-accent);
+    outline-offset: 2px;
+  }
+}
