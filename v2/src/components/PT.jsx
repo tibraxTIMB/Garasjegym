@@ -93,12 +93,21 @@ export default function PT({profile,coachMode=false,focusRequestId,onFocusConsum
   async function subscribe(){
    const {data:{user}}=await supabase.auth.getUser()
    if(!live||!user)return
-   const targetClientId=staff?(messageClient||activeClient):user.id
-   if(!targetClientId)return
-   channel=supabase.channel('pt-client-thread-'+targetClientId)
-    .on('postgres_changes',{event:'*',schema:'public',table:'pt_messages',filter:'client_id=eq.'+targetClientId},()=>{if(live)load(true)})
-    .on('postgres_changes',{event:'*',schema:'public',table:'pt_sessions',filter:'client_id=eq.'+targetClientId},()=>{if(live)load(true)})
-    .subscribe()
+   const targetClientId=staff?(controlledClientId||activeClient||messageClient):user.id
+   let subscription=supabase.channel('pt-client-thread-'+user.id+'-'+(targetClientId||'all'))
+   if(targetClientId){
+    subscription=subscription
+     .on('postgres_changes',{event:'*',schema:'public',table:'pt_messages',filter:'client_id=eq.'+targetClientId},()=>{if(live)load(true)})
+     .on('postgres_changes',{event:'*',schema:'public',table:'pt_sessions',filter:'client_id=eq.'+targetClientId},()=>{if(live)load(true)})
+   }
+   // Admin/manager sees the public-slot totals; coaches and members only
+   // subscribe to booking events for their selected/member account.
+   if(adminOrManager){
+    subscription=subscription.on('postgres_changes',{event:'*',schema:'public',table:'pt_bookings'},()=>{if(live)load(true)})
+   }else if(targetClientId){
+    subscription=subscription.on('postgres_changes',{event:'*',schema:'public',table:'pt_bookings',filter:'member_id=eq.'+targetClientId},()=>{if(live)load(true)})
+   }
+   channel=subscription.subscribe()
   }
   subscribe()
   const refresh=window.setInterval(()=>{if(live)load(true)},60000)
