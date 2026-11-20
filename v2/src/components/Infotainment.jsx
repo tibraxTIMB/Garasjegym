@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { CalendarDays, Clock3, MonitorUp, Play, Pause, RotateCcw, TimerReset, Music2, LoaderCircle, Lock, Unlock, Maximize2, Minimize2, X } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { groupEventsByLocalDay } from '../lib/infotainmentEvents.js'
-import { MusicMiniPlayer } from './Music.jsx'
+import { Music, MusicMiniPlayer } from './Music.jsx'
 import './infotainment.css'
 
 const pad=value=>String(value).padStart(2,'0')
@@ -152,6 +152,7 @@ export default function Infotainment({onExit,timerSnapshot=null}){
  const [elapsed,setElapsed]=useState(0)
  const [running,setRunning]=useState(false)
  const [showDemoClock,setShowDemoClock]=useState(false)
+ const [activeTab,setActiveTab]=useState('oversikt')
 
  useEffect(()=>{const id=window.setInterval(()=>setNow(new Date()),1000);return()=>window.clearInterval(id)},[])
  useEffect(()=>{if(!running)return undefined;const id=window.setInterval(()=>setElapsed(value=>value+1),1000);return()=>window.clearInterval(id)},[running])
@@ -189,26 +190,33 @@ export default function Infotainment({onExit,timerSnapshot=null}){
    <div><span className="infotainment-kicker">TRENING · FELLESSKAP · UTVIKLING</span><h1>Velkomen til GarasjeGym</h1><p>Oversikt over aktivitetane i garasjen, musikk og timer.</p></div>
    <div className="infotainment-date"><span>{dayLabel}</span><strong>{timeLabel.slice(0,5)}</strong></div>
   </section>
-  <div className="infotainment-grid">
-   <section className="infotainment-panel infotainment-calendar">
+  <nav className="infotainment-tabs" role="tablist" aria-label="Infotainment-faner">
+   <button type="button" role="tab" aria-selected={activeTab==='oversikt'} className={activeTab==='oversikt'?'selected':''} onClick={()=>setActiveTab('oversikt')}><MonitorUp size={17}/> Oversikt</button>
+   <button type="button" role="tab" aria-selected={activeTab==='kalender'} className={activeTab==='kalender'?'selected':''} onClick={()=>setActiveTab('kalender')}><CalendarDays size={17}/> Kalender</button>
+   <button type="button" role="tab" aria-selected={activeTab==='musikk'} className={activeTab==='musikk'?'selected':''} onClick={()=>setActiveTab('musikk')}><Music2 size={17}/> Spotify</button>
+   <button type="button" role="tab" aria-selected={activeTab==='timer'} className={activeTab==='timer'?'selected':''} onClick={()=>setActiveTab('timer')}><TimerReset size={17}/> Timer</button>
+  </nav>
+  <div className={'infotainment-grid'+(activeTab!=='oversikt'?' is-focused-tab':'')}>
+   {(activeTab==='oversikt'||activeTab==='kalender')&&<section className="infotainment-panel infotainment-calendar">
     <div className="infotainment-panel-head"><div><span className="infotainment-kicker">KOMANDE AKTIVITET</span><h2><CalendarDays size={19}/> Kalender</h2></div><span className="infotainment-window">Neste 7 dagar</span></div>
     {loading?<div className="infotainment-loading"><LoaderCircle className="infotainment-spin"/> Hentar kalender …</div>:error?<div className="infotainment-empty">{error}</div>:groups.length?groups.map(([day,items])=><div className="infotainment-day" key={day}><h3>{new Date(day+'T12:00:00').toLocaleDateString('nn-NO',{weekday:'long',day:'numeric',month:'long'})}</h3>{items.map(item=><article key={item.event_key} className={'infotainment-event '+(item.category==='pt'?'pt-event':'class-event')}><span className="infotainment-event-time">{new Date(item.starts_at).toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'})}</span><span className="infotainment-event-main"><strong>{item.category==='pt'?'PT-time':item.title}</strong><small>{item.category==='pt'?'Privat avtale · kundeinformasjon skjult':'Gruppetime'}</small></span><span className="infotainment-event-duration">{Math.max(1,Math.round((new Date(item.ends_at)-new Date(item.starts_at))/60000))} min</span></article>)}</div>):<div className="infotainment-empty">Ingen komande aktivitetar er publiserte.</div>}
-   </section>
-   <div className="infotainment-side">
-    <section className="infotainment-panel infotainment-music">
+   </section>}
+   {(activeTab==='oversikt'||activeTab==='musikk')&&<div className="infotainment-side">
+    {activeTab==='oversikt'&&<section className="infotainment-panel infotainment-music">
      <div className="infotainment-panel-head"><div><span className="infotainment-kicker">LYD I GARASJEN</span><h2><Music2 size={19}/> Musikk</h2></div></div>
      <MusicMiniPlayer/>
      <p className="infotainment-note">Styr musikken via den personlege Spotify-tilkoplinga di.</p>
-    </section>
-    <section className="infotainment-panel infotainment-timer">
+    </section>}
+    {activeTab==='musikk'&&<section className="infotainment-panel infotainment-music infotainment-music-expanded"><Music/></section>}
+    {(activeTab==='oversikt'||activeTab==='timer')&&<section className="infotainment-panel infotainment-timer">
      <div className="infotainment-panel-head"><div><span className="infotainment-kicker">TID OG INTERVALL</span><h2><TimerReset size={19}/> Timer</h2></div><div className="infotainment-timer-head-actions"><span className={'infotainment-live '+(trainingActive?'active':'')}>{trainingActive?'TRENING PÅGÅR':'KLAR'}</span><button type="button" className="infotainment-demo-open" onClick={()=>setShowDemoClock(true)}><TimerReset size={15}/> Demoklokke</button></div></div>
      <div className="infotainment-timer-caption">{trainingActive?(timerSnapshot?.title||'Aktiv treningsøkt'):timerCaption}</div>
      <strong className="infotainment-timer-value">{clock(timerValue)}</strong>
      <div className="infotainment-timer-state">{trainingActive?(timerSnapshot?.running?'TRENING PÅGÅR':timerSnapshot?.phase||'PAUSA'):running?'STOPPEKLOKKE GÅR':'STOPPEKLOKKE PAUSA'}</div>
      {!trainingActive&&<div className="infotainment-timer-actions"><button type="button" onClick={()=>setRunning(value=>!value)}>{running?<Pause size={15}/>:<Play size={15}/>} {running?'Pause':'Start'}</button><button type="button" onClick={()=>{setRunning(false);setElapsed(0)}}><RotateCcw size={15}/> Nullstill</button></div>}
      {trainingActive&&<p className="infotainment-note">{timerSnapshot?.running?'Den aktive WOD-timeren held fram i treningsmodus.':'Treningsøkta er pausa eller ferdig i treningsmodus.'}</p>}
-    </section>
-   </div>
+    </section>}
+   </div>}
   </div>
   <footer className="infotainment-footer"><span>GARASJEGYM · STURMKOPF</span><span>Privat PT-informasjon er skjerma på denne skjermen</span></footer>
   {showDemoClock&&<DemoClock onClose={()=>setShowDemoClock(false)}/>}
