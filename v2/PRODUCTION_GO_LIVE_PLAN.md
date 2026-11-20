@@ -367,3 +367,20 @@ The application code is green under both verification workflows. This does not c
 **Production remains NO-GO.** Safe work may continue on the isolated branch: author production-derived migration units, preflight/postflight assertions, rollback/forward-fix plans, and role/concurrency tests. No production DDL/DML, Auth, Edge Function, secrets, hosting or paid resource changes.
 
 Detailed gate: [GO LIVE Phase B7 – final pre-production gate](GO_LIVE_PHASE_B7_FINAL_PREPRODUCTION_GATE_2026-11-20.md).
+
+
+## 7. Phase B8 – membership/Auth production migration design (2026-11-20)
+
+Latest CI after the B7 evidence commit `f5be8f17d7d3e4601b3ebc7b145fcbc0ac750d4c`:
+
+- GarasjeGym 2.0 checks, run `44825826208`: SUCCESS.
+- STURMKOPF build and focused tests, run `44825826161`: SUCCESS.
+- Pages preview run `44825826198`: CANCELLED during build; deploy job cancelled. No deployment occurred.
+
+A fresh aggregate-only production query found 3 profiles, all active (1 admin, 2 members), and 3 Auth users all matched to profiles. No active profile lacked an Auth user. The production `profiles` table does not yet contain `email` or `membership_status`. No row data was changed.
+
+The existing test migration that adds membership fields defaults `membership_status` to `approved`. That default is not safe to reuse unchanged in production because a future direct profile insert could bypass the Auth trigger. The production-derived design therefore uses a fail-closed `pending` default, explicitly backfills only the currently active accounts to approved, preserves their roles/active flags, and ensures new Auth signups are inactive/pending. It also requires preservation of the existing admin and explicit tests for member, manager, admin, pending, rejected and anonymous access.
+
+The complete preflight, migration semantics, test matrix and recovery requirements are recorded in [GO_LIVE_PHASE_B8_MEMBERSHIP_AUTH_MIGRATION_DESIGN_2026-11-20.md](./GO_LIVE_PHASE_B8_MEMBERSHIP_AUTH_MIGRATION_DESIGN_2026-11-20.md).
+
+**B8 outcome:** CI core checks green; membership/Auth migration design prepared for isolated rehearsal. No production or test DDL/DML, Auth changes, Edge Function changes or deployments were performed. Backup/PITR evidence and a successful isolated restore rehearsal remain hard blockers. Release remains **NO-GO**.
