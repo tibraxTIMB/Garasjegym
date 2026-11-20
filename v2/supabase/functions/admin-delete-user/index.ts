@@ -34,8 +34,8 @@ Deno.serve(async (req: Request) => {
     if (callerError || !callerData.user) return reply({ error: "Innlogginga er ugyldig eller utløpt." }, 401)
 
     const { data: callerProfile, error: profileError } = await callerClient
-      .from("profiles").select("role,active").eq("id", callerData.user.id).single()
-    if (profileError || callerProfile?.role !== "admin" || callerProfile?.active !== true) {
+      .from("profiles").select("role,active,membership_status").eq("id", callerData.user.id).single()
+    if (profileError || callerProfile?.role !== "admin" || callerProfile?.active !== true || callerProfile?.membership_status !== "approved") {
       return reply({ error: "Berre aktive administratorar kan sletta brukarar." }, 403)
     }
 
