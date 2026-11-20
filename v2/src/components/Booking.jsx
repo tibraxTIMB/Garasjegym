@@ -130,6 +130,7 @@ export default function Booking({ profile, onLogResult, onOpenWod, initialClassI
     if(wResult.error && /timer_settings|column .* does not exist/i.test(wResult.error.message||'')){
       let fallback=supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,category,is_published,is_archived').eq('is_archived',false).order('name')
       wResult=await fallback
+      if(requestId!==loadSequence.current)return
     }
     if(!wResult.error){
       let visibleWods=wResult.data||[]
@@ -138,6 +139,7 @@ export default function Booking({ profile, onLogResult, onOpenWod, initialClassI
         const assignedIds=[...new Set(visibleClassRows.flatMap(row=>Array.isArray(row.wod_ids)?row.wod_ids:[]))]
         if(assignedIds.length){
           const {data:assigned,error:assignedError}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,category,is_published,is_archived').in('id',assignedIds).eq('is_archived',false)
+          if(requestId!==loadSequence.current)return
           if(!assignedError)visibleWods=[...new Map([...visibleWods,...(assigned||[])].map(row=>[row.id,row])).values()]
         }
       }
