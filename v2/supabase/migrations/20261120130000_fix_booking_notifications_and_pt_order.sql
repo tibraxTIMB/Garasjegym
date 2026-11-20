@@ -143,7 +143,7 @@ create or replace function public.get_coffee_stats()
 returns jsonb
 language plpgsql
 stable
-security definer
+security invoker
 set search_path = pg_catalog, public, pg_temp
 as $function$
 declare
