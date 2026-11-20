@@ -46,6 +46,8 @@ This confirms the `member_rank` change is isolated to TEST. No production SQL wr
 
 These are advisor findings, not proof that every RPC is exploitable. The functions need role-by-role authorization tests and intentional grants review. No broad EXECUTE revocation or Auth setting change was made. Production leaked-password protection remains disabled and requires owner-approved Auth configuration change.
 
+A follow-up search of GitHub commit messages for each of the 11 installed production migration identifiers returned no matching commits. The current repository therefore provides no recoverable original migration source via either file search or commit-message search. This does not prove no external backup or historic repository contains them; it confirms they cannot currently be recovered from the connected repository search.
+
 ## 5. Current release blockers
 
 1. Wave 0 encrypted backup, supported Auth recovery and isolated Supabase restore remain unverified.
