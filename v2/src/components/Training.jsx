@@ -9,10 +9,11 @@ import { formatComplexSequence } from '../lib/wodComplexes.js'
 import { formatParticipation, normalizeWodEngine, parseIntervalNotation } from '../lib/wodEngine.js'
 import PerformanceCenter from './PerformanceCenter.jsx'
 import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration } from '../lib/timerClock.js'
+import { getExerciseMeasurementFlags } from '../lib/exerciseMeasurements.js'
 import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E1.25MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
-const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', uses_height: false, rowValue:'', rowUnit:'m', workSeconds:'', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] })
+const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', uses_height: false, uses_load: true, equipment:'', rowValue:'', rowUnit:'m', workSeconds:'', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] })
 const pad = (n) => String(n).padStart(2, '0')
 const clock = (seconds) => `${pad(Math.floor(Math.max(0, seconds) / 60))}:${pad(Math.max(0, seconds) % 60)}`
 const doseLabel=(item,level='rx')=>{const d=item?.levels?.[level]||{};const parts=[];if(d.sets)parts.push(d.sets+' sett');if(d.reps)parts.push(d.reps+' reps');if(d.heightCm)parts.push(d.heightCm+' cm');if(d.durationSeconds)parts.push(d.durationSeconds+' sek');if(d.distanceMeters)parts.push(d.distanceMeters+' m');if(d.calories)parts.push(d.calories+' cal');if(d.loadMode==='kg'){const loads=[d.loadKgMen!==''&&d.loadKgMen!=null?'M '+d.loadKgMen+' kg':'',d.loadKgWomen!==''&&d.loadKgWomen!=null?'K '+d.loadKgWomen+' kg':''].filter(Boolean);if(loads.length)parts.push(loads.join(' / '))}else if(d.loadMode==='percent'&&d.percent1rm)parts.push(d.percent1rm+' % 1RM');else if(d.loadMode==='rir'&&d.rir!=='')parts.push('RIR '+d.rir);else if(d.loadMode==='bodyweight')parts.push('Kroppsvekt');if(d.tempo)parts.push('Tempo '+d.tempo);if(d.variant)parts.push('Variant: '+d.variant);if(d.instruction)parts.push(d.instruction);return parts.join(' · ')||''};
@@ -635,7 +636,21 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         prescription_levels: item.levels || null,
         prescription_label: doseLabel(item,'rx'),
         rowValue:'',rowUnit:item.row_unit||'m',workSeconds:'',
-        uses_height: Boolean(item.height_cm || Object.values(item.levels||{}).some(level=>level?.heightCm!=null) || /box|boks/i.test(item.exercise_name||'')),
+        equipment: item.equipment || exercises.find(exercise => exercise.id === item.exercise_id)?.equipment || '',
+        uses_height: getExerciseMeasurementFlags({
+          ...item,
+          name: item.exercise_name || item.name || '',
+          equipment: item.equipment || exercises.find(exercise => exercise.id === item.exercise_id)?.equipment || '',
+          levels: item.levels || {},
+          sets: item.sets || [],
+        }).usesHeight,
+        uses_load: getExerciseMeasurementFlags({
+          ...item,
+          name: item.exercise_name || item.name || '',
+          equipment: item.equipment || exercises.find(exercise => exercise.id === item.exercise_id)?.equipment || '',
+          levels: item.levels || {},
+          sets: item.sets || [],
+        }).usesLoad,
         sets: Array.isArray(item.sets) && item.sets.length ? item.sets.map(set => ({
           reps: set.reps == null ? '' : String(set.reps),
           load_kg: set.load_kg == null ? '' : String(set.load_kg),
@@ -687,8 +702,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   }
 
   function addExercise(exercise) {
-    const usesHeight=/box|boks/i.test(exercise.name||'')
-    setItems(current => [...current, { ...emptyExercise(), exercise_id: exercise.id, exercise_name: exercise.name, uses_height: usesHeight }])
+    const measurementFlags=getExerciseMeasurementFlags(exercise)
+    setItems(current => [...current, { ...emptyExercise(), exercise_id: exercise.id, exercise_name: exercise.name, equipment:exercise.equipment||'', uses_height:measurementFlags.usesHeight, uses_load:measurementFlags.usesLoad }])
     setQuery('')
   }
   function addManualWod(){
@@ -696,7 +711,12 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     if(!wod)return
     if(manualWodIds.includes(wod.id)){setNotice('Denne WOD-en er allereie lagt til.');return}
     const schemaItems=sortWodItems(getWodSchemaItems(wod.timer_settings?.workout_schema||{}))
-    const additions=schemaItems.length?schemaItems.map(item=>({...emptyExercise(),manual_wod_id:wod.id,exercise_id:item.exercise_id||'',exercise_name:item.exercise_name||item.name||'',uses_height:Boolean(item.height_cm||Object.values(item.levels||{}).some(level=>level?.heightCm!=null)||/box|boks/i.test(item.exercise_name||item.name||'')),is_rest:!!item.is_rest,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps:[],rest_duration_seconds:item.rest_duration_seconds??null,prescription_levels:item.levels||null,prescription_label:doseLabel(item,wodLevel),rowUnit:item.row_unit||'m'})):(wod.movements||'').split(/\n|,/).map(name=>name.trim()).filter(Boolean).map(name=>({...emptyExercise(),manual_wod_id:wod.id,exercise_name:name}))
+    const additions=schemaItems.length?schemaItems.map(item=>{
+      const catalogExercise=exercises.find(exercise=>exercise.id===item.exercise_id)
+      const equipment=item.equipment||catalogExercise?.equipment||''
+      const measurementFlags=getExerciseMeasurementFlags({...item,name:item.exercise_name||item.name||catalogExercise?.name||'',equipment,levels:item.levels||{},sets:item.sets||[]})
+      return {...emptyExercise(),manual_wod_id:wod.id,exercise_id:item.exercise_id||'',exercise_name:item.exercise_name||item.name||'',equipment,uses_height:measurementFlags.usesHeight,uses_load:measurementFlags.usesLoad,is_rest:!!item.is_rest,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps:[],rest_duration_seconds:item.rest_duration_seconds??null,prescription_levels:item.levels||null,prescription_label:doseLabel(item,wodLevel),rowUnit:item.row_unit||'m'}
+    }):(wod.movements||'').split(/\n|,/).map(name=>name.trim()).filter(Boolean).map(name=>{const flags=getExerciseMeasurementFlags({name});return {...emptyExercise(),manual_wod_id:wod.id,exercise_name:name,uses_height:flags.usesHeight,uses_load:flags.usesLoad}})
     if(!additions.length){setError('WOD-en har ingen registrerte øvingar å leggje til.');return}
     setItems(rows=>[...rows,...additions]);setManualWodIds(ids=>[...ids,wod.id]);setManualWodSelect('');setNotice(wod.name+' er lagt til i den manuelle økta.')
   }
