@@ -515,3 +515,14 @@ Wave 0 must separately establish Auth identity recovery, Storage metadata/object
 The detailed coverage matrix, command outline and acceptance gate are recorded in [GO_LIVE_PHASE_B19_LOGICAL_BACKUP_COVERAGE_GATE_2026-11-20.md](./GO_LIVE_PHASE_B19_LOGICAL_BACKUP_COVERAGE_GATE_2026-11-20.md).
 
 **B19 outcome:** Logical database dump alone is insufficient for full project recovery. No export or restore was performed. Wave 0 and production release remain **NO-GO**.
+
+
+## 19. Phase B20 – Auth and Storage recovery inventory (2026-11-20)
+
+Fresh aggregate-only production queries (no personal fields retrieved) show `auth.users` 3 rows, `auth.identities` 3 rows, `auth.sessions` 12 rows, `storage.buckets` 0 rows and `storage.objects` 0 rows. Auth users/identities must be securely preserved with their UUIDs. Active sessions should be invalidated on restore and users required to re-authenticate. Storage is currently empty, but must be rechecked at backup time.
+
+Supabase's CLI dump reference and platform-to-self-hosted restore guide are not fully aligned about whether Auth schema data is included. The actual dump files must be inspected; do not assume. Supabase documents Auth user export via SQL Editor. Any Auth export may contain password hashes and personal information and must remain encrypted, private and outside GitHub/chat.
+
+Detailed recovery requirements and counts are in [GO_LIVE_PHASE_B20_AUTH_STORAGE_RECOVERY_INVENTORY_2026-11-20.md](./GO_LIVE_PHASE_B20_AUTH_STORAGE_RECOVERY_INVENTORY_2026-11-20.md).
+
+**B20 outcome:** Auth/Storage recovery inventory completed with aggregate counts only; no export or restore was performed. Wave 0 remains NOT PASSED. Production remains NO-GO.
