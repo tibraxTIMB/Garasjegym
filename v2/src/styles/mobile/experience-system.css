@@ -250,3 +250,15 @@ button, [role="button"], summary { touch-action: manipulation; }
 .wod-category-help { display:block; margin:6px 0 12px; line-height:1.45; opacity:.72; }
 .wod-category-early { font-weight:750; }
 .warmup-phase-picker select { background:var(--gg-shell-bg,#0d1015); color:inherit; }
+
+
+/* Shared swipe affordance: gestures are deliberately limited to the sheet handle. */
+.app-more-sheet-grabber {
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.app-more-sheet-grabber:active { cursor: grabbing; }
+@media (prefers-reduced-motion: reduce) {
+  .app-more-sheet, .app-more-backdrop { transition-duration: 0.01ms !important; }
+}
