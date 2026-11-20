@@ -20,5 +20,6 @@ export async function fetchMemberProfile(userId) {
 
 export function isStaff(profile) {
   return profile?.active === true &&
+    profile?.membership_status === 'approved' &&
     (profile.role === 'admin' || profile.role === 'manager')
 }
