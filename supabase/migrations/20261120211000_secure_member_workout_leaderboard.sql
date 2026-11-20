@@ -11,12 +11,13 @@ AS $function$
     COUNT(wl.id)::bigint AS workout_count
   FROM public.profiles p
   LEFT JOIN public.workout_logs wl ON wl.member_id = p.id
-  WHERE p.active IS TRUE
+  WHERE public.is_active_user()
+    AND p.active IS TRUE
     AND p.role = 'member'
     AND p.membership_status = 'approved'
   GROUP BY p.id, p.display_name
   ORDER BY COUNT(wl.id) DESC, COALESCE(NULLIF(BTRIM(p.display_name), ''), 'Medlem') ASC
-  LIMIT 100;
+  LIMIT 500;
 $function$;
 
 REVOKE ALL ON FUNCTION public.get_member_workout_leaderboard() FROM PUBLIC;
