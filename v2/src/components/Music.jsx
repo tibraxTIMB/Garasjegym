@@ -5,7 +5,7 @@ import {
   LoaderCircle, ChevronRight, Check, Settings2
 } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
-import { chooseSpotifyDevice, isUsableSpotifyDevice } from '../lib/spotifyDevices.js'
+import { chooseSpotifyDevice, isUsableSpotifyDevice, spotifyErrorMessage } from '../lib/spotifyDevices.js'
 
 const MusicContext = createContext(null)
 const TOKEN_KEY_PREFIX = 'garasjegym:spotify-token:'
@@ -64,11 +64,7 @@ function trackFromPlayback(data) {
   }
 }
 function shortSpotifyError(data, status, response) {
-  if (status === 429) {
-    const wait = response?.headers?.get('Retry-After')
-    return 'Spotify har sett ei mellombels grense. Prøv igjen' + (wait ? ' om ' + wait + ' sekund.' : ' om litt.')
-  }
-  return data?.error?.message || data?.error_description || 'Spotify-feil (' + status + ').'
+  return spotifyErrorMessage(status, data, response?.headers?.get('Retry-After') || '')
 }
 
 export function MusicProvider({ children, memberId = null }) {
