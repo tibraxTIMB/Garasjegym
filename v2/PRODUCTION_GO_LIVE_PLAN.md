@@ -665,3 +665,14 @@ The routine-grant inventory found one unnecessary grant exception: `public.set_u
 GitHub commit search for all eleven production migration version identifiers returned no matching commits; source lineage remains unresolved. Detailed record: [GO_LIVE_PHASE_B32_CATALOG_CAPTURE_AND_TRIGGER_GRANT_REVIEW_2026-11-20.md](./GO_LIVE_PHASE_B32_CATALOG_CAPTURE_AND_TRIGGER_GRANT_REVIEW_2026-11-20.md).
 
 **B32 outcome:** Read-only catalog capture query pack validated; one unnecessary trigger-function EXECUTE grant exception documented for later rehearsal. No production changes. Wave 0 and production release remain NO-GO.
+
+
+## 32. Phase B33 – effective privileges and future-function default ACL review (2026-11-20)
+
+Fresh production effective-privilege checks: anon has public schema USAGE, but zero effective privileges on existing public tables and sequences; zero SECURITY DEFINER functions executable by anon; one public function executable by anon, the trigger-only invoker `set_updated_at()` already recorded in B32. All 18 public tables have RLS. Existing public tables and the view are postgres-owned.
+
+New finding: `pg_default_acl` for objects created by role `postgres` in schema public grants default EXECUTE on new functions to anon (as well as authenticated/service_role), even though its default table and sequence ACLs exclude anon. This means future postgres-owned public functions can inherit anon EXECUTE unless migrations explicitly revoke it. A supabase_admin default ACL set also contains anon grants, but existing inspected public objects are postgres-owned; do not change platform-owned supabase_admin defaults without confirming execution context and platform dependencies.
+
+Proposed, unapplied narrow fix after restore rehearsal: revoke anon EXECUTE from postgres-owned future public functions via ALTER DEFAULT PRIVILEGES, and revoke PUBLIC/anon/authenticated EXECUTE on trigger-only `set_updated_at()` while preserving postgres/service_role. Keep authenticated RPC grants intact and verify the default ACL and trigger behavior on the restored copy. Detailed record: [GO_LIVE_PHASE_B33_EFFECTIVE_PRIVILEGES_AND_DEFAULT_ACL_REVIEW_2026-11-20.md](./GO_LIVE_PHASE_B33_EFFECTIVE_PRIVILEGES_AND_DEFAULT_ACL_REVIEW_2026-11-20.md).
+
+**B33 outcome:** Existing anon table/sequence access is zero, but future postgres-owned public functions inherit anon EXECUTE by default. A narrow default-ACL correction is prepared, not applied. Production remains NO-GO.
