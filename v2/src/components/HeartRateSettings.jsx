@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import './heart-rate.css'
 import { Activity, Bluetooth, BluetoothConnected, BluetoothOff, HeartPulse, LoaderCircle, ShieldCheck } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { connectHeartRateSensor, disconnectHeartRateSensor, getHeartRateSnapshot, isHeartRateBluetoothAvailable, subscribeHeartRate } from '../lib/heartRate.js'
