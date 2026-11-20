@@ -48,9 +48,9 @@ jobs:
           path: v2/dist
 
   deploy:
-    # One-time user-authorized publication to the shared STURMKOPF preview URL.
-    # Keep workflow_dispatch opt-in for later manual publications.
-    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish_preview) }}
+    # Push events build the preview only. Publishing to the shared Pages URL
+    # requires an explicit manual opt-in from a workflow_dispatch event.
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_preview }}
     permissions:
       pages: write
       id-token: write
