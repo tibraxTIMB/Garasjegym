@@ -129,7 +129,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const [minutes,setMinutes]=useState('20'),[durationSeconds,setDurationSeconds]=useState('0'),[notes,setNotes]=useState(''),[stimulus,setStimulus]=useState('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
  const [rounds,setRounds]=useState('5'),[intervalExerciseCount,setIntervalExerciseCount]=useState('1'),[workSeconds,setWorkSeconds]=useState('60'),[restSeconds,setRestSeconds]=useState('10'),[timeCap,setTimeCap]=useState('20'),[timeCapSeconds,setTimeCapSeconds]=useState('0'),[stationCount,setStationCount]=useState('4'),[stationWork,setStationWork]=useState('45'),[stationTransition,setStationTransition]=useState('15'),[stationRounds,setStationRounds]=useState('3')
  const [ladderStart,setLadderStart]=useState('2'),[ladderStep,setLadderStep]=useState('2'),[ladderDirection,setLadderDirection]=useState('up')
- const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[canPublishWod,setCanPublishWod]=useState(false)
+ const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[canPublishWod,setCanPublishWod]=useState(false),[publishRoleReady,setPublishRoleReady]=useState(false)
  const [prescription,setPrescription]=useState('rx'),[customInstructions,setCustomInstructions]=useState(''),[customUseSets,setCustomUseSets]=useState(false),[combinationMode,setCombinationMode]=useState('For Time')
  const [wizardStep,setWizardStep]=useState(1),[libraryOpen,setLibraryOpen]=useState(false),[rxNotes,setRxNotes]=useState(''),[scaledNotes,setScaledNotes]=useState(''),[intensity,setIntensity]=useState('2')
  const [editingSelectedKey,setEditingSelectedKey]=useState(null),[doseLevelByKey,setDoseLevelByKey]=useState({})
@@ -160,15 +160,17 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   setSelected(hydrated.map((item,index)=>({...item,repsMode:items[index]?.reps_mode||items[index]?.station_reps_mode||'fixed'})));setNotice('WOD-en er opna for redigering. Endringane blir lagra på same WOD.');setLoading(false)
  }
  useEffect(()=>{load();loadWods()},[])
- useEffect(()=>{if(editWodId&&exercises.length)loadWodForEdit(editWodId)},[editWodId,exercises.length])
+ useEffect(()=>{if(editWodId&&exercises.length&&publishRoleReady)loadWodForEdit(editWodId)},[editWodId,exercises.length,publishRoleReady,canPublishWod])
  async function loadWods(){const {data,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,created_at,is_published').order('created_at',{ascending:false});if(e)setError(e.message);else setLibraryWods(data||[])}
  async function load(){
   setLoading(true)
+  setPublishRoleReady(false)
   const {data:{user}}=await supabase.auth.getUser()
   if(user){
    const {data:memberProfile,error:profileError}=await supabase.from('profiles').select('role').eq('id',user.id).maybeSingle()
    setCanPublishWod(!profileError&&['admin','manager'].includes(memberProfile?.role))
   }else setCanPublishWod(false)
+  setPublishRoleReady(true)
   const {data,error:e}=await supabase.from('exercises').select('id,name,category,equipment,video_url,body_area,description,is_rehab,prescription_profiles').eq('is_active',true).order('name')
   if(e)setError(e.message);else setExercises(data||[])
   setLoading(false)
