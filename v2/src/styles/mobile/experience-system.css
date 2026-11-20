@@ -218,3 +218,31 @@ button, [role="button"], summary { touch-action: manipulation; }
   .workout-result-actions { align-items:stretch; }
   .workout-result-actions button { flex:1 1 100%; min-height:48px; }
 }
+
+/* WOD category and two-part warm-up workflow. */
+.wod-category-early,.warmup-phase-picker { display:grid; gap:7px; min-width:0; margin:12px 0; }
+.wod-category-early select,.warmup-phase-picker select { width:100%; min-height:46px; padding:9px 12px; border-radius:10px; }
+.warmup-builder-guide {
+  margin:12px 0; padding:14px; border:1px solid var(--gg-shell-border,rgba(255,255,255,.14));
+  border-left:3px solid var(--gg-shell-accent,#d99a33); border-radius:12px;
+  background:var(--gg-shell-panel,rgba(255,255,255,.035));
+}
+.warmup-builder-guide>strong { display:block; margin-bottom:7px; }
+.warmup-builder-guide p { margin:6px 0 0; line-height:1.45; }
+.warmup-phase-picker { margin:10px 0 0; font-size:12px; font-weight:700; }
+.warmup-execution-guide {
+  display:grid; gap:12px; margin:12px 0 16px; padding:15px;
+  border:1px solid var(--gg-shell-border,rgba(255,255,255,.14)); border-radius:14px;
+  background:var(--gg-shell-panel,rgba(255,255,255,.04));
+}
+.warmup-execution-guide>header { display:grid; gap:5px; }
+.warmup-execution-columns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.warmup-execution-columns>article { display:grid; grid-template-columns:28px minmax(0,1fr); gap:9px; padding:11px; border-radius:11px; background:rgba(255,255,255,.035); }
+.warmup-execution-columns>article>span { display:grid; place-items:center; width:27px; height:27px; border-radius:50%; background:var(--gg-shell-accent,#d99a33); color:#17191c; font-weight:900; }
+.warmup-execution-columns>article strong { display:block; }
+.warmup-execution-columns p { margin:5px 0; font-size:12px; line-height:1.4; opacity:.78; }
+.warmup-execution-columns ul { margin:7px 0 0; padding-left:17px; font-size:12px; line-height:1.5; }
+@media(max-width:560px) {
+ .warmup-execution-columns { grid-template-columns:minmax(0,1fr); }
+ .warmup-execution-columns>article { padding:12px; }
+}
