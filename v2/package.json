@@ -13,8 +13,9 @@
     "test:infotainment": "node --test scripts/infotainment-events.test.mjs",
     "test:wod-complexes": "node --test scripts/wod-complexes.test.mjs",
     "test:wod-import": "node --test scripts/wod-import.test.mjs",
-    "test": "npm run test:wod-order && npm run test:app-base-url && npm run test:infotainment && npm run test:wod-complexes && npm run test:wod-import && npm run test:wod-engine",
-    "test:wod-engine": "node --test scripts/wod-engine.test.mjs"
+    "test": "npm run test:wod-order && npm run test:app-base-url && npm run test:infotainment && npm run test:wod-complexes && npm run test:wod-import && npm run test:wod-engine && npm run test:timer-clock",
+    "test:wod-engine": "node --test scripts/wod-engine.test.mjs",
+    "test:timer-clock": "node --test ../scripts/timer-clock.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
