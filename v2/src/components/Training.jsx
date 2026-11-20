@@ -772,6 +772,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
             if(String(value??'').trim()==='')continue
             if(!Number.isFinite(Number(value))||Number(value)<0)throw new Error(label+' for «'+item.exercise_name+'» må vera null eller eit positivt tal.')
           }
+          if(String(set.height_cm??'').trim()!==''&&(!Number.isFinite(Number(set.height_cm))||Number(set.height_cm)<=0))throw new Error('Høgd for «'+item.exercise_name+'» må vera større enn null centimeter.')
           if(String(set.reps??'').trim()!==''&&!Number.isInteger(Number(set.reps)))throw new Error('Repetisjonar for «'+item.exercise_name+'» må vera eit heiltal.')
         }
       }
@@ -969,7 +970,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
                 <strong>{setIndex+1}</strong>
                 <input aria-label={'Sett '+(setIndex+1)+' repetisjonar'} type="number" min="0" step="1" value={set.reps} onChange={e=>updateSet(items[activeExerciseIndex].key,setIndex,{reps:e.target.value})} placeholder="–"/>
                 <div className="workout-result-measurements">
-                  {items[activeExerciseIndex].uses_height&&<label className="workout-result-measure"><input aria-label={'Sett '+(setIndex+1)+' høgd i centimeter'} type="number" min="0" step="1" value={set.height_cm} onChange={e=>updateSet(items[activeExerciseIndex].key,setIndex,{height_cm:e.target.value})} placeholder="cm"/><span>cm</span></label>}
+                  {items[activeExerciseIndex].uses_height&&<label className="workout-result-measure"><input aria-label={'Sett '+(setIndex+1)+' høgd i centimeter'} type="number" min="1" step="1" value={set.height_cm} onChange={e=>updateSet(items[activeExerciseIndex].key,setIndex,{height_cm:e.target.value})} placeholder="cm"/><span>cm</span></label>}
                   {items[activeExerciseIndex].uses_load&&<label className="workout-result-measure"><input aria-label={'Sett '+(setIndex+1)+' vekt i kilo'} type="number" min="0" step="0.5" value={set.load_kg} onChange={e=>updateSet(items[activeExerciseIndex].key,setIndex,{load_kg:e.target.value})} placeholder="kg"/><span>kg</span></label>}
                 </div>
                 <CheckCircle2 size={22} aria-label="Sett registrert" className={(set.reps!==''||set.load_kg!==''||set.height_cm!==''||set.time_text)?'is-recorded':''}/>
