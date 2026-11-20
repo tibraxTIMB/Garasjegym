@@ -8,8 +8,8 @@ test('parses an 8-bit heart-rate measurement', () => {
 })
 
 test('parses a 16-bit heart-rate measurement', () => {
-  const value = new DataView(Uint8Array.from([0x01, 0x2c, 0x01]).buffer)
-  assert.equal(parseHeartRateMeasurement(value), 300)
+  const value = new DataView(Uint8Array.from([0x01, 0xc8, 0x00]).buffer)
+  assert.equal(parseHeartRateMeasurement(value), 200)
 })
 
 test('rejects malformed and implausible heart-rate measurements', () => {
