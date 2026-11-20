@@ -21,7 +21,7 @@ export default function Overview({profile,onNavigate,onOpenWorkout,onOpenWod=()=
      supabase.from('personal_records').select('id,exercise_name,result,unit,record_date').eq('member_id',user.id).order('record_date',{ascending:false}).limit(100),
      supabase.from('workout_logs').select('id',{count:'exact',head:true}).eq('member_id',user.id),
      supabase.from('pt_wod_assignments').select('id,status,due_date,wods(name,format,duration_minutes)').eq('member_id',user.id).in('status',['assigned','in_progress']).order('due_date',{ascending:true,nullsFirst:false}).limit(5),
-     supabase.from('class_bookings').select('id,status,classes(id,title,starts_at,duration_minutes)').eq('member_id',user.id).eq('status','confirmed').limit(20),
+     supabase.from('class_bookings').select('id,status,classes(id,title,starts_at,duration_minutes,cancelled_at)').eq('member_id',user.id).eq('status','confirmed').limit(100),
      supabase.rpc('get_member_workout_leaderboard')
     ])
     if(!live||requestId!==loadSequence.current)return
@@ -30,7 +30,7 @@ export default function Overview({profile,onNavigate,onOpenWorkout,onOpenWod=()=
     if(p.error)failures.push('Personlege rekordar: '+p.error.message);else setPrs(p.data||[])
     if(count.error)failures.push('Treningsstatistikk: '+count.error.message);else setTotalCount(count.count||0)
     if(a.error)failures.push('PT-tildelingar: '+a.error.message);else setAssignments((a.data||[]).filter(x=>x.wods))
-    if(b.error)failures.push('Gruppetimebooking: '+b.error.message);else setBookings((b.data||[]).filter(x=>x.classes).map(x=>x.classes).sort((x,y)=>new Date(x.starts_at)-new Date(y.starts_at)))
+    if(b.error)failures.push('Gruppetimebooking: '+b.error.message);else setBookings((b.data||[]).filter(x=>x.classes&&!x.classes.cancelled_at&&new Date(x.classes.starts_at)>=new Date()).map(x=>x.classes).sort((x,y)=>new Date(x.starts_at)-new Date(y.starts_at)))
     if(leaderboard.error)failures.push('Treningsrangering: '+leaderboard.error.message)
     else{
      const rows=(leaderboard.data||[]).map(person=>({id:person.member_id,name:person.display_name||'Medlem',count:Number(person.workout_count)||0}))
