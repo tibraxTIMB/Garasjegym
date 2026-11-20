@@ -384,3 +384,20 @@ The existing test migration that adds membership fields defaults `membership_sta
 The complete preflight, migration semantics, test matrix and recovery requirements are recorded in [GO_LIVE_PHASE_B8_MEMBERSHIP_AUTH_MIGRATION_DESIGN_2026-11-20.md](./GO_LIVE_PHASE_B8_MEMBERSHIP_AUTH_MIGRATION_DESIGN_2026-11-20.md).
 
 **B8 outcome:** CI core checks green; membership/Auth migration design prepared for isolated rehearsal. No production or test DDL/DML, Auth changes, Edge Function changes or deployments were performed. Backup/PITR evidence and a successful isolated restore rehearsal remain hard blockers. Release remains **NO-GO**.
+
+
+## 8. Phase B9 – class booking/waitlist production migration design (2026-11-20)
+
+Fresh read-only production inventory:
+
+- 1 class and 1 booking (status confirmed).
+- 0 duplicate active confirmed/pending member/class pairs.
+- Production `class_bookings` has only 6 columns and no attendance fields.
+- Production `classes` has 15 columns but lacks the test schema's `published` and `instructor_id` fields.
+- Existing production unique index is `class_bookings_one_active`, partial on confirmed/pending. It must be preserved until a replacement including waitlist is proven.
+
+Review of the test class booking migrations identified adaptation requirements: explicit publication and instructor ownership mapping; attendance schema/RLS; safe transition from the differently named production unique index; one serialized capacity guard; deterministic waitlist promotion; role-isolated attendance and booking access; and concurrency tests for last-seat booking and cancellation/promotion races. The test migrations cannot be copied unchanged.
+
+Full preflight, schema sequencing, acceptance tests and execution boundary are recorded in [GO_LIVE_PHASE_B9_CLASS_BOOKING_MIGRATION_DESIGN_2026-11-20.md](./GO_LIVE_PHASE_B9_CLASS_BOOKING_MIGRATION_DESIGN_2026-11-20.md).
+
+**B9 outcome:** Production data is currently small and no active duplicate was found, but production schema is materially behind the app/test contract. No SQL or deployment changes were made. Backup/PITR and isolated restore remain hard blockers. Release remains **NO-GO**.
