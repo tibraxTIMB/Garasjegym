@@ -166,7 +166,9 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const effectiveRestSeconds = Math.max(0, Number(restSeconds) || 0)
   const cycle = effectiveWorkSeconds + effectiveRestSeconds
   const intervalExerciseCount = Math.max(1, exerciseList.length || Number(schema?.interval_exercise_count) || 1)
-   const intervalTotal = cycle * Math.max(1, Number(rounds) || 1) * intervalExerciseCount
+   const intervalSlots = Math.max(1, Number(rounds) || 1) * intervalExerciseCount
+   // A finished interval workout must not wait through a rest period after its final work block.
+   const intervalTotal = effectiveWorkSeconds * intervalSlots + effectiveRestSeconds * Math.max(0, intervalSlots - 1)
    const intervalExerciseIndex = Math.floor(elapsed / cycle) % intervalExerciseCount
    const currentIntervalExercise = exerciseList[intervalExerciseIndex]?.exercise_name || exerciseList[intervalExerciseIndex]?.name || activeExercise
   const currentEmomRound = Math.floor(elapsed/emomCycle)+1
