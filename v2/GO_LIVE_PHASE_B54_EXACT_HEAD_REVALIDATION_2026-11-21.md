@@ -64,3 +64,12 @@ A follow-up search of GitHub commit messages for each of the 11 installed produc
 This phase used read-only GitHub metadata and read-only SQL/catalog queries. No production or TEST schema/data/Auth changes, no backup exports, no secrets access, no Pages publication, no PR, no merge and no deployment occurred.
 
 **B54 result:** The TEST-only `member_rank` change remains isolated and production remains unchanged. Exact-head CI is unverified, branch integration remains unsafe, and Wave 0 is not passed. **NO-GO remains in force.**
+
+
+## 7. Additional release-path finding
+
+The current Pages workflow builds with the TEST Supabase URL and TEST publishable key. Its manual `publish_preview=true` gate publishes that TEST-connected bundle to the shared GitHub Pages address; it is not a production deployment. It must not be described or used as production GO LIVE.
+
+The release artifact checker explicitly rejects the production project reference and accepts only the TEST project reference. This is a useful non-interference guard for previews, but it also means the current artifact pipeline cannot produce a production-connected release artifact. A separate, reviewed production build/deployment path is required, with production configuration supplied only through protected environment secrets and a distinct approval gate.
+
+The established CI workflows run `npm run check:migrations` and `npm test`. The new production migration preflight is represented by unit tests inside `npm test`, but `npm run check:production-migrations` is not run as a CI step. Its live-folder check is expected to fail until TEST-only migration files are moved into a separate TEST migration path. Thus a green existing CI run would not, by itself, prove production migration readiness.
