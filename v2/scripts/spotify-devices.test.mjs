@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { chooseSpotifyDevice, isUsableSpotifyDevice } from '../src/lib/spotifyDevices.js'
+import { chooseSpotifyDevice, isUsableSpotifyDevice, spotifyErrorMessage } from '../src/lib/spotifyDevices.js'
 
 test('Spotify devices include tablets, computers and speakers', () => {
   for (const type of ['Smartphone','Tablet','Computer','Speaker','TV']) {
@@ -29,4 +29,14 @@ test('Spotify device selection falls back to active, then first available device
   ],'missing'),'active')
   assert.equal(chooseSpotifyDevice([{id:'first',is_restricted:false}],'missing'),'first')
   assert.equal(chooseSpotifyDevice([], 'missing'),'')
+})
+
+
+test('Spotify API errors explain common recovery steps', () => {
+  assert.match(spotifyErrorMessage(401), /Kople frå og til/)
+  assert.match(spotifyErrorMessage(403), /Premium/)
+  assert.match(spotifyErrorMessage(403, {error:{message:'Premium required'}}), /Premium-abonnement/)
+  assert.match(spotifyErrorMessage(404), /oppdater einingslista/)
+  assert.match(spotifyErrorMessage(429, {}, '12'), /12 sekund/)
+  assert.equal(spotifyErrorMessage(500, {error:{message:'Serverfeil'}}), 'Serverfeil')
 })
