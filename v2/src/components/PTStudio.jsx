@@ -108,7 +108,7 @@ export default function PTStudio({ profile, coachMode=false, onLaunchWorkout, in
    (()=>{let q=supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,is_published,is_archived').eq('is_archived',false).order('name');if(!canManageClients)q=q.eq('is_published',true);return q})()
   ])
   const labels=['medlemslista','innmeldingar','mål','programmalbibliotek','kundeprogram','programøkter','statussjekkar','WOD-bibliotek']
-  const loadErrors=results.flatMap((result,index)=>result.error&&index!==0?[labels[index]+': '+result.error.message]:[])
+  const loadErrors=results.flatMap((result,index)=>result.error&&!(index===0&&!canManageClients)?[labels[index]+': '+result.error.message]:[])
   if(loadErrors.length)setError(loadErrors.join(' · '))
   if(results[0].data){
    setMembers(results[0].data)
@@ -119,7 +119,7 @@ export default function PTStudio({ profile, coachMode=false, onLaunchWorkout, in
   if(canManageClients&&initialClientId)setClientId(initialClientId)
   setLoading(false)
  }
- useEffect(()=>{load()},[])
+ useEffect(()=>{load()},[canManageClients])
  useEffect(()=>{if(!canManageClients)setClientId(profile.id)},[canManageClients,profile.id])
 
  async function run(action) {
