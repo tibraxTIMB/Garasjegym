@@ -1,4 +1,4 @@
-# GarasjeGym 2.0 – STURMKOPF
+# GarasjeGym 2.0 – STURMKOPF FEUER 1.1
 
 Dette er ei separat utviklingsutgåve. GarasjeGym 1.8.16 og produksjonsdata skal vera urørte fram til 2.0 er testa og uttrykkeleg godkjend.
 
