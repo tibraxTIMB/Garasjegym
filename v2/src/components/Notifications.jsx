@@ -21,6 +21,8 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
  const [busy,setBusy]=useState('')
  const [showAll,setShowAll]=useState(false)
  const [hasMore,setHasMore]=useState(false)
+ const [loadingMore,setLoadingMore]=useState(false)
+ const loadingMoreRef=useRef(false)
  const loadSequence=useRef(0)
  const urgent=items.filter(x=>x.priority==='urgent'&&x.status==='open'&&!x.archived_at&&!isExpired(x)).length
  const actionItems=items.filter(x=>x.requires_action&&x.status==='open'&&!x.archived_at&&!isExpired(x))
@@ -34,14 +36,17 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
   return x.status==='open'&&(!x.requires_ack||!x.acknowledged_at)
  }).slice(0,showAll?items.length:30),[items,tab,showAll])
  async function load(append=false){
+  if(append&&loadingMoreRef.current)return
+  if(append){loadingMoreRef.current=true;setLoadingMore(true)}
   const requestId=++loadSequence.current
+  const offset=append?items.length:0
   try{
    const {data:{user},error:authError}=await supabase.auth.getUser()
    if(authError)throw authError
    if(!user){if(requestId===loadSequence.current){setItems([]);setError('Logg inn på nytt for å sjå varslingane.')}return}
    const {data,error:e}=await supabase.from('notifications')
     .select('id,title,body,category,href,is_read,created_at,priority,requires_ack,requires_action,status,read_at,acknowledged_at,resolved_at,expires_at,archived_at')
-    .eq('recipient_id',user.id).is('archived_at',null).order('created_at',{ascending:false}).range(append?items.length:0,(append?items.length:0)+99)
+    .eq('recipient_id',user.id).is('archived_at',null).order('created_at',{ascending:false}).range(offset,offset+99)
    if(e)throw e
    if(requestId!==loadSequence.current)return
    const rows=data||[]
@@ -49,7 +54,10 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
    setItems(current=>append?[...current,...rows.filter(row=>!current.some(existing=>existing.id===row.id))]:rows)
    setError('')
   }catch(loadError){if(requestId===loadSequence.current)setError(loadError?.message||'Varslingane kunne ikkje hentast.')}
-  finally{if(requestId===loadSequence.current)setLoading(false)}
+  finally{
+   if(requestId===loadSequence.current)setLoading(false)
+   if(append){loadingMoreRef.current=false;setLoadingMore(false)}
+  }
  }
  useEffect(()=>{
   let live=true
@@ -132,7 +140,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
    <div className="notification-summary">{urgent>0&&<span className="urgent"><AlertTriangle size={13}/>{urgent} hastar</span>}<span><ClipboardCheck size={13}/>{ackItems.length} må stadfestast</span><span><Clock3 size={13}/>{actionItems.length} opne saker</span></div>
    <nav className="notification-tabs">{[['active','Aktive'],['action','Handling'],['ack','Kvittering'],['info','Info'],['history','Historikk']].map(([id,label])=><button type="button" key={id} className={tab===id?'selected':''} onClick={()=>setTab(id)}>{label}{id==='action'&&actionItems.length>0?' '+actionItems.length:id==='ack'&&ackItems.length>0?' '+ackItems.length:''}</button>)}</nav>
    <div className="notification-list">{loading?<div className="empty-state">Hentar varsel …</div>:visible.length?visible.map(renderItem):<div className="empty-state"><CheckCheck size={22}/><strong>Alt er ryddig</strong><span>Ingen varsel i denne kategorien.</span></div>}</div>
-   <footer><span>{visible.length} viste · {unread} uleste</span><button type="button" onClick={()=>{setShowAll(v=>!v);if(!showAll)setTab('active')}}>{showAll?'Vis færre':'Vis fleire'}</button>{showAll&&hasMore&&<button type="button" onClick={()=>load(true)}>Hent eldre varsel</button>}<button type="button" onClick={()=>load(false)}><RefreshCw size={12}/> Oppdater</button></footer>
+   <footer><span>{visible.length} viste · {unread} uleste</span><button type="button" onClick={()=>{setShowAll(v=>!v);if(!showAll)setTab('active')}}>{showAll?'Vis færre':'Vis fleire'}</button>{showAll&&hasMore&&<button type="button" disabled={loadingMore} onClick={()=>load(true)}>{loadingMore?'Hentar …':'Hent eldre varsel'}</button>}<button type="button" onClick={()=>load(false)}><RefreshCw size={12}/> Oppdater</button></footer>
   </section></>}
  </div>
 }
