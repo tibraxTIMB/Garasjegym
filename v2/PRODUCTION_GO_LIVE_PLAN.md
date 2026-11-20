@@ -685,3 +685,12 @@ Fresh production RLS inventory: 49 policies; all target `authenticated`; none ta
 Verified live `pt_session_capacity` has `security_invoker=true`; anon has no private schema usage, helper EXECUTE or view SELECT; authenticated has the intended access. The view exposes only aggregate session capacity counts. Detailed record: [GO_LIVE_PHASE_B34_RLS_AUDIENCE_AND_PT_VIEW_VERIFICATION_2026-11-20.md](./GO_LIVE_PHASE_B34_RLS_AUDIENCE_AND_PT_VIEW_VERIFICATION_2026-11-20.md).
 
 **B34 outcome:** Policy audience and PT aggregate view boundary verified; no new anonymous policy exposure found. No production changes. Production remains NO-GO pending Wave 0 and role-isolation rehearsal.
+
+
+## 34. Phase B35 – production Edge Function source recovery and compatibility review (2026-11-20)
+
+Recovered the deployed production `garasjegym-music` v2 `index.ts` source, previously absent from STURMKOPF, and archived it at `v2/supabase/functions/garasjegym-music/index.ts`. A fresh comparison confirms the repository copy matches the deployed production source byte-for-byte (3,200 characters); Supabase-reported SHA-256 is `3e369166c2c425c20c0e6af8e49adeaeef96c6e192479102f09a6acde1850e69`. No secret values were read or committed. Production function has `verify_jwt=false` but manually validates the Bearer token with Supabase Auth, then checks the caller's active profile. TEST-only `admin-create-user` and `admin-delete-user` are not deployed in production and must not be promoted as-is.
+
+Release compatibility items: update music function membership check to require approved status when Wave 1 adds `membership_status`; review wildcard CORS and restrict to supported app origins once hosting origins are final; retain manual JWT validation while `verify_jwt=false`; review provider error detail exposure; securely verify required environment secret names/values without exposing them. No Edge Function change or deployment was made. Detailed record: [GO_LIVE_PHASE_B35_EDGE_FUNCTION_SOURCE_RECOVERY_AND_REVIEW_2026-11-20.md](./GO_LIVE_PHASE_B35_EDGE_FUNCTION_SOURCE_RECOVERY_AND_REVIEW_2026-11-20.md).
+
+**B35 outcome:** Production music Edge Function source archived byte-for-byte and reviewed. Membership/CORS refinements and secure secret recovery remain release gates. Production remains NO-GO.
