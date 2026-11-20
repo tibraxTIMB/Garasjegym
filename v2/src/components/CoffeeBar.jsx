@@ -49,7 +49,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
      ?supabase.from('coffee_products').select('id,name,description,price,is_active,sort_order,category,option_groups,prep_minutes,image_url').order('sort_order').order('name')
      :supabase.from('coffee_products').select('id,name,description,price,is_active,sort_order,category,option_groups,prep_minutes,image_url').eq('is_active',true).order('sort_order').order('name'),
     orderQuery,
-    supabase.from('coffee_orders').select('id,member_id,status,total,coffee_order_items(product_name,quantity)').limit(1000),
+    supabase.rpc('get_coffee_stats'),
     supabase.from('coffee_product_reviews').select('id,order_item_id,order_id,member_id,product_id,product_name,rating,comment,created_at,profiles:profiles!coffee_product_reviews_member_id_fkey(display_name)').order('created_at',{ascending:false}).limit(300),
     supabase.from('coffee_settings').select('is_open,closed_message').eq('id',true).maybeSingle(),
     staff?supabase.from('notifications').select('id,href,is_read,created_at').eq('recipient_id',user.id).like('href','coffee-review:%').is('archived_at',null):Promise.resolve({data:[],error:null})
@@ -62,13 +62,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
    const byItem=new Map(reviewRows.map(review=>[review.order_item_id,review]))
    const allOrders=(o.data||[]).map(order=>({...order,coffee_order_items:(order.coffee_order_items||[]).map(item=>({...item,review:byItem.get(item.id)||null}))}))
    setOrders(allOrders.filter(row=>orderView==='archive'?!!row.archived_at:!row.archived_at&&(orderView==='all'?true:orderView==='completed'?['collected','cancelled'].includes(row.status):!['collected','cancelled'].includes(row.status))))
-   if(!stats.error){
-    const rows=(stats.data||[]).filter(row=>staff||row.member_id===user.id)
-    const qty=row=>(row.coffee_order_items||[]).reduce((n,item)=>n+Number(item.quantity||0),0)
-    const popularMap={}
-    rows.filter(row=>row.status!=='cancelled').forEach(row=>(row.coffee_order_items||[]).forEach(item=>{const name=item.product_name||'Ukjend kaffi';popularMap[name]=(popularMap[name]||0)+Number(item.quantity||0)}))
-    setCoffeeStats({bought:rows.filter(row=>row.status==='collected').reduce((n,row)=>n+qty(row),0),made:rows.filter(row=>['ready','collected'].includes(row.status)).reduce((n,row)=>n+qty(row),0),sold:rows.filter(row=>row.status==='collected').reduce((n,row)=>n+qty(row),0),revenue:rows.filter(row=>row.status==='collected').reduce((n,row)=>n+Number(row.total||0),0),popular:Object.entries(popularMap).map(([name,quantity])=>({name,quantity})).sort((a,b)=>b.quantity-a.quantity)})
-   }
+   if(!stats.error&&stats.data)setCoffeeStats(stats.data)
    if(!s.error&&s.data)setSettings(s.data)
    if(staff&&!n.error)setReviewNotifications(n.data||[])
    setLoading(false)
