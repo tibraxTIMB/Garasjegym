@@ -191,11 +191,11 @@ export default function Infotainment({onExit,timerSnapshot=null}){
    <div><span className="infotainment-kicker">TRENING · FELLESSKAP · UTVIKLING</span><h1>Velkomen til GarasjeGym</h1><p>Oversikt over aktivitetane i garasjen, musikk og timer.</p></div>
    <div className="infotainment-date"><span>{dayLabel}</span><strong>{timeLabel.slice(0,5)}</strong></div>
   </section>
-  <nav className="infotainment-tabs" role="tablist" aria-label="Infotainment-faner">
-   <button type="button" role="tab" aria-selected={activeTab==='oversikt'} className={activeTab==='oversikt'?'selected':''} onClick={()=>setActiveTab('oversikt')}><MonitorUp size={17}/> Oversikt</button>
-   <button type="button" role="tab" aria-selected={activeTab==='kalender'} className={activeTab==='kalender'?'selected':''} onClick={()=>setActiveTab('kalender')}><CalendarDays size={17}/> Kalender</button>
-   <button type="button" role="tab" aria-selected={activeTab==='musikk'} className={activeTab==='musikk'?'selected':''} onClick={()=>setActiveTab('musikk')}><Music2 size={17}/> Spotify</button>
-   <button type="button" role="tab" aria-selected={activeTab==='timer'} className={activeTab==='timer'?'selected':''} onClick={()=>setActiveTab('timer')}><TimerReset size={17}/> Timer</button>
+  <nav className="infotainment-tabs" aria-label="Infotainment-faner">
+   <button type="button" aria-pressed={activeTab==='oversikt'} className={activeTab==='oversikt'?'selected':''} onClick={()=>setActiveTab('oversikt')}><MonitorUp size={17}/> Oversikt</button>
+   <button type="button" aria-pressed={activeTab==='kalender'} className={activeTab==='kalender'?'selected':''} onClick={()=>setActiveTab('kalender')}><CalendarDays size={17}/> Kalender</button>
+   <button type="button" aria-pressed={activeTab==='musikk'} className={activeTab==='musikk'?'selected':''} onClick={()=>setActiveTab('musikk')}><Music2 size={17}/> Spotify</button>
+   <button type="button" aria-pressed={activeTab==='timer'} className={activeTab==='timer'?'selected':''} onClick={()=>setActiveTab('timer')}><TimerReset size={17}/> Timer</button>
   </nav>
   <div className={'infotainment-grid'+(activeTab!=='oversikt'?' is-focused-tab':'')}>
    {(activeTab==='oversikt'||activeTab==='kalender')&&<section className="infotainment-panel infotainment-calendar">
