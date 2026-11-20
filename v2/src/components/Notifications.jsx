@@ -89,7 +89,10 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
  async function resolve(item){return patch(item.id,{is_read:true,read_at:new Date().toISOString(),status:'resolved',resolved_at:new Date().toISOString()})}
  async function archive(item){return patch(item.id,{archived_at:new Date().toISOString(),status:item.status==='open'?'dismissed':item.status})}
  async function openItem(item){
-  if(!item.is_read){await markRead(item)}
+  if(!item.is_read){
+   const marked=await markRead(item)
+   if(!marked)return
+  }
   onNavigate(item)
   if(!compact)setOpen(false)
  }
