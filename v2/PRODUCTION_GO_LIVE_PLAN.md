@@ -790,3 +790,10 @@ CI passed on code/test commit `47463c01088039b095023594220abbba584a4029` and sub
 Added `v2/supabase/preflight/wave1_membership_auth_smoke_matrix.md` with isolated admin, two existing members, pending, rejected, inactive and manager test identities. Defines positive/negative expectations for Auth session vs app access, own/other profile, WOD/exercise, workout/PR, class/PT bookings, admin approval, role/active changes, manager self/privilege boundaries, RPC helper behavior and music Edge Function. Tests must use separate JWTs through PostgREST/RPC, not SQL as postgres. Evidence must exclude credentials/PII. Detailed record: [GO_LIVE_PHASE_B47_WAVE1_ISOLATED_SMOKE_MATRIX_2026-11-20.md](./GO_LIVE_PHASE_B47_WAVE1_ISOLATED_SMOKE_MATRIX_2026-11-20.md).
 
 Matrix is prepared only; no users or SQL were run. Wave 0 restore is required before execution. Production remains NO-GO.
+
+
+## 47. Phase B48 – Wave 0 owner evidence handoff (2026-11-20)
+
+Added `v2/supabase/preflight/wave0_owner_evidence_template.md` covering encrypted source backup, CLI/client versions, Auth user/identity/password-hash recovery, custom Auth trigger, Storage snapshot, project Auth/SMTP/redirect/JWT settings, isolated restore, row/UUID/role invariants, role/RLS functional smoke tests and owner approval of exact Wave 1 candidate hash. It prohibits secrets, credentials, tokens, email addresses, UUIDs and password hashes in the record; raw backup remains encrypted and outside GitHub. Full handoff: [GO_LIVE_PHASE_B48_WAVE0_OWNER_EVIDENCE_HANDOFF_2026-11-20.md](./GO_LIVE_PHASE_B48_WAVE0_OWNER_EVIDENCE_HANDOFF_2026-11-20.md).
+
+The owner must perform the backup/restore on a trusted workstation or already-approved isolated target; connected tools cannot securely run the local Docker/CLI process or manage encrypted copies. Official Supabase Auth migration guidance supports moving users, identities and password hashes with a full backup or SQL export/import; different JWT secret invalidates existing tokens, so fresh sign-in must be tested. No backup/restore was performed. Wave 0 remains blocked; production NO-GO.
