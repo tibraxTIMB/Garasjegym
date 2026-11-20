@@ -53,7 +53,7 @@ function clearActiveSensor({ disconnect = false } = {}) {
     activeCharacteristic.removeEventListener('characteristicvaluechanged', activeMeasurementHandler)
   }
   if (activeCharacteristic) {
-    try { activeCharacteristic.stopNotifications() } catch { /* Device may already be disconnected. */ }
+    try { activeCharacteristic.stopNotifications()?.catch(() => {}) } catch { /* Device may already be disconnected. */ }
   }
   if (activeDevice) {
     activeDevice.removeEventListener('gattserverdisconnected', handleDisconnected)
