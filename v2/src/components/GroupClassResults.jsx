@@ -1,43 +1,69 @@
-import {useEffect,useState} from 'react'
+import {useEffect,useRef,useState} from 'react'
 import {CheckCircle2,ClipboardList,LoaderCircle,Play,RefreshCw} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 
 export default function GroupClassResults({onLaunchWod=()=>{}}){
  const [rows,setRows]=useState([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState(''),[hasMore,setHasMore]=useState(false)
+ const loadSequence=useRef(0),loadingMore=useRef(false)
  async function load(append=false){
+  if(loadingMore.current&&!append)return
+  if(append&&loadingMore.current)return
+  if(append)loadingMore.current=true
+  const requestId=++loadSequence.current
+  const offset=append?rows.length:0
   setLoading(true);setError('')
-  const {data:{user}}=await supabase.auth.getUser()
-  if(!user){setLoading(false);return}
-  const {data:sessions,error:sessionError}=await supabase.from('class_live_sessions')
-   .select('id,class_id,session_title,ended_at,wod_id,wod_ids,results_published_at')
-   .eq('status','finished').not('results_published_at','is',null)
-   .order('ended_at',{ascending:false}).range(append?rows.length:0,(append?rows.length:0)+29)
-  if(sessionError){setError(sessionError.message);setLoading(false);return}
-  const sessionRows=sessions||[]
-  setHasMore(sessionRows.length===30)
-  const ids=[...new Set(sessionRows.flatMap(s=>Array.isArray(s.wod_ids)&&s.wod_ids.length?s.wod_ids:(s.wod_id?[s.wod_id]:[])))]
-  if(!ids.length){setRows([]);setLoading(false);return}
-  const [wods,logs,done]=await Promise.all([
-   supabase.from('wods').select('id,name,format,category,duration_minutes').in('id',ids),
-   supabase.from('workout_logs').select('id,class_live_session_id,source_wod_id,title,result_data').eq('member_id',user.id).in('class_live_session_id',sessionRows.map(s=>s.id)),
-   supabase.from('class_session_wod_completions').select('session_id,wod_id').eq('member_id',user.id).in('session_id',sessionRows.map(s=>s.id))
-  ])
-  if(wods.error||logs.error||done.error){setError(wods.error?.message||logs.error?.message||done.error?.message);setLoading(false);return}
-  const wodMap=new Map((wods.data||[]).map(w=>[w.id,w]))
-  const completedLogs=new Set((logs.data||[]).flatMap(x=>[...new Set([x.source_wod_id,...(Array.isArray(x.result_data?.wod_ids)?x.result_data.wod_ids:[])].filter(Boolean))].map(wodId=>x.class_live_session_id+'|'+wodId)))
-  const completedWarmups=new Set((done.data||[]).map(x=>x.session_id+'|'+x.wod_id))
-  const mapped=sessionRows.map(session=>({...session,wods:(Array.isArray(session.wod_ids)&&session.wod_ids.length?session.wod_ids:(session.wod_id?[session.wod_id]:[])).map(id=>wodMap.get(id)).filter(Boolean).map(wod=>({...wod,done:wod.category==='warmup'?completedWarmups.has(session.id+'|'+wod.id):completedLogs.has(session.id+'|'+wod.id)}))})).filter(s=>s.wods.length)
-  setRows(current=>append?[...current,...mapped.filter(row=>!current.some(existing=>existing.id===row.id))]:mapped)
-  setLoading(false)
+  try{
+   const {data:{user},error:authError}=await supabase.auth.getUser()
+   if(authError)throw authError
+   if(!user)throw new Error('Logg inn for å sjå gruppetime-resultata.')
+   const {data:sessions,error:sessionError}=await supabase.from('class_live_sessions')
+    .select('id,class_id,session_title,ended_at,wod_id,wod_ids,results_published_at')
+    .eq('status','finished').not('results_published_at','is',null)
+    .order('ended_at',{ascending:false}).range(offset,offset+29)
+   if(sessionError)throw sessionError
+   const sessionRows=sessions||[]
+   if(requestId!==loadSequence.current)return
+   setHasMore(sessionRows.length===30)
+   const ids=[...new Set(sessionRows.flatMap(s=>Array.isArray(s.wod_ids)&&s.wod_ids.length?s.wod_ids:(s.wod_id?[s.wod_id]:[])))]
+   if(!ids.length){
+    if(!append)setRows([])
+    return
+   }
+   const sessionIds=sessionRows.map(s=>s.id)
+   const [wods,logs,done]=await Promise.all([
+    supabase.from('wods').select('id,name,format,category,duration_minutes').in('id',ids),
+    supabase.from('workout_logs').select('id,class_live_session_id,source_wod_id,title,result_data').eq('member_id',user.id).in('class_live_session_id',sessionIds),
+    supabase.from('class_session_wod_completions').select('session_id,wod_id').eq('member_id',user.id).in('session_id',sessionIds)
+   ])
+   if(wods.error||logs.error||done.error)throw new Error(wods.error?.message||logs.error?.message||done.error?.message)
+   if(requestId!==loadSequence.current)return
+   const wodMap=new Map((wods.data||[]).map(w=>[w.id,w]))
+   const completedLogs=new Set((logs.data||[]).flatMap(x=>[...new Set([x.source_wod_id,...(Array.isArray(x.result_data?.wod_ids)?x.result_data.wod_ids:[])].filter(Boolean))].map(wodId=>x.class_live_session_id+'|'+wodId)))
+   const completedWarmups=new Set((done.data||[]).map(x=>x.session_id+'|'+x.wod_id))
+   const mapped=sessionRows.map(session=>({...session,wods:(Array.isArray(session.wod_ids)&&session.wod_ids.length?session.wod_ids:(session.wod_id?[session.wod_id]:[])).map(id=>wodMap.get(id)).filter(Boolean).map(wod=>({...wod,done:wod.category==='warmup'?completedWarmups.has(session.id+'|'+wod.id):completedLogs.has(session.id+'|'+wod.id)}))})).filter(s=>s.wods.length)
+   setRows(current=>append?[...current,...mapped.filter(row=>!current.some(existing=>existing.id===row.id))]:mapped)
+  }catch(loadError){
+   if(requestId===loadSequence.current)setError(loadError?.message||'Kunne ikkje hente gruppetime-resultat.')
+  }finally{
+   if(requestId===loadSequence.current)setLoading(false)
+   if(append)loadingMore.current=false
+  }
  }
- useEffect(()=>{load();const t=setInterval(load,60000);return()=>clearInterval(t)},[])
+ useEffect(()=>{load();const t=setInterval(()=>load(false),60000);return()=>{clearInterval(t);loadSequence.current++}},[])
  async function markWarmup(session,wod){
-  setBusy(session.id+'|'+wod.id);setError('');setNotice('')
-  const {data:{user}}=await supabase.auth.getUser()
-  const {error:e}=await supabase.from('class_session_wod_completions').insert({session_id:session.id,wod_id:wod.id,member_id:user.id})
-  if(e&&e.code!=='23505')setError(e.message)
-  else{setNotice('Oppvarminga er markert som gjennomført.');await load()}
-  setBusy('')
+  const key=session.id+'|'+wod.id
+  if(busy)return
+  setBusy(key);setError('');setNotice('')
+  try{
+   const {data:{user},error:authError}=await supabase.auth.getUser()
+   if(authError)throw authError
+   if(!user)throw new Error('Logg inn for å registrere oppvarminga.')
+   const {error:e}=await supabase.from('class_session_wod_completions').insert({session_id:session.id,wod_id:wod.id,member_id:user.id})
+   if(e&&e.code!=='23505')throw e
+   setNotice('Oppvarminga er markert som gjennomført.')
+   await load(false)
+  }catch(markError){setError(markError?.message||'Kunne ikkje registrere oppvarminga.')}
+  finally{setBusy('')}
  }
  if(loading)return <div className="training-state"><LoaderCircle className="spin"/> Hentar gruppetime-resultat …</div>
  return <section className="engine-section group-class-results">
