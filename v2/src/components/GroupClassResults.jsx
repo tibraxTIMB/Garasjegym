@@ -3,29 +3,31 @@ import {CheckCircle2,ClipboardList,LoaderCircle,Play,RefreshCw} from 'lucide-rea
 import {supabase} from '../lib/supabase.js'
 
 export default function GroupClassResults({onLaunchWod=()=>{}}){
- const [rows,setRows]=useState([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
- async function load(){
+ const [rows,setRows]=useState([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState(''),[hasMore,setHasMore]=useState(false)
+ async function load(append=false){
   setLoading(true);setError('')
   const {data:{user}}=await supabase.auth.getUser()
   if(!user){setLoading(false);return}
   const {data:sessions,error:sessionError}=await supabase.from('class_live_sessions')
    .select('id,class_id,session_title,ended_at,wod_id,wod_ids,results_published_at')
    .eq('status','finished').not('results_published_at','is',null)
-   .order('ended_at',{ascending:false}).limit(30)
+   .order('ended_at',{ascending:false}).range(append?rows.length:0,(append?rows.length:0)+29)
   if(sessionError){setError(sessionError.message);setLoading(false);return}
   const sessionRows=sessions||[]
+  setHasMore(sessionRows.length===30)
   const ids=[...new Set(sessionRows.flatMap(s=>Array.isArray(s.wod_ids)&&s.wod_ids.length?s.wod_ids:(s.wod_id?[s.wod_id]:[])))]
   if(!ids.length){setRows([]);setLoading(false);return}
   const [wods,logs,done]=await Promise.all([
    supabase.from('wods').select('id,name,format,category,duration_minutes').in('id',ids),
-   supabase.from('workout_logs').select('id,class_live_session_id,source_wod_id,title').eq('member_id',user.id).in('class_live_session_id',sessionRows.map(s=>s.id)),
+   supabase.from('workout_logs').select('id,class_live_session_id,source_wod_id,title,result_data').eq('member_id',user.id).in('class_live_session_id',sessionRows.map(s=>s.id)),
    supabase.from('class_session_wod_completions').select('session_id,wod_id').eq('member_id',user.id).in('session_id',sessionRows.map(s=>s.id))
   ])
   if(wods.error||logs.error||done.error){setError(wods.error?.message||logs.error?.message||done.error?.message);setLoading(false);return}
   const wodMap=new Map((wods.data||[]).map(w=>[w.id,w]))
-  const completedLogs=new Set((logs.data||[]).map(x=>x.class_live_session_id+'|'+x.source_wod_id))
+  const completedLogs=new Set((logs.data||[]).flatMap(x=>[...new Set([x.source_wod_id,...(Array.isArray(x.result_data?.wod_ids)?x.result_data.wod_ids:[])].filter(Boolean))].map(wodId=>x.class_live_session_id+'|'+wodId)))
   const completedWarmups=new Set((done.data||[]).map(x=>x.session_id+'|'+x.wod_id))
-  setRows(sessionRows.map(session=>({...session,wods:(Array.isArray(session.wod_ids)&&session.wod_ids.length?session.wod_ids:(session.wod_id?[session.wod_id]:[])).map(id=>wodMap.get(id)).filter(Boolean).map(wod=>({...wod,done:wod.category==='warmup'?completedWarmups.has(session.id+'|'+wod.id):completedLogs.has(session.id+'|'+wod.id)}))})).filter(s=>s.wods.length))
+  const mapped=sessionRows.map(session=>({...session,wods:(Array.isArray(session.wod_ids)&&session.wod_ids.length?session.wod_ids:(session.wod_id?[session.wod_id]:[])).map(id=>wodMap.get(id)).filter(Boolean).map(wod=>({...wod,done:wod.category==='warmup'?completedWarmups.has(session.id+'|'+wod.id):completedLogs.has(session.id+'|'+wod.id)}))})).filter(s=>s.wods.length)
+  setRows(current=>append?[...current,...mapped.filter(row=>!current.some(existing=>existing.id===row.id))]:mapped)
   setLoading(false)
  }
  useEffect(()=>{load();const t=setInterval(load,60000);return()=>clearInterval(t)},[])
@@ -50,5 +52,6 @@ export default function GroupClassResults({onLaunchWod=()=>{}}){
       :<button type="button" className="primary-button" onClick={()=>onLaunchWod(wod.id,null,session.id)}><Play size={14}/> Registrer resultat</button>}
    </div>)}
   </article>)}
+  {hasMore&&<div className="group-results-more"><button type="button" className="secondary-button" onClick={()=>load(true)}>Hent eldre gruppetimer</button></div>}
  </section>
 }
