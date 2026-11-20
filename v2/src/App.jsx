@@ -360,14 +360,16 @@ export default function App() {
             <Notifications onNavigate={(item) => {
               const href=item.href||''
               if(href.startsWith('pt-request:')){setFocusPTRequestId(href.slice(11));setFocusPTPanel('forespurnader');setPTStudioWorkspace('studio');setPTStudioInitialTab('pt-timar');navigateTo('pt-studio')}
-              else if(href.startsWith('pt-client:')){setFocusPTClientId(href.slice(10));setFocusPTPanel('dialog');setPTStudioWorkspace('studio');setPTStudioInitialTab('pt-timar');navigateTo('pt-studio')}
+               else if(href.startsWith('pt-checkin:')){setFocusPTRequestId(null);setFocusPTClientId(href.slice(11));setFocusPTPanel(null);setPTStudioWorkspace('studio');setPTStudioInitialTab('status');navigateTo('pt-studio')}
+               else if(href.startsWith('pt-intake:')){setFocusPTRequestId(null);setFocusPTClientId(href.slice(10));setFocusPTPanel(null);setPTStudioWorkspace('studio');setPTStudioInitialTab('kartlegging');navigateTo('pt-studio')}
+              else if(href.startsWith('pt-client:')){const targetTab=item.title==='PT-status mottatt'?'status':item.title==='Ny PT-innmelding'?'kartlegging':'pt-timar';setFocusPTClientId(href.slice(10));setFocusPTPanel(targetTab==='pt-timar'?'dialog':null);setPTStudioWorkspace('studio');setPTStudioInitialTab(targetTab);navigateTo('pt-studio')}
               else if(href.startsWith('group-class:')){setFocusGroupClassId(href.slice(12));setPTStudioWorkspace('groups');setPTStudioInitialTab('oversikt');navigateTo('pt-studio')}
               else if(href.startsWith('coffee-review:')){setFocusCoffeeReviewId(href.slice(14));navigateTo('kaffi')}
               else if(href.startsWith('booking:')){if(isStaff(profile)){setPTStudioWorkspace('groups');navigateTo('pt-studio')}else{setScheduleTab('booking');navigateTo('timeplan')}}
               else if(href==='pt-studio'){setPTStudioWorkspace('studio');setPTStudioInitialTab(isStaff(profile)||isPTCoach?'pt-timar':'meldingar');setFocusPTPanel(null);navigateTo('pt-studio')}
               else if(href==='pt-info'){setPTStudioWorkspace('studio');setPTStudioInitialTab('meldingar');setFocusPTPanel(null);navigateTo('pt-studio')}
               else if(item.category==='pt'){setFocusPTRequestId(null);setFocusPTPanel(null);setPTStudioWorkspace('studio');setPTStudioInitialTab(isPTCoach?'oversikt':isStaff(profile)?'pt-timar':'meldingar');navigateTo('pt-studio')}
-              else if(href)navigateTo(({booking:'timeplan','/timeplan':'timeplan',pt:'timeplan','mi-trening':'mi-side','wod-studio':'wod','wod-library':'wod'}[href]||href))
+              else if(href)navigateTo(({booking:'timeplan','/timeplan':'timeplan',pt:'timeplan','mi-trening':'mi-trening','wod-studio':'wod','wod-library':'wod'}[href]||href))
             }} />
             {isStaff(profile)&&<button className="icon-button" onClick={()=>setInfotainmentActive(true)} title="Opna infotainment" aria-label="Opna infotainment"><MonitorPlay size={16}/></button>}<button className="icon-button" onClick={toggleAppFullscreen} title={appFullscreen?"Avslutt fullskjerm":"Fullskjerm"} aria-label={appFullscreen?"Avslutt fullskjerm":"Fullskjerm"}>{appFullscreen?<Minimize size={16}/>:<Maximize size={16}/>}</button><button className="icon-button" onClick={() => supabase.auth.signOut()} title="Logg ut" aria-label="Logg ut"><LogOut size={16} /></button>
           </div>
