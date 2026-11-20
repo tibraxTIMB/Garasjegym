@@ -87,7 +87,7 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
  const myGoals = goals.filter(g=>g.member_id===profile.id&&g.is_visible)
  const myCheckins = checkins.filter(c=>c.member_id===profile.id)
  function programProgress(programId) {
-  const rows=sessions.filter(s=>s.program_id===programId)
+  const rows=sessions.filter(s=>s.program_id===programId&&!s.archived_at)
   const actionable=rows.filter(s=>!['rest','information'].includes(s.session_kind))
   const completed=actionable.filter(s=>s.status==='completed').length
   const percent=actionable.length?Math.round(completed/actionable.length*100):0
