@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "check:migrations": "node scripts/check-migrations.mjs",
+    "check:production-migrations": "node scripts/check-production-migrations.mjs",
     "test:wod-order": "node --test scripts/wod-order.test.mjs",
     "test:app-base-url": "node --test scripts/app-base-url.test.mjs",
     "test:infotainment": "node --test scripts/infotainment-events.test.mjs scripts/infotainment-timer.test.mjs",
