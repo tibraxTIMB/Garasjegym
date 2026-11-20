@@ -1,6 +1,6 @@
 # Production GO LIVE – reconciliation and release plan
 
-**Status:** NO-GO / preparation only  
+**Status:** NO-GO – production hardening applied; full schema release blocked  
 **Last verified:** 2026-11-20  
 **Working branch:** `garasjegym-2.0-sturm­kopf`  
 **Production project:** `kultdmklwmilhoytrrig` (`Garasjegym`)  
@@ -16,14 +16,14 @@ This document is the controlled release plan for bringing the production databas
 | Public tables with RLS enabled | All 18 reported enabled | 46 / 46 |
 | Public tables without any RLS policy | Not yet fully audited | 0 |
 | Anonymous table grants | Not yet fully audited | 0 |
-| Registered migrations | 9 | More than 80 |
+| Registered migrations | 11 | 163 |
 | PostgreSQL | 17.11.0.019 | 17.12.0.000 |
 
 Both Supabase projects are active and healthy. They are separate projects in different regions.
 
 ### Production migration history
 
-Production currently records these nine migrations:
+Production currently records these eleven migrations:
 
 - `20261116213905_lock_down_manager_profile_updates`
 - `20261116214010_restrict_trigger_function_execution`
@@ -34,6 +34,8 @@ Production currently records these nine migrations:
 - `20261118194052_exercise_prescription_profiles`
 - `20261119223903_revoke_anon_security_definer_execute`
 - `20261119224030_harden_production_security_definer_paths`
+- `20261120214242_secure_pt_session_capacity`
+- `20261120214355_revoke_anon_public_table_access`
 
 Test has a different migration history, including a test-only baseline and many later feature migrations. **Do not replay the test migration history directly against production.** The version histories are not aligned and doing so can cause duplicate-object failures, partial schema changes, or data loss.
 
@@ -171,6 +173,32 @@ Only after rehearsal passes and the owner explicitly confirms GO LIVE:
 5. Deploy the matching app build.
 6. Verify auth, role-based access, PT, classes, WOD, workout logging, and notifications.
 7. Keep a rollback/recovery decision log. Database rollback must be a tested restore/recovery plan, not blind reverse DDL.
+
+## 3A. Production hardening applied – 2026-11-20
+
+Two controlled, forward-only security migrations were applied to the production project `kultdmklwmilhoytrrig` after inspecting the live objects and policies:
+
+1. Migration history version `20261120214242_secure_pt_session_capacity`
+   - Replaced `public.pt_session_capacity` with a `SECURITY INVOKER` view.
+   - Added `private.pt_session_capacity_counts()` with an explicit authenticated-user and active-membership check.
+   - Revoked `anon` and `PUBLIC` access to the private helper and view; granted the intended access to `authenticated` and `service_role`.
+   - Verified `security_invoker=true`, zero `anon` schema usage/helper EXECUTE/view SELECT, and the expected authenticated privileges.
+   - Supabase Security Advisor no longer reports `security_definer_view`.
+
+2. Migration history version `20261120214355_revoke_anon_public_table_access`
+   - Revoked all direct `anon` privileges on public tables and sequences.
+   - Revoked default privileges for future public tables and sequences from `anon`.
+   - Verified production still has 18/18 public tables with RLS enabled, zero tables with direct `anon` privileges, and zero public sequences with direct `anon` privileges.
+
+Additional production audit after these changes:
+- 7 public SECURITY DEFINER functions; zero are executable by `anon`.
+- Zero public SECURITY DEFINER functions have a missing fixed `search_path`.
+- Supabase Security Advisor still reports 4 authenticated SECURITY DEFINER function warnings (the reviewed `book_pt_session`, `is_active_user`, `is_admin`, and `is_admin_or_manager` functions) and leaked-password protection remains disabled.
+- Health Advisor reports no lints.
+- Production schema remains 18 public tables versus 46 in test. The app's Pages workflow still hardcodes the test project URL and publishable key.
+- No app deployment, test data copy, or bulk schema migration was performed.
+
+These hardening migrations reduce production exposure but do not close the 28-table gap or resolve the object-level schema differences. **Release status remains NO-GO.**
 
 ## 4. Remaining security settings and audit
 
