@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from 'react'
+import {useEffect,useMemo,useRef,useState} from 'react'
 import {BookOpen,Search,Eye,EyeOff,LoaderCircle,Clock3,Dumbbell,Play,Layers,UserPlus,Trash2,Archive,Edit3,Star,CalendarDays,Info} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import {formatComplexSequence} from '../lib/wodComplexes.js'
@@ -12,25 +12,37 @@ export default function WodLibrary({onLaunchWod,onEditWod,staff=true,isAdmin=fal
  const [wods,setWods]=useState([]),[query,setQuery]=useState(''),[filter,setFilter]=useState('all'),[quickFilter,setQuickFilter]=useState('all'),[formatFilter,setFormatFilter]=useState('all'),[durationFilter,setDurationFilter]=useState('all'),[intensityFilter,setIntensityFilter]=useState('all'),[currentUserId,setCurrentUserId]=useState(''),[loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [customers,setCustomers]=useState([]),[customersLoading,setCustomersLoading]=useState(true),[assignWod,setAssignWod]=useState(null),[customerId,setCustomerId]=useState(''),[dueDate,setDueDate]=useState(''),[coachNote,setCoachNote]=useState('')
  const [sessionWods,setSessionWods]=useState([]),[sessionName,setSessionName]=useState(''),[sessionDate,setSessionDate]=useState(localDateISO()),[showSession,setShowSession]=useState(false),[favorites,setFavorites]=useState([]),[dailyWodId,setDailyWodId]=useState(null),[classes,setClasses]=useState([]),[classWod,setClassWod]=useState(null),[classId,setClassId]=useState(''),[expanded,setExpanded]=useState(null),[categoryFilter,setCategoryFilter]=useState('all'),[dailyScheduleWod,setDailyScheduleWod]=useState(null),[dailyScheduleDate,setDailyScheduleDate]=useState(localDateISO()),[dailyScheduleClassId,setDailyScheduleClassId]=useState(''),[dailySchedulePublished,setDailySchedulePublished]=useState(true)
+ const loadSequence=useRef(0)
  async function load(){
-  setLoading(true)
-  const {data:{user}}=await supabase.auth.getUser()
-  setCurrentUserId(user?.id||'')
-  const request=supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,is_published,is_archived,created_at,timer_settings,created_by,category').order('created_at',{ascending:false})
-  const [w,fav,daily,cls]=await Promise.all([
-   request,
-   user?supabase.from('wod_favorites').select('wod_id').eq('user_id',user.id):Promise.resolve({data:[],error:null}),
-   supabase.from('wod_daily_schedules').select('wod_id').eq('scheduled_date',localDateISO()).is('target_class_id',null).eq('is_published',true).maybeSingle(),
-   staff?supabase.from('classes').select('id,title,starts_at,wod_ids,published').eq('published',true).gte('starts_at',new Date().toISOString()).order('starts_at').limit(50):Promise.resolve({data:[],error:null})
-  ])
-  if(w.error)setError(w.error.message)
-  else setWods(w.data||[])
-  if(!fav.error)setFavorites((fav.data||[]).map(x=>x.wod_id))
-  if(!daily.error)setDailyWodId(daily.data?.wod_id||null)
-  if(!cls.error)setClasses(cls.data||[])
-  setLoading(false)
+  const requestId=++loadSequence.current
+  setLoading(true);setError('')
+  try{
+   const {data:{user},error:userError}=await supabase.auth.getUser()
+   if(userError)throw userError
+   const request=supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,is_published,is_archived,created_at,timer_settings,created_by,category').order('created_at',{ascending:false})
+   const [w,fav,daily,cls]=await Promise.all([
+    request,
+    user?supabase.from('wod_favorites').select('wod_id').eq('user_id',user.id):Promise.resolve({data:[],error:null}),
+    supabase.from('wod_daily_schedules').select('wod_id').eq('scheduled_date',localDateISO()).is('target_class_id',null).eq('is_published',true).maybeSingle(),
+    staff?supabase.from('classes').select('id,title,starts_at,wod_ids,published').eq('published',true).gte('starts_at',new Date().toISOString()).order('starts_at').limit(50):Promise.resolve({data:[],error:null})
+   ])
+   if(requestId!==loadSequence.current)return
+   if(w.error)throw w.error
+   if(fav.error)throw fav.error
+   if(daily.error)throw daily.error
+   if(cls.error)throw cls.error
+   setCurrentUserId(user?.id||'')
+   setWods(w.data||[])
+   setFavorites((fav.data||[]).map(x=>x.wod_id))
+   setDailyWodId(daily.data?.wod_id||null)
+   setClasses(cls.data||[])
+  }catch(e){
+   if(requestId===loadSequence.current)setError('WOD-biblioteket kunne ikkje hentast: '+(e?.message||'Ukjend feil'))
+  }finally{
+   if(requestId===loadSequence.current)setLoading(false)
+  }
  }
- useEffect(()=>{load();async function loadCustomers(){if(!staff){setCustomersLoading(false);return}setCustomersLoading(true);const {data,error:customerError}=await supabase.from('profiles').select('id,display_name').eq('active',true).order('display_name');if(customerError)setError('Kundelista kunne ikkje hentast: '+customerError.message);else setCustomers((data||[]).filter(c=>c.id));setCustomersLoading(false)}loadCustomers()},[])
+ useEffect(()=>{let active=true;load();async function loadCustomers(){if(!staff){if(active)setCustomersLoading(false);return}if(active)setCustomersLoading(true);try{const {data,error:customerError}=await supabase.from('profiles').select('id,display_name').eq('active',true).order('display_name');if(!active)return;if(customerError)setError('Kundelista kunne ikkje hentast: '+customerError.message);else setCustomers((data||[]).filter(c=>c.id))}catch(e){if(active)setError('Kundelista kunne ikkje hentast: '+(e?.message||'Ukjend feil'))}finally{if(active)setCustomersLoading(false)}}loadCustomers();return()=>{active=false;loadSequence.current++}},[])
  useEffect(()=>{if(focusWodId){setExpanded(focusWodId);onFocusConsumed?.();if(!loading&&!wods.some(w=>w.id===focusWodId)){supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,is_published,is_archived,created_at,timer_settings,created_by,category').eq('id',focusWodId).maybeSingle().then(({data,error:e})=>{if(data&&!e)setWods(rows=>rows.some(w=>w.id===data.id)?rows:[data,...rows]);else if(e)setError('Kunne ikkje opna WOD-kortet: '+e.message)})}}},[focusWodId,loading])
  const filtered=useMemo(()=>wods.filter(w=>{
   const minutes=Number(w.duration_minutes)||0
