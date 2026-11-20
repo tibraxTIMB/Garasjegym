@@ -263,3 +263,44 @@ Release remains **NO-GO** until all are true:
 ## 6. Tooling note
 
 The Supabase CLI is not installed in the current execution environment, so this work did not run `supabase migration new`, `supabase db diff`, or `supabase migration list --local`. The migration file follows the repository's existing 12-digit timestamp convention and was applied to the isolated test project using the Supabase migration tool. Before final production migration generation, use a pinned Supabase CLI v2 workflow in a controlled local/CI environment and inspect the generated diff before accepting it.
+
+
+## 3C. Live definition-level reconciliation – 2026-11-20
+
+A new read-only catalog comparison was run against both live projects. This is the latest object inventory and supersedes earlier object-count estimates above and in the Phase A/B1 notes:
+
+| Object | Production | Test | Test-only | Production-only | Changed definitions |
+|---|---:|---:|---:|---:|---:|
+| Columns | 173 | 509 | 336 | 0 | 2 |
+| Constraints | 70 | 226 | 156 | 0 | 1 |
+| RLS policies | 49 | 144 | 104 | 9 | 34 |
+| Indexes | 38 | 181 | 144 | 1 | 0 |
+| Triggers | 7 | 53 | 48 | 2 | 0 |
+| Public functions | 8 | 75 | 67 | 0 | 7 |
+| Public views | 1 | 1 | 0 | 0 | 0 |
+
+Changed existing column definitions:
+- `exercises.body_area`: nullable/no default in production; NOT NULL/default `'Fullkropp'` in test.
+- `workout_logs.result_data`: NOT NULL/default `'{}'::jsonb` in production; nullable/no default in test.
+
+Changed constraint: `class_bookings_status_check` in test permits `waitlist`, production does not.
+
+The seven shared changed function definitions include:
+- `handle_new_auth_user()`: test creates new members inactive and pending; production currently creates the profile using the active default and has no approval status assignment.
+- `is_active_user()`, `is_admin()`, `is_admin_or_manager()`: test requires approved membership as well as active status; production checks active status and role only.
+- `book_pt_session()`: test excludes client-linked private PT sessions from public booking; production does not.
+- `check_class_booking_capacity()`: test locks the class row and validates waitlist eligibility; production does not have the same concurrency guard.
+- `pt_promote_waitlist_after_cancel()`: test limits promotion to published future sessions, uses row locking/skip-locked behavior, and creates a notification; production has the older promotion behavior.
+
+The production and test `pt_session_capacity` views now have matching definition hashes and `security_invoker=true`. Both have anon SELECT disabled.
+
+### Edge Function parity
+
+- Production: `garasjegym-music` active v2, JWT verification disabled.
+- Test: `admin-delete-user` active v2, JWT verification enabled; `admin-create-user` active v2, JWT verification enabled.
+- Test `admin-create-user` returns HTTP 410 and explicitly disables account creation.
+- Production has no `admin-delete-user` function. The test delete function checks historical references across tables that do not yet exist in production, so it must not be deployed unchanged. Adapt it only after the production schema and FK/reference preservation rules are finalized. Preserve the production music integration and review its JWT/secrets separately.
+
+Detailed evidence and release implications: [GO_LIVE_PHASE_B2_DEFINITION_RECONCILIATION_2026-11-20.md](./GO_LIVE_PHASE_B2_DEFINITION_RECONCILIATION_2026-11-20.md).
+
+**Phase B2 is complete as a read-only review.** No test or production changes, backups, restores, migrations or deployments were performed. Production remains NO-GO pending backup/PITR evidence, an isolated restore rehearsal, production-origin migration reconstruction, and explicit owner GO LIVE approval.
