@@ -49,7 +49,7 @@ security_definer as (
   select 'public_security_definer_without_fixed_search_path' as check_name, count(*)::text as observed_value
   from pg_proc p join pg_namespace n on n.oid=p.pronamespace
   where n.nspname='public' and p.prosecdef
-    and not exists (select 1 from unnest(coalesce(p.proconfig, array[]::text[])) cfg where cfg like 'search_path=%')
+    and not exists (select 1 from unnest(coalesce(p.proconfig, array[]::text[])) as config(setting) where setting like 'search_path=%')
 ),
 columns as (
   select 'profiles.email' as check_name,
