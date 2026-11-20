@@ -268,3 +268,33 @@ CI kontrollerer installasjon, migreringsdelimiterar og Vite production build. De
 - **MANUELL TEST:** Ikkje utført i autentisert nettlesar eller på fysisk Android-/nettbrett.
 
 **Produksjon og main:** Ingen endringar er utførte i main eller produksjonsdatabasen.
+
+
+## 20. QA-tillegg – 20.11.2026
+
+**Kontrollert commit:** `2d82c9988252b025a98a0ee501229b7cc0c293d5`  
+**GitHub Actions:** `STURMKOPF · build and test`, run `44783584852` – SUCCESS.
+
+### Automatisk kodekontroll
+- Dependency install, migreringskontroll og Vite-produksjonsbygg bestått.
+- Alle automatiske testar bestått: treningsstart-/tildelingskontekst, app-base-URL/auth-redirect, infotainment, WOD-kompleks, WOD-rekkjefølgje, WOD-import, WOD-engine, timer, gruppetime-live-timer, Spotify-einingar, mobilgestar og pulsmåling.
+- CI vart utvida med `test:training-launch-context`, som tidlegare låg i npm-testskriptet utan å vera med i arbeidsflyten.
+- npm-installasjonen stoppa først på ein ikkje-publisert versjon `@babel/parser@^7.29.15`. `v2/package.json` har no ein eksplisitt override til publisert v7-versjon `7.29.14`; installasjon og full CI-køyring er stadfesta bestått.
+
+### WOD-rekkjefølgje og PT-program
+- WOD Builder si reine rekkjefølgjelogikk har bestått automatiske testar for opp/ned, direkte posisjon, drag-and-drop-hjelpar, sekvensiell `sort_order` og gjenopning av lagra rekkjefølgje.
+- Testdatabase: 8 WOD-ar med schema-items; ingen manglande, dupliserte eller avvikande `sort_order`-verdiar vart funne.
+- `reorder_pt_program_sessions` og `move_pt_program_session` vart testa med mellombelse program/økter i transaksjonar som vart rulla tilbake. Begge RPC-kalla stadfesta venta rekkjefølgje/veke/dag.
+- Etter rollback: 0 mellombelse QA-program og 0 QA-økter står att.
+
+### Ny database-tryggleikskontroll
+- 46 av 46 offentlege tabellar har RLS aktivert.
+- 0 offentlege tabellar har direkte SELECT/INSERT/UPDATE/DELETE-rettar for `anon`.
+- 0 SECURITY DEFINER-funksjonar manglar fast `search_path`.
+- SECURITY DEFINER-åtvaringane i Security Advisor gjeld 24 funksjonar som kan kallast av `authenticated`; ingen av dei har anon EXECUTE. Desse skal vurderast funksjon for funksjon, ikkje fjernast samla.
+- Auth-innstillinga for lekkasjekontroll av passord er framleis deaktivert og må aktiverast før produksjonsklarering.
+
+### Attståande avgrensingar
+- Automatiske testar og SQL-transaksjonstestar erstattar ikkje manuell ende-til-ende-testing i autentisert nettlesar på mobil, nettbrett og PC.
+- Testprosjektet har framleis ikkje varige PT-program/coach-data; full PT-flyt må prøvast manuelt med relevante kontoar.
+- Produksjonssetting er ikkje utført eller godkjend. Alle databasekontrollane over er avgrensa til `garasjegym-2-test`.
