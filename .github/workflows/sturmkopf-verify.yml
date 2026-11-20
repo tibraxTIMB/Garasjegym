@@ -37,6 +37,8 @@ jobs:
         run: npm run test:wod-complexes
       - name: Test WOD ordering
         run: npm run test:wod-order
+      - name: Test exercise height and load measurements
+        run: npm run test:exercise-measurements
       - name: Test WOD text import parser
         run: npm run test:wod-import
       - name: Test WOD engine normalization and scoring
