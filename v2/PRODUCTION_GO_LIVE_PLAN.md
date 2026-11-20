@@ -456,3 +456,16 @@ The B14 review defines the migration order and security requirements for favorit
 Full source review, production inventory, migration order and acceptance tests are recorded in [GO_LIVE_PHASE_B14_OPTIONAL_INTEGRATIONS_MIGRATION_DESIGN_2026-11-20.md](./GO_LIVE_PHASE_B14_OPTIONAL_INTEGRATIONS_MIGRATION_DESIGN_2026-11-20.md).
 
 **B14 outcome:** Optional integration migration design prepared. No database or deployment changes were made. Backup/PITR evidence and isolated restore remain hard blockers. Release remains **NO-GO**.
+
+
+## 14. Phase B15 – account deletion and profile-retention gate (2026-11-20)
+
+Live Edge Function inventory confirms production has only `garasjegym-music`; the test-only `admin-delete-user` is not deployed in production. Source review shows the test delete function checks several test-only tables and omits important production references, so it cannot be deployed unchanged.
+
+Fresh production FK catalog inspection identified CASCADE links from profiles to class bookings, personal records, PT bookings, PT notes/messages, PT requests, social posts/comments and workout logs, plus RESTRICT/NO ACTION links for staff-created records. Permanent Auth deletion could therefore erase training and social history or fail on authored records.
+
+The release requirement is a production-specific, deactivation-first workflow. Permanent deletion must fail closed whenever the schema/reference inventory differs or any durable history exists. The last active approved admin and all admin accounts must be protected.
+
+Full source review, FK inventory, risks and acceptance tests are recorded in [GO_LIVE_PHASE_B15_ACCOUNT_DELETION_RETENTION_GATE_2026-11-20.md](./GO_LIVE_PHASE_B15_ACCOUNT_DELETION_RETENTION_GATE_2026-11-20.md).
+
+**B15 outcome:** Account deletion is blocked from production; no Edge Function/Auth/profile changes were made. Release remains **NO-GO**.
