@@ -70,6 +70,38 @@ END;
 $pending$;
 RESET ROLE;
 
+-- Re-running the signup trigger for an existing profile may synchronize email
+-- only; it must not overwrite the user's role, active state, approval or name.
+CREATE TEMP TABLE auth_signup_conflict_probe (
+  id uuid,
+  email text,
+  raw_user_meta_data jsonb
+);
+CREATE TRIGGER on_signup_conflict_probe
+AFTER INSERT ON auth_signup_conflict_probe
+FOR EACH ROW EXECUTE FUNCTION public.handle_new_auth_user();
+INSERT INTO auth_signup_conflict_probe(id,email,raw_user_meta_data)
+VALUES (
+  '00000000-0000-0000-0000-000000000002',
+  'synced-member@example.test',
+  '{"display_name":"Must Not Replace Existing Name"}'
+);
+DO $conflict$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id='00000000-0000-0000-0000-000000000002'
+      AND email='synced-member@example.test'
+      AND display_name='Member One'
+      AND role='member'
+      AND active=true
+      AND membership_status='approved'
+  ) THEN
+    RAISE EXCEPTION 'Signup conflict path changed protected profile fields';
+  END IF;
+END;
+$conflict$;
+
 -- An admin can promote an existing member to manager in the isolated target.
 SET ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
