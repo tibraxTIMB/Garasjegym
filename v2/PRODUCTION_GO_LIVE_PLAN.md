@@ -783,3 +783,10 @@ On commit `47463c01088039b095023594220abbba584a4029`, STURMKOPF build/focused te
 Fresh read-only production snapshot after B43–B45: profiles 3 (all active), Auth users 3, classes 1, class bookings 1, legacy PT sessions 1, PT bookings 1, WODs 1, workout logs 0, personal records 1, Storage buckets/objects 0. `profiles.email` and `membership_status` remain absent. Production migration ledger remains 11; TEST remains 163. Production still has exactly one Edge Function, `garasjegym-music` ACTIVE v2, `verify_jwt=false`, deployed source SHA-256 unchanged at `3e369166c2c425c20c0e6af8e49adeaeef96c6e192479102f09a6acde1850e69`. Branch-only membership gate has not been deployed. Full checkpoint: [GO_LIVE_PHASE_B46_PRODUCTION_NONINTERFERENCE_CHECKPOINT_2026-11-20.md](./GO_LIVE_PHASE_B46_PRODUCTION_NONINTERFERENCE_CHECKPOINT_2026-11-20.md).
 
 CI passed on code/test commit `47463c01088039b095023594220abbba584a4029` and subsequent B45 report commit `355d180a9398e1f6e274111e640872ae3b38459b`; latest preview workflow cancelled, no preview deployment. No production or TEST data/schema/Auth/function/secret/hosting changes. Wave 0 owner backup/restore and Auth settings verification remain hard blockers; production NO-GO.
+
+
+## 46. Phase B47 – Wave 1 isolated Auth/RLS smoke matrix (2026-11-20)
+
+Added `v2/supabase/preflight/wave1_membership_auth_smoke_matrix.md` with isolated admin, two existing members, pending, rejected, inactive and manager test identities. Defines positive/negative expectations for Auth session vs app access, own/other profile, WOD/exercise, workout/PR, class/PT bookings, admin approval, role/active changes, manager self/privilege boundaries, RPC helper behavior and music Edge Function. Tests must use separate JWTs through PostgREST/RPC, not SQL as postgres. Evidence must exclude credentials/PII. Detailed record: [GO_LIVE_PHASE_B47_WAVE1_ISOLATED_SMOKE_MATRIX_2026-11-20.md](./GO_LIVE_PHASE_B47_WAVE1_ISOLATED_SMOKE_MATRIX_2026-11-20.md).
+
+Matrix is prepared only; no users or SQL were run. Wave 0 restore is required before execution. Production remains NO-GO.
