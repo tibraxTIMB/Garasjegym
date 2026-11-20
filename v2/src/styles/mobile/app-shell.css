@@ -352,3 +352,9 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .app-more-backdrop
     outline-offset: 2px;
   }
 }
+
+@media (max-width: 420px) {
+  .app-more-sheet-head h2 { font-size: 18px; }
+  .app-more-head-actions { gap: 5px; }
+  .app-more-expand { gap: 4px; padding-inline: 8px; font-size: 11px; }
+}
