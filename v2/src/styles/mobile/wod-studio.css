@@ -277,7 +277,7 @@
 
   .wod-builder-step-2 .wod-reorder-controls {
     display: grid !important;
-    grid-template-columns: repeat(5, minmax(44px, 1fr)) minmax(70px, 1.3fr);
+    grid-template-columns: minmax(44px, 1fr) minmax(44px, 1fr) minmax(70px, 1.3fr) minmax(44px, 1fr);
     justify-content: stretch !important;
     align-items: stretch !important;
     gap: 6px !important;
