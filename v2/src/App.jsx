@@ -294,7 +294,7 @@ export default function App() {
       </div></main>
     )
   }
-  if (profile.membership_status === 'pending') {
+  if (profile.membership_status !== 'approved' && profile.membership_status !== 'rejected') {
     return (
       <main className="auth-shell"><div className="auth-card">
         <div className="eyebrow"><ShieldCheck size={14} /> MEDLEMSKAP · VENTAR</div>
@@ -305,7 +305,7 @@ export default function App() {
       </div></main>
     )
   }
-  if (profile.membership_status === 'rejected' || !profile.active) {
+  if (profile.membership_status === 'rejected' || (profile.membership_status === 'approved' && !profile.active)) {
     return (
       <main className="auth-shell"><div className="auth-card">
         <div className="eyebrow"><ShieldCheck size={14} /> MEDLEMSKAP</div>
