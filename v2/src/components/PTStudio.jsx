@@ -110,7 +110,10 @@ export default function PTStudio({ profile, coachMode=false, onLaunchWorkout, in
   const labels=['medlemslista','innmeldingar','mål','programmalbibliotek','kundeprogram','programøkter','statussjekkar','WOD-bibliotek']
   const loadErrors=results.flatMap((result,index)=>result.error&&index!==0?[labels[index]+': '+result.error.message]:[])
   if(loadErrors.length)setError(loadErrors.join(' · '))
-  if(results[0].data)setMembers(results[0].data)
+  if(results[0].data){
+   setMembers(results[0].data)
+   if(coachMode&&!initialClientId&&results[0].data.length)setClientId(current=>current||results[0].data[0].id)
+  }
   setIntakes(results[1].data||[]);setGoals(results[2].data||[]);setTemplates(results[3].data||[])
   setPrograms(results[4].data||[]);setSessions(results[5].data||[]);setCheckins(results[6].data||[]);setWods(results[7].data||[])
   if(canManageClients&&initialClientId)setClientId(initialClientId)
