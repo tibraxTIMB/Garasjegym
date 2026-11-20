@@ -589,3 +589,17 @@
     min-height: 0;
   }
 }
+
+
+.gg-training-session .manual-entry-intro {
+  display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:16px;
+  padding:16px; border:1px solid var(--gg-shell-border); border-left:4px solid var(--gg-shell-accent,#f0a33a);
+  border-radius:14px; background:var(--gg-shell-panel,rgba(255,255,255,.04));
+}
+.gg-training-session .manual-entry-intro strong { display:block; margin-top:4px; font-size:17px; }
+.gg-training-session .manual-entry-intro p { margin:6px 0 0; opacity:.75; line-height:1.45; font-size:13px; }
+.gg-training-session .manual-entry-intro button { min-height:52px; white-space:nowrap; }
+@media(max-width:560px) {
+ .gg-training-session .manual-entry-intro { grid-template-columns:minmax(0,1fr); }
+ .gg-training-session .manual-entry-intro button { width:100%; }
+}
