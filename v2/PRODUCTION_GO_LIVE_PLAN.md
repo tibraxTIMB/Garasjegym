@@ -504,3 +504,14 @@ This corrects the Wave 0 diagnosis: the absence of daily backup/PITR evidence is
 No plan upgrade, PITR, compute upgrade, new project/branch, export or restore was performed. The backup contains private member data and must remain encrypted and outside GitHub/chat. The full owner-workstation procedure and acceptance criteria are in [GO_LIVE_PHASE_B18_FREE_PLAN_BACKUP_RECOVERY_PATH_2026-11-20.md](./GO_LIVE_PHASE_B18_FREE_PLAN_BACKUP_RECOVERY_PATH_2026-11-20.md).
 
 **B18 outcome:** Zero-budget recovery path prepared. Wave 0 remains NOT PASSED until the logical dump, Storage export and isolated restore are executed and verified. Production remains NO-GO.
+
+
+## 18. Phase B19 – logical backup coverage gate (2026-11-20)
+
+Current Supabase CLI documentation confirms `supabase db dump` excludes managed schemas including `auth` and `storage`; default dump is schema-only, while data and custom roles require separate `--data-only` and `--role-only` exports. Storage object bytes are not included in database dumps. Therefore a standard CLI dump is not a complete GarasjeGym project backup.
+
+Wave 0 must separately establish Auth identity recovery, Storage metadata/object recovery, Edge Function source/config and Auth provider settings. If Auth recovery cannot be proven on the current Free plan, the owner must explicitly accept a documented recovery limitation or approve another supported backup approach. Do not claim full recovery based on public schema/data dumps alone.
+
+The detailed coverage matrix, command outline and acceptance gate are recorded in [GO_LIVE_PHASE_B19_LOGICAL_BACKUP_COVERAGE_GATE_2026-11-20.md](./GO_LIVE_PHASE_B19_LOGICAL_BACKUP_COVERAGE_GATE_2026-11-20.md).
+
+**B19 outcome:** Logical database dump alone is insufficient for full project recovery. No export or restore was performed. Wave 0 and production release remain **NO-GO**.
