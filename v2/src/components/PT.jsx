@@ -18,7 +18,7 @@ function CalendarSelect({value,onChange,label='Vel dato'}) {
  return <div className="pt-calendar-picker"><strong>{label}</strong><button type="button" className="pt-calendar-toggle" onClick={()=>setOpen(v=>!v)}><CalendarClock size={16}/>{value?new Date(value).toLocaleString('nn-NO',{dateStyle:'medium',timeStyle:'short'}):'Vel dato og klokkeslett'}<span>{open?'Lukk':'Opne kalender'}</span></button>{open&&<div className="pt-calendar"><div className="pt-calendar-head"><strong>{month.toLocaleDateString('nn-NO',{month:'long',year:'numeric'})}</strong><div><button type="button" onClick={()=>setMonth(new Date(year,m-1,1))}>‹</button><button type="button" onClick={()=>setMonth(new Date(year,m+1,1))}>›</button></div></div><div className="pt-calendar-grid">{['M','T','O','T','F','L','S'].map((d,i)=><span className="pt-calendar-weekday" key={i}>{d}</span>)}{Array.from({length:offset},(_,i)=><span key={'blank'+i}/>)}{Array.from({length:days},(_,i)=>i+1).map(d=><button type="button" key={d} className={selected===dateKey(d)?'selected':''} onClick={()=>onChange(dateKey(d)+'T'+time)}>{d}</button>)}</div><label className="pt-calendar-time">Klokkeslett<input type="time" value={time} onChange={e=>onChange((selected||dateKey(new Date().getDate()))+'T'+e.target.value)}/></label><button type="button" className="primary-button" onClick={()=>setOpen(false)}>Bruk tidspunkt</button></div>}</div>
 }
 export default function PT({profile,coachMode=false,focusRequestId,onFocusConsumed,onLaunchWorkout,controlledClientId,hideCustomerPicker=false,onClientChange,focusPanel=null,onFocusPanelConsumed}){
-  useEffect(()=>{if(controlledClientId!==undefined){const nextClient=controlledClientId||'';setActiveClient(nextClient);setCustomerDraft(nextClient)}},[controlledClientId])
+  useEffect(()=>{if(controlledClientId!==undefined){const nextClient=controlledClientId||'';setActiveClient(nextClient);setCustomerDraft(nextClient);setMessageClient(nextClient);setNoteClient(nextClient)}},[controlledClientId])
  useEffect(()=>{if(!focusPanel)return;setActivePanel(focusPanel);onFocusPanelConsumed?.()},[focusPanel])
  const staff=isStaff(profile)||coachMode
  const adminOrManager=isStaff(profile)
@@ -58,10 +58,26 @@ export default function PT({profile,coachMode=false,focusRequestId,onFocusConsum
   if(wd.error)setError(wd.error.message);else setWodLibrary(wd.data||[])
   setLoading(false)
  }
- useEffect(()=>{load();const refresh=setInterval(()=>load(true),60000);return()=>clearInterval(refresh)},[staff,activeClient,messageClient])
+ useEffect(()=>{
+  let live=true,channel=null
+  load()
+  async function subscribe(){
+   const {data:{user}}=await supabase.auth.getUser()
+   if(!live||!user)return
+   const targetClientId=staff?(messageClient||activeClient):user.id
+   if(!targetClientId)return
+   channel=supabase.channel('pt-client-thread-'+targetClientId)
+    .on('postgres_changes',{event:'*',schema:'public',table:'pt_messages',filter:'client_id=eq.'+targetClientId},()=>{if(live)load(true)})
+    .on('postgres_changes',{event:'*',schema:'public',table:'pt_sessions',filter:'client_id=eq.'+targetClientId},()=>{if(live)load(true)})
+    .subscribe()
+  }
+  subscribe()
+  const refresh=window.setInterval(()=>{if(live)load(true)},60000)
+  return()=>{live=false;window.clearInterval(refresh);if(channel)supabase.removeChannel(channel)}
+ },[staff,activeClient,messageClient])
  const hasUnsavedWork=Boolean(showWodBuilder||messageText.trim()||noteGoals.trim()||noteText.trim()||followUp||Object.values(planDrafts).some(d=>d&&Object.values(d).some(v=>String(v||'').trim())));
  useEffect(()=>{if(!hasUnsavedWork)return;const warn=e=>{e.preventDefault();e.returnValue='Du har endringar som ikkje er lagra.'};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn)},[hasUnsavedWork]);
- useEffect(()=>{if(!staff||!focusRequestId||!requests.length)return;const target=requests.find(row=>row.id===focusRequestId);if(target){setActiveClient(target.member_id);setCustomerDraft(target.member_id);onClientChange?.(target.member_id);setActivePanel('forespurnader')}const timer=setTimeout(()=>{document.getElementById('pt-request-'+focusRequestId)?.scrollIntoView({behavior:'smooth',block:'center'});onFocusConsumed?.()},180);return()=>clearTimeout(timer)},[staff,focusRequestId,requests])
+ useEffect(()=>{if(!staff||!focusRequestId||!requests.length)return;const target=requests.find(row=>row.id===focusRequestId);if(target){setActiveClient(target.member_id);setCustomerDraft(target.member_id);setMessageClient(target.member_id);setNoteClient(target.member_id);onClientChange?.(target.member_id);setActivePanel('forespurnader')}const timer=setTimeout(()=>{document.getElementById('pt-request-'+focusRequestId)?.scrollIntoView({behavior:'smooth',block:'center'});onFocusConsumed?.()},180);return()=>clearTimeout(timer)},[staff,focusRequestId,requests])
  async function prescribeWorkout(event){
   event.preventDefault();setBusy('prescribe');setError('');setNotice('')
   try{
@@ -211,7 +227,10 @@ export default function PT({profile,coachMode=false,focusRequestId,onFocusConsum
    const {data:{user}}=await supabase.auth.getUser()
    const clientId=staff?messageClient:user.id
    if(!clientId)throw new Error('Vel ein PT-kunde.')
-   const {error:e}=await supabase.from('pt_messages').insert({client_id:clientId,sender_id:user.id,body:messageText.trim()})
+   const body=messageText.trim()
+   if(!body)throw new Error('Skriv ei melding før du sender.')
+   if(body.length>3000)throw new Error('Meldinga kan ikkje vera lengre enn 3000 teikn.')
+   const {error:e}=await supabase.from('pt_messages').insert({client_id:clientId,sender_id:user.id,body})
    if(e)throw e
    setMessageText('');setNotice('Meldinga er sendt.');await load()
   }catch(e){setError(e.message||'Kunne ikkje senda meldinga.')}finally{setBusy('')}
