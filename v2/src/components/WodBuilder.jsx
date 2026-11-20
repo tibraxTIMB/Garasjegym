@@ -271,6 +271,17 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    const dose=showSets?[(d.sets?d.sets+' sett':''),(d.reps?d.reps+' reps':''),doseLoadLabel(d)].filter(Boolean).join(' · '):target+(doseLoadLabel(d)?' · '+doseLoadLabel(d):'')
    return x.name+' – '+dose+(d.tempo?' · tempo '+d.tempo:'')+(x.coachNote?' · '+x.coachNote:'')
   }
+ async function findActiveAssignment(memberId,wodId){
+  const {data,error:e}=await supabase.from('pt_wod_assignments')
+   .select('id,status')
+   .eq('member_id',memberId)
+   .eq('wod_id',wodId)
+   .in('status',['assigned','in_progress'])
+   .limit(1)
+   .maybeSingle()
+  if(e)throw e
+  return data
+ }
  async function assignLibraryWod(){
   const wod=libraryWods.find(x=>x.id===selectedLibraryWod)
   if(!wod||!assignedClientId)return
@@ -278,6 +289,11 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   try{
    const {data:{user}}=await supabase.auth.getUser()
    if(!user)throw new Error('Logg inn på nytt.')
+   const existing=await findActiveAssignment(assignedClientId,wod.id)
+   if(existing){
+    setNotice('Denne WOD-en er allereie aktivt tildelt kunden. Ingen duplikat vart oppretta.')
+    return
+   }
    const {error:e}=await supabase.from('pt_wod_assignments').insert({member_id:assignedClientId,wod_id:wod.id,assigned_by:user.id,location:'Valfritt',coach_note:'Tildelt frå PT Studio'})
    if(e)throw e
    setNotice('Eksisterande WOD er tildelt kunden. Biblioteket er ikkje kopiert eller endra.')
@@ -347,14 +363,23 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    if(!editingWodId)wodPayload.created_by=user.id
    let savedWodId=editingWodId||null
    if(assignedClientId){
-    const {data:assignedWodId,error:e}=await supabase.rpc('save_wod_with_pt_assignment',{
-     p_wod:wodPayload,
-     p_member_id:assignedClientId,
-     p_wod_id:editingWodId||null
-    })
-    if(e)throw e
-    if(!assignedWodId)throw new Error('WOD og PT-tildeling vart ikkje stadfesta av databasen.')
-    savedWodId=assignedWodId
+    const existingAssignment=editingWodId?await findActiveAssignment(assignedClientId,editingWodId):null
+    if(existingAssignment){
+     const {data:savedWod,error:e}=await supabase.from('wods').update(wodPayload).eq('id',editingWodId).select('id').single()
+     if(e)throw e
+     savedWodId=savedWod.id
+     setNotice('WOD-en er oppdatert. Den aktive tildelinga til kunden er bevart utan duplikat.')
+    }else{
+     const {data:assignedWodId,error:e}=await supabase.rpc('save_wod_with_pt_assignment',{
+      p_wod:wodPayload,
+      p_member_id:assignedClientId,
+      p_wod_id:editingWodId||null
+     })
+     if(e)throw e
+     if(!assignedWodId)throw new Error('WOD og PT-tildeling vart ikkje stadfesta av databasen.')
+     savedWodId=assignedWodId
+     setNotice('WOD-en er lagra og tildelt kunden.')
+    }
     onAssigned?.()
    }else{
     const wodRequest=editingWodId?supabase.from('wods').update(wodPayload).eq('id',editingWodId).select('id').single():supabase.from('wods').insert(wodPayload).select('id').single()
