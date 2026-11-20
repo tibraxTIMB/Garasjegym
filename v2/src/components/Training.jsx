@@ -8,7 +8,7 @@ import { getWodSchemaItems, sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
 import { formatParticipation, normalizeWodEngine, parseIntervalNotation } from '../lib/wodEngine.js'
 import PerformanceCenter from './PerformanceCenter.jsx'
-import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, splitDuration } from '../lib/timerClock.js'
+import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration } from '../lib/timerClock.js'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E1.25MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', uses_height: false, rowValue:'', rowUnit:'m', workSeconds:'', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] })
@@ -140,7 +140,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const savedDuration = Number(schema?.duration_seconds) || 0
   const capDuration = Number(schema?.time_cap_seconds) || (Number(schema?.time_cap_minutes) || 0) * 60
   const isEMOM = /^E\d+(?:\.\d+)?MOM$/.test(format) || ['EMOM', 'EMOM 1', 'EMOM 2'].includes(format)
-  const emomEvery = Math.max(1,Math.min(7,Number(emomEveryOverride)||getEmomIntervalMinutes(format,timerSettings)))
+  const emomEvery = normalizeEmomIntervalMinutes(emomEveryOverride, getEmomIntervalMinutes(format,timerSettings))
   const emomCycle = emomEvery * 60
   const effectiveEmomWorkSeconds = Math.max(1,Math.min(emomCycle,Number(workSeconds)||emomCycle))
   const effectiveEmomRestSeconds = Math.max(0,Math.min(emomCycle-effectiveEmomWorkSeconds,Number(restSeconds)||0))
@@ -352,7 +352,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           <label>Sekund<input type="number" min="0" max="59" value={(durationOverride??target)%60} onChange={e=>setDurationOverride(Math.max(1,Math.floor((durationOverride??target)/60)*60+Math.max(0,Math.min(59,Number(e.target.value)||0))))}/></label>
         </div>
       </div>}
-      {isEMOM && <div className="timer-setup-section"><strong>EMOM-intervall</strong><label className="timer-setup-select">Start arbeid kvart <select value={emomEvery} onChange={e=>setEmomEveryOverride(Number(e.target.value))}>{[1,2,3,4,5,6,7].map(value=><option key={value} value={value}>{value===1?'minutt':value+' minutt'}</option>)}</select></label></div>}
+      {isEMOM && <div className="timer-setup-section"><strong>EMOM-intervall</strong><label className="timer-setup-select">Start arbeid kvart <select value={emomEvery} onChange={e=>setEmomEveryOverride(Number(e.target.value))}>{[0.25,0.5,0.75,1,1.25,1.5,1.75,2,3,4,5,6,7].map(value=>{const seconds=Math.round(value*60);const label=seconds<60?seconds+' sekund':seconds%60===0?(seconds/60)+' minutt':Math.floor(seconds/60)+' minutt og '+(seconds%60)+' sekund';return <option key={value} value={value}>{label}</option>})}</select></label></div>}
       <div className="timer-setup-section"><strong>Skjermoppsett</strong><div className="timer-layout-presets">
         <button type="button" onClick={()=>applyLayoutPreset('standard')}>Standard</button><button type="button" onClick={()=>applyLayoutPreset('minimal')}>Minimal</button><button type="button" onClick={()=>applyLayoutPreset('group')}>Gruppetime</button><button type="button" onClick={()=>applyLayoutPreset('pt')}>PT</button>
       </div></div>
