@@ -37,5 +37,7 @@ jobs:
         run: npm run test:wod-order
       - name: Test WOD text import parser
         run: npm run test:wod-import
+      - name: Test WOD engine normalization and scoring
+        run: npm run test:wod-engine
       - name: Build application
         run: npm run build
