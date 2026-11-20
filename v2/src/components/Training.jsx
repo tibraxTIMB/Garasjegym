@@ -713,6 +713,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
 
   async function saveWorkout(event) {
     event.preventDefault()
+    if (saving) return
     if (!title.trim()) { setError('Gi økta eit namn før du lagrar.'); return }
     if (!items.length || items.some(item => !item.exercise_name.trim())) {
       setError('Alle øvingane må ha namn.'); return
@@ -729,8 +730,31 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       const isAmrapScore = normalizedFormat === 'amrap' || (['couplet','triplet'].includes(normalizedFormat) && combinationMode === 'AMRAP')
       const isForTimeScore = ['for time','chipper'].includes(normalizedFormat) || (['couplet','triplet'].includes(normalizedFormat) && combinationMode === 'For Time')
       const elapsedSeconds = Number(timerSnapshot.elapsed)||0
-      const parsedTime = scoreTime.trim() ? (()=>{const parts=scoreTime.trim().split(':').map(Number);return parts.length===2?parts[0]*60+parts[1]:parts.length===3?parts[0]*3600+parts[1]*60+parts[2]:NaN})() : (isForTimeScore&&elapsedSeconds>0?elapsedSeconds:null)
-      if(scoreTime.trim()&&!Number.isFinite(parsedTime))throw new Error('Tid må skrivast som mm:ss eller tt:mm:ss.')
+      const parsedTime = scoreTime.trim() ? (()=>{
+        const raw=scoreTime.trim()
+        if(!/^\\d{1,3}:\\d{1,2}(?::\\d{1,2})?$/.test(raw))return NaN
+        const parts=raw.split(':').map(Number)
+        if(parts.some(value=>!Number.isInteger(value)||value<0)||parts.slice(1).some(value=>value>59))return NaN
+        return parts.length===2?parts[0]*60+parts[1]:parts[0]*3600+parts[1]*60+parts[2]
+      })() : (isForTimeScore&&elapsedSeconds>0?elapsedSeconds:null)
+      if(scoreTime.trim()&&!Number.isFinite(parsedTime))throw new Error('Tid må skrivast som mm:ss eller tt:mm:ss, med sekund og minutt mellom 00 og 59.')
+      const numericFields=[['rundar',scoreRounds],['repetisjonar',scoreReps],['belastning',scoreLoad],['kaloriar',scoreCalories],['distanse',scoreDistance]]
+      for(const [label,value] of numericFields){
+        if(String(value??'').trim()==='')continue
+        const number=Number(value)
+        if(!Number.isFinite(number)||number<0)throw new Error(label+' må vera eit gyldig tal på null eller meir.')
+        if(['rundar','repetisjonar'].includes(label)&&!Number.isInteger(number))throw new Error(label+' må vera eit heiltal.')
+      }
+      for(const item of items){
+        if(String(item.rowValue??'').trim()!==''&&(!Number.isFinite(Number(item.rowValue))||Number(item.rowValue)<0))throw new Error('Distanse eller varigheit for «'+item.exercise_name+'» må vera null eller eit positivt tal.')
+        for(const set of item.sets||[]){
+          for(const [label,value] of [['reps',set.reps],['belastning',set.load_kg],['høgd',set.height_cm],['tid',set.time_seconds]]){
+            if(String(value??'').trim()==='')continue
+            if(!Number.isFinite(Number(value))||Number(value)<0)throw new Error(label+' for «'+item.exercise_name+'» må vera null eller eit positivt tal.')
+          }
+          if(String(set.reps??'').trim()!==''&&!Number.isInteger(Number(set.reps)))throw new Error('Repetisjonar for «'+item.exercise_name+'» må vera eit heiltal.')
+        }
+      }
       const hasRecordedScore=[scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||items.some(item=>Number(item.rowValue)>0||item.sets?.some(set=>[set.reps,set.load_kg,set.height_cm,set.time_text,set.time_seconds].some(value=>String(value??'').trim()!=='')))
       if(manualEntry&&!hasRecordedScore)throw new Error('Registrer minst eitt faktisk resultat – til dømes reps, kg, høgd, tid, distanse eller kaloriar – før du lagrar etterregistreringa.')
       if(classSessionId&&source?.category!=='warmup'&&!hasRecordedScore)throw new Error('Hovud-WOD må ha minst eitt registrert resultat før du kan lagra.')
@@ -843,7 +867,10 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   }
   async function savePersonalRecord(event) {
     event.preventDefault()
+    if (prSaving) return
     if (!prName.trim() || !prResult.trim()) return
+    const normalizedResult=Number(prResult.trim().replace(',','.'))
+    if(!Number.isFinite(normalizedResult)||normalizedResult<=0){setError('Ein personleg rekord må vera eit gyldig tal større enn null.');return}
     setPrSaving(true); setError(''); setNotice('')
     try {
       const { data: { user }, error: authError } = await supabase.auth.getUser()
