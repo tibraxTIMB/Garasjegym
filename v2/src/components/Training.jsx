@@ -9,6 +9,7 @@ import { formatComplexSequence } from '../lib/wodComplexes.js'
 import { formatParticipation, normalizeWodEngine, parseIntervalNotation } from '../lib/wodEngine.js'
 import PerformanceCenter from './PerformanceCenter.jsx'
 import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration } from '../lib/timerClock.js'
+import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E1.25MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', uses_height: false, rowValue:'', rowUnit:'m', workSeconds:'', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] })
@@ -439,6 +440,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [source, setSource] = useState(null)
   const [wodLevel,setWodLevel]=useState('rx')
   const [classSessionId, setClassSessionId] = useState(null)
+  const [launchLinkContext,setLaunchLinkContext]=useState(emptyTrainingLaunchContext)
   const [title, setTitle] = useState('')
   const [workoutDate,setWorkoutDate]=useState(()=>localDateISO())
   const [manualWodIds,setManualWodIds]=useState([])
@@ -514,13 +516,14 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   useEffect(() => {
     if (!launchWodId || loading) return
     const wod = wods.find(item => item.id === launchWodId)
-    if (wod) { startWorkout(wod); setClassSessionId(launchClassSessionId || null); onLaunchConsumed?.() }
-  }, [launchWodId, loading, wods])
+    if (wod) { startWorkout(wod); setClassSessionId(launchClassSessionId || null); setLaunchLinkContext(captureTrainingLaunchContext({launchAssignmentId,launchProgramSessionId})); onLaunchConsumed?.() }
+  }, [launchWodId, loading, wods, launchClassSessionId, launchAssignmentId, launchProgramSessionId])
 
   useEffect(() => {
     if (!launchProgramSessionId || launchWodId || loading) return
     startWorkout()
     setTitle(launchProgramSessionTitle || 'Eigen PT-økt')
+    setLaunchLinkContext(captureTrainingLaunchContext({launchProgramSessionId}))
     onLaunchConsumed?.()
   }, [launchProgramSessionId, launchWodId, loading])
 
@@ -555,6 +558,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     // A free session opens with the timer ready at zero; a selected WOD starts directly.
     setTimerLaunchId(autoStart ? value => value + 1 : 0)
     setClassSessionId(null)
+    setLaunchLinkContext(emptyTrainingLaunchContext())
     setSaveToken(crypto.randomUUID())
     setSource(wod)
     setWodLevel(wod?.timer_settings?.workout_schema?.prescription||'rx')
@@ -614,7 +618,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
 
   function startManualWorkout(){
     setManualEntry(true)
-    setTimerLaunchId(0);setClassSessionId(null);setSaveToken(crypto.randomUUID());setSource(null);setWodLevel('rx')
+    setTimerLaunchId(0);setClassSessionId(null);setLaunchLinkContext(emptyTrainingLaunchContext());setSaveToken(crypto.randomUUID());setSource(null);setWodLevel('rx')
     setTitle('Manuell trening');setFormat('Fri trening');setDuration('0');setDurationSeconds('0');setWorkoutDate(localDateISO())
     setNote('');setItems([]);setQuery('');setActiveExerciseIndex(0);setManualWodIds([]);setManualWodSelect('')
     setTimerSnapshot({elapsed:0,laps:[],roundsCompleted:0,phase:'Klar',running:false})
@@ -716,8 +720,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       }))
       const {data:workoutId,error:saveError}=await supabase.rpc('save_workout_with_pt_links',{
         p_workout:payload,
-        p_assignment_id:launchAssignmentId||null,
-        p_program_session_id:launchProgramSessionId||null
+        p_assignment_id:launchLinkContext.assignmentId,
+        p_program_session_id:launchLinkContext.programSessionId
       })
       if(saveError)throw saveError
       if(!workoutId)throw new Error('Databasen returnerte ikkje ID for den lagra økta.')
