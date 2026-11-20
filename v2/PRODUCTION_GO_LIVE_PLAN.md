@@ -469,3 +469,16 @@ The release requirement is a production-specific, deactivation-first workflow. P
 Full source review, FK inventory, risks and acceptance tests are recorded in [GO_LIVE_PHASE_B15_ACCOUNT_DELETION_RETENTION_GATE_2026-11-20.md](./GO_LIVE_PHASE_B15_ACCOUNT_DELETION_RETENTION_GATE_2026-11-20.md).
 
 **B15 outcome:** Account deletion is blocked from production; no Edge Function/Auth/profile changes were made. Release remains **NO-GO**.
+
+
+## 15. Phase B16 – Wave 0 recovery gate revalidation (2026-11-20)
+
+Fresh project checks show production and test are both `ACTIVE_HEALTHY`. There are no Supabase development branches in either project. Production has 11 migration ledger entries; test has 163, and the histories are independent. No restore target exists.
+
+The connected tools do not expose completed backup timestamps, PITR retention/recovery windows or restore outcomes. Project health must not be treated as backup evidence. No restore resource was created and no paid resource was requested.
+
+Wave 0 remains blocked until the owner supplies the latest completed production backup timestamp/timezone, PITR status and recovery window, any backup warnings, and confirmation that an isolated restore can be performed without unapproved cost. A successful isolated restore and rehearsal must precede any production changes.
+
+The exact evidence checklist and stop conditions are in [GO_LIVE_PHASE_B16_WAVE0_RECOVERY_GATE_REVALIDATION_2026-11-20.md](./GO_LIVE_PHASE_B16_WAVE0_RECOVERY_GATE_REVALIDATION_2026-11-20.md).
+
+**B16 outcome:** Recovery gate revalidated and still NOT PASSED. No production/test database changes, restore, Auth/Edge Function changes or deployment were performed. Release remains **NO-GO**.
