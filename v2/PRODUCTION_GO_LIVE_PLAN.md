@@ -714,3 +714,12 @@ Added `v2/supabase/preflight/auth_restore_acceptance_read_only.sql`; its aggrega
 Official Supabase guidance distinguishes Auth recovery from a public-schema dump: Auth schema data includes users/identities, and the Auth migration guidance covers password hashes; standard CLI dumps exclude managed `auth`/`storage` schemas. A destination with a different JWT secret invalidates existing tokens, so fresh sign-in must be tested even if password hashes and UUIDs are preserved. Raw exports are highly sensitive and must stay encrypted/off-repo. A local Docker/Supabase rehearsal is only a zero-hosting-cost candidate until Auth service-version compatibility and actual sign-in/trigger/RLS tests pass.
 
 **B37 outcome:** Auth inventory and privacy-safe acceptance query prepared and production-validated; no Auth data exported or changed. Actual encrypted export and isolated restore remain outstanding. Wave 0 remains blocked; production remains NO-GO.
+
+
+## 37. Phase B38 – production security/performance advisor revalidation (2026-11-20)
+
+Fresh production advisors at 22:36 UTC: security still reports 4 authenticated-callable SECURITY DEFINER warnings (`book_pt_session`, `is_active_user`, `is_admin`, `is_admin_or_manager`) and leaked-password protection disabled. The four functions were reviewed in B29 and have fixed search_path and intended caller/role checks; do not blindly revoke authenticated EXECUTE or convert them to invoker. Leaked-password protection is a real Auth hardening item to enable after Wave 0 recovery and then test.
+
+Performance advisor: 14 unindexed FKs, 34 RLS initplan warnings, 10 unused indexes, 3 tables with multiple permissive policies. Health advisor returned no lints. These are tracked optimization/review items; no blanket index drops, RLS rewrites or policy consolidation. Detailed record: [GO_LIVE_PHASE_B38_PRODUCTION_ADVISOR_REVALIDATION_2026-11-20.md](./GO_LIVE_PHASE_B38_PRODUCTION_ADVISOR_REVALIDATION_2026-11-20.md).
+
+B37 Auth acceptance has been clarified: user UUID/identity link and password-hash-presence evidence must match; session/refresh-token differences are acceptable if intentionally invalidated, with fresh sign-in tested. B28 owner runbook now documents this and the official Auth-schema recovery guidance. No production changes. Wave 0 remains blocked; production remains NO-GO.
