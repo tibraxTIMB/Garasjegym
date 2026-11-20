@@ -118,7 +118,7 @@ Production currently records exactly these 11 versions:
 - 20261120214242 secure_pt_session_capacity
 - 20261120214355 revoke_anon_public_table_access
 
-The test history is not a valid sequence to replay in production. It contains a test-only baseline, seed data, and a large set of migrations with version/name mismatches against repository SQL files. Reconstruct missing migration history before producing the final forward-only migration set. Never reset the test database or replay its full history against production as a shortcut.
+The V2 test history is now fully represented by the 163 SQL files in `v2/supabase/migrations` by version; there are zero installed test versions without a matching file and zero V2 SQL files absent from the test ledger. This supersedes older QA notes that reported 15 missing files and four uninstalled files. The test history is still not a valid sequence to replay in production: it contains a test-only baseline and seed migration, while production has a separate 11-version history. None of the 11 production versions is represented in the V2 migration directory. See [MIGRATION_RECONCILIATION_2026-11-20.md](./MIGRATION_RECONCILIATION_2026-11-20.md). Never reset the test database or replay its full history against production as a shortcut.
 
 ## 5. Security evidence
 
@@ -165,7 +165,7 @@ Completed:
 Outstanding:
 - Verify production backup/PITR and record a fresh restore point.
 - Obtain a fresh production schema dump/snapshot suitable for a restore rehearsal.
-- Reconcile repository migration files with installed test migration history.
+- Archive or reconstruct the SQL source for the 11 production-applied migration versions.
 - Produce a production-derived object-by-object delta and reviewed forward-only migrations.
 - Rehearse on a fresh production restore before any production migration.
 
