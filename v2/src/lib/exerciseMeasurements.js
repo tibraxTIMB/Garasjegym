@@ -1,6 +1,6 @@
 const HEIGHT_MOVEMENT = /box\\s*(?:jump|step.?up|step.?over)|burpee\\s*box|box\\s*over/i;
 const BODYWEIGHT_MOVEMENT = /air squat|burpee|double under|single under|toes-to-bar|pull-up|push-up|handstand push-up/i;
-const LOAD_MOVEMENT = /squat|deadlift|press|curl|row|clean|snatch|jerk|thrust|pulldown|leg press|swing|lunge|carry|wall ball|step.?up|step.?over|muscle-up/i;
+const LOAD_MOVEMENT = /squat|deadlift|press|curl|row|clean|snatch|jerk|thrust|pulldown|leg press|swing|lunge|carry|wall ball|step.?up|muscle-up/i;
 const EXTERNAL_LOAD = /manual|dumbbell|kettlebell|barbell|vektstang|stang|vektskive|landmine|medisinball|medicine ball|weight vest|vektvest/i;
 
 const hasValue = value => value !== null && value !== undefined && String(value).trim() !== '';
@@ -31,7 +31,7 @@ export function getExerciseMeasurementFlags(exercise = {}) {
   const usesHeight = HEIGHT_MOVEMENT.test(name) || hasSavedHeight;
   const externalLoad = EXTERNAL_LOAD.test(equipment) || EXTERNAL_LOAD.test(name);
   const ordinaryLoad = LOAD_MOVEMENT.test(name) && !BODYWEIGHT_MOVEMENT.test(name)
-    && (!usesHeight || /step.?up|step.?over/i.test(name));
+    && (!usesHeight || /step.?up/i.test(name));
   const usesLoad = Boolean(exercise.is_complex || hasSavedLoad || externalLoad || ordinaryLoad || !usesHeight);
 
   return { usesHeight, usesLoad };
