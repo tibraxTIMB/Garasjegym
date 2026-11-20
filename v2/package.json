@@ -10,7 +10,7 @@
     "check:migrations": "node scripts/check-migrations.mjs",
     "test:wod-order": "node --test scripts/wod-order.test.mjs",
     "test:app-base-url": "node --test scripts/app-base-url.test.mjs",
-    "test:infotainment": "node --test scripts/infotainment-events.test.mjs",
+    "test:infotainment": "node --test scripts/infotainment-events.test.mjs scripts/infotainment-timer.test.mjs",
     "test:wod-complexes": "node --test scripts/wod-complexes.test.mjs",
     "test:wod-import": "node --test scripts/wod-import.test.mjs",
     "test": "npm run test:wod-order && npm run test:training-launch-context && npm run test:app-base-url && npm run test:infotainment && npm run test:wod-complexes && npm run test:wod-import && npm run test:wod-engine && npm run test:timer-clock && npm run test:group-class-live-timer && npm run test:spotify-devices && npm run test:gestures && npm run test:heart-rate",
