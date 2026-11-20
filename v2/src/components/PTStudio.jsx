@@ -93,7 +93,7 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
  async function load() {
   setError('')
   const results = await Promise.all([
-   staff ? supabase.from('profiles').select('id,display_name,role,avatar_url,member_rank,active').eq('active',true).order('display_name') : Promise.resolve({data:[],error:null}),
+   staff ? supabase.from('profiles').select('id,display_name,role,avatar_url,member_rank,active,membership_status').eq('active',true).eq('membership_status','approved').order('display_name') : Promise.resolve({data:[],error:null}),
    supabase.from('pt_intakes').select('*').order('created_at',{ascending:false}).limit(300),
    supabase.from('pt_client_goals').select('*').order('created_at',{ascending:false}),
    supabase.from('pt_program_templates').select('*').eq('is_active',true).order('title'),
