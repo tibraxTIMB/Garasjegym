@@ -7,6 +7,7 @@ import {
 import { supabase } from '../lib/supabase.js'
 import { chooseSpotifyDevice, isUsableSpotifyDevice, spotifyErrorMessage } from '../lib/spotifyDevices.js'
 import { clearSpotifyOAuthSession, readSpotifyOAuthSession, writeSpotifyOAuthSession } from '../lib/spotifyOAuthStorage.js'
+import { shouldDiscardSpotifyRefreshToken, spotifyRefreshErrorMessage } from '../lib/spotifyTokens.js'
 
 const MusicContext = createContext(null)
 const TOKEN_KEY_PREFIX = 'garasjegym:spotify-token:'
@@ -97,9 +98,11 @@ export function MusicProvider({ children, memberId = null }) {
     })
     const refreshed = await response.json().catch(() => ({}))
     if (!response.ok) {
-      clearToken(memberId)
-      setSpotifyToken(null)
-      throw new Error(refreshed.error_description || 'Spotify-økta kunne ikkje fornyast. Kople til på nytt.')
+      if (shouldDiscardSpotifyRefreshToken(response.status, refreshed)) {
+        clearToken(memberId)
+        setSpotifyToken(null)
+      }
+      throw new Error(spotifyRefreshErrorMessage(response.status, refreshed))
     }
     const next = {
       ...token,
