@@ -55,3 +55,6 @@ jobs:
         run: npm run test:heart-rate
       - name: Build application
         run: npm run build
+      - name: Check built release artifact environment and secrets
+        working-directory: v2
+        run: npm run check:release-artifact
