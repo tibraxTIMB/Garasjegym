@@ -16,18 +16,18 @@ No data rows were exported. No SQL writes, grants, revokes, migrations, Auth cha
 ## 2. Confirmed production catalog facts
 - 18 public base tables were returned; RLS is enabled on all 18.
 - Seven public SECURITY DEFINER functions were returned. All seven have explicit `search_path = pg_catalog, public, pg_temp`.
-- Five of those functions have EXECUTE granted to authenticated: `book_pt_session`, `is_active_user`, `is_admin`, `is_admin_or_manager`; plus the function inventory count includes two trigger-only SECURITY DEFINER routines (`check_class_booking_capacity`, `handle_new_auth_user`, `pt_promote_waitlist_after_cancel`) whose ACLs do not grant authenticated execution. (The five count is not implied by this list: only four authenticated-executable routines were observed in the current function ACL output.)
+- Exactly four of the seven have EXECUTE granted to authenticated: `book_pt_session`, `is_active_user`, `is_admin`, and `is_admin_or_manager`. The three trigger routines (`check_class_booking_capacity`, `handle_new_auth_user`, `pt_promote_waitlist_after_cancel`) do not grant authenticated execution.
 - Production trigger inventory includes class booking capacity, updated-at triggers, and PT waitlist promotion.
 - No anon table grants appeared in the role_table_grants aggregation.
 
 ## 3. Critical finding – authenticated TRUNCATE and TRIGGER privileges
-The production privilege inventory reports the `authenticated` role has:
-- `TRUNCATE` on 13 public tables:
-  `class_bookings`, `classes`, `member_preferences`, `personal_records`, `pt_bookings`, `pt_client_notes`, `pt_messages`, `pt_requests`, `pt_session_capacity`, `pt_session_exercises`, `pt_sessions`, `social_comments`, `social_posts`.
+A follow-up query using `has_table_privilege` and `pg_class.relacl` independently confirms that the `authenticated` role has:
+- The initial role-grant aggregation listed 13 names, but the follow-up effective-privilege/ACL query confirms the following **12 public base tables**:
+  `class_bookings`, `classes`, `member_preferences`, `personal_records`, `pt_bookings`, `pt_client_notes`, `pt_messages`, `pt_requests`, `pt_session_exercises`, `pt_sessions`, `social_comments`, `social_posts`.
 - `TRIGGER` on the same 13 tables.
 - `REFERENCES` on the same 13 tables.
 
-This is a materially different risk from ordinary row-level INSERT/UPDATE/DELETE grants. PostgreSQL TRUNCATE is not filtered by row-level security; therefore RLS enabled on a table does not protect it from a role that has TRUNCATE privilege. The reported authenticated TRUNCATE grants must be independently confirmed against effective privileges and ACL grantors, and their provenance/default-privilege source identified. TRIGGER and REFERENCES are also unnecessary for normal client CRUD and should be reviewed.
+This is a materially different risk from ordinary row-level INSERT/UPDATE/DELETE grants. PostgreSQL TRUNCATE is not filtered by row-level security; therefore RLS enabled on a table does not protect it from a role that has TRUNCATE privilege. The ACL entries on all 12 tables explicitly show `authenticated=arwdDxtm/postgres`; the grants are direct relation ACL entries with `postgres` as grantor. `has_table_privilege` returns true for TRUNCATE, TRIGGER and REFERENCES on each of the 12 tables. `pt_session_capacity` appeared in the first information_schema aggregation but did not appear as a public base table in the follow-up `pg_class` query; its relation kind and grant path remain to be identified. The provenance/default-privilege source for the direct grants still needs investigation. TRIGGER and REFERENCES are also unnecessary for normal client CRUD and should be reviewed.
 
 **Do not execute a blanket revoke based only on this summary.** First capture exact `relacl`, `has_table_privilege` results, grantors, inherited role membership, schema default ACLs and dependency requirements. Then prepare a least-privilege remediation script and test it on an isolated restore. Production remediation remains blocked by the missing verified backup/restore evidence in Wave 0.
 
