@@ -119,3 +119,22 @@
 @media(max-width:900px){.infotainment-demo-stage{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}}
 @media(max-width:560px){.infotainment-demo-stage{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}}
 @media(prefers-reduced-motion:reduce){.infotainment-demo-progress span{transition:none}}
+
+
+/* Infotainment navigation and focused views */
+.infotainment-tabs{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px;border:1px solid #ffffff1c;border-radius:16px;background:#111820eF;backdrop-filter:blur(14px)}
+.infotainment-tabs button{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;padding:10px 20px;border:1px solid #ffffff24;border-radius:12px;background:#ffffff08;color:#d8dee6;font:inherit;font-weight:750;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
+.infotainment-tabs button:hover{background:#ffffff14;transform:translateY(-1px)}
+.infotainment-tabs button.selected{background:#e6a23a;color:#17191c;border-color:#e6a23a;box-shadow:0 5px 18px #e6a23a30}
+.infotainment-tabs button:focus-visible{outline:3px solid #ffd28d;outline-offset:3px}
+.infotainment-grid.is-focused-tab{display:block;min-height:0}
+.infotainment-grid.is-focused-tab>.infotainment-panel{width:100%;max-width:1500px;margin:0 auto}
+.infotainment-grid.is-focused-tab>.infotainment-side{display:block;width:100%;max-width:1500px;margin:0 auto}
+.infotainment-music-expanded{padding:clamp(16px,2vw,28px)}
+.infotainment-music-expanded .music-page{max-width:1200px;margin:0 auto}
+@media(max-width:700px){
+ .infotainment-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:6px}
+ .infotainment-tabs button{min-width:0;min-height:48px;padding:8px 4px;gap:5px;flex-direction:column;font-size:11px}
+ .infotainment-tabs button svg{width:17px;height:17px}
+}
+@media(prefers-reduced-motion:reduce){.infotainment-tabs button{transition:none}}
