@@ -222,6 +222,9 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   }
 
   useEffect(() => {
+    timerRunStartedAt.current = null
+    timerRunBaseElapsed.current = 0
+    elapsedRef.current = 0
     setElapsed(0); setRunning(false); setRound(1); setPhase('Klar'); setLaps([])
     setWorkSeconds(getDefaultWorkSeconds(format,timerSettings))
     setRestSeconds(getDefaultRestSeconds(format,timerSettings))
@@ -233,6 +236,9 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   // immediately. The token also retriggers this when the Timer component stays mounted.
   useEffect(() => {
     if (!autoStartToken) return
+    timerRunBaseElapsed.current = 0
+    elapsedRef.current = 0
+    timerRunStartedAt.current = Date.now()
     setElapsed(0)
     setRound(1)
     setLaps([])
@@ -358,7 +364,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         <div className="timer-actions">
           <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) { setPhase('PÅGÅR'); setHasStarted(true) } setRunning(value => !value) }} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
           {isAmrap && <button type="button" className="timer-lap-button" onClick={lapAction} disabled={!running}>+ REGISTRER RUNDE</button>}
-          <button type="button" className="secondary-button" onClick={() => { setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar'); setHasStarted(false) }}><RotateCcw size={14}/> Nullstill</button>
+          <button type="button" className="secondary-button" onClick={() => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar'); setHasStarted(false) }}><RotateCcw size={14}/> Nullstill</button>
           {(isStopwatch || isForTime) && <button type="button" className="secondary-button" onClick={() => setLaps(value => [...value, elapsed])}>Mellomtid</button>}
           <button type="button" className="secondary-button" onClick={() => setSoundOn(value => !value)}>{soundOn ? 'Lyd på' : 'Lyd av'}</button>
           <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
