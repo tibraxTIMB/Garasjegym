@@ -10,7 +10,10 @@ export function readDeviceProfile() {
   const shortSide = Math.min(width, height)
   const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches || false
   const touch = coarsePointer || (navigator.maxTouchPoints || 0) > 0
-  const orientation = width >= height ? 'landscape' : 'portrait'
+  const screenOrientation = window.screen?.orientation?.type
+  const orientation = screenOrientation
+    ? (screenOrientation.startsWith('landscape') ? 'landscape' : 'portrait')
+    : (window.matchMedia?.('(orientation: landscape)').matches ? 'landscape' : 'portrait')
   const device = shortSide < 600 || width < 600
     ? 'mobile'
     : (touch || width < 1100)
