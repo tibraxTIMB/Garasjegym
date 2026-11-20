@@ -654,3 +654,14 @@ Preservation contract re-confirmed: preserve all existing Auth/profile identitie
 Detailed evidence: [GO_LIVE_PHASE_B31_PRODUCTION_DATA_PRESERVATION_CHECKPOINT_2026-11-20.md](./GO_LIVE_PHASE_B31_PRODUCTION_DATA_PRESERVATION_CHECKPOINT_2026-11-20.md).
 
 **B31 outcome:** Core aggregate counts remain stable. No production changes. Wave 0 remains NOT PASSED; production remains NO-GO.
+
+
+## 31. Phase B32 – production catalog capture and trigger-function grant review (2026-11-20)
+
+Added `v2/supabase/preflight/production_catalog_capture_read_only.sql`, a SELECT-only inventory for tables/RLS, columns/defaults, constraints, indexes, policies, triggers, functions, views, extensions and grants. All 12 query sections were executed individually against production and completed successfully. Fresh counts: 18 public tables (all RLS enabled), 173 columns, 70 constraints, 49 policies, 38 indexes, 6 non-internal triggers, 8 public functions and 1 view. No direct anon table grants.
+
+The routine-grant inventory found one unnecessary grant exception: `public.set_updated_at()` (RETURNS trigger, SECURITY INVOKER) has EXECUTE for PUBLIC, anon and authenticated, unlike the other three trigger-returning functions which are restricted to postgres/service_role. This does not itself prove anonymous table access: anon has zero direct table grant rows and all public base tables have RLS. Because it is trigger-only, it cannot be called as an ordinary scalar/RPC function; nevertheless the grant is unnecessary and should be removed in a reviewed migration after restore rehearsal and trigger smoke tests. Proposed narrow revoke is documented but NOT applied. Also reconcile the existing production `restrict_trigger_function_execution` migration intent against this live ACL.
+
+GitHub commit search for all eleven production migration version identifiers returned no matching commits; source lineage remains unresolved. Detailed record: [GO_LIVE_PHASE_B32_CATALOG_CAPTURE_AND_TRIGGER_GRANT_REVIEW_2026-11-20.md](./GO_LIVE_PHASE_B32_CATALOG_CAPTURE_AND_TRIGGER_GRANT_REVIEW_2026-11-20.md).
+
+**B32 outcome:** Read-only catalog capture query pack validated; one unnecessary trigger-function EXECUTE grant exception documented for later rehearsal. No production changes. Wave 0 and production release remain NO-GO.
