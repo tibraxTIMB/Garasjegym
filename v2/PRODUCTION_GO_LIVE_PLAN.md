@@ -676,3 +676,12 @@ New finding: `pg_default_acl` for objects created by role `postgres` in schema p
 Proposed, unapplied narrow fix after restore rehearsal: revoke anon EXECUTE from postgres-owned future public functions via ALTER DEFAULT PRIVILEGES, and revoke PUBLIC/anon/authenticated EXECUTE on trigger-only `set_updated_at()` while preserving postgres/service_role. Keep authenticated RPC grants intact and verify the default ACL and trigger behavior on the restored copy. Detailed record: [GO_LIVE_PHASE_B33_EFFECTIVE_PRIVILEGES_AND_DEFAULT_ACL_REVIEW_2026-11-20.md](./GO_LIVE_PHASE_B33_EFFECTIVE_PRIVILEGES_AND_DEFAULT_ACL_REVIEW_2026-11-20.md).
 
 **B33 outcome:** Existing anon table/sequence access is zero, but future postgres-owned public functions inherit anon EXECUTE by default. A narrow default-ACL correction is prepared, not applied. Production remains NO-GO.
+
+
+## 33. Phase B34 – RLS policy audience and PT capacity view verification (2026-11-20)
+
+Fresh production RLS inventory: 49 policies; all target `authenticated`; none target `anon` or `PUBLIC`; 49 permissive and 0 restrictive. All 18 public tables have RLS enabled (none FORCE RLS). Multiple policies per table remain operation-specific; advisor overlap warnings on exercises, pt_session_exercises and wods are not grounds for blind policy consolidation. Behavioral member/member and member/coach isolation tests remain required on the restored production copy.
+
+Verified live `pt_session_capacity` has `security_invoker=true`; anon has no private schema usage, helper EXECUTE or view SELECT; authenticated has the intended access. The view exposes only aggregate session capacity counts. Detailed record: [GO_LIVE_PHASE_B34_RLS_AUDIENCE_AND_PT_VIEW_VERIFICATION_2026-11-20.md](./GO_LIVE_PHASE_B34_RLS_AUDIENCE_AND_PT_VIEW_VERIFICATION_2026-11-20.md).
+
+**B34 outcome:** Policy audience and PT aggregate view boundary verified; no new anonymous policy exposure found. No production changes. Production remains NO-GO pending Wave 0 and role-isolation rehearsal.
