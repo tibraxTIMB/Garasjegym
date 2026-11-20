@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, CheckCircle2, Clock3, Dumbbell, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
+import { RELEASE_NAME } from '../lib/release.js'
 import HeartRateTrainingPanel from './HeartRateTrainingPanel.jsx'
 import { MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
@@ -995,7 +996,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         </section>
       </div>}
     </form> : <>
-      <div className="training-heading"><div><div className="section-kicker">{simpleMode ? "SUPERENKEL MODUS · TRENING" : "TRENING · MOTOR"}</div><h3>{simpleMode ? "Kva vil du gjera i dag?" : "Vel øktform"}</h3>{simpleMode&&<p>Vel ei ferdig økt eller start di eiga. Resultatet blir lagra på profilen din.</p>}</div>{!simpleMode&&<span className="count-pill">STURMKOPF</span>}</div>
+      <div className="training-heading"><div><div className="section-kicker">{simpleMode ? "SUPERENKEL MODUS · TRENING" : "TRENING · MOTOR"}</div><h3>{simpleMode ? "Kva vil du gjera i dag?" : "Vel øktform"}</h3>{simpleMode&&<p>Vel ei ferdig økt eller start di eiga. Resultatet blir lagra på profilen din.</p>}</div>{!simpleMode&&<span className="count-pill">{RELEASE_NAME}</span>}</div>
       <div className={simpleMode ? "engine-entry-grid simple-entry-grid" : "engine-entry-grid"}>
         <button type="button" onClick={() => startWorkout()}><Dumbbell size={20}/><strong>{simpleMode ? "Start trening" : "Fri trening"}</strong><small>{simpleMode ? "Start klokka og tren" : "Bygg økta frå botnen"}</small></button>
         <button type="button" onClick={() => setMode('wods')}><Activity size={20}/><strong>{simpleMode ? "Følg eit opplegg" : "Start ein WOD"}</strong><small>{simpleMode ? "Vel ei økt som er laga for deg" : "Vel ei publisert økt"}</small></button>
