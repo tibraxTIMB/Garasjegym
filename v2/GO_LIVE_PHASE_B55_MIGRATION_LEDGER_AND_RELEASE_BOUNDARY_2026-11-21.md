@@ -50,3 +50,14 @@ The current workflows run `npm run check:migrations` and `npm test`; they do not
 This phase performed read-only migration ledger and GitHub comparison checks and updated this report. No production database writes, Auth setting changes, Edge Function changes, deployment, Pages publication, merge, rebase, paid resource creation, or backup/restore operation occurred.
 
 **B55 result:** Migration ledger counts and release boundaries are reconfirmed. Production remains **NO-GO** until the gates above are independently passed.
+
+
+## 6. Fresh Supabase Advisor recheck
+
+Read-only advisor calls on both projects returned:
+- Production security: 4 authenticated-executable SECURITY DEFINER warnings (`book_pt_session`, `is_active_user`, `is_admin`, `is_admin_or_manager`) and 1 leaked-password-protection-disabled warning.
+- TEST security: 25 authenticated-executable SECURITY DEFINER warnings and 1 leaked-password-protection-disabled warning.
+- Production health: no lints.
+- TEST health: no lints.
+
+These are advisor findings, not proof that every listed RPC is exploitable. They require per-function grant, caller-role and data-scope review. Do not blanket-revoke helper execution: RLS policies and other RPCs may depend on those helpers. No grants or Auth settings were changed in this recheck.
