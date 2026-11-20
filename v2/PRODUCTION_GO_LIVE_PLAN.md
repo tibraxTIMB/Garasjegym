@@ -148,6 +148,26 @@ Only after rehearsal passes and the owner explicitly confirms GO LIVE:
 
 ## 4. Remaining security settings and audit
 
+The test advisor now reports 13 authenticated `SECURITY DEFINER` RPC warnings and one Auth warning for leaked-password protection. The previous `security_definer_view` finding is no longer reported in test after the new view migration.
+
+The 13 authenticated RPCs are an intentional application API surface, not 13 anonymous entry points. The audited grants exclude `anon` and `PUBLIC`; each function is granted to `authenticated` and/or system roles. The reviewed authorization patterns are:
+
+- `book_class`, `book_pt_session`: require an authenticated active member; validate published/future session, duplicate booking, and capacity.
+- `create_pt_program_with_sessions`: requires active admin/manager.
+- `get_class_attendance_counts`: requires active membership, caps a request at 100 class IDs, and limits unpublished classes to staff.
+- `get_infotainment_schedule`: requires active membership and limits the requested period to 31 days.
+- `is_active_user`, `is_admin`, `is_admin_or_manager`: evaluate the caller's own profile via `auth.uid()`; they do not accept a target user ID.
+- `place_coffee_order`: legacy wrapper delegates to `place_coffee_order_v2`, which checks the caller's active membership. Keep the wrapper only while compatibility requires it.
+- `skip_coffee_product_review`, `submit_coffee_product_review`: require active membership and verify that the order item belongs to the caller and is collected.
+- `toggle_social_reaction`: requires active membership and validates the reaction and target post.
+
+These functions must remain on a reviewed allowlist with regression tests. Do not remove the warning by blindly changing atomic booking/order functions to invoker mode; that can break their intended transaction and RLS behavior. If a function is not needed by the app, revoke its authenticated EXECUTE grant in a separate reviewed migration.
+
+The test performance advisor also reports 41 RLS init-plan warnings and unindexed foreign-key warnings. These are performance findings, not authorization bypasses. Fix them in a separate optimization pass after verifying policy semantics and query plans; do not bulk-rewrite policies as part of a production schema reconciliation.
+
+- Supabase's production advisor reported leaked-password protection disabled. This is an Auth configuration setting, not a SQL migration. It must be enabled in the production Auth settings after confirming the user-facing password policy and recovery flow. It has not been changed by this work.
+
+
 - Supabase's production advisor reported leaked-password protection disabled. This is an Auth configuration setting, not a SQL migration. It must be enabled in the production Auth settings after confirming the user-facing password policy and recovery flow. It has not been changed by this work.
 - The test audit found 27 `SECURITY DEFINER` functions in `public`. Several are trigger-only and have execution restricted to system roles; member-facing RPCs have explicit authenticated grants and perform identity/role checks. Keep a per-function allowlist and test each member-facing RPC. Do not mechanically convert all of them to invoker functions because some are intentional atomic workflows or RLS helper functions.
 - Review all advisor warnings, including unindexed foreign keys and RLS init-plan performance warnings. These are not all launch blockers, but the final release must record accepted risks and resolve avoidable warnings.
