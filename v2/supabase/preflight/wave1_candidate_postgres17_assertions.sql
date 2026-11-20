@@ -260,7 +260,11 @@ SELECT 'WAVE1_POSTGRES17_CANDIDATE_TESTS_PASSED' AS result;
 -- or client-linked published PT session; public unassigned PT slot remains visible.
 UPDATE public.profiles
 SET active=true,membership_status='approved',role='member'
-WHERE id IN ('00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000003');
+WHERE id IN ('00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000004');
+INSERT INTO public.pt_coaches(user_id,is_active)
+VALUES ('00000000-0000-0000-0000-000000000004',true);
+INSERT INTO public.pt_client_assignments(coach_user_id,member_id,status)
+VALUES ('00000000-0000-0000-0000-000000000004','00000000-0000-0000-0000-000000000003','active');
 SET ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',false);
 DO $privacy_member$
@@ -289,5 +293,20 @@ BEGIN
   END IF;
 END;
 $privacy_admin$;
+RESET ROLE;
+RESET ROLE;
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000004',false);
+DO $privacy_coach$
+DECLARE v_sessions bigint; v_client_sessions bigint;
+BEGIN
+  SELECT count(*) INTO v_sessions FROM public.pt_sessions;
+  SELECT count(*) INTO v_client_sessions FROM public.pt_sessions
+  WHERE client_id='00000000-0000-0000-0000-000000000003';
+  IF v_sessions <> 2 OR v_client_sessions <> 1 THEN
+    RAISE EXCEPTION 'Assigned coach should see public slot plus only assigned client session; got total %, client-linked %',v_sessions,v_client_sessions;
+  END IF;
+END;
+$privacy_coach$;
 RESET ROLE;
 SELECT 'WAVE2_RLS_PRIVACY_TESTS_PASSED' AS result;
