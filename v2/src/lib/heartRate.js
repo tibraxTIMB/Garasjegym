@@ -125,7 +125,7 @@ export async function connectHeartRateSensor() {
       if (bpm == null || attempt !== connectionAttempt) return
       publish({
         status: 'connected',
-        deviceName: device.name || 'Bluetooth-pulsbelte',
+        deviceName: device.name || 'Bluetooth-pulskjelde',
         bpm,
         receivedAt: Date.now(),
         error: '',
