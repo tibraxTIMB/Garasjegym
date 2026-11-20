@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { isUsableSpotifyDevice } from '../src/lib/spotifyDevices.js'
+import { chooseSpotifyDevice, isUsableSpotifyDevice } from '../src/lib/spotifyDevices.js'
 
 test('Spotify devices include tablets, computers and speakers', () => {
   for (const type of ['Smartphone','Tablet','Computer','Speaker','TV']) {
@@ -12,4 +12,21 @@ test('restricted and unidentified Spotify devices are excluded', () => {
   assert.equal(isUsableSpotifyDevice({id:'restricted',type:'Speaker',is_restricted:true}), false)
   assert.equal(isUsableSpotifyDevice({type:'Tablet',is_restricted:false}), false)
   assert.equal(isUsableSpotifyDevice(null), false)
+})
+
+test('Spotify device selection keeps the current choice when it is still available', () => {
+  const devices = [
+    {id:'speaker',type:'Speaker',is_active:true,is_restricted:false},
+    {id:'tablet',type:'Tablet',is_active:false,is_restricted:false},
+  ]
+  assert.equal(chooseSpotifyDevice(devices,'tablet'),'tablet')
+})
+
+test('Spotify device selection falls back to active, then first available device', () => {
+  assert.equal(chooseSpotifyDevice([
+    {id:'first',is_active:false,is_restricted:false},
+    {id:'active',is_active:true,is_restricted:false},
+  ],'missing'),'active')
+  assert.equal(chooseSpotifyDevice([{id:'first',is_restricted:false}],'missing'),'first')
+  assert.equal(chooseSpotifyDevice([], 'missing'),'')
 })
