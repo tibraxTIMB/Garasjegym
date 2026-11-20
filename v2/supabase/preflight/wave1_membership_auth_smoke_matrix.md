@@ -21,7 +21,7 @@ Do not create these users in production. Remove test identities only from the di
 
 | Capability | No JWT (U) | Anonymous Auth (AN) | Pending P | Rejected R | Inactive X | Approved member M/N | Manager G | Admin A |
 |---|---|---|---|---|---|---|---|
-| Auth session can exist | No | Yes, if signup/login configured | Yes, if login allowed | Yes | Yes | Yes | Yes |
+| Auth session can exist | No | Yes, if anonymous sign-in is enabled | Yes | Yes | Yes | Yes | Yes | Yes |
 | App full access | No | No | No | No | No | Yes | Yes | Yes |
 | Read own profile | No | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
 | Read another member's profile | No | No | No | No | No | No | Yes, per staff policy | Yes |
