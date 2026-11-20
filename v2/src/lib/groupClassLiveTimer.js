@@ -38,7 +38,7 @@ export function getGroupClassLiveTimer({ format = '', elapsed = 0, settings = {}
     }
   }
 
-  const emomMatch = String(format).trim().toUpperCase().match(/^E(\\d+(?:\\.\\d+)?)MOM$/)
+  const emomMatch = String(format).trim().toUpperCase().match(/^E(\d+(?:\.\d+)?)MOM$/)
   if (emomMatch || ['EMOM', 'EMOM 1', 'EMOM 2'].includes(format)) {
     const configuredEvery = Number(schema?.interval?.work_every_minutes)
     const everyMinutes = Math.max(0.25, Math.min(60,
