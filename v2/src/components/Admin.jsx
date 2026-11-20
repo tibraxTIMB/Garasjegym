@@ -4,6 +4,7 @@ import {rankForCount,RANK_TITLES} from './Overview.jsx'
 import {supabase} from '../lib/supabase.js'
 import CoffeeBar from './CoffeeBar.jsx'
 import { RELEASE_NAME } from '../lib/release.js'
+import { canManageMemberAccess } from '../lib/membershipAccess.js'
 
 export default function Admin({profile}){
  const [members,setMembers]=useState([]),[wods,setWods]=useState([]),[exercises,setExercises]=useState([]),[rankCounts,setRankCounts]=useState({}),[adminTab,setAdminTab]=useState('oversikt')
@@ -60,7 +61,7 @@ export default function Admin({profile}){
    setExerciseName('');setEquipment('');setVideoUrl('');setBodyArea('Fullkropp');setExerciseDescription('');setVariantLabel('');setDoseDefaults({rx:{men_kg:'',women_kg:''},scaled:{men_kg:'',women_kg:''},foundation:{men_kg:'',women_kg:''}});setEditingExercise(null);setShowExerciseForm(false);setNotice(editingExercise?'Øving oppdatert.':'Øving lagra i biblioteket.');await load()
   }catch(e){setError(e.message||'Kunne ikkje lagra øving.')}finally{setBusy('')}
  }
- function canManageMember(member){return isAdmin||(profile.role==='manager'&&member.id!==profile.id&&member.membership_status==='approved'&&member.active===true&&member.role==='member')}
+ function canManageMember(member){return canManageMemberAccess(profile,member)}
  function startMemberRename(member){setEditingMemberId(member.id);setMemberNameDraft(member.display_name||'')}
  function cancelMemberRename(){setEditingMemberId('');setMemberNameDraft('')}
  async function saveMemberName(member){
