@@ -30,18 +30,22 @@ export default function HeartRateSettings() {
   useEffect(() => {
     let live = true
     async function load() {
-      if (!supabase) throw new Error('Supabase er ikkje konfigurert.')
-      const { data, error: authError } = await supabase.auth.getUser()
-      if (authError) throw authError
-      const user = data?.user
-      if (!user) { if (live) setLoading(false); return }
-      const { data, error: loadError } = await supabase.from('member_preferences')
-        .select('hr_enabled,hr_share_with_pt,hr_share_on_screen,hr_save_history')
-        .eq('user_id', user.id).maybeSingle()
-      if (!live) return
-      if (loadError) setError('Kunne ikkje lesa pulsinnstillingane: ' + loadError.message)
-      else setPreferences({ ...DEFAULTS, ...(data || {}) })
-      setLoading(false)
+      try {
+        if (!supabase) throw new Error('Supabase er ikkje konfigurert.')
+        const { data: authData, error: authError } = await supabase.auth.getUser()
+        if (authError) throw authError
+        const user = authData?.user
+        if (!user) return
+        const { data: preferenceData, error: loadError } = await supabase.from('member_preferences')
+          .select('hr_enabled,hr_share_with_pt,hr_share_on_screen,hr_save_history')
+          .eq('user_id', user.id).maybeSingle()
+        if (loadError) throw loadError
+        if (live) setPreferences({ ...DEFAULTS, ...(preferenceData || {}) })
+      } catch (loadError) {
+        if (live) setError('Kunne ikkje lesa pulsinnstillingane: ' + (loadError.message || 'Ukjend feil'))
+      } finally {
+        if (live) setLoading(false)
+      }
     }
     load()
     return () => { live = false }
@@ -56,9 +60,9 @@ export default function HeartRateSettings() {
     setNotice('')
     try {
       if (!supabase) throw new Error('Supabase er ikkje konfigurert.')
-      const { data, error: authError } = await supabase.auth.getUser()
+      const { data: authData, error: authError } = await supabase.auth.getUser()
       if (authError) throw authError
-      const user = data?.user
+      const user = authData?.user
       if (!user) throw new Error('Du må vere innlogga.')
       const { error: saveError } = await supabase.from('member_preferences')
         .upsert({ user_id: user.id, ...next, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
