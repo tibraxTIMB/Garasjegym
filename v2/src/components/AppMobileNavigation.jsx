@@ -18,6 +18,8 @@ function shortLabel(item) {
 
 export default function AppMobileNavigation({ items = [], active, staff = false, onNavigate }) {
   const [moreOpen, setMoreOpen] = useState(false)
+  const [moreExpanded, setMoreExpanded] = useState(false)
+  const [touchStartY, setTouchStartY] = useState(null)
   const preferred = staff ? STAFF_PRIMARY : MEMBER_PRIMARY
   const primary = preferred.map(id => items.find(item => item.id === id)).filter(Boolean).slice(0, 4)
   const primaryIds = new Set(primary.map(item => item.id))
@@ -35,6 +37,7 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
 
   function choose(item) {
     setMoreOpen(false)
+    setMoreExpanded(false)
     onNavigate?.(item.id)
   }
 
@@ -73,12 +76,24 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
         <div className="app-more-backdrop" onClick={() => setMoreOpen(false)}>
           <section
             id="app-mobile-more"
-            className="app-more-sheet"
+            className={moreExpanded ? 'app-more-sheet is-expanded' : 'app-more-sheet'}
+            onTouchStart={event => setTouchStartY(event.touches[0]?.clientY ?? null)}
+            onTouchEnd={event => {
+              if (touchStartY == null) return
+              const delta = event.changedTouches[0].clientY - touchStartY
+              if (delta < -45) setMoreExpanded(true)
+              if (delta > 65) {
+                if (moreExpanded) setMoreExpanded(false)
+                else setMoreOpen(false)
+              }
+              setTouchStartY(null)
+            }}
             role="dialog"
             aria-modal="true"
             aria-label="Fleire område"
             onClick={event => event.stopPropagation()}
           >
+            <div className="app-more-sheet-grabber" aria-hidden="true"><span /></div>
             <div className="app-more-sheet-head">
               <div>
                 <span className="app-shell-eyebrow">GARASJEGYM</span>
