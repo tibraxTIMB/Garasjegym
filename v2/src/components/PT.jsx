@@ -43,9 +43,14 @@ export default function PT({profile,coachMode=false,focusRequestId,onFocusConsum
    const targetClientId=staff
     ?(controlledClientId||activeClient||(!hideCustomerPicker?messageClient:''))
     :user.id
+   const bookingQuery=adminOrManager
+    ?supabase.from('pt_bookings').select('id,session_id,member_id,status,note')
+    :targetClientId
+     ?supabase.from('pt_bookings').select('id,session_id,member_id,status,note').eq('member_id',targetClientId)
+     :supabase.from('pt_bookings').select('id,session_id,member_id,status,note').limit(0)
    const [s,b,r,m,p,n,ex,wd]=await Promise.all([
     supabase.from('pt_sessions').select('id,title,client_id,starts_at,duration_minutes,capacity,price,status,prep,message,cancellation_note,custom_workout,wod_ids,session_type,coach_notes,completed_notes,attendance_status').in('status',staff?['draft','published','planned','completed','cancelled']:['published','planned','completed','cancelled']).order('starts_at',{ascending:false}).limit(100),
-    staff ? supabase.from('pt_bookings').select('id,session_id,status,note') : supabase.from('pt_bookings').select('id,session_id,status,note').eq('member_id',user.id),
+    bookingQuery,
     supabase.from('pt_requests').select('id,member_id,preferred_at,alternative_at,availability_note,goal,status,staff_note,pt_session_id,created_at,handled_at,archived_at').order('created_at',{ascending:false}).limit(100).then(result=>staff?result:{...result,data:(result.data||[]).filter(row=>row.member_id===user.id)}),
     staff ? supabase.from('profiles').select('id,display_name,role,member_rank,avatar_url,membership_status').eq('role','member').neq('id',user.id).eq('active',true).eq('membership_status','approved').order('display_name') : Promise.resolve({data:[],error:null}),
     (()=>{let query=supabase.from('pt_messages').select('id,client_id,sender_id,body,created_at').order('created_at',{ascending:false}).limit(200);if(targetClientId)query=query.eq('client_id',targetClientId);else query=query.limit(0);return query})(),
