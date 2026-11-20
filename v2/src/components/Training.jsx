@@ -556,6 +556,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         exercise_id: item.exercise_id || '',
         exercise_name: item.exercise_name || '',
         minute_slot: item.minute_slot ?? '',
+        warmup_phase: item.warmup_phase || 'specific_prep',
         is_rest: !!item.is_rest,
         is_complex: !!item.is_complex,
         complex_family: item.complex_family || null,
@@ -657,7 +658,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       const elapsedSeconds = Number(timerSnapshot.elapsed)||0
       const parsedTime = scoreTime.trim() ? (()=>{const parts=scoreTime.trim().split(':').map(Number);return parts.length===2?parts[0]*60+parts[1]:parts.length===3?parts[0]*3600+parts[1]*60+parts[2]:NaN})() : (isForTimeScore&&elapsedSeconds>0?elapsedSeconds:null)
       if(scoreTime.trim()&&!Number.isFinite(parsedTime))throw new Error('Tid må skrivast som mm:ss eller tt:mm:ss.')
-      const hasRecordedScore=[scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||items.some(item=>Number(item.rowValue)>0||item.sets?.some(set=>String(set.height_cm??'').trim()!==''))
+      const hasRecordedScore=[scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||items.some(item=>Number(item.rowValue)>0||item.sets?.some(set=>[set.reps,set.load_kg,set.height_cm,set.time_text,set.time_seconds].some(value=>String(value??'').trim()!=='')))
       if(classSessionId&&source?.category!=='warmup'&&!hasRecordedScore)throw new Error('Hovud-WOD må ha minst eitt registrert resultat før du kan lagra.')
       const resultData = {
         version:3,format,prescription_level:wodLevel,wod_engine:source?.timer_settings?.workout_schema?.wod_engine||null,wod_ids:source?.id?[source.id]:manualWodIds,wod_names:(source?.id?[source.id]:manualWodIds).map(id=>wods.find(w=>w.id===id)?.name).filter(Boolean),elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':'completed',completed:true,time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
