@@ -164,7 +164,7 @@ export default function App() {
   const [scheduleTab,setScheduleTab]=useState('booking')
   const [ptStudioWorkspace,setPTStudioWorkspace]=useState('studio')
   const [ptStudioInitialTab,setPTStudioInitialTab]=useState('oversikt')
-  const [infotainmentActive,setInfotainmentActive]=useState(false)
+  const [infotainmentActive,setInfotainmentActive]=useState(()=>{try{return sessionStorage.getItem('garasjegym:infotainment-active')==='1'}catch{return false}})
   const [timerSnapshot,setTimerSnapshot]=useState({elapsed:0,remaining:0,phase:'Klar',running:false})
   const handleTimerSnapshot=useCallback(snapshot=>setTimerSnapshot(snapshot),[])
   function navigateTo(next){if(!next||next===active)return;setNavigationStack(stack=>[...stack,active].slice(-12));setActive(next)}
@@ -376,7 +376,7 @@ export default function App() {
         <footer>GARASJEGYM 2.0 · STURMKOPF</footer>
       </main>
       <AppMobileNavigation items={mobileNavItems} active={active} staff={!simpleMode&&isStaff(profile)} onNavigate={handleSectionNavigate}/>
-      {infotainmentActive&&isStaff(profile)&&<Suspense fallback={<div className="training-state" role="status">Lastar infotainment …</div>}><Infotainment onExit={()=>setInfotainmentActive(false)} timerSnapshot={timerSnapshot}/></Suspense>}
+      {infotainmentActive&&isStaff(profile)&&<Suspense fallback={<div className="training-state" role="status">Lastar infotainment …</div>}><Infotainment onExit={()=>{try{sessionStorage.removeItem('garasjegym:infotainment-active')}catch{}setInfotainmentActive(false)}} timerSnapshot={timerSnapshot}/></Suspense>}
     </div>
     </MusicProvider>
   )
