@@ -746,3 +746,10 @@ No production change or test signup. This strengthens the Wave 1 security requir
 Fresh aggregate identity inventory: all 3 existing identities use provider `email`; all 3 users are non-anonymous and non-SSO. This does not establish project-level Auth provider/signup settings. The connected read-only integration cannot inspect the Dashboard settings. Added [GO_LIVE_PHASE_B41_OWNER_AUTH_CONFIGURATION_CHECKLIST_2026-11-20.md](./GO_LIVE_PHASE_B41_OWNER_AUTH_CONFIGURATION_CHECKLIST_2026-11-20.md) for owner verification of email signup, anonymous sign-in, other providers, email confirmation, redirect URLs, SMTP, leaked-password protection, MFA and JWT expiry/signing-key type. Do not share secrets. Until Wave 1 fixes the `active DEFAULT true` trigger path, keep public signup disabled if self-service signup is not required. No settings changed.
 
 B37 Auth baseline now records email-only identities; session/refresh-token differences remain acceptable only when intentionally invalidated and fresh sign-in is proven. Production remains NO-GO pending Wave 0.
+
+
+## 41. Phase B42 – production profile RLS and grant boundary review (2026-11-20)
+
+Fresh production policy/grant inspection: `profile_select_own_or_staff` permits SELECT only for self or admin/manager; `profile_update_staff` permits admin or admin/manager updating another member profile, with role constrained to member on the manager path. Authenticated has table SELECT/UPDATE only; no client INSERT/DELETE. Anon has no table grant. New profiles are created through the SECURITY DEFINER Auth trigger. Wave 1 must preserve these row and column boundaries, keep authenticated INSERT/DELETE absent, and use an explicit admin approval path. Detailed record: [GO_LIVE_PHASE_B42_PROFILE_RLS_AND_GRANT_BOUNDARY_2026-11-20.md](./GO_LIVE_PHASE_B42_PROFILE_RLS_AND_GRANT_BOUNDARY_2026-11-20.md).
+
+No profile policies or grants changed. Production remains NO-GO pending Wave 0 and Wave 1 isolated rehearsal.
