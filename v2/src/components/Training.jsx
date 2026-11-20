@@ -802,7 +802,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
 
   if (loading) return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar treningsdata …</div>
 
-  return <div className={simpleMode ? "training-module simple-mode" : "training-module"}>
+  return <div className={simpleMode && mode === "home" ? "training-module simple-mode" : "training-module"}>
     {error && <div className="auth-error" role="alert">{error}</div>}
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16}/> {notice}</div>}
     {mode === 'active' ? <form className="engine-form gg-training-session" onSubmit={saveWorkout}>
