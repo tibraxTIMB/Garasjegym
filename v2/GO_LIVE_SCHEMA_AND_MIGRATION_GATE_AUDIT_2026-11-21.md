@@ -3,7 +3,7 @@
 Date: 2026-11-21  
 Repository: `tibraxTIMB/Garasjegym`  
 Working branch: `garasjegym-2.0-sturm­kopf`  
-Latest audited working commit before this report update: `92a90509d9dbdbce08facf7dec8a07aed4661928`
+Latest audited working commit before this report update: `e5a17bc65d53e4afa2fd03f27399488a3d24ebca`
 
 ## Decision
 
@@ -80,7 +80,7 @@ These files have been committed on the isolated branch. The three new preflight 
 
 ## Required next gates
 
-1. Run `npm install`, `npm test`, `npm run build`, `npm run check:migrations`, and the production migration preflight in a real checkout of this exact branch/commit. No npm lockfile currently exists in the repository, so `npm ci` is not available and dependency resolution is not yet locked.
+1. Run `npm install`, `npm test`, `npm run build`, `npm run check:migrations`, and the production migration preflight in a real checkout of this exact branch/commit. No npm lockfile currently exists in the repository, so `npm ci` is not available and dependency resolution is not yet locked. The workflow currently uses `npm install` as a temporary validation path; adding and committing a reviewed lockfile remains a release-quality requirement.
 2. Split test-only baseline, seed, and bootstrap SQL from the production migration path; add a guard test proving they cannot enter the production deployment artifact.
 3. Build a production-specific migration plan for the 28 tables and 35 columns, including RLS, grants, indexes, triggers, functions, views, storage policies, and data backfill/compatibility.
 4. Obtain an external backup and prove a restore to a separate disposable project before production writes.
