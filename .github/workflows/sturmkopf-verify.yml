@@ -43,5 +43,7 @@ jobs:
         run: npm run test:timer-clock
       - name: Test group class live timer phases
         run: npm run test:group-class-live-timer
+      - name: Test Spotify playback device compatibility
+        run: npm run test:spotify-devices
       - name: Build application
         run: npm run build
