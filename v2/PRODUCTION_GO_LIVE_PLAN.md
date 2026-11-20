@@ -76,6 +76,32 @@ This list is a table-presence comparison, not a complete column, constraint, tri
 
 Test has `hr_enabled`, `hr_share_with_pt`, `hr_share_on_screen`, and `hr_save_history` on `member_preferences`. Production currently has only the older `user_id`, `super_simple_mode`, and `updated_at` columns. The Live HR migration is not installed in production.
 
+### Object-level schema drift (same-day production/test comparison)
+
+The deeper comparison confirms that the 28 missing tables are only part of the gap:
+
+| Object type | Production | Test | Difference |
+|---|---:|---:|---|
+| Public columns | 173 | 502 | 329 test-only; 0 production-only; 2 changed |
+| RLS policies | 49 | 129 | 83 test-only; 3 production-only; 8 changed |
+| Indexes | 38 | 170 | 133 test-only; 1 production-only |
+| Constraints | 70 | 223 | 153 test-only; 0 production-only; 1 changed |
+| Triggers | 6 | 25 | 20 test-only; 1 production-only |
+| Public functions | 8 | 42 | 34 test-only; 0 production-only; 3 changed |
+| Public views | 1 | 1 | 1 changed definition |
+
+Important differences on existing production tables:
+
+- `exercises.body_area`: production is nullable with no default; test is NOT NULL with default `'Fullkropp'`.
+- `workout_logs.result_data`: production is NOT NULL with default `'{}'::jsonb`; test is nullable with no default. This must be reconciled against every app insert/update path before changing either side.
+- `class_bookings.status`: production check constraint does not allow `waitlist`; test does. The class booking insert/update policies and trigger logic have also evolved.
+- `check_class_booking_capacity()`, `handle_new_auth_user()`, and `is_active_user()` differ between projects. In particular, the test signup trigger creates new profiles inactive and pending, and test active-user checks require approved membership. Preserve this safety behavior when bringing production forward.
+- Production has three policies not present in test: `member_preferences_select_own`, `pt_bookings_delete`, and `pt_bookings_insert`. These are legacy access paths that must be reconciled with the stricter test policies before launch.
+- Production has a unique partial index `class_bookings_one_active` on `(class_id, member_id)` for confirmed/pending bookings. Test has a differently named replacement index that includes the waitlist state. Do not drop the production index until the replacement's uniqueness and waitlist semantics are verified against existing rows.
+- Production has one legacy `class_bookings_capacity_check` trigger; test uses the newer row-locking capacity guard plus waitlist promotion and booking notifications. Replace only after concurrency and waitlist tests pass.
+
+The 329 column, 83 policy, 133 index, 153 constraint, 20 trigger, and 34 function differences are not safe to solve by copying objects blindly. They require a reviewed, ordered forward migration with data-preserving transformations and role-specific tests.
+
 ## 2. Security fix prepared and verified in test
 
 Production's `public.pt_session_capacity` view had no `security_invoker` option and had grants for `anon` and `authenticated`. Its query aggregates booking counts, but as a default owner-privileged view it bypasses underlying RLS.
