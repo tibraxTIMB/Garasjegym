@@ -33,13 +33,13 @@ Deno.serve(async (req: Request) => {
   const user = await userResponse.json();
 
   const profileResponse = await fetch(
-    `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=role,active`,
+    `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=role,active,membership_status`,
     { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } },
   );
   if (!profileResponse.ok) return reply({ error: "Klarte ikkje kontrollere medlemsrolla." }, 503);
   const profiles = await profileResponse.json();
   const profile = profiles?.[0];
-  if (!profile?.active) return reply({ error: "Aktivt medlemskap er nødvendig." }, 403);
+  if (!profile?.active || profile.membership_status !== "approved") return reply({ error: "Godkjent og aktivt medlemskap er nødvendig." }, 403);
 
   const staff = profile.role === "admin" || profile.role === "manager";
   if (!soundtrackToken || !soundZone) {
