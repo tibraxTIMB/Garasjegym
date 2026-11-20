@@ -540,3 +540,14 @@ Test advisors report 25 SECURITY DEFINER warnings, leaked password protection di
 No grants, functions, policies, indexes or Auth settings were changed. Do not mass-revoke, convert all SECURITY DEFINER helpers or drop indexes from advisor output alone. Remediation order and validation requirements are in [GO_LIVE_PHASE_B21_SECURITY_PERFORMANCE_ADVISOR_GATE_2026-11-20.md](./GO_LIVE_PHASE_B21_SECURITY_PERFORMANCE_ADVISOR_GATE_2026-11-20.md).
 
 **B21 outcome:** Fresh security/performance baseline recorded. Production remains NO-GO pending Wave 0 recovery and schema migration gates.
+
+
+## 21. Phase B22 – hosting and deployment isolation revalidation (2026-11-20)
+
+Reviewed the three current workflows. The Pages preview build uses TEST Supabase izwzwvlexqxqewzijhhd, not production. Pushes build an artifact only; publishing the shared Pages URL requires manual workflow_dispatch with publish_preview=true and replaces the current shared Pages content. The STURMKOPF verification workflow runs targeted tests/build; the GarasjeGym 2.0 workflow runs full tests/build. Neither applies migrations or deploys production.
+
+The B20 Pages run built successfully but its deploy job was skipped, so it did not publish. No dedicated production workflow exists. A future production workflow requires a protected manual environment, production-only variables, exact artifact provenance, production-derived migrations, backup/restore gate, pre/postflight and smoke tests. Do not add/activate it until recovery and migration rehearsals pass.
+
+Full workflow audit is in [GO_LIVE_PHASE_B22_HOSTING_DEPLOYMENT_ISOLATION_2026-11-20.md](./GO_LIVE_PHASE_B22_HOSTING_DEPLOYMENT_ISOLATION_2026-11-20.md).
+
+**B22 outcome:** Preview/production separation revalidated. No production workflow or deploy was added. Production remains NO-GO.
