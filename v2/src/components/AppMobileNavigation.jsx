@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, MoreHorizontal, X } from 'lucide-react'
 
 const MEMBER_PRIMARY = ['oversikt', 'trening', 'wod', 'timeplan']
 const STAFF_PRIMARY = ['oversikt', 'trening', 'pt-studio', 'wod']
+const COACH_PRIMARY = ['oversikt', 'trening', 'pt-studio', 'wod']
 
 function shortLabel(item) {
   if (item.id === 'oversikt') return 'Heim'
@@ -17,12 +18,12 @@ function shortLabel(item) {
   return item.label
 }
 
-export default function AppMobileNavigation({ items = [], active, staff = false, onNavigate }) {
+export default function AppMobileNavigation({ items = [], active, staff = false, coach = false, onNavigate }) {
   const [moreOpen, setMoreOpen] = useState(false)
   const [moreExpanded, setMoreExpanded] = useState(false)
   const moreButtonRef = useRef(null)
   const moreSheetRef = useRef(null)
-  const preferred = staff ? STAFF_PRIMARY : MEMBER_PRIMARY
+  const preferred = staff ? STAFF_PRIMARY : coach ? COACH_PRIMARY : MEMBER_PRIMARY
   const primary = preferred.map(id => items.find(item => item.id === id)).filter(Boolean).slice(0, 4)
   const primaryIds = new Set(primary.map(item => item.id))
   const secondary = items.filter(item => !primaryIds.has(item.id))
