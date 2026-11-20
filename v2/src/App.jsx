@@ -366,7 +366,7 @@ export default function App() {
               else if(href==='pt-studio'){setPTStudioWorkspace('studio');navigateTo('pt-studio')}
               else if(href==='pt-info'){setPTStudioInitialTab('meldingar');navigateTo('pt-studio')}
               else if(item.category==='pt'){setFocusPTRequestId(null);setPTStudioWorkspace('studio');setPTStudioInitialTab(isPTCoach?'oversikt':isStaff(profile)?'pt-timar':'meldingar');navigateTo('pt-studio')}
-              else if(href)navigateTo(({booking:'timeplan',pt:'timeplan','mi-trening':'mi-side','wod-studio':'wod','wod-library':'wod'}[href]||href))
+              else if(href)navigateTo(({booking:'timeplan','/timeplan':'timeplan',pt:'timeplan','mi-trening':'mi-side','wod-studio':'wod','wod-library':'wod'}[href]||href))
             }} />
             {isStaff(profile)&&<button className="icon-button" onClick={()=>setInfotainmentActive(true)} title="Opna infotainment" aria-label="Opna infotainment"><MonitorPlay size={16}/></button>}<button className="icon-button" onClick={toggleAppFullscreen} title={appFullscreen?"Avslutt fullskjerm":"Fullskjerm"} aria-label={appFullscreen?"Avslutt fullskjerm":"Fullskjerm"}>{appFullscreen?<Minimize size={16}/>:<Maximize size={16}/>}</button><button className="icon-button" onClick={() => supabase.auth.signOut()} title="Logg ut" aria-label="Logg ut"><LogOut size={16} /></button>
           </div>
