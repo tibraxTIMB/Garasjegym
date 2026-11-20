@@ -9,7 +9,7 @@ const priorityMeta={
  normal:{label:'Vanleg',tone:'normal',icon:Info},
  low:{label:'Info',tone:'low',icon:Info}
 }
-const hrefLabel=href=>href?.startsWith('coffee-review:')?'Sjå produktvurdering':href?.startsWith('pt-request:')?'Opna PT-førespurnad':href?.startsWith('pt-client:')?'Opna kunde i PT-studio':href?.startsWith('group-class:')?'Opna gruppetime':href?.startsWith('booking:')?'Opna booking':href==='pt-studio'?'Opna PT-studio':href==='booking'||href==='/timeplan'?'Opna timeplan':href==='kaffi'?'Opna kaffibar':'Opna'
+const hrefLabel=href=>href?.startsWith('coffee-review:')?'Sjå produktvurdering':href?.startsWith('pt-request:')?'Opna PT-førespurnad':href?.startsWith('pt-client:')?'Opna PT-dialog':href?.startsWith('group-class:')?'Opna gruppetime':href?.startsWith('booking:')?'Opna booking':href==='pt-studio'?'Opna PT-oppfølging':href==='pt-info'?'Opna PT-meldingar':href==='pt'?'Opna PT Studio':href==='booking'||href==='/timeplan'?'Opna timeplan':href==='kaffi'?'Opna kaffibar':'Opna'
 const isExpired=item=>item.expires_at&&new Date(item.expires_at)<new Date()
 
 export default function Notifications({onNavigate=()=>{},compact=false,context='oversikt'}){
