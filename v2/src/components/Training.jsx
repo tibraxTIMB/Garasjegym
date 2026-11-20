@@ -8,7 +8,7 @@ import { getWodSchemaItems, sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
 import { formatParticipation, normalizeWodEngine, parseIntervalNotation } from '../lib/wodEngine.js'
 import PerformanceCenter from './PerformanceCenter.jsx'
-import { clampElapsedToTarget, elapsedSecondsFromTimestamp, splitDuration } from '../lib/timerClock.js'
+import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, splitDuration } from '../lib/timerClock.js'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E1.25MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', uses_height: false, rowValue:'', rowUnit:'m', workSeconds:'', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] })
@@ -154,7 +154,6 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const stationPlan = schema?.station_circuit || {}
   const stationList = Array.isArray(stationPlan.stations) && stationPlan.stations.length ? stationPlan.stations : (schema?.items || []).map((item,index)=>({...item,station_number:index+1}))
   const stationCount = Math.max(1, Number(stationPlan.station_count) || stationList.length || 1)
-  const stationSlots = Math.max(1, Number(rounds) || 1) * stationCount
   const isCountdown = ['AMRAP', 'Nedteljing'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'AMRAP')
   const isForTime = ['For Time', 'Chipper'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'For Time')
   const isDeathBy = format === 'Death By'
@@ -167,11 +166,19 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const effectiveRestSeconds = Math.max(0, Number(restSeconds) || 0)
   const cycle = effectiveWorkSeconds + effectiveRestSeconds
   const intervalExerciseCount = Math.max(1, exerciseList.length || Number(schema?.interval_exercise_count) || 1)
-   const intervalSlots = Math.max(1, Number(rounds) || 1) * intervalExerciseCount
-   // A finished interval workout must not wait through a rest period after its final work block.
-   const intervalTotal = effectiveWorkSeconds * intervalSlots + effectiveRestSeconds * Math.max(0, intervalSlots - 1)
-   const intervalExerciseIndex = Math.floor(elapsed / cycle) % intervalExerciseCount
-   const currentIntervalExercise = exerciseList[intervalExerciseIndex]?.exercise_name || exerciseList[intervalExerciseIndex]?.name || activeExercise
+   // Intervals and station circuits share one finite-slot calculation. It removes
+  // the final transition, clamps the finished phase to zero, and counts completed rounds.
+  const fixedSlotState = getFixedSlotTimerState({
+    elapsed,
+    workSeconds: effectiveWorkSeconds,
+    restSeconds: effectiveRestSeconds,
+    rounds,
+    slotsPerRound: isStationCircuit ? stationCount : intervalExerciseCount,
+    transitionLabel: isStationCircuit ? 'BYTE STASJON' : 'KVILE',
+  })
+  const intervalTotal = fixedSlotState.totalSeconds
+  const intervalExerciseIndex = fixedSlotState.currentSlotIndex % intervalExerciseCount
+  const currentIntervalExercise = exerciseList[intervalExerciseIndex]?.exercise_name || exerciseList[intervalExerciseIndex]?.name || activeExercise
   const currentEmomRound = Math.floor(elapsed/emomCycle)+1
   const hasExplicitEmomSlots = exerciseList.some(item=>String(item.minute_slot??item.minuteSlot??'').trim()!=='')
   const currentEmomExercises = exerciseList.filter(item=>String(item.minute_slot??item.minuteSlot??'').split(/[,\s;\/]+/).some(slot=>Number(slot)===currentEmomRound))
@@ -180,30 +187,26 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     : hasExplicitEmomSlots ? 'Ingen øving for denne runden'
     : exerciseList.length>1 ? (exerciseList[(currentEmomRound-1)%exerciseList.length]?.exercise_name||exerciseList[(currentEmomRound-1)%exerciseList.length]?.name||activeExercise)
     : activeExercise
-  const stationTotal = effectiveWorkSeconds * stationSlots + Math.max(0, stationSlots - 1) * effectiveRestSeconds
+  const stationTotal = fixedSlotState.totalSeconds
+  const timerLimitReached = (
+    (isCountdown || isEMOM || isStationCircuit || hasTimeCap) && elapsed >= (isStationCircuit ? stationTotal : target)
+  ) || (isTimedInterval && elapsed >= intervalTotal)
   const totalTarget = isStationCircuit ? stationTotal : isTimedInterval ? intervalTotal : target
   const remainingTotal = Math.max(0, totalTarget - elapsed)
-  const phaseElapsed = (isTimedInterval || isStationCircuit) ? elapsed % cycle : elapsed % emomCycle
-  const inWorkPhase = phaseElapsed < effectiveWorkSeconds
-  const phaseRemaining = (isTimedInterval || isStationCircuit)
-    ? Math.max(0, (inWorkPhase ? effectiveWorkSeconds : cycle) - phaseElapsed)
-    : Math.max(0, emomCycle - (elapsed % emomCycle || 0))
-  const currentRound = isStationCircuit
-    ? Math.min(Math.floor(elapsed / (cycle * stationCount)) + 1, Math.max(1, Number(rounds)||1))
-    : isTimedInterval
-    ? Math.min(Math.floor(elapsed / (cycle * intervalExerciseCount)) + 1, Math.max(1, Number(rounds) || 1))
+  const inWorkPhase = !fixedSlotState.isTransition && !fixedSlotState.isComplete
+  const phaseRemaining = fixedSlotState.phaseRemaining
+  const currentRound = (isStationCircuit || isTimedInterval)
+    ? fixedSlotState.currentRound
     : isEMOM ? Math.floor(elapsed / emomCycle) + 1
     : (isDeathBy || isLadder) ? Math.floor(elapsed / 60) + 1
     : Math.floor(elapsed / 60) + 1
-  const currentPhase = isStationCircuit
-    ? (inWorkPhase ? 'ARBEID' : 'BYTE STASJON')
-    : isTimedInterval
-    ? (inWorkPhase ? 'ARBEID' : 'KVILE')
+  const currentPhase = isStationCircuit || isTimedInterval
+    ? fixedSlotState.phase
     : isEMOM ? (isEmomWorkPhase ? 'ARBEID' : isEmomRestPhase ? 'KVILE' : 'VENTAR')
     : (isDeathBy || isLadder) ? 'NY RUNDE' : 'PÅGÅR'
   const primaryTime = isCountdown ? remainingTotal
     : (isTimedInterval || isStationCircuit) ? phaseRemaining
-    : isEMOM ? emomPhaseRemaining
+    : isEMOM ? (timerLimitReached ? 0 : emomPhaseRemaining)
     : elapsed
 
   function cue(frequency = 880, duration = 0.16) {
@@ -285,24 +288,28 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     return undefined
   }, [running])
 
-  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isStationCircuit ? Math.min(Math.floor(elapsed / (cycle * stationCount)), Number(rounds)||1) : isAmrap ? laps.length : round, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isTimedInterval||isStationCircuit||hasTimeCap, currentRound }) }, [elapsed, laps, round, phase, running, isCountdown, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, currentRound])
+  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isStationCircuit ? fixedSlotState.roundsCompleted : isAmrap ? laps.length : round, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isTimedInterval||isStationCircuit||hasTimeCap, currentRound }) }, [elapsed, laps, round, phase, running, isCountdown, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, currentRound])
 
   useEffect(() => {
     if (!running) return
-    if ((isCountdown || isEMOM || isStationCircuit || hasTimeCap) && elapsed >= (isStationCircuit ? stationTotal : target)) {
-      setElapsed(clampElapsedToTarget(elapsed, isStationCircuit ? stationTotal : target)); timerRunStartedAt.current = null; setRunning(false); setPhase(hasTimeCap ? 'TIDSGRENSE' : 'FERDIG'); cue(520, 0.5); return
-    }
-    if (isTimedInterval && elapsed >= intervalTotal) {
-      setElapsed(clampElapsedToTarget(elapsed, intervalTotal)); timerRunStartedAt.current = null; setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return
+    if (timerLimitReached) {
+      const finishAt = isStationCircuit ? stationTotal : isTimedInterval ? intervalTotal : target
+      setElapsed(clampElapsedToTarget(elapsed, finishAt))
+      timerRunStartedAt.current = null
+      setRunning(false)
+      setPhase(hasTimeCap ? 'TIDSGRENSE' : 'FERDIG')
+      cue(520, 0.5)
+      return
     }
     if (((isTimedInterval || isStationCircuit) && (elapsed % cycle === 0 || elapsed % cycle === effectiveWorkSeconds)) ||
       (isEMOM && elapsed > 0 && (elapsed % emomCycle === 0 || elapsed % emomCycle === effectiveEmomWorkSeconds || elapsed % emomCycle === effectiveEmomWorkSeconds+effectiveEmomRestSeconds)) ||
       (isDeathBy && elapsed > 0 && elapsed % 60 === 0)) cue(1040, 0.12)
-  }, [elapsed, running, target, capDuration, hasTimeCap, isCountdown, isEMOM, isDeathBy, isTimedInterval, isStationCircuit, intervalTotal, stationTotal, cycle, emomCycle, effectiveWorkSeconds, effectiveEmomWorkSeconds, effectiveEmomRestSeconds])
+  }, [elapsed, running, timerLimitReached, target, capDuration, hasTimeCap, isCountdown, isEMOM, isDeathBy, isTimedInterval, isStationCircuit, intervalTotal, stationTotal, cycle, emomCycle, effectiveWorkSeconds, effectiveEmomWorkSeconds, effectiveEmomRestSeconds])
 
   useEffect(() => {
-    if (running) setPhase(currentPhase)
-  }, [elapsed, running, currentPhase])
+    // Do not let the ordinary phase refresh overwrite FERDIG / TIDSGRENSE.
+    if (running && !timerLimitReached) setPhase(currentPhase)
+  }, [elapsed, running, currentPhase, timerLimitReached])
 
   async function toggleFocus() {
     if (!focused) {
