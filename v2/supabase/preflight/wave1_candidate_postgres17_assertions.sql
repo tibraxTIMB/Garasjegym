@@ -55,6 +55,21 @@ BEGIN
 END;
 $signup$;
 
+-- Pending users may read their own profile for the waiting screen, but no member data.
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000004',false);
+DO $pending$
+DECLARE v_rows bigint;
+BEGIN
+  IF public.is_active_user() OR public.is_admin() OR public.is_admin_or_manager() THEN
+    RAISE EXCEPTION 'Pending user has authorization';
+  END IF;
+  SELECT count(*) INTO v_rows FROM public.profiles;
+  IF v_rows <> 1 THEN RAISE EXCEPTION 'Pending user can read % profiles instead of own row only',v_rows; END IF;
+END;
+$pending$;
+RESET ROLE;
+
 -- An admin can promote an existing member to manager in the isolated target.
 SET ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
