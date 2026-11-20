@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSwipeGesture } from '../hooks/useSwipeGesture.js'
-import { MoreHorizontal, X } from 'lucide-react'
+import { ChevronDown, ChevronUp, MoreHorizontal, X } from 'lucide-react'
 
 const MEMBER_PRIMARY = ['oversikt', 'trening', 'wod', 'timeplan']
 const STAFF_PRIMARY = ['oversikt', 'trening', 'pt-studio', 'wod']
@@ -130,11 +130,23 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
                 <span className="app-shell-eyebrow">GARASJEGYM</span>
                 <h2>Fleire område</h2>
               </div>
-              <button type="button" className="app-more-close" onClick={() => setMoreOpen(false)} aria-label="Lukk meny">
-                <X size={20} />
-              </button>
+              <div className="app-more-head-actions">
+                <button
+                  type="button"
+                  className="app-more-expand"
+                  aria-expanded={moreExpanded}
+                  aria-controls="app-mobile-more-grid"
+                  onClick={() => setMoreExpanded(value => !value)}
+                >
+                  {moreExpanded ? <ChevronDown size={17} aria-hidden="true" /> : <ChevronUp size={17} aria-hidden="true" />}
+                  <span>{moreExpanded ? 'Trekk saman' : 'Utvid'}</span>
+                </button>
+                <button type="button" className="app-more-close" onClick={() => setMoreOpen(false)} aria-label="Lukk meny">
+                  <X size={20} />
+                </button>
+              </div>
             </div>
-            <div className="app-more-grid">
+            <div className="app-more-grid" id="app-mobile-more-grid">
               {secondary.map(item => {
                 const Icon = item.icon
                 const selected = active === item.id
