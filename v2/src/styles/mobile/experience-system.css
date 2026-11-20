@@ -246,3 +246,7 @@ button, [role="button"], summary { touch-action: manipulation; }
  .warmup-execution-columns { grid-template-columns:minmax(0,1fr); }
  .warmup-execution-columns>article { padding:12px; }
 }
+
+.wod-category-help { display:block; margin:6px 0 12px; line-height:1.45; opacity:.72; }
+.wod-category-early { font-weight:750; }
+.warmup-phase-picker select { background:var(--gg-shell-bg,#0d1015); color:inherit; }
