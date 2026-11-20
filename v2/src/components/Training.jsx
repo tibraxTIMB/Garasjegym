@@ -319,6 +319,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const completedRounds = isAmrap ? laps.length : round
   const lapAction = () => { if(!running)return; setLaps(value => [...value, splitDuration(elapsed, value)]); setRound(value => value + 1); cue(1200, 0.1) }
   const splitAction = () => { if(!running)return; setLaps(value => [...value, splitDuration(elapsed, value)]); cue(1200, 0.1) }
+  const toggleRunning = () => { if (running) { setRunning(false); setPhase('PAUSE'); return } if (phase === 'FERDIG' || phase === 'TIDSGRENSE') return; setHasStarted(true); setPhase('PÅGÅR'); setRunning(true) }
   return <div className={focused ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
     <div className="timer-topline">
       <div className="timer-context"><span className="timer-origin-chip">{originLabel}</span><span className="timer-format-chip">{format.toUpperCase()}</span></div>
@@ -364,7 +365,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         {isAmrap && <div className="timer-round-total"><span>RUNDER FULLFØRT</span><b>{completedRounds}</b></div>}
         {!isStationCircuit && !isAmrap && (isTimedInterval ? (exerciseList[intervalExerciseIndex + 1]?.exercise_name || exerciseList[0]?.exercise_name) : nextExercise) && <div className="timer-next-exercise"><span>NESTE ØVING</span><b>{isTimedInterval ? (exerciseList[intervalExerciseIndex + 1]?.exercise_name || exerciseList[0]?.exercise_name) : nextExercise}</b></div>}
         <div className="timer-actions">
-          <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) { setPhase('PÅGÅR'); setHasStarted(true) } setRunning(value => !value) }} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
+          <button type="button" className="secondary-button" onClick={toggleRunning} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : phase==='PAUSE' ? <><Play size={14}/> Gjenoppta</> : <><Play size={14}/> Start</>}</button>
           {isAmrap && <button type="button" className="timer-lap-button" onClick={lapAction} disabled={!running}>+ REGISTRER RUNDE</button>}
           <button type="button" className="secondary-button" onClick={() => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar'); setHasStarted(false) }}><RotateCcw size={14}/> Nullstill</button>
           {(isStopwatch || isForTime) && <button type="button" className="secondary-button" onClick={splitAction} disabled={!running}>Mellomtid</button>}
