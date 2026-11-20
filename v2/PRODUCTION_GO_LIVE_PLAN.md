@@ -80,7 +80,7 @@ Test has `hr_enabled`, `hr_share_with_pt`, `hr_share_on_screen`, and `hr_save_hi
 
 Production's `public.pt_session_capacity` view had no `security_invoker` option and had grants for `anon` and `authenticated`. Its query aggregates booking counts, but as a default owner-privileged view it bypasses underlying RLS.
 
-The new migration `20261120121500_secure_pt_session_capacity.sql`:
+The new migration `20261120110502_secure_pt_session_capacity.sql`:
 
 1. Creates a non-exposed `private` schema.
 2. Creates `private.pt_session_capacity_counts()`, which checks `auth.uid()` and active membership and returns aggregate counts only.
