@@ -1,0 +1,99 @@
+/* STURMKOPF responsive experience layer — shared contract for every module. */
+:root {
+  --gg-space-1: 4px;
+  --gg-space-2: 8px;
+  --gg-space-3: 12px;
+  --gg-space-4: 16px;
+  --gg-space-5: 20px;
+  --gg-space-6: 24px;
+  --gg-control-height: 46px;
+  --gg-panel-radius: 16px;
+  --gg-content-width: 1440px;
+}
+html { -webkit-text-size-adjust: 100%; }
+body { overscroll-behavior-y: none; }
+button, a, input, select, textarea, summary { -webkit-tap-highlight-color: transparent; }
+button, [role="button"], summary { touch-action: manipulation; }
+.app-shell .main { min-width: 0; }
+.app-shell .training-content,
+.app-shell .training-content > *,
+.app-shell .training-module,
+.app-shell .module-content,
+.app-shell .module-workspace { min-width: 0; max-width: 100%; }
+.app-shell .content-card { overflow: visible; }
+.app-shell :is(input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea) {
+  min-height: var(--gg-control-height);
+  border-radius: 10px;
+}
+.app-shell :is(button,.primary-button,.secondary-button,.icon-button) { min-height: 42px; }
+.app-shell :is(button,input,select,textarea):focus-visible,
+.app-shell summary:focus-visible { outline: 2px solid var(--gg-shell-accent,#f0a33a); outline-offset: 2px; }
+.app-shell :is(.engine-section,.pt2-panel,.schedule-panel,.community-panel,.coffee-panel,.admin-panel,.my-page-panel) {
+  min-width: 0; max-width: 100%; overflow-wrap: anywhere;
+}
+.app-shell :is(.module-grid,.dashboard-grid,.overview-grid,.admin-grid,.coffee-grid,.community-grid) {
+  grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr));
+}
+.app-shell :is(.module-toolbar,.module-heading,.panel-heading,.section-heading) {
+  min-width: 0; flex-wrap: wrap; align-items: center; gap: 10px;
+}
+.app-shell :is(.horizontal-tabs,.filter-row,.toolbar-actions) {
+  min-width: 0; max-width: 100%; overscroll-behavior-x: contain;
+}
+.app-shell .gg-expandable {
+  min-width: 0; overflow: clip; border: 1px solid var(--gg-shell-border,rgba(255,255,255,.12));
+  border-radius: var(--gg-panel-radius); background: var(--gg-shell-panel,#191f21);
+}
+.app-shell .gg-expandable > summary {
+  display: flex; min-height: 54px; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 12px 15px; cursor: pointer; list-style: none; font-weight: 800;
+}
+.app-shell .gg-expandable > summary::-webkit-details-marker { display:none; }
+.app-shell .gg-expandable > summary::after { content: "+"; color: var(--gg-shell-accent,#f0a33a); font-size: 22px; }
+.app-shell .gg-expandable[open] > summary::after { content: "−"; }
+.app-shell .gg-expandable-content { min-width:0; padding: 0 15px 15px; }
+.app-more-sheet-grabber { display:flex; justify-content:center; padding:0 0 13px; touch-action:pan-y; }
+.app-more-sheet-grabber span { width:42px; height:5px; border-radius:99px; background:rgba(240,244,239,.36); }
+.app-more-sheet.is-expanded { height: min(88dvh,900px); max-height: calc(100dvh - env(safe-area-inset-top) - 12px); }
+.app-more-sheet.is-expanded .app-more-grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr)); }
+@media (min-width: 901px) and (max-width: 1180px) {
+  html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell {
+    grid-template-columns: 82px minmax(0,1fr);
+  }
+  html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .sidebar {
+    padding: 18px 8px;
+  }
+  html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .sidebar .brand {
+    justify-content:center; padding:0 0 22px;
+  }
+  html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .sidebar .brand > div:last-child,
+  html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .sidebar .side-label,
+  html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .sidebar .nav-item span,
+  html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .sidebar .sidebar-foot { display:none; }
+  html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .sidebar .nav-item {
+    justify-content:center; min-height:50px; padding:10px 6px;
+  }
+  html[data-gg-device="tablet"][data-gg-orientation="landscape"] .app-shell > .main {
+    padding-inline: clamp(18px,3vw,40px);
+  }
+}
+@media (max-width: 900px) {
+  .app-shell .content-card { padding: clamp(12px,3.2vw,20px); }
+  .app-shell :is(.module-toolbar,.module-heading,.panel-heading,.section-heading) { align-items:stretch; }
+  .app-shell :is(.module-toolbar,.toolbar-actions) > button { flex:1 1 auto; }
+  .app-shell :is(.data-table-wrap,.table-scroll,.wide-table) { max-width:100%; overflow-x:auto; overscroll-behavior-x:contain; }
+  .app-shell :is(.modal-backdrop,.dialog-backdrop,[role=dialog]) { overscroll-behavior:contain; }
+  .app-shell :is(.modal-backdrop,.dialog-backdrop) { padding:8px 8px max(8px,env(safe-area-inset-bottom)); }
+}
+@media (max-width: 560px) {
+  .app-shell .content-card { border-radius:13px; }
+  .app-shell :is(.module-grid,.dashboard-grid,.overview-grid,.admin-grid,.coffee-grid,.community-grid) {
+    grid-template-columns:minmax(0,1fr);
+  }
+  .app-shell :is(.module-toolbar,.toolbar-actions) { display:flex; }
+  .app-shell :is(.module-toolbar,.toolbar-actions) > button { min-height:46px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .app-more-sheet { transition: height .22s ease, max-height .22s ease; }
+  .app-shell .gg-expandable { transition:border-color .16s ease; }
+}
