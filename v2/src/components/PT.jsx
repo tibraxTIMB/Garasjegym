@@ -191,12 +191,21 @@ export default function PT({profile,coachMode=false,focusRequestId,onFocusConsum
   finally{setBusy('')}
  }
  async function request(event){
-  event.preventDefault();setBusy('request');setError('')
+  event.preventDefault()
+  const now=new Date()
+  const preferredAt=preferred?new Date(preferred):null
+  const alternativeAt=alternative?new Date(alternative):null
+  if(!goal.trim()){setError('Skriv kort kva du ønskjer hjelp med.');return}
+  if(preferredAt&&(!Number.isFinite(preferredAt.getTime())||preferredAt<=now)){setError('Føretrekt tidspunkt må liggja fram i tid.');return}
+  if(alternativeAt&&(!Number.isFinite(alternativeAt.getTime())||alternativeAt<=now)){setError('Alternativt tidspunkt må liggja fram i tid.');return}
+  if(preferredAt&&alternativeAt&&preferredAt.getTime()===alternativeAt.getTime()){setError('Vel to ulike tidspunkt, eller fjern alternativet.');return}
+  setBusy('request');setError('');setNotice('')
   try{
-   const {data:{user}}=await supabase.auth.getUser()
-   const {error:e}=await supabase.from('pt_requests').insert({member_id:user.id,preferred_at:preferred?new Date(preferred).toISOString():null,alternative_at:alternative?new Date(alternative).toISOString():null,availability_note:availability.trim(),goal:goal.trim()})
+   const {data:{user},error:authError}=await supabase.auth.getUser()
+   if(authError||!user)throw authError||new Error('Logg inn på nytt.')
+   const {error:e}=await supabase.from('pt_requests').insert({member_id:user.id,preferred_at:preferredAt?preferredAt.toISOString():null,alternative_at:alternativeAt?alternativeAt.toISOString():null,availability_note:availability.trim(),goal:goal.trim()})
    if(e)throw e
-   setShowRequest(false);setGoal('');setAvailability('');setNotice('PT-førespurnaden er sendt.');await load()
+   setShowRequest(false);setGoal('');setAvailability('');setPreferred('');setAlternative('');setNotice('PT-førespurnaden er sendt.');await load()
   }catch(e){setError(e.message||'Kunne ikkje senda førespurnaden.')}
   finally{setBusy('')}
  }
