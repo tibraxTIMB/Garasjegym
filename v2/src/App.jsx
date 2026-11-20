@@ -22,6 +22,7 @@ import {
 import { supabase, isSupabaseConfigured } from './lib/supabase.js'
 import { fetchMemberProfile, isStaff } from './lib/auth.js'
 import { getAppBaseUrl } from './lib/appBaseUrl.js'
+import { getMembershipGate } from './lib/membershipAccess.js'
 const Training = lazy(() => import('./components/Training.jsx'))
 
 
@@ -294,7 +295,7 @@ export default function App() {
       </div></main>
     )
   }
-  if (profile.membership_status !== 'approved' && profile.membership_status !== 'rejected') {
+  if (getMembershipGate(profile) === 'pending') {
     return (
       <main className="auth-shell"><div className="auth-card">
         <div className="eyebrow"><ShieldCheck size={14} /> MEDLEMSKAP · VENTAR</div>
@@ -305,7 +306,7 @@ export default function App() {
       </div></main>
     )
   }
-  if (profile.membership_status === 'rejected' || (profile.membership_status === 'approved' && !profile.active)) {
+  if (getMembershipGate(profile) === 'denied') {
     return (
       <main className="auth-shell"><div className="auth-card">
         <div className="eyebrow"><ShieldCheck size={14} /> MEDLEMSKAP</div>
