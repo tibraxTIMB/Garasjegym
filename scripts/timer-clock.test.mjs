@@ -22,3 +22,23 @@ test('lap split records only the time since the previous split', () => {
   assert.equal(splitDuration(35, [12, 10]), 13)
   assert.equal(splitDuration(12, []), 12)
 })
+
+
+test('finite interval workouts omit the rest period after the final work block', () => {
+  const total = (work, rest, rounds, exercises) => {
+    const slots = Math.max(1, rounds) * Math.max(1, exercises)
+    return work * slots + rest * Math.max(0, slots - 1)
+  }
+  assert.equal(total(45, 15, 2, 4), 465)
+  assert.equal(total(20, 10, 8, 1), 230)
+  assert.equal(total(60, 0, 3, 2), 360)
+})
+
+test('station circuits already use the same no-final-transition rule', () => {
+  const stationTotal = (work, transition, rounds, stations) => {
+    const slots = Math.max(1, rounds) * Math.max(1, stations)
+    return work * slots + transition * Math.max(0, slots - 1)
+  }
+  assert.equal(stationTotal(45, 15, 6, 4), 1425)
+  assert.equal(stationTotal(45, 0, 1, 2), 90)
+})
