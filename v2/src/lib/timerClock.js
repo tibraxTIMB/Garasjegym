@@ -16,3 +16,52 @@ export function splitDuration(elapsed, previousSplits = []) {
     .reduce((sum, split) => sum + Math.max(0, Math.floor(Number(split) || 0)), 0)
   return Math.max(0, total - recorded)
 }
+
+/**
+ * Derive a finite work/rest timer made of repeated slots.
+ * There is no rest period after the final work slot.
+ */
+export function getFixedSlotTimerState({
+  elapsed = 0,
+  workSeconds = 45,
+  restSeconds = 15,
+  rounds = 1,
+  slotsPerRound = 1,
+  transitionLabel = 'KVILE',
+} = {}) {
+  const seconds = Math.max(0, Math.floor(Number(elapsed) || 0));
+  const work = Math.max(1, Math.floor(Number(workSeconds) || 45));
+  const rest = Math.max(0, Math.floor(Number(restSeconds) || 0));
+  const safeRounds = Math.max(1, Math.floor(Number(rounds) || 1));
+  const safeSlotsPerRound = Math.max(1, Math.floor(Number(slotsPerRound) || 1));
+  const totalSlots = safeRounds * safeSlotsPerRound;
+  const cycleSeconds = work + rest;
+  const totalSeconds = work * totalSlots + rest * Math.max(0, totalSlots - 1);
+  const isComplete = seconds >= totalSeconds;
+  const currentSlotIndex = isComplete
+    ? totalSlots - 1
+    : Math.min(totalSlots - 1, Math.floor(seconds / cycleSeconds));
+  const withinSlot = isComplete ? work : seconds - currentSlotIndex * cycleSeconds;
+  const isTransition = !isComplete && currentSlotIndex < totalSlots - 1 && withinSlot >= work;
+  const phaseRemaining = isComplete
+    ? 0
+    : Math.max(0, isTransition ? cycleSeconds - withinSlot : work - withinSlot);
+  const completedWorkSlots = isComplete
+    ? totalSlots
+    : Math.min(totalSlots, Math.floor((seconds + rest) / cycleSeconds));
+
+  return {
+    totalSlots,
+    cycleSeconds,
+    totalSeconds,
+    remainingSeconds: Math.max(0, totalSeconds - seconds),
+    currentSlotIndex,
+    currentSlot: (currentSlotIndex % safeSlotsPerRound) + 1,
+    currentRound: Math.floor(currentSlotIndex / safeSlotsPerRound) + 1,
+    roundsCompleted: Math.floor(completedWorkSlots / safeSlotsPerRound),
+    isTransition,
+    isComplete,
+    phase: isComplete ? 'FERDIG' : isTransition ? transitionLabel : 'ARBEID',
+    phaseRemaining,
+  };
+}
