@@ -28,6 +28,10 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
   const primaryIds = new Set(primary.map(item => item.id))
   const secondary = items.filter(item => !primaryIds.has(item.id))
   const activeInMore = secondary.some(item => item.id === active)
+  function closeMore() {
+    setMoreOpen(false)
+    setMoreExpanded(false)
+  }
   const sheetGesture = useSwipeGesture({
     axis: 'y', threshold: 55, onSwipe: direction => {
       if (direction === 'up') setMoreExpanded(true)
@@ -47,7 +51,7 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
     const handleKeyDown = event => {
       if (event.key === 'Escape') {
         event.preventDefault()
-        setMoreOpen(false)
+        closeMore()
         return
       }
       if (event.key !== 'Tab') return
@@ -71,9 +75,21 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
     }
   }, [moreOpen])
 
+  useEffect(() => {
+    const closeWhenNavigationIsHidden = () => {
+      if (window.matchMedia?.('(min-width: 901px)').matches) closeMore()
+    }
+    closeWhenNavigationIsHidden()
+    window.addEventListener('resize', closeWhenNavigationIsHidden, { passive: true })
+    window.addEventListener('orientationchange', closeWhenNavigationIsHidden, { passive: true })
+    return () => {
+      window.removeEventListener('resize', closeWhenNavigationIsHidden)
+      window.removeEventListener('orientationchange', closeWhenNavigationIsHidden)
+    }
+  }, [])
+
   function choose(item) {
-    setMoreOpen(false)
-    setMoreExpanded(false)
+    closeMore()
     onNavigate?.(item.id)
   }
 
@@ -103,7 +119,7 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
           aria-label="Opne fleire område"
           aria-expanded={moreOpen}
           aria-controls="app-mobile-more"
-          onClick={() => setMoreOpen(value => !value)}
+          onClick={() => { if (moreOpen) closeMore(); else setMoreOpen(true) }}
         >
           {moreOpen ? <X size={20} /> : <MoreHorizontal size={20} />}
           <span>Meir</span>
@@ -111,7 +127,7 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
       </nav>
 
       {moreOpen && (
-        <div className="app-more-backdrop" onClick={() => setMoreOpen(false)}>
+        <div className="app-more-backdrop" onClick={closeMore}>
           <section
             ref={moreSheetRef}
             id="app-mobile-more"
@@ -142,7 +158,7 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
                   {moreExpanded ? <ChevronDown size={17} aria-hidden="true" /> : <ChevronUp size={17} aria-hidden="true" />}
                   <span>{moreExpanded ? 'Trekk saman' : 'Utvid'}</span>
                 </button>
-                <button type="button" className="app-more-close" onClick={() => setMoreOpen(false)} aria-label="Lukk meny">
+                <button type="button" className="app-more-close" onClick={closeMore} aria-label="Lukk meny">
                   <X size={20} />
                 </button>
               </div>
