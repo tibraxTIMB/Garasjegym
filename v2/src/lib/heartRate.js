@@ -44,7 +44,7 @@ export function parseHeartRateMeasurement(value) {
   const is16Bit = Boolean(flags & 0x01)
   if (value.byteLength < (is16Bit ? 3 : 2)) return null
   const bpm = is16Bit ? value.getUint16(1, true) : value.getUint8(1)
-  if (!Number.isFinite(bpm) || bpm < 25 || bpm > 250) return null
+  if (!Number.isFinite(bpm) || bpm < 1 || bpm > 300) return null
   return bpm
 }
 
