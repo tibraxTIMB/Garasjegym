@@ -295,6 +295,7 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
  async function archiveProgram(program) { await run(async()=>{const {error:e}=await supabase.rpc('archive_pt_program',{p_program_id:program.id});if(e)throw e;setNotice('PT-programmet og aktive økter er flytta til arkivet.')}) }
  async function restoreProgram(program) { await run(async()=>{const {error:e}=await supabase.rpc('restore_pt_program',{p_program_id:program.id});if(e)throw e;setNotice('PT-programmet er gjenoppretta.')}) }
  async function archiveProgramSession(session) { await run(async()=>{const {error:e}=await supabase.rpc('archive_pt_program_session',{p_session_id:session.id});if(e)throw e;setNotice('PT-økta er arkivert.')}) }
+ async function restoreProgramSession(session) { await run(async()=>{const {error:e}=await supabase.rpc('restore_pt_program_session',{p_session_id:session.id});if(e)throw e;setNotice('PT-økta er gjenoppretta.')}) }
  async function moveSession(session,direction) {
   const rows=clientSessions;const index=rows.findIndex(x=>x.id===session.id);const next=rows[index+direction];if(!next)return;
   await run(async()=>{
