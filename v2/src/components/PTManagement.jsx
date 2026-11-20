@@ -25,7 +25,7 @@ export default function PTManagement({ profile }) {
   async function load() {
     setLoading(true);setError('')
     const results = await Promise.all([
-      staff ? supabase.from('profiles').select('id,display_name,role').eq('active',true).order('display_name') : Promise.resolve({data:[],error:null}),
+      staff ? supabase.from('profiles').select('id,display_name,role,membership_status').eq('active',true).eq('membership_status','approved').order('display_name') : Promise.resolve({data:[],error:null}),
       supabase.from('pt_coaches').select('*,profiles!pt_coaches_user_id_fkey(id,display_name,role)').order('created_at',{ascending:false}),
       supabase.from('pt_services').select('*').order('sort_order').order('title'),
       supabase.from('pt_service_requests').select('*,pt_services(title)').order('created_at',{ascending:false}),
