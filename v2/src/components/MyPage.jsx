@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from 'react'
+import {useEffect,useMemo,useRef,useState} from 'react'
 import {UserRound,Trophy,Activity,LoaderCircle,Mail,ShieldCheck,ArrowRight,TrendingUp,ToggleLeft,ToggleRight,ChevronLeft,ChevronRight,Trash2,List,Calendar} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import GroupClassResults from './GroupClassResults.jsx'
@@ -21,10 +21,58 @@ function ProgressChart({records}){
 
 export default function MyPage({profile,email,onOpenWorkout,onLaunchWod=()=>{},initialTab='profile',simpleMode=false,onSimpleModeChange=()=>{},simpleModeError='',simpleModeSaving=false}){
  const [logs,setLogs]=useState([]),[prs,setPrs]=useState([]),[favoriteWods,setFavoriteWods]=useState([]),[bookings,setBookings]=useState([]),[assignments,setAssignments]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[tab,setTab]=useState(initialTab),[selectedPR,setSelectedPR]=useState(null),[historyView,setHistoryView]=useState('list'),[calendarMonth,setCalendarMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1)),[selectedDay,setSelectedDay]=useState(new Date().toLocaleDateString('en-CA')),[selectedEvent,setSelectedEvent]=useState(null),[deleting,setDeleting]=useState('')
+ const loadSequence=useRef(0)
  useEffect(()=>{setTab(initialTab)},[initialTab])
- useEffect(()=>{let live=true;async function load(){const {data:{user}}=await supabase.auth.getUser();if(!user){if(live)setLoading(false);return}const [l,initialPRs,favs,b,a]=await Promise.all([supabase.from('workout_logs').select('id,title,source_wod_id,workout_date,created_at,format,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,result_data,note').order('created_at',{ascending:false}).limit(200),supabase.from('personal_records').select('id,exercise_name,result,unit,record_date,note,workout_log_id').order('record_date',{ascending:false}).limit(200),supabase.from('wod_favorites').select('wod_id,created_at,wods(id,name,format,duration_minutes,movements,notes,timer_settings)').order('created_at',{ascending:false}),supabase.from('class_bookings').select('id,status,classes(id,title,starts_at,duration_minutes,cancelled_at,cancellation_note)').eq('member_id',user.id).in('status',['confirmed','waitlist','cancelled']).limit(200),supabase.from('pt_wod_assignments').select('id,status,due_date,wods(name,format,duration_minutes)').eq('member_id',(await supabase.auth.getUser()).data.user.id).in('status',['assigned','in_progress','completed']).limit(200)]);let p=initialPRs;if(p.error&&/workout_log_id|schema cache/i.test(p.error.message||'')){p=await supabase.from('personal_records').select('id,exercise_name,result,unit,record_date,note').order('record_date',{ascending:false}).limit(200);if(!p.error)p.data=(p.data||[]).map(row=>({...row,workout_log_id:null}))}if(!live)return;if(!favs.error)setFavoriteWods((favs.data||[]).filter(x=>x.wods).map(x=>x.wods));if(!b.error)setBookings((b.data||[]).filter(x=>x.classes&&(x.status!=='cancelled'||x.classes.cancelled_at)));if(!a.error)setAssignments((a.data||[]).filter(x=>x.wods));if(l.error)setError(l.error.message);else setLogs(l.data||[]);if(p.error)setError(p.error.message);else setPrs(p.data||[]);setLoading(false)}load();return()=>{live=false}},[])
+ useEffect(()=>{
+  let live=true
+  const requestId=++loadSequence.current
+  async function load(){
+   try{
+    const {data:{user},error:authError}=await supabase.auth.getUser()
+    if(authError)throw authError
+    if(!user){if(live)setLoading(false);return}
+    const [l,initialPRs,favs,b,a]=await Promise.all([
+     supabase.from('workout_logs').select('id,title,source_wod_id,workout_date,created_at,format,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,result_data,note').eq('member_id',user.id).order('created_at',{ascending:false}).limit(200),
+     supabase.from('personal_records').select('id,exercise_name,result,unit,record_date,note,workout_log_id').eq('member_id',user.id).order('record_date',{ascending:false}).limit(200),
+     supabase.from('wod_favorites').select('wod_id,created_at,wods(id,name,format,duration_minutes,movements,notes,timer_settings)').eq('user_id',user.id).order('created_at',{ascending:false}),
+     supabase.from('class_bookings').select('id,status,classes(id,title,starts_at,duration_minutes,cancelled_at,cancellation_note)').eq('member_id',user.id).in('status',['confirmed','waitlist','cancelled']).limit(200),
+     supabase.from('pt_wod_assignments').select('id,status,due_date,wods(name,format,duration_minutes)').eq('member_id',user.id).in('status',['assigned','in_progress','completed']).limit(200)
+    ])
+    let p=initialPRs
+    if(p.error&&/workout_log_id|schema cache/i.test(p.error.message||'')){
+     p=await supabase.from('personal_records').select('id,exercise_name,result,unit,record_date,note').eq('member_id',user.id).order('record_date',{ascending:false}).limit(200)
+     if(!p.error)p.data=(p.data||[]).map(row=>({...row,workout_log_id:null}))
+    }
+    if(!live||requestId!==loadSequence.current)return
+    const failures=[]
+    if(l.error)failures.push('Treningshistorikk: '+l.error.message);else setLogs(l.data||[])
+    if(p.error)failures.push('Personlege rekordar: '+p.error.message);else setPrs(p.data||[])
+    if(favs.error)failures.push('WOD-favorittar: '+favs.error.message);else setFavoriteWods((favs.data||[]).filter(x=>x.wods).map(x=>x.wods))
+    if(b.error)failures.push('Gruppetimekalender: '+b.error.message);else setBookings((b.data||[]).filter(x=>x.classes&&(x.status!=='cancelled'||x.classes.cancelled_at)))
+    if(a.error)failures.push('PT-tildelingar: '+a.error.message);else setAssignments((a.data||[]).filter(x=>x.wods))
+    setError(failures.join(' · '))
+   }catch(loadError){
+    if(live&&requestId===loadSequence.current)setError('Kunne ikkje henta Mi side: '+(loadError?.message||'Ukjend feil'))
+   }finally{
+    if(live&&requestId===loadSequence.current)setLoading(false)
+   }
+  }
+  load()
+  return()=>{live=false;loadSequence.current++}
+ },[])
+
  const sourceLog=selectedPR?.workout_log_id?logs.find(x=>x.id===selectedPR.workout_log_id):null
- const deleteWorkout=async log=>{if(!window.confirm('Vil du slette «'+(log.title||'Treningsøkt')+'»? Økta og tilhøyrande resultat blir fjerna.'))return;setDeleting(String(log.id));setError('');const {error:deleteError}=await supabase.from('workout_logs').delete().eq('id',log.id);if(deleteError)setError('Økta blei ikkje sletta: '+deleteError.message);else setLogs(current=>current.filter(item=>item.id!==log.id));setDeleting('')}
+ const deleteWorkout=async log=>{
+  if(deleting||!window.confirm('Vil du slette «'+(log.title||'Treningsøkt')+'» frå historikken? Eventuelle personlege rekordar blir ståande som sjølvstendige rekordar.'))return
+  setDeleting(String(log.id));setError('')
+  try{
+   const {error:deleteError}=await supabase.from('workout_logs').delete().eq('id',log.id)
+   if(deleteError)throw deleteError
+   setLogs(current=>current.filter(item=>item.id!==log.id))
+   setPrs(current=>current.map(record=>record.workout_log_id===log.id?{...record,workout_log_id:null}:record))
+  }catch(deleteError){setError('Økta blei ikkje sletta: '+(deleteError?.message||'Ukjend feil'))}
+  finally{setDeleting('')}
+ }
  const historyEvents=useMemo(()=>{const completed=logs.map(log=>({id:'log-'+log.id,type:'completed',title:log.title||'Treningsøkt',date:historyDateKey(log.workout_date),time:log.created_at?new Date(log.created_at).toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'}):'',detail:(log.format||'Trening')+(log.score_rounds!=null?' · '+log.score_rounds+' rundar':'')+(log.score_reps!=null?' + '+log.score_reps+' reps':'')+(log.score_time_seconds!=null?' · '+Math.floor(log.score_time_seconds/60)+':'+String(Math.round(log.score_time_seconds%60)).padStart(2,'0'):'')+(log.score_load_kg!=null?' · '+log.score_load_kg+' kg':'')+(log.score_calories!=null?' · '+log.score_calories+' cal':'')+(log.score_distance!=null?' · '+log.score_distance+' '+(log.score_unit||'m'):''),log}));const classes=bookings.map(item=>({id:'class-'+item.id,type:'planned',title:item.classes.title||'Gruppetime',date:historyDateKey(item.classes.starts_at),time:new Date(item.classes.starts_at).toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'}),detail:(item.classes.cancelled_at?'Avlyst'+(item.classes.cancellation_note?' · '+item.classes.cancellation_note:''):item.status==='waitlist'?'Venteliste':'Gruppetime')+(item.classes.duration_minutes?' · '+item.classes.duration_minutes+' min':''),raw:item}));const assigned=assignments.filter(item=>item.due_date&&item.status!=='completed').map(item=>({id:'assignment-'+item.id,type:'planned',title:item.wods.name||'Tildelt WOD',date:historyDateKey(item.due_date),time:'',detail:(item.wods.format||'WOD')+(item.wods.duration_minutes?' · '+item.wods.duration_minutes+' min':''),raw:item}));return [...completed,...classes,...assigned].filter(event=>event.date).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))},[logs,bookings,assignments])
  const daysInHistoryMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,0).getDate(),historyOffset=(new Date(calendarMonth.getFullYear(),calendarMonth.getMonth(),1).getDay()+6)%7
  const calendarCells=[...Array(historyOffset).fill(null),...Array.from({length:daysInHistoryMonth},(_,i)=>i+1)];while(calendarCells.length%7)calendarCells.push(null)
