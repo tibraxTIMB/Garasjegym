@@ -16,14 +16,13 @@ export default function Overview({profile,onNavigate,onOpenWorkout,onOpenWod=()=
     const {data:{user},error:authError}=await supabase.auth.getUser()
     if(authError)throw authError
     if(!user){if(live&&requestId===loadSequence.current)setLoading(false);return}
-    const [l,p,count,a,b,leaderboardLogs,leaderboardProfiles]=await Promise.all([
+    const [l,p,count,a,b,leaderboard]=await Promise.all([
      supabase.from('workout_logs').select('id,title,workout_date,format,score_rounds,score_reps,note').eq('member_id',user.id).order('workout_date',{ascending:false}).limit(100),
      supabase.from('personal_records').select('id,exercise_name,result,unit,record_date').eq('member_id',user.id).order('record_date',{ascending:false}).limit(100),
      supabase.from('workout_logs').select('id',{count:'exact',head:true}).eq('member_id',user.id),
      supabase.from('pt_wod_assignments').select('id,status,due_date,wods(name,format,duration_minutes)').eq('member_id',user.id).in('status',['assigned','in_progress']).order('due_date',{ascending:true,nullsFirst:false}).limit(5),
      supabase.from('class_bookings').select('id,status,classes(id,title,starts_at,duration_minutes)').eq('member_id',user.id).eq('status','confirmed').limit(20),
-     supabase.from('workout_logs').select('member_id').limit(10000),
-     supabase.from('profiles').select('id,display_name').eq('active',true)
+     supabase.rpc('get_member_workout_leaderboard')
     ])
     if(!live||requestId!==loadSequence.current)return
     const failures=[]
@@ -32,12 +31,9 @@ export default function Overview({profile,onNavigate,onOpenWorkout,onOpenWod=()=
     if(count.error)failures.push('Treningsstatistikk: '+count.error.message);else setTotalCount(count.count||0)
     if(a.error)failures.push('PT-tildelingar: '+a.error.message);else setAssignments((a.data||[]).filter(x=>x.wods))
     if(b.error)failures.push('Gruppetimebooking: '+b.error.message);else setBookings((b.data||[]).filter(x=>x.classes).map(x=>x.classes).sort((x,y)=>new Date(x.starts_at)-new Date(y.starts_at)))
-    if(leaderboardLogs.error)failures.push('Treningsrangering: '+leaderboardLogs.error.message)
-    if(leaderboardProfiles.error)failures.push('Medlemsliste: '+leaderboardProfiles.error.message)
-    if(!leaderboardLogs.error&&!leaderboardProfiles.error){
-     const counts=new Map()
-     ;(leaderboardLogs.data||[]).forEach(row=>counts.set(row.member_id,(counts.get(row.member_id)||0)+1))
-     const rows=(leaderboardProfiles.data||[]).map(person=>({id:person.id,name:person.display_name||'Medlem',count:counts.get(person.id)||0})).sort((x,y)=>y.count-x.count||x.name.localeCompare(y.name,'nn'))
+    if(leaderboard.error)failures.push('Treningsrangering: '+leaderboard.error.message)
+    else{
+     const rows=(leaderboard.data||[]).map(person=>({id:person.member_id,name:person.display_name||'Medlem',count:Number(person.workout_count)||0}))
      setRanking(rows.map((row,index)=>({...row,position:index+1})))
     }
     setError(failures.join(' · '))
