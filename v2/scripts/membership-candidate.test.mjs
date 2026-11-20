@@ -3,8 +3,6 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 
 const candidatePath = new URL('../supabase/candidates/wave1_membership_auth_production_candidate.sql', import.meta.url)
-const migrationDirectory = new URL('../supabase/migrations/', import.meta.url)
-
 test('Wave 1 production candidate is isolated outside the auto-applied migrations directory', async () => {
   const candidate = await readFile(candidatePath, 'utf8')
   assert.match(candidate, /NOT AN INSTALLED MIGRATION/i)
@@ -19,7 +17,8 @@ test('Wave 1 production candidate is isolated outside the auto-applied migration
   assert.match(candidate, /GRANT UPDATE \(display_name, role, active, membership_status\)/)
   assert.match(candidate, /BEGIN;[\s\S]*COMMIT;\s*$/)
   assert.doesNotMatch(candidate, /\b(DROP\s+TABLE|TRUNCATE|DELETE\s+FROM)\b/i)
-  assert.equal(migrationDirectory.pathname.includes('/candidates/'), false)
+  assert.match(candidatePath.pathname, /\/candidates\//)
+  assert.equal(candidatePath.pathname.includes('/migrations/'), false)
 })
 
 test('candidate has balanced dollar-quote blocks', async () => {
