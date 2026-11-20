@@ -150,7 +150,7 @@ export function MusicProvider({ children, memberId = null }) {
         spotifyRequest('/me/player/devices').catch(() => ({devices:[]})),
         spotifyRequest('/me/player').catch(() => null),
       ])
-      const phones = (devices?.devices || []).filter(isPersonalPhone)
+      const phones = (devices?.devices || []).filter(isUsableSpotifyDevice)
       const pages = []
       let offset = 0
       for (let pageNumber=0; pageNumber<20; pageNumber+=1) {
@@ -268,7 +268,7 @@ export function MusicProvider({ children, memberId = null }) {
           spotifyRequest('/me/player/devices').catch(()=>({devices:[]})),
         ])
         if (!live) return
-        const phones = (devices?.devices || []).filter(isPersonalPhone)
+        const phones = (devices?.devices || []).filter(isUsableSpotifyDevice)
         setSpotifyDevices(phones)
         if (!phones.some(device=>device.id===spotifyDeviceId)) {
           setSpotifyDeviceId(phones.find(device=>device.is_active)?.id || phones[0]?.id || '')
@@ -329,7 +329,7 @@ export function MusicProvider({ children, memberId = null }) {
       spotifyRequest('/me/player').catch(()=>null),
       spotifyRequest('/me/player/devices').catch(()=>({devices:[]})),
     ])
-    const phones=(devices?.devices||[]).filter(isPersonalPhone)
+    const phones=(devices?.devices||[]).filter(isUsableSpotifyDevice)
     setSpotifyDevices(phones)
     const personal=isUsableSpotifyDevice(playback?.device)
     setSpotifyTrack(personal?trackFromPlayback(playback):null)
@@ -524,9 +524,9 @@ function SpotifyConnectCard({compact=false}) {
         <button type="button" onClick={()=>music.spotifyAction('refresh')} disabled={music.spotifyBusy} aria-label="Oppdater Spotify"><RefreshCw size={compact?13:15}/></button>
       </div>
       {!compact&&<div className="personal-spotify-selects">
-        <label><span><Smartphone size={12}/> Spotify-eining</span><select value={music.spotifyDeviceId} onChange={event=>music.setSpotifyDeviceId(event.target.value)}><option value="">Vel mobil …</option>{music.spotifyDevices.map(device=><option key={device.id} value={device.id}>{device.name}{device.is_active?' · aktiv':''}</option>)}</select></label>
+        <label><span><Smartphone size={12}/> Spotify-eining</span><select value={music.spotifyDeviceId} onChange={event=>music.setSpotifyDeviceId(event.target.value)}><option value="">Vel eining …</option>{music.spotifyDevices.map(device=><option key={device.id} value={device.id}>{device.name}{device.is_active?' · aktiv':''}</option>)}</select></label>
       </div>}
-      {!music.spotifyDeviceId&&<p className="spotify-hint">Opna Spotify på din eigen mobil og trykk Oppdater einingar. Vel ei tilgjengeleg Spotify-eining. Mobil, nettbrett, datamaskin og høgtalar kan visast.</p>}
+      {!music.spotifyDeviceId&&<p className="spotify-hint">Opna Spotify på Spotify-eininga di og trykk Oppdater einingar. Vel ei tilgjengeleg Spotify-eining. Mobil, nettbrett, datamaskin og høgtalar kan visast.</p>}
     </> : <div className="personal-spotify-connect">
       {!compact&&<p>Kople til din eigen Spotify-profil. GarasjeGym lagrar ikkje Spotify-passord eller deler kontoen med andre.</p>}
       <button type="button" className="spotify-connect-button" onClick={music.connectSpotify}><LogIn size={15}/> Kople til Spotify</button>
