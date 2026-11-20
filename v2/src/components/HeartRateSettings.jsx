@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import './heart-rate.css'
-import { Activity, Bluetooth, BluetoothConnected, BluetoothOff, HeartPulse, LoaderCircle, ShieldCheck } from 'lucide-react'
+import { Bluetooth, BluetoothConnected, BluetoothOff, HeartPulse, LoaderCircle, ShieldCheck } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { connectHeartRateSensor, disconnectHeartRateSensor, getHeartRateSnapshot, isHeartRateBluetoothAvailable, subscribeHeartRate } from '../lib/heartRate.js'
 
@@ -95,7 +95,7 @@ export default function HeartRateSettings() {
         <div><strong>Bruk puls under trening</strong><small>Gjer pulsmåling tilgjengeleg i treningsmodus.</small></div>
         <button type="button" className={preferences.hr_enabled ? 'simple-mode-toggle enabled' : 'simple-mode-toggle'} aria-pressed={preferences.hr_enabled} disabled={Boolean(saving)} onClick={() => updatePreference('hr_enabled', !preferences.hr_enabled)}>{preferences.hr_enabled ? 'På' : 'Av'}</button>
       </div>
-      <div className="hr-sensor-card">
+      <div className="hr-sensor-card" aria-live="polite">
         <div className="hr-sensor-heading"><div className="hr-sensor-icon"><Bluetooth size={19}/></div><div><strong>{sensor.deviceName || 'Bluetooth-pulsbelte'}</strong><small>{connected ? (stale ? 'Ingen nye målingar' : 'Tilkopla') : sensor.status === 'connecting' ? 'Koplar til …' : 'Ikkje tilkopla'}</small></div><span className={connected && !stale ? 'hr-status-dot connected' : 'hr-status-dot'} /></div>
         {connected && <div className="hr-sensor-reading"><strong>{stale ? '–' : sensor.bpm ?? '–'}</strong><span>BPM</span></div>}
         <div className="hr-sensor-actions">
