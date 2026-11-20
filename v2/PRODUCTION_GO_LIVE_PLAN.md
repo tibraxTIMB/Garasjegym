@@ -412,3 +412,12 @@ Reviewed the two PT Studio source migrations. The proposed additive production s
 The complete role matrix, source review, migration units and acceptance tests are recorded in [GO_LIVE_PHASE_B10_PT_STUDIO_MIGRATION_DESIGN_2026-11-20.md](./GO_LIVE_PHASE_B10_PT_STUDIO_MIGRATION_DESIGN_2026-11-20.md).
 
 **B10 outcome:** PT Studio migration design prepared; no database, Auth, Edge Function or deployment changes were made. Backup/PITR and isolated restore remain hard blockers. Release remains **NO-GO**.
+
+
+## 10. Phase B11 – WOD/workout/PR production migration design (2026-11-20)
+
+Fresh production counts: `wods` 1, `workout_logs` 0, `workout_exercises` 0, `workout_sets` 0, `personal_records` 1. The existing PR is standalone (`workout_log_id IS NULL`) and must remain standalone; do not fabricate a workout log or attach it to a WOD.
+
+Reviewed atomic workout save, structured result, PT linkage and PR integrity migrations. Production adaptation must preserve `workout_logs.result_data NOT NULL DEFAULT '{}'`, add dependencies before RPCs, preserve exact exercise sort order, keep PT completion atomic/idempotent, protect private PT WOD visibility, and validate PR ownership/units (including box height in cm). The detailed design and acceptance matrix are in [GO_LIVE_PHASE_B11_WOD_WORKOUT_PR_MIGRATION_DESIGN_2026-11-20.md](./GO_LIVE_PHASE_B11_WOD_WORKOUT_PR_MIGRATION_DESIGN_2026-11-20.md).
+
+**B11 outcome:** WOD/workout/PR production migration design prepared; no database or deployment changes were made. Backup/PITR and isolated restore remain hard blockers. Release remains **NO-GO**.
