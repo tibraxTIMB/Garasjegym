@@ -335,7 +335,15 @@ export default function App() {
         <div className="side-label">HOVUDMENY</div>
         <nav aria-label="Hovudmeny">
           {visibleSections.map(({ id, label, icon: ItemIcon }) => (
-            <button key={id} className={active === id ? 'nav-item selected' : 'nav-item'} onClick={() => handleSectionNavigate(id)}>
+            <button
+              key={id}
+              type="button"
+              className={active === id ? 'nav-item selected' : 'nav-item'}
+              aria-label={label}
+              aria-current={active === id ? 'page' : undefined}
+              title={label}
+              onClick={() => handleSectionNavigate(id)}
+            >
               <ItemIcon size={18} /><span>{label}</span>
             </button>
           ))}
