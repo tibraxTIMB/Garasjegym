@@ -40,24 +40,42 @@ export default function PT({profile,coachMode=false,focusRequestId,onFocusConsum
   try{
    const {data:{user},error:authError}=await supabase.auth.getUser()
    if(authError||!user)throw authError||new Error('Logg inn på nytt.')
-   const [s,b,r,m,p,n,pe,ex,wd]=await Promise.all([
+   const targetClientId=staff
+    ?(controlledClientId||activeClient||(!hideCustomerPicker?messageClient:''))
+    :user.id
+   const [s,b,r,m,p,n,ex,wd]=await Promise.all([
     supabase.from('pt_sessions').select('id,title,client_id,starts_at,duration_minutes,capacity,price,status,prep,message,cancellation_note,custom_workout,wod_ids,session_type,coach_notes,completed_notes,attendance_status').in('status',staff?['draft','published','planned','completed','cancelled']:['published','planned','completed','cancelled']).order('starts_at',{ascending:false}).limit(100),
     staff ? supabase.from('pt_bookings').select('id,session_id,status,note') : supabase.from('pt_bookings').select('id,session_id,status,note').eq('member_id',user.id),
     supabase.from('pt_requests').select('id,member_id,preferred_at,alternative_at,availability_note,goal,status,staff_note,pt_session_id,created_at,handled_at,archived_at').order('created_at',{ascending:false}).limit(100).then(result=>staff?result:{...result,data:(result.data||[]).filter(row=>row.member_id===user.id)}),
     staff ? supabase.from('profiles').select('id,display_name,role,member_rank,avatar_url,membership_status').eq('role','member').neq('id',user.id).eq('active',true).eq('membership_status','approved').order('display_name') : Promise.resolve({data:[],error:null}),
-    (()=>{let query=supabase.from('pt_messages').select('id,client_id,sender_id,body,created_at').order('created_at',{ascending:false}).limit(200);const targetClientId=staff?(controlledClientId||messageClient||activeClient):user.id;if(targetClientId)query=query.eq('client_id',targetClientId);else query=query.limit(0);return query})(),
-    staff ? supabase.from('pt_client_notes').select('id,client_id,coach_id,goals,note,follow_up_at,created_at').order('updated_at',{ascending:false}).limit(100) : Promise.resolve({data:[],error:null}),
-    supabase.from('pt_session_exercises').select('id,session_id,sort_order,phase,exercise_name,sets,reps,target_load,rest_seconds,notes').order('sort_order'),
+    (()=>{let query=supabase.from('pt_messages').select('id,client_id,sender_id,body,created_at').order('created_at',{ascending:false}).limit(200);if(targetClientId)query=query.eq('client_id',targetClientId);else query=query.limit(0);return query})(),
+    staff&&targetClientId ? supabase.from('pt_client_notes').select('id,client_id,coach_id,goals,note,follow_up_at,created_at').eq('client_id',targetClientId).order('updated_at',{ascending:false}).limit(100) : Promise.resolve({data:[],error:null}),
     supabase.from('exercises').select('id,name,category,video_url').eq('is_active',true).order('name'),
     supabase.from('wods').select('id,name,format,duration_minutes,movements,notes').eq('is_published',true).order('created_at',{ascending:false}),
    ])
    if(requestId!==loadSequence.current)return
-   const failures=[s,b,r,m,p,n,pe,ex,wd].filter(result=>result.error).map(result=>result.error.message)
+   const visibleSessionIds=(s.data||[])
+    .filter(row=>staff?Boolean(targetClientId&&row.client_id===targetClientId):(row.status==='published'||row.client_id===user.id))
+    .map(row=>row.id)
+   const pe=visibleSessionIds.length
+    ?await supabase.from('pt_session_exercises').select('id,session_id,sort_order,phase,exercise_name,sets,reps,target_load,rest_seconds,notes').in('session_id',visibleSessionIds).order('sort_order')
+    :{data:[],error:null}
+   if(requestId!==loadSequence.current)return
+   const failures=[s,b,r,m,p,n,ex,wd,pe].filter(result=>result.error).map(result=>result.error.message)
    if(failures.length)setError(failures.join(' · '))
    setSessions(staff?(s.data||[]):(s.data||[]).filter(row=>row.status==='published'||row.client_id===user.id||(b.data||[]).some(booking=>booking.session_id===row.id)))
    setBookings(b.data||[])
    setRequests(r.data||[])
-   if(m.data){setMembers(m.data);if(m.data.length){if(!hideCustomerPicker)setActiveClient(v=>v||m.data[0].id);setCustomerDraft(v=>v||m.data[0].id);setMessageClient(v=>v||m.data[0].id);setNoteClient(v=>v||m.data[0].id)}}
+   if(m.data){
+    setMembers(m.data)
+    if(m.data.length){
+     if(!hideCustomerPicker)setActiveClient(v=>v||m.data[0].id)
+     setCustomerDraft(v=>v||m.data[0].id)
+     if(targetClientId){setMessageClient(targetClientId);setNoteClient(targetClientId)}
+     else if(!hideCustomerPicker){setMessageClient(v=>v||m.data[0].id);setNoteClient(v=>v||m.data[0].id)}
+     else {setMessageClient('');setNoteClient('')}
+    }
+   }
    setMessages((p.data||[]).slice().reverse())
    setNotes(n.data||[])
    setPlans((pe.data||[]).reduce((acc,row)=>{(acc[row.session_id] ||= []).push(row);return acc},{}))
