@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from 'react'
+import {useEffect,useMemo,useRef,useState} from 'react'
 import {Bell,CheckCheck,Coffee,CalendarDays,MessageCircle,UserRound,Info,Check,AlertTriangle,Clock3,Archive,ArrowUpRight,ClipboardCheck,RefreshCw,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 
@@ -21,6 +21,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
  const [busy,setBusy]=useState('')
  const [showAll,setShowAll]=useState(false)
  const [hasMore,setHasMore]=useState(false)
+ const loadSequence=useRef(0)
  const urgent=items.filter(x=>x.priority==='urgent'&&x.status==='open'&&!x.archived_at&&!isExpired(x)).length
  const actionItems=items.filter(x=>x.requires_action&&x.status==='open'&&!x.archived_at&&!isExpired(x))
  const ackItems=items.filter(x=>x.requires_ack&&!x.acknowledged_at&&x.status==='open'&&!x.archived_at&&!isExpired(x))
@@ -33,20 +34,22 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
   return x.status==='open'&&(!x.requires_ack||!x.acknowledged_at)
  }).slice(0,showAll?items.length:30),[items,tab,showAll])
  async function load(append=false){
+  const requestId=++loadSequence.current
   try{
    const {data:{user},error:authError}=await supabase.auth.getUser()
    if(authError)throw authError
-   if(!user){setItems([]);setError('Logg inn på nytt for å sjå varslingane.');return}
+   if(!user){if(requestId===loadSequence.current){setItems([]);setError('Logg inn på nytt for å sjå varslingane.')}return}
    const {data,error:e}=await supabase.from('notifications')
     .select('id,title,body,category,href,is_read,created_at,priority,requires_ack,requires_action,status,read_at,acknowledged_at,resolved_at,expires_at,archived_at')
     .eq('recipient_id',user.id).is('archived_at',null).order('created_at',{ascending:false}).range(append?items.length:0,(append?items.length:0)+99)
    if(e)throw e
+   if(requestId!==loadSequence.current)return
    const rows=data||[]
    setHasMore(rows.length===100)
    setItems(current=>append?[...current,...rows.filter(row=>!current.some(existing=>existing.id===row.id))]:rows)
    setError('')
-  }catch(loadError){setError(loadError?.message||'Varslingane kunne ikkje hentast.')}
-  finally{setLoading(false)}
+  }catch(loadError){if(requestId===loadSequence.current)setError(loadError?.message||'Varslingane kunne ikkje hentast.')}
+  finally{if(requestId===loadSequence.current)setLoading(false)}
  }
  useEffect(()=>{
   let live=true
@@ -63,18 +66,23 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
     .subscribe()
   }
   start()
-  const refreshTimer=compact?window.setInterval(()=>{if(live)load()},60_000):null
-  return()=>{live=false;if(channel)supabase.removeChannel(channel);if(refreshTimer)window.clearInterval(refreshTimer)}
+  // Realtime is the primary path; polling keeps inboxes correct after reconnects
+  // and on clients where the realtime websocket is temporarily unavailable.
+  const refreshTimer=window.setInterval(()=>{if(live)load()},60_000)
+  return()=>{live=false;loadSequence.current+=1;if(channel)supabase.removeChannel(channel);window.clearInterval(refreshTimer)}
  },[context,compact])
  async function patch(id,values){
   setBusy(id);setError('')
-  const {data:{user},error:authError}=await supabase.auth.getUser()
-  if(authError||!user){setError('Logg inn på nytt før du endrar varslingar.');setBusy('');return false}
-  const {error:e}=await supabase.from('notifications').update(values).eq('id',id).eq('recipient_id',user.id).select('id')
-  if(e)setError(e.message)
-  else setItems(rows=>rows.map(x=>x.id===id?{...x,...values}:x))
-  setBusy('')
-  return !e
+  try{
+   const {data:{user},error:authError}=await supabase.auth.getUser()
+   if(authError||!user)throw authError||new Error('Logg inn på nytt før du endrar varslingar.')
+   const {data,error:e}=await supabase.from('notifications').update(values).eq('id',id).eq('recipient_id',user.id).select('id')
+   if(e)throw e
+   if(!data?.length)throw new Error('Varslet vart ikkje oppdatert. Last inn på nytt og prøv igjen.')
+   setItems(rows=>rows.map(x=>x.id===id?{...x,...values}:x))
+   return true
+  }catch(patchError){setError(patchError?.message||'Kunne ikkje oppdatere varslet.');return false}
+  finally{setBusy('')}
  }
  async function markRead(item){if(item.is_read)return true;return patch(item.id,{is_read:true,read_at:new Date().toISOString()})}
  async function acknowledge(item){return patch(item.id,{is_read:true,read_at:new Date().toISOString(),acknowledged_at:new Date().toISOString()})}
