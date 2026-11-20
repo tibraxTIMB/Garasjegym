@@ -27,6 +27,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Check SQL migrations
         run: npm run check:migrations
+      - name: Test training launch context and assignment routing
+        run: npm run test:training-launch-context
       - name: Test app base URL and auth redirects
         run: npm run test:app-base-url
       - name: Test infotainment calendar grouping
