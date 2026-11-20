@@ -7,6 +7,7 @@ import { sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
 import { formatParticipation, normalizeWodEngine, parseIntervalNotation } from '../lib/wodEngine.js'
 import PerformanceCenter from './PerformanceCenter.jsx'
+import { clampElapsedToTarget, elapsedSecondsFromTimestamp, splitDuration } from '../lib/timerClock.js'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E1.25MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', uses_height: false, rowValue:'', rowUnit:'m', workSeconds:'', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] })
@@ -266,7 +267,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       timerRunStartedAt.current = Date.now()
       const refresh = () => {
         if (timerRunStartedAt.current == null) return
-        const nextElapsed = timerRunBaseElapsed.current + Math.floor((Date.now() - timerRunStartedAt.current) / 1000)
+        const nextElapsed = elapsedSecondsFromTimestamp(timerRunStartedAt.current, timerRunBaseElapsed.current)
         setElapsed(current => current === nextElapsed ? current : nextElapsed)
       }
       refresh()
@@ -274,7 +275,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       return () => window.clearInterval(id)
     }
     if (timerRunStartedAt.current != null) {
-      const finalElapsed = timerRunBaseElapsed.current + Math.floor((Date.now() - timerRunStartedAt.current) / 1000)
+      const finalElapsed = elapsedSecondsFromTimestamp(timerRunStartedAt.current, timerRunBaseElapsed.current)
       timerRunStartedAt.current = null
       setElapsed(current => Math.max(current, finalElapsed))
     }
@@ -286,10 +287,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   useEffect(() => {
     if (!running) return
     if ((isCountdown || isEMOM || isStationCircuit || hasTimeCap) && elapsed >= (isStationCircuit ? stationTotal : target)) {
-      setRunning(false); setPhase(hasTimeCap ? 'TIDSGRENSE' : 'FERDIG'); cue(520, 0.5); return
+      setElapsed(clampElapsedToTarget(elapsed, isStationCircuit ? stationTotal : target)); setRunning(false); setPhase(hasTimeCap ? 'TIDSGRENSE' : 'FERDIG'); cue(520, 0.5); return
     }
     if (isTimedInterval && elapsed >= intervalTotal) {
-      setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return
+      setElapsed(clampElapsedToTarget(elapsed, intervalTotal)); setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return
     }
     if (((isTimedInterval || isStationCircuit) && (elapsed % cycle === 0 || elapsed % cycle === effectiveWorkSeconds)) ||
       (isEMOM && elapsed > 0 && (elapsed % emomCycle === 0 || elapsed % emomCycle === effectiveEmomWorkSeconds || elapsed % emomCycle === effectiveEmomWorkSeconds+effectiveEmomRestSeconds)) ||
@@ -316,7 +317,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const showTimeCap = hasTimeCap
   const roundsShown = isTimedInterval ? Math.min(currentRound, Number(rounds)) : currentRound
   const completedRounds = isAmrap ? laps.length : round
-  const lapAction = () => { if(!running)return; setLaps(value => [...value, Math.max(0, elapsed - value.reduce((sum, lap) => sum + lap, 0))]); setRound(value => value + 1); cue(1200, 0.1) }
+  const lapAction = () => { if(!running)return; setLaps(value => [...value, splitDuration(elapsed, value)]); setRound(value => value + 1); cue(1200, 0.1) }
+  const splitAction = () => { if(!running)return; setLaps(value => [...value, splitDuration(elapsed, value)]); cue(1200, 0.1) }
   return <div className={focused ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
     <div className="timer-topline">
       <div className="timer-context"><span className="timer-origin-chip">{originLabel}</span><span className="timer-format-chip">{format.toUpperCase()}</span></div>
@@ -365,7 +367,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           <button type="button" className="secondary-button" onClick={() => { if (!running && phase === 'FERDIG') return; if (!running) { setPhase('PÅGÅR'); setHasStarted(true) } setRunning(value => !value) }} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : <><Play size={14}/> Start</>}</button>
           {isAmrap && <button type="button" className="timer-lap-button" onClick={lapAction} disabled={!running}>+ REGISTRER RUNDE</button>}
           <button type="button" className="secondary-button" onClick={() => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar'); setHasStarted(false) }}><RotateCcw size={14}/> Nullstill</button>
-          {(isStopwatch || isForTime) && <button type="button" className="secondary-button" onClick={() => setLaps(value => [...value, elapsed])}>Mellomtid</button>}
+          {(isStopwatch || isForTime) && <button type="button" className="secondary-button" onClick={splitAction} disabled={!running}>Mellomtid</button>}
           <button type="button" className="secondary-button" onClick={() => setSoundOn(value => !value)}>{soundOn ? 'Lyd på' : 'Lyd av'}</button>
           <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
         </div>
