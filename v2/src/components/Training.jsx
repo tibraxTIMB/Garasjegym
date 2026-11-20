@@ -462,6 +462,10 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [timerSnapshot, setTimerSnapshot] = useState({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
   const [timerLaunchId, setTimerLaunchId] = useState(0)
   useEffect(()=>{onTimerSnapshot?.({...timerSnapshot,title,format})},[timerSnapshot,title,format,onTimerSnapshot])
+  useEffect(()=>()=>onTimerSnapshot?.({
+    elapsed:0,laps:[],roundsCompleted:0,phase:'Klar',running:false,
+    remaining:0,displayTime:0,countdown:false,currentRound:1,title:'',format:''
+  }),[onTimerSnapshot])
 
   function clearTimerSnapshot(){
     onTimerSnapshot?.({
