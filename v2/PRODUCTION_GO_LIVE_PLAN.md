@@ -599,3 +599,14 @@ Latest final CI commit 54d64c717bbf80823f3ef4748d38e97fadd21461: full GarasjeGym
 Detailed report: [GO_LIVE_PHASE_B26_AUTOMATED_ARTIFACT_SAFETY_GATE_2026-11-20.md](./GO_LIVE_PHASE_B26_AUTOMATED_ARTIFACT_SAFETY_GATE_2026-11-20.md).
 
 **B26 outcome:** Automated TEST-only artifact gate in place and final CI green. Wave 0 recovery still not passed; production remains NO-GO.
+
+
+## 26. Phase B27 – isolated restore acceptance query pack (2026-11-20)
+
+Added v2/supabase/preflight/restore_rehearsal_read_only.sql. It reports aggregate core data/Auth/Storage counts, Auth/profile linkage, standalone PR linkage, invalid roles, public-table RLS coverage, SECURITY DEFINER search_path settings and key schema-contract columns. It is SELECT-only and does not return member PII.
+
+Executed the exact query against isolated TEST project izwzwvlexqxqewzijhhd; it completed successfully across all result categories. This validates SQL syntax/behavior only; TEST data is not a production restore and is not used as recovery evidence.
+
+After the owner completes an encrypted source backup and isolated restore, run the query against that restored target and compare with the exact backup timestamp, then complete application smoke tests. Full record: [GO_LIVE_PHASE_B27_RESTORE_ACCEPTANCE_QUERY_PACK_2026-11-20.md](./GO_LIVE_PHASE_B27_RESTORE_ACCEPTANCE_QUERY_PACK_2026-11-20.md).
+
+**B27 outcome:** Acceptance query pack prepared and TEST-validated. No production export, restore or changes. Wave 0 remains NOT PASSED; production remains NO-GO.
