@@ -5,6 +5,7 @@ import {
   Smartphone, LoaderCircle, ChevronRight, Check, Settings2
 } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
+import { isUsableSpotifyDevice } from '../lib/spotifyDevices.js'
 
 const MusicContext = createContext(null)
 const TOKEN_KEY_PREFIX = 'garasjegym:spotify-token:'
@@ -61,9 +62,6 @@ function trackFromPlayback(data) {
     progressMs:data.progress_ms || 0,
     externalUrl:item.external_urls?.spotify || '',
   }
-}
-export function isUsableSpotifyDevice(device) {
-  return Boolean(device?.id) && !device?.is_restricted
 }
 function shortSpotifyError(data, status, response) {
   if (status === 429) {
