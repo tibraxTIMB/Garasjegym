@@ -4,8 +4,6 @@
 
 ## Result
 
-<badge>Not applicable in Markdown source</badge>
-
 | Check | Result |
 |---|---:|
 | SQL migration files in `v2/supabase/migrations` | 163 |
