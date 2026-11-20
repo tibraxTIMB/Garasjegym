@@ -18,7 +18,6 @@ export function getExerciseMeasurementFlags(exercise = {}) {
   const equipment = String(exercise.equipment || '').toLowerCase();
   const levels = exercise.levels || exercise.prescription_levels || {};
   const levelRows = Object.values(levels).filter(value => value && typeof value === 'object');
-  const setRows = Array.isArray(exercise.sets) ? exercise.sets : [];
   const schemaSets = Array.isArray(exercise.sets) ? exercise.sets : [];
 
   const hasSavedHeight = hasHeight(exercise)
