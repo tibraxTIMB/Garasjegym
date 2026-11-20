@@ -8,6 +8,7 @@ import {isStaff} from '../lib/auth.js'
 export default function ScheduleHub({profile,onLogResult,onLaunchWorkout,onOpenWod,focusRequestId,onFocusConsumed,initialClassId=null,initialTab='booking',onTabChange=()=>{},simpleMode=false,hidePTTab=false,onInitialClassConsumed=()=>{}}){
  const [tab,setTab]=useState(initialTab)
  const [focusClassId,setFocusClassId]=useState(initialClassId)
+ const [focusPTClientId,setFocusPTClientId]=useState(null)
  useEffect(()=>{setTab(simpleMode?'booking':initialTab)},[initialTab,simpleMode])
  useEffect(()=>{setFocusClassId(initialClassId)},[initialClassId])
  const allowedTab=value=>simpleMode?'booking':((hidePTTab&&value==='pt')||(!isStaff(profile)&&value==='calendar'))?'booking':value
@@ -20,6 +21,6 @@ export default function ScheduleHub({profile,onLogResult,onLaunchWorkout,onOpenW
    {!hidePTTab&&<button type="button" role="tab" aria-selected={activeTab==='pt'} className={activeTab==='pt'?'selected':''} onClick={()=>changeTab('pt')}><UserRound size={16}/> PT-studio</button>}
    {isStaff(profile)&&<button type="button" role="tab" aria-selected={activeTab==='calendar'} className={activeTab==='calendar'?'selected':''} onClick={()=>changeTab('calendar')}><CalendarDays size={16}/> Kalender</button>}
   </div>}
-  {activeTab==='booking'?<Booking profile={profile} onLogResult={onLogResult} onOpenWod={onOpenWod} initialClassId={focusClassId} onInitialClassConsumed={()=>{setFocusClassId(null);onInitialClassConsumed?.()}}/>:activeTab==='pt'?<PT profile={profile} focusRequestId={focusRequestId} onFocusConsumed={onFocusConsumed} onLaunchWorkout={onLaunchWorkout}/>:<CalendarAdmin onNavigate={(target,classId)=>{changeTab(target==='pt'?'pt':'booking');if(target!=='pt'&&classId)setFocusClassId(classId)}}/>}
+  {activeTab==='booking'?<Booking profile={profile} onLogResult={onLogResult} onOpenWod={onOpenWod} initialClassId={focusClassId} onInitialClassConsumed={()=>{setFocusClassId(null);onInitialClassConsumed?.()}}/>:activeTab==='pt'?<PT profile={profile} controlledClientId={focusPTClientId} onClientChange={setFocusPTClientId} focusRequestId={focusRequestId} onFocusConsumed={onFocusConsumed} onLaunchWorkout={onLaunchWorkout}/>:<CalendarAdmin onNavigate={(target,classId,clientId)=>{changeTab(target==='pt'?'pt':'booking');if(target==='pt')setFocusPTClientId(clientId||null);else if(classId)setFocusClassId(classId)}}/>}
  </div>
 }
