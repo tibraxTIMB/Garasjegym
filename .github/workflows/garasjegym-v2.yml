@@ -31,7 +31,7 @@ jobs:
         run: npm run check:migrations
       - name: Run automated tests
         run: npm test
-      - name: Build production bundle
+      - name: Build isolated TEST bundle
         env:
           VITE_SUPABASE_URL: https://izwzwvlexqxqewzijhhd.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_jZyaYhD8_jZgpgutKF7lRg_EcJ0EGSQ
