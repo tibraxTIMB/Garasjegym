@@ -62,8 +62,8 @@ function trackFromPlayback(data) {
     externalUrl:item.external_urls?.spotify || '',
   }
 }
-function isPersonalPhone(device) {
-  return String(device?.type || '').toLowerCase() === 'smartphone' && !device?.is_restricted
+export function isUsableSpotifyDevice(device) {
+  return Boolean(device?.id) && !device?.is_restricted
 }
 function shortSpotifyError(data, status, response) {
   if (status === 429) {
@@ -167,7 +167,7 @@ export function MusicProvider({ children, memberId = null }) {
       const activePhone = phones.find(device=>device.is_active)
       const nextDevice = currentPhoneId || activePhone?.id || phones[0]?.id || ''
       setSpotifyDeviceId(nextDevice)
-      const playbackIsPersonal = isPersonalPhone(playback?.device)
+      const playbackIsPersonal = isUsableSpotifyDevice(playback?.device)
       setSpotifyTrack(playbackIsPersonal ? trackFromPlayback(playback) : null)
       setSpotifyPlaying(Boolean(playbackIsPersonal && playback?.is_playing))
       setSpotifyStatus('Tilkopla ' + (profile.display_name || 'Spotify'))
@@ -273,7 +273,7 @@ export function MusicProvider({ children, memberId = null }) {
         if (!phones.some(device=>device.id===spotifyDeviceId)) {
           setSpotifyDeviceId(phones.find(device=>device.is_active)?.id || phones[0]?.id || '')
         }
-        const personal = isPersonalPhone(playback?.device)
+        const personal = isUsableSpotifyDevice(playback?.device)
         setSpotifyTrack(personal ? trackFromPlayback(playback) : null)
         setSpotifyPlaying(Boolean(personal && playback?.is_playing))
       } catch { /* Neste oppdatering eller brukarhandling prøver igjen. */ }
@@ -331,7 +331,7 @@ export function MusicProvider({ children, memberId = null }) {
     ])
     const phones=(devices?.devices||[]).filter(isPersonalPhone)
     setSpotifyDevices(phones)
-    const personal=isPersonalPhone(playback?.device)
+    const personal=isUsableSpotifyDevice(playback?.device)
     setSpotifyTrack(personal?trackFromPlayback(playback):null)
     setSpotifyPlaying(Boolean(personal&&playback?.is_playing))
   },[spotifyRequest])
@@ -524,9 +524,9 @@ function SpotifyConnectCard({compact=false}) {
         <button type="button" onClick={()=>music.spotifyAction('refresh')} disabled={music.spotifyBusy} aria-label="Oppdater Spotify"><RefreshCw size={compact?13:15}/></button>
       </div>
       {!compact&&<div className="personal-spotify-selects">
-        <label><span><Smartphone size={12}/> Personleg mobil</span><select value={music.spotifyDeviceId} onChange={event=>music.setSpotifyDeviceId(event.target.value)}><option value="">Vel mobil …</option>{music.spotifyDevices.map(device=><option key={device.id} value={device.id}>{device.name}{device.is_active?' · aktiv':''}</option>)}</select></label>
+        <label><span><Smartphone size={12}/> Spotify-eining</span><select value={music.spotifyDeviceId} onChange={event=>music.setSpotifyDeviceId(event.target.value)}><option value="">Vel mobil …</option>{music.spotifyDevices.map(device=><option key={device.id} value={device.id}>{device.name}{device.is_active?' · aktiv':''}</option>)}</select></label>
       </div>}
-      {!music.spotifyDeviceId&&<p className="spotify-hint">Opna Spotify på din eigen mobil og trykk Oppdater einingar. Berre personlege mobil-einingar blir viste.</p>}
+      {!music.spotifyDeviceId&&<p className="spotify-hint">Opna Spotify på din eigen mobil og trykk Oppdater einingar. Vel ei tilgjengeleg Spotify-eining. Mobil, nettbrett, datamaskin og høgtalar kan visast.</p>}
     </> : <div className="personal-spotify-connect">
       {!compact&&<p>Kople til din eigen Spotify-profil. GarasjeGym lagrar ikkje Spotify-passord eller deler kontoen med andre.</p>}
       <button type="button" className="spotify-connect-button" onClick={music.connectSpotify}><LogIn size={15}/> Kople til Spotify</button>
