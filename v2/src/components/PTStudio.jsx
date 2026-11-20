@@ -20,7 +20,7 @@ function Pill({children,tone=''}) { return <span className={'pt2-pill '+tone}>{c
 function Empty({children}) { return <div className="pt2-empty">{children}</div> }
 function dateLabel(value) { return value ? new Date(value).toLocaleDateString('nn-NO',{day:'numeric',month:'short',year:'numeric'}) : 'Ikkje sett' }
 
-export default function PTStudio({ profile, coachMode=false, onLaunchWorkout, initialClientId=null, initialWorkspace='studio', initialTab='oversikt', focusRequestId=null, focusGroupClassId=null, onFocusRequestConsumed, onFocusGroupClassConsumed }) {
+export default function PTStudio({ profile, coachMode=false, onLaunchWorkout, initialClientId=null, initialWorkspace='studio', initialTab='oversikt', focusRequestId=null, focusGroupClassId=null, focusPanel=null, onFocusPanelConsumed, onFocusRequestConsumed, onFocusGroupClassConsumed }) {
  const staff = isStaff(profile)
  const canManageClients = staff || coachMode
  const [loading,setLoading] = useState(true)
@@ -360,7 +360,7 @@ export default function PTStudio({ profile, coachMode=false, onLaunchWorkout, in
   {coachMode&&!loading&&members.length===0&&<section className="pt2-panel"><span className="section-kicker">PT STUDIO</span><h3>Ingen kundar er tildelte deg enno</h3><p>Du får tilgang til kundar når administrator har registrert deg som PT og tildelt deg eit aktivt kundeforhold. Når tildelinga er på plass, kjem kundane automatisk opp her.</p></section>}
   {canManageClients&&clientId&&<nav className="pt2-tabs">{[['oversikt','Oversikt'],['plan','Kurs og plan'],['mål','Mål og fokus'],['kartlegging','Kartlegging'],['status','Statussjekk'],['pt-timar','PT-timar og dialog'],...(staff?[['administrasjon','PT-administrasjon']]:[])].map(([id,label])=><button key={id} className={tab===id?'selected':''} onClick={()=>setTab(id)}>{label}</button>)}</nav>}
   {!canManageClients&&<nav className="pt2-tabs">{[['oversikt','Oversikt'],['plan','Treningsplan'],['mål','Mine mål'],['status','Statussjekk'],['meldingar','Frå PT'],['tenester','PT-tenester']].map(([id,label])=><button key={id} className={tab===id?'selected':''} onClick={()=>setTab(id)}>{label}</button>)}</nav>}
-  {canManageClients&&tab==='pt-timar'&&(clientId||focusRequestId)&&<PT profile={profile} coachMode={coachMode} controlledClientId={clientId} onClientChange={setClientId} hideCustomerPicker focusRequestId={focusRequestId} onFocusConsumed={onFocusRequestConsumed} onLaunchWorkout={onLaunchWorkout}/>}
+  {canManageClients&&tab==='pt-timar'&&(clientId||focusRequestId)&&<PT profile={profile} coachMode={coachMode} controlledClientId={clientId} onClientChange={setClientId} hideCustomerPicker focusRequestId={focusRequestId} focusPanel={focusPanel} onFocusPanelConsumed={onFocusPanelConsumed} onFocusConsumed={onFocusRequestConsumed} onLaunchWorkout={onLaunchWorkout}/>}
   {canManageClients&&tab==='pt-timar'&&!clientId&&!focusRequestId&&<Empty>Vel ein kunde øvst i PT Studio før du opnar PT-timar og dialog.</Empty>}{!canManageClients&&tab==='meldingar'&&<PTInfo/>}
   {canManageClients&&clientId&&tab==='oversikt'&&<div className="pt2-grid">
    <section className="pt2-panel"><div className="pt2-panel-head"><div><span className="section-kicker">KUNDEPROFIL</span><h3>{selectedMember?.display_name||'Kunde'}</h3></div><Pill>{selectedMember?.role||'medlem'}</Pill></div>
