@@ -1,4 +1,4 @@
-import { useEffect,useState } from 'react'
+import { useEffect,useRef,useState } from 'react'
 import { CalendarClock,CheckCircle2,LoaderCircle,Plus,Trash2,UserRound } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { isStaff } from '../lib/auth.js'
@@ -32,31 +32,42 @@ export default function PT({profile,coachMode=false,focusRequestId,onFocusConsum
  const [noteClient,setNoteClient]=useState(''),[noteGoals,setNoteGoals]=useState(''),[noteText,setNoteText]=useState(''),[followUp,setFollowUp]=useState(''),[requestDrafts,setRequestDrafts]=useState({}),[noteType,setNoteType]=useState('progress'),[expandedPlanSessions,setExpandedPlanSessions]=useState({})
  const [sessionEditor,setSessionEditor]=useState(null)
  const [sessionDraft,setSessionDraft]=useState({title:'',startsAt:'',duration:'60',message:'',cancellationNote:''})
+ const loadSequence=useRef(0)
  async function load(silent=false){
-  if(!silent)setLoading(true);setError('')
-  const {data:{user},error:authError}=await supabase.auth.getUser()
-  if(authError||!user){setError('Logg inn på nytt.');setLoading(false);return}
-  const [s,b,r,m,p,n,pe,ex,wd]=await Promise.all([
-   supabase.from('pt_sessions').select('id,title,client_id,starts_at,duration_minutes,capacity,price,status,prep,message,cancellation_note,custom_workout,wod_ids,session_type,coach_notes,completed_notes,attendance_status').in('status',staff?['draft','published','planned','completed','cancelled']:['published','planned','completed','cancelled']).order('starts_at',{ascending:false}).limit(100),
-   staff ? supabase.from('pt_bookings').select('id,session_id,status,note') : supabase.from('pt_bookings').select('id,session_id,status,note').eq('member_id',user.id),
-   supabase.from('pt_requests').select('id,member_id,preferred_at,alternative_at,availability_note,goal,status,staff_note,pt_session_id,created_at,handled_at,archived_at').order('created_at',{ascending:false}).limit(100).then(result=>staff?result:{...result,data:(result.data||[]).filter(row=>row.member_id===user.id)}),
-   staff ? supabase.from('profiles').select('id,display_name,role,member_rank,avatar_url,membership_status').eq('role','member').neq('id',user.id).eq('active',true).eq('membership_status','approved').order('display_name') : Promise.resolve({data:[],error:null}),
-   (()=>{let query=supabase.from('pt_messages').select('id,client_id,sender_id,body,created_at').order('created_at',{ascending:false}).limit(200);const targetClientId=staff?(messageClient||activeClient):user.id;if(targetClientId)query=query.eq('client_id',targetClientId);return query})(),
-   staff ? supabase.from('pt_client_notes').select('id,client_id,coach_id,goals,note,follow_up_at,created_at').order('updated_at',{ascending:false}).limit(100) : Promise.resolve({data:[],error:null}),
-   supabase.from('pt_session_exercises').select('id,session_id,sort_order,phase,exercise_name,sets,reps,target_load,rest_seconds,notes').order('sort_order'),
-   supabase.from('exercises').select('id,name,category,video_url').eq('is_active',true).order('name'),
-   supabase.from('wods').select('id,name,format,duration_minutes,movements,notes').eq('is_published',true).order('created_at',{ascending:false}),
-  ])
-  if(s.error)setError(s.error.message);else setSessions(staff?(s.data||[]):(s.data||[]).filter(row=>row.status==='published'||row.client_id===user.id||(b.data||[]).some(booking=>booking.session_id===row.id)))
-  if(b.error)setError(b.error.message);else setBookings(b.data||[])
-  if(r.error)setError(r.error.message);else setRequests(r.data||[])
-  if(m.error)setError(m.error.message);else {setMembers(m.data||[]);if(m.data?.length){if(!hideCustomerPicker)setActiveClient(v=>v||m.data[0].id);setCustomerDraft(v=>v||m.data[0].id);setMessageClient(v=>v||m.data[0].id);setNoteClient(v=>v||m.data[0].id)}}
-  if(p.error)setError(p.error.message);else setMessages((p.data||[]).slice().reverse())
-  if(n.error)setError(n.error.message);else setNotes(n.data||[])
-  if(pe.error)setError(pe.error.message);else setPlans((pe.data||[]).reduce((acc,row)=>{(acc[row.session_id] ||= []).push(row);return acc},{}))
-  if(ex.error)setError(ex.error.message);else setExerciseLibrary(ex.data||[])
-  if(wd.error)setError(wd.error.message);else setWodLibrary(wd.data||[])
-  setLoading(false)
+  const requestId=++loadSequence.current
+  if(!silent)setLoading(true)
+  setError('')
+  try{
+   const {data:{user},error:authError}=await supabase.auth.getUser()
+   if(authError||!user)throw authError||new Error('Logg inn på nytt.')
+   const [s,b,r,m,p,n,pe,ex,wd]=await Promise.all([
+    supabase.from('pt_sessions').select('id,title,client_id,starts_at,duration_minutes,capacity,price,status,prep,message,cancellation_note,custom_workout,wod_ids,session_type,coach_notes,completed_notes,attendance_status').in('status',staff?['draft','published','planned','completed','cancelled']:['published','planned','completed','cancelled']).order('starts_at',{ascending:false}).limit(100),
+    staff ? supabase.from('pt_bookings').select('id,session_id,status,note') : supabase.from('pt_bookings').select('id,session_id,status,note').eq('member_id',user.id),
+    supabase.from('pt_requests').select('id,member_id,preferred_at,alternative_at,availability_note,goal,status,staff_note,pt_session_id,created_at,handled_at,archived_at').order('created_at',{ascending:false}).limit(100).then(result=>staff?result:{...result,data:(result.data||[]).filter(row=>row.member_id===user.id)}),
+    staff ? supabase.from('profiles').select('id,display_name,role,member_rank,avatar_url,membership_status').eq('role','member').neq('id',user.id).eq('active',true).eq('membership_status','approved').order('display_name') : Promise.resolve({data:[],error:null}),
+    (()=>{let query=supabase.from('pt_messages').select('id,client_id,sender_id,body,created_at').order('created_at',{ascending:false}).limit(200);const targetClientId=staff?(messageClient||activeClient):user.id;if(targetClientId)query=query.eq('client_id',targetClientId);return query})(),
+    staff ? supabase.from('pt_client_notes').select('id,client_id,coach_id,goals,note,follow_up_at,created_at').order('updated_at',{ascending:false}).limit(100) : Promise.resolve({data:[],error:null}),
+    supabase.from('pt_session_exercises').select('id,session_id,sort_order,phase,exercise_name,sets,reps,target_load,rest_seconds,notes').order('sort_order'),
+    supabase.from('exercises').select('id,name,category,video_url').eq('is_active',true).order('name'),
+    supabase.from('wods').select('id,name,format,duration_minutes,movements,notes').eq('is_published',true).order('created_at',{ascending:false}),
+   ])
+   if(requestId!==loadSequence.current)return
+   const failures=[s,b,r,m,p,n,pe,ex,wd].filter(result=>result.error).map(result=>result.error.message)
+   if(failures.length)setError(failures.join(' · '))
+   setSessions(staff?(s.data||[]):(s.data||[]).filter(row=>row.status==='published'||row.client_id===user.id||(b.data||[]).some(booking=>booking.session_id===row.id)))
+   setBookings(b.data||[])
+   setRequests(r.data||[])
+   if(m.data){setMembers(m.data);if(m.data.length){if(!hideCustomerPicker)setActiveClient(v=>v||m.data[0].id);setCustomerDraft(v=>v||m.data[0].id);setMessageClient(v=>v||m.data[0].id);setNoteClient(v=>v||m.data[0].id)}}
+   setMessages((p.data||[]).slice().reverse())
+   setNotes(n.data||[])
+   setPlans((pe.data||[]).reduce((acc,row)=>{(acc[row.session_id] ||= []).push(row);return acc},{}))
+   setExerciseLibrary(ex.data||[])
+   setWodLibrary(wd.data||[])
+  }catch(loadError){
+   if(requestId===loadSequence.current)setError(loadError?.message||'PT-data kunne ikkje hentast.')
+  }finally{
+   if(requestId===loadSequence.current)setLoading(false)
+  }
  }
  useEffect(()=>{
   let live=true,channel=null
@@ -73,7 +84,7 @@ export default function PT({profile,coachMode=false,focusRequestId,onFocusConsum
   }
   subscribe()
   const refresh=window.setInterval(()=>{if(live)load(true)},60000)
-  return()=>{live=false;window.clearInterval(refresh);if(channel)supabase.removeChannel(channel)}
+  return()=>{live=false;loadSequence.current+=1;window.clearInterval(refresh);if(channel)supabase.removeChannel(channel)}
  },[staff,activeClient,messageClient])
  const hasUnsavedWork=Boolean(showWodBuilder||messageText.trim()||noteGoals.trim()||noteText.trim()||followUp||Object.values(planDrafts).some(d=>d&&Object.values(d).some(v=>String(v||'').trim())));
  useEffect(()=>{if(!hasUnsavedWork)return;const warn=e=>{e.preventDefault();e.returnValue='Du har endringar som ikkje er lagra.'};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn)},[hasUnsavedWork]);
