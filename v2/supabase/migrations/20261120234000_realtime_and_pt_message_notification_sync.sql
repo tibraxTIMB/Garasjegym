@@ -102,7 +102,7 @@ GRANT EXECUTE ON FUNCTION public.notify_pt_message() TO postgres, service_role;
 REVOKE ALL ON FUNCTION public.archive_pt_message_notifications() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.archive_pt_message_notifications() TO postgres, service_role;
 
-DO $publication$
+DO $
 DECLARE
   v_table text;
 BEGIN
@@ -120,4 +120,4 @@ BEGIN
     END LOOP;
   END IF;
 END;
-$publication$;
+$;
