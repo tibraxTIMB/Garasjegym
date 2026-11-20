@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, ArrowRight, CalendarDays, CheckCircle2, ClipboardList, Dumbbell, Flag, MessageSquareText, Plus, RefreshCw, Target, UserRound, Users, Search, X } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import Notifications from './Notifications.jsx'
@@ -68,6 +68,7 @@ export default function PTStudio({ profile, coachMode=false, onLaunchWorkout, in
  const [clientNote,setClientNote] = useState('')
  const [showArchivedPrograms,setShowArchivedPrograms] = useState(false)
  const [sessionSlotDrafts,setSessionSlotDrafts] = useState({})
+ const loadSequence = useRef(0)
 
  const selectedMember = members.find(m=>m.id===clientId)
  const visibleTemplates = useMemo(()=>templates.filter(template=>{
@@ -96,30 +97,37 @@ export default function PTStudio({ profile, coachMode=false, onLaunchWorkout, in
  }
 
  async function load() {
+  const requestId=++loadSequence.current
   setError('')
-  const results = await Promise.all([
-   canManageClients ? supabase.from('profiles').select('id,display_name,role,avatar_url,member_rank,active,membership_status').eq('role','member').neq('id',profile.id).eq('active',true).eq('membership_status','approved').order('display_name') : Promise.resolve({data:[],error:null}),
-   supabase.from('pt_intakes').select('*').order('created_at',{ascending:false}).limit(300),
-   supabase.from('pt_client_goals').select('*').order('created_at',{ascending:false}),
-   supabase.from('pt_program_templates').select('*').eq('is_active',true).order('title'),
-   supabase.from('pt_programs').select('*').order('created_at',{ascending:false}),
-   supabase.from('pt_program_sessions').select('*').order('sequence_no'),
-   supabase.from('pt_checkins').select('*').order('created_at',{ascending:false}),
-   (()=>{let q=supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,is_published,is_archived').eq('is_archived',false).order('name');if(!canManageClients)q=q.eq('is_published',true);return q})()
-  ])
-  const labels=['medlemslista','innmeldingar','mål','programmalbibliotek','kundeprogram','programøkter','statussjekkar','WOD-bibliotek']
-  const loadErrors=results.flatMap((result,index)=>result.error&&!(index===0&&!canManageClients)?[labels[index]+': '+result.error.message]:[])
-  if(loadErrors.length)setError(loadErrors.join(' · '))
-  if(results[0].data){
-   setMembers(results[0].data)
-   if(coachMode&&!initialClientId&&results[0].data.length)setClientId(current=>current||results[0].data[0].id)
+  try {
+   const results = await Promise.all([
+    canManageClients ? supabase.from('profiles').select('id,display_name,role,avatar_url,member_rank,active,membership_status').eq('role','member').neq('id',profile.id).eq('active',true).eq('membership_status','approved').order('display_name') : Promise.resolve({data:[],error:null}),
+    supabase.from('pt_intakes').select('*').order('created_at',{ascending:false}).limit(300),
+    supabase.from('pt_client_goals').select('*').order('created_at',{ascending:false}),
+    supabase.from('pt_program_templates').select('*').eq('is_active',true).order('title'),
+    supabase.from('pt_programs').select('*').order('created_at',{ascending:false}),
+    supabase.from('pt_program_sessions').select('*').order('sequence_no'),
+    supabase.from('pt_checkins').select('*').order('created_at',{ascending:false}),
+    (()=>{let q=supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,is_published,is_archived').eq('is_archived',false).order('name');if(!canManageClients)q=q.eq('is_published',true);return q})()
+   ])
+   if(requestId!==loadSequence.current)return
+   const labels=['medlemslista','innmeldingar','mål','programmalbibliotek','kundeprogram','programøkter','statussjekkar','WOD-bibliotek']
+   const loadErrors=results.flatMap((result,index)=>result.error&&!(index===0&&!canManageClients)?[labels[index]+': '+result.error.message]:[])
+   if(loadErrors.length)setError(loadErrors.join(' · '))
+   if(results[0].data){
+    setMembers(results[0].data)
+    if(coachMode&&!initialClientId&&results[0].data.length)setClientId(current=>current||results[0].data[0].id)
+   }
+   setIntakes(results[1].data||[]);setGoals(results[2].data||[]);setTemplates(results[3].data||[])
+   setPrograms(results[4].data||[]);setSessions(results[5].data||[]);setCheckins(results[6].data||[]);setWods(results[7].data||[])
+   if(canManageClients&&initialClientId)setClientId(initialClientId)
+  } catch(loadError) {
+   if(requestId===loadSequence.current)setError(loadError?.message||'PT-studioet kunne ikkje hentast.')
+  } finally {
+   if(requestId===loadSequence.current)setLoading(false)
   }
-  setIntakes(results[1].data||[]);setGoals(results[2].data||[]);setTemplates(results[3].data||[])
-  setPrograms(results[4].data||[]);setSessions(results[5].data||[]);setCheckins(results[6].data||[]);setWods(results[7].data||[])
-  if(canManageClients&&initialClientId)setClientId(initialClientId)
-  setLoading(false)
  }
- useEffect(()=>{load()},[canManageClients])
+ useEffect(()=>{load();return()=>{loadSequence.current+=1}},[canManageClients])
  useEffect(()=>{if(!canManageClients)setClientId(profile.id)},[canManageClients,profile.id])
 
  async function run(action) {
