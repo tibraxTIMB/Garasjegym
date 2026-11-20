@@ -376,7 +376,7 @@ export default function App() {
         <footer>GARASJEGYM 2.0 · STURMKOPF</footer>
       </main>
       <AppMobileNavigation items={mobileNavItems} active={active} staff={!simpleMode&&isStaff(profile)} onNavigate={handleSectionNavigate}/>
-      {infotainmentActive&&isStaff(profile)&&<Suspense fallback={<div className="training-state" role="status">Lastar infotainment …</div>}><Infotainment onExit={()=>{try{sessionStorage.removeItem('garasjegym:infotainment-active')}catch{}setInfotainmentActive(false)}} timerSnapshot={timerSnapshot}/></Suspense>}
+      {infotainmentActive&&isStaff(profile)&&<Suspense fallback={<div className="training-state" role="status">Lastar infotainment …</div>}><Infotainment onExit={()=>{try{sessionStorage.removeItem('garasjegym:infotainment-active');sessionStorage.removeItem('garasjegym:infotainment-tab')}catch{}setInfotainmentActive(false)}} timerSnapshot={timerSnapshot}/></Suspense>}
     </div>
     </MusicProvider>
   )
