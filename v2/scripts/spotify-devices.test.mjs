@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { chooseSpotifyDevice, isUsableSpotifyDevice, spotifyErrorMessage } from '../src/lib/spotifyDevices.js'
 import { clearSpotifyOAuthSession, readSpotifyOAuthSession, writeSpotifyOAuthSession } from '../src/lib/spotifyOAuthStorage.js'
+import { shouldDiscardSpotifyRefreshToken, spotifyRefreshErrorMessage } from '../src/lib/spotifyTokens.js'
 
 test('Spotify devices include tablets, computers and speakers', () => {
   for (const type of ['Smartphone','Tablet','Computer','Speaker','TV']) {
@@ -68,4 +69,19 @@ test('Spotify OAuth session helpers fail safely when browser storage is blocked'
   assert.deepEqual(readSpotifyOAuthSession(blocked, 'state', 'verifier'), {state:'',verifier:''})
   assert.equal(writeSpotifyOAuthSession(blocked, 'state', 'verifier', 's', 'v'), false)
   assert.equal(clearSpotifyOAuthSession(blocked, 'state', 'verifier'), false)
+})
+
+
+test('only an explicit invalid_grant response discards a Spotify refresh token', () => {
+  assert.equal(shouldDiscardSpotifyRefreshToken(400, {error:'invalid_grant'}), true)
+  assert.equal(shouldDiscardSpotifyRefreshToken(400, {error:'invalid_client'}), false)
+  assert.equal(shouldDiscardSpotifyRefreshToken(401, {error:'invalid_grant'}), false)
+  assert.equal(shouldDiscardSpotifyRefreshToken(429, {error:'rate_limited'}), false)
+  assert.equal(shouldDiscardSpotifyRefreshToken(500, {error:'server_error'}), false)
+})
+
+test('Spotify refresh errors distinguish reauthorization from temporary failures', () => {
+  assert.match(spotifyRefreshErrorMessage(400, {error:'invalid_grant'}), /Kople til på nytt/)
+  assert.match(spotifyRefreshErrorMessage(429, {error:'rate_limited'}), /rate_limited/)
+  assert.match(spotifyRefreshErrorMessage(503, {}), /Prøv igjen om litt/)
 })
