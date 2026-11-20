@@ -4,10 +4,16 @@
 BEGIN;
 DO $preflight$
 BEGIN
-  IF to_regclass('public.class_bookings') IS NULL OR to_regclass('public.pt_sessions') IS NULL OR to_regclass('public.pt_bookings') IS NULL THEN
+  IF to_regclass('public.class_bookings') IS NULL OR to_regclass('public.pt_sessions') IS NULL OR to_regclass('public.pt_bookings') IS NULL OR to_regclass('public.pt_coaches') IS NULL OR to_regclass('public.pt_client_assignments') IS NULL THEN
     RAISE EXCEPTION 'Required production tables are missing';
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='public.class_bookings'::regclass AND attname='member_id' AND NOT attisdropped)
+  IF NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='public.profiles'::regclass AND attname='membership_status' AND NOT attisdropped)
+     OR NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='public.profiles'::regclass AND attname='active' AND NOT attisdropped)
+     OR NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='public.pt_coaches'::regclass AND attname='is_active' AND NOT attisdropped)
+     OR NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='public.pt_client_assignments'::regclass AND attname='coach_user_id' AND NOT attisdropped)
+     OR NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='public.pt_client_assignments'::regclass AND attname='member_id' AND NOT attisdropped)
+     OR NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='public.pt_client_assignments'::regclass AND attname='status' AND NOT attisdropped)
+     OR NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='public.class_bookings'::regclass AND attname='member_id' AND NOT attisdropped)
      OR NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='public.class_bookings'::regclass AND attname='status' AND NOT attisdropped)
      OR NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='public.pt_sessions'::regclass AND attname='client_id' AND NOT attisdropped)
      OR NOT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='public.pt_sessions'::regclass AND attname='status' AND NOT attisdropped) THEN
@@ -18,6 +24,33 @@ $preflight$;
 CREATE SCHEMA IF NOT EXISTS app_private;
 REVOKE ALL ON SCHEMA app_private FROM PUBLIC, anon;
 GRANT USAGE ON SCHEMA app_private TO authenticated;
+CREATE OR REPLACE FUNCTION app_private.is_pt_coach_for_member(p_member_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path TO 'pg_catalog','public','app_private'
+AS $function$
+  SELECT auth.uid() IS NOT NULL
+     AND public.is_active_user()
+     AND p_member_id IS NOT NULL
+     AND EXISTS (
+       SELECT 1
+       FROM public.pt_client_assignments a
+       JOIN public.pt_coaches c ON c.user_id=a.coach_user_id AND c.is_active=true
+       JOIN public.profiles coach_profile ON coach_profile.id=c.user_id
+       JOIN public.profiles client_profile ON client_profile.id=a.member_id
+       WHERE a.coach_user_id=auth.uid()
+         AND a.member_id=p_member_id
+         AND a.status='active'
+         AND coach_profile.active=true
+         AND coach_profile.membership_status='approved'
+         AND client_profile.active=true
+         AND client_profile.membership_status='approved'
+     );
+$function$;
+REVOKE ALL ON FUNCTION app_private.is_pt_coach_for_member(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION app_private.is_pt_coach_for_member(uuid) TO authenticated;
 CREATE OR REPLACE FUNCTION app_private.has_own_pt_session_booking(p_session_id uuid)
 RETURNS boolean
 LANGUAGE sql
@@ -53,6 +86,7 @@ USING (
     public.is_admin_or_manager()
     OR client_id = (SELECT auth.uid())
     OR (client_id IS NULL AND status = 'published')
+    OR (client_id IS NOT NULL AND app_private.is_pt_coach_for_member(client_id))
     OR app_private.has_own_pt_session_booking(id)
   )
 );
