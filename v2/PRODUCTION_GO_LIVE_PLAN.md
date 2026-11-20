@@ -723,3 +723,10 @@ Fresh production advisors at 22:36 UTC: security still reports 4 authenticated-c
 Performance advisor: 14 unindexed FKs, 34 RLS initplan warnings, 10 unused indexes, 3 tables with multiple permissive policies. Health advisor returned no lints. These are tracked optimization/review items; no blanket index drops, RLS rewrites or policy consolidation. Detailed record: [GO_LIVE_PHASE_B38_PRODUCTION_ADVISOR_REVALIDATION_2026-11-20.md](./GO_LIVE_PHASE_B38_PRODUCTION_ADVISOR_REVALIDATION_2026-11-20.md).
 
 B37 Auth acceptance has been clarified: user UUID/identity link and password-hash-presence evidence must match; session/refresh-token differences are acceptable if intentionally invalidated, with fresh sign-in tested. B28 owner runbook now documents this and the official Auth-schema recovery guidance. No production changes. Wave 0 remains blocked; production remains NO-GO.
+
+
+## 38. Phase B39 – production Storage recovery revalidation (2026-11-20)
+
+Fresh production Storage aggregate check: 0 buckets, 0 objects, 0 Storage RLS policies; all 10 Storage base tables have RLS enabled. The schema contains 11 non-internal managed Storage triggers relating to bucket/object lifecycle and protection; do not replay or modify these platform-managed objects as app migrations. The zero bucket/object baseline is valid only for this snapshot and must be rechecked immediately before the backup. If still zero, record it; if non-zero, export bucket config, object bytes, paths and metadata separately. Detailed record: [GO_LIVE_PHASE_B39_STORAGE_RECOVERY_REVALIDATION_2026-11-20.md](./GO_LIVE_PHASE_B39_STORAGE_RECOVERY_REVALIDATION_2026-11-20.md).
+
+No Storage objects or metadata were exported or changed. Wave 0 remains blocked; production remains NO-GO.
