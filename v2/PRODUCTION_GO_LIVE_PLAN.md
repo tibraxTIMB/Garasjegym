@@ -304,3 +304,17 @@ The production and test `pt_session_capacity` views now have matching definition
 Detailed evidence and release implications: [GO_LIVE_PHASE_B2_DEFINITION_RECONCILIATION_2026-11-20.md](./GO_LIVE_PHASE_B2_DEFINITION_RECONCILIATION_2026-11-20.md).
 
 **Phase B2 is complete as a read-only review.** No test or production changes, backups, restores, migrations or deployments were performed. Production remains NO-GO pending backup/PITR evidence, an isolated restore rehearsal, production-origin migration reconstruction, and explicit owner GO LIVE approval.
+
+
+## 3D. Phase B3 – app-to-production dependency audit (2026-11-20)
+
+**Status: NO-GO.** Read-only audit only; no database, Auth, Edge Function, or hosting changes.
+
+The live production `profiles` table has neither `email` nor `membership_status`, but the current STURMKOPF `fetchMemberProfile()` query in `v2/src/lib/auth.js` selects both. `App.jsx` then gates application access on `membership_status`. A frontend-only release against the current production schema can therefore fail during profile bootstrap. This is a hard release blocker.
+
+The current frontend also calls class booking RPCs and reads live class-session tables; test-only class-live tables are missing from production. PT Studio calls newer PT programme/intake/goal/check-in tables and RPCs that are absent from production. The app's member-deletion action invokes `admin-delete-user`, which is not deployed in production; the test implementation has reference checks for tables/columns absent from production and cannot be copied unchanged.
+
+See the detailed call-path map, production column evidence, and ordered remediation gates in [GO LIVE Phase B3 – app dependency audit](GO_LIVE_PHASE_B3_APP_DEPENDENCY_AUDIT_2026-11-20.md).
+
+Required next steps are a deliberate membership/email compatibility and backfill design; an atomic booking/waitlist migration; a production-derived PT/WOD dependency migration; and a production-schema-specific deletion Edge Function. All must be rehearsed from a verified recovery point before production changes. Do not ship the current frontend unchanged to production.
+
