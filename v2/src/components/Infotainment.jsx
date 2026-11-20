@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { CalendarDays, Clock3, MonitorUp, Play, Pause, RotateCcw, TimerReset, Music2, LoaderCircle, Lock, Unlock, Maximize2, Minimize2, X } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { groupEventsByLocalDay } from '../lib/infotainmentEvents.js'
+import { getDemoTimerState } from '../lib/infotainmentTimer.js'
 import { Music, MusicMiniPlayer } from './Music.jsx'
 import './infotainment.css'
 
@@ -41,24 +42,8 @@ function DemoClock({onClose}){
  const isCountdown=format==='countdown'||format==='amrap'
  const isEmom=format==='emom'||format==='e2mom'
  const isIntervals=format==='tabata'||format==='interval'
- const intervalMinutes=format==='e2mom'?2:1
- const intervalSeconds=intervalMinutes*60
- const safeWork=Math.max(1,Math.min(isEmom?intervalSeconds:600,Number(workSeconds)||1))
- const safeRest=Math.max(0,Math.min(isEmom?intervalSeconds-safeWork:600,Number(restSeconds)||0))
- const cycleSeconds=isEmom?intervalSeconds:isIntervals?safeWork+safeRest:0
- const totalSeconds=isCountdown?Math.max(1,Number(minutes)||1)*60:isEmom?intervalSeconds*Math.max(1,Number(rounds)||1):isIntervals?cycleSeconds*Math.max(1,Number(rounds)||1):0
- const limited=isCountdown||isEmom||isIntervals
- const remaining=Math.max(0,totalSeconds-elapsed)
- const intervalElapsed=isIntervals?elapsed%Math.max(1,cycleSeconds):0
- const intervalWork=intervalElapsed<safeWork
- const emomElapsed=elapsed%intervalSeconds
- const emomWork=emomElapsed<safeWork
- const emomRest=!emomWork&&(emomElapsed-safeWork)<safeRest
- const emomRound=Math.min(Math.floor(elapsed/intervalSeconds)+1,Math.max(1,Number(rounds)||1))
- const intervalRound=Math.min(Math.floor(elapsed/Math.max(1,cycleSeconds))+1,Math.max(1,Number(rounds)||1))
- const phase=isEmom?(emomWork?'ARBEID':emomRest?'PAUSE':'VENTETID'):isIntervals?(intervalWork?'ARBEID':'PAUSE'):format==='amrap'?'AMRAP · TID ATT':format==='countdown'?'NEDTELJING':format==='fortime'?'MEDGÅTT TID':'STOPPEKLOKKE'
- const displayTime=isCountdown?remaining:isEmom?Math.max(0,emomWork?safeWork-emomElapsed:emomRest?safeRest-(emomElapsed-safeWork):intervalSeconds-emomElapsed):isIntervals?Math.max(0,intervalWork?safeWork-intervalElapsed:cycleSeconds-intervalElapsed):elapsed
- const roundLabel=isEmom?'RUNDE '+emomRound+' / '+rounds:isIntervals?'RUNDE '+intervalRound+' / '+rounds:''
+ const demoState=useMemo(()=>getDemoTimerState({format,elapsed,minutes,workSeconds,restSeconds,rounds}),[format,elapsed,minutes,workSeconds,restSeconds,rounds])
+ const {limited,totalSeconds,remaining,phase,displayTime,roundLabel,safeWork,safeRest,intervalSeconds}=demoState
  const formatInfo=DEMO_FORMATS.find(item=>item.id===format)
  useEffect(()=>{
   if(!running)return undefined
