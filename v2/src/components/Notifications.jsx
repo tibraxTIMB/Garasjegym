@@ -21,7 +21,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
  const [busy,setBusy]=useState('')
  const [showAll,setShowAll]=useState(false)
  const [hasMore,setHasMore]=useState(false)
- const urgent=items.filter(x=>x.priority==='urgent'&&x.status==='open'&&!x.archived_at).length
+ const urgent=items.filter(x=>x.priority==='urgent'&&x.status==='open'&&!x.archived_at&&!isExpired(x)).length
  const actionItems=items.filter(x=>x.requires_action&&x.status==='open'&&!x.archived_at&&!isExpired(x))
  const ackItems=items.filter(x=>x.requires_ack&&!x.acknowledged_at&&x.status==='open'&&!x.archived_at&&!isExpired(x))
  const unread=items.filter(x=>!x.is_read&&!x.archived_at&&!isExpired(x)).length
@@ -33,17 +33,20 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
   return x.status==='open'&&(!x.requires_ack||!x.acknowledged_at)
  }).slice(0,showAll?items.length:30),[items,tab,showAll])
  async function load(append=false){
-  const {data:{user}}=await supabase.auth.getUser()
-  if(!user){setLoading(false);return}
-  const {data,error:e}=await supabase.from('notifications')
-   .select('id,title,body,category,href,is_read,created_at,priority,requires_ack,requires_action,status,read_at,acknowledged_at,resolved_at,expires_at,archived_at')
-   .eq('recipient_id',user.id).is('archived_at',null).order('created_at',{ascending:false}).range(append?items.length:0,(append?items.length:0)+99)
-  if(e)setError(e.message);else{
+  try{
+   const {data:{user},error:authError}=await supabase.auth.getUser()
+   if(authError)throw authError
+   if(!user){setItems([]);setError('Logg inn på nytt for å sjå varslingane.');return}
+   const {data,error:e}=await supabase.from('notifications')
+    .select('id,title,body,category,href,is_read,created_at,priority,requires_ack,requires_action,status,read_at,acknowledged_at,resolved_at,expires_at,archived_at')
+    .eq('recipient_id',user.id).is('archived_at',null).order('created_at',{ascending:false}).range(append?items.length:0,(append?items.length:0)+99)
+   if(e)throw e
    const rows=data||[]
    setHasMore(rows.length===100)
    setItems(current=>append?[...current,...rows.filter(row=>!current.some(existing=>existing.id===row.id))]:rows)
-  }
-  setLoading(false)
+   setError('')
+  }catch(loadError){setError(loadError?.message||'Varslingane kunne ikkje hentast.')}
+  finally{setLoading(false)}
  }
  useEffect(()=>{
   let live=true
@@ -60,11 +63,13 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
     .subscribe()
   }
   start()
-  return()=>{live=false;if(channel)supabase.removeChannel(channel)}
+  const refreshTimer=compact?window.setInterval(()=>{if(live)load()},60_000):null
+  return()=>{live=false;if(channel)supabase.removeChannel(channel);if(refreshTimer)window.clearInterval(refreshTimer)}
  },[context,compact])
  async function patch(id,values){
   setBusy(id);setError('')
-  const {data:{user}}=await supabase.auth.getUser()
+  const {data:{user},error:authError}=await supabase.auth.getUser()
+  if(authError||!user){setError('Logg inn på nytt før du endrar varslingar.');setBusy('');return false}
   const {error:e}=await supabase.from('notifications').update(values).eq('id',id).eq('recipient_id',user.id).select('id')
   if(e)setError(e.message)
   else setItems(rows=>rows.map(x=>x.id===id?{...x,...values}:x))
@@ -91,19 +96,19 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
     <div className="notification-item-title"><strong>{item.title}</strong>{item.priority!=='normal'&&<span className={'notification-priority '+p.tone}><PriorityIcon size={11}/>{p.label}</span>}</div>
     <span>{item.body}</span>
     <div className="notification-meta-v2"><time>{new Date(item.created_at).toLocaleString('nn-NO',{dateStyle:'short',timeStyle:'short'})}</time>{item.requires_action&&pending&&<b className="notification-kind action">KREV HANDLING</b>}{item.requires_ack&&!item.acknowledged_at&&<b className="notification-kind ack">KVITTER LESING</b>}{item.status==='resolved'&&<b className="notification-kind done">LØYST</b>}</div>
-    <div className="notification-actions-v2">
+    {!compact&&<div className="notification-actions-v2">
      {(item.href||item.requires_action)&&<button type="button" className="notification-open-action" disabled={busy===item.id} onClick={()=>openItem(item)}>{hrefLabel(item.href)} <ArrowUpRight size={13}/></button>}
      {item.requires_ack&&!item.acknowledged_at&&<button type="button" className="notification-ack-action" disabled={busy===item.id} onClick={()=>acknowledge(item)}><ClipboardCheck size={13}/> Stadfest lest</button>}
      {item.requires_action&&pending&&<button type="button" className="notification-done-action" disabled={busy===item.id} onClick={()=>resolve(item)}><Check size={13}/> Marker løyst</button>}
      {!item.requires_action&&!item.requires_ack&&pending&&<button type="button" className="notification-dismiss-action" disabled={busy===item.id} onClick={()=>archive(item)}><Archive size={13}/> Skjul</button>}
-    </div>
+    </div>}
    </div>
    {!item.is_read&&<i className="notification-unread-dot" aria-label="Ulest"/>}
   </article>
  }
  if(compact){
   const rows=items.filter(x=>!x.archived_at&&!isExpired(x)&&x.status==='open'&&(!x.requires_ack||!x.acknowledged_at)).filter(x=>context==='pt-studio'?x.category==='pt'||x.href?.startsWith('pt-'):context==='group'?x.category==='booking'||x.category==='group'||x.href?.startsWith('group-class:'):true).slice(0,4)
-  if(!rows.length)return <section className="notification-context"><div className="notification-context-head"><Bell size={16}/><strong>{context==='pt-studio'?'PT-varslingar':context==='group'?'Gruppetime-varslingar':'Varslingar'}</strong><span>0</span></div><p>Ingen oppfølging ventar her.</p></section>
+  if(!rows.length)return <section className="notification-context"><div className="notification-context-head"><Bell size={16}/><strong>{context==='pt-studio'?'PT-varslingar':context==='group'?'Gruppetime-varslingar':'Varslingar'}</strong><span>0</span></div><p>{loading?'Hentar varsel …':error?'Varslingane er ikkje tilgjengelege akkurat no.':'Ingen oppfølging ventar her.'}</p></section>
   return <section className="notification-context"><div className="notification-context-head"><Bell size={16}/><strong>{context==='pt-studio'?'PT-varslingar':context==='group'?'Gruppetime-varslingar':'Varslingar'}</strong><span>{rows.length}</span></div>{rows.map(renderItem)}</section>
  }
  return <div className="notification-wrap">
