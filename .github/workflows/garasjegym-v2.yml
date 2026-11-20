@@ -32,6 +32,9 @@ jobs:
       - name: Run automated tests
         run: npm test
       - name: Build production bundle
+        env:
+          VITE_SUPABASE_URL: https://izwzwvlexqxqewzijhhd.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_jZyaYhD8_jZgpgutKF7lRg_EcJ0EGSQ
         run: npm run build
       - name: Check built release artifact environment and secrets
         working-directory: v2
