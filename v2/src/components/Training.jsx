@@ -653,6 +653,9 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     if (!items.length || items.some(item => !item.exercise_name.trim())) {
       setError('Alle øvingane må ha namn.'); return
     }
+    if (items.some(item => !Array.isArray(item.sets) || item.sets.length === 0)) {
+      setError('Legg til minst eitt sett på kvar øving før du lagrar.'); return
+    }
     setSaving(true); setError(''); setNotice('')
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
