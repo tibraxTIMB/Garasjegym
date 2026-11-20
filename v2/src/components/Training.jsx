@@ -248,10 +248,31 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   useEffect(() => { if (stop) setRunning(false) }, [stop])
   useEffect(() => { const sync = () => setFocused(Boolean(document.fullscreenElement)); document.addEventListener('fullscreenchange', sync); return () => document.removeEventListener('fullscreenchange', sync) }, [])
 
+  // Derive elapsed time from wall-clock timestamps. Interval callbacks only refresh
+  // the display; they never accumulate time, so background throttling cannot create drift.
+  const timerRunStartedAt = useRef(null)
+  const timerRunBaseElapsed = useRef(0)
+  const elapsedRef = useRef(elapsed)
+  useEffect(() => { elapsedRef.current = elapsed }, [elapsed])
   useEffect(() => {
-    if (!running) return undefined
-    const id = window.setInterval(() => setElapsed(value => value + 1), 1000)
-    return () => window.clearInterval(id)
+    if (running) {
+      timerRunBaseElapsed.current = elapsedRef.current
+      timerRunStartedAt.current = Date.now()
+      const refresh = () => {
+        if (timerRunStartedAt.current == null) return
+        const nextElapsed = timerRunBaseElapsed.current + Math.floor((Date.now() - timerRunStartedAt.current) / 1000)
+        setElapsed(current => current === nextElapsed ? current : nextElapsed)
+      }
+      refresh()
+      const id = window.setInterval(refresh, 200)
+      return () => window.clearInterval(id)
+    }
+    if (timerRunStartedAt.current != null) {
+      const finalElapsed = timerRunBaseElapsed.current + Math.floor((Date.now() - timerRunStartedAt.current) / 1000)
+      timerRunStartedAt.current = null
+      setElapsed(current => Math.max(current, finalElapsed))
+    }
+    return undefined
   }, [running])
 
   useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isStationCircuit ? Math.min(Math.floor(elapsed / (cycle * stationCount)), Number(rounds)||1) : isAmrap ? laps.length : round, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isTimedInterval||isStationCircuit||hasTimeCap, currentRound }) }, [elapsed, laps, round, phase, running, isCountdown, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, currentRound])
