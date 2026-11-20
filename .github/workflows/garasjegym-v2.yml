@@ -74,3 +74,42 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/sturmkopf
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f v2/supabase/preflight/wave1_candidate_postgres17_run.sql
+
+  trigger-functions-postgres17:
+    if: github.event_name == 'push'
+    name: Disposable PostgreSQL 17 trigger-function privilege rehearsal
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sturmkopf
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d sturmkopf"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Create trigger-only function fixture
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/sturmkopf
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f v2/supabase/preflight/trigger_execute_postgres17_fixture.sql
+      - name: Revoke direct client execution from attached trigger functions
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/sturmkopf
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f v2/supabase/migrations/20261121000100_revoke_public_execute_from_trigger_functions.sql
+      - name: Assert direct calls are blocked and triggers still execute
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/sturmkopf
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f v2/supabase/preflight/trigger_execute_postgres17_assertions.sql
