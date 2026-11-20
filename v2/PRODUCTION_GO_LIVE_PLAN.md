@@ -421,3 +421,14 @@ Fresh production counts: `wods` 1, `workout_logs` 0, `workout_exercises` 0, `wor
 Reviewed atomic workout save, structured result, PT linkage and PR integrity migrations. Production adaptation must preserve `workout_logs.result_data NOT NULL DEFAULT '{}'`, add dependencies before RPCs, preserve exact exercise sort order, keep PT completion atomic/idempotent, protect private PT WOD visibility, and validate PR ownership/units (including box height in cm). The detailed design and acceptance matrix are in [GO_LIVE_PHASE_B11_WOD_WORKOUT_PR_MIGRATION_DESIGN_2026-11-20.md](./GO_LIVE_PHASE_B11_WOD_WORKOUT_PR_MIGRATION_DESIGN_2026-11-20.md).
 
 **B11 outcome:** WOD/workout/PR production migration design prepared; no database or deployment changes were made. Backup/PITR and isolated restore remain hard blockers. Release remains **NO-GO**.
+
+
+## 11. Phase B12 – hosting/environment separation audit (2026-11-20)
+
+The current Pages workflow is preview-only. It builds against the TEST Supabase project and only publishes to the shared Pages URL after a manual workflow dispatch with `publish_preview=true`. Push-triggered builds skip deployment. It is not a production workflow and must remain unchanged for preview use.
+
+Production needs a separate protected deployment pipeline with production-only environment variables, exact commit/artifact provenance, manual approval, environment isolation and database-compatible rollback. No production workflow, Pages publish, secrets or environment variables were changed.
+
+Full evidence and requirements are recorded in [GO_LIVE_PHASE_B12_HOSTING_ENVIRONMENT_AUDIT_2026-11-20.md](./GO_LIVE_PHASE_B12_HOSTING_ENVIRONMENT_AUDIT_2026-11-20.md).
+
+**B12 outcome:** Preview/production separation verified; no production deployment path is authorized. Release remains **NO-GO**.
