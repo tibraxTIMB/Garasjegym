@@ -12,9 +12,9 @@ function CalendarSelect({value,onChange,label='Vel dato'}) {
  const dateKey=d=>year+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0')
  return <div className="pt-calendar-picker"><strong>{label}</strong><button type="button" className="pt-calendar-toggle" onClick={()=>setOpen(v=>!v)}><CalendarClock size={16}/>{value?new Date(value).toLocaleString('nn-NO',{dateStyle:'medium',timeStyle:'short'}):'Vel dato og klokkeslett'}<span>{open?'Lukk':'Opne kalender'}</span></button>{open&&<div className="pt-calendar"><div className="pt-calendar-head"><strong>{month.toLocaleDateString('nn-NO',{month:'long',year:'numeric'})}</strong><div><button type="button" onClick={()=>setMonth(new Date(year,m-1,1))}>‹</button><button type="button" onClick={()=>setMonth(new Date(year,m+1,1))}>›</button></div></div><div className="pt-calendar-grid">{['M','T','O','T','F','L','S'].map((d,i)=><span className="pt-calendar-weekday" key={i}>{d}</span>)}{Array.from({length:offset},(_,i)=><span key={'blank'+i}/>)}{Array.from({length:days},(_,i)=>i+1).map(d=><button type="button" key={d} className={selected===dateKey(d)?'selected':''} onClick={()=>onChange(dateKey(d)+'T'+time)}>{d}</button>)}</div><label className="pt-calendar-time">Klokkeslett<input type="time" value={time} onChange={e=>onChange((selected||dateKey(new Date().getDate()))+'T'+e.target.value)}/></label><button type="button" className="primary-button" onClick={()=>setOpen(false)}>Bruk tidspunkt</button></div>}</div>
 }
-export default function PT({profile,focusRequestId,onFocusConsumed,onLaunchWorkout,controlledClientId,hideCustomerPicker=false,onClientChange}){
+export default function PT({profile,coachMode=false,focusRequestId,onFocusConsumed,onLaunchWorkout,controlledClientId,hideCustomerPicker=false,onClientChange}){
   useEffect(()=>{if(controlledClientId){setActiveClient(controlledClientId);setCustomerDraft(controlledClientId)}},[controlledClientId])
- const staff=isStaff(profile)
+ const staff=isStaff(profile)||coachMode
  const [sessions,setSessions]=useState([]),[bookings,setBookings]=useState([]),[requests,setRequests]=useState([])
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [showCreate,setShowCreate]=useState(false),[showRequest,setShowRequest]=useState(false),[activeClient,setActiveClient]=useState(''),[customerDraft,setCustomerDraft]=useState(''),[showWodBuilder,setShowWodBuilder]=useState(false),[activePanel,setActivePanel]=useState('oversikt')
@@ -29,7 +29,7 @@ export default function PT({profile,focusRequestId,onFocusConsumed,onLaunchWorko
   if(authError||!user){setError('Logg inn på nytt.');setLoading(false);return}
   const [s,b,r,m,p,n,pe,ex,wd]=await Promise.all([
    supabase.from('pt_sessions').select('id,title,client_id,starts_at,duration_minutes,capacity,price,status,prep,message,custom_workout,wod_ids,session_type,coach_notes,completed_notes,attendance_status').in('status',staff?['draft','published','planned','completed']:['published','planned']).order('starts_at',{ascending:false}).limit(100).then(result=>staff?result:{...result,data:(result.data||[]).filter(row=>row.status==='published'||row.client_id===user.id)}),
-   supabase.from('pt_bookings').select('id,session_id,status,note').eq('member_id',user.id),
+   staff ? supabase.from('pt_bookings').select('id,session_id,status,note') : supabase.from('pt_bookings').select('id,session_id,status,note').eq('member_id',user.id),
    supabase.from('pt_requests').select('id,member_id,preferred_at,alternative_at,availability_note,goal,status,staff_note,created_at,handled_at,archived_at').order('created_at',{ascending:false}).limit(100).then(result=>staff?result:{...result,data:(result.data||[]).filter(row=>row.member_id===user.id)}),
    staff ? supabase.from('profiles').select('id,display_name,role,member_rank,avatar_url,membership_status').eq('active',true).eq('membership_status','approved').order('display_name') : Promise.resolve({data:[],error:null}),
    supabase.from('pt_messages').select('id,client_id,sender_id,body,created_at').order('created_at',{ascending:true}).limit(200),
