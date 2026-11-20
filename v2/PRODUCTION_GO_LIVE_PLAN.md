@@ -564,3 +564,14 @@ B22 CI on commit bfed0bbf753bff31a355dfbd3b1b6b28e82d167d: STURMKOPF focused tes
 Full preservation contract and read-only results are in [GO_LIVE_PHASE_B23_PRODUCTION_DATA_PRESERVATION_BASELINE_2026-11-20.md](./GO_LIVE_PHASE_B23_PRODUCTION_DATA_PRESERVATION_BASELINE_2026-11-20.md).
 
 **B23 outcome:** Production baseline recorded; no data or schema changes. This is not a backup and does not pass Wave 0. Production remains NO-GO.
+
+
+## 23. Phase B24 – release identity and client build verification (2026-11-20)
+
+Found stale user-facing version labels in login, mobile header, footer, Admin, Training and browser metadata. Added v2/src/lib/release.js as the single source of truth for RELEASE_NAME=STURMKOPF FEUER 1.1 and RELEASE_SHORT=FEUER 1.1; aligned app shell, Admin, Training, browser title, PWA description and README. Technical package semver remains 2.0.0, distinct from the Feuer 1.1 release/codename.
+
+Final B24 commit da6467a34b7b205e0c86d49420f80fb4ec76a92e: STURMKOPF focused tests/build SUCCESS (44827794496); full npm test + bundle SUCCESS (44827794580); Pages build/artifact SUCCESS (44827794592); deploy SKIPPED. No preview publication or production deployment.
+
+Full record: [GO_LIVE_PHASE_B24_RELEASE_IDENTITY_AND_BUILD_VERIFICATION_2026-11-20.md](./GO_LIVE_PHASE_B24_RELEASE_IDENTITY_AND_BUILD_VERIFICATION_2026-11-20.md).
+
+**B24 outcome:** Release label aligned and CI green. This is not a production release; Wave 0 recovery remains blocked and production remains NO-GO.
