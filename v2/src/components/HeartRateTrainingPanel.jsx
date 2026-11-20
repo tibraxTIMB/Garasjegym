@@ -29,6 +29,6 @@ export default function HeartRateTrainingPanel() {
   return <section className="engine-section hr-training-panel" aria-live="polite">
     <div className="engine-section-title"><h4><HeartPulse size={17}/> Puls</h4><span><Activity size={13}/> {stale ? 'Vent på signal' : 'Live'}</span></div>
     <div className="hr-training-reading"><strong>{stale ? '–' : sensor.bpm ?? '–'}</strong><span>BPM</span></div>
-    <div className="hr-training-foot"><span>{sensor.deviceName || 'Bluetooth-pulsbelte'}</span><span>{stale ? 'Ingen nye målingar' : 'Oppdaterer automatisk'}</span></div>
+    <div className="hr-training-foot"><span>{sensor.deviceName || 'Bluetooth-pulskjelde'}</span><span>{stale ? 'Ingen nye målingar' : 'Oppdaterer automatisk'}</span></div>
   </section>
 }
