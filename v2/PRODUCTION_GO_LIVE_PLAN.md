@@ -493,3 +493,14 @@ It confirms core membership/class/PT legacy/WOD/workout/social tables exist, but
 The full result and consequences are in [GO_LIVE_PHASE_B17_EXECUTABLE_PRODUCTION_PREFLIGHT_2026-11-20.md](./GO_LIVE_PHASE_B17_EXECUTABLE_PRODUCTION_PREFLIGHT_2026-11-20.md).
 
 **B17 outcome:** A reproducible production schema gate is now committed and executed. No DDL/DML, Auth, Edge Function, secret or deployment changes were made. Backup/PITR and isolated restore remain hard blockers. Release remains **NO-GO**.
+
+
+## 17. Phase B18 – backup capability and zero-budget recovery path (2026-11-20)
+
+The connected Supabase organization record confirms the organization is on the **Free** plan. Current Supabase documentation states that automated daily backups are provided on Pro, Team and Enterprise, while Free projects should use Supabase CLI logical dumps and off-site backups. PITR is a paid add-on for Pro/Team/Enterprise and requires at least Small compute.
+
+This corrects the Wave 0 diagnosis: the absence of daily backup/PITR evidence is expected on the current Free plan, not simply a missing dashboard lookup. To preserve the zero-budget constraint, the viable path is a private logical database dump via Supabase CLI, a separate Storage-object export, secure off-site copies and a successful isolated restore rehearsal. A logical dump is not equivalent to provider-managed PITR.
+
+No plan upgrade, PITR, compute upgrade, new project/branch, export or restore was performed. The backup contains private member data and must remain encrypted and outside GitHub/chat. The full owner-workstation procedure and acceptance criteria are in [GO_LIVE_PHASE_B18_FREE_PLAN_BACKUP_RECOVERY_PATH_2026-11-20.md](./GO_LIVE_PHASE_B18_FREE_PLAN_BACKUP_RECOVERY_PATH_2026-11-20.md).
+
+**B18 outcome:** Zero-budget recovery path prepared. Wave 0 remains NOT PASSED until the logical dump, Storage export and isolated restore are executed and verified. Production remains NO-GO.
