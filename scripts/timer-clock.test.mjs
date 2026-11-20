@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { clampElapsedToTarget, elapsedSecondsFromTimestamp, splitDuration } from '../v2/src/lib/timerClock.js'
+import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, splitDuration } from '../v2/src/lib/timerClock.js'
 
 test('timer clock is derived from timestamps rather than refresh count', () => {
   assert.equal(elapsedSecondsFromTimestamp(10_000, 12, 15_450), 17)
@@ -41,4 +41,72 @@ test('station circuits already use the same no-final-transition rule', () => {
   }
   assert.equal(stationTotal(45, 15, 6, 4), 1425)
   assert.equal(stationTotal(45, 0, 1, 2), 90)
+})
+
+
+test('station circuit completes every round and has zero time at the finish', () => {
+  const state = getFixedSlotTimerState({
+    elapsed: 465,
+    workSeconds: 45,
+    restSeconds: 15,
+    rounds: 2,
+    slotsPerRound: 4,
+    transitionLabel: 'BYTE STASJON',
+  })
+  assert.equal(state.totalSeconds, 465)
+  assert.equal(state.isComplete, true)
+  assert.equal(state.phase, 'FERDIG')
+  assert.equal(state.phaseRemaining, 0)
+  assert.equal(state.remainingSeconds, 0)
+  assert.equal(state.roundsCompleted, 2)
+  assert.equal(state.currentRound, 2)
+  assert.equal(state.currentSlot, 4)
+})
+
+test('a completed circuit round is counted when its final work block ends', () => {
+  const state = getFixedSlotTimerState({
+    elapsed: 225,
+    workSeconds: 45,
+    restSeconds: 15,
+    rounds: 2,
+    slotsPerRound: 4,
+    transitionLabel: 'BYTE STASJON',
+  })
+  assert.equal(state.isComplete, false)
+  assert.equal(state.phase, 'BYTE STASJON')
+  assert.equal(state.phaseRemaining, 15)
+  assert.equal(state.roundsCompleted, 1)
+  assert.equal(state.currentRound, 1)
+  assert.equal(state.currentSlot, 4)
+})
+
+test('interval slots keep the correct exercise slot and omit the final rest', () => {
+  const state = getFixedSlotTimerState({
+    elapsed: 170,
+    workSeconds: 20,
+    restSeconds: 10,
+    rounds: 2,
+    slotsPerRound: 3,
+  })
+  assert.equal(state.totalSeconds, 170)
+  assert.equal(state.isComplete, true)
+  assert.equal(state.phaseRemaining, 0)
+  assert.equal(state.roundsCompleted, 2)
+  assert.equal(state.currentRound, 2)
+  assert.equal(state.currentSlot, 3)
+})
+
+test('zero-rest work slots advance and count rounds without an extra delay', () => {
+  const state = getFixedSlotTimerState({
+    elapsed: 135,
+    workSeconds: 45,
+    restSeconds: 0,
+    rounds: 2,
+    slotsPerRound: 3,
+  })
+  assert.equal(state.totalSeconds, 270)
+  assert.equal(state.phase, 'ARBEID')
+  assert.equal(state.currentRound, 2)
+  assert.equal(state.currentSlot, 1)
+  assert.equal(state.roundsCompleted, 1)
 })
