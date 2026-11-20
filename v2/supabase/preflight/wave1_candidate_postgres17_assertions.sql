@@ -271,8 +271,8 @@ BEGIN
   IF v_bookings <> 0 THEN
     RAISE EXCEPTION 'PRIVACY FAILURE: member A can read % of member B confirmed bookings',v_bookings;
   END IF;
-  IF v_sessions <> 1 THEN
-    RAISE EXCEPTION 'PRIVACY FAILURE: member A sees % PT sessions; expected only the unassigned public slot',v_sessions;
+  IF v_sessions <> 2 THEN
+    RAISE EXCEPTION 'PRIVACY FAILURE: member A sees % PT sessions; expected public slot plus own booked private slot',v_sessions;
   END IF;
 END;
 $privacy_member$;
@@ -284,8 +284,8 @@ DECLARE v_bookings bigint; v_sessions bigint;
 BEGIN
   SELECT count(*) INTO v_bookings FROM public.class_bookings;
   SELECT count(*) INTO v_sessions FROM public.pt_sessions;
-  IF v_bookings <> 1 OR v_sessions <> 2 THEN
-    RAISE EXCEPTION 'Staff visibility regression: expected 1 booking and 2 sessions, got % and %',v_bookings,v_sessions;
+  IF v_bookings <> 1 OR v_sessions <> 3 THEN
+    RAISE EXCEPTION 'Staff visibility regression: expected 1 booking and 3 sessions, got % and %',v_bookings,v_sessions;
   END IF;
 END;
 $privacy_admin$;
