@@ -643,3 +643,14 @@ B30 defines a forward-only production wave manifest: Wave 0 recovery; Wave 1 mem
 Detailed evidence: [GO_LIVE_PHASE_B30_MIGRATION_LINEAGE_AND_RELEASE_MANIFEST_2026-11-20.md](./GO_LIVE_PHASE_B30_MIGRATION_LINEAGE_AND_RELEASE_MANIFEST_2026-11-20.md).
 
 **B30 outcome:** Production migration source lineage gap confirmed and release manifest documented. No production SQL or deployment. Wave 0 remains NOT PASSED; production remains NO-GO.
+
+
+## 30. Phase B31 – fresh production data-preservation checkpoint (2026-11-20)
+
+Fresh aggregate-only SELECT against production confirms: profiles 3 (1 admin, 2 members; all 3 active); classes 1; class bookings 1; legacy PT sessions 1; PT bookings 1; PT requests/messages/client notes 0; WODs 1; workout logs/exercises/sets 0; personal records 1 (still standalone with NULL workout_log_id); Auth users 3; identities 3; sessions 12; Storage buckets/objects 0. This matches the B23 baseline. No personal fields or row-level data were retrieved.
+
+Preservation contract re-confirmed: preserve all existing Auth/profile identities and roles, class/booking, legacy PT session/booking, WOD, and standalone PR. Do not seed demo data or fabricate workout history. Recheck Storage at backup time. This aggregate checkpoint is not a backup or restore test.
+
+Detailed evidence: [GO_LIVE_PHASE_B31_PRODUCTION_DATA_PRESERVATION_CHECKPOINT_2026-11-20.md](./GO_LIVE_PHASE_B31_PRODUCTION_DATA_PRESERVATION_CHECKPOINT_2026-11-20.md).
+
+**B31 outcome:** Core aggregate counts remain stable. No production changes. Wave 0 remains NOT PASSED; production remains NO-GO.
