@@ -443,3 +443,16 @@ These functions require a per-function authorization/grant allowlist and role-ba
 Detailed findings, remediation references and acceptance requirements are in [GO_LIVE_PHASE_B13_AUTH_RPC_SECURITY_GATE_2026-11-20.md](./GO_LIVE_PHASE_B13_AUTH_RPC_SECURITY_GATE_2026-11-20.md).
 
 **B13 outcome:** Security findings reconciled; Auth configuration remains open. Release remains **NO-GO**.
+
+
+## 13. Phase B14 – calendar, notifications, coffee and social integration design (2026-11-20)
+
+Latest B13 commit `26149da8fedac8e7147622fd2a667ee7591721c4` has all three CI workflows successful: GarasjeGym 2.0 checks, STURMKOPF build/test and Pages preview build. The Pages deploy job was skipped, as designed; no site was published.
+
+Fresh production catalog checks show `social_posts` exists with 0 rows and a `reactions jsonb` column. The V2 tables `notifications`, `coffee_products`, `coffee_orders`, `coffee_order_items`, `calendar_events`, `wod_favorites`, `pt_program_templates`, `pt_programs`, `pt_program_sessions` and `pt_checkins` are absent from production.
+
+The B14 review defines the migration order and security requirements for favorites/calendar, recipient-scoped notifications, coffee order integrity, social reaction ownership and privacy-safe infotainment. In particular, trigger notifications need idempotency and recipient isolation; coffee prices must be sourced from trusted product rows; private PT details must never appear in infotainment; and staff calendar access must be role-scoped.
+
+Full source review, production inventory, migration order and acceptance tests are recorded in [GO_LIVE_PHASE_B14_OPTIONAL_INTEGRATIONS_MIGRATION_DESIGN_2026-11-20.md](./GO_LIVE_PHASE_B14_OPTIONAL_INTEGRATIONS_MIGRATION_DESIGN_2026-11-20.md).
+
+**B14 outcome:** Optional integration migration design prepared. No database or deployment changes were made. Backup/PITR evidence and isolated restore remain hard blockers. Release remains **NO-GO**.
