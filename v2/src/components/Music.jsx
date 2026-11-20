@@ -2,10 +2,10 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import {
   Music2, Headphones, Disc3, Play, Pause, SkipBack, SkipForward, LogIn, LogOut,
   ExternalLink, RefreshCw, Search, ListMusic, Zap, Radio, Waves, Leaf, X,
-  Smartphone, LoaderCircle, ChevronRight, Check, Settings2
+  LoaderCircle, ChevronRight, Check, Settings2
 } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
-import { isUsableSpotifyDevice } from '../lib/spotifyDevices.js'
+import { chooseSpotifyDevice, isUsableSpotifyDevice } from '../lib/spotifyDevices.js'
 
 const MusicContext = createContext(null)
 const TOKEN_KEY_PREFIX = 'garasjegym:spotify-token:'
@@ -148,7 +148,7 @@ export function MusicProvider({ children, memberId = null }) {
         spotifyRequest('/me/player/devices').catch(() => ({devices:[]})),
         spotifyRequest('/me/player').catch(() => null),
       ])
-      const phones = (devices?.devices || []).filter(isUsableSpotifyDevice)
+      const availableDevices = (devices?.devices || []).filter(isUsableSpotifyDevice)
       const pages = []
       let offset = 0
       for (let pageNumber=0; pageNumber<20; pageNumber+=1) {
@@ -160,11 +160,8 @@ export function MusicProvider({ children, memberId = null }) {
       }
       setSpotifyProfile(profile)
       setSpotifyPlaylists(pages)
-      setSpotifyDevices(phones)
-      const currentPhoneId = phones.some(device=>device.id===spotifyDeviceId) ? spotifyDeviceId : ''
-      const activePhone = phones.find(device=>device.is_active)
-      const nextDevice = currentPhoneId || activePhone?.id || phones[0]?.id || ''
-      setSpotifyDeviceId(nextDevice)
+      setSpotifyDevices(availableDevices)
+      setSpotifyDeviceId(chooseSpotifyDevice(availableDevices,spotifyDeviceId))
       const playbackIsPersonal = isUsableSpotifyDevice(playback?.device)
       setSpotifyTrack(playbackIsPersonal ? trackFromPlayback(playback) : null)
       setSpotifyPlaying(Boolean(playbackIsPersonal && playback?.is_playing))
@@ -266,11 +263,9 @@ export function MusicProvider({ children, memberId = null }) {
           spotifyRequest('/me/player/devices').catch(()=>({devices:[]})),
         ])
         if (!live) return
-        const phones = (devices?.devices || []).filter(isUsableSpotifyDevice)
-        setSpotifyDevices(phones)
-        if (!phones.some(device=>device.id===spotifyDeviceId)) {
-          setSpotifyDeviceId(phones.find(device=>device.is_active)?.id || phones[0]?.id || '')
-        }
+        const availableDevices = (devices?.devices || []).filter(isUsableSpotifyDevice)
+        setSpotifyDevices(availableDevices)
+        setSpotifyDeviceId(chooseSpotifyDevice(availableDevices,spotifyDeviceId))
         const personal = isUsableSpotifyDevice(playback?.device)
         setSpotifyTrack(personal ? trackFromPlayback(playback) : null)
         setSpotifyPlaying(Boolean(personal && playback?.is_playing))
@@ -316,9 +311,9 @@ export function MusicProvider({ children, memberId = null }) {
     setSpotifyError('')
   },[memberId])
 
-  const requirePersonalPhone = useCallback(() => {
+  const requireAvailableDevice = useCallback(() => {
     if (!spotifyDeviceId || !spotifyDevices.some(device=>device.id===spotifyDeviceId)) {
-      throw new Error('Opna Spotify på din eigen mobil, start appen og trykk Oppdater einingar.')
+      throw new Error('Opna Spotify på ei eining, start avspeling og trykk Oppdater einingar. Vel deretter eininga i lista.')
     }
   },[spotifyDeviceId,spotifyDevices])
 
@@ -327,8 +322,9 @@ export function MusicProvider({ children, memberId = null }) {
       spotifyRequest('/me/player').catch(()=>null),
       spotifyRequest('/me/player/devices').catch(()=>({devices:[]})),
     ])
-    const phones=(devices?.devices||[]).filter(isUsableSpotifyDevice)
-    setSpotifyDevices(phones)
+    const availableDevices=(devices?.devices||[]).filter(isUsableSpotifyDevice)
+    setSpotifyDevices(availableDevices)
+    setSpotifyDeviceId(current=>chooseSpotifyDevice(availableDevices,current))
     const personal=isUsableSpotifyDevice(playback?.device)
     setSpotifyTrack(personal?trackFromPlayback(playback):null)
     setSpotifyPlaying(Boolean(personal&&playback?.is_playing))
@@ -342,7 +338,7 @@ export function MusicProvider({ children, memberId = null }) {
         await loadSpotifyData()
         return
       }
-      requirePersonalPhone()
+      requireAvailableDevice()
       const device = '?device_id='+encodeURIComponent(spotifyDeviceId)
       if (action==='play') await spotifyRequest('/me/player/play'+device,{method:'PUT'})
       if (action==='pause') await spotifyRequest('/me/player/pause'+device,{method:'PUT'})
@@ -355,14 +351,14 @@ export function MusicProvider({ children, memberId = null }) {
     } finally {
       setSpotifyBusy(false)
     }
-  },[spotifyDeviceId,spotifyRequest,loadSpotifyData,refreshPlayback,requirePersonalPhone])
+  },[spotifyDeviceId,spotifyRequest,loadSpotifyData,refreshPlayback,requireAvailableDevice])
 
   const playPlaylist = useCallback(async(playlistUri,genreId='')=>{
     if (!playlistUri) return
     setSpotifyBusy(true)
     setSpotifyError('')
     try {
-      requirePersonalPhone()
+      requireAvailableDevice()
       const device='?device_id='+encodeURIComponent(spotifyDeviceId)
       await spotifyRequest('/me/player/play'+device,{
         method:'PUT',
@@ -377,14 +373,14 @@ export function MusicProvider({ children, memberId = null }) {
     } finally {
       setSpotifyBusy(false)
     }
-  },[spotifyDeviceId,spotifyRequest,refreshPlayback,requirePersonalPhone])
+  },[spotifyDeviceId,spotifyRequest,refreshPlayback,requireAvailableDevice])
 
   const playTrack = useCallback(async(track,genreId='')=>{
     if (!track?.uri) return
     setSpotifyBusy(true)
     setSpotifyError('')
     try {
-      requirePersonalPhone()
+      requireAvailableDevice()
       const device='?device_id='+encodeURIComponent(spotifyDeviceId)
       await spotifyRequest('/me/player/play'+device,{
         method:'PUT',
@@ -398,7 +394,7 @@ export function MusicProvider({ children, memberId = null }) {
     } finally {
       setSpotifyBusy(false)
     }
-  },[spotifyDeviceId,spotifyRequest,refreshPlayback,requirePersonalPhone])
+  },[spotifyDeviceId,spotifyRequest,refreshPlayback,requireAvailableDevice])
 
   const searchSpotify = useCallback(async query=>{
     const value=String(query||'').trim()
@@ -510,7 +506,7 @@ function SpotifyConnectCard({compact=false}) {
       <div className="personal-spotify-now">
         <div className="personal-spotify-art">{music.spotifyTrack?.imageUrl&&!compact?<img src={music.spotifyTrack.imageUrl} alt=""/>:<Disc3 size={compact?19:25}/>}</div>
         <div className="personal-spotify-meta">
-          <strong>{music.spotifyTrack?.name||'Ingen song spelar på mobilen'}</strong>
+          <strong>{music.spotifyTrack?.name||'Ingen song spelar no'}</strong>
           <span>{music.spotifyTrack?.artists?.join(', ')||'Vel ei speleliste eller søk etter ein song'}</span>
         </div>
         {music.spotifyTrack?.externalUrl&&<a className="spotify-open-track" href={music.spotifyTrack.externalUrl} target="_blank" rel="noreferrer" aria-label="Opna song i Spotify"><ExternalLink size={13}/></a>}
@@ -522,7 +518,7 @@ function SpotifyConnectCard({compact=false}) {
         <button type="button" onClick={()=>music.spotifyAction('refresh')} disabled={music.spotifyBusy} aria-label="Oppdater Spotify"><RefreshCw size={compact?13:15}/></button>
       </div>
       {!compact&&<div className="personal-spotify-selects">
-        <label><span><Smartphone size={12}/> Spotify-eining</span><select value={music.spotifyDeviceId} onChange={event=>music.setSpotifyDeviceId(event.target.value)}><option value="">Vel eining …</option>{music.spotifyDevices.map(device=><option key={device.id} value={device.id}>{device.name}{device.is_active?' · aktiv':''}</option>)}</select></label>
+        <label><span><Headphones size={12}/> Spotify-eining</span><select value={music.spotifyDeviceId} onChange={event=>music.setSpotifyDeviceId(event.target.value)}><option value="">Vel eining …</option>{music.spotifyDevices.map(device=><option key={device.id} value={device.id}>{device.name}{device.is_active?' · aktiv':''}</option>)}</select></label>
       </div>}
       {!music.spotifyDeviceId&&<p className="spotify-hint">Opna Spotify på Spotify-eininga di og trykk Oppdater einingar. Vel ei tilgjengeleg Spotify-eining. Mobil, nettbrett, datamaskin og høgtalar kan visast.</p>}
     </> : <div className="personal-spotify-connect">
@@ -656,7 +652,7 @@ export function Music() {
               <span className="spotify-playlist-art">{playlist.images?.[0]?.url?<img src={playlist.images[0].url} alt=""/>:<ListMusic size={17}/>}</span>
               <span><strong>{playlist.name}</strong><small>{playlist.tracks?.total??playlist.items?.total??'–'} songar</small></span>
             </button>
-            <button type="button" className="spotify-row-play" title="Spel speleliste på eigen mobil" onClick={()=>music.playPlaylist(playlist.uri)} disabled={music.spotifyBusy}><Play size={14}/></button>
+            <button type="button" className="spotify-row-play" title="Spel speleliste på vald Spotify-eining" onClick={()=>music.playPlaylist(playlist.uri)} disabled={music.spotifyBusy}><Play size={14}/></button>
           </article>):<div className="empty-state">Ingen spelelister passar søket.</div>}</div>
           {selectedPlaylist&&<aside className="spotify-playlist-detail">
             <div className="spotify-playlist-detail-head"><strong>{selectedPlaylist.name}</strong><button type="button" onClick={()=>setSelectedPlaylistId('')} aria-label="Lukk speleliste"><X size={14}/></button></div>
@@ -687,7 +683,7 @@ export function MusicMiniPlayer() {
 
   return <div className="timer-music-stack">
     <div className="timer-spotify-mini-line">
-      <div className="timer-spotify-mini-track"><Music2 size={15}/><span><strong>{music?.spotifyTrack?.name||'Spotify'}</strong><small>{music?.spotifyTrack?.artists?.join(', ')|| (music?.spotifyConnected?'Klar på din mobil':'Kople til profilen din')}</small></span></div>
+      <div className="timer-spotify-mini-track"><Music2 size={15}/><span><strong>{music?.spotifyTrack?.name||'Spotify'}</strong><small>{music?.spotifyTrack?.artists?.join(', ')|| (music?.spotifyConnected?'Klar på Spotify-eininga':'Kople til profilen din')}</small></span></div>
       {music?.spotifyConnected?<div className="timer-spotify-mini-controls">
         <button type="button" onClick={()=>music.spotifyAction('previous')} disabled={music.spotifyBusy||!music.spotifyCanControl||!music.spotifyDeviceId} aria-label="Førre song"><SkipBack size={13}/></button>
         <button type="button" className="main" onClick={()=>music.spotifyAction(music.spotifyPlaying?'pause':'play')} disabled={music.spotifyBusy||!music.spotifyCanControl||!music.spotifyDeviceId} aria-label={music.spotifyPlaying?'Pause':'Spel av'}>{music.spotifyPlaying?<Pause size={14}/>:<Play size={14}/>}</button>
