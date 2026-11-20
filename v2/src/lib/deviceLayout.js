@@ -4,9 +4,9 @@ export function readDeviceProfile() {
   if (typeof window === 'undefined') {
     return { width: 1024, height: 768, orientation: 'landscape', device: 'tablet', touch: false, layout: 'tablet-landscape' }
   }
-  const viewport = window.visualViewport
-  const width = Math.max(1, Math.round(viewport?.width || document.documentElement.clientWidth || window.innerWidth))
-  const height = Math.max(1, Math.round(viewport?.height || document.documentElement.clientHeight || window.innerHeight))
+  // Use the layout viewport: the on-screen keyboard can shrink visualViewport and must not change device class or orientation.
+  const width = Math.max(1, Math.round(window.innerWidth || document.documentElement.clientWidth))
+  const height = Math.max(1, Math.round(window.innerHeight || document.documentElement.clientHeight))
   const shortSide = Math.min(width, height)
   const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches || false
   const touch = coarsePointer || (navigator.maxTouchPoints || 0) > 0
@@ -48,11 +48,8 @@ export function useDeviceProfile() {
     }
 
     update()
-    const viewport = window.visualViewport
     window.addEventListener('resize', update, { passive: true })
     window.addEventListener('orientationchange', update, { passive: true })
-    viewport?.addEventListener('resize', update, { passive: true })
-    viewport?.addEventListener('scroll', update, { passive: true })
     const orientation = window.screen?.orientation
     orientation?.addEventListener?.('change', update)
     const coarse = window.matchMedia?.('(pointer: coarse)')
@@ -62,8 +59,6 @@ export function useDeviceProfile() {
       if (frame) cancelAnimationFrame(frame)
       window.removeEventListener('resize', update)
       window.removeEventListener('orientationchange', update)
-      viewport?.removeEventListener('resize', update)
-      viewport?.removeEventListener('scroll', update)
       orientation?.removeEventListener?.('change', update)
       coarse?.removeEventListener?.('change', update)
     }
