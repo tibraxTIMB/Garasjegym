@@ -40,8 +40,14 @@ jobs:
         run: npm test
       - name: Validate SQL migration syntax conventions
         run: npm run check:migrations
-      - name: Build production bundle
+      - name: Build isolated TEST bundle
+        env:
+          VITE_SUPABASE_URL: https://izwzwvlexqxqewzijhhd.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_jZyaYhD8_jZgpgutKF7lRg_EcJ0EGSQ
+          VITE_SPOTIFY_CLIENT_ID: ${{ vars.VITE_SPOTIFY_CLIENT_ID }}
         run: npm run build
+      - name: Check release artifact environment and secrets
+        run: npm run check:release-artifact
 
   production-migration-safety:
     name: Production migration safety gate
