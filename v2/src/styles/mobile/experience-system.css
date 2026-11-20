@@ -97,3 +97,68 @@ button, [role="button"], summary { touch-action: manipulation; }
   .app-more-sheet { transition: height .22s ease, max-height .22s ease; }
   .app-shell .gg-expandable { transition:border-color .16s ease; }
 }
+
+/* WOD Builder touch corrections: keep the direct position control available on phones. */
+@media (max-width: 560px) {
+  .wod-builder-step-2 .wod-reorder-controls {
+    display:grid !important;
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    align-items:stretch;
+    gap:7px !important;
+  }
+  .wod-builder-step-2 .wod-reorder-controls .wod-order-picker {
+    display:flex !important;
+    grid-column:1 / -1;
+    justify-content:flex-start;
+    align-items:center;
+    gap:10px;
+    min-height:46px;
+    padding:5px 10px !important;
+    border:1px solid var(--gg-shell-border);
+    border-radius:10px;
+  }
+  .wod-builder-step-2 .wod-reorder-controls .wod-order-picker select {
+    width:auto !important;
+    min-width:76px;
+    flex:1;
+    min-height:42px !important;
+  }
+  .wod-builder-step-2 .wod-selected-card {
+    display:grid !important;
+    grid-template-columns:34px minmax(0,1fr);
+    align-items:start !important;
+  }
+  .wod-builder-step-2 .wod-selected-card .wod-reorder-controls {
+    grid-column:1 / -1;
+  }
+  .wod-builder-step-2 .wod-reorder-controls > button {
+    min-height:48px !important;
+  }
+  .wod-wizard-steps {
+    display:flex !important;
+    grid-template-columns:none !important;
+    gap:7px !important;
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    scroll-snap-type:x proximity;
+    padding:8px 1px !important;
+  }
+  .wod-wizard-steps > span {
+    flex:0 0 88px;
+    scroll-snap-align:start;
+  }
+}
+/* Swipe-friendly horizontal tab rails, without shrinking the controls. */
+@media (max-width: 900px) {
+  .app-shell :is(.hub-tabs,.admin-tabs,.coffee-tabs,.my-page-tabs,.pt2-tabs,.pt2-workspace-switch) {
+    max-width:100%;
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
+  }
+  .app-shell :is(.hub-tabs,.admin-tabs,.coffee-tabs,.my-page-tabs,.pt2-tabs) > button {
+    flex:0 0 auto;
+    white-space:nowrap;
+  }
+}
