@@ -401,7 +401,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   </div>
 }
 
-export default function Training({ launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, onTimerSnapshot, simpleMode = false, quickStart = false, onQuickStartConsumed, onSaved, onDiscard }) {
+export default function Training({ launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, onTimerSnapshot, simpleMode = false, quickStart = false, onQuickStartConsumed, quickManualEntry = false, onQuickManualEntryConsumed, onSaved, onDiscard }) {
   const [wods, setWods] = useState([])
   const [dailyWodId,setDailyWodId]=useState(null)
   const [exercises, setExercises] = useState([])
@@ -521,6 +521,12 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     startWorkout(null, { autoStart: true })
     onQuickStartConsumed?.()
   }, [quickStart, simpleMode, loading, mode])
+
+  useEffect(() => {
+    if (!quickManualEntry || !simpleMode || loading || mode !== 'home') return
+    startManualWorkout()
+    onQuickManualEntryConsumed?.()
+  }, [quickManualEntry, simpleMode, loading, mode])
 
   const activeWodEngine=normalizeWodEngine(source?.timer_settings?.workout_schema||{},{format:source?.format||format})
   const availableWods=wods.filter(wod=>wod.is_published&&!wod.is_archived)
