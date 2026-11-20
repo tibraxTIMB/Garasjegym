@@ -1,4 +1,4 @@
-DO $migration$
+DO $$
 DECLARE
   v_existing_qual text;
 BEGIN
@@ -21,4 +21,4 @@ BEGIN
     v_existing_qual
   );
 END;
-$migration$;
+$$;
