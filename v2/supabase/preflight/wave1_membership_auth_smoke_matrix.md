@@ -5,6 +5,8 @@
 ## Test identities
 
 Prepare disposable identities in the isolated target only:
+- U: unauthenticated caller with no JWT.
+- AN: anonymous Supabase Auth user, only if anonymous sign-in is enabled in the project settings.
 - A: existing admin, same UUID as production restore.
 - M: existing member 1, same UUID.
 - N: existing member 2, same UUID.
@@ -17,25 +19,26 @@ Do not create these users in production. Remove test identities only from the di
 
 ## Expected authorization matrix
 
-| Capability | Anonymous | Pending P | Rejected R | Inactive X | Approved member M/N | Manager G | Admin A |
+| Capability | No JWT (U) | Anonymous Auth (AN) | Pending P | Rejected R | Inactive X | Approved member M/N | Manager G | Admin A |
 |---|---|---|---|---|---|---|---|
 | Auth session can exist | No | Yes, if signup/login configured | Yes, if login allowed | Yes | Yes | Yes | Yes |
-| App full access | No | No | No | No | Yes | Yes | Yes |
-| Read own profile | No | Yes | Yes | Yes | Yes | Yes | Yes |
-| Read another member's profile | No | No | No | No | No | Yes, per staff policy | Yes |
-| Read published WOD/exercises | No | No | No | No | Yes | Yes | Yes |
-| Read own workout/PR history | No | No | No | No | Yes | Yes, per staff policy | Yes |
-| Book own PT session via RPC | No | No | No | No | Yes, if published/future/capacity permits | Yes, if eligible | Yes, if eligible |
-| Create class booking | No | No | No | No | Yes, subject to class rules | Yes | Yes |
-| Use admin/staff navigation | No | No | No | No | No | Yes | Yes |
-| Approve/reject membership | No | No | No | No | No | No | Yes |
-| Change another user's role | No | No | No | No | No | No | Yes, not self |
-| Change another user's active state | No | No | No | No | No | No | Yes, not self |
-| Manager edits another approved member display name | No | No | No | No | No | Yes | Yes |
-| Manager edits own profile | No | No | No | No | n/a | No | Admin self metadata only |
-| Music Edge Function | No | No | No | No | Yes | Yes | Yes |
+| App full access | No | No | No | No | No | Yes | Yes | Yes |
+| Read own profile | No | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| Read another member's profile | No | No | No | No | No | No | Yes, per staff policy | Yes |
+| Read published WOD/exercises | No | No | No | No | No | Yes | Yes | Yes |
+| Read own workout/PR history | No | No | No | No | No | Yes | Yes, per staff policy | Yes |
+| Book own PT session via RPC | No | No | No | No | No | Yes, if published/future/capacity permits | Yes, if eligible | Yes, if eligible |
+| Create class booking | No | No | No | No | No | Yes, subject to class rules | Yes | Yes |
+| Use admin/staff navigation | No | No | No | No | No | No | Yes | Yes |
+| Approve/reject membership | No | No | No | No | No | No | No | No | Yes |
+| Change another user's role | No | No | No | No | No | No | No | No | Yes, not self |
+| Change another user's active state | No | No | No | No | No | No | No | No | Yes, not self |
+| Manager edits another approved member display name | No | No | No | No | No | No | No | Yes | Yes |
+| Manager edits own profile | No | No | No | No | No | n/a | No | Admin self metadata only |
+| Music Edge Function | No | No | No | No | No | Yes | Yes | Yes |
 
 **Notes**
+- The U column means an unauthenticated request with no JWT. Supabase anonymous sign-in, if enabled, creates an Auth user/session and must be tested separately as AN; it is still not an approved member and must be denied protected app data. Project-level anonymous sign-in remains unverified until the owner checks B41.
 - A pending or rejected user may have a valid Auth session; that is not app authorization. The app and database must deny protected data access.
 - A member can read their own profile row while pending so the waiting/denied screen can render; they cannot read other profiles.
 - Manager profile read access follows the current staff SELECT policy, but UPDATE must be restricted to other active, approved member rows. Manager must not approve, reject, deactivate, promote or self-edit.
