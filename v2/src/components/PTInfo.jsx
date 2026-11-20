@@ -51,7 +51,21 @@ export default function PTInfo(){
   }catch(e){setError(e.message||'Kunne ikkje sletta meldinga.')}
   finally{setDeletingId('')}
  }
- useEffect(()=>{load();const refresh=window.setInterval(()=>load(true),60_000);return()=>{loadSequence.current+=1;window.clearInterval(refresh)}},[])
+ useEffect(()=>{
+  let live=true,channel=null
+  load()
+  async function subscribe(){
+   const {data:{user}}=await supabase.auth.getUser()
+   if(!live||!user)return
+   channel=supabase.channel('pt-member-info-'+user.id)
+    .on('postgres_changes',{event:'*',schema:'public',table:'pt_messages',filter:'client_id=eq.'+user.id},()=>{if(live)load(true)})
+    .on('postgres_changes',{event:'*',schema:'public',table:'pt_sessions',filter:'client_id=eq.'+user.id},()=>{if(live)load(true)})
+    .subscribe()
+  }
+  subscribe()
+  const refresh=window.setInterval(()=>{if(live)load(true)},60_000)
+  return()=>{live=false;loadSequence.current+=1;window.clearInterval(refresh);if(channel)supabase.removeChannel(channel)}
+ },[])
  return <div className="pt-info-simple">
   <div className="training-heading"><div><span className="section-kicker">PERSONLEG OPPFØLGING</span><h3>Frå PT</h3><p>Meldingar, beskjedar og planlagde infotimar.</p></div><button type="button" className="secondary-button" onClick={load} disabled={loading}><RefreshCw size={15}/> Oppdater</button></div>
   {error&&<div className="auth-error" role="alert">{error}</div>}
