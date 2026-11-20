@@ -24,9 +24,8 @@ for (const file of files) {
   for (const [delimiter, count] of counts) {
     if (count % 2 !== 0) errors.push(`${file}: uparleg dollar-quote delimiter ${delimiter}.`)
   }
-  if (/\bdo\s+\$(?!\$)/i.test(sql)) {
-    errors.push(`${file}: DO-blokk ser ut til å ha ein ufullstendig dollar-quote.`)
-  }
+  // Dollar-quote delimiters are validated above for every tag, including DO $tag$ blocks.
+  // Do not reject tagged delimiters: PostgreSQL accepts both $ and named tags such as $migration$.
 }
 
 if (errors.length) {
