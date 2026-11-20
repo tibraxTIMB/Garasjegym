@@ -83,3 +83,7 @@ Never copy the production JWT signing secret, service-role key, database passwor
 Only read-only Auth metadata/count queries and trigger catalog inspection were run against production. No raw Auth rows were exported. No Auth settings, users, identities, sessions, triggers, functions, database objects, Edge Functions, secrets or hosting were changed.
 
 **B37 result:** Auth source baseline and privacy-safe restore acceptance query are prepared and production-validated. The actual encrypted export and isolated restore have not been performed. Wave 0 remains blocked; production remains **NO-GO**.
+
+
+### Additional provider inventory (read-only)
+A separate aggregate query found all 3 identities use provider `email`; all 3 Auth users are non-anonymous and non-SSO. This is a database identity inventory only. It does not prove whether other sign-in providers or public signup are enabled in project-level Auth settings. See the owner checklist in [B41](./GO_LIVE_PHASE_B41_OWNER_AUTH_CONFIGURATION_CHECKLIST_2026-11-20.md).
