@@ -298,7 +298,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    if(e)throw e
    setNotice('Eksisterande WOD er tildelt kunden. Biblioteket er ikkje kopiert eller endra.')
    onAssigned?.()
-  }catch(e){setError(e.message||'Kunne ikkje tildela WOD.')}finally{setBusy(false)}
+  }catch(e){if(e.code==='23505')setNotice('Denne WOD-en vart nettopp aktivt tildelt kunden. Ingen duplikat vart oppretta.');else setError(e.message||'Kunne ikkje tildela WOD.')}finally{setBusy(false)}
  }
  async function save(event){
   event.preventDefault();setError('');setNotice('')
