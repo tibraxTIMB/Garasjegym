@@ -139,3 +139,37 @@ CREATE POLICY profile_update_staff ON public.profiles
 
 GRANT SELECT, UPDATE ON public.profiles TO authenticated;
 GRANT SELECT ON public.profiles TO service_role;
+
+-- Minimal production-shaped fixtures for the two cross-member privacy policies.
+CREATE TABLE public.class_bookings (
+  id uuid PRIMARY KEY,
+  class_id uuid NOT NULL,
+  member_id uuid NOT NULL REFERENCES public.profiles(id),
+  status text NOT NULL
+);
+CREATE TABLE public.pt_sessions (
+  id uuid PRIMARY KEY,
+  client_id uuid REFERENCES public.profiles(id),
+  status text NOT NULL
+);
+ALTER TABLE public.class_bookings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.pt_sessions ENABLE ROW LEVEL SECURITY;
+GRANT SELECT ON public.class_bookings, public.pt_sessions TO authenticated;
+CREATE POLICY class_bookings_read_own_or_staff ON public.class_bookings
+  FOR SELECT TO authenticated
+  USING (
+    (public.is_active_user() AND status='confirmed')
+    OR (member_id=auth.uid() AND public.is_active_user())
+    OR public.is_admin_or_manager()
+  );
+CREATE POLICY pt_sessions_read ON public.pt_sessions
+  FOR SELECT TO authenticated
+  USING (
+    public.is_active_user()
+    AND (public.is_admin_or_manager() OR client_id=auth.uid() OR status='published')
+  );
+INSERT INTO public.class_bookings(id,class_id,member_id,status) VALUES
+ ('10000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000003','confirmed');
+INSERT INTO public.pt_sessions(id,client_id,status) VALUES
+ ('30000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000003','published'),
+ ('30000000-0000-0000-0000-000000000002',NULL,'published');
