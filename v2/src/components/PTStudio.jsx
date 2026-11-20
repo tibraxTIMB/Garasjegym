@@ -286,7 +286,7 @@ export default function PTStudio({ profile, coachMode=false, onLaunchWorkout, in
   })
  }
  async function reviewCheckin(row) {
-  await run(async()=>{const {error:e}=await supabase.from('pt_checkins').update({status:'reviewed'}).eq('id',row.id);if(e)throw e;setNotice('Statussvaret er markert som gjennomgått.')})
+  await run(async()=>{const {error:e}=await supabase.from('pt_checkins').update({status:'reviewed',reviewed_at:new Date().toISOString()}).eq('id',row.id);if(e)throw e;setNotice('Statussvaret er markert som gjennomgått.')})
  }
  async function attachWodToSession(session,wodId) {
   await run(async()=>{
