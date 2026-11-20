@@ -526,3 +526,17 @@ Supabase's CLI dump reference and platform-to-self-hosted restore guide are not 
 Detailed recovery requirements and counts are in [GO_LIVE_PHASE_B20_AUTH_STORAGE_RECOVERY_INVENTORY_2026-11-20.md](./GO_LIVE_PHASE_B20_AUTH_STORAGE_RECOVERY_INVENTORY_2026-11-20.md).
 
 **B20 outcome:** Auth/Storage recovery inventory completed with aggregate counts only; no export or restore was performed. Wave 0 remains NOT PASSED. Production remains NO-GO.
+
+
+## 20. Phase B21 – fresh security and performance advisor gate (2026-11-20)
+
+Fresh read-only production advisors report:
+- 4 authenticated SECURITY DEFINER warnings: `book_pt_session`, `is_active_user`, `is_admin`, `is_admin_or_manager`.
+- 1 Auth warning: leaked password protection disabled.
+- Performance: 14 unindexed foreign keys, 34 RLS init-plan warnings, 10 unused indexes, 3 tables with multiple permissive policies (`exercises`, `pt_session_exercises`, `wods`).
+
+Test advisors report 25 SECURITY DEFINER warnings, leaked password protection disabled and 47 unused-index findings; test and production schema sizes differ and counts are not directly comparable.
+
+No grants, functions, policies, indexes or Auth settings were changed. Do not mass-revoke, convert all SECURITY DEFINER helpers or drop indexes from advisor output alone. Remediation order and validation requirements are in [GO_LIVE_PHASE_B21_SECURITY_PERFORMANCE_ADVISOR_GATE_2026-11-20.md](./GO_LIVE_PHASE_B21_SECURITY_PERFORMANCE_ADVISOR_GATE_2026-11-20.md).
+
+**B21 outcome:** Fresh security/performance baseline recorded. Production remains NO-GO pending Wave 0 recovery and schema migration gates.
