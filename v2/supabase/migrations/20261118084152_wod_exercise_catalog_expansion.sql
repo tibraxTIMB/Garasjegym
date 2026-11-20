@@ -1,0 +1,48 @@
+
+with catalog(name,category,body_area,equipment,description) as (values
+('Markløft med manualar','Styrke','Rygg / bein','Manualar','Hinge frå golvet med ein manual i kvar hand. Hald manualane tett på kroppen og press golvet frå deg.'),
+('Kettlebell markløft','Styrke','Rygg / bein','Kettlebell','Markløft med kula mellom føtene. Hald ryggen stabil og driv rørsla med hofte og bein.'),
+('Markløft med medisinball','Styrke','Rygg / bein','Medisinball','Løft ballen frå golvet med kontrollert hoftehinge. Bruk ei ballvekt som kan haldast tett på kroppen.'),
+('Dumbbell Romanian Deadlift','Styrke','Bein / rygg','Manualar','Hoftehinge med lett knevinkel og manualar langs låra. Senk til du kjenner strekk i bakside lår.'),
+('Dumbbell Floor Press','Styrke','Bryst / triceps','Manualar','Brystpress liggjande på golvet. Overarmane møter golvet kontrollert i botn.'),
+('Incline Dumbbell Press','Styrke','Bryst / skulder','Manualar / skråbenk','Skrå brystpress med manualar. Hald skulderblada stabile mot benken.'),
+('Chest-supported Dumbbell Row','Styrke','Rygg','Manualar / skråbenk','Bryststøtta roing. Trekk albogane bakover utan å løfta brystet frå benken.'),
+('One-arm Dumbbell Row','Styrke','Rygg','Manual','Einarms roing med støtte på benk. Trekk manualen mot hofta utan å rotera overkroppen.'),
+('Dumbbell Reverse Lunge','Styrke','Bein / sete','Manualar','Bakoverutfall med manualar. Hald overkroppen stabil og press gjennom fremste fot.'),
+('Dumbbell Lateral Raise','Styrke','Skulder','Manualar','Løft manualane ut til sida med mjuke olbogar og kontrollert senkefase.'),
+('Dumbbell Rear Delt Fly','Styrke','Skulder / øvre rygg','Manualar','Framoverbøygd omvendt flyes. Før armane ut til sida utan å rykkja.'),
+('Hammer Curl','Styrke','Armar','Manualar','Bicepscurl med nøytralt grep. Hald overarmane rolege.'),
+('Dumbbell Overhead Triceps Extension','Styrke','Triceps','Manual','Tricepsstrekk over hovudet. Hald albogane peikande framover.'),
+('Dumbbell Pullover','Styrke','Bryst / rygg','Manual / benk','Før manualen kontrollert bak hovudet frå brystposisjon. Unngå stor svai i korsryggen.'),
+('Dumbbell Step-up','Styrke','Bein / sete','Manualar / kasse','Steg opp på kasse med manualar. Bruk fremste bein til å løfta kroppen kontrollert.'),
+('Dumbbell Front Squat','Styrke','Bein','Manualar','Hald manualane ved skuldrene og utfør knebøy med oppreist overkropp.'),
+('Kettlebell Clean','Styrke','Fullkropp','Kettlebell','Før kula frå heng til rack-posisjon tett rundt underarmen utan hardt slag.'),
+('Kettlebell Clean and Press','Styrke','Fullkropp / skulder','Kettlebell','Clean til rack og press kula kontrollert over hovudet.'),
+('Kettlebell Snatch','CrossFit','Fullkropp','Kettlebell','Eksplosiv hoftehinge som fører kula til låst posisjon over hovudet.'),
+('Kettlebell Front Rack Squat','Styrke','Bein / kjerne','Kettlebell','Knebøy med ei eller to kettlebells i rack-posisjon.'),
+('Kettlebell Reverse Lunge','Styrke','Bein / sete','Kettlebell','Bakoverutfall med kettlebell i goblet- eller rack-posisjon.'),
+('Kettlebell Single-arm Row','Styrke','Rygg','Kettlebell','Einarms roing med støtte. Trekk kula mot hofta og hald ryggen stabil.'),
+('Kettlebell Windmill','Styrke','Skulder / kjerne','Kettlebell','Kontrollert hoftehinge med kula over hovudet. Start lett og prioriter skulderkontroll.'),
+('Turkish Get-up','Styrke','Fullkropp / kjerne','Kettlebell','Reis deg frå liggjande til ståande med kula over hovudet gjennom kontrollerte delposisjonar.'),
+('Kettlebell Dead-stop Swing','CrossFit','Hofte / kondisjon','Kettlebell','Start kvar sving frå golvet. Skap kraft med hofteekstensjon og hald ryggen stabil.'),
+('Kettlebell High Pull','CrossFit','Fullkropp','Kettlebell','Eksplosiv hofteekstensjon med trekking av kula mot brysthøgd.'),
+('Kettlebell Push Press','Styrke','Skulder / bein','Kettlebell','Kort dip og kraftfull drive for å pressa kula over hovudet.'),
+('Kettlebell Suitcase Deadlift','Styrke','Rygg / kjerne','Kettlebell','Markløft med kula på utsida av eine foten. Hald kroppen rett og unngå sidebøy.'),
+('Medicine Ball Slam','CrossFit','Fullkropp','Medisinball','Løft ballen over hovudet og slam han kontrollert i golvet. Bruk ball som toler slamming.'),
+('Medicine Ball Squat','Styrke','Bein / kjerne','Medisinball','Knebøy med ballen halden framfor brystet.'),
+('Medicine Ball Reverse Lunge','Styrke','Bein / kjerne','Medisinball','Bakoverutfall medan ballen blir halden tett mot brystet.'),
+('Medicine Ball Bear-hug Squat','Styrke','Bein / kjerne','Medisinball','Knebøy med ballen i bjørneklem framfor brystet.'),
+('Medicine Ball Clean','CrossFit','Fullkropp','Medisinball','Før ballen frå golvet til front rack med kontrollert hofte- og kneekstensjon.'),
+('Dumbbell Snatch','CrossFit','Fullkropp','Manual','Einarms eksplosivt løft frå golv til over hovudet. Byt arm etter avtalt reps.'),
+('Dumbbell Thruster','CrossFit','Fullkropp','Manualar','Front squat direkte over i press med manualar.'),
+('Devil Press','CrossFit','Fullkropp','Manualar','Burpee med manualar og samanhengande sving til låst posisjon over hovudet.'),
+('Man Maker','CrossFit','Fullkropp','Manualar','Kombiner push-up, roing, clean og thruster med manualar. Prioriter kontroll framfor fart.'),
+('Dumbbell Hang Clean','CrossFit','Fullkropp','Manualar','Eksplosivt løft frå heng til skulderposisjon med to manualar.'),
+('Dumbbell Push Press','Styrke','Skulder / bein','Manualar','Kort dip og drive for å pressa manualane over hovudet.'),
+('Dumbbell Box Step-over','CrossFit','Bein / kondisjon','Manualar / kasse','Gå kontrollert over kassa med manualar eller kroppsvekt.'),
+('Kettlebell Thruster','CrossFit','Fullkropp','Kettlebell','Knebøy med kettlebell i rack-posisjon direkte over i press.')
+)
+insert into public.exercises(name,category,body_area,equipment,description,is_active,is_rehab)
+select c.name,c.category,c.body_area,c.equipment,c.description,true,false
+from catalog c
+where not exists (select 1 from public.exercises e where lower(trim(e.name))=lower(trim(c.name)));

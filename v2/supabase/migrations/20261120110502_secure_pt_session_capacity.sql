@@ -1,7 +1,3 @@
--- Preserve the PT capacity summary without exposing individual booking rows.
--- The public view uses caller privileges; the private helper returns aggregate-only data
--- after validating the authenticated member. Never expose the helper schema through PostgREST.
-
 create schema if not exists private;
 revoke all on schema private from public, anon;
 grant usage on schema private to authenticated, service_role;

@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS public.pt_program_sessions_program_order_idx;

@@ -1,5 +1,4 @@
--- Optimize row-independent auth expressions in public RLS policies.
--- Preserve policy names, roles, commands, permissiveness and access predicates.
+
 DO $$
 DECLARE
   r record;
@@ -11,7 +10,7 @@ DECLARE
   v_stmt text;
 BEGIN
   FOR r IN
-    SELECT p.polname, p.polcmd, p.polpermissive, p.polroles,
+    SELECT p.polrelid, p.polname, p.polcmd, p.polpermissive, p.polroles,
            pg_get_expr(p.polqual, p.polrelid) AS using_expr,
            pg_get_expr(p.polwithcheck, p.polrelid) AS check_expr,
            n.nspname, c.relname
@@ -26,6 +25,7 @@ BEGIN
   LOOP
     v_using := r.using_expr;
     v_check := r.check_expr;
+
     IF v_using IS NOT NULL THEN
       v_using := regexp_replace(v_using, 'auth\.uid\(\)', '(select auth.uid())', 'gi');
       v_using := regexp_replace(v_using, 'auth\.jwt\(\)', '(select auth.jwt())', 'gi');
@@ -36,24 +36,36 @@ BEGIN
       v_check := regexp_replace(v_check, 'auth\.jwt\(\)', '(select auth.jwt())', 'gi');
       v_check := regexp_replace(v_check, 'current_setting\(([^()]*)\)', '(select current_setting(\1))', 'gi');
     END IF;
-    v_cmd := CASE r.polcmd WHEN 'r' THEN 'SELECT' WHEN 'a' THEN 'INSERT'
-      WHEN 'w' THEN 'UPDATE' WHEN 'd' THEN 'DELETE' ELSE 'ALL' END;
-    SELECT string_agg(quote_ident(x.rolname), ', ') INTO v_roles
-    FROM pg_roles x WHERE x.oid = ANY(r.polroles);
+
+    v_cmd := CASE r.polcmd
+      WHEN 'r' THEN 'SELECT'
+      WHEN 'a' THEN 'INSERT'
+      WHEN 'w' THEN 'UPDATE'
+      WHEN 'd' THEN 'DELETE'
+      ELSE 'ALL'
+    END;
+    SELECT string_agg(quote_ident(x.rolname), ', ')
+      INTO v_roles
+    FROM pg_roles x
+    WHERE x.oid = ANY(r.polroles);
     v_permissive := CASE WHEN r.polpermissive THEN 'PERMISSIVE' ELSE 'RESTRICTIVE' END;
+
     EXECUTE format('DROP POLICY %I ON %I.%I', r.polname, r.nspname, r.relname);
     v_stmt := format('CREATE POLICY %I ON %I.%I AS %s FOR %s TO %s',
-      r.polname, r.nspname, r.relname, v_permissive, v_cmd,
-      coalesce(nullif(v_roles, ''), 'PUBLIC'));
-    IF v_using IS NOT NULL THEN v_stmt := v_stmt || format(' USING (%s)', v_using); END IF;
-    IF v_check IS NOT NULL THEN v_stmt := v_stmt || format(' WITH CHECK (%s)', v_check); END IF;
+                     r.polname, r.nspname, r.relname, v_permissive, v_cmd,
+                     coalesce(nullif(v_roles, ''), 'PUBLIC'));
+    IF v_using IS NOT NULL THEN
+      v_stmt := v_stmt || format(' USING (%s)', v_using);
+    END IF;
+    IF v_check IS NOT NULL THEN
+      v_stmt := v_stmt || format(' WITH CHECK (%s)', v_check);
+    END IF;
     EXECUTE v_stmt;
   END LOOP;
 END $$;
 
--- SECURITY DEFINER RPCs keep their authenticated application access, but are
--- no longer executable by PUBLIC/anon. Their in-function identity/role checks
--- remain the authorization boundary for the privileged operation.
+-- Keep the public API surface limited to authenticated callers for functions
+-- whose bodies enforce their own identity/role checks.
 REVOKE ALL ON FUNCTION public.book_class(uuid) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.book_pt_session(uuid) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.create_pt_program_with_sessions(jsonb,jsonb) FROM PUBLIC, anon;

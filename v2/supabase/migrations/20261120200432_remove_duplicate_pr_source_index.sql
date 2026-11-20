@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS public.idx_personal_records_workout_log_id;
