@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSwipeGesture } from '../hooks/useSwipeGesture.js'
 import { MoreHorizontal, X } from 'lucide-react'
 
 const MEMBER_PRIMARY = ['oversikt', 'trening', 'wod', 'timeplan']
@@ -19,7 +20,6 @@ function shortLabel(item) {
 export default function AppMobileNavigation({ items = [], active, staff = false, onNavigate }) {
   const [moreOpen, setMoreOpen] = useState(false)
   const [moreExpanded, setMoreExpanded] = useState(false)
-  const [touchStartY, setTouchStartY] = useState(null)
   const moreButtonRef = useRef(null)
   const moreSheetRef = useRef(null)
   const preferred = staff ? STAFF_PRIMARY : MEMBER_PRIMARY
@@ -27,6 +27,15 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
   const primaryIds = new Set(primary.map(item => item.id))
   const secondary = items.filter(item => !primaryIds.has(item.id))
   const activeInMore = secondary.some(item => item.id === active)
+  const sheetGesture = useSwipeGesture({
+    axis: 'y', threshold: 55, onSwipe: direction => {
+      if (direction === 'up') setMoreExpanded(true)
+      if (direction === 'down') {
+        if (moreExpanded) setMoreExpanded(false)
+        else setMoreOpen(false)
+      }
+    },
+  })
 
   useEffect(() => {
     if (!moreOpen) return undefined
@@ -106,23 +115,16 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
             ref={moreSheetRef}
             id="app-mobile-more"
             className={moreExpanded ? 'app-more-sheet is-expanded' : 'app-more-sheet'}
-            onTouchStart={event => setTouchStartY(event.touches[0]?.clientY ?? null)}
-            onTouchEnd={event => {
-              if (touchStartY == null) return
-              const delta = event.changedTouches[0].clientY - touchStartY
-              if (delta < -45) setMoreExpanded(true)
-              if (delta > 65) {
-                if (moreExpanded) setMoreExpanded(false)
-                else setMoreOpen(false)
-              }
-              setTouchStartY(null)
-            }}
             role="dialog"
             aria-modal="true"
             aria-label="Fleire område"
             onClick={event => event.stopPropagation()}
           >
-            <div className="app-more-sheet-grabber" aria-hidden="true"><span /></div>
+            <div
+              className="app-more-sheet-grabber"
+              aria-hidden="true"
+              {...sheetGesture}
+            ><span /></div>
             <div className="app-more-sheet-head">
               <div>
                 <span className="app-shell-eyebrow">GARASJEGYM</span>
