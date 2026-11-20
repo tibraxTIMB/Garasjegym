@@ -54,6 +54,9 @@ jobs:
       - name: Test Bluetooth heart-rate measurement parsing
         run: npm run test:heart-rate
       - name: Build application
+        env:
+          VITE_SUPABASE_URL: https://izwzwvlexqxqewzijhhd.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_jZyaYhD8_jZgpgutKF7lRg_EcJ0EGSQ
         run: npm run build
       - name: Check built release artifact environment and secrets
         working-directory: v2
