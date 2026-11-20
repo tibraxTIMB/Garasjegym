@@ -774,9 +774,14 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
           }
         })
         if(newPRs.length){
-          const {error:prWriteError}=await supabase.from('personal_records').insert(newPRs)
+          const {data:recordedPRs,error:prWriteError}=await supabase.rpc('record_workout_prs',{
+            p_workout_id:workoutId,
+            p_records:newPRs
+          })
           if(prWriteError)throw prWriteError
-          prMessage=' Nye PR-ar registrerte ('+levelKey.toUpperCase()+'): '+newPRs.map(pr=>pr.exercise_name+' '+pr.result+' '+pr.unit).join(', ')
+          prMessage=recordedPRs?.length
+            ?' Nye PR-ar registrerte ('+levelKey.toUpperCase()+'): '+recordedPRs.map(pr=>pr.exercise_name+' '+pr.result+' '+pr.unit).join(', ')
+            :' PR-kontrollen er fullført. Ingen nye rekordar over det beste resultatet vart registrerte.'
         }
       } catch(prError) {
         prMessage=' Automatisk PR-kontroll kunne ikkje fullførast: '+(prError.message||'ukjend feil')
