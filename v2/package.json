@@ -21,7 +21,8 @@
     "test:gestures": "node --test scripts/gesture.test.mjs",
     "test:heart-rate": "node --test scripts/heart-rate.test.mjs",
     "test:training-launch-context": "node --test scripts/training-launch-context.test.mjs",
-    "test:exercise-measurements": "node --test scripts/exercise-measurements.test.mjs"
+    "test:exercise-measurements": "node --test scripts/exercise-measurements.test.mjs",
+    "check:release-artifact": "node scripts/check-release-artifact.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
