@@ -630,3 +630,16 @@ Fresh production advisors: 4 authenticated-callable SECURITY DEFINER warnings; l
 Detailed evidence: [GO_LIVE_PHASE_B29_PRODUCTION_SECURITY_REVALIDATION_2026-11-20.md](./GO_LIVE_PHASE_B29_PRODUCTION_SECURITY_REVALIDATION_2026-11-20.md).
 
 **B29 outcome:** Function access paths and advisor warnings reviewed; no production changes. Wave 0 remains NOT PASSED; production remains NO-GO.
+
+
+## 29. Phase B30 – migration lineage, exclusion rules and production release manifest (2026-11-20)
+
+Reconciled current repo tree and live ledgers: production 11 versions, TEST 163 versions, v2 migration files 163 (version-aligned to TEST), root legacy migration set 15. None of the 11 production-applied version prefixes has a corresponding SQL source file in either current repository migration directory. This is a provenance gap; do not invent original SQL or substitute similarly named TEST migrations.
+
+Explicitly excluded from production: TEST baseline `20261116225942_baseline_from_production_schema_no_data.sql`, demo seed `20261116230108_test_seed_data.sql`, and first-signup admin bootstrap `20261117090304_test_first_signup_admin_bootstrap.sql`. Root legacy migrations are separate and must not be mixed with v2 migrations. Reviewed membership reconciliation migration adds `membership_status` default approved and a pending/inactive signup trigger; production's three existing profiles require explicit preservation/approval-state review before this migration can be promoted. Coffee reconciliation and PT-program migrations have dependency assumptions and are not standalone feature packages.
+
+B30 defines a forward-only production wave manifest: Wave 0 recovery; Wave 1 membership/Auth; Wave 2 class booking; Wave 3 PT Studio; Wave 4 WOD/workout/PR; Wave 5 optional integrations; Wave 6 account lifecycle. Every wave requires exact source hashes, SELECT-only preflight, data invariants, RLS/grant/RPC review, postflight, smoke tests and rehearsed recovery.
+
+Detailed evidence: [GO_LIVE_PHASE_B30_MIGRATION_LINEAGE_AND_RELEASE_MANIFEST_2026-11-20.md](./GO_LIVE_PHASE_B30_MIGRATION_LINEAGE_AND_RELEASE_MANIFEST_2026-11-20.md).
+
+**B30 outcome:** Production migration source lineage gap confirmed and release manifest documented. No production SQL or deployment. Wave 0 remains NOT PASSED; production remains NO-GO.
