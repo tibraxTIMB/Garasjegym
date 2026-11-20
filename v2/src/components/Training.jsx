@@ -287,10 +287,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   useEffect(() => {
     if (!running) return
     if ((isCountdown || isEMOM || isStationCircuit || hasTimeCap) && elapsed >= (isStationCircuit ? stationTotal : target)) {
-      setElapsed(clampElapsedToTarget(elapsed, isStationCircuit ? stationTotal : target)); setRunning(false); setPhase(hasTimeCap ? 'TIDSGRENSE' : 'FERDIG'); cue(520, 0.5); return
+      setElapsed(clampElapsedToTarget(elapsed, isStationCircuit ? stationTotal : target)); timerRunStartedAt.current = null; setRunning(false); setPhase(hasTimeCap ? 'TIDSGRENSE' : 'FERDIG'); cue(520, 0.5); return
     }
     if (isTimedInterval && elapsed >= intervalTotal) {
-      setElapsed(clampElapsedToTarget(elapsed, intervalTotal)); setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return
+      setElapsed(clampElapsedToTarget(elapsed, intervalTotal)); timerRunStartedAt.current = null; setRunning(false); setPhase('FERDIG'); cue(520, 0.5); return
     }
     if (((isTimedInterval || isStationCircuit) && (elapsed % cycle === 0 || elapsed % cycle === effectiveWorkSeconds)) ||
       (isEMOM && elapsed > 0 && (elapsed % emomCycle === 0 || elapsed % emomCycle === effectiveEmomWorkSeconds || elapsed % emomCycle === effectiveEmomWorkSeconds+effectiveEmomRestSeconds)) ||
