@@ -401,3 +401,14 @@ Review of the test class booking migrations identified adaptation requirements: 
 Full preflight, schema sequencing, acceptance tests and execution boundary are recorded in [GO_LIVE_PHASE_B9_CLASS_BOOKING_MIGRATION_DESIGN_2026-11-20.md](./GO_LIVE_PHASE_B9_CLASS_BOOKING_MIGRATION_DESIGN_2026-11-20.md).
 
 **B9 outcome:** Production data is currently small and no active duplicate was found, but production schema is materially behind the app/test contract. No SQL or deployment changes were made. Backup/PITR and isolated restore remain hard blockers. Release remains **NO-GO**.
+
+
+## 9. Phase B10 – PT Studio production migration design (2026-11-20)
+
+Read-only production row counts confirm legacy data remains in `pt_sessions` (1 row) and `pt_bookings` (1 row); `pt_client_notes`, `pt_messages`, `pt_requests`, and `pt_session_exercises` currently have zero rows. These legacy tables and their contracts must be preserved.
+
+Reviewed the two PT Studio source migrations. The proposed additive production sequence is split into coach/relationship foundation, intake/goals/programmes, then check-ins and integrations. Key unresolved risks include assigned-coach access being missing from manager-only policies, over-broad coach access, immutable member/coach field boundaries, active assignment uniqueness, cascading deletion/retention, and consistency between legacy PT records and new Studio objects.
+
+The complete role matrix, source review, migration units and acceptance tests are recorded in [GO_LIVE_PHASE_B10_PT_STUDIO_MIGRATION_DESIGN_2026-11-20.md](./GO_LIVE_PHASE_B10_PT_STUDIO_MIGRATION_DESIGN_2026-11-20.md).
+
+**B10 outcome:** PT Studio migration design prepared; no database, Auth, Edge Function or deployment changes were made. Backup/PITR and isolated restore remain hard blockers. Release remains **NO-GO**.
