@@ -551,3 +551,16 @@ The B20 Pages run built successfully but its deploy job was skipped, so it did n
 Full workflow audit is in [GO_LIVE_PHASE_B22_HOSTING_DEPLOYMENT_ISOLATION_2026-11-20.md](./GO_LIVE_PHASE_B22_HOSTING_DEPLOYMENT_ISOLATION_2026-11-20.md).
 
 **B22 outcome:** Preview/production separation revalidated. No production workflow or deploy was added. Production remains NO-GO.
+
+
+## 22. Phase B23 – production data-preservation baseline (2026-11-20)
+
+Captured a fresh aggregate-only production baseline at 22:16:27 UTC: 3 profiles (1 admin, 2 members; all active), 1 class, 1 confirmed class booking, 1 legacy PT session, 1 PT booking, 1 WOD, 1 standalone PR, 0 workout logs/exercises/sets, 3 Auth users, 3 identities, 12 sessions and 0 Storage buckets/objects. The sole PR has no linked workout log and must remain standalone.
+
+Explicitly prohibited test-only replay sources: the test seed migration inserts demo exercises/WOD/coffee/class; the first-signup bootstrap promotes the first account to admin; the test baseline is schema-only and not a production migration. Test and production migration ledgers are independent; do not replay the test chain.
+
+B22 CI on commit bfed0bbf753bff31a355dfbd3b1b6b28e82d167d: STURMKOPF focused tests/build SUCCESS, full GarasjeGym checks SUCCESS, Pages build SUCCESS (attempt 2), Pages deploy SKIPPED. No publication occurred.
+
+Full preservation contract and read-only results are in [GO_LIVE_PHASE_B23_PRODUCTION_DATA_PRESERVATION_BASELINE_2026-11-20.md](./GO_LIVE_PHASE_B23_PRODUCTION_DATA_PRESERVATION_BASELINE_2026-11-20.md).
+
+**B23 outcome:** Production baseline recorded; no data or schema changes. This is not a backup and does not pass Wave 0. Production remains NO-GO.
