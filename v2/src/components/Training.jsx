@@ -801,7 +801,24 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
             <div><span>ØVINGAR</span><strong>{items.length}</strong></div>
             {timerSnapshot.roundsCompleted>0&&<div><span>RUNDER</span><strong>{timerSnapshot.roundsCompleted}</strong></div>}
           </div>
-          {items.length>0&&<div className="workout-finish-exercises"><strong>Øvingar i økta</strong><ol>{items.map((item,index)=><li key={item.key}>{item.exercise_name||'Øving utan namn'}{item.sets?.some(set=>set.reps||set.load_kg||set.time_text||set.height_cm)?<small>{item.sets.map(set=>[set.reps?set.reps+' reps':'',item.uses_height&&set.height_cm?set.height_cm+' cm':'',set.load_kg?set.load_kg+' kg':'',set.time_text||''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ')}</small>:null}</li>)}</ol></div>}
+          {items.length>0&&<section className="workout-result-entry">
+            <div className="workout-result-tabs" role="tablist" aria-label="Vel øving for resultat">
+              {items.map((item,index)=><button type="button" key={item.key} role="tab" aria-selected={activeExerciseIndex===index} className={activeExerciseIndex===index?'selected':''} onClick={()=>setActiveExerciseIndex(index)}>{item.exercise_name||'Øving '+(index+1)}</button>)}
+            </div>
+            {items[activeExerciseIndex]&&<div className="workout-result-exercise">
+              <header><div><span className="section-kicker">RESULTAT · ØVING {activeExerciseIndex+1} AV {items.length}</span><h4>{items[activeExerciseIndex].exercise_name}</h4>{items[activeExerciseIndex].prescription_label&&<small>{items[activeExerciseIndex].prescription_label}</small>}</div><span className="count-pill">{items[activeExerciseIndex].sets?.length||0} sett</span></header>
+              <div className="workout-result-set-head"><span>Sett</span><span>Reps</span><span>{items[activeExerciseIndex].uses_height?'Høgd':'Vekt'}</span><span></span></div>
+              {(items[activeExerciseIndex].sets||[]).map((set,setIndex)=><div className="workout-result-set" key={setIndex}>
+                <strong>{setIndex+1}</strong>
+                <input aria-label={'Sett '+(setIndex+1)+' repetisjonar'} type="number" min="0" step="1" value={set.reps} onChange={e=>updateSet(items[activeExerciseIndex].key,setIndex,{reps:e.target.value})} placeholder="–"/>
+                {items[activeExerciseIndex].uses_height
+                  ? <label className="workout-result-measure"><input aria-label={'Sett '+(setIndex+1)+' høgd i centimeter'} type="number" min="0" step="1" value={set.height_cm} onChange={e=>updateSet(items[activeExerciseIndex].key,setIndex,{height_cm:e.target.value})} placeholder="cm"/><span>cm</span></label>
+                  : <label className="workout-result-measure"><input aria-label={'Sett '+(setIndex+1)+' vekt i kilo'} type="number" min="0" step="0.5" value={set.load_kg} onChange={e=>updateSet(items[activeExerciseIndex].key,setIndex,{load_kg:e.target.value})} placeholder="kg"/><span>kg</span></label>}
+                <CheckCircle2 size={22} aria-label="Sett registrert" className={(set.reps!==''||set.load_kg!==''||set.height_cm!==''||set.time_text)?'is-recorded':''}/>
+              </div>)}
+              <div className="workout-result-actions"><button type="button" className="secondary-button" onClick={()=>addSet(items[activeExerciseIndex].key)}><Plus size={16}/> Legg til sett</button><span>{items[activeExerciseIndex].sets?.filter(set=>set.reps!==''||set.load_kg!==''||set.height_cm!==''||set.time_text).length||0} av {items[activeExerciseIndex].sets?.length||0} registrert</span></div>
+            </div>}
+          </section>}
           <section className="workout-finish-results"><h4>Registrer resultat</h4><p>Fel ta utgangspunkt i øktforma{source?.name?' og WOD-oppsettet':''}. Fyll berre inn det som manglar.</p>
             <div className="engine-fields three">
               {(format==='AMRAP'||(['Couplet','Triplet'].includes(format)&&source?.timer_settings?.workout_schema?.combination_mode==='AMRAP'))&&<><label>Fullførte rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder={String(timerSnapshot.roundsCompleted||0)}/></label><label>Ekstra reps<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="0"/></label></>}
