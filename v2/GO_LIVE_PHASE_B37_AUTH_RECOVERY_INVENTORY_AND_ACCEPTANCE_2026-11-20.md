@@ -48,7 +48,7 @@ Added `v2/supabase/preflight/auth_restore_acceptance_read_only.sql`. It is SELEC
 - Count of users with a non-empty password hash (never the hash itself).
 - Non-internal triggers on the Auth schema and their function security settings.
 
-The fingerprint query executed successfully against production. The separate Auth trigger inventory also executed successfully. Re-run both query sections against the isolated restore and compare source/target outputs. Fingerprints are integrity checks, not a substitute for sign-in tests.
+The fingerprint query executed successfully against production. The separate Auth trigger inventory also executed successfully. Re-run both query sections against the isolated restore and compare source/target outputs. The user UUID set, identity UUID/link set and password-hash-presence count must match for a same-identity recovery. Session and refresh-token counts/fingerprints are informational: if the owner deliberately invalidates all sessions for security, they are expected to differ and fresh sign-in must succeed. Fingerprints are integrity checks, not a substitute for sign-in tests.
 
 ## 4. Supported recovery approach and critical limitation
 
