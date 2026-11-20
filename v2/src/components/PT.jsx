@@ -19,6 +19,7 @@ function CalendarSelect({value,onChange,label='Vel dato'}) {
 }
 export default function PT({profile,coachMode=false,focusRequestId,onFocusConsumed,onLaunchWorkout,controlledClientId,hideCustomerPicker=false,onClientChange,focusPanel=null,onFocusPanelConsumed}){
   useEffect(()=>{if(controlledClientId!==undefined){const nextClient=controlledClientId||'';setActiveClient(nextClient);setCustomerDraft(nextClient)}},[controlledClientId])
+ useEffect(()=>{if(!focusPanel)return;setActivePanel(focusPanel);onFocusPanelConsumed?.()},[focusPanel])
  const staff=isStaff(profile)||coachMode
  const adminOrManager=isStaff(profile)
  const [sessions,setSessions]=useState([]),[bookings,setBookings]=useState([]),[requests,setRequests]=useState([])
