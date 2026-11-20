@@ -200,6 +200,24 @@ Additional production audit after these changes:
 
 These hardening migrations reduce production exposure but do not close the 28-table gap or resolve the object-level schema differences. **Release status remains NO-GO.**
 
+## 3B. Updated migration ledger reconciliation – 2026-11-20
+
+A fresh version-prefix comparison was run against the current STURMKOPF branch and both live Supabase migration ledgers:
+
+- `v2/supabase/migrations`: 163 SQL files.
+- Test project migration ledger: 163 installed versions.
+- Test versions without a matching V2 SQL file: 0.
+- V2 SQL files absent from the test ledger: 0.
+- Production project: 11 installed versions; none of those 11 versions is present in the V2 migration directory.
+
+This supersedes older QA notes that reported 15 test migration versions without SQL files and four V2 SQL files absent from the test ledger. Those statements are stale for the current branch. The V2 test migration history is now file/ledger-aligned by version.
+
+The test history remains separate from production and must not be replayed against production. It includes a test-only baseline and test seed migration. The root-level legacy `supabase/migrations` directory is a separate 15-file set and must not be mixed with `v2/supabase/migrations`.
+
+The 11 production-applied versions still need their original SQL source archived or reconstructed from live production definitions and repository history. A new production-derived forward-only migration sequence is still required.
+
+Evidence: [MIGRATION_RECONCILIATION_2026-11-20.md](./MIGRATION_RECONCILIATION_2026-11-20.md) and [PRODUCTION_CAPTURE_2026-11-20.md](./PRODUCTION_CAPTURE_2026-11-20.md).
+
 ## 4. Remaining security settings and audit
 
 The test advisor now reports 13 authenticated `SECURITY DEFINER` RPC warnings and one Auth warning for leaked-password protection. The previous `security_definer_view` finding is no longer reported in test after the new view migration.
