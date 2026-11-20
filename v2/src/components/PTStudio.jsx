@@ -291,9 +291,8 @@ export default function PTStudio({ profile, onLaunchWorkout, initialClientId=nul
  async function moveSession(session,direction) {
   const rows=clientSessions;const index=rows.findIndex(x=>x.id===session.id);const next=rows[index+direction];if(!next)return;
   await run(async()=>{
-   const {error:e1}=await supabase.from('pt_program_sessions').update({sequence_no:-1}).eq('id',session.id);if(e1)throw e1;
-   const {error:e2}=await supabase.from('pt_program_sessions').update({sequence_no:session.sequence_no,week_no:session.week_no||1,day_no:session.day_no||1}).eq('id',next.id);if(e2)throw e2;
-   const {error:e3}=await supabase.from('pt_program_sessions').update({sequence_no:next.sequence_no,week_no:next.week_no||1,day_no:next.day_no||1}).eq('id',session.id);if(e3)throw e3;
+   const {error:e}=await supabase.rpc('reorder_pt_program_sessions',{p_session_id:session.id,p_target_session_id:next.id})
+   if(e)throw e
    setNotice('Rekkjefølgja er oppdatert.')
   })
  }
