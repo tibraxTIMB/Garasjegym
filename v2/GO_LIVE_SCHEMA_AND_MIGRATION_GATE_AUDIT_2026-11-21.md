@@ -3,7 +3,7 @@
 Date: 2026-11-21  
 Repository: `tibraxTIMB/Garasjegym`  
 Working branch: `garasjegym-2.0-sturm­kopf`  
-Latest audited working commit before this report update: `e5a17bc65d53e4afa2fd03f27399488a3d24ebca`
+Latest audited working commit before this report update: `db73086cea7b0331f838bef6ed6590f60a362f86`
 
 ## Decision
 
@@ -62,9 +62,9 @@ A production migration plan must be reconstructed from the actual production sch
 ## Security and data-integrity observations
 
 - RLS is enabled on all 18 production base tables and all 46 test base tables.
-- The test security advisor previously reported 25 authenticated-executable SECURITY DEFINER functions. Current catalog count: 49 SECURITY DEFINER functions, 25 executable by `authenticated`, 0 executable by `anon`; all 49 have explicit search_path settings. Function-by-function review is still required; do not revoke helper grants indiscriminately.
+- The test security advisor reports 25 authenticated-executable SECURITY DEFINER functions. Current catalog count: 49 SECURITY DEFINER functions, 25 executable by `authenticated`, 0 executable by `anon`; all 49 have explicit search_path settings. A static review of all 25 exposed functions found explicit `auth.uid()` / active-membership guards on the member-facing RPCs; the coffee-order compatibility wrapper delegates to the guarded v2 function, the leaderboard checks the active-user helper, and the three role helpers bind checks to `auth.uid()`. This is not a substitute for role-based runtime/negative tests. Do not revoke helper grants indiscriminately.
 - Production catalog count: 7 SECURITY DEFINER functions, 4 executable by `authenticated`, 0 by `anon`; all have explicit search_path settings.
-- Production leaked-password protection remains reported disabled by the Supabase security advisor.
+- Production leaked-password protection remains reported disabled by the Supabase security advisor. No Auth configuration write was made.
 - Test data integrity checks found no duplicate class/PT booking pairs, capacity overruns, PR-to-wrong-member links, or orphan notifications in the checked conditions.
 - One historical completed PT WOD assignment has no workout-log link. It was not modified.
 - Test storage inventory and production storage inventory were read; no backup artifact or restore test was produced.
