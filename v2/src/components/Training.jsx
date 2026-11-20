@@ -805,7 +805,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   return <div className={simpleMode ? "training-module simple-mode" : "training-module"}>
     {error && <div className="auth-error" role="alert">{error}</div>}
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16}/> {notice}</div>}
-    {mode === 'active' ? <form className={simpleMode ? `engine-form gg-training-session simple-quick-form${reviewOpen?" review-open":""}` : "engine-form gg-training-session"} onSubmit={saveWorkout}>
+    {mode === 'active' ? <form className="engine-form gg-training-session" onSubmit={saveWorkout}>
       <div className="training-heading"><div><div className="section-kicker">TRENING · AKTIV ØKT</div><h3>{source?.name||'Bygg økta di'}</h3></div><span className="count-pill">{items.length} øvingar</span></div>
       {source&&activeWodEngine.participation!=='individual'&&<section className="wod-execution-partner"><div><strong>{formatParticipation(activeWodEngine)}</strong><span>{({free_split:'Del arbeidet fritt',you_go_i_go:'You go – I go',alternate:'Annankvar / vekselvis',synchronized:'Synkroniserte repetisjonar',parallel:'Parallelt arbeid'})[activeWodEngine.collaboration]||'Felles gjennomføring'}</span></div><small>Resultat blir lagra med partner-/teamoppsettet frå WOD-kortet. Scoring: {(activeWodEngine.scoring?.fields||[]).join(' + ')}</small></section>}
       {source?.timer_settings?.workout_schema?.items?.some(item=>item.levels)&&<section className="wod-execution-level"><strong>Vel doseringsnivå</strong><div className="hub-tabs" role="group" aria-label="Doseringsnivå">{[{id:'rx',label:'RX'},{id:'scaled',label:'Scaled'},{id:'foundation',label:'Foundation'}].map(level=><button type="button" key={level.id} className={wodLevel===level.id?'selected':''} aria-pressed={wodLevel===level.id} onClick={()=>setWodLevel(level.id)}>{level.label}</button>)}</div></section>}
@@ -839,7 +839,6 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         </article>)}
         <button type="button" className="secondary-button" onClick={() => setItems(current => [...current, emptyExercise()])}><Plus size={15}/> Legg til eiga øving</button>
       </section>
-      {simpleMode&&<button type="button" className="secondary-button simple-review-toggle" onClick={()=>setReviewOpen(v=>!v)}>{reviewOpen?"Skjul redigering":"Revider øvingar og resultat"}</button>}
       {finishOpen&&<div className="workout-finish-backdrop" role="presentation">
         <section className="workout-finish-dialog" role="dialog" aria-modal="true" aria-labelledby="finish-workout-title">
           <div className="workout-finish-head"><div><span className="section-kicker">ØKTA ER FERDIG</span><h3 id="finish-workout-title">{title||'Treningsøkt'}</h3></div><button type="button" className="danger-icon" aria-label="Lukk" onClick={()=>setFinishOpen(false)}>×</button></div>
