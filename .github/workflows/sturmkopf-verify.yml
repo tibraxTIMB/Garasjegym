@@ -47,5 +47,7 @@ jobs:
         run: npm run test:spotify-devices
       - name: Test mobile swipe gesture classification
         run: npm run test:gestures
+      - name: Test Bluetooth heart-rate measurement parsing
+        run: npm run test:heart-rate
       - name: Build application
         run: npm run build
