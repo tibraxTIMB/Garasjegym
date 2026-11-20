@@ -512,7 +512,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
 
   useEffect(() => {
     if (!quickStart || !simpleMode || loading || mode !== 'home') return
-    startWorkout()
+    startWorkout(null, { autoStart: true })
     onQuickStartConsumed?.()
   }, [quickStart, simpleMode, loading, mode])
 
@@ -529,9 +529,10 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     onDiscard?.()
   }
 
-  function startWorkout(wod = null) {
+  function startWorkout(wod = null, { autoStart = Boolean(wod) } = {}) {
     try { document.documentElement.requestFullscreen?.().catch(() => {}) } catch { /* Fullscreen er valfri på eininga. */ }
-    setTimerLaunchId(value => value + 1)
+    // A free session opens with the timer ready at zero; a selected WOD starts directly.
+    setTimerLaunchId(autoStart ? value => value + 1 : 0)
     setClassSessionId(null)
     setSaveToken(crypto.randomUUID())
     setSource(wod)
@@ -870,7 +871,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       <div className={simpleMode ? "engine-entry-grid simple-entry-grid" : "engine-entry-grid"}>
         <button type="button" onClick={() => startWorkout()}><Dumbbell size={20}/><strong>{simpleMode ? "Start trening" : "Fri trening"}</strong><small>{simpleMode ? "Start klokka og tren" : "Bygg økta frå botnen"}</small></button>
         <button type="button" onClick={() => setMode('wods')}><Activity size={20}/><strong>{simpleMode ? "Følg eit opplegg" : "Start ein WOD"}</strong><small>{simpleMode ? "Vel ei økt som er laga for deg" : "Vel ei publisert økt"}</small></button>
-        <button type="button" onClick={startManualWorkout}><Activity size={20}/><strong>Registrer i ettertid</strong><small>Legg inn ei økt du alt har gjennomført</small></button>
+        <button type="button" onClick={startManualWorkout}><Activity size={20}/><strong>Registrer manuell trening</strong><small>Legg inn ei økt du alt har gjennomført</small></button>
       </div>
       {mode === 'wods' && <section className="engine-section wod-library-screen">
         <div className="engine-section-title"><div><h4>WOD-bibliotek</h4><span>{wods.length} publiserte økter</span></div><button className="text-button" onClick={() => setMode('home')}>Lukk</button></div>
