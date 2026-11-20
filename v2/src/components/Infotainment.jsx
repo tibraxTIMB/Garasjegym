@@ -145,6 +145,7 @@ function DemoClock({onClose}){
 }
 
 export default function Infotainment({onExit,timerSnapshot=null}){
+ useEffect(()=>{try{sessionStorage.setItem('garasjegym:infotainment-active','1')}catch{}},[])
  const [now,setNow]=useState(()=>new Date())
  const [events,setEvents]=useState([])
  const [loading,setLoading]=useState(true)
