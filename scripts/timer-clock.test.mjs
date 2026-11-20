@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, splitDuration } from '../v2/src/lib/timerClock.js'
+import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration } from '../v2/src/lib/timerClock.js'
 
 test('timer clock is derived from timestamps rather than refresh count', () => {
   assert.equal(elapsedSecondsFromTimestamp(10_000, 12, 15_450), 17)
@@ -109,4 +109,13 @@ test('zero-rest work slots advance and count rounds without an extra delay', () 
   assert.equal(state.currentRound, 2)
   assert.equal(state.currentSlot, 1)
   assert.equal(state.roundsCompleted, 1)
+})
+
+
+test('fractional EMOM intervals are preserved and bounded', () => {
+  assert.equal(normalizeEmomIntervalMinutes(1.25, 1), 1.25)
+  assert.equal(normalizeEmomIntervalMinutes(0.25, 1), 0.25)
+  assert.equal(normalizeEmomIntervalMinutes(0.1, 1), 0.25)
+  assert.equal(normalizeEmomIntervalMinutes(12, 1), 7)
+  assert.equal(normalizeEmomIntervalMinutes(null, 1.5), 1.5)
 })
