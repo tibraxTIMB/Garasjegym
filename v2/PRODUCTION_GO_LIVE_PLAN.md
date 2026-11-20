@@ -610,3 +610,14 @@ Executed the exact query against isolated TEST project izwzwvlexqxqewzijhhd; it 
 After the owner completes an encrypted source backup and isolated restore, run the query against that restored target and compare with the exact backup timestamp, then complete application smoke tests. Full record: [GO_LIVE_PHASE_B27_RESTORE_ACCEPTANCE_QUERY_PACK_2026-11-20.md](./GO_LIVE_PHASE_B27_RESTORE_ACCEPTANCE_QUERY_PACK_2026-11-20.md).
 
 **B27 outcome:** Acceptance query pack prepared and TEST-validated. No production export, restore or changes. Wave 0 remains NOT PASSED; production remains NO-GO.
+
+
+## 27. Phase B28 – owner backup/restore execution runbook and fresh platform inventory (2026-11-20)
+
+Fresh read-only inventory confirms production ACTIVE_HEALTHY (PostgreSQL 17.11.0.019), TEST ACTIVE_HEALTHY (17.12.0.000), production migration ledger 11, TEST ledger 163. Production Edge Functions: only garasjegym-music v2 (verify_jwt=false, manual bearer validation and active-profile check). TEST-only admin-create-user/admin-delete-user functions are absent from production. Production music function source hash and required Soundtrack secret names are recorded in the runbook; no secret values were read. Branch protection remains unverified because the GitHub integration lacks permission for the protection endpoint.
+
+Updated owner backup instructions to current Supabase CLI --remote syntax; --db-url is deprecated in CLI v3 and removed in v4. Standard CLI dumps exclude managed auth/storage schemas, so the public database dump cannot be called a complete project backup. Auth users/identities and supported UUID-preserving recovery remain a hard Wave 0 requirement. Previous Storage baseline was 0 buckets/0 objects and must be rechecked at snapshot time. Do not create a hosted restore project or paid resource without fresh quote and approval; do not overwrite TEST.
+
+Detailed owner runbook: [GO_LIVE_PHASE_B28_OWNER_BACKUP_RESTORE_EXECUTION_RUNBOOK_2026-11-20.md](./GO_LIVE_PHASE_B28_OWNER_BACKUP_RESTORE_EXECUTION_RUNBOOK_2026-11-20.md).
+
+**B28 outcome:** Current CLI instructions and project recovery inventory reconciled. No export, restore, production change, deployment or cost. Wave 0 remains NOT PASSED; production remains NO-GO.
