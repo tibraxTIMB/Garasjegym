@@ -20,7 +20,7 @@ The runner sets the Wave 0 tripwire only inside this disposable service, then ex
 
 ## 2. Candidate execution result
 
-<badge color="success">PASS</badge> The exact candidate file `v2/supabase/candidates/wave1_membership_auth_production_candidate.sql` executed successfully on PostgreSQL 17.12.
+**Result: PASS** The exact candidate file `v2/supabase/candidates/wave1_membership_auth_production_candidate.sql` executed successfully on PostgreSQL 17.12.
 
 Assertions passed:
 - Three existing profiles remain present, active and role-preserved; existing active accounts become approved.
