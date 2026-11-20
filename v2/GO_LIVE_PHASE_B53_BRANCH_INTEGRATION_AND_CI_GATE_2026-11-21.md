@@ -75,3 +75,12 @@ The new production preflight intentionally blocks the three known TEST-only migr
 8. Obtain explicit owner GO LIVE approval for the exact reviewed migration/build hashes.
 
 **B53 result:** Existing preview workflow is guarded against automatic publication, and new CI/migration safety checks are committed. Branch integration, migration provenance, reproducible dependencies, backup/restore and latest-head CI remain blockers. Production remains **NO-GO**.
+
+
+## 7. CI workflow consolidation – 2026-11-21
+
+A follow-up review found that the additional `.github/workflows/sturm-kopf-ci.yml` duplicated the established `garasjegym-v2.yml` and `sturmkopf-verify.yml` workflows. Its production migration job would also fail against the intentionally mixed TEST migration directory. To avoid duplicate CI runs and a misleading permanently-red workflow, the redundant workflow was removed from the isolated branch.
+
+The production migration checker and its three unit tests remain in the codebase, and the tests remain part of `npm test`. The checker is a deliberate manual release gate until a separate, provenance-reviewed production migration directory exists. Existing CI workflows already run the aggregate app tests, migration checks, PostgreSQL 17 rehearsal and isolated TEST build on branch pushes.
+
+No existing workflow was weakened, no production deployment workflow was changed, and no workflow was manually dispatched. The next exact-head CI status must be checked from GitHub Actions before release acceptance.
