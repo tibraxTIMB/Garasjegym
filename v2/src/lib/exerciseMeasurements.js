@@ -1,4 +1,4 @@
-const HEIGHT_MOVEMENT = /box\\s*(?:jump|step.?up|step.?over)|burpee\\s*box|box\\s*over/i;
+const HEIGHT_MOVEMENT = /box\s*(?:jump|step.?up|step.?over)|burpee\s*box|box\s*over/i;
 const BODYWEIGHT_MOVEMENT = /air squat|burpee|double under|single under|toes-to-bar|pull-up|push-up|handstand push-up/i;
 const LOAD_MOVEMENT = /squat|deadlift|press|curl|row|clean|snatch|jerk|thrust|pulldown|leg press|swing|lunge|carry|wall ball|step.?up|muscle-up/i;
 const EXTERNAL_LOAD = /manual|dumbbell|kettlebell|barbell|vektstang|stang|vektskive|landmine|medisinball|medicine ball|weight vest|vektvest/i;
