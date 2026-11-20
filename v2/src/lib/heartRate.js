@@ -10,11 +10,15 @@ let snapshot = {
 }
 let activeDevice = null
 let activeCharacteristic = null
+let activeMeasurementHandler = null
+let connectionAttempt = 0
 const listeners = new Set()
 
 function publish(patch) {
   snapshot = { ...snapshot, ...patch }
-  listeners.forEach(listener => listener(snapshot))
+  listeners.forEach(listener => {
+    try { listener(snapshot) } catch (error) { console.error('Heart-rate listener failed', error) }
+  })
 }
 
 export function getHeartRateSnapshot() {
@@ -35,22 +39,39 @@ export function isHeartRateBluetoothAvailable() {
 }
 
 export function parseHeartRateMeasurement(value) {
-  if (!value || value.byteLength < 2) return null
+  if (!value || typeof value.getUint8 !== 'function' || value.byteLength < 2) return null
   const flags = value.getUint8(0)
   const is16Bit = Boolean(flags & 0x01)
+  if (value.byteLength < (is16Bit ? 3 : 2)) return null
   const bpm = is16Bit ? value.getUint16(1, true) : value.getUint8(1)
   if (!Number.isFinite(bpm) || bpm < 25 || bpm > 250) return null
   return bpm
 }
 
-function handleDisconnected() {
+function clearActiveSensor({ disconnect = false } = {}) {
+  if (activeCharacteristic && activeMeasurementHandler) {
+    activeCharacteristic.removeEventListener('characteristicvaluechanged', activeMeasurementHandler)
+  }
+  if (activeCharacteristic) {
+    try { activeCharacteristic.stopNotifications() } catch { /* Device may already be disconnected. */ }
+  }
+  if (activeDevice) {
+    activeDevice.removeEventListener('gattserverdisconnected', handleDisconnected)
+    if (disconnect && activeDevice.gatt?.connected) activeDevice.gatt.disconnect()
+  }
   activeCharacteristic = null
+  activeMeasurementHandler = null
   activeDevice = null
+}
+
+function handleDisconnected() {
+  clearActiveSensor()
   publish({
     status: 'disconnected',
     deviceName: '',
     bpm: null,
     receivedAt: null,
+    error: '',
   })
 }
 
@@ -64,6 +85,7 @@ export async function connectHeartRateSensor() {
   }
 
   disconnectHeartRateSensor()
+  const attempt = ++connectionAttempt
   publish({ status: 'connecting', error: '', bpm: null })
 
   try {
@@ -71,17 +93,36 @@ export async function connectHeartRateSensor() {
       filters: [{ services: [HEART_RATE_SERVICE] }],
       optionalServices: [HEART_RATE_SERVICE],
     })
+    if (attempt !== connectionAttempt) {
+      if (device.gatt?.connected) device.gatt.disconnect()
+      return null
+    }
+
     activeDevice = device
     device.addEventListener('gattserverdisconnected', handleDisconnected)
 
     const server = await device.gatt.connect()
-    const service = await server.getPrimaryService(HEART_RATE_SERVICE)
-    const characteristic = await service.getCharacteristic(HEART_RATE_MEASUREMENT)
-    activeCharacteristic = characteristic
+    if (attempt !== connectionAttempt) {
+      if (device.gatt?.connected) device.gatt.disconnect()
+      return null
+    }
 
-    characteristic.addEventListener('characteristicvaluechanged', event => {
+    const service = await server.getPrimaryService(HEART_RATE_SERVICE)
+    if (attempt !== connectionAttempt) {
+      if (device.gatt?.connected) device.gatt.disconnect()
+      return null
+    }
+
+    const characteristic = await service.getCharacteristic(HEART_RATE_MEASUREMENT)
+    if (attempt !== connectionAttempt) {
+      if (device.gatt?.connected) device.gatt.disconnect()
+      return null
+    }
+
+    activeCharacteristic = characteristic
+    activeMeasurementHandler = event => {
       const bpm = parseHeartRateMeasurement(event.target.value)
-      if (bpm == null) return
+      if (bpm == null || attempt !== connectionAttempt) return
       publish({
         status: 'connected',
         deviceName: device.name || 'Bluetooth-pulsbelte',
@@ -89,9 +130,15 @@ export async function connectHeartRateSensor() {
         receivedAt: Date.now(),
         error: '',
       })
-    })
-
+    }
+    characteristic.addEventListener('characteristicvaluechanged', activeMeasurementHandler)
     await characteristic.startNotifications()
+
+    if (attempt !== connectionAttempt) {
+      clearActiveSensor({ disconnect: true })
+      return null
+    }
+
     publish({
       status: 'connected',
       deviceName: device.name || 'Bluetooth-pulsbelte',
@@ -99,9 +146,8 @@ export async function connectHeartRateSensor() {
     })
     return device
   } catch (error) {
-    if (activeDevice) activeDevice.removeEventListener('gattserverdisconnected', handleDisconnected)
-    activeDevice = null
-    activeCharacteristic = null
+    if (attempt !== connectionAttempt) return null
+    clearActiveSensor({ disconnect: true })
     publish({
       status: 'disconnected',
       deviceName: '',
@@ -114,14 +160,7 @@ export async function connectHeartRateSensor() {
 }
 
 export function disconnectHeartRateSensor() {
-  if (activeCharacteristic) {
-    try { activeCharacteristic.stopNotifications() } catch { /* Device may already be disconnected. */ }
-  }
-  if (activeDevice) {
-    activeDevice.removeEventListener('gattserverdisconnected', handleDisconnected)
-    if (activeDevice.gatt?.connected) activeDevice.gatt.disconnect()
-  }
-  activeCharacteristic = null
-  activeDevice = null
+  connectionAttempt += 1
+  clearActiveSensor({ disconnect: true })
   publish({ status: 'disconnected', deviceName: '', bpm: null, receivedAt: null, error: '' })
 }
