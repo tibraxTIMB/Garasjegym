@@ -18,13 +18,22 @@ export default function HeartRateSettings() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [sensor, setSensor] = useState(getHeartRateSnapshot())
+  const [, setClockNow] = useState(Date.now())
 
   useEffect(() => subscribeHeartRate(setSensor), [])
+  useEffect(() => {
+    if (sensor.status !== 'connected') return undefined
+    const interval = setInterval(() => setClockNow(Date.now()), 1000)
+    return () => clearInterval(interval)
+  }, [sensor.status])
 
   useEffect(() => {
     let live = true
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
+      if (!supabase) throw new Error('Supabase er ikkje konfigurert.')
+      const { data, error: authError } = await supabase.auth.getUser()
+      if (authError) throw authError
+      const user = data?.user
       if (!user) { if (live) setLoading(false); return }
       const { data, error: loadError } = await supabase.from('member_preferences')
         .select('hr_enabled,hr_share_with_pt,hr_share_on_screen,hr_save_history')
@@ -46,7 +55,10 @@ export default function HeartRateSettings() {
     setError('')
     setNotice('')
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      if (!supabase) throw new Error('Supabase er ikkje konfigurert.')
+      const { data, error: authError } = await supabase.auth.getUser()
+      if (authError) throw authError
+      const user = data?.user
       if (!user) throw new Error('Du må vere innlogga.')
       const { error: saveError } = await supabase.from('member_preferences')
         .upsert({ user_id: user.id, ...next, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
@@ -73,7 +85,7 @@ export default function HeartRateSettings() {
   }
 
   const connected = sensor.status === 'connected'
-  const stale = sensor.receivedAt && Date.now() - sensor.receivedAt > 10000
+  const stale = connected && (!sensor.receivedAt || Date.now() - sensor.receivedAt > 10000)
 
   return <section className="engine-section hr-settings">
     <div className="engine-section-title"><h4><HeartPulse size={17}/> Puls under trening</h4><span>Valfritt</span></div>
