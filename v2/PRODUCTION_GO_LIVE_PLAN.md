@@ -318,3 +318,14 @@ See the detailed call-path map, production column evidence, and ordered remediat
 
 Required next steps are a deliberate membership/email compatibility and backfill design; an atomic booking/waitlist migration; a production-derived PT/WOD dependency migration; and a production-schema-specific deletion Edge Function. All must be rehearsed from a verified recovery point before production changes. Do not ship the current frontend unchanged to production.
 
+
+
+## 3E. Phase B4 – production-derived migration design (2026-11-20)
+
+**Status: DESIGN COMPLETE / NO-GO.** B4 defines six dependency-ordered migration waves: (0) backup/PITR and isolated restore; (1) membership/profile/Auth; (2) class booking/capacity/waitlist; (3) PT Studio; (4) WOD/workout/PR; (5) optional coffee/notifications/social/calendar; and (6) production-specific member-deletion Edge Function. It includes preflight checks, role-based acceptance tests, data preservation requirements, stop conditions and rollback principles.
+
+The design explicitly rejects replaying the 163 test migrations against production. It also identifies the important membership nuance in the inspected test migration: existing profiles receive approved by default while new signups become inactive/pending. Existing accounts and the owner/admin recovery path must be audited before adopting that behavior.
+
+Detailed sequence and acceptance gates: [GO LIVE Phase B4 – migration design](GO_LIVE_PHASE_B4_MIGRATION_DESIGN_2026-11-20.md).
+
+**Next gate:** Wave 0. The owner must provide the latest completed production backup/PITR timestamp and confirm the recovery rehearsal route. Any paid resource requires cost disclosure and explicit approval. No production DDL, Auth changes, Edge Function deployment or hosting deployment has been performed.
