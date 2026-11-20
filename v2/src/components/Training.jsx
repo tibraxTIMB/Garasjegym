@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase.js'
 import HeartRateTrainingPanel from './HeartRateTrainingPanel.jsx'
 import { MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
-import { sortWodItems } from '../lib/wodOrdering.js'
+import { getWodSchemaItems, sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
 import { formatParticipation, normalizeWodEngine, parseIntervalNotation } from '../lib/wodEngine.js'
 import PerformanceCenter from './PerformanceCenter.jsx'
@@ -563,7 +563,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
     setScoreRounds(''); setScoreReps(''); setScoreTime('')
     const schema = wod?.timer_settings?.workout_schema
-    const orderedSchemaItems = sortWodItems(schema?.items || [])
+    const orderedSchemaItems = sortWodItems(getWodSchemaItems(schema))
     if(schema?.library_category==='warmup')orderedSchemaItems.sort((a,b)=>({specific_prep:0,movement_rehearsal:1}[a.warmup_phase||'specific_prep']??0)-({specific_prep:0,movement_rehearsal:1}[b.warmup_phase||'specific_prep']??0))
     if (orderedSchemaItems.length) {
       setItems(orderedSchemaItems.map(item => ({
@@ -641,7 +641,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     const wod=manualWodOptions.find(item=>item.id===manualWodSelect)
     if(!wod)return
     if(manualWodIds.includes(wod.id)){setNotice('Denne WOD-en er allereie lagt til.');return}
-    const schemaItems=sortWodItems(wod.timer_settings?.workout_schema?.items||[])
+    const schemaItems=sortWodItems(getWodSchemaItems(wod.timer_settings?.workout_schema||{}))
     const additions=schemaItems.length?schemaItems.map(item=>({...emptyExercise(),manual_wod_id:wod.id,exercise_id:item.exercise_id||'',exercise_name:item.exercise_name||item.name||'',uses_height:Boolean(item.height_cm||Object.values(item.levels||{}).some(level=>level?.heightCm!=null)||/box|boks/i.test(item.exercise_name||item.name||'')),is_rest:!!item.is_rest,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps:[],rest_duration_seconds:item.rest_duration_seconds??null,prescription_levels:item.levels||null,prescription_label:doseLabel(item,wodLevel),rowUnit:item.row_unit||'m'})):(wod.movements||'').split(/\n|,/).map(name=>name.trim()).filter(Boolean).map(name=>({...emptyExercise(),manual_wod_id:wod.id,exercise_name:name}))
     if(!additions.length){setError('WOD-en har ingen registrerte øvingar å leggje til.');return}
     setItems(rows=>[...rows,...additions]);setManualWodIds(ids=>[...ids,wod.id]);setManualWodSelect('');setNotice(wod.name+' er lagt til i den manuelle økta.')
@@ -897,7 +897,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         {availableWods.filter(wod=>(!wodFavoritesOnly||favoriteWodIds.includes(wod.id))&&(!wodSearch.trim()||[wod.name,wod.format,wod.movements,wod.notes].some(value=>(value||'').toLowerCase().includes(wodSearch.trim().toLowerCase())))).length ? <div className="wod-list">{availableWods.filter(wod=>(!wodFavoritesOnly||favoriteWodIds.includes(wod.id))&&(!wodSearch.trim()||[wod.name,wod.format,wod.movements,wod.notes].some(value=>(value||'').toLowerCase().includes(wodSearch.trim().toLowerCase())))).sort((a,b)=>(a.id===dailyWodId?-1:0)-(b.id===dailyWodId?-1:0)).map(wod => {
           const schema=wod.timer_settings?.workout_schema||{}
           const engine=normalizeWodEngine(schema,{format:wod.format})
-          const wodItems=sortWodItems(schema.items||[])
+          const wodItems=sortWodItems(getWodSchemaItems(schema))
           const isExpanded=expandedWodId===wod.id
           return <article className={isExpanded?'wod-card wod-card-expanded':'wod-card'} key={wod.id}>
             <div className="wod-top"><span>{wod.id===dailyWodId?'DAGENS WOD · ':''}{wod.timer_settings?.workout_schema?.library_category==='warmup'?'OPPVARMING':wod.timer_settings?.workout_schema?.library_category==='standard'?'STANDARD':'WOD'} · {wod.format||'WOD'}</span><span>{schema.duration_seconds?clock(schema.duration_seconds):wod.duration_minutes?wod.duration_minutes+' MIN':''}</span></div>
