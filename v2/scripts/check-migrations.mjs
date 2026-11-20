@@ -9,10 +9,11 @@ if (files.length === 0) errors.push('Ingen SQL-migreringar vart funne.')
 
 const versions = new Set()
 for (const file of files) {
-  if (!/^\d{12}_[a-z0-9_]+\.sql$/i.test(file)) {
-    errors.push(`${file}: filnamnet må starta med ein 12-sifra migreringsversjon.`)
+  const match = file.match(/^(\d{12}|\d{14})_[a-z0-9_]+\.sql$/i)
+  if (!match) {
+    errors.push(`${file}: filnamnet må starta med ein 12- eller 14-sifra migreringsversjon.`)
   }
-  const version = file.slice(0, 12)
+  const version = match?.[1] || file.split('_', 1)[0]
   if (versions.has(version)) errors.push(`${file}: duplikat migreringsversjon ${version}.`)
   versions.add(version)
 
