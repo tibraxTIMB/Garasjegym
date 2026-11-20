@@ -340,3 +340,16 @@ The available project/database interfaces do not expose a verifiable completed p
 Do not call production restore as an inspection shortcut. No production DDL, data, Auth, Edge Function, secrets, hosting or project configuration was changed.
 
 Detailed evidence: [GO LIVE Phase B5 – Wave 0 recovery readiness](GO_LIVE_PHASE_B5_WAVE0_RECOVERY_READINESS_2026-11-20.md).
+
+
+## 3G. Phase B6 – release candidate verification (2026-11-20)
+
+The current branch commit passed the configured STURMKOPF verification workflow: 19/19 executed steps succeeded, including migration checks, WOD ordering, training launch context, timer calculations, mobile gestures, Bluetooth heart-rate parsing and the Vite build. This is an automated build/test pass, not proof of production compatibility or end-to-end acceptance.
+
+Fresh production advisors still report four authenticated-callable SECURITY DEFINER RPC warnings, leaked-password protection disabled, 14 unindexed foreign-key findings and 34 RLS init-plan findings. Test advisors report 25 SECURITY DEFINER warnings. Findings require function-by-function review; no blanket revocations or policy/index changes are authorized.
+
+The Pages workflow builds against TEST and only publishes the shared Pages URL after a manual `publish_preview=true` dispatch. It is not the production release pipeline and was not triggered.
+
+**Overall remains NO-GO:** production schema/Auth dependencies from B3 are unresolved and Wave 0 backup/PITR recovery readiness from B5 is unverified. No production deployment or database changes.
+
+Detailed evidence: [GO LIVE Phase B6 – release candidate verification](GO_LIVE_PHASE_B6_RELEASE_CANDIDATE_VERIFICATION_2026-11-20.md).
