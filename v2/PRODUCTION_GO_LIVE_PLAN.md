@@ -762,3 +762,10 @@ Additional production preflight: no Auth user has a missing/blank email; no prof
 Branch-only application changes: `isStaff()` requires approved membership; App routes unknown membership states to waiting/denied rather than normal member access; manager cannot edit self in Admin UI; music Edge Function requires approved+active; admin-delete Edge Function requires approved+active admin. Deploy the music function only after Wave 1 schema is present and tested. V2 PT Studio currently writes `profiles.member_rank`, but production lacks that column; track it as a PT-wave dependency, not Wave 1.
 
 No database or Edge Function changes were applied. No preview/production deployment requested or performed in this phase. Wave 0 and owner Auth settings verification remain hard blockers; production remains NO-GO.
+
+
+## 43. Phase B44 – centralized RLS membership gate coverage (2026-11-20)
+
+Fresh production catalog query: 49 public policies; 38 reference `is_active_user()`, 39 reference `is_admin_or_manager()`, 3 reference `is_admin()` (overlapping); zero policy predicates directly reference profiles or membership_status. All 8 public functions inspected. `book_pt_session(uuid)` explicitly checks `auth.uid()` and `is_active_user()`; therefore it inherits the new approval gate. Signup trigger is the one Auth-user trigger and must create inactive/pending. Other public functions are capacity/waitlist/updated_at triggers. The current SECURITY DEFINER functions retain fixed search_path; no grant or function changed. Detailed report: [GO_LIVE_PHASE_B44_RLS_CENTRAL_MEMBERSHIP_GATE_REVIEW_2026-11-20.md](./GO_LIVE_PHASE_B44_RLS_CENTRAL_MEMBERSHIP_GATE_REVIEW_2026-11-20.md).
+
+The three-helper approach can gate the existing policy set without a blanket rewrite, provided the current ACLs are preserved and all role/RPC combinations are tested on the isolated restore. No database changes. Production remains NO-GO pending Wave 0.
