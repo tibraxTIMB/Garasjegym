@@ -31,7 +31,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
   if(tab==='info')return !x.requires_action&&!x.requires_ack&&x.status==='open'
   if(tab==='history')return x.status!=='open'||x.acknowledged_at
   return x.status==='open'&&(!x.requires_ack||!x.acknowledged_at)
- }).slice(0,showAll?100:30),[items,tab,showAll])
+ }).slice(0,showAll?items.length:30),[items,tab,showAll])
  async function load(append=false){
   const {data:{user}}=await supabase.auth.getUser()
   if(!user){setLoading(false);return}
