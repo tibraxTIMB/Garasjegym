@@ -40,3 +40,7 @@ Stop if any pending/rejected/inactive account accesses protected data, any membe
 This phase created test documentation only. No SQL was executed, no disposable user was created, no production or TEST database was modified, and no function or hosting deployment was performed.
 
 **B47 result:** Wave 1 role/RLS smoke matrix is ready for the isolated restore. It cannot be truthfully marked passed until Wave 0 backup and restore are completed. Production remains **NO-GO**.
+
+
+### Clarification: anonymous Auth identities
+The smoke matrix now distinguishes an unauthenticated request with no JWT (U) from an anonymous Supabase Auth user/session (AN), if project-level anonymous sign-in is enabled. AN is a real Auth session but is not an approved membership and must be denied protected app data. The project setting remains owner-verification work in B41; include the AN test only if enabled.
