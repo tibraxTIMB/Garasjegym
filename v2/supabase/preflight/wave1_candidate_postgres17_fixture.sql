@@ -173,3 +173,13 @@ INSERT INTO public.class_bookings(id,class_id,member_id,status) VALUES
 INSERT INTO public.pt_sessions(id,client_id,status) VALUES
  ('30000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000003','published'),
  ('30000000-0000-0000-0000-000000000002',NULL,'published');
+
+CREATE TABLE public.pt_bookings (
+  id uuid PRIMARY KEY,
+  session_id uuid NOT NULL REFERENCES public.pt_sessions(id),
+  member_id uuid NOT NULL REFERENCES public.profiles(id)
+);
+INSERT INTO public.pt_sessions(id,client_id,status) VALUES
+ ('30000000-0000-0000-0000-000000000003',NULL,'draft');
+INSERT INTO public.pt_bookings(id,session_id,member_id) VALUES
+ ('40000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000002');
