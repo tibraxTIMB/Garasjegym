@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { chooseSpotifyDevice, isUsableSpotifyDevice, spotifyErrorMessage } from '../lib/spotifyDevices.js'
+import { clearSpotifyOAuthSession, readSpotifyOAuthSession, writeSpotifyOAuthSession } from '../lib/spotifyOAuthStorage.js'
 
 const MusicContext = createContext(null)
 const TOKEN_KEY_PREFIX = 'garasjegym:spotify-token:'
@@ -195,16 +196,14 @@ export function MusicProvider({ children, memberId = null }) {
     const code = params.get('code')
     const state = params.get('state')
     if (!code) return
-    const expectedState = sessionStorage.getItem(STATE_KEY)
-    const verifier = sessionStorage.getItem(VERIFIER_KEY)
+    const { state: expectedState, verifier } = readSpotifyOAuthSession(sessionStorage, STATE_KEY, VERIFIER_KEY)
     const cleanUrl = REDIRECT_URI()
     window.history.replaceState({},document.title,cleanUrl)
     if (!expectedState || state!==expectedState || !verifier) {
       setSpotifyError('Spotify-innlogginga kunne ikkje stadfestast. Prøv å kople til på nytt.')
       return
     }
-    sessionStorage.removeItem(STATE_KEY)
-    sessionStorage.removeItem(VERIFIER_KEY)
+    clearSpotifyOAuthSession(sessionStorage, STATE_KEY, VERIFIER_KEY)
     ;(async()=>{
       try {
         const response = await fetch('https://accounts.spotify.com/api/token',{
@@ -274,8 +273,9 @@ export function MusicProvider({ children, memberId = null }) {
     try {
       const verifier = randomString(64)
       const state = randomString(32)
-      sessionStorage.setItem(VERIFIER_KEY,verifier)
-      sessionStorage.setItem(STATE_KEY,state)
+      if (!writeSpotifyOAuthSession(sessionStorage, STATE_KEY, VERIFIER_KEY, state, verifier)) {
+        throw new Error('Nettlesaren blokkerer mellombels lagring. Tillat nettstadslagring og prøv igjen.')
+      }
       const challenge = await sha256(verifier)
       const params = new URLSearchParams({
         client_id:getClientId(),
