@@ -463,6 +463,13 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [timerLaunchId, setTimerLaunchId] = useState(0)
   useEffect(()=>{onTimerSnapshot?.({...timerSnapshot,title,format})},[timerSnapshot,title,format,onTimerSnapshot])
 
+  function clearTimerSnapshot(){
+    onTimerSnapshot?.({
+      elapsed:0,laps:[],roundsCompleted:0,phase:'Klar',running:false,
+      remaining:0,displayTime:0,countdown:false,currentRound:1,title:'',format:''
+    })
+  }
+
   async function loadAll(silent=false) {
     if (!silent) setLoading(true); setError('')
     let w = await supabase.from('wods')
@@ -549,6 +556,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     if (!window.confirm('Forkasta økta? Ho blir sletta utan å bli lagra i treningsloggen.')) return
     setFinishOpen(false); setMode('home'); setSource(null); setClassSessionId(null); setItems([])
     setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
+    clearTimerSnapshot()
     onDiscard?.()
   }
 
@@ -788,6 +796,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       }
       setNotice('Økta er lagra i treningsloggen.' + prMessage)
       setFinishOpen(false); setMode('home'); setReviewOpen(false)
+      clearTimerSnapshot()
       setSaveToken(crypto.randomUUID())
       await loadAll()
       onSaved?.()
