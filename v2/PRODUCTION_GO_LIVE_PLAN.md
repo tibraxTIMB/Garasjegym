@@ -814,3 +814,10 @@ This remains a PostgreSQL mock fixture, not an actual Supabase Auth/restore test
 
 
 Wave 1 candidate revision pin: `v2/supabase/candidates/wave1_membership_auth_production_candidate.sql` currently has GitHub blob SHA `8e0227bb4fd7159a79635749bb8a91a09a4c7ebe` on the STURMKOPF branch. The Wave 0 owner evidence template now records this exact immutable file revision for approval. If the candidate changes, the owner must review and approve the new blob SHA; this identifier is not a SHA-256 backup checksum.
+
+
+## 50. Phase B51 – exact candidate revision pin and regression guard (2026-11-20)
+
+The Wave 0 owner template now pins the exact production Wave 1 candidate path and GitHub blob SHA `8e0227bb4fd7159a79635749bb8a91a09a4c7ebe`. `v2/scripts/membership-candidate.test.mjs` computes the Git blob SHA from checked-out file bytes and asserts the owner template contains the same value. First run correctly detected the template pin had not been updated; template was corrected and rerun passed. On commit `b2ded164d58342b4b85d85b5dbfb940d84ae6453`, full checks `44833279263` SUCCESS including exact-hash test + disposable PostgreSQL 17.12 candidate rehearsal; focused build/test `44833279235` SUCCESS; preview artifact build `44833279279` SUCCESS with deploy skipped. Detailed record: [GO_LIVE_PHASE_B51_CANDIDATE_REVISION_PIN_AND_CI_2026-11-20.md](./GO_LIVE_PHASE_B51_CANDIDATE_REVISION_PIN_AND_CI_2026-11-20.md).
+
+No production/TEST changes or deployments. Wave 0 owner backup and actual Supabase restore remain blockers; production NO-GO.
