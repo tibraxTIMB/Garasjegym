@@ -432,3 +432,14 @@ Production needs a separate protected deployment pipeline with production-only e
 Full evidence and requirements are recorded in [GO_LIVE_PHASE_B12_HOSTING_ENVIRONMENT_AUDIT_2026-11-20.md](./GO_LIVE_PHASE_B12_HOSTING_ENVIRONMENT_AUDIT_2026-11-20.md).
 
 **B12 outcome:** Preview/production separation verified; no production deployment path is authorized. Release remains **NO-GO**.
+
+
+## 12. Phase B13 – live Auth/RPC security gate (2026-11-20)
+
+Fresh Security Advisor checks at 22:08 UTC report four authenticated SECURITY DEFINER warnings in production (`book_pt_session`, `is_active_user`, `is_admin`, `is_admin_or_manager`) and 25 in test. Leaked Password Protection is disabled in both environments.
+
+These functions require a per-function authorization/grant allowlist and role-based tests; do not mechanically convert them all to invoker mode or blanket-revoke authenticated EXECUTE. Production leaked-password protection must be enabled after confirming the user-facing password and recovery policy. No Auth or RPC setting was changed.
+
+Detailed findings, remediation references and acceptance requirements are in [GO_LIVE_PHASE_B13_AUTH_RPC_SECURITY_GATE_2026-11-20.md](./GO_LIVE_PHASE_B13_AUTH_RPC_SECURITY_GATE_2026-11-20.md).
+
+**B13 outcome:** Security findings reconciled; Auth configuration remains open. Release remains **NO-GO**.
