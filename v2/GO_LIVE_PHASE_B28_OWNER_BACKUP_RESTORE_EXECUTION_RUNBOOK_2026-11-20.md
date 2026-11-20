@@ -53,10 +53,14 @@ The current CLI dump documentation excludes managed `auth` and `storage` schemas
 
 Before Wave 0 can pass, the owner must demonstrate a supported and tested way to recover:
 - `auth.users` and `auth.identities`, preserving the UUIDs required by `public.profiles` and foreign keys.
-- Email confirmation/provider identity state and any MFA-related records required by the actual account configuration.
+- Password verification data (`encrypted_password`) and email confirmation/provider identity state, without exposing hashes or tokens.
+- Any MFA-related records required by the actual account configuration.
+- The custom `auth.users` trigger and its `public.handle_new_auth_user()` function, plus relevant Auth configuration.
 - A secure post-restore sign-in and password-reset flow.
 
-Do not manually write into managed Auth tables, invent replacement user UUIDs, or assume that an SQL export alone is a supported restore. Do not restore active sessions; plan for forced re-authentication. If a supported Auth recovery method cannot be demonstrated on the current Free plan, record that as an explicit recovery limitation and keep production NO-GO until the owner approves an acceptable, tested recovery design.
+Supabase's Auth migration guidance describes migrating the Auth schema, including users and hashed passwords, using a full backup or SQL export/import. The separate User Management guide describes exporting `auth.users` and `auth.identities` from the SQL Editor; that is useful for inventory/export but a CSV alone is not accepted as a tested restore procedure. Standard `supabase db dump` still excludes managed `auth` and `storage` schemas, so do not mistake the public schema dump for the Auth backup. Use a documented Auth-schema recovery method and prove it in an isolated compatible environment.
+
+Do not manually insert selected rows into managed Auth tables, invent replacement user UUIDs, or assume that an SQL export alone is a supported restore. Active sessions and refresh tokens may be intentionally discarded to force re-authentication; they are not required to match the source snapshot if the owner explicitly chooses that security posture. If sessions are restored, verify their behavior in the target. A different JWT secret invalidates old tokens; require fresh sign-in. If a supported Auth recovery method cannot be demonstrated on the current Free plan, record that as an explicit recovery limitation and keep production NO-GO until the owner approves an acceptable, tested recovery design.
 
 ## 5. Storage, Edge Functions and project configuration
 
@@ -71,7 +75,7 @@ The current Free organization already has the production and TEST projects. Do n
 
 A zero-budget public-schema rehearsal may use a local Supabase stack, but it is not a full Supabase managed Auth restore. Use a disposable local environment and a compatible Postgres/Supabase stack; document compatibility differences from production PostgreSQL 17.11.0.019. Run `v2/supabase/preflight/restore_rehearsal_read_only.sql` only against the restored local target. Compare counts against the backup snapshot, then run app smoke tests using isolated credentials.
 
-A successful public-schema rehearsal does not pass Wave 0 until the Auth recovery method is also demonstrated.
+A successful public-schema rehearsal does not pass Wave 0 until the Auth recovery method is also demonstrated. The Auth acceptance query's user UUID, identity UUID/link and password-hash-presence checks must match; session/refresh-token fingerprints are informational if the rehearsal deliberately invalidates sessions.
 
 ## 7. Explicit stop conditions
 
