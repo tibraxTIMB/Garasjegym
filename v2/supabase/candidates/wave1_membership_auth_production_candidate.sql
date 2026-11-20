@@ -102,6 +102,27 @@ BEGIN
   END IF;
 
   IF NOT EXISTS (
+    SELECT 1
+    FROM pg_trigger t
+    JOIN pg_class c ON c.oid=t.tgrelid
+    JOIN pg_namespace n ON n.oid=c.relnamespace
+    JOIN pg_proc p ON p.oid=t.tgfoid
+    JOIN pg_namespace pn ON pn.oid=p.pronamespace
+    WHERE n.nspname='auth' AND c.relname='users'
+      AND t.tgname='on_auth_user_created'
+      AND pn.nspname='public' AND p.proname='handle_new_auth_user'
+      AND p.prosecdef
+      AND p.proconfig @> ARRAY['search_path=pg_catalog, public, pg_temp']
+      AND NOT t.tgisinternal
+  ) THEN
+    RAISE EXCEPTION 'STOP: expected SECURITY DEFINER Auth signup trigger/function/search_path differs';
+  END IF;
+
+  IF has_table_privilege('anon','public.profiles','SELECT') THEN
+    RAISE EXCEPTION 'STOP: anon unexpectedly has SELECT on profiles';
+  END IF;
+
+  IF NOT EXISTS (
     SELECT 1 FROM pg_policies
     WHERE schemaname='public' AND tablename='profiles'
       AND policyname='profile_select_own_or_staff' AND cmd='SELECT'
