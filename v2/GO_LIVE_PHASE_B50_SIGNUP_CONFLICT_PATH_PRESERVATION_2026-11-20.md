@@ -32,3 +32,11 @@ This is still a PostgreSQL fixture, not an actual Supabase project restore. It d
 No production or TEST database changes, Auth exports, Edge Function deployments, secret changes, hosting publication or paid Supabase resources were used.
 
 **B50 result:** The signup trigger's existing-profile conflict path now has an explicit regression assertion and passes PostgreSQL 17.12. Wave 0 remains blocked; production remains **NO-GO**.
+
+
+## Exact candidate revision approved for rehearsal
+- Candidate path: `v2/supabase/candidates/wave1_membership_auth_production_candidate.sql`
+- GitHub blob SHA: `8e0227bb4fd7159a79635749bb8a91a09a4c7ebe`
+- Branch: `garasjegym-2.0-sturm­kopf`
+
+The owner must approve this exact immutable file revision after Wave 0, or re-review and approve a newer blob SHA if the candidate changes. This is a GitHub blob content identifier, not a SHA-256 backup checksum.
