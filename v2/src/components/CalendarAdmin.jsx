@@ -8,7 +8,7 @@ const tone={pt:'pt',class:'class',meeting:'meeting',maintenance:'maintenance',ot
 export default function CalendarAdmin({onNavigate=()=>{}}){
  const [month,setMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1)),[focusDay,setFocusDay]=useState(()=>new Date())
  const [events,setEvents]=useState([]),[sessions,setSessions]=useState([]),[classes,setClasses]=useState([])
- const [loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState('')
+ const [loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[saving,setSaving]=useState(false),[removing,setRemoving]=useState(false)
  const [mode,setMode]=useState('month'),[showForm,setShowForm]=useState(false),[editing,setEditing]=useState(null)
  const [title,setTitle]=useState(''),[kind,setKind]=useState('meeting'),[start,setStart]=useState(()=>toLocalInput(new Date())),[end,setEnd]=useState(()=>toLocalInput(new Date(Date.now()+3600000))),[description,setDescription]=useState(''),[client,setClient]=useState('')
  const [clients,setClients]=useState([]),[detail,setDetail]=useState(null)
@@ -54,12 +54,10 @@ export default function CalendarAdmin({onNavigate=()=>{}}){
    setMonth(nextMonth);setFocusDay(nextDay)
    return
   }
-  setFocusDay(current=>{
-   const next=new Date(current)
-   next.setDate(next.getDate()+(mode==='week'?7:1)*direction)
-   setMonth(new Date(next.getFullYear(),next.getMonth(),1))
-   return next
-  })
+  const next=new Date(focusDay)
+  next.setDate(next.getDate()+(mode==='week'?7:1)*direction)
+  setFocusDay(next)
+  setMonth(new Date(next.getFullYear(),next.getMonth(),1))
  }
  function openNew(d=new Date()){setEditing(null);setTitle('');setKind('meeting');setDescription('');setClient('');const s=new Date(d),now=new Date();s.setHours(s.toDateString()===now.toDateString()?now.getHours()+1:10,0,0,0);setStart(toLocalInput(s));setEnd(toLocalInput(new Date(s.getTime()+3600000)));setShowForm(true)}
  function openEdit(e){
@@ -67,7 +65,7 @@ export default function CalendarAdmin({onNavigate=()=>{}}){
   setEditing(e);setTitle(e.title);setKind(e.type);setDescription(e.description||'');setClient(e.client_id||'');setStart(toLocalInput(new Date(e.starts_at)));setEnd(toLocalInput(new Date(e.ends_at)));setShowForm(true)
  }
  async function save(ev){
-  ev.preventDefault();setError('');setNotice('')
+  ev.preventDefault();if(saving)return;setSaving(true);setError('');setNotice('')
   const cleanTitle=title.trim()
   if(!cleanTitle){setError('Skriv inn eit namn på avtalen.');return}
   const maxMinutes=kind==='pt'?600:kind==='class'?300:1440
@@ -95,13 +93,17 @@ export default function CalendarAdmin({onNavigate=()=>{}}){
    setNotice(kind==='pt'?(client?'PT-time oppretta og knytt til kunden.':'PT-time publisert for booking.'):kind==='class'?'Gruppetime oppretta og publisert.':editing?'Avtalen er oppdatert.':'Avtalen er lagra.')
    await load()
   }catch(saveError){setError(saveError?.message||'Kunne ikkje lagra avtalen.')}
+  finally{setSaving(false)}
  }
  async function remove(){
-  if(!editing||!window.confirm('Sletta avtalen?'))return
-  setError('');setNotice('')
-  const {error:e}=await supabase.from('calendar_events').delete().eq('id',editing.id)
-  if(e)setError(e.message)
-  else{setShowForm(false);setNotice('Avtalen er sletta.');await load()}
+  if(!editing||removing||saving||!window.confirm('Sletta avtalen?'))return
+  setRemoving(true);setError('');setNotice('')
+  try{
+   const {error:e}=await supabase.from('calendar_events').delete().eq('id',editing.id)
+   if(e)throw e
+   setShowForm(false);setNotice('Avtalen er sletta.');await load()
+  }catch(removeError){setError(removeError?.message||'Avtalen kunne ikkje slettast.')}
+  finally{setRemoving(false)}
  }
  return <div className="calendar-admin">
   <div className="training-heading"><div><div className="section-kicker">GARASJEGYM · ADMIN</div><h3>Kalender</h3><p>PT-timar, gruppetimar og eigne avtalar samla på ein stad.</p></div><button className="primary-button" onClick={()=>openNew()}><Plus size={16}/> Ny avtale</button></div>
@@ -122,6 +124,6 @@ export default function CalendarAdmin({onNavigate=()=>{}}){
     {detail.description&&<p className="calendar-detail-description">{detail.description}</p>}
     <div className="calendar-modal-actions"><button type="button" className="primary-button" onClick={()=>{const target=detail.source==='class'?'booking':'pt';const classId=detail.source==='class'?detail.id.replace(/^class-/,''):null;setDetail(null);onNavigate(target,classId,detail.source==='pt'?detail.client_id:null)}}>{detail.source==='class'?'Opna gruppetime':'Opna PT-oversikt'}</button></div>
   </section></div>}
-  {showForm&&<div className="calendar-modal-backdrop"><form className="calendar-modal" onSubmit={save}><div className="training-heading"><h3>{editing?'Rediger avtale':'Ny avtale'}</h3><button type="button" className="secondary-button" onClick={()=>setShowForm(false)}>Lukk</button></div><label>Tittel<input value={title} onChange={e=>setTitle(e.target.value)} required/></label><label>Type<select value={kind} onChange={e=>setKind(e.target.value)}>{types.map(([id,label])=><option value={id} key={id} disabled={Boolean(editing)&&['pt','class'].includes(id)&&id!==editing.type}>{label}</option>)}</select></label><label>Kunde (valfritt)<select value={client} onChange={e=>setClient(e.target.value)}><option value="">Ingen kunde</option>{clients.map(x=><option value={x.id} key={x.id}>{x.display_name}</option>)}</select></label><div className="engine-fields"><label>Start<input type="datetime-local" value={start} onChange={e=>setStart(e.target.value)} required/></label><label>Slutt<input type="datetime-local" value={end} onChange={e=>setEnd(e.target.value)} required/></label></div><label>Notat<textarea value={description} onChange={e=>setDescription(e.target.value)} rows="3"/></label><div className="calendar-modal-actions"><button className="primary-button">{editing?'Lagre endring':'Opprett avtale'}</button>{editing&&<button type="button" className="secondary-button" onClick={remove}>Slett</button>}</div></form></div>}
+  {showForm&&<div className="calendar-modal-backdrop"><form className="calendar-modal" onSubmit={save}><div className="training-heading"><h3>{editing?'Rediger avtale':'Ny avtale'}</h3><button type="button" className="secondary-button" onClick={()=>setShowForm(false)}>Lukk</button></div><label>Tittel<input value={title} onChange={e=>setTitle(e.target.value)} required/></label><label>Type<select value={kind} onChange={e=>setKind(e.target.value)}>{types.map(([id,label])=><option value={id} key={id} disabled={Boolean(editing)&&['pt','class'].includes(id)&&id!==editing.type}>{label}</option>)}</select></label><label>Kunde (valfritt)<select value={client} onChange={e=>setClient(e.target.value)}><option value="">Ingen kunde</option>{clients.map(x=><option value={x.id} key={x.id}>{x.display_name}</option>)}</select></label><div className="engine-fields"><label>Start<input type="datetime-local" value={start} onChange={e=>setStart(e.target.value)} required/></label><label>Slutt<input type="datetime-local" value={end} onChange={e=>setEnd(e.target.value)} required/></label></div><label>Notat<textarea value={description} onChange={e=>setDescription(e.target.value)} rows="3"/></label><div className="calendar-modal-actions"><button className="primary-button" disabled={saving||removing}>{saving?'Lagrar …':editing?'Lagre endring':'Opprett avtale'}</button>{editing&&<button type="button" className="secondary-button" disabled={saving||removing} onClick={remove}>{removing?'Slettar …':'Slett'}</button>}</div></form></div>}
  </div>
 }
