@@ -575,3 +575,14 @@ Final B24 commit da6467a34b7b205e0c86d49420f80fb4ec76a92e: STURMKOPF focused tes
 Full record: [GO_LIVE_PHASE_B24_RELEASE_IDENTITY_AND_BUILD_VERIFICATION_2026-11-20.md](./GO_LIVE_PHASE_B24_RELEASE_IDENTITY_AND_BUILD_VERIFICATION_2026-11-20.md).
 
 **B24 outcome:** Release label aligned and CI green. This is not a production release; Wave 0 recovery remains blocked and production remains NO-GO.
+
+
+## 24. Phase B25 – built artifact provenance and secret-boundary audit (2026-11-20)
+
+Downloaded and inspected the Pages artifact from run 44827794592, artifact 14674632850, source commit da6467a34b7b205e0c86d49420f80fb4ec76a92e. SHA-256 from GitHub and local computation matched: edf8112444ef52790608aabd3c473f6397b8cf4bfbf3aa094ab048e2a342bafe. Artifact has 39 tar entries (37 regular files), including lazy-loaded app modules.
+
+Built-bundle scan: TEST project ref present; production project ref absent; service_role absent; no actual sb_secret token; no private-key PEM header; STURMKOPF FEUER 1.1 present. The SDK contains only the literal sb_secret_ prefix used for key-format detection, not a key value. No production URL or privileged key was found.
+
+Deploy job was SKIPPED. Artifact remains an unpublished TEST preview; no production deployment. Detailed evidence: [GO_LIVE_PHASE_B25_ARTIFACT_PROVENANCE_SECRET_BOUNDARY_2026-11-20.md](./GO_LIVE_PHASE_B25_ARTIFACT_PROVENANCE_SECRET_BOUNDARY_2026-11-20.md).
+
+**B25 outcome:** Artifact provenance and environment boundary verified. No deployment or Supabase changes. Production remains NO-GO.
