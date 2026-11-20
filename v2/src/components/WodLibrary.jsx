@@ -103,7 +103,21 @@ export default function WodLibrary({onLaunchWod,onEditWod,staff=true,isAdmin=fal
   }catch(e){setError('Kunne ikkje planleggja Dagens WOD: '+(e.message||'Ukjend feil'))}
   finally{setBusy('')}
  }
- async function addToClass(){if(!classWod||!classId)return;setBusy('class');const target=classes.find(x=>x.id===classId);const ids=Array.isArray(target?.wod_ids)?target.wod_ids:[];const next=[...new Set([...ids,classWod.id])];const {error:e}=await supabase.from('classes').update({wod_ids:next}).eq('id',classId);if(e)setError(e.message);else{setClasses(rows=>rows.map(x=>x.id===classId?{...x,wod_ids:next}:x));setNotice(classWod.name+' er lagt til i gruppetimen.');setClassWod(null);setClassId('')}setBusy('')}
+ async function addToClass(){
+  if(!classWod||!classId||busy==='class')return
+  setBusy('class');setError('');setNotice('')
+  try{
+   const {data:{user},error:authError}=await supabase.auth.getUser()
+   if(authError||!user)throw authError||new Error('Logg inn på nytt.')
+   const {data:wodIds,error:addError}=await supabase.rpc('add_wod_to_class',{p_class_id:classId,p_wod_id:classWod.id})
+   if(addError)throw addError
+   const next=Array.isArray(wodIds)?wodIds:[]
+   setClasses(rows=>rows.map(x=>x.id===classId?{...x,wod_ids:next}:x))
+   setNotice(classWod.name+' er lagt til i gruppetimen.')
+   setClassWod(null);setClassId('')
+  }catch(e){setError('Kunne ikkje leggja WOD til gruppetimen: '+(e?.message||'Ukjend feil'))}
+  finally{setBusy('')}
+ }
  async function assign(){if(!assignWod||!customerId||busy==='assign')return;setBusy('assign');setError('');setNotice('');try{const {data:{user},error:authError}=await supabase.auth.getUser();if(authError||!user)throw authError||new Error('Du må vere innlogga for å tildele ein WOD.');const {data:existing,error:lookupError}=await supabase.from('pt_wod_assignments').select('id,status').eq('member_id',customerId).eq('wod_id',assignWod.id).in('status',['assigned','in_progress']).limit(1);if(lookupError)throw lookupError;if(existing?.length){const selectedCustomer=customers.find(c=>c.id===customerId);setNotice(assignWod.name+' er allereie aktivt tildelt '+(selectedCustomer?.display_name||'kunden')+'. Ingen ny tildeling vart oppretta.');setAssignWod(null);return}const {data:created,error:e}=await supabase.from('pt_wod_assignments').insert({member_id:customerId,wod_id:assignWod.id,assigned_by:user.id,due_date:dueDate||null,coach_note:coachNote.trim(),status:'assigned'}).select('id').single();if(e){if(e.code==='23505')throw new Error('Denne WOD-en vart nettopp tildelt kunden. Den aktive tildelinga er bevart.');throw e}if(!created?.id)throw new Error('Tildelinga blei ikkje stadfesta av databasen.');const selectedCustomer=customers.find(c=>c.id===customerId);setNotice(assignWod.name+' er tildelt '+(selectedCustomer?.display_name||'kunden')+'.');setAssignWod(null);setCustomerId('');setDueDate('');setCoachNote('')}catch(e){setError('Kunne ikkje tildele WOD: '+(e?.message||'Ukjend feil'))}finally{setBusy('')}}
  async function createSession(){
   if(!sessionWods.length||busy==='session')return
