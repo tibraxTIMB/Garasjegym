@@ -821,3 +821,10 @@ Wave 1 candidate revision pin: `v2/supabase/candidates/wave1_membership_auth_pro
 The Wave 0 owner template now pins the exact production Wave 1 candidate path and GitHub blob SHA `8e0227bb4fd7159a79635749bb8a91a09a4c7ebe`. `v2/scripts/membership-candidate.test.mjs` computes the Git blob SHA from checked-out file bytes and asserts the owner template contains the same value. First run correctly detected the template pin had not been updated; template was corrected and rerun passed. On commit `b2ded164d58342b4b85d85b5dbfb940d84ae6453`, full checks `44833279263` SUCCESS including exact-hash test + disposable PostgreSQL 17.12 candidate rehearsal; focused build/test `44833279235` SUCCESS; preview artifact build `44833279279` SUCCESS with deploy skipped. Detailed record: [GO_LIVE_PHASE_B51_CANDIDATE_REVISION_PIN_AND_CI_2026-11-20.md](./GO_LIVE_PHASE_B51_CANDIDATE_REVISION_PIN_AND_CI_2026-11-20.md).
 
 No production/TEST changes or deployments. Wave 0 owner backup and actual Supabase restore remain blockers; production NO-GO.
+
+
+## 51. Phase B52 – final production non-interference checkpoint (2026-11-20)
+
+Fresh production aggregate SELECT after B49–B51: profiles 3 (all active), Auth users 3, classes 1, class bookings 1, legacy PT sessions 1, PT bookings 1, WODs 1, workout logs 0, personal records 1, Storage 0 buckets/0 objects. `profiles.email` and `membership_status` remain absent. Production migration ledger 11, TEST 163. Production Edge Functions remain exactly one: `garasjegym-music` ACTIVE v2, `verify_jwt=false`, source SHA-256 unchanged `3e369166c2c425c20c0e6af8e49adeaeef96c6e192479102f09a6acde1850e69`. Detailed checkpoint: [GO_LIVE_PHASE_B52_FINAL_NONINTERFERENCE_CHECKPOINT_2026-11-20.md](./GO_LIVE_PHASE_B52_FINAL_NONINTERFERENCE_CHECKPOINT_2026-11-20.md).
+
+All Wave 1 candidate execution occurred in disposable PostgreSQL 17.12 GitHub Actions only. Candidate blob pin is enforced by automated test. No production or TEST changes. Owner-run encrypted backup, supported Auth recovery and actual isolated Supabase restore remain mandatory. Production remains NO-GO.
