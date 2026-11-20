@@ -161,7 +161,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  }
  useEffect(()=>{load();loadWods()},[])
  useEffect(()=>{if(editWodId&&exercises.length&&publishRoleReady)loadWodForEdit(editWodId)},[editWodId,exercises.length,publishRoleReady,canPublishWod])
- async function loadWods(){const {data,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,created_at,is_published').order('created_at',{ascending:false});if(e)setError(e.message);else setLibraryWods(data||[])}
+ async function loadWods(){const {data,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,created_at,is_published,is_archived').eq('is_archived',false).order('created_at',{ascending:false});if(e)setError(e.message);else setLibraryWods((data||[]).filter(w=>!w.is_archived))}
  async function load(){
   setLoading(true)
   setPublishRoleReady(false)
