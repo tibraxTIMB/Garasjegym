@@ -329,3 +329,14 @@ The design explicitly rejects replaying the 163 test migrations against producti
 Detailed sequence and acceptance gates: [GO LIVE Phase B4 – migration design](GO_LIVE_PHASE_B4_MIGRATION_DESIGN_2026-11-20.md).
 
 **Next gate:** Wave 0. The owner must provide the latest completed production backup/PITR timestamp and confirm the recovery rehearsal route. Any paid resource requires cost disclosure and explicit approval. No production DDL, Auth changes, Edge Function deployment or hosting deployment has been performed.
+
+
+## 3F. Phase B5 – Wave 0 recovery readiness check (2026-11-20)
+
+Read-only inspection reconfirmed both Supabase projects are `ACTIVE_HEALTHY`. No development branches exist on either project. No branch or project was created and no cost-bearing resource was provisioned.
+
+The available project/database interfaces do not expose a verifiable completed production backup timestamp, PITR retention window, or restore-test result. Project health is not evidence of recoverability. **Wave 0 remains blocked** until the owner supplies the backup/PITR evidence from Database → Backups in the production dashboard and a cost-approved isolated restore route is identified.
+
+Do not call production restore as an inspection shortcut. No production DDL, data, Auth, Edge Function, secrets, hosting or project configuration was changed.
+
+Detailed evidence: [GO LIVE Phase B5 – Wave 0 recovery readiness](GO_LIVE_PHASE_B5_WAVE0_RECOVERY_READINESS_2026-11-20.md).
