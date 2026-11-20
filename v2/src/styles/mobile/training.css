@@ -499,3 +499,93 @@
 .gg-training-session .manual-wod-chips>span{display:inline-flex;align-items:center;gap:7px;padding:6px 9px;border-radius:8px;background:var(--panel,rgba(255,255,255,.06));font-size:12px}
 .gg-training-session .manual-wod-chips button{display:grid;place-items:center;width:24px;height:24px;border:0;border-radius:6px;background:rgba(255,255,255,.08);color:inherit;font-size:17px;line-height:1}
 @media(max-width:560px){.gg-training-session .manual-wod-picker-row{grid-template-columns:minmax(0,1fr)}.gg-training-session .manual-wod-picker-row button{width:100%;justify-content:center}}
+
+
+/* STURMKOPF training interaction and timer hierarchy */
+.gg-training-session button {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .12s ease, filter .12s ease, box-shadow .12s ease, border-color .12s ease;
+}
+.gg-training-session button:active:not(:disabled) {
+  transform: translateY(1px) scale(.985);
+  filter: brightness(1.16);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.16);
+}
+.gg-training-session button:focus-visible {
+  outline: 3px solid var(--gg-shell-accent,#f0a33a);
+  outline-offset: 3px;
+}
+.gg-training-session button:disabled {
+  cursor: not-allowed;
+  opacity: .48;
+  filter: saturate(.55);
+}
+.gg-training-session .timer-panel-clock .timer-main-clock {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-weight: 950;
+  text-shadow: 0 5px 26px rgba(0,0,0,.22);
+}
+.gg-training-session .timer-panel-clock .timer-actions button {
+  min-height: 50px;
+  font-weight: 800;
+}
+.gg-training-session .timer-panel-clock .timer-actions button:first-child {
+  border-color: var(--gg-shell-accent,#f0a33a);
+}
+.gg-training-session .timer-panel-clock .timer-finish-button {
+  width: 100%;
+  min-height: 58px;
+  border-radius: 14px;
+  font-weight: 900;
+  letter-spacing: .01em;
+}
+.gg-training-session .engine-entry-grid > button {
+  min-height: 124px;
+  position: relative;
+  overflow: hidden;
+  transition: transform .12s ease, border-color .12s ease, background .12s ease;
+}
+.gg-training-session .engine-entry-grid > button:active {
+  transform: scale(.985);
+  border-color: var(--gg-shell-accent,#f0a33a);
+}
+.gg-training-session .engine-entry-grid > button strong {
+  font-size: 16px;
+}
+.gg-training-session .engine-entry-grid > button small {
+  line-height: 1.4;
+}
+@media (max-width: 900px) {
+  .gg-training-session .timer-panel-clock .timer-panel-content {
+    border-radius: 16px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(240,163,58,.10), transparent 68%);
+  }
+  .gg-training-session .timer-panel-clock .timer-center {
+    min-height: min(62dvh,560px);
+    justify-content: space-evenly;
+  }
+  .gg-training-session .timer-panel-clock .timer-finish-row small {
+    text-align: center;
+    line-height: 1.4;
+  }
+}
+@media (max-width: 560px) {
+  .gg-training-session .timer-panel-clock .timer-center {
+    min-height: min(66dvh,520px);
+    gap: 13px;
+    padding: 18px 8px;
+  }
+  .gg-training-session .timer-panel-clock .timer-main-clock {
+    font-size: clamp(76px,22vw,118px) !important;
+    letter-spacing: -.065em;
+  }
+  .gg-training-session .timer-panel-clock .timer-actions button {
+    min-height: 50px;
+    font-size: 12px;
+  }
+  .gg-training-session .timer-panel-info,
+  .gg-training-session .timer-panel-laps {
+    min-height: 0;
+  }
+}
