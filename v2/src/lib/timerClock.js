@@ -10,6 +10,16 @@ export function clampElapsedToTarget(elapsed, target) {
   return Number.isFinite(limit) && limit > 0 ? Math.min(value, Math.floor(limit)) : value
 }
 
+
+export function normalizeEmomIntervalMinutes(value, fallback = 1) {
+  const candidate = Number(value);
+  const defaultValue = Number(fallback);
+  const selected = Number.isFinite(candidate) && candidate > 0
+    ? candidate
+    : Number.isFinite(defaultValue) && defaultValue > 0 ? defaultValue : 1;
+  return Math.max(0.25, Math.min(7, selected));
+}
+
 export function splitDuration(elapsed, previousSplits = []) {
   const total = Math.max(0, Math.floor(Number(elapsed) || 0))
   const recorded = (Array.isArray(previousSplits) ? previousSplits : [])
