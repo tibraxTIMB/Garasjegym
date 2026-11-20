@@ -3,14 +3,14 @@ import {CheckCircle2,ClipboardList,LoaderCircle,Play,RefreshCw} from 'lucide-rea
 import {supabase} from '../lib/supabase.js'
 
 export default function GroupClassResults({onLaunchWod=()=>{}}){
- const [rows,setRows]=useState([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState(''),[hasMore,setHasMore]=useState(false)
+ const [rows,setRows]=useState([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState(''),[hasMore,setHasMore]=useState(false),[nextOffset,setNextOffset]=useState(0)
  const loadSequence=useRef(0),loadingMore=useRef(false)
  async function load(append=false){
   if(loadingMore.current&&!append)return
   if(append&&loadingMore.current)return
   if(append)loadingMore.current=true
   const requestId=++loadSequence.current
-  const offset=append?rows.length:0
+  const offset=append?nextOffset:0
   setLoading(true);setError('')
   try{
    const {data:{user},error:authError}=await supabase.auth.getUser()
@@ -24,6 +24,7 @@ export default function GroupClassResults({onLaunchWod=()=>{}}){
    const sessionRows=sessions||[]
    if(requestId!==loadSequence.current)return
    setHasMore(sessionRows.length===30)
+   setNextOffset(offset+sessionRows.length)
    const ids=[...new Set(sessionRows.flatMap(s=>Array.isArray(s.wod_ids)&&s.wod_ids.length?s.wod_ids:(s.wod_id?[s.wod_id]:[])))]
    if(!ids.length){
     if(!append)setRows([])
