@@ -39,5 +39,7 @@ jobs:
         run: npm run test:wod-import
       - name: Test WOD engine normalization and scoring
         run: npm run test:wod-engine
+      - name: Test timer clock, split and finish calculations
+        run: npm run test:timer-clock
       - name: Build application
         run: npm run build
