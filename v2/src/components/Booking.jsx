@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CalendarDays, CheckCircle2, Clock3, LoaderCircle, Plus, Users, UserRound, Radio, Play, Pause, Square } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { isStaff } from '../lib/auth.js'
@@ -68,20 +68,26 @@ export default function Booking({ profile, onLogResult, onOpenWod, initialClassI
   const [wods,setWods]=useState([])
   const [selectedWod,setSelectedWod]=useState({}),[createWodIds,setCreateWodIds]=useState([])
   const [clockNow,setClockNow]=useState(Date.now())
+  const loadSequence=useRef(0)
   const staff=isStaff(profile)
   const attendeeCountFor=classId=>staff?attendance.filter(row=>row.class_id===classId&&['confirmed','pending'].includes(row.status)).length:Number(attendance.find(row=>row.class_id===classId)?.confirmed_count||0)
   const instructorNameFor=id=>instructors.find(person=>person.id===id)?.display_name||'Ikkje tildelt'
   useEffect(()=>{if(initialClassId&&classes.length){const target=classes.find(c=>c.id===initialClassId);if(target){setSelectedClass(target);onInitialClassConsumed()}}},[initialClassId,classes,onInitialClassConsumed])
 
   async function load(silent=false){
-    if(!silent)setLoading(true);setError('')
+    const requestId=++loadSequence.current
+    if(!silent)setLoading(true)
+    setError('')
+    try{
     const [{data:userData,error:userError}]=await Promise.all([supabase.auth.getUser()])
-    if(userError||!userData.user){setError('Logg inn på nytt.');setLoading(false);return}
+    if(requestId!==loadSequence.current)return
+    if(userError||!userData.user){setError('Logg inn på nytt.');return}
     let classQuery=supabase.from('classes')
       .select('id,title,type,capacity,starts_at,duration_minutes,description,workout_text,wod_ids,instructor_id,published,cancelled_at,cancellation_note,prep_text,main_text,finish_text,coach_notes')
       .gte('starts_at',new Date(Date.now()-86400000).toISOString()).order('starts_at').limit(50)
     if(!staff)classQuery=classQuery.eq('published',true).is('cancelled_at',null)
     const {data:classRows,error:classError}=await classQuery
+    if(requestId!==loadSequence.current)return
     // Include dated WOD plans only for classes this member is allowed to see (schedule RLS handles this).
     const rawClassRows=classRows||[]
     const classIds=rawClassRows.map(row=>row.id)
@@ -89,6 +95,7 @@ export default function Booking({ profile, onLogResult, onOpenWod, initialClassI
     if(!classError&&classIds.length){
       const {data:scheduled,error:scheduleError}=await supabase.from('wod_daily_schedules')
         .select('target_class_id,wod_id').in('target_class_id',classIds).eq('is_published',true)
+      if(requestId!==loadSequence.current)return
       if(scheduleError)setError(scheduleError.message)
       else if(scheduled?.length){
         const byClass=scheduled.reduce((acc,row)=>{(acc[row.target_class_id] ||= []).push(row.wod_id);return acc},{})
@@ -106,18 +113,20 @@ export default function Booking({ profile, onLogResult, onOpenWod, initialClassI
         ? supabase.from('profiles').select('id,display_name').in('role',['admin','manager']).eq('active',true).eq('membership_status','approved').order('display_name')
         : Promise.resolve({data:[],error:null})
     ])
+    if(requestId!==loadSequence.current)return
     if(b.error)setError(b.error.message);else setMine(b.data||[])
     if(staff&&!instructorRows.error)setInstructors(instructorRows.data||[])
     if(a.error)setError(a.error.message);else if(staff){
       setAttendance(a.data||[])
       const ids=[...new Set((a.data||[]).map(row=>row.member_id).filter(Boolean))]
-      if(ids.length){const {data:people}=await supabase.from('profiles').select('id,display_name').in('id',ids);setMemberNames(v=>({...v,...Object.fromEntries((people||[]).map(p=>[p.id,p.display_name||'Medlem']))}))}
+      if(ids.length){const {data:people}=await supabase.from('profiles').select('id,display_name').in('id',ids);if(requestId!==loadSequence.current)return;setMemberNames(v=>({...v,...Object.fromEntries((people||[]).map(p=>[p.id,p.display_name||'Medlem']))}))}
     }else{
       setAttendance((a.data||[]).map(row=>({class_id:row.class_id,confirmed_count:Number(row.confirmed_count)||0})))
     }
     if(live.error)setError(live.error.message);else setLiveSessions(live.data||[])
     let w=supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,category,is_published,is_archived').eq('is_archived',false).order('name')
     let wResult=await w
+    if(requestId!==loadSequence.current)return
     if(wResult.error && /timer_settings|column .* does not exist/i.test(wResult.error.message||'')){
       let fallback=supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,category,is_published,is_archived').eq('is_archived',false).order('name')
       wResult=await fallback
@@ -135,9 +144,17 @@ export default function Booking({ profile, onLogResult, onOpenWod, initialClassI
       setWods(visibleWods)
     }
 
-    setLoading(false)
+    }catch(loadError){
+      if(requestId===loadSequence.current)setError(loadError?.message||'Timeplanen kunne ikkje hentast.')
+    }finally{
+      if(requestId===loadSequence.current)setLoading(false)
+    }
   }
-  useEffect(()=>{load();const refresh=setInterval(()=>load(true),30000);return()=>clearInterval(refresh)},[])
+  useEffect(()=>{
+    load()
+    const refresh=setInterval(()=>load(true),30000)
+    return()=>{loadSequence.current+=1;clearInterval(refresh)}
+  },[])
   const liveSessionIds=liveSessions.map(s=>s.id).sort().join(',')
   useEffect(()=>{
     if(!staff||!liveSessionIds){setSessionResults({});return}
