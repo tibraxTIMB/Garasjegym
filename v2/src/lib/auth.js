@@ -1,4 +1,5 @@
 import { supabase } from './supabase.js'
+export { isStaff } from './membershipAccess.js'
 
 /**
  * Fetches the signed-in member's public profile.
@@ -18,8 +19,3 @@ export async function fetchMemberProfile(userId) {
   return { profile: data ?? null, error }
 }
 
-export function isStaff(profile) {
-  return profile?.active === true &&
-    profile?.membership_status === 'approved' &&
-    (profile.role === 'admin' || profile.role === 'manager')
-}
