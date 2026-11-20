@@ -730,3 +730,12 @@ B37 Auth acceptance has been clarified: user UUID/identity link and password-has
 Fresh production Storage aggregate check: 0 buckets, 0 objects, 0 Storage RLS policies; all 10 Storage base tables have RLS enabled. The schema contains 11 non-internal managed Storage triggers relating to bucket/object lifecycle and protection; do not replay or modify these platform-managed objects as app migrations. The zero bucket/object baseline is valid only for this snapshot and must be rechecked immediately before the backup. If still zero, record it; if non-zero, export bucket config, object bytes, paths and metadata separately. Detailed record: [GO_LIVE_PHASE_B39_STORAGE_RECOVERY_REVALIDATION_2026-11-20.md](./GO_LIVE_PHASE_B39_STORAGE_RECOVERY_REVALIDATION_2026-11-20.md).
 
 No Storage objects or metadata were exported or changed. Wave 0 remains blocked; production remains NO-GO.
+
+
+## 39. Phase B40 – production Membership/Auth preflight and signup activation finding (2026-11-20)
+
+Added and executed `v2/supabase/preflight/membership_auth_wave_preflight_read_only.sql`. Production snapshot: 3 profiles, all active (1 admin, 2 members, 0 managers), 3 Auth users, no orphan profile/Auth rows, no duplicate Auth email groups, 2 profile policies, RLS on, no anon profile SELECT, one Auth signup trigger. No IDs or email addresses were selected.
+
+New high-priority finding: `profiles.active` has default `true`; `on_auth_user_created` calls `public.handle_new_auth_user()`, which inserts only id/display_name/role and omits active. Therefore, if project-level Auth signup is enabled, newly created profiles inherit active=true. `is_active_user()` checks active only; production has no `membership_status` column. The app's own account creation restriction does not prove project-level Auth signup is disabled; current Auth provider/signup setting was not accessible to the read-only tooling. Verify it owner-side. Wave 1 must set future `active` default false, explicitly create new profiles inactive/pending, and require active+approved in role helpers. Preserve the existing three account UUIDs/roles and test on isolated restore. Detailed record: [GO_LIVE_PHASE_B40_MEMBERSHIP_AUTH_PREFLIGHT_AND_SIGNUP_GATE_2026-11-20.md](./GO_LIVE_PHASE_B40_MEMBERSHIP_AUTH_PREFLIGHT_AND_SIGNUP_GATE_2026-11-20.md).
+
+No production change or test signup. This strengthens the Wave 1 security requirement. Wave 0 remains blocked; production remains NO-GO.
