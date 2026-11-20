@@ -3,7 +3,7 @@
 Date: 2026-11-21  
 Repository: `tibraxTIMB/Garasjegym`  
 Working branch: `garasjegym-2.0-sturm­kopf`  
-Latest audited working commit before this report: `88969707cc744441475c849869d01f8ae2d8830f`
+Latest audited working commit before this report update: `92a90509d9dbdbce08facf7dec8a07aed4661928`
 
 ## Decision
 
@@ -71,16 +71,16 @@ A production migration plan must be reconstructed from the actual production sch
 
 ## Changes made on the isolated working branch
 
-1. Added `20261120205200_add_member_rank_to_profiles.sql` and applied it only to the test project. It adds an optional text column with a 40-character limit. Production remains unchanged.
+1. Added `20261120230300_add_member_rank_to_profiles.sql` and applied it only to the test project. The filename now matches the migration version recorded by the test project's migration ledger. It adds an optional text column with a 40-character limit. Production remains unchanged.
 2. Added `scripts/check-production-migrations.mjs`, which blocks files with test-only naming or an explicit `TEST ONLY` header.
 3. Added `scripts/production-migrations.test.mjs` with tests for safe files, test-only filenames, and test-only headers.
 4. Exposed `npm run check:production-migrations` and included `test:production-migrations` in the aggregate `npm test` script.
 
-These files have been committed on the isolated branch. They have not yet been executed in a full repository checkout; GitHub returned no CI status checks or workflow runs for the audited commits. The preflight is expected to fail on the current mixed migration folder until test-only migrations are separated from the production migration path. That is an intentional release block.
+These files have been committed on the isolated branch. The three new preflight unit tests were executed in a local Node.js fixture using the exact committed test and preflight source: 3 passed, 0 failed. This is not a substitute for running the full repository suite. A GitHub Actions workflow (`.github/workflows/sturm-kopf-ci.yml`) now runs app tests, migration checks, and the production build, with a separate production migration safety gate. No completed CI run has yet been verified. The preflight is expected to fail on the current mixed migration folder until test-only migrations are separated from the production migration path. That is an intentional release block.
 
 ## Required next gates
 
-1. Run `npm ci`, `npm test`, `npm run build`, `npm run check:migrations`, and the production migration preflight in a real checkout of this exact branch/commit.
+1. Run `npm install`, `npm test`, `npm run build`, `npm run check:migrations`, and the production migration preflight in a real checkout of this exact branch/commit. No npm lockfile currently exists in the repository, so `npm ci` is not available and dependency resolution is not yet locked.
 2. Split test-only baseline, seed, and bootstrap SQL from the production migration path; add a guard test proving they cannot enter the production deployment artifact.
 3. Build a production-specific migration plan for the 28 tables and 35 columns, including RLS, grants, indexes, triggers, functions, views, storage policies, and data backfill/compatibility.
 4. Obtain an external backup and prove a restore to a separate disposable project before production writes.
