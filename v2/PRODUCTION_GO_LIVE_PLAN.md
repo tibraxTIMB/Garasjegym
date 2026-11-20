@@ -586,3 +586,16 @@ Built-bundle scan: TEST project ref present; production project ref absent; serv
 Deploy job was SKIPPED. Artifact remains an unpublished TEST preview; no production deployment. Detailed evidence: [GO_LIVE_PHASE_B25_ARTIFACT_PROVENANCE_SECRET_BOUNDARY_2026-11-20.md](./GO_LIVE_PHASE_B25_ARTIFACT_PROVENANCE_SECRET_BOUNDARY_2026-11-20.md).
 
 **B25 outcome:** Artifact provenance and environment boundary verified. No deployment or Supabase changes. Production remains NO-GO.
+
+
+## 25. Phase B26 – automated build-artifact safety gate (2026-11-20)
+
+Added v2/scripts/check-release-artifact.mjs and npm script check:release-artifact. It verifies the built dist contains the expected TEST project reference and Feuer 1.1 identity, excludes the production project ref, service_role and actual sb_secret token values, and contains the required WOD Builder/PT Studio/Training/Admin assets plus index and manifest. The guard runs after Vite build in all three workflows.
+
+The first guard run correctly failed because the verification build had no Supabase environment configured. Fixed both verification workflows to build explicitly against the isolated TEST project and labelled the full check as a TEST bundle. This is not a production build.
+
+Latest final CI commit 54d64c717bbf80823f3ef4748d38e97fadd21461: full GarasjeGym checks SUCCESS (44828172562), STURMKOPF focused checks SUCCESS (44828172172), preview build/artifact guard SUCCESS (44828097148), preview deploy SKIPPED. No production or Pages deployment.
+
+Detailed report: [GO_LIVE_PHASE_B26_AUTOMATED_ARTIFACT_SAFETY_GATE_2026-11-20.md](./GO_LIVE_PHASE_B26_AUTOMATED_ARTIFACT_SAFETY_GATE_2026-11-20.md).
+
+**B26 outcome:** Automated TEST-only artifact gate in place and final CI green. Wave 0 recovery still not passed; production remains NO-GO.
