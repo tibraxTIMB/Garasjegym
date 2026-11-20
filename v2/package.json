@@ -13,7 +13,7 @@
     "test:infotainment": "node --test scripts/infotainment-events.test.mjs scripts/infotainment-timer.test.mjs",
     "test:wod-complexes": "node --test scripts/wod-complexes.test.mjs",
     "test:wod-import": "node --test scripts/wod-import.test.mjs",
-    "test": "npm run test:wod-order && npm run test:exercise-measurements && npm run test:training-launch-context && npm run test:app-base-url && npm run test:infotainment && npm run test:wod-complexes && npm run test:wod-import && npm run test:wod-engine && npm run test:timer-clock && npm run test:group-class-live-timer && npm run test:spotify-devices && npm run test:gestures && npm run test:heart-rate && npm run test:membership-access",
+    "test": "npm run test:wod-order && npm run test:exercise-measurements && npm run test:training-launch-context && npm run test:app-base-url && npm run test:infotainment && npm run test:wod-complexes && npm run test:wod-import && npm run test:wod-engine && npm run test:timer-clock && npm run test:group-class-live-timer && npm run test:spotify-devices && npm run test:gestures && npm run test:heart-rate && npm run test:membership-access && npm run test:membership-candidate",
     "test:wod-engine": "node --test scripts/wod-engine.test.mjs",
     "test:timer-clock": "node --test ../scripts/timer-clock.test.mjs",
     "test:group-class-live-timer": "node --test scripts/group-class-live-timer.test.mjs",
@@ -23,7 +23,8 @@
     "test:training-launch-context": "node --test scripts/training-launch-context.test.mjs",
     "test:exercise-measurements": "node --test scripts/exercise-measurements.test.mjs",
     "check:release-artifact": "node scripts/check-release-artifact.mjs",
-    "test:membership-access": "node --test scripts/membership-access.test.mjs"
+    "test:membership-access": "node --test scripts/membership-access.test.mjs",
+    "test:membership-candidate": "node --test scripts/membership-candidate.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
