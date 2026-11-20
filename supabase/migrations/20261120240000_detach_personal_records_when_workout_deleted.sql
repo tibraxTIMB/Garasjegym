@@ -1,4 +1,4 @@
--- Preserve PR history while clearing its source link when the workout is deleted.
+-- Ensure PR source links are nullable and detached automatically when a workout is deleted.
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -14,7 +14,3 @@ BEGIN
   END IF;
 END;
 $$;
-
-CREATE INDEX IF NOT EXISTS idx_personal_records_workout_log_id
-  ON public.personal_records(workout_log_id)
-  WHERE workout_log_id IS NOT NULL;
