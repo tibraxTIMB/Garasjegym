@@ -39,6 +39,7 @@ const Infotainment = lazy(() => import('./components/Infotainment.jsx'))
 import AppMobileNavigation from './components/AppMobileNavigation.jsx'
 import { Music, MusicProvider } from './components/Music.jsx'
 import { useDeviceProfile } from './lib/deviceLayout.js'
+import { RELEASE_NAME, RELEASE_SHORT } from './lib/release.js'
 
 const sections = [
   { id: 'oversikt', label: 'Oversikt', icon: LayoutDashboard, note: 'Dashboard og treningsstatus' },
@@ -98,7 +99,7 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
       <div className="auth-card">
         <div className="brand auth-brand">
           <div className="brand-mark"><Wrench size={22} /></div>
-          <div><strong>GARASJEGYM</strong><span>STURMKOPF · 2.0</span></div>
+          <div><strong>GARASJEGYM</strong><span>{RELEASE_NAME}</span></div>
         </div>
         <div className="eyebrow"><ShieldCheck size={14} /> MEDLEMSOMRÅDE</div>
         <h1>{mode === 'login' ? <>Velkomen <em>tilbake.</em></> : <>Nytt <em>passord.</em></>}</h1>
@@ -331,7 +332,7 @@ export default function App() {
       {!simpleMode&&<aside className="sidebar">
         <div className="brand">
           <div className="brand-mark"><Wrench size={22} /></div>
-          <div><strong>GARASJEGYM</strong><span>STURMKOPF · 2.0</span></div>
+          <div><strong>GARASJEGYM</strong><span>{RELEASE_NAME}</span></div>
         </div>
         <div className="side-label">HOVUDMENY</div>
         <nav aria-label="Hovudmeny">
@@ -353,7 +354,7 @@ export default function App() {
       </aside>}
       <main className={simpleMode?'main simple-app-main':'main'}>
         <header className="topbar">
-          <div className="mobile-brand">GARASJEGYM <span>2.0</span></div>
+          <div className="mobile-brand">GARASJEGYM <span>{RELEASE_SHORT}</span></div>
           {active!=='oversikt'&&navigationStack.length>0&&<button type="button" className={simpleMode?'simple-back-button':'route-back-button'} onClick={()=>navigateBack('oversikt')}>← Tilbake</button>}
           <div className="top-meta">
             <span className="member-name">{profile.display_name || session.user.email}</span>
@@ -391,12 +392,12 @@ export default function App() {
           <p>{current.note}</p>
           <div className="notice">
             <strong>Innlogging og medlemsroller er kopla til.</strong>
-            <span>Dette er første funksjonelle steg i 2.0. Modulane blir bygde ut stegvis. Eksisterande 1.8.16 og produksjonsdata er ikkje endra.</span>
+            <span>Dette er GarasjeGym 2.0 – STURMKOPF FEUER 1.1. Eksisterande 1.8.16 og produksjonsdata er ikkje endra.</span>
           </div>
         </section>}
         </Suspense>
         {selectedWorkout&&<div className="modal-backdrop" role="presentation" onClick={()=>setSelectedWorkout(null)}><section className="booking-create workout-detail-modal" role="dialog" aria-modal="true" aria-label="Treningsresultat" onClick={e=>e.stopPropagation()}><div className="training-heading"><div><span className="section-kicker">GJENNOMFØRT ØKT</span><h3>{selectedWorkout.title||'Treningsøkt'}</h3><p>{selectedWorkout.workout_date||''}</p></div><button className="secondary-button" onClick={()=>setSelectedWorkout(null)}>Lukk</button></div><div className="workout-detail-score"><strong>{selectedWorkout.score_rounds??'–'}</strong><span>Rundar</span><strong>{selectedWorkout.score_reps??'–'}</strong><span>Ekstra reps</span>{selectedWorkout.score_time_seconds!=null&&<><strong>{Math.floor(selectedWorkout.score_time_seconds/60)}:{String(Math.floor(selectedWorkout.score_time_seconds%60)).padStart(2,'0')}</strong><span>Sluttid</span></>}{selectedWorkout.score_load_kg!=null&&<><strong>{selectedWorkout.score_load_kg} kg</strong><span>Tungaste løft</span></>}{selectedWorkout.score_calories!=null&&<><strong>{selectedWorkout.score_calories}</strong><span>Kaloriar</span></>}{selectedWorkout.score_distance!=null&&<><strong>{selectedWorkout.score_distance} {selectedWorkout.score_unit||'m'}</strong><span>Avstand</span></>}</div><p>{selectedWorkout.format||'Trening'}</p>{selectedWorkout.result_data?.split_seconds?.length>0&&<p>Rundetider: {selectedWorkout.result_data.split_seconds.map((seconds,index)=>`${index+1}: ${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,'0')}`).join(' · ')}</p>}<p>{selectedWorkout.note||'Ingen notat registrert.'}</p>{selectedWorkout.detailLoading&&<div className="training-state">Hentar resultat og øvingsanalyse …</div>}{selectedWorkout.detailError&&<div className="auth-error" role="alert">{selectedWorkout.detailError}</div>}{selectedWorkout.exercises?.length>0&&<section className="workout-exercise-detail"><h4>Øvingar og sett</h4>{selectedWorkout.exercises.map(ex=><article className="history-card" key={ex.id}><strong>{ex.exercise_name}</strong>{ex.source_text&&<small>{ex.source_text}</small>}{(ex.workout_sets||[]).sort((x,y)=>x.set_number-y.set_number).map(set=><div className="workout-set-detail" key={set.id}><span>Sett {set.set_number}</span><b>{set.reps!=null?set.reps+' reps':''}{set.load_kg!=null?' · '+set.load_kg+' kg':''}{set.time_text?' · '+set.time_text:''}{set.time_seconds!=null?' · '+set.time_seconds+' sek':''}</b></div>)}</article>)}</section>}{selectedWorkout.exercises?.length===0&&!selectedWorkout.detailLoading&&<small>Ingen øvingsdetaljar er lagra på denne økta.</small>}</section></div>}
-        <footer>GARASJEGYM 2.0 · STURMKOPF</footer>
+        <footer>GARASJEGYM · {RELEASE_NAME}</footer>
       </main>
       <AppMobileNavigation items={mobileNavItems} active={active} staff={!simpleMode&&isStaff(profile)} coach={isPTCoach} onNavigate={handleSectionNavigate}/>
       {infotainmentActive&&isStaff(profile)&&<Suspense fallback={<div className="training-state" role="status">Lastar infotainment …</div>}><Infotainment onExit={()=>{try{sessionStorage.removeItem('garasjegym:infotainment-active');sessionStorage.removeItem('garasjegym:infotainment-tab')}catch{}setInfotainmentActive(false)}} timerSnapshot={timerSnapshot}/></Suspense>}
