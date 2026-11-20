@@ -811,3 +811,6 @@ CI: sandbox run `44832677598` SUCCESS; integrated Postgres rehearsal + full buil
 Extended the PostgreSQL 17.12 candidate assertions to invoke the exact `handle_new_auth_user()` trigger function with an existing profile UUID and changed email/display name. It asserts the conflict path updates email only and preserves display_name, role, active and membership_status. Passed; log marker `WAVE1_POSTGRES17_CANDIDATE_TESTS_PASSED`. On commit `b3d2b9fcd57a00c7c2ef0fa7c62d02a822d66020`, full checks + disposable PostgreSQL job `44832920483` SUCCESS and STURMKOPF focused build/test `44832920459` SUCCESS. Detailed report: [GO_LIVE_PHASE_B50_SIGNUP_CONFLICT_PATH_PRESERVATION_2026-11-20.md](./GO_LIVE_PHASE_B50_SIGNUP_CONFLICT_PATH_PRESERVATION_2026-11-20.md).
 
 This remains a PostgreSQL mock fixture, not an actual Supabase Auth/restore test. No production or TEST database changes. Wave 0 remains blocked; production NO-GO.
+
+
+Wave 1 candidate revision pin: `v2/supabase/candidates/wave1_membership_auth_production_candidate.sql` currently has GitHub blob SHA `8e0227bb4fd7159a79635749bb8a91a09a4c7ebe` on the STURMKOPF branch. The Wave 0 owner evidence template now records this exact immutable file revision for approval. If the candidate changes, the owner must review and approve the new blob SHA; this identifier is not a SHA-256 backup checksum.
