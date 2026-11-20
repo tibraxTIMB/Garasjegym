@@ -32,7 +32,7 @@ export function getExerciseMeasurementFlags(exercise = {}) {
   const externalLoad = EXTERNAL_LOAD.test(equipment) || EXTERNAL_LOAD.test(name);
   const ordinaryLoad = LOAD_MOVEMENT.test(name) && !BODYWEIGHT_MOVEMENT.test(name)
     && (!usesHeight || /step.?up|step.?over/i.test(name));
-  const usesLoad = Boolean(exercise.is_complex || hasSavedLoad || externalLoad || ordinaryLoad);
+  const usesLoad = Boolean(exercise.is_complex || hasSavedLoad || externalLoad || ordinaryLoad || !usesHeight);
 
   return { usesHeight, usesLoad };
 }
