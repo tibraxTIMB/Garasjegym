@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MoreHorizontal, X } from 'lucide-react'
 
 const MEMBER_PRIMARY = ['oversikt', 'trening', 'wod', 'timeplan']
@@ -20,6 +20,8 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
   const [moreOpen, setMoreOpen] = useState(false)
   const [moreExpanded, setMoreExpanded] = useState(false)
   const [touchStartY, setTouchStartY] = useState(null)
+  const moreButtonRef = useRef(null)
+  const moreSheetRef = useRef(null)
   const preferred = staff ? STAFF_PRIMARY : MEMBER_PRIMARY
   const primary = preferred.map(id => items.find(item => item.id === id)).filter(Boolean).slice(0, 4)
   const primaryIds = new Set(primary.map(item => item.id))
@@ -28,11 +30,35 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
 
   useEffect(() => {
     if (!moreOpen) return undefined
-    const closeOnEscape = event => {
-      if (event.key === 'Escape') setMoreOpen(false)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const focusable = () => [...(moreSheetRef.current?.querySelectorAll('button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])') || [])]
+    requestAnimationFrame(() => focusable()[0]?.focus())
+    const handleKeyDown = event => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setMoreOpen(false)
+        return
+      }
+      if (event.key !== 'Tab') return
+      const controls = focusable()
+      if (!controls.length) return
+      const first = controls[0]
+      const last = controls[controls.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
-    window.addEventListener('keydown', closeOnEscape)
-    return () => window.removeEventListener('keydown', closeOnEscape)
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+      if (moreButtonRef.current?.isConnected) moreButtonRef.current.focus()
+    }
   }, [moreOpen])
 
   function choose(item) {
@@ -61,8 +87,10 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
           )
         })}
         <button
+          ref={moreButtonRef}
           type="button"
           className={moreOpen || activeInMore ? 'app-mobile-nav-item is-active' : 'app-mobile-nav-item'}
+          aria-label="Opne fleire område"
           aria-expanded={moreOpen}
           aria-controls="app-mobile-more"
           onClick={() => setMoreOpen(value => !value)}
@@ -75,6 +103,7 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
       {moreOpen && (
         <div className="app-more-backdrop" onClick={() => setMoreOpen(false)}>
           <section
+            ref={moreSheetRef}
             id="app-mobile-more"
             className={moreExpanded ? 'app-more-sheet is-expanded' : 'app-more-sheet'}
             onTouchStart={event => setTouchStartY(event.touches[0]?.clientY ?? null)}
