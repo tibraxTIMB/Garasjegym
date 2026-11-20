@@ -41,5 +41,7 @@ jobs:
         run: npm run test:wod-engine
       - name: Test timer clock, split and finish calculations
         run: npm run test:timer-clock
+      - name: Test group class live timer phases
+        run: npm run test:group-class-live-timer
       - name: Build application
         run: npm run build
