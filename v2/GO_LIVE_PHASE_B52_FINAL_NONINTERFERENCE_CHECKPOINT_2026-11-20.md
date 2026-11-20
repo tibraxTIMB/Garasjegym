@@ -44,3 +44,9 @@ The PostgreSQL fixture is not a full Supabase Auth restore or production-data re
 This phase used only aggregate SELECT queries and read-only project inventories against production and TEST. All SQL execution occurred in disposable PostgreSQL 17.12 GitHub Actions containers. No production/TEST DDL/DML, Auth exports/settings, Storage objects, Edge Functions, secrets, hosting publication or paid Supabase resources were used.
 
 **B52 result:** Production data, schema, migration ledger and deployed Edge Function remain unchanged after Wave 1 candidate development and sandbox rehearsal. Production remains **NO-GO** until owner-run encrypted backup, supported Auth recovery and isolated Supabase restore are complete.
+
+
+## CI on B52 checkpoint commit
+- Full GarasjeGym 2.0 checks `44833454126`: SUCCESS, including disposable PostgreSQL 17.12 candidate rehearsal and full app/test bundle.
+- STURMKOPF focused build/test `44833454064`: SUCCESS.
+- Preview workflow `44833454049`: cancelled; no preview deploy.
