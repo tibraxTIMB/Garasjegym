@@ -34,7 +34,7 @@ test('Wave 0 owner approval template pins the exact candidate Git blob revision'
   const candidate = await readFile(candidatePath, 'utf8')
   const templatePath = new URL('../supabase/preflight/wave0_owner_evidence_template.md', import.meta.url)
   const template = await readFile(templatePath, 'utf8')
-  const blobHeader = Buffer.from(`blob ${Buffer.byteLength(candidate)}\\0`)
+  const blobHeader = Buffer.from(`blob ${Buffer.byteLength(candidate)}\0`)
   const blobSha = createHash('sha1').update(blobHeader).update(candidate).digest('hex')
   assert.ok(template.includes(blobSha), `Owner evidence template must pin candidate blob SHA ${blobSha}`)
 })
