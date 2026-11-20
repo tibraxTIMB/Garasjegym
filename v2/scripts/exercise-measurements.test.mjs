@@ -11,6 +11,10 @@ test('plain plyo box exercises use height rather than load', () => {
     getExerciseMeasurementFlags({ name: 'Box Jump Over', equipment: 'Kasse' }),
     { usesHeight: true, usesLoad: false },
   );
+  assert.deepEqual(
+    getExerciseMeasurementFlags({ name: 'Box Step-over', equipment: 'Kasse' }),
+    { usesHeight: true, usesLoad: false },
+  );
 });
 
 test('dumbbell box step-over supports both box height and external load', () => {
