@@ -153,7 +153,8 @@ export default function Infotainment({onExit,timerSnapshot=null}){
  const [elapsed,setElapsed]=useState(0)
  const [running,setRunning]=useState(false)
  const [showDemoClock,setShowDemoClock]=useState(false)
- const [activeTab,setActiveTab]=useState('oversikt')
+ const [activeTab,setActiveTab]=useState(()=>{try{const saved=sessionStorage.getItem('garasjegym:infotainment-tab');return ['oversikt','kalender','musikk','timer'].includes(saved)?saved:'oversikt'}catch{return 'oversikt'}})
+ useEffect(()=>{try{sessionStorage.setItem('garasjegym:infotainment-tab',activeTab)}catch{}},[activeTab])
 
  useEffect(()=>{const id=window.setInterval(()=>setNow(new Date()),1000);return()=>window.clearInterval(id)},[])
  useEffect(()=>{if(!running)return undefined;const id=window.setInterval(()=>setElapsed(value=>value+1),1000);return()=>window.clearInterval(id)},[running])
