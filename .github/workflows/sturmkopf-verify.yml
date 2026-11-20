@@ -45,5 +45,7 @@ jobs:
         run: npm run test:group-class-live-timer
       - name: Test Spotify playback device compatibility
         run: npm run test:spotify-devices
+      - name: Test mobile swipe gesture classification
+        run: npm run test:gestures
       - name: Build application
         run: npm run build
