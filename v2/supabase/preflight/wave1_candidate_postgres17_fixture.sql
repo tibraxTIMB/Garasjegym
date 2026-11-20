@@ -183,3 +183,16 @@ INSERT INTO public.pt_sessions(id,client_id,status) VALUES
  ('30000000-0000-0000-0000-000000000003',NULL,'draft');
 INSERT INTO public.pt_bookings(id,session_id,member_id) VALUES
  ('40000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000002');
+
+-- Assigned-coach relationship tables are created before Wave 2; membership
+-- approval columns are added by the Wave 1 candidate before helper creation.
+CREATE TABLE public.pt_coaches (
+  user_id uuid PRIMARY KEY REFERENCES public.profiles(id) ON DELETE CASCADE,
+  is_active boolean NOT NULL DEFAULT true
+);
+CREATE TABLE public.pt_client_assignments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  coach_user_id uuid NOT NULL REFERENCES public.pt_coaches(user_id) ON DELETE CASCADE,
+  member_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  status text NOT NULL DEFAULT 'active'
+);
