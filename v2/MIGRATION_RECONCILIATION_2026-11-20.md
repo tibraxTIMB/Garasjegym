@@ -19,7 +19,7 @@ The production migration history is intentionally different from the test histor
 
 ## Release implications
 
-1. The test database can now be reproduced from the V2 migration directory by version ordering, subject to confirming all required external prerequisites and environment settings.
+1. The installed test migration ledger is fully represented by V2 SQL files by version. A clean replay in a fresh isolated database has not yet been performed, so full reproducibility is not proven.
 2. This does **not** make the test history safe to replay against production. The test history contains a test-only baseline and test seed migration, and production has a separate 11-version history.
 3. The original SQL source for the 11 production-applied versions must be located/archived or reconstructed from the live production definitions and commit history before final approval.
 4. The production release sequence must be a new reviewed forward-only sequence derived from a production schema capture. It must preserve existing rows and production-only behavior.
