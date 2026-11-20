@@ -39,7 +39,7 @@ export default function CalendarAdmin({onNavigate=()=>{}}){
  useEffect(()=>{load()},[month])
  const rows=useMemo(()=>[
   ...events.filter(x=>!x.class_id&&!x.pt_session_id).map(x=>({...x,source:'manual',type:x.event_type,client_name:clients.find(person=>person.id===x.client_id)?.display_name})),
-  ...sessions.map(x=>({id:'pt-'+x.id,title:x.status==='cancelled'?'AVLYST · '+(x.title||'PT-time'):x.status==='completed'?'FULLFØRT · '+(x.title||'PT-time'):x.title||'PT-time',type:'pt',starts_at:x.starts_at,ends_at:new Date(new Date(x.starts_at).getTime()+(x.duration_minutes||60)*60000).toISOString(),description:x.message||'',source:'pt',status:x.status,client_id:x.client_id,client_name:x.profiles?.display_name})),
+  ...sessions.map(x=>({id:'pt-'+x.id,title:x.status==='cancelled'?'AVLYST · '+(x.title||'PT-time'):x.status==='completed'?'FULLFØRT · '+(x.title||'PT-time'):x.title||'PT-time',type:'pt',starts_at:x.starts_at,ends_at:new Date(new Date(x.starts_at).getTime()+(x.duration_minutes||60)*60000).toISOString(),description:x.cancellation_note||x.message||'',source:'pt',status:x.status,client_id:x.client_id,client_name:x.profiles?.display_name})),
   ...classes.map(x=>({id:'class-'+x.id,title:x.cancelled_at?'AVLYST · '+x.title:x.published===false?'UTKAST · '+x.title:x.title,type:'class',starts_at:x.starts_at,ends_at:new Date(new Date(x.starts_at).getTime()+(x.duration_minutes||60)*60000).toISOString(),description:x.cancellation_note||x.description,published:x.published,cancelled_at:x.cancelled_at,source:'class'}))
  ].sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at)),[events,sessions,classes,clients])
  const days=mode==='day'?1:mode==='week'?7:new Date(month.getFullYear(),month.getMonth()+1,0).getDate()
