@@ -85,7 +85,9 @@
 - Functional smoke result: PASS / FAIL / INCOMPLETE
 - Outstanding deviations:
 - Operator and UTC completion time:
-- Owner approval for Wave 1 candidate hash:
+- Exact Wave 1 candidate path: `v2/supabase/candidates/wave1_membership_auth_production_candidate.sql`
+- Exact GitHub blob SHA to review: `8e0227bb4fd7159a79635749bb8a91a09a4c7ebe`
+- Owner approval for that exact candidate revision:
 - Owner approval for any paid resource (must be explicit and separate):
 
 **Wave 0 passes only when A–E have evidence and no unresolved critical deviation remains.** A public-schema-only restore is not a complete Supabase project recovery. If Auth UUID/password recovery is not demonstrated, Wave 0 remains blocked and production stays NO-GO.
