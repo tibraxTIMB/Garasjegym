@@ -14,6 +14,8 @@ test('parses a 16-bit heart-rate measurement', () => {
 
 test('rejects malformed and implausible heart-rate measurements', () => {
   assert.equal(parseHeartRateMeasurement(new DataView(new ArrayBuffer(1))), null)
+  assert.equal(parseHeartRateMeasurement(new DataView(Uint8Array.from([0x01, 0xc8]).buffer)), null)
+  assert.equal(parseHeartRateMeasurement(new Uint8Array([0, 100])), null)
   assert.equal(parseHeartRateMeasurement(new DataView(Uint8Array.from([0x00, 10]).buffer)), null)
   assert.equal(parseHeartRateMeasurement(new DataView(Uint8Array.from([0x00, 251]).buffer)), null)
   assert.equal(parseHeartRateMeasurement(null), null)
