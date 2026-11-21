@@ -1,16 +1,20 @@
 /* One decision per screen, with the same dark, touch-sized controls throughout. */
 .wod-builder { scroll-margin-top:76px; }
 .wod-builder .gg-wizard-progress {
-  display:flex!important;flex-wrap:wrap!important;gap:7px!important;
-  align-items:center!important;min-width:0!important;margin:8px 0 16px!important;
+  display:grid!important;gap:5px!important;align-items:stretch!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  min-width:0!important;margin:6px 0 11px!important;
 }
+.wod-builder .gg-wizard-progress[data-step-count="4"] { grid-template-columns:repeat(4,minmax(0,1fr))!important; }
 .wod-builder .gg-wizard-progress button {
-  display:flex;align-items:center;gap:7px;flex:1 1 90px;min-width:0;
-  padding:8px 10px;min-height:44px;background:#172329;color:#dce6e8;
-  border:1px solid #43535d;border-radius:11px;font-size:12px;font-weight:750;
+  display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
+  gap:4px!important;min-width:0!important;min-height:57px!important;padding:6px 2px!important;
+  background:#172329;color:#dce6e8;border:1px solid #43535d;border-radius:9px;
+  font-size:clamp(10px,2.4vw,12px)!important;line-height:1.1!important;font-weight:750;
+  white-space:nowrap;overflow:hidden;
 }
 .wod-builder .gg-wizard-progress button b {
-  display:grid;place-items:center;width:24px;height:24px;flex:0 0 24px;
+  display:grid;place-items:center;width:23px;height:23px;flex:0 0 23px;
   background:#2b414b;color:#f6f8f8;border-radius:50%;font-size:12px;
 }
 .wod-builder .gg-wizard-progress button.active { background:#46301c;border-color:#e4a049;color:#fff; }
@@ -58,9 +62,8 @@
 .gg-analog-time-head { display:grid;gap:4px;text-align:center; }
 .gg-analog-time-head strong { font-size:18px; }
 .gg-analog-time-head small { color:#bfccd2;font-size:12px; }
-.gg-time-presets { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px; }
-.gg-time-presets button,.gg-cap-choice button { min-height:44px;padding:7px 5px;background:#25353e;color:#ecf2f5;border:1px solid #526671;border-radius:10px;font-size:13px;font-weight:800; }
-.gg-time-presets button.active,.gg-cap-choice button.selected { background:#9c4910;color:#fff;border-color:#eda448; }
+.gg-cap-choice button { min-height:44px;padding:7px 5px;background:#25353e;color:#ecf2f5;border:1px solid #526671;border-radius:10px;font-size:13px;font-weight:800; }
+.gg-cap-choice button.selected { background:#9c4910;color:#fff;border-color:#eda448; }
 .gg-analog-time-wheel { position:relative;width:min(100%,300px);aspect-ratio:1;margin:0 auto; }
 .gg-time-clock-face { display:block;width:100%;height:100%;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none; }
 .gg-time-clock-face:active { cursor:grabbing; }
@@ -89,8 +92,10 @@
 .gg-quick-dosage { display:grid;gap:11px;padding-top:12px;min-width:0; }
 .gg-quick-dose-heading { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px; }
 .gg-quick-dose-heading strong { font-size:15px;color:#fff; }
+.gg-quick-dose-heading small { font-size:12px;color:#b8cbd2; }
 .gg-quick-dose-heading button { min-height:40px;padding:8px 11px;border-radius:9px;border:1px solid #6b7478;background:#22343d;color:#ffce91;font-size:12px;font-weight:800; }
-.gg-level-row { display:grid;grid-template-columns:minmax(80px,.2fr) minmax(0,1fr);gap:12px;min-width:0;padding:12px;border:1px solid #455861;border-left:4px solid #89d8a7;border-radius:12px;background:#17252c; }
+.gg-level-row { display:grid;grid-template-columns:minmax(70px,.14fr) minmax(0,1fr);gap:12px;min-width:0;padding:12px;border:1px solid #455861;border-left:4px solid #89d8a7;border-radius:12px;background:#17252c; }
+.gg-level-row.gg-level-intermediate { border-left-color:#f0c46d; }
 .gg-level-row.gg-level-scaled { border-left-color:#92c9fb; }
 .gg-level-row.gg-level-foundation { border-left-color:#dcb2fd; }
 .gg-level-row>strong { color:#fff;font-size:14px;padding-top:9px; }
@@ -104,6 +109,11 @@
 .gg-box-height button.selected { background:#ac560e;border-color:#eda448; }
 .gg-dose-alt-mode { grid-column:1/-1;color:#c7d1d7;padding:8px; }
 .gg-quick-dosage>small { color:#aebfc8;font-size:12px; }
+.gg-secondary-dosage { min-width:0;padding:7px 10px;border:1px solid #455b66;border-radius:11px;background:#111f26; }
+.gg-secondary-dosage>summary { display:flex;align-items:center;min-height:44px;cursor:pointer;color:#ffce88;font-weight:850;font-size:14px; }
+.gg-secondary-dosage>p { margin:3px 0 11px;color:#c4d1d5;font-size:13px; }
+.gg-secondary-dosage .gg-level-row { margin:9px 0; }
+.gg-copy-rx { min-height:42px;padding:8px 12px;border:1px solid #5d707b;border-radius:9px;background:#263740;color:#f5ca98;font-weight:800; }
 .gg-dose-advanced { border:1px solid #415864;border-radius:11px;padding:8px 11px;margin-top:13px;background:#111f26; }
 .gg-dose-advanced summary { cursor:pointer;color:#ffcb84;min-height:42px;display:flex;align-items:center;font-weight:800;font-size:14px; }
 .gg-dose-advanced[open] summary { border-bottom:1px solid #3a4a52;margin-bottom:10px; }
@@ -140,6 +150,9 @@
 .gg-review-levels>div { display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:#e0e8ea; }
 .gg-review-levels b { min-width:94px;color:#f7bf72; }
 .gg-review-levels span { flex:1;min-width:0;overflow-wrap:break-word; }
+.gg-review-optional { border-top:1px solid #3e505a;padding:6px 0 0; }
+.gg-review-optional summary { min-height:34px;cursor:pointer;font-weight:750;color:#efbd83; }
+.gg-review-optional>div { display:flex;gap:10px;flex-wrap:wrap;margin:7px 0; }
 .gg-review-edit { justify-self:start;min-height:42px;padding:7px 13px;border-radius:9px;background:#283c47;border:1px solid #657881;color:#fff;font-weight:800; }
 .gg-review-notes { border:1px solid #4d6068;border-radius:12px;padding:10px 12px; }
 .gg-review-notes summary { color:#f8bb70;cursor:pointer;min-height:42px;font-weight:800; }
@@ -151,6 +164,15 @@
 .wod-builder-step-2 .wod-composer .wod-selected-list { max-height:none!important;overflow:visible!important; }
 .gg-custom-options label { display:grid;gap:6px;margin:9px 0;color:#e3edf0;font-size:13px; }
 .gg-custom-options input:not([type=checkbox]),.gg-custom-options textarea { width:100%;padding:10px;background:#12222a;color:#fff;border:1px solid #566b76;border-radius:9px; }
+.wod-builder-step-3 .wizard-dose-stage .wizard-stage-actions,
+.wod-builder-step-4 .wizard-final-stage .wizard-stage-actions { position:static!important;inset:auto!important;transform:none!important;margin:10px 0 0!important;box-shadow:none!important; }
+.wod-builder-step-3 .wizard-dose-stage { padding-bottom:calc(105px + env(safe-area-inset-bottom,0px))!important; }
+.wod-builder-step-4 .wizard-final-stage { padding-bottom:calc(105px + env(safe-area-inset-bottom,0px))!important; }
+.wod-library-portal .gg-picker-feedback { position:sticky;top:54px;z-index:25;display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:9px 13px;margin:7px 0;border:1px solid #4e9d73;border-radius:10px;background:#133226;color:#e6fff0;font-size:13px;line-height:1.3;box-shadow:0 4px 15px #0005; }
+.wod-library-portal .gg-picker-feedback>span { font-size:18px;color:#a4f5bb; }
+.wod-library-portal .wod-picked-count { padding:4px 6px;border-radius:6px;background:#1c5136;color:#d7ffe4!important;font-size:11px!important;line-height:1.2; }
+.wod-library-portal .wod-exercise-card.is-picked .wod-add-button { background:#24583d!important;border-color:#72c98f!important;color:#effff3!important; }
+.wod-library-portal .wod-exercise-card .wod-add-button { display:flex!important;gap:7px;align-items:center;justify-content:center;min-height:44px!important;font-size:13px!important;font-weight:850!important; }
 
 @media(max-width:720px) {
  .gg-featured-formats { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -168,7 +190,9 @@
 @media(max-width:390px){
  .gg-featured-formats { gap:8px; }
  .gg-featured-formats>button { min-height:116px;padding:10px; }
- .gg-time-presets button { font-size:12px; }
+ .wod-builder .gg-wizard-progress { gap:3px!important; }
+ .wod-builder .gg-wizard-progress button { min-height:51px!important;padding:4px 1px!important;font-size:10px!important; }
+ .wod-builder .gg-wizard-progress button b { width:20px;height:20px;flex-basis:20px;font-size:11px; }
  .gg-reorder-buttons { gap:3px;padding:3px; }
  .gg-reorder-buttons button { width:42px;min-width:42px;height:42px; }
 }

@@ -3,7 +3,7 @@ import { clampWodDuration, dialValueFromPoint } from '../lib/wodTimeDial.js'
 
 const pad = value => String(value).padStart(2, '0')
 
-export default function WodTimeDial({ label, value, onChange, unit = 'min', presets = [8, 12, 16, 20], maximum = 600 }) {
+export default function WodTimeDial({ label, value, onChange, unit = 'min', maximum = 600 }) {
   const dragging = useRef(false)
   const number = clampWodDuration(value, maximum)
   const dialNumber = Math.min(60, number)
@@ -22,9 +22,6 @@ export default function WodTimeDial({ label, value, onChange, unit = 'min', pres
 
   return <section className="gg-analog-time" aria-label={label}>
     <div className="gg-analog-time-head"><strong>{label}</strong><small>Trykk eller dra visaren · juster nøyaktig med + / −</small></div>
-    <div className="gg-time-presets" role="group" aria-label="Snøggval for tid">
-      {presets.map(preset => <button type="button" key={preset} aria-pressed={number === preset} className={number === preset ? 'active' : ''} onClick={() => set(preset)}>{preset} {unit}</button>)}
-    </div>
     <div className="gg-analog-time-wheel">
       <svg className="gg-time-clock-face" viewBox="0 0 240 240" role="slider" tabIndex={0} aria-label={`${label}, ${number} ${unit}`} aria-valuemin={1} aria-valuemax={maximum} aria-valuenow={number} aria-valuetext={`${number} ${unit}`} onKeyDown={event => {if(event.key==='ArrowRight'||event.key==='ArrowUp'){event.preventDefault();set(number+1)}else if(event.key==='ArrowLeft'||event.key==='ArrowDown'){event.preventDefault();set(number-1)}else if(event.key==='Home'){event.preventDefault();set(1)}else if(event.key==='End'){event.preventDefault();set(maximum)}}} onPointerDown={event => {event.currentTarget.setPointerCapture(event.pointerId);dragging.current=true;readPointer(event)}} onPointerMove={event => {if(dragging.current)readPointer(event)}} onPointerUp={event => {if(dragging.current)readPointer(event);dragging.current=false;if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId)}} onPointerCancel={() => {dragging.current=false}}>
         <circle cx="120" cy="120" r="87" fill="#0d171c" stroke="#354b56" strokeWidth="11"/>
