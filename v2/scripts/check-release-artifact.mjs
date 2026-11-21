@@ -2,8 +2,8 @@ import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 
 const dist = path.resolve('dist')
-const expectedTestProject = 'izwzwvlexqxqewzijhhd'
-const forbiddenProductionProject = 'kultdmklwmilhoytrrig'
+const expectedProject = process.env.EXPECTED_SUPABASE_PROJECT_REF || 'izwzwvlexqxqewzijhhd'
+const knownProjectRefs = ['izwzwvlexqxqewzijhhd', 'kultdmklwmilhoytrrig']
 const releaseName = 'STURMKOPF FEUER 1.1'
 
 async function walk(directory) {
@@ -30,8 +30,12 @@ const contents = await Promise.all(textFiles.map(file => readFile(file, 'utf8'))
 const bundle = contents.join('\n')
 const failures = []
 
-if (!bundle.includes(expectedTestProject)) failures.push('TEST Supabase project reference is missing')
-if (bundle.includes(forbiddenProductionProject)) failures.push('Production Supabase project reference found in client artifact')
+if (!bundle.includes(expectedProject)) failures.push(`Expected Supabase project reference is missing: ${expectedProject}`)
+for (const projectRef of knownProjectRefs) {
+  if (projectRef !== expectedProject && bundle.includes(projectRef)) {
+    failures.push(`Unexpected Supabase project reference found in client artifact: ${projectRef}`)
+  }
+}
 if (bundle.includes('service_role')) failures.push('service_role literal found in client artifact')
 if (/sb_secret_[A-Za-z0-9_-]{20,}/.test(bundle)) failures.push('Potential Supabase secret key value found in client artifact')
 if (!bundle.includes(releaseName)) failures.push(`Release label missing: ${releaseName}`)
@@ -47,5 +51,5 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`)
   process.exitCode = 1
 } else {
-  console.log(`Release artifact safety check passed: ${files.length} files, TEST project only, ${releaseName}`)
+  console.log(`Release artifact safety check passed: ${files.length} files, Supabase project ${expectedProject}, ${releaseName}`)
 }
