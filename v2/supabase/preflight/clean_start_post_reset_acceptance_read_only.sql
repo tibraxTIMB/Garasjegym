@@ -113,6 +113,7 @@ operational_counts AS (
   UNION ALL SELECT 'pt_client_notes',count(*) FROM public.pt_client_notes
   UNION ALL SELECT 'pt_coaches',count(*) FROM public.pt_coaches
   UNION ALL SELECT 'pt_intakes',count(*) FROM public.pt_intakes
+  UNION ALL SELECT 'pt_messages',count(*) FROM public.pt_messages
   UNION ALL SELECT 'pt_program_sessions',count(*) FROM public.pt_program_sessions
   UNION ALL SELECT 'pt_program_templates',count(*) FROM public.pt_program_templates
   UNION ALL SELECT 'pt_programs',count(*) FROM public.pt_programs
@@ -128,6 +129,7 @@ operational_counts AS (
   UNION ALL SELECT 'training_sessions',count(*) FROM public.training_sessions
   UNION ALL SELECT 'wod_daily_schedules',count(*) FROM public.wod_daily_schedules
   UNION ALL SELECT 'wod_favorites',count(*) FROM public.wod_favorites
+  UNION ALL SELECT 'wods',count(*) FROM public.wods
   UNION ALL SELECT 'workout_exercises',count(*) FROM public.workout_exercises
   UNION ALL SELECT 'workout_logs',count(*) FROM public.workout_logs
   UNION ALL SELECT 'workout_sets',count(*) FROM public.workout_sets
