@@ -104,7 +104,7 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
         </div>
         <div className="eyebrow"><ShieldCheck size={14} /> MEDLEMSOMRÅDE</div>
         <h1>{mode === 'login' ? <>Velkomen <em>tilbake.</em></> : <>Nytt <em>passord.</em></>}</h1>
-        <p className="auth-intro">{mode === 'reset' ? 'Skriv inn e-postadressa di, så sender me ei lenkje for å nullstilla passordet.' : 'Vel eit nytt passord for GarasjeGym-kontoen din.'}</p>
+        <p className="auth-intro">{mode === 'reset' ? 'Skriv inn e-postadressa di, så sender me ei lenkje for å nullstilla passordet.' : mode === 'update' ? 'Vel eit unikt passord på minst 12 teikn for GarasjeGym-kontoen din.' : 'Logg inn med den personlege GarasjeGym-kontoen din.'}</p>
         <form className="auth-form" onSubmit={submit}>
           {mode !== 'update' && <label>
             E-post
@@ -112,7 +112,7 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
           </label>}
           {mode !== 'reset' && <label>
             Passord
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={6} placeholder="Passord" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={mode === 'update' ? 12 : undefined} placeholder="Passord" />
           </label>}
           {error && <div className="auth-error" role="alert">{error}</div>}
           {message && <div className="auth-message" role="status">{message}</div>}
