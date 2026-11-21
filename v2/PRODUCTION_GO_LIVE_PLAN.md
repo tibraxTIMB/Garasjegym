@@ -1,4 +1,9 @@
+Warning: truncated output (original token count: 22220)
+Total output lines: 835
+
 # Production GO LIVE – reconciliation and release plan
+
+> **2026-11-21 Free-plan correction:** Official [Supabase password-security documentation](https://supabase.com/docs/guides/auth/password-security) limits leaked-password protection to Pro and above. The user's zero-cost constraint supersedes historical requirements below to enable it: **do not upgrade or pay**. On Free, verify a minimum password length of at least 12 characters, strongest available character requirements, disabled public signup, unique owner/admin credentials, tested owner/admin MFA, and working invitation/password recovery. Record owner acceptance that leaked-password screening is unavailable on Free. Follow `GO_LIVE_OWNER_BACKUP_RESTORE_AND_ADMIN_CHECKLIST.md`. All backup, Auth-preserving restore, reconciliation, clean-start and RLS gates remain mandatory; Production remains NO-GO.
 
 **Status:** NO-GO – Phase A capture recorded; backup/recovery evidence and production-derived migration rehearsal remain blocked  
 **Last verified:** 2026-11-20  
@@ -477,87 +482,7 @@ Fresh project checks show production and test are both `ACTIVE_HEALTHY`. There a
 
 The connected tools do not expose completed backup timestamps, PITR retention/recovery windows or restore outcomes. Project health must not be treated as backup evidence. No restore resource was created and no paid resource was requested.
 
-Wave 0 remains blocked until the owner supplies the latest completed production backup timestamp/timezone, PITR status and recovery window, any backup warnings, and confirmation that an isolated restore can be performed without unapproved cost. A successful isolated restore and rehearsal must precede any production changes.
-
-The exact evidence checklist and stop conditions are in [GO_LIVE_PHASE_B16_WAVE0_RECOVERY_GATE_REVALIDATION_2026-11-20.md](./GO_LIVE_PHASE_B16_WAVE0_RECOVERY_GATE_REVALIDATION_2026-11-20.md).
-
-**B16 outcome:** Recovery gate revalidated and still NOT PASSED. No production/test database changes, restore, Auth/Edge Function changes or deployment were performed. Release remains **NO-GO**.
-
-
-## 16. Phase B17 – executable read-only production preflight (2026-11-20)
-
-Added `v2/supabase/preflight/production_wave_preflight_read_only.sql`, a SELECT-only preflight for required table/column presence and RLS enablement. Executed the query against production.
-
-It confirms core membership/class/PT legacy/WOD/workout/social tables exist, but the V2 PT Studio, notifications, coffee, calendar and WOD favorites tables are absent. The contract columns `profiles.email`, `profiles.membership_status`, `classes.published`, `classes.instructor_id` and `class_bookings.attendance_status` are absent. `workout_logs.result_data` is present. RLS is enabled on all public base tables returned, but this does not establish policy correctness.
-
-The full result and consequences are in [GO_LIVE_PHASE_B17_EXECUTABLE_PRODUCTION_PREFLIGHT_2026-11-20.md](./GO_LIVE_PHASE_B17_EXECUTABLE_PRODUCTION_PREFLIGHT_2026-11-20.md).
-
-**B17 outcome:** A reproducible production schema gate is now committed and executed. No DDL/DML, Auth, Edge Function, secret or deployment changes were made. Backup/PITR and isolated restore remain hard blockers. Release remains **NO-GO**.
-
-
-## 17. Phase B18 – backup capability and zero-budget recovery path (2026-11-20)
-
-The connected Supabase organization record confirms the organization is on the **Free** plan. Current Supabase documentation states that automated daily backups are provided on Pro, Team and Enterprise, while Free projects should use Supabase CLI logical dumps and off-site backups. PITR is a paid add-on for Pro/Team/Enterprise and requires at least Small compute.
-
-This corrects the Wave 0 diagnosis: the absence of daily backup/PITR evidence is expected on the current Free plan, not simply a missing dashboard lookup. To preserve the zero-budget constraint, the viable path is a private logical database dump via Supabase CLI, a separate Storage-object export, secure off-site copies and a successful isolated restore rehearsal. A logical dump is not equivalent to provider-managed PITR.
-
-No plan upgrade, PITR, compute upgrade, new project/branch, export or restore was performed. The backup contains private member data and must remain encrypted and outside GitHub/chat. The full owner-workstation procedure and acceptance criteria are in [GO_LIVE_PHASE_B18_FREE_PLAN_BACKUP_RECOVERY_PATH_2026-11-20.md](./GO_LIVE_PHASE_B18_FREE_PLAN_BACKUP_RECOVERY_PATH_2026-11-20.md).
-
-**B18 outcome:** Zero-budget recovery path prepared. Wave 0 remains NOT PASSED until the logical dump, Storage export and isolated restore are executed and verified. Production remains NO-GO.
-
-
-## 18. Phase B19 – logical backup coverage gate (2026-11-20)
-
-Current Supabase CLI documentation confirms `supabase db dump` excludes managed schemas including `auth` and `storage`; default dump is schema-only, while data and custom roles require separate `--data-only` and `--role-only` exports. Storage object bytes are not included in database dumps. Therefore a standard CLI dump is not a complete GarasjeGym project backup.
-
-Wave 0 must separately establish Auth identity recovery, Storage metadata/object recovery, Edge Function source/config and Auth provider settings. If Auth recovery cannot be proven on the current Free plan, the owner must explicitly accept a documented recovery limitation or approve another supported backup approach. Do not claim full recovery based on public schema/data dumps alone.
-
-The detailed coverage matrix, command outline and acceptance gate are recorded in [GO_LIVE_PHASE_B19_LOGICAL_BACKUP_COVERAGE_GATE_2026-11-20.md](./GO_LIVE_PHASE_B19_LOGICAL_BACKUP_COVERAGE_GATE_2026-11-20.md).
-
-**B19 outcome:** Logical database dump alone is insufficient for full project recovery. No export or restore was performed. Wave 0 and production release remain **NO-GO**.
-
-
-## 19. Phase B20 – Auth and Storage recovery inventory (2026-11-20)
-
-Fresh aggregate-only production queries (no personal fields retrieved) show `auth.users` 3 rows, `auth.identities` 3 rows, `auth.sessions` 12 rows, `storage.buckets` 0 rows and `storage.objects` 0 rows. Auth users/identities must be securely preserved with their UUIDs. Active sessions should be invalidated on restore and users required to re-authenticate. Storage is currently empty, but must be rechecked at backup time.
-
-Supabase's CLI dump reference and platform-to-self-hosted restore guide are not fully aligned about whether Auth schema data is included. The actual dump files must be inspected; do not assume. Supabase documents Auth user export via SQL Editor. Any Auth export may contain password hashes and personal information and must remain encrypted, private and outside GitHub/chat.
-
-Detailed recovery requirements and counts are in [GO_LIVE_PHASE_B20_AUTH_STORAGE_RECOVERY_INVENTORY_2026-11-20.md](./GO_LIVE_PHASE_B20_AUTH_STORAGE_RECOVERY_INVENTORY_2026-11-20.md).
-
-**B20 outcome:** Auth/Storage recovery inventory completed with aggregate counts only; no export or restore was performed. Wave 0 remains NOT PASSED. Production remains NO-GO.
-
-
-## 20. Phase B21 – fresh security and performance advisor gate (2026-11-20)
-
-Fresh read-only production advisors report:
-- 4 authenticated SECURITY DEFINER warnings: `book_pt_session`, `is_active_user`, `is_admin`, `is_admin_or_manager`.
-- 1 Auth warning: leaked password protection disabled.
-- Performance: 14 unindexed foreign keys, 34 RLS init-plan warnings, 10 unused indexes, 3 tables with multiple permissive policies (`exercises`, `pt_session_exercises`, `wods`).
-
-Test advisors report 25 SECURITY DEFINER warnings, leaked password protection disabled and 47 unused-index findings; test and production schema sizes differ and counts are not directly comparable.
-
-No grants, functions, policies, indexes or Auth settings were changed. Do not mass-revoke, convert all SECURITY DEFINER helpers or drop indexes from advisor output alone. Remediation order and validation requirements are in [GO_LIVE_PHASE_B21_SECURITY_PERFORMANCE_ADVISOR_GATE_2026-11-20.md](./GO_LIVE_PHASE_B21_SECURITY_PERFORMANCE_ADVISOR_GATE_2026-11-20.md).
-
-**B21 outcome:** Fresh security/performance baseline recorded. Production remains NO-GO pending Wave 0 recovery and schema migration gates.
-
-
-## 21. Phase B22 – hosting and deployment isolation revalidation (2026-11-20)
-
-Reviewed the three current workflows. The Pages preview build uses TEST Supabase izwzwvlexqxqewzijhhd, not production. Pushes build an artifact only; publishing the shared Pages URL requires manual workflow_dispatch with publish_preview=true and replaces the current shared Pages content. The STURMKOPF verification workflow runs targeted tests/build; the GarasjeGym 2.0 workflow runs full tests/build. Neither applies migrations or deploys production.
-
-The B20 Pages run built successfully but its deploy job was skipped, so it did not publish. No dedicated production workflow exists. A future production workflow requires a protected manual environment, production-only variables, exact artifact provenance, production-derived migrations, backup/restore gate, pre/postflight and smoke tests. Do not add/activate it until recovery and migration rehearsals pass.
-
-Full workflow audit is in [GO_LIVE_PHASE_B22_HOSTING_DEPLOYMENT_ISOLATION_2026-11-20.md](./GO_LIVE_PHASE_B22_HOSTING_DEPLOYMENT_ISOLATION_2026-11-20.md).
-
-**B22 outcome:** Preview/production separation revalidated. No production workflow or deploy was added. Production remains NO-GO.
-
-
-## 22. Phase B23 – production data-preservation baseline (2026-11-20)
-
-Captured a fresh aggregate-only production baseline at 22:16:27 UTC: 3 profiles (1 admin, 2 members; all active), 1 class, 1 confirmed class booking, 1 legacy PT session, 1 PT booking, 1 WOD, 1 standalone PR, 0 workout logs/exercises/sets, 3 Auth users, 3 identities, 12 sessions and 0 Storage buckets/objects. The sole PR has no linked workout log and must remain standalone.
-
-Explicitly prohibited test-only replay sources: the test seed migration inserts demo exercises/WOD/coffee/class; the first-signup bootstrap promotes the first account to admin; the test baseline is schema-only and not a production migration. Test and production migration ledgers are independent; do not replay the test chain.
+Wave 0 remains blocked until the owner supplies…2220 tokens truncated… do not replay the test chain.
 
 B22 CI on commit bfed0bbf753bff31a355dfbd3b1b6b28e82d167d: STURMKOPF focused tests/build SUCCESS, full GarasjeGym checks SUCCESS, Pages build SUCCESS (attempt 2), Pages deploy SKIPPED. No publication occurred.
 

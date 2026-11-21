@@ -52,7 +52,7 @@ Production function differences to reconcile:
 - `is_active_user()`, `is_admin()`, and `is_admin_or_manager()` must enforce approved membership as in the current TEST target.
 - `book_pt_session(uuid)` must only book public unassigned sessions (`client_id IS NULL`).
 - Review all SECURITY DEFINER RPCs by intended caller and authorization boundary. Do not blanket-revoke helpers used by RLS.
-- Enable leaked-password protection in Auth security settings and verify the effective setting.
+- **Free-plan password gate:** Supabase leaked-password protection is available only on Pro and above; do not upgrade or incur cost to satisfy this gate. On Free, configure and verify a minimum password length of at least 12 characters and the strongest available character requirements in Auth settings. Disable public signup (section 4), use unique password-manager-generated owner/admin passwords, enable and test MFA for the owner/admin account, and test invitation and password-recovery flows. Record owner acceptance of the residual risk that leaked passwords are not screened on Free. See [Supabase password security](https://supabase.com/docs/guides/auth/password-security) and [MFA](https://supabase.com/docs/guides/auth/auth-mfa).
 - Run positive and negative class/PT/member-isolation tests against the Production-shaped restored schema.
 
 ## 4. Invitation-only Auth configuration
@@ -111,7 +111,7 @@ The current catalogue has 135 distinct names, but this is provisional until sema
 - [ ] `admin-create-user` remains disabled (HTTP 410); no in-app account creation.
 - [ ] Supabase Auth **Allow new users to sign up** is disabled; dashboard invitation flow tested and creates pending profiles.
 - [ ] Positive and negative class/PT/member-isolation tests pass.
-- [ ] Leaked-password protection enabled and verified.
+- [ ] Free-plan Auth password minimum >=12 and strongest available character requirements verified; owner/admin MFA and invitation/recovery flows tested; leaked-password screening unavailable on Free and residual risk accepted (no paid upgrade).
 - [ ] Exercise semantic aliases and category mapping reviewed; exact catalogue manifest approved.
 - [ ] Clean-start rehearsal completed on isolated restored copy.
 - [ ] Exactly one newly created owner-admin Auth identity/profile verified.
