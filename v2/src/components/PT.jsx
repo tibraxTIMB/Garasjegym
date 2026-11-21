@@ -15,7 +15,27 @@ function CalendarSelect({value,onChange,label='Vel dato'}) {
  const selected=value?value.slice(0,10):'',time=value&&value.length>10?value.slice(11,16):'10:00'
  const year=month.getFullYear(),m=month.getMonth(),first=new Date(year,m,1).getDay(),offset=(first+6)%7,days=new Date(year,m+1,0).getDate()
  const dateKey=d=>year+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0')
- return <div className="pt-calendar-picker"><strong>{label}</strong><button type="button" className="pt-calendar-toggle" onClick={()=>setOpen(v=>!v)}><CalendarClock size={16}/>{value?new Date(value).toLocaleString('nn-NO',{dateStyle:'medium',timeStyle:'short'}):'Vel dato og klokkeslett'}<span>{open?'Lukk':'Opne kalender'}</span></button>{open&&<div className="pt-calendar"><div className="pt-calendar-head"><strong>{month.toLocaleDateString('nn-NO',{month:'long',year:'numeric'})}</strong><div><button type="button" onClick={()=>setMonth(new Date(year,m-1,1))}>‹</button><button type="button" onClick={()=>setMonth(new Date(year,m+1,1))}>›</button></div></div><div className="pt-calendar-grid">{['M','T','O','T','F','L','S'].map((d,i)=><span className="pt-calendar-weekday" key={i}>{d}</span>)}{Array.from({length:offset},(_,i)=><span key={'blank'+i}/>)}{Array.from({length:days},(_,i)=>i+1).map(d=><button type="button" key={d} className={selected===dateKey(d)?'selected':''} onClick={()=>onChange(dateKey(d)+'T'+time)}>{d}</button>)}</div><label className="pt-calendar-time">Klokkeslett<input type="time" value={time} onChange={e=>onChange((selected||dateKey(new Date().getDate()))+'T'+e.target.value)}/></label><button type="button" className="primary-button" onClick={()=>setOpen(false)}>Bruk tidspunkt</button></div>}</div>
+ const today=new Date()
+ const todayKey=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0')
+ const displayDate=value?new Date(value):null
+ const displayLabel=displayDate&&Number.isFinite(displayDate.getTime())
+  ?displayDate.toLocaleDateString('nn-NO',{day:'numeric',month:'short',year:'numeric'})+' · '+displayDate.toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'})
+  :'Vel dato og klokkeslett'
+ return <div className="pt-calendar-picker">
+  <strong>{label}</strong>
+  <button type="button" className="pt-calendar-toggle" aria-expanded={open} onClick={()=>setOpen(v=>!v)}>
+   <CalendarClock size={18}/><span className="pt-calendar-toggle-date">{displayLabel}</span><span className="pt-calendar-toggle-action">{open?'Lukk':'Vel dato'}</span>
+  </button>
+  {open&&<div className="pt-calendar">
+   <div className="pt-calendar-head"><strong>{month.toLocaleDateString('nn-NO',{month:'long',year:'numeric'})}</strong><div><button type="button" className="pt-calendar-today-jump" onClick={()=>setMonth(new Date(today.getFullYear(),today.getMonth(),1))}>I dag</button><button type="button" aria-label="Førre månad" onClick={()=>setMonth(new Date(year,m-1,1))}>‹</button><button type="button" aria-label="Neste månad" onClick={()=>setMonth(new Date(year,m+1,1))}>›</button></div></div>
+   <div className="pt-calendar-grid">{['Mån','Tys','Ons','Tor','Fre','Lau','Sun'].map((d,i)=><span className="pt-calendar-weekday" key={i}>{d}</span>)}
+    {Array.from({length:offset},(_,i)=><span className="pt-calendar-empty" key={'blank'+i}/>)}
+    {Array.from({length:days},(_,i)=>i+1).map(d=>{const date=dateKey(d),isToday=date===todayKey,isSelected=date===selected;return <button type="button" key={d} className={[isToday?'is-today':'',isSelected?'selected':''].filter(Boolean).join(' ')} aria-current={isToday?'date':undefined} aria-label={`${d}. ${month.toLocaleDateString('nn-NO',{month:'long',year:'numeric'})}${isToday?' · i dag':''}`} aria-pressed={isSelected} onClick={()=>onChange(date+'T'+time)}>{d}</button>})}
+   </div>
+   <label className="pt-calendar-time">Klokkeslett<input type="time" value={time} onChange={e=>onChange((selected||todayKey)+'T'+e.target.value)}/></label>
+   <button type="button" className="primary-button" onClick={()=>setOpen(false)}>Bruk tidspunkt</button>
+  </div>}
+ </div>
 }
 export default function PT({profile,coachMode=false,focusRequestId,onFocusConsumed,onLaunchWorkout,controlledClientId,hideCustomerPicker=false,onClientChange,focusPanel=null,onFocusPanelConsumed}){
   useEffect(()=>{if(controlledClientId!==undefined){const nextClient=controlledClientId||'';setActiveClient(nextClient);setCustomerDraft(nextClient);setMessageClient(nextClient);setNoteClient(nextClient)}},[controlledClientId])
