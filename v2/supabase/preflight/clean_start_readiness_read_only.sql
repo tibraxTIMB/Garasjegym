@@ -1,6 +1,11 @@
 -- Read-only clean-start preflight. Does not modify any data.
--- Run only against the isolated full-schema restore after migrations are rehearsed.
--- Returns aggregate counts only; no member PII or secrets.
+-- IMPORTANT: run only against an isolated restore derived from Production after
+-- the reviewed schema migrations are applied. Do NOT use the current TEST
+-- project's own exercise seed as a proxy for Production's original 56 rows:
+-- the TEST seed is a separate catalog (94 system rows at the last audit).
+-- The contract below checks the exact original Production exercise names and
+-- categories survive the migration/restore. Extra system catalog rows added by
+-- reviewed catalog migrations may coexist; custom created_by rows must be 0.
 
 WITH expected_tables(table_name, retain_policy) AS (
   VALUES
