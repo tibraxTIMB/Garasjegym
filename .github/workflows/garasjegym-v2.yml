@@ -38,6 +38,8 @@ jobs:
         run: npm run build
       - name: Check built release artifact environment and secrets
         working-directory: v2
+        env:
+          EXPECTED_SUPABASE_PROJECT_REF: izwzwvlexqxqewzijhhd
         run: npm run check:release-artifact
 
   wave1-candidate-postgres17:
