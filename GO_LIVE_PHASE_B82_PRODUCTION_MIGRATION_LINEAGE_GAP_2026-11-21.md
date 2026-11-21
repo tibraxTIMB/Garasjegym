@@ -27,3 +27,10 @@ Do not replay the active branch's 164 SQL files directly against Production. Do 
 
 ## Safety
 This was a repository-tree and read-only migration-ledger comparison. No production schema, data, Auth, policies, grants or deployment was changed.
+## B87 follow-up – repository-history recovery search (read-only)
+
+A second recovery pass queried GitHub commit history for each of the 11 exact Production ledger paths under `v2/supabase/migrations`. No commits were returned for any exact timestamped path. A repository-tree scan found only four same-suffix branch files under different timestamps (the four already listed above); the other seven descriptive suffixes were not present in the current repository tree. Exact-name GitHub code searches also returned no matching source files.
+
+This means the exact historical SQL is not recoverable from the checked-in GitHub path history or current branch tree. It does **not** prove that no owner-local working copy, old release archive, or external backup exists; those remain the only plausible source for byte-identical historical SQL. Until such a source is found, treat all 11 historical migrations as unrecovered and retain the forward-only reconciliation path. Never fabricate historical files or edit the live migration ledger to make the audit appear clean.
+
+No Production or TEST schema, data, migration ledger, Auth, policy or deployment was changed by this search.
