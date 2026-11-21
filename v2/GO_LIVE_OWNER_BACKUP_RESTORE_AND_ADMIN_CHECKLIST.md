@@ -83,7 +83,8 @@ This is a separate operation from backup/restore. Rehearse the exact reset again
 - Custom/user-created exercise rows; retain the approved standard system catalogue only.
 
 **Create the new owner account:**
-- Create exactly one new owner-controlled Auth user and its profile.
+- Through Supabase Dashboard → Authentication → Users, create exactly one new owner-controlled email Auth user and complete email confirmation. Verify the email address belongs to the owner before proceeding.
+- The Auth signup trigger creates the initial pending profile. Run `v2/supabase/preflight/owner_admin_bootstrap_isolated_rehearsal.sql` only on the isolated rehearsal target to promote the sole confirmed pending profile. The template refuses to run unless exactly one Auth user, profile and email identity exist.
 - Confirm exactly one Auth identity is linked to that user.
 - Confirm exactly one active, approved admin profile exists; no legacy profiles, managers or members remain.
 - Verify the new owner can sign in to the clean-start app and access all admin functions.
