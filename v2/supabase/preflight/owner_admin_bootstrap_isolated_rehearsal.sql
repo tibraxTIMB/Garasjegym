@@ -74,5 +74,5 @@ BEGIN
   END IF;
 
   RAISE NOTICE 'Owner admin profile bootstrapped for the sole confirmed Auth user. Verify login in the app before opening member signup.';
-END
+END;
 $owner_admin_bootstrap$;
