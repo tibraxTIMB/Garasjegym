@@ -210,7 +210,7 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
         run: psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/auth_signup_gate_full_supabase_postgres17.sql
-      - name: Verify guarded new owner admin bootstrap in rollback transaction
+      - name: Rehearse complete clean-start reset and new owner admin in rollback transaction
         env:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
         run: psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/owner_admin_bootstrap_smoke_test.sql
@@ -219,13 +219,10 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
         run: |
           psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/clean_start_readiness_read_only.sql > /tmp/clean-start-readiness.out
-          psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/clean_start_post_reset_acceptance_read_only.sql > /tmp/clean-start-acceptance.out
           test -s /tmp/clean-start-readiness.out
-          test -s /tmp/clean-start-acceptance.out
-          printf 'Read-only readiness rows: '
+          printf 'Read-only pre-reset inventory rows: '
           wc -l < /tmp/clean-start-readiness.out
-          printf 'Read-only acceptance rows: '
-          wc -l < /tmp/clean-start-acceptance.out
+          printf 'Post-reset acceptance is executed inside the full rollback clean-start rehearsal above.'
       - name: Stop ephemeral Supabase stack
         if: always()
         working-directory: v2
