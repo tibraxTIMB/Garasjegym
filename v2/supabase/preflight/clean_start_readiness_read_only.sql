@@ -1,11 +1,11 @@
 -- Read-only clean-start preflight. Does not modify any data.
--- IMPORTANT: run only against an isolated restore derived from Production after
--- the reviewed schema migrations are applied. Do NOT use the current TEST
--- project's own exercise seed as a proxy for Production's original 56 rows:
--- the TEST seed is a separate catalog (94 system rows at the last audit).
--- The contract below checks the exact original Production exercise names and
--- categories survive the migration/restore. Extra system catalog rows added by
--- reviewed catalog migrations may coexist; custom created_by rows must be 0.
+-- Run against an isolated Production-derived restore after reviewed forward-only
+-- schema/catalogue migrations, before rehearsing the reset.
+-- The clean-start contract uses the reconciled exercise manifest, not the old
+-- 56-row Production catalogue or the separate 94-row TEST snapshot.
+-- Run exercise_catalogue_manifest_assertions.sql as the exact name-level check.
+-- Legacy Auth/profile and operational rows are inventoried for the reset plan;
+-- they are NOT expected to be retained in the clean-start result.
 
 WITH expected_tables(table_name, retain_policy) AS (
   VALUES
@@ -20,7 +20,7 @@ WITH expected_tables(table_name, retain_policy) AS (
     ('coffee_orders','clear'),
     ('coffee_product_reviews','clear'),
     ('coffee_products','clear'),
-    ('coffee_settings','retain_safe_singleton'),
+    ('coffee_settings','clear'),
     ('daily_wod','clear'),
     ('exercise_favorites','clear'),
     ('member_preferences','clear'),
@@ -59,75 +59,9 @@ table_inventory AS (
          to_regclass(format('public.%I',e.table_name)) IS NOT NULL AS exists_in_schema
   FROM expected_tables e
 ),
-core_exercise_contract(name,category) AS (
-  VALUES
-    ('Air Squat','CrossFit'),
-    ('Back Squat','CrossFit'),
-    ('Bike Erg','CrossFit'),
-    ('Box Jump','CrossFit'),
-    ('Box Step-up','CrossFit'),
-    ('Burpee','CrossFit'),
-    ('Burpee Box Jump Over','CrossFit'),
-    ('Chest-to-Bar Pull-up','CrossFit'),
-    ('Clean and Jerk','CrossFit'),
-    ('Deadlift','CrossFit'),
-    ('Double Under','CrossFit'),
-    ('Farmer Carry','CrossFit'),
-    ('Front Squat','CrossFit'),
-    ('Handstand Push-up','CrossFit'),
-    ('Kettlebell Swing','CrossFit'),
-    ('Overhead Squat','CrossFit'),
-    ('Power Clean','CrossFit'),
-    ('Power Snatch','CrossFit'),
-    ('Pull-up','CrossFit'),
-    ('Push Jerk','CrossFit'),
-    ('Push Press','CrossFit'),
-    ('Row','CrossFit'),
-    ('Single Under','CrossFit'),
-    ('SkiErg','CrossFit'),
-    ('Snatch','CrossFit'),
-    ('Squat Clean','CrossFit'),
-    ('Thruster','CrossFit'),
-    ('Toes-to-Bar','CrossFit'),
-    ('Walking Lunge','CrossFit'),
-    ('Wall Ball Shot','CrossFit'),
-    ('Pilates Cat Stretch','Pilates'),
-    ('Pilates Clam','Pilates'),
-    ('Pilates Criss Cross','Pilates'),
-    ('Pilates Double Leg Stretch','Pilates'),
-    ('Pilates Hundred','Pilates'),
-    ('Pilates Mermaid','Pilates'),
-    ('Pilates Roll Up','Pilates'),
-    ('Pilates Saw','Pilates'),
-    ('Pilates Shoulder Bridge','Pilates'),
-    ('Pilates Side Kick','Pilates'),
-    ('Pilates Side Plank','Pilates'),
-    ('Pilates Single Leg Stretch','Pilates'),
-    ('Pilates Spine Stretch Forward','Pilates'),
-    ('Pilates Swan Prep','Pilates'),
-    ('Pilates Swimming','Pilates'),
-    ('Barbell Row','Styrke'),
-    ('Bench Press','Styrke'),
-    ('Biceps Curl','Styrke'),
-    ('Bulgarian Split Squat','Styrke'),
-    ('Dumbbell Shoulder Press','Styrke'),
-    ('Hip Thrust','Styrke'),
-    ('Lat Pulldown','Styrke'),
-    ('Leg Press','Styrke'),
-    ('Plank','Styrke'),
-    ('Romanian Deadlift','Styrke'),
-    ('Triceps Pushdown','Styrke')
-),
 exercise_baseline AS (
   SELECT count(*) FILTER (WHERE created_by IS NULL) AS system_exercise_count,
-         count(*) FILTER (WHERE created_by IS NOT NULL) AS custom_count,
-         (SELECT count(*) FROM core_exercise_contract c
-          WHERE EXISTS (
-            SELECT 1 FROM public.exercises e
-            WHERE lower(trim(e.name))=lower(trim(c.name))
-              AND e.category=c.category
-              AND e.created_by IS NULL
-          )) AS core_exercise_count
+         count(*) FILTER (WHERE created_by IS NOT NULL) AS custom_count
   FROM public.exercises
 ),
 profile_state AS (
@@ -157,10 +91,10 @@ SELECT 'schema_table' AS section,
        retain_policy AS detail
 FROM table_inventory
 UNION ALL
-SELECT 'exercise_baseline','core_exercise_contract',
-       CASE WHEN core_exercise_count=56 AND custom_count=0 THEN 'PASS' ELSE 'CHECK' END,
-       format('core_exercises_found=%s/56 system_catalog_total=%s custom_exercises=%s; original contract 30 CrossFit, 15 Pilates, 11 Styrke',
-              core_exercise_count,system_exercise_count,custom_count)
+SELECT 'exercise_catalogue','reconciled_manifest_count',
+       CASE WHEN system_exercise_count=135 AND custom_count=0 THEN 'PASS' ELSE 'CHECK' END,
+       format('system_catalog=%s/135 provisional_manifest custom_exercises=%s; exact names must also pass exercise_catalogue_manifest_assertions.sql',
+              system_exercise_count,custom_count)
 FROM exercise_baseline
 UNION ALL
 SELECT 'profile_state','owner_admin_count',
@@ -177,12 +111,6 @@ SELECT 'auth_linkage','auth_profile_links',
               auth_user_count,auth_users_with_profile,auth_users_without_profile,profile_rows_without_auth_user)
 FROM auth_linkage CROSS JOIN orphan_profiles
 UNION ALL
-SELECT 'retained_configuration','coffee_settings_count',
-       CASE WHEN count(*)=1 THEN 'PASS' ELSE 'CHECK' END,
-       format('rows=%s',count(*))
-FROM public.coffee_settings
-
-UNION ALL
 SELECT 'operational_data', table_name,
        CASE WHEN row_count=0 THEN 'PASS' ELSE 'CHECK' END,
        format('rows=%s',row_count)
@@ -198,6 +126,7 @@ FROM (
   UNION ALL SELECT 'coffee_orders',count(*) FROM public.coffee_orders
   UNION ALL SELECT 'coffee_product_reviews',count(*) FROM public.coffee_product_reviews
   UNION ALL SELECT 'coffee_products',count(*) FROM public.coffee_products
+  UNION ALL SELECT 'coffee_settings',count(*) FROM public.coffee_settings
   UNION ALL SELECT 'daily_wod',count(*) FROM public.daily_wod
   UNION ALL SELECT 'exercise_favorites',count(*) FROM public.exercise_favorites
   UNION ALL SELECT 'member_preferences',count(*) FROM public.member_preferences
