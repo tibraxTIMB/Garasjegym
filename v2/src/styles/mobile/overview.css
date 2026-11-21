@@ -139,3 +139,42 @@
   .overview-dashboard .overview-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
+/* A readable rank insignia without a tall empty hero. */
+.overview-dashboard > .overview-compact-header { display: grid; grid-template-columns: minmax(0,1fr) minmax(240px,.8fr); gap: 12px; align-items: center; }
+.overview-dashboard > .overview-compact-header h3 { margin: 4px 0; }
+.overview-dashboard .overview-rank-label { align-items: stretch; gap: 5px; width: 100%; padding: 10px 12px; border: 1px solid #93723f; border-radius: 12px; background: linear-gradient(110deg,#28271f,#172226); }
+.overview-rank-main { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 7px; }
+.overview-dashboard .overview-rank-title { flex: 0 1 auto; min-width: 0; padding: 6px 12px; font-size: clamp(12px,2vw,16px); overflow-wrap: anywhere; }
+.overview-dashboard .overview-rank-stars { flex: 0 0 auto; min-width: 0; gap: 3px; padding: 4px 7px; }
+.overview-dashboard .overview-rank-stars span { font-size: 21px; }
+.overview-rank-progress { display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; color: #d2d6d2; font-size: 11px; }
+.overview-rank-progress small { color: #f5c47c; font-size: 11px; }
+.overview-rank-progressbar { height: 4px; overflow: hidden; border-radius: 5px; background: #3f4746; }
+.overview-rank-progressbar span { display: block; height: 100%; border-radius: inherit; background: #e9a442; transition: width .2s ease; }
+.overview-dashboard .overview-ranking { margin-bottom: 0; padding: 0; }
+.overview-dashboard .overview-ranking > summary { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 10px 14px; color: #f0dec0; font-weight: 850; cursor: pointer; }
+.overview-dashboard .overview-ranking > summary span { margin-left: auto; color: #abb9b6; font-size: 11px; font-weight: 650; }
+.overview-dashboard .overview-ranking[open] { padding-bottom: 12px; }
+.overview-dashboard .overview-ranking[open] > .overview-ranking-self,
+.overview-dashboard .overview-ranking[open] > ol { margin-inline: 12px; }
+@media (max-width: 700px) {
+  .overview-dashboard > .overview-compact-header { grid-template-columns: minmax(0,1fr); gap: 7px; }
+  .overview-dashboard .overview-rank-label { flex-direction: column; max-width: 100%; }
+  .overview-dashboard .overview-rank-title { min-width: 0; }
+  .overview-dashboard .overview-rank-stars { min-width: 0; }
+}
+
+/* Superenkel startscreen: two compact choices, with the PT assignment promoted. */
+.simple-app-shell .simple-home { padding: 3px 0 12px; }
+.simple-app-shell .simple-home h2 { margin: 0 0 10px; font-size: clamp(22px,5vw,29px); }
+.simple-app-shell .simple-home-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+.simple-app-shell .simple-home-grid .simple-home-action { min-height: 100px; padding: 11px 12px; gap: 5px; border-radius: 12px; }
+.simple-app-shell .simple-home-grid .simple-home-action svg { width: 23px; height: 23px; }
+.simple-app-shell .simple-home-grid .simple-home-action strong { font-size: clamp(14px,3.2vw,18px); line-height: 1.16; }
+.simple-app-shell .simple-home-grid .simple-home-action small { font-size: 11px; line-height: 1.3; }
+.simple-app-shell .simple-home-grid .simple-home-action:nth-child(3) { grid-column: 1/-1; flex-direction: row; justify-content: flex-start; gap: 14px; min-height: 84px; border-color: #efb354; background: linear-gradient(120deg,#45301b,#212b2b); }
+.simple-app-shell .simple-home-grid .simple-home-action:nth-child(3) > span { display: grid; gap: 3px; }
+.simple-app-shell .simple-home-grid .simple-home-action:nth-child(3) svg { width: 30px; height: 30px; }
+.simple-app-shell .simple-welcome { padding-block: 12px 6px; }
+.simple-app-shell .simple-welcome h1 { font-size: clamp(26px,5vw,36px); }
+

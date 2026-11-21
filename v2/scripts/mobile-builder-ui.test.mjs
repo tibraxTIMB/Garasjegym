@@ -53,15 +53,49 @@ test('AMRAP round splits stay visible without growing the clock page', () => {
   assert.match(styles, /@media \(orientation: landscape\)\s*\{[^]*?\.gg-live-timer__clock-area\s*\{[^}]*grid-template-rows:\s*auto minmax\(0,1fr\) auto auto/s)
 })
 
-test('timer places compact music and round pills before the exercise overview', () => {
+test('timer puts round pills by the clock and keeps the exercise overview before compact music', () => {
   const timer = source('../src/components/Training.jsx')
   const music = source('../src/components/Music.jsx')
   const styles = source('../src/components/timer-viewport.css')
   assert.match(timer, /<MusicMiniPlayer liveCompact\/>/)
-  assert.ok(timer.indexOf('className="gg-live-timer__music"') < timer.indexOf('className="gg-live-timer__laps"'))
-  assert.ok(timer.indexOf('className="gg-live-timer__laps"') < timer.indexOf('className="gg-live-timer__exercise"'))
+  assert.ok(timer.indexOf('className="gg-live-timer__clock-laps"') < timer.indexOf('className="gg-live-timer__context"'))
+  assert.ok(timer.indexOf('className="gg-live-timer__exercise"') < timer.indexOf('className="gg-live-timer__music"'))
   assert.match(music, /!liveCompact&&<GenreButtons/)
   assert.match(styles, /\.gg-live-timer__music \.timer-spotify-mini-line/)
+  assert.match(styles, /\.gg-live-timer__clock-laps\s*\{[^}]*position: absolute/)
+  assert.match(timer, /Alle øvingar \(\{stageRows\.length\}\)/)
+})
+
+test('the workout button can return to workout types without silently losing a draft', () => {
+  const app = source('../src/App.jsx')
+  const timer = source('../src/components/Training.jsx')
+  assert.match(app, /id==='trening'&&active==='trening'\)\{setWorkoutReselectToken/)
+  assert.match(app, /<Training reselectToken=\{workoutReselectToken\}/)
+  assert.match(timer, /function returnToWorkoutTypes\(\)/)
+  assert.match(timer, /window\.confirm\('Byta økttype\?/)
+  assert.match(timer, /useEffect\(\(\)=>\{if\(reselectToken>0\)returnToWorkoutTypes\(\)/)
+  assert.match(timer, /← Vel økttype/)
+})
+
+test('WOD selection shows a dedicated visible screen instead of content below the entry buttons', () => {
+  const timer = source('../src/components/Training.jsx')
+  assert.match(timer, /mode==='wods' \? <div className="training-wod-chooser-head"/)
+  assert.match(timer, /mode === 'wods' && <section className="engine-section wod-library-screen"/)
+  assert.match(timer, /mode==='home'&&<details className="training-extra-tools"/)
+  assert.match(timer, /className="manual-wod-picker-toggle" aria-expanded=\{manualWodPickerOpen\}/)
+  assert.match(timer, /className="manual-wod-picker-options"/)
+  assert.match(source('../src/styles/mobile/training.css'), /\.gg-training-session \.manual-wod-picker-results\s*\{/)
+})
+
+test('member dashboard shows rank progress compactly and promotes the assigned PT session', () => {
+  const app = source('../src/App.jsx')
+  const overview = source('../src/components/Overview.jsx')
+  assert.match(app, /Gjennomfør PT-økta/)
+  assert.match(app, /Økta som PT-en har tildelt deg/)
+  assert.match(overview, /overview-rank-progressbar/)
+  assert.match(overview, /Første økta gir deg ei stjerne/)
+  assert.match(overview, /<details className="engine-section overview-ranking">/)
+  assert.match(overview, /<Notifications compact hideWhenEmpty context="oversikt"\/>/)
 })
 
 test('the central ØKT button is orange and owner badges are tied to a user ID', () => {
@@ -85,7 +119,7 @@ test('an active workout stays mounted across navigation and offers a one-tap ret
   const timer = source('../src/components/Training.jsx')
   const styles = source('../src/styles/mobile/app-shell.css')
   assert.match(app, /trainingVisited\|\|active==='trening'/)
-  assert.match(app, /<Training visible=\{active==='trening'\} onBackground=/)
+  assert.match(app, /<Training reselectToken=\{workoutReselectToken\} visible=\{active==='trening'\} onBackground=/)
   assert.match(app, /active === 'trening' \? null : active === 'timeplan'/)
   assert.match(app, /timerSnapshot\.sessionOpen&&<button[^>]*className="ongoing-workout-return"/)
   assert.match(timer, /sessionOpen:mode==='active'/)

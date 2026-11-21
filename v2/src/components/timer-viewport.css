@@ -188,6 +188,7 @@
   padding: clamp(6px, 1.6dvh, 16px) 0;
 }
 .gg-live-timer__clock-area {
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -239,6 +240,15 @@
 .gg-live-timer__exercise li { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; font-size: clamp(12px, 2.5dvh, 16px); line-height: 1.25; }
 .gg-live-timer__exercise li > span { min-width: 0; overflow-wrap: anywhere; }
 .gg-live-timer__exercise li small { flex: 0 0 auto; color: #d0a565; font-size: 12px; white-space: nowrap; }
+.gg-live-timer__exercise li { align-items: flex-start; }
+.gg-live-timer__exercise li small { flex: 0 1 44%; white-space: normal; text-align: right; overflow-wrap: anywhere; }
+.gg-live-timer__exercise-title { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.gg-live-timer__exercise-title > span { color: #9eafb5; font-size: 11px; font-weight: 850; letter-spacing: .09em; }
+.gg-live-timer__exercise-title button { padding: 2px 0; border: 0; background: none; color: #f2b45b; font-size: 11px; font-weight: 800; white-space: nowrap; }
+.gg-live-timer__body--with-laps .gg-live-timer__clock-area { padding-bottom: 62px; }
+.gg-live-timer__clock-laps { position: absolute; right: 3px; bottom: 2px; left: 3px; display: grid; gap: 5px; min-width: 0; padding: 5px 8px; border: 1px solid rgba(169,193,198,.18); border-radius: 10px; background: rgba(11,22,27,.78); text-align: left; }
+.gg-live-timer__clock-laps .gg-live-timer__laps-heading { min-height: 14px; }
+.gg-live-timer__clock-laps .gg-live-timer__lap-preview li { min-width: 0; }
 .gg-live-timer__more { align-self: flex-start; padding: 2px 0; border: 0; background: transparent; color: #f2b45b; font-size: 13px; font-weight: 800; }
 .gg-live-timer__next { color: #a8c1c8; font-size: 13px; line-height: 1.25; }
 .gg-live-timer__body--with-laps .gg-live-timer__context { justify-content: flex-start; gap: 7px; }
@@ -338,6 +348,10 @@
   .gg-live-timer__context { padding: 6px 10px; }
   .gg-live-timer__time { font-size: min(calc(12vw * var(--gg-time-scale,1)), calc(23dvh * var(--gg-time-scale,1)), 132px); }
   .gg-live-timer__lap-preview li { padding: 3px 2px; }
+  .gg-live-timer__body--with-laps .gg-live-timer__clock-area { padding-bottom: 50px; }
+  .gg-live-timer__clock-laps { gap: 2px; padding: 3px 6px; }
+  .gg-live-timer__clock-laps .gg-live-timer__laps-heading > span { font-size: 9px; }
+  .gg-live-timer__clock-laps .gg-live-timer__lap-preview li { padding: 3px 2px; }
   .gg-live-timer__footer { padding-top: 5px; }
   .gg-live-timer__footer button { min-height: 48px; }
 }

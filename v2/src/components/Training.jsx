@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Activity, CheckCircle2, Clock3, Dumbbell, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2, Settings2, List, Volume2, VolumeX, Maximize2, Minimize2, X } from 'lucide-react'
+import { Activity, CheckCircle2, ChevronDown, Clock3, Dumbbell, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2, Settings2, List, Volume2, VolumeX, Maximize2, Minimize2, X } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { RELEASE_NAME } from '../lib/release.js'
 import HeartRateTrainingPanel from './HeartRateTrainingPanel.jsx'
@@ -417,19 +417,19 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           <div className="gg-live-timer__time" style={{'--gg-time-scale': Math.max(.78,Math.min(1.16,appearance.clockSize/112))}} role="timer" aria-label={`${stageTimeLabel}: ${clock(primaryTime)}`}>{clock(primaryTime)}</div>
           <div className="gg-live-timer__time-label">{stageTimeLabel}</div>
           {(isCountdown||isEMOM||isTimedInterval||isStationCircuit||hasTimeCap)&&<div className="gg-live-timer__time-secondary"><span>{isCountdown?'Medgått':isEMOM?'Økta att':isTimedInterval||isStationCircuit?'Økta att':'Tid att'}</span><b>{clock(isCountdown?elapsed:remainingTotal)}</b></div>}
+          {stageLapHistory.length>0&&<div className="gg-live-timer__clock-laps" aria-label={stageLapLabel}>
+            <div className="gg-live-timer__laps-heading"><span>RUNDETIDER</span><button type="button" onClick={()=>setStagePanel('laps')}>Vis alle ({laps.length})</button></div>
+            <ol className="gg-live-timer__lap-preview">{stageLapHistory.slice(-3).map(lap=><li key={lap.round}><span>{isAmrap?'R':'M'}{lap.round}</span><b>{clock(lap.duration)}</b></li>)}</ol>
+          </div>}
         </div>
         <div className="gg-live-timer__context">
           {isAmrap&&<div className="gg-live-timer__rounds"><span>FULLFØRTE RUNDER</span><strong>{laps.length}</strong></div>}
           {(isTimedInterval||isStationCircuit||isEMOM)&&<div className="gg-live-timer__rounds"><span>{isStationCircuit?'STASJON · RUNDE':isEMOM?'MINUTT':'RUNDE'}</span><strong>{isStationCircuit?`${visibleStationIndex+1}/${stationCount} · ${Math.min(currentRound,Number(rounds)||1)}/${rounds}`:isEMOM?currentEmomRound:`${roundsShown}/${rounds}`}</strong></div>}
-          <div className="gg-live-timer__music" aria-label="Musikkstyring"><MusicMiniPlayer liveCompact/></div>
-          {stageLapHistory.length>0&&<div className="gg-live-timer__laps" aria-label={stageLapLabel}>
-            <div className="gg-live-timer__laps-heading"><span>{stageLapLabel}</span><button type="button" onClick={()=>setStagePanel('laps')}>Vis alle ({laps.length})</button></div>
-            <ol className="gg-live-timer__lap-preview">{stageLapHistory.slice(-3).map(lap=><li key={lap.round}><span>{isAmrap?'R':'M'}{lap.round}</span><b>{clock(lap.duration)}</b></li>)}</ol>
-          </div>}
-          <div className="gg-live-timer__exercise"><span>{isAmrap?'WOD-ØVINGAR':isStationCircuit?'NO · STASJON':isEMOM?'DENNE RUNDA':'AKTUELL ØVING'}</span>
+          <div className="gg-live-timer__exercise"><div className="gg-live-timer__exercise-title"><span>{isAmrap?'WOD-ØVINGAR':isStationCircuit?'STASJONAR':isEMOM?'DENNE RUNDA':'AKTUELL ØVING'}</span><button type="button" onClick={()=>setStagePanel('wod')}>Alle øvingar ({stageRows.length})</button></div>
             {isAmrap?<ol>{stageRows.map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span>{item.dose&&<small>{item.dose}</small>}</li>)}</ol>:<strong>{stageExerciseName||'Sjå øvingslista'}</strong>}
             {!isAmrap&&stageNextExercise&&stageNextExercise!==stageExerciseName&&<small className="gg-live-timer__next">Neste: {stageNextExercise}</small>}
           </div>
+          <div className="gg-live-timer__music" aria-label="Musikkstyring"><MusicMiniPlayer liveCompact/></div>
         </div>
       </div>
       <footer className="gg-live-timer__footer">
@@ -529,7 +529,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   </div>
 }
 
-export default function Training({ launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, onTimerSnapshot, onBackground, visible = true, simpleMode = false, quickStart = false, onQuickStartConsumed, quickManualEntry = false, onQuickManualEntryConsumed, onSaved, onDiscard }) {
+export default function Training({ launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, onTimerSnapshot, onBackground, visible = true, reselectToken = 0, simpleMode = false, quickStart = false, onQuickStartConsumed, quickManualEntry = false, onQuickManualEntryConsumed, onSaved, onDiscard }) {
   const [wods, setWods] = useState([])
   const [dailyWodId,setDailyWodId]=useState(null)
   const [exercises, setExercises] = useState([])
@@ -560,6 +560,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [workoutDate,setWorkoutDate]=useState(()=>localDateISO())
   const [manualWodIds,setManualWodIds]=useState([])
   const [manualWodSelect,setManualWodSelect]=useState('')
+  const [manualWodPickerOpen,setManualWodPickerOpen]=useState(false)
+  const [manualWodQuery,setManualWodQuery]=useState('')
   const [format, setFormat] = useState('Fri trening')
   const [duration, setDuration] = useState('10')
   const [durationSeconds, setDurationSeconds] = useState('0')
@@ -704,6 +706,26 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const availableWods=wods.filter(wod=>wod.is_published&&!wod.is_archived)
   const manualWodOptions=wods.filter(wod=>!wod.is_archived)
 
+  function returnToWorkoutTypes() {
+    if (mode === 'active') {
+      const hasUnsavedWorkout = sessionPrepared || manualEntry || timerSnapshot.elapsed > 0 || items.some(item=>item.exercise_name.trim())
+      if (hasUnsavedWorkout && !window.confirm('Byta økttype? Den uferdige økta og registrerte rundar blir forkasta.')) return
+      setFinishOpen(false)
+      setSessionPrepared(false)
+      setManualEntry(false)
+      setSource(null)
+      setClassSessionId(null)
+      setItems([])
+      setTimerSnapshot({elapsed:0,laps:[],roundsCompleted:0,phase:'Klar',running:false})
+      clearTimerSnapshot()
+    }
+    setNotice('')
+    setMode('home')
+    window.scrollTo({top:0,behavior:'auto'})
+  }
+
+  useEffect(()=>{if(reselectToken>0)returnToWorkoutTypes()},[reselectToken])
+
   const filteredExercises = useMemo(() => exercises.filter(e => e.name.toLowerCase().includes(query.toLowerCase()) || (e.category || '').toLowerCase().includes(query.toLowerCase())), [exercises, query])
 
   function leaveWorkout() {
@@ -838,7 +860,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       return {...emptyExercise(),manual_wod_id:wod.id,exercise_id:item.exercise_id||'',exercise_name:item.exercise_name||item.name||'',equipment,uses_height:measurementFlags.usesHeight,uses_load:measurementFlags.usesLoad,is_rest:!!item.is_rest,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps:[],rest_duration_seconds:item.rest_duration_seconds??null,prescription_levels:item.levels||null,prescription_label:doseLabel(item,wodLevel),rowUnit:item.row_unit||'m'}
     }):(wod.movements||'').split(/\n|,/).map(name=>name.trim()).filter(Boolean).map(name=>{const flags=getExerciseMeasurementFlags({name});return {...emptyExercise(),manual_wod_id:wod.id,exercise_name:name,uses_height:flags.usesHeight,uses_load:flags.usesLoad}})
     if(!additions.length){setError('WOD-en har ingen registrerte øvingar å leggje til.');return}
-    setItems(rows=>[...rows,...additions]);setManualWodIds(ids=>[...ids,wod.id]);setManualWodSelect('');setNotice(wod.name+' er lagt til i den manuelle økta.')
+    setItems(rows=>[...rows,...additions]);setManualWodIds(ids=>[...ids,wod.id]);setManualWodSelect('');setManualWodQuery('');setManualWodPickerOpen(false);setNotice(wod.name+' er lagt til i den manuelle økta.')
   }
 
   function updateExercise(key, patch) {
@@ -955,7 +977,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     {error && <div className="auth-error" role="alert">{error}</div>}
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16}/> {notice}</div>}
     {mode === 'active' ? <form className="engine-form gg-training-session" onSubmit={saveWorkout}>
-      <div className="training-heading"><div><div className="section-kicker">TRENING · AKTIV ØKT</div><h3>{source?.name||'Bygg økta di'}</h3></div><span className="count-pill">{items.length} øvingar</span></div>
+      <div className="training-heading"><div><div className="section-kicker">TRENING · AKTIV ØKT</div><h3>{source?.name||'Bygg økta di'}</h3></div><button type="button" className="workout-return-types" onClick={returnToWorkoutTypes}>← Vel økttype</button></div>
       {source&&activeWodEngine.participation!=='individual'&&<section className="wod-execution-partner"><div><strong>{formatParticipation(activeWodEngine)}</strong><span>{({free_split:'Del arbeidet fritt',you_go_i_go:'You go – I go',alternate:'Annankvar / vekselvis',synchronized:'Synkroniserte repetisjonar',parallel:'Parallelt arbeid'})[activeWodEngine.collaboration]||'Felles gjennomføring'}</span></div><small>Resultat blir lagra med partner-/teamoppsettet frå WOD-kortet. Scoring: {(activeWodEngine.scoring?.fields||[]).join(' + ')}</small></section>}
       {source?.timer_settings?.workout_schema?.items?.some(item=>item.levels)&&<section className="wod-execution-level"><strong>Vel doseringsnivå</strong><div className="hub-tabs" role="group" aria-label="Doseringsnivå">{[{id:'rx',label:'RX'},...(source.timer_settings.workout_schema.items.some(item=>item.levels?.intermediate)?[{id:'intermediate',label:'Intermediate'}]:[]),{id:'scaled',label:'Scaled'},{id:'foundation',label:'Foundation'}].map(level=><button type="button" key={level.id} className={wodLevel===level.id?'selected':''} aria-pressed={wodLevel===level.id} onClick={()=>setWodLevel(level.id)}>{level.label}</button>)}</div></section>}
       <div className="engine-fields">
@@ -970,7 +992,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         <div className="engine-section-title"><h4>{format==='Stasjonssirkel'?'Stasjonane i økta':'WOD / øvingsrekkjefølgje'}</h4><span>{format==='Stasjonssirkel'?'Alle stasjonar – roter etter eiga startplassering':'Vel øvinga du arbeider med'}</span></div>
         <div className={format==='Stasjonssirkel'?'timer-station-grid':'wod-list'}>{items.map((item, index) => format==='Stasjonssirkel' ? <article className="timer-station-card" key={item.key}><span>STASJON {index+1}</span><strong>{item.exercise_name||'Øving'}</strong><small>{item.reps_mode==='amrap'?'AMRAP · maks reps':item.reps?item.reps+' reps':'Valfritt tal reps'}</small></article> : <button type="button" key={item.key} className={index === activeExerciseIndex ? 'secondary-button active' : 'secondary-button'} onClick={() => setActiveExerciseIndex(index)}>{index + 1}. {item.is_rest?'⏸ Pause · '+clock(Number(item.rest_duration_seconds)||30):item.exercise_name || 'Ny øving'}</button>)}</div>
       </section>}
-      {!source&&<section className="engine-section manual-wod-picker"><div className="engine-section-title"><h4>Legg til WOD i økta</h4><span>Du kan kombinere fleire WOD-ar og enkeltøvingar</span></div><div className="manual-wod-picker-row"><select value={manualWodSelect} onChange={e=>setManualWodSelect(e.target.value)}><option value="">Vel WOD frå biblioteket …</option>{manualWodOptions.map(wod=><option key={wod.id} value={wod.id}>{wod.name} · {wod.format}</option>)}</select><button type="button" className="secondary-button" disabled={!manualWodSelect} onClick={addManualWod}><Plus size={15}/> Legg til WOD</button></div>{manualWodIds.length>0&&<div className="manual-wod-chips">{manualWodIds.map(id=>{const wod=manualWodOptions.find(item=>item.id===id);return <span key={id}>{wod?.name||'WOD'}<button type="button" aria-label={'Fjern '+(wod?.name||'WOD')} onClick={()=>{setManualWodIds(rows=>rows.filter(value=>value!==id));setItems(rows=>rows.filter(item=>item.manual_wod_id!==id))}}>×</button></span>})}</div>}</section>}
+      {!source&&<section className="engine-section manual-wod-picker"><div className="engine-section-title"><h4>Legg til WOD i økta</h4><span>Du kan kombinere fleire WOD-ar og enkeltøvingar</span></div><div className="manual-wod-picker-row"><button type="button" className="manual-wod-picker-toggle" aria-expanded={manualWodPickerOpen} onClick={()=>setManualWodPickerOpen(value=>!value)}><Search size={17}/><span>{manualWodOptions.find(wod=>wod.id===manualWodSelect)?.name||'Søk og vel WOD frå biblioteket'}</span><ChevronDown size={17}/></button><button type="button" className="secondary-button" disabled={!manualWodSelect} onClick={addManualWod}><Plus size={15}/> Legg til WOD</button></div>{manualWodPickerOpen&&<div className="manual-wod-picker-results"><label><Search size={16}/><input autoFocus value={manualWodQuery} onChange={event=>setManualWodQuery(event.target.value)} placeholder="Søk etter WOD eller format …"/></label><div className="manual-wod-picker-options">{manualWodOptions.filter(wod=>[wod.name,wod.format].some(value=>String(value||'').toLowerCase().includes(manualWodQuery.trim().toLowerCase()))).slice(0,30).map(wod=><button type="button" key={wod.id} className={manualWodSelect===wod.id?'is-selected':''} onClick={()=>{setManualWodSelect(wod.id);setManualWodPickerOpen(false)}}><strong>{wod.name}</strong><small>{wod.format} · {wod.duration_minutes||'–'} min</small></button>)}{!manualWodOptions.some(wod=>[wod.name,wod.format].some(value=>String(value||'').toLowerCase().includes(manualWodQuery.trim().toLowerCase())))&&<p>Ingen WOD-ar passar søket.</p>}</div></div>}{manualWodIds.length>0&&<div className="manual-wod-chips">{manualWodIds.map(id=>{const wod=manualWodOptions.find(item=>item.id===id);return <span key={id}>{wod?.name||'WOD'}<button type="button" aria-label={'Fjern '+(wod?.name||'WOD')} onClick={()=>{setManualWodIds(rows=>rows.filter(value=>value!==id));setItems(rows=>rows.filter(item=>item.manual_wod_id!==id))}}>×</button></span>})}</div>}</section>}
       <section className="engine-section">
         <div className="engine-section-title"><h4>Øvingar og sett</h4><span>Legg inn resultat per sett</span></div>
         <div className="exercise-search"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Søk i øvingsbiblioteket …"/></div>
@@ -1038,12 +1060,14 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         </section>
       </div>}
     </form> : <>
+      {mode==='wods' ? <div className="training-wod-chooser-head"><div><span className="section-kicker">TRENING · WOD</span><h3>Vel ein WOD</h3><p>Trykk «Utfør WOD» for å opna den store klokka.</p></div><button type="button" className="secondary-button" onClick={()=>setMode('home')}>← Økttypar</button></div> : <>
       <div className="training-heading"><div><div className="section-kicker">{simpleMode ? "SUPERENKEL MODUS · TRENING" : "TRENING · MOTOR"}</div><h3>{simpleMode ? "Kva vil du gjera i dag?" : "Vel øktform"}</h3>{simpleMode&&<p>Vel ei ferdig økt eller start di eiga. Resultatet blir lagra på profilen din.</p>}</div>{!simpleMode&&<span className="count-pill">{RELEASE_NAME}</span>}</div>
       <div className={simpleMode ? "engine-entry-grid simple-entry-grid" : "engine-entry-grid"}>
         <button type="button" onClick={() => startWorkout()}><Dumbbell size={20}/><strong>{simpleMode ? "Start trening" : "Fri trening"}</strong><small>{simpleMode ? "Vel øvingar og start klokka" : "Bygg økta frå botnen"}</small></button>
-        <button type="button" onClick={() => setMode('wods')}><Activity size={20}/><strong>{simpleMode ? "Følg eit opplegg" : "Start ein WOD"}</strong><small>{simpleMode ? "Vel ei økt som er laga for deg" : "Vel ei publisert økt"}</small></button>
+        <button type="button" onClick={() => {setMode('wods');window.scrollTo({top:0,behavior:'auto'})}}><Activity size={20}/><strong>{simpleMode ? "Følg eit opplegg" : "Start ein WOD"}</strong><small>{simpleMode ? "Vel ei økt som er laga for deg" : "Vel ei publisert økt"}</small></button>
         <button type="button" onClick={startManualWorkout}><Activity size={20}/><strong>Registrer manuell trening</strong><small>Legg inn ei økt du alt har gjennomført</small></button>
       </div>
+      </>}
       {mode === 'wods' && <section className="engine-section wod-library-screen">
         <div className="engine-section-title"><div><h4>WOD-bibliotek</h4><span>{wods.length} publiserte økter</span></div><button className="text-button" onClick={() => setMode('home')}>Lukk</button></div>
         <label className="wod-library-search"><Search size={16}/><input value={wodSearch} onChange={e=>setWodSearch(e.target.value)} placeholder="Søk etter WOD, format eller øving …"/></label>
@@ -1074,6 +1098,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
           </article>
         })}</div> : <div className="empty-state">{wodFavoritesOnly?'Du har ikkje merkt nokon WOD-ar som favoritt.':wodSearch?'Ingen WOD-ar passar søket.':'Ingen publiserte WOD-ar enno.'}</div>}
       </section>}
+      {mode==='home'&&<details className="training-extra-tools"><summary>Meir: øvingsbibliotek, historikk og PR</summary>
       <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
         <div className="training-heading"><div><div className="section-kicker">HISTORIKK</div><h3>Siste økter</h3></div><span className="count-pill">{history.length} økter</span></div>
         {history.length ? <div className="history-list">{history.map(log => <article className="history-card" key={log.id}><div className="history-card-top"><strong>{log.title}</strong><span>{log.workout_date}</span></div><small>{log.format} · {log.workout_exercises?.length || 0} øvingar</small>{log.workout_exercises?.sort((a,b)=>a.sort_order-b.sort_order).map((ex,index) => {const result=log.result_data?.exercise_results?.[index];return <div className="history-exercise" key={ex.id}><b>{ex.exercise_name}</b><span>{[result?.row_value!=null?[result.row_value,({m:'m',km:'km',cal:'cal',s:'sek',min:'min'})[result.row_unit]||result.row_unit].filter(Boolean).join(' '):'',(ex.workout_sets || []).map(s => [s.reps ? (result?.is_complex?'syklusar ':'')+s.reps+(result?.is_complex?'':' reps') : '', s.height_cm ? s.height_cm+' cm' : '', s.load_kg ? s.load_kg+' kg' : '', s.time_seconds ? s.time_seconds+' sek' : s.time_text || ''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ')].filter(Boolean).join(' · ') || 'Ingen resultat registrert'}</span>{result?.is_complex&&Array.isArray(result.complex_steps)&&<small className="training-complex-sequence"><strong>Komplekssekvens</strong><ol>{result.complex_steps.map((step,stepIndex)=><li key={stepIndex}>{step.reps} × {step.name}</li>)}</ol></small>}</div>})}{log.note && <p>{log.note}</p>}</article>)}</div> : <div className="empty-state">Du har ikkje lagra økter enno.</div>}
@@ -1085,6 +1110,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         <div className="training-heading"><div><div className="section-kicker">BIBLIOTEK</div><h3>Øvingsbibliotek</h3></div><span className="count-pill">{exercises.length} øvingar</span></div>
         {exercises.length ? <><div className="exercise-library-toolbar"><label className="exercise-library-search"><Search size={15}/><input value={libraryQuery} onChange={e => setLibraryQuery(e.target.value)} placeholder="Søk etter øving eller kategori …"/></label><button type="button" className={favoritesOnly ? 'secondary-button favorite-filter active' : 'secondary-button favorite-filter'} onClick={() => setFavoritesOnly(v => !v)}><Star size={14}/>{favoritesOnly ? 'Vis alle øvingar' : 'Favorittar'}</button></div>{(()=>{const q=libraryQuery.trim().toLowerCase();const filtered=exercises.filter(ex=>(!favoritesOnly||favoriteNames.includes(ex.name))&&(!q||[ex.name,ex.category,ex.equipment].some(v=>(v||'').toLowerCase().includes(q))));const categories=[...new Set(filtered.map(ex=>ex.category||'Anna'))].sort((a,b)=>a.localeCompare(b,'nn'));return <div className="exercise-library-groups">{categories.length?categories.map((category,index)=>{const group=filtered.filter(ex=>(ex.category||'Anna')===category);return <details className="exercise-library-group" key={category} open={!!q||index===0}><summary><strong>{category}</strong><span>{group.length} øvingar</span></summary><div className="exercise-list">{group.map(ex=><div className="exercise-row" key={ex.id}><Dumbbell size={16}/><div><strong>{ex.name}</strong><span>{[ex.category,ex.equipment].filter(Boolean).join(' · ')}</span></div><button type="button" className={favoriteNames.includes(ex.name)?'favorite-star selected':'favorite-star'} onClick={()=>toggleFavorite(ex)} aria-label={favoriteNames.includes(ex.name)?'Fjern favoritt':'Legg til favoritt'}><Star size={17} fill={favoriteNames.includes(ex.name)?'currentColor':'none'}/></button></div>)}</div></details>}) : <div className="empty-state">{favoritesOnly?'Du har ikkje merkt nokon øvingar som favoritt.':'Ingen øvingar passar søket.'}</div>}</div>})()}</> : <div className="empty-state">Øvingsbiblioteket er tomt. Øvingar kan leggjast inn av admin/manager.</div>}
       </section>
+      </details>}
     </>}
   </div>
 }

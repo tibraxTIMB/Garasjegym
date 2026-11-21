@@ -4,6 +4,25 @@
   gap: clamp(14px, 2vw, 20px);
   min-width: 0;
 }
+.workout-return-types { min-height: 40px; padding: 8px 12px; border: 1px solid #b18a53; border-radius: 10px; background: #26312f; color: #ffd194; font-weight: 800; }
+.training-wod-chooser-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.training-wod-chooser-head h3 { margin: 4px 0; font-size: clamp(22px,4vw,29px); }
+.training-wod-chooser-head p { margin: 0; color: #abbdb9; font-size: 12px; }
+.training-extra-tools { margin-top: 13px; border: 1px solid rgba(200,211,207,.2); border-radius: 12px; }
+.training-extra-tools > summary { padding: 12px 14px; color: #f0c47f; font-size: 13px; font-weight: 850; cursor: pointer; }
+.training-extra-tools > .engine-section { margin: 12px; }
+.gg-training-session .manual-wod-picker-row select { appearance: auto; color-scheme: dark; background: #152329 !important; color: #f4f7f5 !important; border: 1px solid #798d91 !important; border-radius: 10px; padding: 10px; font-size: 15px; }
+.gg-training-session .manual-wod-picker-row select option { background: #17262b; color: #f4f7f5; }
+.gg-training-session .manual-wod-picker-toggle { display: flex; align-items: center; gap: 9px; min-width: 0; min-height: 48px; padding: 10px 12px; border: 1px solid #71878a; border-radius: 10px; background: #18292d; color: #e8f1ec; text-align: left; }
+.gg-training-session .manual-wod-picker-toggle span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gg-training-session .manual-wod-picker-toggle svg { flex: 0 0 auto; color: #f0b156; }
+.gg-training-session .manual-wod-picker-results { display: grid; gap: 7px; margin-top: 9px; padding: 10px; border: 1px solid #56696d; border-radius: 11px; background: #142126; }
+.gg-training-session .manual-wod-picker-results > label { display: flex; align-items: center; gap: 8px; color: #f2bb69; }
+.gg-training-session .manual-wod-picker-results input { width: 100%; min-width: 0; border: 1px solid #50686b; border-radius: 8px; background: #0b191e; color: #f5f7f4; padding: 8px 10px; }
+.gg-training-session .manual-wod-picker-options { display: grid; gap: 5px; max-height: min(40dvh,280px); overflow-y: auto; }
+.gg-training-session .manual-wod-picker-options button { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px 10px; min-height: 45px; padding: 9px 12px; border: 1px solid #354b50; border-radius: 8px; background: #1d2e33; color: #f2f4f1; text-align: left; }
+.gg-training-session .manual-wod-picker-options button.is-selected { border-color: #eaaa4a; background: #3b2e1f; }
+.gg-training-session .manual-wod-picker-options button small { color: #cda46b; }
 
 .gg-training-session > .training-heading {
   align-items: center;

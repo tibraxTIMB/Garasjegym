@@ -12,7 +12,7 @@ const priorityMeta={
 const hrefLabel=href=>href?.startsWith('coffee-review:')?'Sjå produktvurdering':href?.startsWith('pt-request:')?'Opna PT-førespurnad':href?.startsWith('pt-checkin:')?'Opna statussjekk':href?.startsWith('pt-intake:')?'Opna PT-kartlegging':href?.startsWith('pt-client:')?'Opna PT-oppfølging':href?.startsWith('group-class:')?'Opna gruppetime':href?.startsWith('booking:')?'Opna booking':href==='pt-studio'?'Opna PT-oppfølging':href==='pt-info'?'Opna PT-meldingar':href==='pt'?'Opna PT Studio':href==='mi-trening'?'Opna Mi trening':href==='booking'||href==='/timeplan'?'Opna timeplan':href==='kaffi'?'Opna kaffibar':'Opna'
 const isExpired=item=>item.expires_at&&new Date(item.expires_at)<new Date()
 
-export default function Notifications({onNavigate=()=>{},compact=false,context='oversikt'}){
+export default function Notifications({onNavigate=()=>{},compact=false,hideWhenEmpty=false,context='oversikt'}){
  const [items,setItems]=useState([])
  const [open,setOpen]=useState(false)
  const [loading,setLoading]=useState(true)
@@ -127,6 +127,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,context='
  }
  if(compact){
   const rows=items.filter(x=>!x.archived_at&&!isExpired(x)&&x.status==='open'&&(!x.requires_ack||!x.acknowledged_at)).filter(x=>context==='pt-studio'?x.category==='pt'||x.href?.startsWith('pt-'):context==='group'?x.category==='booking'||x.category==='group'||x.href?.startsWith('group-class:'):true).slice(0,4)
+  if(!rows.length&&hideWhenEmpty&&!loading&&!error)return null
   if(!rows.length)return <section className="notification-context"><div className="notification-context-head"><Bell size={16}/><strong>{context==='pt-studio'?'PT-varslingar':context==='group'?'Gruppetime-varslingar':'Varslingar'}</strong><span>0</span></div><p>{loading?'Hentar varsel …':error?'Varslingane er ikkje tilgjengelege akkurat no.':'Ingen oppfølging ventar her.'}</p></section>
   return <section className="notification-context"><div className="notification-context-head"><Bell size={16}/><strong>{context==='pt-studio'?'PT-varslingar':context==='group'?'Gruppetime-varslingar':'Varslingar'}</strong><span>{rows.length}</span></div>{rows.map(renderItem)}</section>
  }
