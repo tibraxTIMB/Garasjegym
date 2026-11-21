@@ -51,8 +51,17 @@ sha256sum *.age > ENCRYPTED_SHA256SUMS
 Do not put the recipient's private key in the same location as the backup.
 
 ## 2. Preserve Supabase-managed data and project configuration separately
-The database dump above is not a complete Supabase project backup. Record and protect these items separately:
-- Auth users and identities, user metadata, app metadata, MFA factors and relevant Auth configuration/provider settings. Use the Supabase-supported export/backup path or an owner-controlled Admin API export. A plain SQL dump from `db dump` does not include `auth.users`.
+The database dump above is not a complete Supabase project backup. The Supabase CLI `db dump` excludes Supabase-managed schemas, including `auth` and `storage`; a CSV/API export of user fields is not a full recovery of Auth credentials, hashed passwords, identity records, or MFA factors. Therefore do not count the three CLI dump files alone as a complete, restorable project backup.
+
+**Important zero-budget limitation:** Supabase's current "Restore to a new project" clone flow can transfer Auth users and hashed passwords, but it is currently beta, requires a paid plan and physical backups enabled on the source. That path is not assumed available under the project's zero-budget constraint. Do not create/upgrade a paid project without explicit cost approval. Official references:
+- CLI backup/restore: https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore
+- Restore to new project (paid plans + physical backups): https://supabase.com/docs/guides/platform/clone-project
+- Auth users and export guidance: https://supabase.com/docs/guides/auth/managing-user-data
+
+Before any reset, the owner must establish a no-surprise-cost method that genuinely preserves and can restore Auth users/hashed passwords/identities/MFA, not just user CSV rows. Possible sources are a supported full Dashboard `.backup` covering the Auth schema, or an owner-verified full logical Postgres backup/restore process covering the required managed schema data. The exact method must be demonstrated in an isolated compatible Supabase restore. If the free project's available tools cannot provide such a restorable Auth backup without paid services, this is a hard no-go: keep Production data and admin identity unchanged until a safe method is available.
+
+Record and protect these items separately:
+- Auth users and identities, hashed passwords, user metadata, app metadata, MFA factors and relevant Auth configuration/provider settings. Verify that the backup mechanism includes all required Auth records and can restore them, not merely list users.
 - Storage buckets, object inventory and object bytes; bucket policies and any RLS/custom triggers on managed Storage tables.
 - Edge Function source/config, deployment versions, JWT verification settings and secret names. Recover secret values only into the owner's secret manager, never into Git.
 - Auth redirect URLs, SMTP/provider settings, Site URL, OAuth credentials, webhooks and other Dashboard project settings.
