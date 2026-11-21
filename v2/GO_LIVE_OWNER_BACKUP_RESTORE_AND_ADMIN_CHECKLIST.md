@@ -56,6 +56,9 @@ The database dump above is not a complete Supabase project backup. Record and pr
 - Storage buckets, object inventory and object bytes; bucket policies and any RLS/custom triggers on managed Storage tables.
 - Edge Function source/config, deployment versions, JWT verification settings and secret names. Recover secret values only into the owner's secret manager, never into Git.
 - Auth redirect URLs, SMTP/provider settings, Site URL, OAuth credentials, webhooks and other Dashboard project settings.
+- Supabase Auth's leaked-password protection is currently reported disabled in both Production and TEST. The owner should enable it in Auth password/security settings and verify the effective setting before accepting new member registrations.
+- The database advisor reports four authenticated-executable SECURITY DEFINER helpers in Production. These include membership predicates used by app/RLS; do not revoke them blindly. Review the bodies, call sites, and grants and confirm all are intentional. The TEST project reports 25 such functions, each needing the same grant/body review.
+- Production performance advisor findings at the latest read-only audit: 14 unindexed foreign keys, 34 RLS initplan warnings, 3 overlapping permissive SELECT-policy groups, and 10 unused-index candidates. RLS initplan/overlapping-policy findings should be reconciled with the TEST policy-consolidation migrations; unused-index candidates should not be dropped solely because the project has had low query volume.
 - Realtime publication and any customizations to managed schemas (Auth/Storage triggers/policies). The full local rehearsal must explicitly validate these objects.
 - External integrations, DNS/hosting settings and the current Production app URL.
 
