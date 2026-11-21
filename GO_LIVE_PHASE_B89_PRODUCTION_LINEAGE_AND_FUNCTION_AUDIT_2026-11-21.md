@@ -24,7 +24,7 @@ Production has 11 applied migration records. The active branch has 166 migration
 | 20261120214242 | secure_pt_session_capacity | No | 20261120110502_secure_pt_session_capacity.sql |
 | 20261120214355 | revoke_anon_public_table_access | No | 20261120091100_revoke_anon_public_table_access.sql |
 
-The four suffix matches have different timestamps. They are not proof of byte-identical historical SQL and must not be substituted into the live ledger. No original SQL has been reconstructed or fabricated. Continue searching owner-controlled local backups/release archives; if unavailable, derive and rehearse a forward-only reconciliation from the verified Production restore.
+The four suffix matches have different timestamps. They are not proof of byte-identical historical SQL and must not be substituted into the live ledger. No original SQL has been reconstructed or fabricated. A second repository-wide check found only two Git branches (`main` and the STURMKOPF work branch), no GitHub releases, and only five migration SQL files on `main`; none matches any of the 11 Production ledger entries. The active branch also has no exact original sources. Continue searching owner-controlled local backups/release archives; if unavailable, derive and rehearse a forward-only reconciliation from the verified Production restore.
 
 ## Production RLS policy drift – launch blocker
 The earlier read-only policy identity/expression comparison remains material:
