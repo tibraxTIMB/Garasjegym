@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   production-candidate:
-    name: Build and verify against the real Production Supabase project
+    name: Build and verify against the designated new STURMKOPF database
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -36,12 +36,15 @@ jobs:
         run: npm test
       - name: Build production-target bundle (no deployment)
         env:
-          VITE_SUPABASE_URL: https://kultdmklwmilhoytrrig.supabase.co
-          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_DsQ4F5ApJeTsBKpK71Ox4Q_GBOsSLTG
+          # Owner-approved zero-cost cutover: the complete former TEST project
+          # becomes the new live database after clean-start/admin acceptance.
+          # The legacy Production project remains untouched.
+          VITE_SUPABASE_URL: https://izwzwvlexqxqewzijhhd.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_jZyaYhD8_jZgpgutKF7lRg_EcJ0EGSQ
         run: npm run build
       - name: Verify production project binding and client artifact safety
         env:
-          EXPECTED_SUPABASE_PROJECT_REF: kultdmklwmilhoytrrig
+          EXPECTED_SUPABASE_PROJECT_REF: izwzwvlexqxqewzijhhd
         run: npm run check:release-artifact
       - name: Upload production-target candidate artifact
         uses: actions/upload-artifact@v4
@@ -53,5 +56,6 @@ jobs:
 
 # This workflow intentionally builds and tests only. It does not deploy to
 # GitHub Pages, modify Production database schema/data, or deploy Edge Functions.
-# Production rollout remains blocked until the Auth-preserving backup/restore,
-# exact migration lineage, owner-admin login, and schema/RLS acceptance gates pass.
+# The owner waived backup and authorized the existing complete TEST project as
+# the new zero-cost live target. Rollout remains blocked until clean-start data,
+# a newly created owner-admin login, and schema/RLS acceptance gates pass.
