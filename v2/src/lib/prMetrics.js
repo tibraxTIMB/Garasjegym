@@ -9,9 +9,10 @@ const SIDE_LABELS = {right:'Høgre',left:'Venstre',both:'Per side',alternating:'
 export function exerciseRecordType(name, sets = [], result = {}) {
   const text = String(name || '').toLowerCase()
   if (/box\s*(jump|step|over)|burpee\s*box/.test(text)) return 'height'
-  if (/plank|hold|hang|wall sit|l.?sit|handstand hold/.test(text)) return 'hold'
+  if (/plank|hold|(?:^|\s)(?:dead|active|flexed.arm) hang\b|wall sit|l.?sit/.test(text)) return 'hold'
   if (/rowerg|ski.?erg|assault bike|bikeerg|romaskin|løping|running|run\b|sykkel|swim|svømm/.test(text)) return 'endurance'
   if (sets.some(set => positive(set.load_kg))) return 'load'
+  if (/^trx\b/.test(text)) return 'reps'
   if (/kettlebell|dumbbell|manual|barbell|markløft|deadlift|squat|snatch|clean|jerk|press|curl|thruster|carry|swing|lunges?/.test(text)) return 'load'
   if (positive(result.meters) || ['m','km','cal'].includes(result.row_unit)) return 'endurance'
   if (sets.some(set => positive(set.height_cm))) return 'height'

@@ -53,7 +53,9 @@ Deno.serve(async (request: Request) => {
     if (existing?.length) return reply({ error: "Denne e-postadressa har allereie ein konto.", existing: true }, 409)
 
     const { data: invited, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-      redirectTo: "https://tibraxtimb.github.io/Garasjegym/",
+      // Query hint stays on the branded landing page after GoTrue consumes
+      // its one-time auth token, so the member can choose their password.
+      redirectTo: "https://tibraxtimb.github.io/Garasjegym/?welcome=invite",
     })
     if (inviteError) {
       console.error("admin-invite-user failed to invite", inviteError)

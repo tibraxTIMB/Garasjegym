@@ -6,7 +6,7 @@ test('first-owner signup is opt-in and never grants admin from the browser', asy
   const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8')
   assert.match(app, /VITE_OWNER_BOOTSTRAP_SIGNUP === 'true'/)
   assert.match(app, /supabase\.auth\.signUp\(/)
-  assert.match(app, /minLength=\{mode === 'update' \|\| mode === 'register' \? 12/)
+  assert.match(app, /minLength=\{\['invite','update','register'\]\.includes\(mode\) \? 12/)
   const signupCall = app.slice(app.indexOf('supabase.auth.signUp('), app.indexOf('supabase.auth.signUp(') + 300)
   assert.equal(/role:\s*['"]admin['"]/.test(signupCall), false)
 })

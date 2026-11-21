@@ -7,6 +7,13 @@
 .exercise-pr-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;min-height:48px;padding:8px;border:0;border-radius:10px;background:transparent;color:#c6d1d3;font-size:13px;font-weight:850}
 .exercise-pr-tabs button.active{background:#a86822;color:#fff7ed}
 .exercise-pr-tabs button span{font-size:11px;opacity:.7}
+.exercise-pr-filters{display:grid;gap:10px;min-width:0}
+.exercise-pr-category-scroll{display:flex;align-items:center;gap:7px;overflow-x:auto;padding:2px 0 7px;scrollbar-width:thin}
+.exercise-pr-category-scroll button{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;min-height:36px;padding:7px 11px;border:1px solid #53666a;border-radius:999px;background:#1b2b2e;color:#c9d6d7;font-size:12px;font-weight:800}
+.exercise-pr-category-scroll button.active{background:#2a503e;border-color:#58b987;color:#d8ffe8}
+.exercise-pr-category-scroll button span{font-size:11px;opacity:.75}
+.exercise-pr-search{display:flex;align-items:center;gap:8px;min-width:0;padding:0 11px;border:1px solid #53666a;border-radius:10px;background:#112329;color:#abbcbf}
+.exercise-pr-search input{min-width:0;width:100%;min-height:43px;border:0;outline:0;background:transparent;color:#f8faf9;font-size:14px}
 .exercise-pr-select{display:grid;gap:6px;color:#dbe6e6;font-size:12px;font-weight:850}
 .exercise-pr-select select{width:100%;min-height:50px;padding:10px 12px;border:1px solid #60757a;border-radius:10px;background:#112329;color:#f8faf9;font-size:15px}
 .exercise-pr-summary{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:6px}

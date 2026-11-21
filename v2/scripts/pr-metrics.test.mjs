@@ -33,6 +33,18 @@ test('bodyweight, holds and cardio expose different relevant measurements',()=>{
  assert.equal(exerciseRecordType('Romaskin',[],{meters:500}),'endurance')
 })
 
+test('hang olympic lifting stays loaded while dead hang and wall sit measure seconds',()=>{
+ assert.equal(exerciseRecordType('Hang Power Clean',[{reps:3,load_kg:60}]),'load')
+ assert.equal(exerciseRecordType('Hang Squat Snatch',[{reps:2,load_kg:40}]),'load')
+ assert.equal(exerciseRecordType('Dead Hang',[{time_seconds:64}]),'hold')
+ assert.equal(exerciseRecordType('Wall Sit',[{time_seconds:90}]),'hold')
+ assert.equal(exerciseRecordType('TRX Row',[{reps:12}]),'reps')
+ assert.equal(exerciseRecordType('TRX Biceps Curl',[{reps:8}]),'reps')
+ assert.equal(exerciseRecordType('TRX Plank',[{time_seconds:48}]),'hold')
+ const [exercise]=deriveExerciseRecords([workout(1,'Dead Hang',[{time_seconds:64}],{result_data:{exercise_results:[{}]}})])
+ assert.deepEqual(exercise.records.map(r=>[r.key,r.value]),[['hold',64]])
+})
+
 test('invalid load without reps does not become a PR',()=>{
  const [exercise]=deriveExerciseRecords([workout(1,'Kettlebell Snatch',[{reps:null,load_kg:36}])])
  assert.equal(exercise.records.length,0)

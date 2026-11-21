@@ -68,3 +68,10 @@ test('saved height and load values preserve both measurements when a WOD is reop
     { usesHeight: true, usesLoad: true },
   );
 });
+
+test('TRX and static holds do not ask for kilograms unless externally loaded', () => {
+  for (const name of ['TRX Row', 'TRX Chest Press', 'Dead Hang', 'Wall Sit', 'Ab Wheel Rollout']) {
+    assert.deepEqual(getExerciseMeasurementFlags({ name, equipment: name.startsWith('TRX') ? 'TRX' : '' }), { usesHeight: false, usesLoad: false });
+  }
+  assert.deepEqual(getExerciseMeasurementFlags({name:'Dead Hang',equipment:'Pull-up-stong',sets:[{load_kg:10}]}),{usesHeight:false,usesLoad:true});
+});

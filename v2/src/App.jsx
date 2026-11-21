@@ -7,6 +7,7 @@ import {
   Coffee,
   Music2,
   Dumbbell,
+  Trophy,
   PlayCircle,
   LayoutDashboard,
   LogOut,
@@ -43,6 +44,8 @@ import WorkoutDetail from './components/WorkoutDetail.jsx'
 import { Music, MusicProvider } from './components/Music.jsx'
 import { useDeviceProfile } from './lib/deviceLayout.js'
 import { RELEASE_NAME, RELEASE_SHORT } from './lib/release.js'
+import {clearInviteLanding,isInviteLanding} from './lib/invitationFlow.js'
+import './components/invitation.css'
 
 const sections = [
   { id: 'oversikt', label: 'Oversikt', icon: LayoutDashboard, note: 'Dashboard og treningsstatus' },
@@ -56,13 +59,14 @@ const sections = [
   { id: 'mi-side', label: 'Mi side', icon: UserRound, note: 'Profil, treningshistorikk og PR' },
 ]
 
-function AuthScreen({ recovery = false, onRecoveryComplete }) {
+function AuthScreen({ recovery = false, invitation = false, onRecoveryComplete, onInvitationComplete }) {
   // Explicit release-only switch. Public signups are not part of normal use;
   // server-side Auth/DB rules must enforce the verified owner bootstrap.
   const ownerRegistrationEnabled = import.meta.env.VITE_OWNER_BOOTSTRAP_SIGNUP === 'true'
-  const [mode, setMode] = useState(recovery ? 'update' : 'login')
+  const [mode, setMode] = useState(invitation ? 'invite' : recovery ? 'update' : 'login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -73,14 +77,20 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
     setError('')
     setMessage('')
     try {
-      if (mode === 'update') {
+      if (mode === 'update' || mode === 'invite') {
+        if(password!==confirmPassword)throw new Error('Passorda er ikkje like. Prøv igjen.')
         const { error: updateError } = await supabase.auth.updateUser({ password })
         if (updateError) throw updateError
-        setMessage('Passordet er oppdatert. Du kan no logga inn med det nye passordet.')
-        setMode('login')
         setPassword('')
-        onRecoveryComplete?.()
-        await supabase.auth.signOut()
+        setConfirmPassword('')
+        if(mode==='invite'){
+          onInvitationComplete?.()
+        }else{
+          setMessage('Passordet er oppdatert. Du kan no logga inn med det nye passordet.')
+          setMode('login')
+          onRecoveryComplete?.()
+          await supabase.auth.signOut()
+        }
       } else if (mode === 'reset') {
         const redirectTo = getAppBaseUrl(window.location.origin, import.meta.env.BASE_URL)
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo })
@@ -123,25 +133,27 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
           <div><strong>GARASJEGYM</strong><span>{RELEASE_NAME}</span></div>
         </div>
         <div className="eyebrow"><ShieldCheck size={14} /> MEDLEMSOMRÅDE</div>
-        <h1>{mode === 'login' ? <>Velkomen <em>tilbake.</em></> : mode === 'register' ? <>Aktiver <em>eigar.</em></> : <>Nytt <em>passord.</em></>}</h1>
-        <p className="auth-intro">{mode === 'reset' ? 'Skriv inn e-postadressa di, så sender me ei lenkje for å nullstilla passordet.' : mode === 'update' ? 'Vel eit unikt passord på minst 12 teikn for GarasjeGym-kontoen din.' : mode === 'register' ? 'Eingongsregistrering for eigaren. Bruk tibrakestad@gmail.com og eit unikt passord på minst 12 teikn.' : 'Logg inn med den personlege GarasjeGym-kontoen din.'}</p>
+        <h1>{mode === 'login' ? <>Velkomen <em>tilbake.</em></> : mode === 'register' ? <>Aktiver <em>eigar.</em></> : mode === 'invite' ? <>Velkomen til <em>GarasjeGym!</em></> : <>Nytt <em>passord.</em></>}</h1>
+        <p className="auth-intro">{mode === 'invite' ? 'Du er invitert inn i treningsfellesskapet! Opprett ditt eige passord, så er du klar til å trene.' : mode === 'reset' ? 'Skriv inn e-postadressa di, så sender me ei lenkje for å nullstilla passordet.' : mode === 'update' ? 'Vel eit unikt passord på minst 12 teikn for GarasjeGym-kontoen din.' : mode === 'register' ? 'Eingongsregistrering for eigaren. Bruk tibrakestad@gmail.com og eit unikt passord på minst 12 teikn.' : 'Logg inn med den personlege GarasjeGym-kontoen din.'}</p>
+        {mode === 'invite' && <div className="invite-welcome-features" aria-label="Dette får du i GarasjeGym"><div><Dumbbell size={18}/><span><strong>WOD og økter</strong><small>Finn øvingar, bygg økter og bruk den store klokka.</small></span></div><div><Trophy size={18}/><span><strong>PR og framgang</strong><small>Samla treningslogg, rekordar og personleg utvikling.</small></span></div><div><CalendarDays size={18}/><span><strong>Timar og PT</strong><small>Timeplan, gruppetrening og tildelte økter.</small></span></div><div><Coffee size={18}/><span><strong>Garasjefellesskapet</strong><small>Meldingar, aktivitet og ein liten kaffibar.</small></span></div></div>}
         <form className="auth-form" onSubmit={submit}>
-          {mode !== 'update' && <label>
+          {mode !== 'update' && mode !== 'invite' && <label>
             E-post
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required placeholder="namn@epost.no" />
           </label>}
           {mode !== 'reset' && <label>
             Passord
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={mode === 'update' || mode === 'register' ? 12 : undefined} placeholder="Passord" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={['invite','update','register'].includes(mode) ? 12 : undefined} placeholder={mode==='invite'?'Minst 12 teikn':'Passord'} />
           </label>}
+          {(mode === 'invite' || mode === 'update') && <label>Gjenta passordet<input type="password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} autoComplete="new-password" minLength={12} required placeholder="Skriv passordet ein gong til"/></label>}
           {error && <div className="auth-error" role="alert">{error}</div>}
           {message && <div className="auth-message" role="status">{message}</div>}
           <button className="primary-button" type="submit" disabled={busy}>
-            {busy ? 'Arbeider …' : mode === 'login' ? 'Logg inn' : mode === 'reset' ? 'Send lenkje' : mode === 'register' ? 'Registrer eigarkonto' : 'Lagra nytt passord'}
+            {busy ? 'Arbeider …' : mode === 'invite' ? 'Opprett passord og bli med' : mode === 'login' ? 'Logg inn' : mode === 'reset' ? 'Send lenkje' : mode === 'register' ? 'Registrer eigarkonto' : 'Lagra nytt passord'}
           </button>
         </form>
         <div className="auth-switch">
-          {mode !== 'login' && <button type="button" onClick={() => { if (mode === 'update') onRecoveryComplete?.(); setMode('login'); setError(''); setMessage('') }}>Tilbake til innlogging</button>}
+          {mode !== 'login' && mode !== 'invite' && <button type="button" onClick={() => { if (mode === 'update') onRecoveryComplete?.(); setMode('login'); setError(''); setMessage('') }}>Tilbake til innlogging</button>}
           {mode === 'login' && <button type="button" onClick={() => { setMode('reset'); setError(''); setMessage('') }}>Gløymt passord?</button>}
           {mode === 'login' && ownerRegistrationEnabled && <button type="button" onClick={() => { setMode('register'); setError(''); setMessage(''); setEmail('tibrakestad@gmail.com') }}>Aktiver eigarkonto</button>}
         </div>
@@ -159,6 +171,7 @@ export default function App() {
   useDeviceProfile()
   const [session, setSession] = useState(null)
   const [passwordRecovery, setPasswordRecovery] = useState(false)
+  const [invitationPending,setInvitationPending]=useState(()=>isInviteLanding(window.location))
   const [authReady, setAuthReady] = useState(false)
   const [profile, setProfile] = useState(null)
   const [isPTCoach, setIsPTCoach] = useState(false)
@@ -311,7 +324,9 @@ export default function App() {
     return <LoadingScreen text="Supabase er ikkje konfigurert. Legg inn VITE_SUPABASE_URL og VITE_SUPABASE_PUBLISHABLE_KEY i v2/.env.local." />
   }
   if (!authReady) return <LoadingScreen text="Koplar til GarasjeGym …" />
-  if (passwordRecovery) return <AuthScreen recovery onRecoveryComplete={() => setPasswordRecovery(false)} />
+  if (passwordRecovery) return <AuthScreen key="recovery" recovery onRecoveryComplete={() => setPasswordRecovery(false)} />
+  if (invitationPending && session) return <AuthScreen key="invitation" invitation onInvitationComplete={()=>{clearInviteLanding(window);setInvitationPending(false)}} />
+  if (invitationPending && !session) return <main className="auth-shell"><div className="auth-card"><div className="eyebrow"><ShieldCheck size={14}/> INVITASJON</div><h1>Lenkja er <em>ikkje gyldig.</em></h1><p className="auth-intro">Opne invitasjonslenkja direkte frå e-posten. Dersom ho er brukt eller utgått, må du be administrator om ei ny invitasjon.</p><button type="button" className="primary-button" onClick={()=>{clearInviteLanding(window);setInvitationPending(false)}}>Til innlogging</button></div></main>
   if (!session) return <AuthScreen />
   if (!profileReady) return <LoadingScreen text="Hentar medlemsprofil …" />
 
