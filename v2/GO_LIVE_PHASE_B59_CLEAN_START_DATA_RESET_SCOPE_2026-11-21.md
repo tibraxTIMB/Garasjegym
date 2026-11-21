@@ -1,4 +1,7 @@
 # GO LIVE Phase B59 – clean-start data reset scope and launch bootstrap
+
+> **SUPERSEDED SCOPE NOTICE (2026-11-21):** This is a historical scope discussion. Its old suggestions to retain the existing admin, retain the 56-row catalogue, preserve `coffee_settings`, or selectively retain legacy configuration are superseded. Current binding contract: create exactly one new owner-controlled Auth/admin identity; migrate no old Auth users/profiles/members/managers; clear all legacy operational data including coffee settings; preserve the reviewed 135-name provisional standard exercise catalogue and the full app schema/security/modules. See B81 and the current owner checklist. No reset is authorized by this historical document.
+
 **Date:** 2026-11-21  
 **Release:** SturmKopf Feuer 1.1  
 **Production project:** `kultdmklwmilhoytrrig`  
