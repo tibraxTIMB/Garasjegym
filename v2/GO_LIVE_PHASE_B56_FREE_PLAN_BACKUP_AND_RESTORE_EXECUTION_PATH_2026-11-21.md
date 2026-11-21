@@ -1,5 +1,7 @@
 # GO LIVE Phase B56 – Free Plan backup and restore execution path
 
+> **Scope clarification (2026-11-21):** This document remains a historical zero-cost backup capability assessment. Any mention of mapping or retaining the old admin/member identities is for protected rollback backup and isolated restore only. It does not authorize carrying old Auth users, profiles or operational data into the clean-start launch. The binding clean-start contract and current owner steps are in `GO_LIVE_PHASE_B81_ZERO_COST_BACKUP_AND_RESTORE_RUNBOOK_2026-11-21.md` and `GO_LIVE_OWNER_BACKUP_RESTORE_AND_ADMIN_CHECKLIST.md`.
+
 **Date:** 2026-11-21  
 **Release:** SturmKopf Feuer 1.1  
 **Production project:** `kultdmklwmilhoytrrig`  
