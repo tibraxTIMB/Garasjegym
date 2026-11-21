@@ -13,7 +13,7 @@ TEST project `izwzwvlexqxqewzijhhd` currently has:
 
 The current STURMKOPF client source `v2/src/components/Admin.jsx` invokes `supabase.functions.invoke('admin-delete-user')` in its member deletion action. Therefore the current app's delete-member action will fail against Production until the function is deployed there. This is a confirmed app-to-function dependency, not a hypothetical dependency.
 
-The user-creation function is intentionally disabled and the current app does not invoke `admin-create-user`, consistent with the owner requirement to remove in-app account creation.
+The user-creation function is intentionally disabled and the current app does not invoke `admin-create-user`, consistent with the owner requirement to remove in-app account creation. The current app source also contains no public sign-up UI. However, this alone does not prevent direct Supabase Auth API signup. The hosted project's Auth setting **Allow new users to sign up** must be disabled in Authentication → General configuration to enforce invitation-only access. Its current Production value was not available through the read-only database/function inventory and remains an owner verification gate. Dashboard-invited users should still be tested end-to-end and must enter as pending members for admin approval.
 
 ## Security review of admin-delete-user
 The repository function source:
