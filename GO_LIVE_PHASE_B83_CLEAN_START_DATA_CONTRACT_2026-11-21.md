@@ -30,7 +30,7 @@ Start with an operationally empty database and create exactly one NEW owner admi
 ## Mandatory release gates
 1. A protected, verified Production backup and a documented rollback path exist before any destructive operation.
 2. Production schema and migration-lineage drift is reconciled with forward-only, reviewed migrations. Never edit migration ledger rows manually or replay TEST bootstrap/fixtures into Production.
-3. The canonical 94 exercise records are enumerated and reviewed by name/category/metadata. The exact-94 integrity gate, seven-category check and duplicate-name check pass. A row count alone is not sufficient.
+3. The full Production + TEST + expansion exercise union is reconciled by name/category/metadata, semantic aliases are reviewed, and an exact canonical manifest is approved. The interim minimum/category/Pilates/duplicate checks pass; the final exact count is taken from the manifest, not assumed to be 94 or 97.
 4. The new admin is created through the approved owner-controlled process; credentials and secrets are never placed in GitHub or ChatGPT.
 5. Post-reset read-only acceptance confirms exactly one linked new Auth identity and admin profile; zero non-admin profiles; zero legacy Auth identities; zero rows in all operational/history tables listed above; and complete reconciled exercise catalogue (final count measured after alias review).
 6. Verify group-class creation, booking, cancellation/waitlist and messaging work with new records after acceptance; the empty-state gate must not disable these features.
@@ -41,7 +41,7 @@ Start with an operationally empty database and create exactly one NEW owner admi
 - Production has only 18 of 46 expected application tables and 0 of 26 app RPCs at the last audit.
 - Production migration ledger has 11 entries whose exact timestamped SQL files are missing from the active branch.
 - Production Auth/RLS/function behaviour differs materially from the tested target.
-- The exact 94-row canonical exercise list has not yet been independently enumerated and compared. The existing 56-row legacy-preservation SQL is not a complete 94-row catalogue definition.
+- The full canonical exercise manifest and semantic-alias reconciliation have not yet been completed. The existing 56-row legacy-preservation SQL is not a complete catalogue definition.
 - A verified backup/restore rehearsal and new owner-admin login acceptance are still outstanding.
 
 ## Safety boundary
