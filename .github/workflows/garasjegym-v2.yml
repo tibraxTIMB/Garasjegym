@@ -169,6 +169,12 @@ jobs:
               text = text[:match.start(2)] + body + text[match.end(2):]
           path.write_text(text)
           PY
+      - name: Install isolated TEST-only baseline and fixtures
+        working-directory: v2
+        run: |
+          # These files are intentionally outside the production migration path.
+          # Copy them only into this disposable local test stack.
+          cp supabase/test-fixtures/migrations/*.sql supabase/migrations/
       - name: Start isolated Supabase stack
         working-directory: v2
         run: supabase start
