@@ -5,8 +5,6 @@
 -- Run only on an isolated Production-derived rehearsal target after reset.
 -- Also run exercise_catalogue_manifest_assertions.sql for exact names/categories.
 WITH profiles_state AS (
-),
-profiles_state AS (
   SELECT count(*) profile_count,
          count(*) FILTER (WHERE role='admin' AND active=true AND membership_status='approved') valid_admin_count,
          count(*) FILTER (WHERE role<>'admin') non_admin_profiles,
