@@ -48,9 +48,41 @@ WITH expected_tables(table_name) AS (VALUES
   ('workout_sets')
 ),
 expected_columns(table_name,column_name) AS (VALUES
+  ('class_bookings','attendance_status'),
+  ('class_bookings','attendance_marked_at'),
+  ('class_bookings','attendance_marked_by'),
+  ('classes','instructor_id'),
+  ('classes','published'),
+  ('classes','cancelled_at'),
+  ('classes','cancelled_by'),
+  ('classes','cancellation_note'),
+  ('classes','prep_text'),
+  ('classes','main_text'),
+  ('classes','finish_text'),
+  ('classes','coach_notes'),
+  ('member_preferences','created_at'),
+  ('member_preferences','last_seen_pt_wod_at'),
+  ('member_preferences','spotify_genre_playlists'),
+  ('member_preferences','hr_enabled'),
+  ('member_preferences','hr_share_with_pt'),
+  ('member_preferences','hr_share_on_screen'),
+  ('member_preferences','hr_save_history'),
   ('profiles','email'),
   ('profiles','membership_status'),
-  ('profiles','member_rank')
+  ('profiles','member_rank'),
+  ('pt_requests','archived_at'),
+  ('pt_requests','pt_session_id'),
+  ('pt_sessions','session_type'),
+  ('pt_sessions','coach_notes'),
+  ('pt_sessions','completed_notes'),
+  ('pt_sessions','attendance_status'),
+  ('pt_sessions','cancellation_note'),
+  ('social_posts','author_role'),
+  ('wods','is_archived'),
+  ('wods','category'),
+  ('workout_logs','class_live_session_id'),
+  ('workout_logs','save_token'),
+  ('workout_sets','height_cm')
 ),
 expected_rpcs(function_name) AS (VALUES
   ('add_wod_to_class'),
@@ -111,13 +143,14 @@ missing_rpcs AS (
 )
 SELECT 'missing_table' category,item,'BLOCKER' severity FROM missing_tables
 UNION ALL
-SELECT 'missing_profile_column',item,'BLOCKER' FROM missing_columns
+SELECT 'missing_required_column',item,'BLOCKER' FROM missing_columns
 UNION ALL
 SELECT 'missing_rls',item,'BLOCKER' FROM missing_rls
 UNION ALL
 SELECT 'missing_rpc',item,'BLOCKER' FROM missing_rpcs
 UNION ALL
 SELECT 'summary','expected_tables='||(SELECT count(*) FROM expected_tables)
+  ||'; required_existing_columns='||(SELECT count(*) FROM expected_columns)
   ||'; present_tables='||(SELECT count(*) FROM expected_tables e WHERE NOT EXISTS (SELECT 1 FROM missing_tables m WHERE m.item=e.table_name))
   ||'; missing_tables='||(SELECT count(*) FROM missing_tables)
   ||'; missing_columns='||(SELECT count(*) FROM missing_columns)
