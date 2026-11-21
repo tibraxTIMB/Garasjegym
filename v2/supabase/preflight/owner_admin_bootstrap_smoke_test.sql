@@ -3,6 +3,9 @@
 -- everything back. Never touches a real owner account or persistent database state.
 BEGIN;
 
+SELECT set_config('app.clean_start_target','isolated-rehearsal',true);
+\ir clean_start_reset_isolated_rehearsal.sql
+
 DO $owner_fixture$
 DECLARE
   v_user_id uuid := 'f2000000-0000-4000-8000-000000000002';
@@ -56,5 +59,8 @@ BEGIN
   END IF;
 END;
 $owner_assert$;
+
+\ir clean_start_post_reset_acceptance_read_only.sql
+\ir exercise_catalogue_manifest_assertions.sql
 
 ROLLBACK;
