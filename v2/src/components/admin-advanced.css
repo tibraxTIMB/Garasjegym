@@ -1,0 +1,5 @@
+.admin-advanced-tools { border: 1px solid #435154; border-radius: 12px; background: #172125; }
+.admin-advanced-tools > summary { display: flex; justify-content: space-between; gap: 12px; cursor: pointer; padding: 16px; color: #f4f6f5; }
+.admin-advanced-tools > summary span { color: #b5c3c4; font-size: 13px; }
+.admin-advanced-content { padding: 4px 14px 16px; border-top: 1px solid #435154; }
+@media(max-width:520px) { .admin-advanced-tools > summary { flex-direction: column; gap: 3px; } }

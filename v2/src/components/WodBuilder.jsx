@@ -4,7 +4,6 @@ import {Plus,Search,Trash2,ArrowUp,ArrowDown,Save,LoaderCircle,WandSparkles,Dice
 import {supabase} from '../lib/supabase.js'
 import {addWodSortOrder,getWodSchemaItems,moveWodItemByKey,moveWodItemToPosition,sortWodItems} from '../lib/wodOrdering.js'
 import {COMPLEX_EXERCISES,formatComplexSequence} from '../lib/wodComplexes.js'
-import WodImportPanel from './WodImportPanel.jsx'
 import { createWodEngineConfig, buildLegacyCompatibleBlock, normalizeWodEngine, scoreForWodFormat, PARTICIPATION_MODES, COLLABORATION_MODES, SCORE_TYPES } from '../lib/wodEngine.js'
 import { getFixedSlotTimerState } from '../lib/timerClock.js'
 import './wod-ordering.css'
@@ -122,7 +121,7 @@ const equipmentIcon=value=>{const v=(value||'').toLowerCase();if(/power.?rack|sq
 const equipmentItems=value=>(value||'Kroppsvekt').split(/[,;+\\/\\n]+/).map(x=>x.trim()).filter(Boolean);
 const categoryTone=value=>{const v=(value||'').toLowerCase();return v.includes('kond')||v.includes('cardio')||v.includes('crossfit')?'conditioning':v.includes('kjern')||v.includes('core')||v.includes('pilates')?'core':v.includes('styr')||v.includes('strength')?'strength':v.includes('mobil')?'mobility':v.includes('golf')?'golf':v.includes('rehab')||v.includes('fysio')?'rehab':'other'}
 
-export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=null,onSaved,onCancel}){
+export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=null,initialImport=null,onImportConsumed,onSaved,onCancel}){
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område'),[equipmentFilter,setEquipmentFilter]=useState('all'),[movementFilter,setMovementFilter]=useState('all'),[openFilter,setOpenFilter]=useState('')
  const rehabBodyAreas=['hofte','skulder','kne','nakke']
  const isRehabExercise=x=>!!(x.is_rehab||x.category==='Rehab / fysio'||rehabBodyAreas.includes((x.body_area||'').toLowerCase()))
@@ -230,6 +229,9 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   })
   setName(parsed.name||'Importert WOD');setFormat(parsed.format||'Eigen økt');setMinutes(String(parsed.minutes||20));setTimeCap(parsed.minutes?String(parsed.minutes):'');setRounds(String(parsed.rounds||1));setSelected(imported);setNotes(parsed.notes||'');setStimulus('Importert WOD – kontroller format, øvingar og dosering før lagring.');setLibraryCategory('standard');setPublishToMembers(false);setWizardStep(2);setError('');setNotice('WOD-teksten er tolka og lagd inn i byggjaren. Kontroller alle øvingar, belastningar og doseringsnivå før lagring.')
  }
+ useEffect(()=>{
+  if(!loading&&initialImport&&!editWodId){applyImportedWod(initialImport);onImportConsumed?.()}
+ },[loading,initialImport,editWodId])
  function add(ex){if(isInterval&&selected.length>=Number(intervalExerciseCount)){setError(`Du har valt ${intervalExerciseCount} øvingar/drag. Endre talet i oppsettet dersom du vil leggja til fleire.`);return}if(isStationCircuit&&selected.length>=Number(stationCount)){setError(`Du har valt ${stationCount} stasjonar. Fjern ei øving eller auk talet på stasjonar før du legg til fleire.`);return}setError('');const item=blankItem(ex);item.prescription=loadPairFor(ex)||{};setSelected(rows=>[...rows,{...item,...(isStationCircuit?{reps:'',repsMode:'amrap'}:{})}])}
  function addPause(){setError('');setSelected(rows=>[...rows,{...blankItem({id:null,name:'Pause',category:'Pause',body_area:'Heile kroppen',equipment:'Ingen',description:'Planlagd pause mellom øvingar.',is_rest:true}),is_rest:true,pauseSeconds:'30',reps:''}]);setLibraryOpen(false)}
  function suggestUniqueWodName(){const existing=new Set(libraryWods.map(w=>(w.name||'').trim().toLowerCase()));for(let i=0;i<60;i++){const candidate=randomWodName();if(!existing.has(candidate.toLowerCase())&&candidate.toLowerCase()!==name.trim().toLowerCase())return candidate}return randomWodName()+' '+String(Date.now()).slice(-4)}
@@ -412,7 +414,6 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
     <p className="wod-help">Vel formatet nedanfor. Resultattypen følgjer automatisk formatet, også når du endrar tidsstruktur. Partner og team kan framleis veljast ovanfor.</p>
   </section>}
   {wizardStep===1&&<section className="wod-classic-picker"><div className="wod-classic-copy"><span className="wod-classic-kicker">BENCHMARK COLLECTION</span><strong>Klassiske WOD-ar</strong><small>The Girls · Hero WODs · originaloppsett</small></div><div className="wod-classic-controls"><select className="wod-classic-select" value={classicChoice} onChange={e=>setClassicChoice(e.target.value)}><option value="">Vel ei klassisk økt …</option><optgroup label="The Girls">{CLASSIC_WODS.filter(x=>x.group==='The Girls').map(x=><option key={x.name} value={x.name}>{x.name}</option>)}</optgroup><optgroup label="Hero WODs">{CLASSIC_WODS.filter(x=>x.group==='Hero WODs').map(x=><option key={x.name} value={x.name}>{x.name}</option>)}</optgroup></select><button type="button" className="secondary-button" disabled={!classicChoice} onClick={loadClassicWod}>Last inn</button></div></section>}
-  {wizardStep===1&&<WodImportPanel exerciseCatalog={exercises} onApply={applyImportedWod}/>}
   {wizardStep===1&&<div className="wod-studio-tools"><button type="button" className="primary-button" onClick={randomWod}><Dices size={17}/> Generer tilfeldig WOD</button><button type="button" className="secondary-button" onClick={reset}><Trash2 size={15}/> Forkast økt</button></div>}
   <div className="wod-builder-layout">
    {wizardStep===2&&<aside className="wod-setup-summary"><div className="wod-setup-summary-kicker">WOD-OPPSETT</div><h4>{name||'Namlaus WOD'}</h4><div className="wod-setup-summary-row"><span>Format</span><strong>{format}</strong></div><div className="wod-setup-summary-row"><span>Tidsramme</span><strong>{isAmrap?(timeCap?timeCap+' min':'Open AMRAP'):isForTime?(timeCap?timeCap+' min':'Fri tid'):isElapsedFormat?'Medgått tid':minutes+' min'}</strong></div><div className="wod-setup-summary-row"><span>Intensitet</span><strong>{intensity==='1'?'Kontrollert':intensity==='3'?'Høg':'Utfordrande'}</strong></div><div className="wod-setup-summary-hint">Oppsettet er klart. Vel øvingar i biblioteket og legg dei til i ønskt rekkjefølgje.</div></aside>}
