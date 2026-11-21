@@ -70,6 +70,24 @@ test('mobile WOD browsing keeps category and search visible but folds away secon
   assert.match(styles, /\.welcome-wod-compact h1/)
 })
 
+test('WOD library cards keep RX and Scaled visible without long action stacks', () => {
+  const library = source('../src/components/WodLibrary.jsx')
+  const styles = source('../src/components/wod-compact.css')
+  assert.match(library, /const compactDose=\(item,level\)=>/)
+  assert.match(library, /\$\{men\}\/\$\{women\} kg/)
+  assert.match(library, /const rx=compactDose\(item,'rx'\),scaled=compactDose\(item,'scaled'\)/)
+  assert.match(library, /RX '\+rx/)
+  assert.match(library, /Scaled '\+scaled/)
+  assert.match(library, /className="wod-card-exercise-preview wod-card-exercise-compact"/)
+  assert.match(library, /className="wod-library-actions wod-card-primary-actions"/)
+  assert.match(library, /className="wod-card-action-panel wod-card-use-panel"/)
+  assert.match(library, /className="wod-card-details-toggle"/)
+  assert.match(library, /onClick=\{\(\)=>onLaunchWod\?\.\(w\.id\)\}/)
+  assert.match(styles, /\.wod-library-card-compact \.wod-card-primary-actions/)
+  assert.match(styles, /\.wod-library-card-compact \.wod-card-action-panel button/)
+  assert.doesNotMatch(library, /Bruk kvinnevekt som snarveg/)
+})
+
 test('class builder and PT Studio use dark, readable field and selected-item surfaces', () => {
   assert.match(source('../src/components/Booking.jsx'), /import '\.\/builder-form-contrast\.css'/)
   assert.match(source('../src/components/PTStudio.jsx'), /import '\.\/builder-form-contrast\.css'/)

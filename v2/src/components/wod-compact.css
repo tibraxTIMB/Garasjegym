@@ -1,5 +1,4 @@
-/* Keep the WOD library close to the top of the phone screen. This module only
-   changes navigation and filters; cards and editing keep their existing UI. */
+/* Keep the WOD library compact on phones, with advanced actions available on demand. */
 .welcome.welcome-wod-compact {
   padding: 14px 0 10px;
 }
@@ -52,4 +51,133 @@
   .wod-library-expanded-filters .wod-library-advanced-filters select { min-width: 0; width: 100%; min-height: 43px; font-size: 13px; }
   .wod-library-expanded-filters .wod-library-visibility-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .wod-library-expanded-filters .wod-library-visibility-chips button { min-height: 41px; }
+}
+
+/* Cards show the workout first. Longer prescriptions and management stay expandable. */
+.wod-library-card.wod-library-card-compact {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 13px;
+  overflow: visible;
+}
+.wod-library-card-compact .wod-library-card-head {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+.wod-card-head-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+.wod-card-icon-action {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid #4b5c60;
+  border-radius: 10px;
+  background: #1d2a2e;
+  color: #e8f0ef;
+}
+.wod-card-icon-action.is-favorite { border-color: #b88739; color: #ffc067; background: #33291b; }
+.wod-library-card-compact h4 { margin: 0; font-size: 18px; line-height: 1.25; }
+.wod-card-mini-category { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; color: #e5ece9; font-size: 13px; }
+.wod-card-mini-category strong { color: #f8bf70; font-size: 12px; }
+.wod-library-card-compact .wod-library-meta { justify-content: flex-start; gap: 12px; font-size: 12px; }
+.wod-library-card-compact .wod-card-short-stimulus {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #cbd3d1;
+}
+.wod-card-exercise-compact { display: grid; gap: 5px; }
+.wod-card-exercise-compact .wod-card-exercise-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid #39494b;
+  border-radius: 8px;
+  background: #121c1f;
+}
+.wod-card-exercise-line strong { color: #f2f5f4; font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; }
+.wod-card-exercise-line small { color: #f1bb76; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.wod-card-exercise-more { padding: 1px 5px; color: #b6c1bf; font-size: 12px; }
+.wod-card-details-toggle {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 40px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: #f0bb73;
+  font-size: 12px;
+  font-weight: 750;
+}
+.wod-library-card-compact .wod-card-primary-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(86px, .8fr);
+  width: 100%;
+  gap: 8px;
+}
+.wod-library-card-compact .wod-card-primary-actions button {
+  min-width: 0;
+  min-height: 46px;
+  padding: 9px;
+  font-size: 14px;
+  line-height: 1.25;
+  font-weight: 800;
+}
+.wod-library-card-compact .wod-card-primary-actions .primary-button { grid-column: auto; }
+.wod-library-card-compact .wod-card-primary-actions .wod-card-use-button { display: inline-flex; gap: 6px; }
+.wod-library-card-compact .wod-card-action-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  width: 100%;
+  padding: 9px;
+  border: 1px solid #46565a;
+  border-radius: 10px;
+  background: #131d21;
+}
+.wod-library-card-compact .wod-card-action-panel button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid #536166;
+  border-radius: 8px;
+  background: #223036;
+  color: #f2f6f5;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+.wod-library-card-compact .wod-card-action-panel .wod-card-danger-action { border-color: #8a504b; color: #ffb5ad; }
+.wod-library-card-compact .wod-card-detail { width: 100%; overflow-wrap: anywhere; }
+.wod-library-card-compact button:focus-visible { outline: 3px solid #f4be72; outline-offset: 3px; }
+
+@media (max-width: 380px) {
+  .wod-library-card.wod-library-card-compact { padding: 10px; }
+  .wod-library-card-compact .wod-card-primary-actions { grid-template-columns: minmax(0, 1.5fr) minmax(80px, .8fr); }
+  .wod-library-card-compact .wod-card-primary-actions button { font-size: 13px; }
+  .wod-card-head-actions .coffee-status { font-size: 10px; }
 }
