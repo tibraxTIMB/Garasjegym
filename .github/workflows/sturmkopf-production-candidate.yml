@@ -1,0 +1,57 @@
+name: STURMKOPF · production-target release candidate (build only)
+
+on:
+  push:
+    branches:
+      - "garasjegym-2.0-sturm­kopf"
+    paths:
+      - "v2/**"
+      - ".github/workflows/sturmkopf-production-candidate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  production-candidate:
+    name: Build and verify against the real Production Supabase project
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - name: Checkout STURMKOPF
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check SQL migration syntax
+        run: npm run check:migrations
+      - name: Block TEST-only migrations from the production path
+        run: npm run check:production-migrations
+      - name: Run application regression suite
+        run: npm test
+      - name: Build production-target bundle (no deployment)
+        env:
+          VITE_SUPABASE_URL: https://kultdmklwmilhoytrrig.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_DsQ4F5ApJeTsBKpK71Ox4Q_GBOsSLTG
+        run: npm run build
+      - name: Verify production project binding and client artifact safety
+        env:
+          EXPECTED_SUPABASE_PROJECT_REF: kultdmklwmilhoytrrig
+        run: npm run check:release-artifact
+      - name: Upload production-target candidate artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sturmkopf-feuer-1.1-production-target-candidate
+          path: v2/dist
+          if-no-files-found: error
+          retention-days: 14
+
+# This workflow intentionally builds and tests only. It does not deploy to
+# GitHub Pages, modify Production database schema/data, or deploy Edge Functions.
+# Production rollout remains blocked until the Auth-preserving backup/restore,
+# exact migration lineage, owner-admin login, and schema/RLS acceptance gates pass.
