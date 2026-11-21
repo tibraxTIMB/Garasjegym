@@ -88,7 +88,7 @@ This is a separate operation from backup/restore. Rehearse the exact reset again
 
 **Acceptance checks:**
 1. Run `v2/supabase/preflight/clean_start_readiness_read_only.sql` before the reset; treat profile/Auth sections as legacy inventory.
-2. Run the reset only in the isolated rehearsal copy using the reviewed dependency-aware procedure.
+2. Run `v2/supabase/preflight/clean_start_reset_isolated_rehearsal.sql` only inside an explicit transaction on the isolated local rehearsal target with `app.clean_start_target='isolated-rehearsal'`. It refuses any other target and must never be copied to Production. For eventual Production Auth deletion, use the Auth Admin API/Dashboard after the separate owner GO LIVE approval.
 3. Create the new owner-admin Auth user and profile.
 4. Run `v2/supabase/preflight/clean_start_post_reset_acceptance_read_only.sql`.
 5. Run `v2/supabase/preflight/exercise_catalogue_manifest_assertions.sql`.
