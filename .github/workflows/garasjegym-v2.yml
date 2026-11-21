@@ -77,6 +77,41 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/sturmkopf
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f v2/supabase/preflight/wave1_candidate_postgres17_run.sql
 
+  owner-first-signup-postgres17:
+    if: github.event_name == 'push'
+    name: Disposable PostgreSQL 17 first-owner signup security rehearsal
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sturmkopf
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d sturmkopf"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Create isolated Auth/profile fixture
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/sturmkopf
+        run: psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/owner_first_signup_postgres17_fixture.sql
+      - name: Assert first owner confirmation and reject competing registrations
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/sturmkopf
+        run: psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/owner_first_signup_postgres17_assertions.sql
+
   trigger-functions-postgres17:
     if: github.event_name == 'push'
     name: Disposable PostgreSQL 17 trigger-function privilege rehearsal
