@@ -76,7 +76,8 @@ REVOKE ALL ON FUNCTION public.is_admin() FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.is_admin_or_manager() FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.place_coffee_order(jsonb,text) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.place_coffee_order_v2(jsonb,text,uuid) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.reorder_pt_program_sessions(uuid,uuid) FROM PUBLIC, anon;
+-- reorder_pt_program_sessions is created in the later PT reorder migration,
+-- which applies its own explicit REVOKE/GRANT after the function exists.
 REVOKE ALL ON FUNCTION public.skip_coffee_product_review(uuid) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.submit_coffee_product_review(uuid,integer,text) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.toggle_social_reaction(uuid,text) FROM PUBLIC, anon;
@@ -91,7 +92,6 @@ GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_admin_or_manager() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.place_coffee_order(jsonb,text) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.place_coffee_order_v2(jsonb,text,uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.reorder_pt_program_sessions(uuid,uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.skip_coffee_product_review(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.submit_coffee_product_review(uuid,integer,text) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.toggle_social_reaction(uuid,text) TO authenticated;
