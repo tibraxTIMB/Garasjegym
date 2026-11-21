@@ -112,4 +112,52 @@ SELECT 'retained_configuration','coffee_settings_count',
        CASE WHEN count(*)=1 THEN 'PASS' ELSE 'CHECK' END,
        format('rows=%s',count(*))
 FROM public.coffee_settings
+
+UNION ALL
+SELECT 'operational_data', table_name,
+       CASE WHEN row_count=0 THEN 'PASS' ELSE 'CHECK' END,
+       format('rows=%s',row_count)
+FROM (
+  SELECT 'calendar_events'::text table_name,count(*)::bigint row_count FROM public.calendar_events
+  UNION ALL SELECT 'challenge_participants',count(*) FROM public.challenge_participants
+  UNION ALL SELECT 'challenges',count(*) FROM public.challenges
+  UNION ALL SELECT 'class_bookings',count(*) FROM public.class_bookings
+  UNION ALL SELECT 'class_live_sessions',count(*) FROM public.class_live_sessions
+  UNION ALL SELECT 'class_session_wod_completions',count(*) FROM public.class_session_wod_completions
+  UNION ALL SELECT 'classes',count(*) FROM public.classes
+  UNION ALL SELECT 'coffee_order_items',count(*) FROM public.coffee_order_items
+  UNION ALL SELECT 'coffee_orders',count(*) FROM public.coffee_orders
+  UNION ALL SELECT 'coffee_product_reviews',count(*) FROM public.coffee_product_reviews
+  UNION ALL SELECT 'coffee_products',count(*) FROM public.coffee_products
+  UNION ALL SELECT 'daily_wod',count(*) FROM public.daily_wod
+  UNION ALL SELECT 'exercise_favorites',count(*) FROM public.exercise_favorites
+  UNION ALL SELECT 'member_preferences',count(*) FROM public.member_preferences
+  UNION ALL SELECT 'notifications',count(*) FROM public.notifications
+  UNION ALL SELECT 'personal_records',count(*) FROM public.personal_records
+  UNION ALL SELECT 'pt_bookings',count(*) FROM public.pt_bookings
+  UNION ALL SELECT 'pt_checkins',count(*) FROM public.pt_checkins
+  UNION ALL SELECT 'pt_client_assignments',count(*) FROM public.pt_client_assignments
+  UNION ALL SELECT 'pt_client_goals',count(*) FROM public.pt_client_goals
+  UNION ALL SELECT 'pt_client_notes',count(*) FROM public.pt_client_notes
+  UNION ALL SELECT 'pt_coaches',count(*) FROM public.pt_coaches
+  UNION ALL SELECT 'pt_intakes',count(*) FROM public.pt_intakes
+  UNION ALL SELECT 'pt_program_sessions',count(*) FROM public.pt_program_sessions
+  UNION ALL SELECT 'pt_program_templates',count(*) FROM public.pt_program_templates
+  UNION ALL SELECT 'pt_programs',count(*) FROM public.pt_programs
+  UNION ALL SELECT 'pt_requests',count(*) FROM public.pt_requests
+  UNION ALL SELECT 'pt_service_requests',count(*) FROM public.pt_service_requests
+  UNION ALL SELECT 'pt_services',count(*) FROM public.pt_services
+  UNION ALL SELECT 'pt_session_exercises',count(*) FROM public.pt_session_exercises
+  UNION ALL SELECT 'pt_sessions',count(*) FROM public.pt_sessions
+  UNION ALL SELECT 'pt_wod_assignments',count(*) FROM public.pt_wod_assignments
+  UNION ALL SELECT 'social_comments',count(*) FROM public.social_comments
+  UNION ALL SELECT 'social_posts',count(*) FROM public.social_posts
+  UNION ALL SELECT 'training_session_wods',count(*) FROM public.training_session_wods
+  UNION ALL SELECT 'training_sessions',count(*) FROM public.training_sessions
+  UNION ALL SELECT 'wod_daily_schedules',count(*) FROM public.wod_daily_schedules
+  UNION ALL SELECT 'wod_favorites',count(*) FROM public.wod_favorites
+  UNION ALL SELECT 'workout_exercises',count(*) FROM public.workout_exercises
+  UNION ALL SELECT 'workout_logs',count(*) FROM public.workout_logs
+  UNION ALL SELECT 'workout_sets',count(*) FROM public.workout_sets
+) operational_counts
 ORDER BY section,item;
