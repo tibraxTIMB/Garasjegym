@@ -397,7 +397,7 @@ export default function App() {
           <div className="eyebrow"><Activity size={14} /> GARASJEGYM · SUPERENKEL</div>
           <h1>Hei, <em>{profile.display_name?.split(' ')[0]||'der'}.</em></h1>
           
-        </section> : <section className="welcome">
+        </section> : <section className={active === 'wod' ? 'welcome welcome-wod-compact' : 'welcome'}>
           <div className="eyebrow"><Activity size={14} /> GARASJEGYM · NY GENERASJON</div>
           <h1>Bygd for å <em>prestera.</em></h1>
           <p>Ein felles plattform for trening, booking og fellesskap.</p>

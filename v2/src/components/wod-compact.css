@@ -1,0 +1,55 @@
+/* Keep the WOD library close to the top of the phone screen. This module only
+   changes navigation and filters; cards and editing keep their existing UI. */
+.welcome.welcome-wod-compact {
+  padding: 14px 0 10px;
+}
+.welcome-wod-compact .eyebrow { font-size: 10px; }
+.welcome-wod-compact h1 { margin: 6px 0 2px; font-size: clamp(28px, 3.7vw, 39px); line-height: 1.08; letter-spacing: -.04em; }
+.welcome-wod-compact p { margin: 3px 0 0; font-size: 13px; line-height: 1.35; }
+
+.wod-hub .wod-hub-compact-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0; }
+.wod-hub-compact-head h3 { margin: 0; font-size: 21px; }
+.wod-hub-compact-head .primary-button { flex: 0 0 auto; min-height: 40px; padding: 8px 13px; }
+.wod-hub > .hub-tabs { margin: 0; }
+
+.wod-library-compact-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
+.wod-library-compact-heading strong { font-size: 17px; color: #f3f6f5; }
+.wod-library-compact-heading span { color: #d8aa66; font-size: 13px; white-space: nowrap; }
+.wod-hub .wod-library-page { gap: 9px; }
+.wod-library-page .wod-library-compact-toolbar { display: grid; gap: 8px; margin: 0 0 3px; width: 100%; }
+.wod-library-compact-toolbar .wod-search { width: 100%; min-width: 0; margin: 0; min-height: 43px; }
+.wod-library-compact-toolbar .wod-search input { min-height: 41px; font-size: 14px; }
+.wod-library-mobile-filters { display: none; }
+.wod-library-expanded-filters { display: grid; gap: 8px; min-width: 0; }
+.wod-library-expanded-filters .calendar-view-switch { display: flex; flex-wrap: wrap; gap: 6px; }
+.wod-library-expanded-filters .calendar-view-switch button { min-height: 38px; font-size: 12px; }
+
+@media (max-width: 900px) {
+  .welcome.welcome-wod-compact { padding: 9px 0 9px; }
+  .welcome-wod-compact .eyebrow { display: none; }
+  .welcome-wod-compact h1 { margin: 0; font-size: clamp(24px, 6vw, 29px); letter-spacing: -.04em; }
+  .welcome-wod-compact p { display: none; }
+  .content-card:has(> .wod-hub) { padding: 12px !important; }
+  .wod-hub { gap: 8px; }
+  .wod-hub .wod-hub-compact-head { flex-wrap: nowrap; }
+  .wod-hub-compact-head h3 { font-size: 20px; }
+  .wod-hub-compact-head .primary-button { min-height: 40px; padding: 6px 11px; font-size: 13px; }
+  .wod-hub > .hub-tabs { padding: 4px; }
+  .wod-hub > .hub-tabs button { min-height: 39px; }
+  .wod-library-compact-heading strong { font-size: 16px; }
+  .wod-library-page .wod-library-compact-toolbar { gap: 7px; }
+  .wod-library-mobile-filters { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; align-items: stretch; min-width: 0; }
+  .wod-library-type-pick { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 44px; padding: 0 9px; border: 1px solid #47565c; border-radius: 9px; background: #172126; }
+  .wod-library-type-pick span { flex: 0 0 auto; color: #a6b6bb; font-size: 12px; font-weight: 750; }
+  .wod-library-type-pick select { flex: 1; min-width: 0; width: 100%; min-height: 42px; padding: 0 13px 0 0; border: 0; border-radius: 0; background: transparent; color: #f5f7f7; font-size: 13px; font-weight: 750; }
+  .wod-library-filter-toggle { display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 88px; min-height: 44px; padding: 7px 11px; border: 1px solid #53636a; border-radius: 9px; background: #243239; color: #f0f4f4; font-size: 13px; font-weight: 800; }
+  .wod-library-filter-toggle.is-active { border-color: #d39543; color: #f9c47a; }
+  .wod-library-filter-toggle span { font-size: 20px; line-height: 1; }
+  .wod-library-expanded-filters { display: none; }
+  .wod-library-expanded-filters.is-open { display: grid; gap: 9px; padding: 9px; border: 1px solid #39484e; border-radius: 10px; background: #141d21; }
+  .wod-library-expanded-filters .wod-library-category-chips { display: none; }
+  .wod-library-expanded-filters .wod-library-advanced-filters { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+  .wod-library-expanded-filters .wod-library-advanced-filters select { min-width: 0; width: 100%; min-height: 43px; font-size: 13px; }
+  .wod-library-expanded-filters .wod-library-visibility-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .wod-library-expanded-filters .wod-library-visibility-chips button { min-height: 41px; }
+}
