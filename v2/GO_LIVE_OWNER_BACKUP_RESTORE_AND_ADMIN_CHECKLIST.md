@@ -55,7 +55,10 @@ Production function differences to reconcile:
 - Enable leaked-password protection in Auth security settings and verify the effective setting.
 - Run positive and negative class/PT/member-isolation tests against the Production-shaped restored schema.
 
-## 4. Clean-start rehearsal – isolated Production restore only
+## 4. Invitation-only Auth configuration
+Before launch, disable **Allow new users to sign up** in Supabase Dashboard → Authentication → General configuration. This prevents open self-registration through the Auth API, not just through the app UI. Keep the app without account-creation controls and keep `admin-create-user` disabled (HTTP 410). Invite members through the Supabase Auth Users dashboard after the new owner admin is verified; confirm each invite creates an inactive pending profile and requires admin approval. Test both: ordinary public signup is rejected, while a dashboard-invited user can complete the invite and appears as pending. See [Supabase Auth general configuration](https://supabase.com/docs/guides/auth/general-configuration).
+
+## 5. Clean-start rehearsal – isolated Production restore only
 This is a separate operation from backup/restore. Rehearse the exact reset against the isolated Production-derived restored copy. Never run the reset rehearsal in Production.
 
 **Preserve:**
@@ -97,7 +100,7 @@ This is a separate operation from backup/restore. Rehearse the exact reset again
 
 The current catalogue has 135 distinct names, but this is provisional until semantic-alias and category review is approved. Do not assume 56 or 94 is the final count. Possible duplicate candidates are documented in the manifest; do not delete or merge names without a reviewed alias strategy.
 
-## 5. Release gates – all required before Production GO LIVE
+## 6. Release gates – all required before Production GO LIVE
 - [ ] Encrypted Production backup complete, checksummed and locally verified.
 - [ ] Full Auth/Storage/config backup coverage proven.
 - [ ] Free isolated restore completed and old owner-admin rollback login verified.
@@ -105,6 +108,7 @@ The current catalogue has 135 distinct names, but this is provisional until sema
 - [ ] Production-shaped schema/RLS/Auth/functions reconciliation rehearsed.
 - [ ] `admin-delete-user` deployed with JWT verification enabled after schema reconciliation and all positive/negative function tests pass; it is currently missing in Production although the client invokes it.
 - [ ] `admin-create-user` remains disabled (HTTP 410); no in-app account creation.
+- [ ] Supabase Auth **Allow new users to sign up** is disabled; dashboard invitation flow tested and creates pending profiles.
 - [ ] Positive and negative class/PT/member-isolation tests pass.
 - [ ] Leaked-password protection enabled and verified.
 - [ ] Exercise semantic aliases and category mapping reviewed; exact catalogue manifest approved.
