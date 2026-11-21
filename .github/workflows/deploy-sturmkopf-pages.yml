@@ -43,7 +43,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: https://izwzwvlexqxqewzijhhd.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_jZyaYhD8_jZgpgutKF7lRg_EcJ0EGSQ
-          VITE_OWNER_BOOTSTRAP_SIGNUP: 'true'
+          VITE_OWNER_BOOTSTRAP_SIGNUP: 'false'
           VITE_SPOTIFY_CLIENT_ID: ${{ vars.VITE_SPOTIFY_CLIENT_ID }}
         run: npm run build
       - name: Check built release artifact environment and secrets

@@ -105,7 +105,10 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
         if (authError) throw authError
       }
     } catch (err) {
-      setError(err.message || 'Noko gjekk gale. Prøv igjen.')
+      const raw = err?.message || ''
+      setError(/invalid login credentials/i.test(raw)
+        ? 'Feil e-post eller passord, eller kontoen er ikkje oppretta her enno. Nye medlemmar får invitasjon frå administrator.'
+        : raw || 'Noko gjekk gale. Prøv igjen.')
     } finally {
       setBusy(false)
     }
@@ -141,7 +144,7 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
           {mode === 'login' && <button type="button" onClick={() => { setMode('reset'); setError(''); setMessage('') }}>Gløymt passord?</button>}
           {mode === 'login' && ownerRegistrationEnabled && <button type="button" onClick={() => { setMode('register'); setError(''); setMessage(''); setEmail('tibrakestad@gmail.com') }}>Aktiver eigarkonto</button>}
         </div>
-        <p className="auth-footnote">Medlemskontoar blir oppretta av administrator.</p>
+        <p className="auth-footnote">Ny brukar? Administrator sender ei personleg invitasjon på e-post. Opne lenkja før du loggar inn.</p>
       </div>
     </main>
   )

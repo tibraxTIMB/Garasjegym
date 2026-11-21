@@ -414,14 +414,15 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         <div className="gg-live-timer__context">
           {isAmrap&&<div className="gg-live-timer__rounds"><span>FULLFØRTE RUNDER</span><strong>{laps.length}</strong></div>}
           {(isTimedInterval||isStationCircuit||isEMOM)&&<div className="gg-live-timer__rounds"><span>{isStationCircuit?'STASJON · RUNDE':isEMOM?'MINUTT':'RUNDE'}</span><strong>{isStationCircuit?`${visibleStationIndex+1}/${stationCount} · ${Math.min(currentRound,Number(rounds)||1)}/${rounds}`:isEMOM?currentEmomRound:`${roundsShown}/${rounds}`}</strong></div>}
-          <div className="gg-live-timer__exercise"><span>{isAmrap?'WOD-ØVINGAR':isStationCircuit?'NO · STASJON':isEMOM?'DENNE RUNDA':'AKTUELL ØVING'}</span>
-            {isAmrap?<ol>{stageRows.map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span>{item.dose&&<small>{item.dose}</small>}</li>)}</ol>:<strong>{stageExerciseName||'Sjå øvingslista'}</strong>}
-            {!isAmrap&&stageNextExercise&&stageNextExercise!==stageExerciseName&&<small className="gg-live-timer__next">Neste: {stageNextExercise}</small>}
-          </div>
+          <div className="gg-live-timer__music" aria-label="Musikkstyring"><MusicMiniPlayer liveCompact/></div>
           {stageLapHistory.length>0&&<div className="gg-live-timer__laps" aria-label={stageLapLabel}>
             <div className="gg-live-timer__laps-heading"><span>{stageLapLabel}</span><button type="button" onClick={()=>setStagePanel('laps')}>Vis alle ({laps.length})</button></div>
             <ol className="gg-live-timer__lap-preview">{stageLapHistory.slice(-3).map(lap=><li key={lap.round}><span>{isAmrap?'R':'M'}{lap.round}</span><b>{clock(lap.duration)}</b></li>)}</ol>
           </div>}
+          <div className="gg-live-timer__exercise"><span>{isAmrap?'WOD-ØVINGAR':isStationCircuit?'NO · STASJON':isEMOM?'DENNE RUNDA':'AKTUELL ØVING'}</span>
+            {isAmrap?<ol>{stageRows.map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span>{item.dose&&<small>{item.dose}</small>}</li>)}</ol>:<strong>{stageExerciseName||'Sjå øvingslista'}</strong>}
+            {!isAmrap&&stageNextExercise&&stageNextExercise!==stageExerciseName&&<small className="gg-live-timer__next">Neste: {stageNextExercise}</small>}
+          </div>
         </div>
       </div>
       <footer className="gg-live-timer__footer">

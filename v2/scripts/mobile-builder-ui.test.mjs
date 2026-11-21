@@ -53,6 +53,45 @@ test('AMRAP round splits stay visible without growing the clock page', () => {
   assert.match(styles, /@media \(orientation: landscape\)\s*\{[^]*?\.gg-live-timer__clock-area\s*\{[^}]*grid-template-rows:\s*auto minmax\(0,1fr\) auto auto/s)
 })
 
+test('timer places compact music and round pills before the exercise overview', () => {
+  const timer = source('../src/components/Training.jsx')
+  const music = source('../src/components/Music.jsx')
+  const styles = source('../src/components/timer-viewport.css')
+  assert.match(timer, /<MusicMiniPlayer liveCompact\/>/)
+  assert.ok(timer.indexOf('className="gg-live-timer__music"') < timer.indexOf('className="gg-live-timer__laps"'))
+  assert.ok(timer.indexOf('className="gg-live-timer__laps"') < timer.indexOf('className="gg-live-timer__exercise"'))
+  assert.match(music, /!liveCompact&&<GenreButtons/)
+  assert.match(styles, /\.gg-live-timer__music \.timer-spotify-mini-line/)
+})
+
+test('the central ØKT button is orange and owner badges are tied to a user ID', () => {
+  const nav = source('../src/styles/mobile/calendar-unified.css')
+  const badge = source('../src/components/GarageOwnerBadge.jsx')
+  const community = source('../src/components/Community.jsx')
+  const pt = source('../src/components/PT.jsx')
+  const ptInfo = source('../src/components/PTInfo.jsx')
+  assert.match(nav, /\.app-shell \.app-mobile-nav-item--start \{[^}]*background:linear-gradient\(150deg,#f3aa43,#d97c24\)/)
+  assert.match(badge, /GARAGE_OWNER_USER_ID = '[a-f0-9-]+'/)
+  assert.match(badge, /userId===GARAGE_OWNER_USER_ID/)
+  assert.doesNotMatch(community, /post\.author_role==='admin'&&/)
+  assert.match(community, /<GarageOwnerBadge userId=\{post\.author_id\}\/>/)
+  assert.match(community, /<GarageOwnerBadge userId=\{c\.author_id\}\/>/)
+  assert.match(pt, /<GarageOwnerBadge userId=\{m\.sender_id\}\/>/)
+  assert.match(ptInfo, /<GarageOwnerBadge userId=\{m\.sender_id\}\/>/)
+})
+
+test('member invitation uses a server-side administrator gate, never a public service key', () => {
+  const edge = source('../supabase/functions/admin-invite-user/index.ts')
+  const admin = source('../src/components/Admin.jsx')
+  const workflow = source('../../.github/workflows/deploy-sturmkopf-pages.yml')
+  assert.match(edge, /auth\.getUser\(authorization\.slice\(7\)\)/)
+  assert.match(edge, /profile\?\.role !== "admin"/)
+  assert.match(edge, /auth\.admin\.inviteUserByEmail\(email/)
+  assert.match(edge, /role: "member", active: true, membership_status: "approved"/)
+  assert.match(admin, /functions\.invoke\('admin-invite-user'/)
+  assert.match(workflow, /VITE_OWNER_BOOTSTRAP_SIGNUP: 'false'/)
+})
+
 test('mobile WOD browsing stays compact without a global hero and folds away secondary filters', () => {
   const app = source('../src/App.jsx')
   const hub = source('../src/components/WodHub.jsx')

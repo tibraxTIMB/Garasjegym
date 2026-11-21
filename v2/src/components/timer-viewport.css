@@ -241,8 +241,17 @@
 .gg-live-timer__exercise li small { flex: 0 0 auto; color: #d0a565; font-size: 12px; white-space: nowrap; }
 .gg-live-timer__more { align-self: flex-start; padding: 2px 0; border: 0; background: transparent; color: #f2b45b; font-size: 13px; font-weight: 800; }
 .gg-live-timer__next { color: #a8c1c8; font-size: 13px; line-height: 1.25; }
-.gg-live-timer__body--with-laps .gg-live-timer__context { justify-content: space-between; gap: 4px; }
-.gg-live-timer__laps { display: grid; gap: 5px; flex: 0 0 auto; min-width: 0; padding-top: 6px; border-top: 1px solid rgba(169,193,198,.2); }
+.gg-live-timer__body--with-laps .gg-live-timer__context { justify-content: flex-start; gap: 7px; }
+.gg-live-timer__music { flex:0 0 auto; min-width:0; }
+.gg-live-timer__music .timer-music-stack { margin:0; gap:0; }
+.gg-live-timer__music .timer-spotify-mini-line { flex-wrap:nowrap; min-height:37px; padding:4px 6px; background:#17272b; border-color:#40535a; }
+.gg-live-timer__music .timer-spotify-mini-track { flex:1 1 0; min-width:0; }
+.gg-live-timer__music .timer-spotify-mini-track>span { flex:1; min-width:0; }
+.gg-live-timer__music .timer-spotify-mini-track strong { font-size:11px; }
+.gg-live-timer__music .timer-spotify-mini-track small { font-size:9px; }
+.gg-live-timer__music .timer-spotify-mini-controls button,.gg-live-timer__music .spotify-mini-connect,.gg-live-timer__music .timer-spotify-tools-toggle { min-width:29px; min-height:30px!important; height:30px; }
+.gg-live-timer__music .spotify-mini-connect { font-size:10px; }
+.gg-live-timer__laps { display: grid; gap: 5px; flex: 0 0 auto; min-width: 0; padding:0 0 8px; border-bottom: 1px solid rgba(169,193,198,.2); }
 .gg-live-timer__laps-heading { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; }
 .gg-live-timer__laps-heading > span { color: #a8bac0; font-size: 11px; font-weight: 850; letter-spacing: .09em; }
 .gg-live-timer__laps-heading button { padding: 0; border: 0; background: transparent; color: #f2b45b; font-size: 12px; font-weight: 800; white-space: nowrap; }

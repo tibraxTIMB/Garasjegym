@@ -671,7 +671,7 @@ export function Music() {
   </div>
 }
 
-export function MusicMiniPlayer() {
+export function MusicMiniPlayer({liveCompact=false}) {
   const music=useMusic()
   const [toolsOpen,setToolsOpen]=useState(false)
   const [toolsTab,setToolsTab]=useState('search')
@@ -680,7 +680,7 @@ export function MusicMiniPlayer() {
   const search=useDebouncedSpotifySearch(music.searchSpotify,music.spotifyConnected,query,toolsOpen&&toolsTab==='search')
   const visiblePlaylists=music.spotifyPlaylists.filter(playlist=>(playlist.name||'').toLowerCase().includes(playlistQuery.toLowerCase()))
 
-  return <div className="timer-music-stack">
+  return <div className={liveCompact?'timer-music-stack timer-music-stack--live':'timer-music-stack'}>
     <div className="timer-spotify-mini-line">
       <div className="timer-spotify-mini-track"><Music2 size={15}/><span><strong>{music?.spotifyTrack?.name||'Spotify'}</strong><small>{music?.spotifyTrack?.artists?.join(', ')|| (music?.spotifyConnected?'Klar på Spotify-eininga':'Kople til profilen din')}</small></span></div>
       {music?.spotifyConnected?<div className="timer-spotify-mini-controls">
@@ -690,7 +690,7 @@ export function MusicMiniPlayer() {
       </div>:<button type="button" className="spotify-mini-connect" onClick={music.connectSpotify}><LogIn size={13}/> Kople til</button>}
       <button type="button" className={'timer-spotify-tools-toggle'+(toolsOpen?' selected':'')} onClick={()=>setToolsOpen(value=>!value)} aria-expanded={toolsOpen} aria-label={toolsOpen?'Lukk musikkverktøy':'Opna søk og spelelister'}>{toolsOpen?<X size={14}/>:<Search size={14}/>}</button>
     </div>
-    <GenreButtons music={music} compact/>
+    {!liveCompact&&<GenreButtons music={music} compact/>}
     {toolsOpen&&<div className="spotify-mini-tools" role="dialog" aria-label="Spotify-søk og spelelister">
       <div className="spotify-mini-tools-head"><strong>Spotify</strong><button type="button" onClick={()=>setToolsOpen(false)} aria-label="Lukk"><X size={14}/></button></div>
       {!music.spotifyConnected?<div className="empty-state">Kople til Spotify-profilen for å søka og sjå spelelister.</div>:<>

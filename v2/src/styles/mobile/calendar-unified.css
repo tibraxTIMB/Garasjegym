@@ -83,10 +83,10 @@
 @media (max-width: 900px) {
  .app-shell .main > .content-card { margin-top:12px; }
  .app-shell .app-mobile-nav { overflow:visible; }
- .app-shell .app-mobile-nav-item--start { position:relative; z-index:2; transform:translateY(-11px); min-height:73px; margin-bottom:-11px; border:2px solid #6dda9a; border-radius:17px; background:linear-gradient(150deg,#2b8053,#194e38); color:#ebfff2; box-shadow:0 4px 15px #0009,0 0 0 3px #132a21; }
+ .app-shell .app-mobile-nav-item--start { position:relative; z-index:2; transform:translateY(-11px); min-height:73px; margin-bottom:-11px; border:2px solid #f6bd65; border-radius:17px; background:linear-gradient(150deg,#f3aa43,#d97c24); color:#231606; box-shadow:0 4px 15px #0009,0 0 0 3px #4a3118; }
  .app-shell .app-mobile-nav-item--start svg { width:29px; height:29px; stroke-width:2.5; }
  .app-shell .app-mobile-nav-item--start span { font-size:12px; font-weight:950; letter-spacing:.7px; }
- .app-shell .app-mobile-nav-item--start.is-active { background:linear-gradient(145deg,#61e295,#28845a); color:#10251a; border-color:#bdffd4; }
+ .app-shell .app-mobile-nav-item--start.is-active { background:linear-gradient(145deg,#ffd17b,#eb9830); color:#291704; border-color:#fff0bd; }
  .gg-cal-date,.gg-cal-blank { min-height:51px; padding:4px 2px; }
  .gg-cal-date { align-items:center; gap:3px; }
  .gg-cal-date>strong { width:25px; height:25px; font-size:13px; }
