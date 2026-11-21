@@ -122,7 +122,8 @@ jobs:
     # Serialize full local Supabase stacks; they otherwise contend for host ports.
     concurrency:
       group: sturmkopf-full-supabase-replay-${{ github.ref }}
-      cancel-in-progress: true
+      # Queue subsequent pushes instead of cancelling an in-flight database replay.
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
