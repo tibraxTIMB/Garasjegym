@@ -78,6 +78,6 @@ export default function Overview({profile,onNavigate,onOpenWorkout,onOpenWod=()=
   <section className="engine-section"><div className="training-heading"><div><div className="section-kicker">PERSONLEGE REKORDAR</div><h3>Siste PR</h3></div><button className="secondary-button" onClick={()=>onNavigate('pr-senter')}>Alle PR-ar</button></div>
    {prs.length?<div className="overview-pr-grid">{prs.slice(0,3).map(pr=><button type="button" className="history-card pr-click-card" key={pr.id} onClick={()=>onNavigate('pr-senter')}><strong>{pr.exercise_name}</strong><div className="pr-result">{pr.result} {pr.unit}</div><small>{pr.record_date}</small><span className="overview-log-open">Opne PR-senter <ArrowRight size={13}/></span></button>)}</div>:<div className="empty-state">Registrer den første personlege rekorden din.</div>}
   </section>
-  <div className="overview-shortcuts"><button onClick={()=>onNavigate('trening')}><Dumbbell size={17}/> Start trening</button><button onClick={()=>onNavigate('timeplan')}><CalendarDays size={17}/> Finn ei time</button><button onClick={()=>onNavigate('mi-side')}><Trophy size={17}/> Mi treningsprofil</button></div>
+  <div className="overview-shortcuts"><button onClick={()=>onNavigate('trening')}><Dumbbell size={17}/> Start trening</button><button onClick={()=>onNavigate('timeplan')}><CalendarDays size={17}/> Finn ei time</button><button onClick={()=>onNavigate('mi-side')}><Trophy size={17}/> Min treningsprofil</button></div>
  </div>
 }

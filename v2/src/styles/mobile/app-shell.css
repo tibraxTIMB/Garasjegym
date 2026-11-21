@@ -242,6 +242,34 @@
     gap: 9px;
   }
 
+  .app-more-shortcuts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    margin-bottom: 14px;
+  }
+
+  .app-more-shortcuts button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    min-height: 70px;
+    padding: 11px;
+    border: 1px solid rgba(240, 163, 58, .5);
+    border-radius: 13px;
+    background: linear-gradient(145deg, #44321e, #292a25);
+    color: #ffe0ab;
+    text-align: left;
+  }
+
+  .app-more-shortcuts button > svg { flex: 0 0 auto; }
+  .app-more-shortcuts button span { display: grid; gap: 3px; min-width: 0; }
+  .app-more-shortcuts button strong { font-size: 13px; }
+  .app-more-shortcuts button small { color: #d4c5ae; font-size: 10px; line-height: 1.3; }
+
+  .app-more-shortcuts button:focus-visible { outline: 2px solid #ffd18b; outline-offset: 2px; }
+
   .app-more-link {
     display: flex;
     min-width: 0;
@@ -274,6 +302,29 @@
     background: rgba(255,255,255,.055);
   }
 }
+
+.ongoing-workout-return {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  width: 100%;
+  margin: 12px 0 4px;
+  padding: 12px 17px;
+  border: 1px solid #dca255;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #302b1e, #1a2525);
+  color: #f7e9c9;
+  text-align: left;
+  cursor: pointer;
+}
+.ongoing-workout-return strong { min-width: 0; flex: 1 1 120px; font-size: 16px; overflow-wrap: anywhere; }
+.ongoing-workout-status { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 850; letter-spacing: .8px; }
+.ongoing-live-dot { width: 9px; height: 9px; border-radius: 50%; background: #e2a950; }
+.ongoing-live-dot.is-running { background: #62dc95; box-shadow: 0 0 0 4px #62dc9526; }
+.ongoing-workout-action { color: #ffca80; font-weight: 850; white-space: nowrap; }
+.ongoing-workout-return:focus-visible { outline: 2px solid #ffd18b; outline-offset: 3px; }
 
 @media (max-width: 420px) {
   .app-shell > .main { padding-right: 9px; padding-left: 9px; }

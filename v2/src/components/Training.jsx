@@ -62,7 +62,7 @@ function TimerPanel({id,title,layout,onMove,onResize,onLock,locked,children,devi
   <div className="timer-panel-content">{children}</div>
  </section>
 }
-function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], prescriptionLevel = 'rx', timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, originLabel = 'EIGA ØKT', autoStartToken = 0 }) {
+function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], prescriptionLevel = 'rx', timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, onBackground = () => {}, visible = true, originLabel = 'EIGA ØKT', autoStartToken = 0 }) {
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [round, setRound] = useState(1)
@@ -282,7 +282,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     document.addEventListener('fullscreenchange', sync)
     return () => document.removeEventListener('fullscreenchange', sync)
   }, [])
-  const stageVisible = focused && !stop
+  const stageVisible = focused && !stop && visible
   useEffect(() => {
     if (!stageVisible) return undefined
     const previousOverflow = document.body.style.overflow
@@ -357,6 +357,12 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     } catch { /* CSS-flata fungerer òg når nettlesaren nektar ekte fullskjerm. */ }
   }
 
+  async function returnToApp() {
+    try { if (document.fullscreenElement === timerContainerRef.current) await document.exitFullscreen?.() } catch { /* CSS-biletet kan lukkast utan Fullscreen API. */ }
+    setStagePanel(null)
+    onBackground()
+  }
+
   const isAmrap = format === 'AMRAP' || (['Couplet','Triplet'].includes(format) && schema?.combination_mode === 'AMRAP')
   const isStopwatch = ['Stoppeklokke', 'Fri trening', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt'].includes(format) ||
     (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'Open')
@@ -402,7 +408,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           <button type="button" onClick={()=>setSoundOn(value=>!value)} aria-label={soundOn?'Slå av lyd':'Slå på lyd'} title={soundOn?'Lyd på':'Lyd av'}>{soundOn?<Volume2 size={21}/>:<VolumeX size={21}/>}</button>
           <button type="button" onClick={toggleBrowserFullscreen} aria-label={browserFullscreen?'Vis nettlesarfelt':'Skjul nettlesarfelt – ekte fullskjerm'} title="Fullskjerm">{browserFullscreen?<Minimize2 size={21}/>:<Maximize2 size={21}/>}</button>
           <button type="button" className={stagePanel==='settings'?'is-selected':''} onClick={()=>setStagePanel(value=>value==='settings'?null:'settings')} aria-label="Tilpass klokka" title="Tilpass klokka" aria-expanded={stagePanel==='settings'}><Settings2 size={21}/></button>
-          <button type="button" onClick={toggleFocus} aria-label="Minimer klokka" title="Minimer klokka"><X size={21}/></button>
+          <button type="button" onClick={returnToApp} aria-label="Til appen – økta held fram" title="Til appen – økta held fram"><X size={21}/></button>
         </div>
       </header>
       <div className={laps.length?'gg-live-timer__body gg-live-timer__body--with-laps':'gg-live-timer__body'}>
@@ -430,7 +436,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         <button type="button" className="gg-live-timer__pause" onClick={toggleRunning} disabled={stageIsComplete}>{running?<><Pause size={21}/> Pause</>:phase==='PAUSE'?<><Play size={21}/> Hald fram</>:<><Play size={21}/> Start</>}</button>
         {isAmrap&&<button type="button" className="gg-live-timer__round-button" onClick={lapAction} disabled={!running}><Plus size={21}/> Runde</button>}
         {(isStopwatch||isForTime)&&<button type="button" className="gg-live-timer__split" onClick={splitAction} disabled={!running}>Mellomtid</button>}
-        <button type="button" className="gg-live-timer__finish" onClick={onFinish} disabled={!hasStarted}><CheckCircle2 size={20}/> Fullfør</button>
+        <button type="button" className="gg-live-timer__finish" onClick={onFinish} disabled={!hasStarted}><CheckCircle2 size={20}/> Avslutt</button>
       </footer>
       {stagePanel&&<div className="gg-live-timer__scrim" onClick={()=>setStagePanel(null)} role="presentation"/>}
       {stagePanel==='wod'&&<aside className="gg-live-timer__drawer" aria-label="Øvingar i WOD-en"><header><strong>Øvingar · {stageRows.length}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk øvingslista"><X size={20}/></button></header><ol className="gg-live-timer__all-exercises">{stageRows.map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span><small>{item.dose}</small></li>)}</ol>{!stageRows.length&&<p>Ingen øvingar er lagde til.</p>}</aside>}
@@ -497,9 +503,9 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         </div>
         <div className="timer-finish-row">
           <button type="button" className="timer-finish-button" onClick={onFinish} disabled={!hasStarted}>
-            <CheckCircle2 size={18}/><span>Fullfør økta</span>
+            <CheckCircle2 size={18}/><span>Avslutt økta</span>
           </button>
-          <small>{hasStarted ? 'Registrer resultat og lagre treningsøkta' : 'Start timeren før du fullfører økta'}</small>
+          <small>{hasStarted ? 'Kontroller resultat og lagre økta etterpå' : 'Start timeren før du avsluttar økta'}</small>
         </div>
       </section></TimerPanel>:id==='info'?<TimerPanel key={id} id="info" title="ØKTINFORMASJON" layout={panelLayout.info} deviceProfile={deviceProfile} locked={Boolean(lockedPanels.info)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock} designMode={designMode}><aside className="timer-side timer-side-left">
         <div className="timer-bottom-heading">ØKTINFORMASJON</div>
@@ -523,7 +529,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   </div>
 }
 
-export default function Training({ launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, onTimerSnapshot, simpleMode = false, quickStart = false, onQuickStartConsumed, quickManualEntry = false, onQuickManualEntryConsumed, onSaved, onDiscard }) {
+export default function Training({ launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, onTimerSnapshot, onBackground, visible = true, simpleMode = false, quickStart = false, onQuickStartConsumed, quickManualEntry = false, onQuickManualEntryConsumed, onSaved, onDiscard }) {
   const [wods, setWods] = useState([])
   const [dailyWodId,setDailyWodId]=useState(null)
   const [exercises, setExercises] = useState([])
@@ -571,7 +577,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [timerSnapshot, setTimerSnapshot] = useState({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
   const [timerLaunchId, setTimerLaunchId] = useState(0)
   const loadSequence = useRef(0)
-  useEffect(()=>{onTimerSnapshot?.({...timerSnapshot,title,format})},[timerSnapshot,title,format,onTimerSnapshot])
+  useEffect(()=>{onTimerSnapshot?.({...timerSnapshot,title,format,sessionOpen:mode==='active',sessionPrepared})},[timerSnapshot,title,format,mode,sessionPrepared,onTimerSnapshot])
   useEffect(()=>()=>onTimerSnapshot?.({
     elapsed:0,laps:[],roundsCompleted:0,phase:'Klar',running:false,
     remaining:0,displayTime:0,countdown:false,currentRound:1,title:'',format:''
@@ -667,16 +673,20 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   useEffect(() => {
     if (!launchWodId || loading) return
     const wod = wods.find(item => item.id === launchWodId)
-    if (wod) { startWorkout(wod); setClassSessionId(launchClassSessionId || null); setLaunchLinkContext(captureTrainingLaunchContext({launchAssignmentId,launchProgramSessionId})); onLaunchConsumed?.() }
-  }, [launchWodId, loading, wods, launchClassSessionId, launchAssignmentId, launchProgramSessionId])
+    if (wod) {
+      if(mode==='active') {setNotice('Du har allereie ei pågåande økt. Avslutt og lagre henne før du startar ei ny.');onLaunchConsumed?.();return}
+      startWorkout(wod); setClassSessionId(launchClassSessionId || null); setLaunchLinkContext(captureTrainingLaunchContext({launchAssignmentId,launchProgramSessionId})); onLaunchConsumed?.()
+    }
+  }, [launchWodId, loading, wods, launchClassSessionId, launchAssignmentId, launchProgramSessionId, mode])
 
   useEffect(() => {
     if (!launchProgramSessionId || launchWodId || loading) return
+    if(mode==='active'){setNotice('Du har allereie ei pågåande økt. Avslutt og lagre henne først.');onLaunchConsumed?.();return}
     startWorkout()
     setTitle(launchProgramSessionTitle || 'Eigen PT-økt')
     setLaunchLinkContext(captureTrainingLaunchContext({launchProgramSessionId}))
     onLaunchConsumed?.()
-  }, [launchProgramSessionId, launchWodId, loading])
+  }, [launchProgramSessionId, launchWodId, loading, mode])
 
   useEffect(() => {
     if (!quickStart || !simpleMode || loading || mode !== 'home') return
@@ -955,7 +965,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         {['AMRAP','Nedteljing','E1MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM'].includes(format) && <label>Øktlengd (minutt)<input type="number" min="1" max="600" value={duration} onChange={e => setDuration(e.target.value)}/></label>}
       </div>
       {source?.timer_settings?.workout_schema?.library_category==='warmup'&&<section className="warmup-execution-guide" aria-label="Oppvarming i to delar"><header><span className="section-kicker">OPPVARMING · TO DELAR</span><strong>Førebu kroppen og finn arbeidsnivået</strong></header><div className="warmup-execution-columns"><article><span>1</span><div><strong>Felles oppvarming</strong><p>Gradvis spissing mot hovud-WOD sin stimulus og rørsleform.</p><ul>{items.filter(item=>item.warmup_phase!=='movement_rehearsal'&&!item.is_rest).map(item=><li key={item.key}>{item.exercise_name}</li>)}</ul></div></article><article><span>2</span><div><strong>Fri teknisk innøving</strong><p>Prøv hovudrørsla med lette vekter. Auk gradvis og finn ditt eige arbeidsnivå for WOD-en.</p><ul>{items.filter(item=>item.warmup_phase==='movement_rehearsal'&&!item.is_rest).map(item=><li key={item.key}>{item.exercise_name}</li>)}</ul></div></article></div></section>}
-       {manualEntry ? <section className="manual-entry-intro" aria-label="Manuell treningsregistrering"><div><span className="section-kicker">ETTERREGISTRERING</span><strong>Registrer ei økt du allereie har gjennomført</strong><p>Legg inn øvingar, sett, reps, vekt, høgd, tid eller distanse. Ingen timer blir starta.</p></div><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Kontroller og lagre</button></section> : sessionPrepared ? <><Timer autoStartToken={timerLaunchId} format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} nextExercise={items[activeExerciseIndex + 1]?.exercise_name || ''} exerciseList={items} prescriptionLevel={wodLevel} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={() => setFinishOpen(true)} originLabel={classSessionId ? 'GRUPPETIME' : launchAssignmentId ? 'TILDELT FRÅ PT' : source ? 'EIGEN WOD' : 'EIGA ØKT'}/><HeartRateTrainingPanel /><div className="workout-finish-actions"><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Gå til resultat og lagre økt</button></div></> : <section className="free-session-setup" aria-label="Førebu fri økt"><div><span className="section-kicker">STEG 1 AV 2 · FRI ØKT</span><strong>Vel øvingar før du startar klokka</strong><p>Søk i øvingsbiblioteket nedanfor, legg til øvingane du vil trene, og juster sett eller belastning. Timeren opnar først når du vel «Start økta».</p></div><button type="button" className="primary-button" onClick={()=>{setSessionPrepared(true);setTimerLaunchId(value=>value+1)}}><Play size={18}/> Start økta{items.filter(item=>item.exercise_name.trim()).length ? ` · ${items.filter(item=>item.exercise_name.trim()).length} øvingar` : ' utan øvingar'}</button></section>}
+       {manualEntry ? <section className="manual-entry-intro" aria-label="Manuell treningsregistrering"><div><span className="section-kicker">ETTERREGISTRERING</span><strong>Registrer ei økt du allereie har gjennomført</strong><p>Legg inn øvingar, sett, reps, vekt, høgd, tid eller distanse. Ingen timer blir starta.</p></div><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Kontroller og lagre</button></section> : sessionPrepared ? <><Timer visible={visible} onBackground={onBackground} autoStartToken={timerLaunchId} format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} nextExercise={items[activeExerciseIndex + 1]?.exercise_name || ''} exerciseList={items} prescriptionLevel={wodLevel} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={() => setFinishOpen(true)} originLabel={classSessionId ? 'GRUPPETIME' : launchAssignmentId ? 'TILDELT FRÅ PT' : source ? 'EIGEN WOD' : 'EIGA ØKT'}/><HeartRateTrainingPanel /><div className="workout-finish-actions"><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Avslutt økta · gå til resultat</button></div></> : <section className="free-session-setup" aria-label="Førebu fri økt"><div><span className="section-kicker">STEG 1 AV 2 · FRI ØKT</span><strong>Vel øvingar før du startar klokka</strong><p>Søk i øvingsbiblioteket nedanfor, legg til øvingane du vil trene, og juster sett eller belastning. Timeren opnar først når du vel «Start økta».</p></div><button type="button" className="primary-button" onClick={()=>{setSessionPrepared(true);setTimerLaunchId(value=>value+1)}}><Play size={18}/> Start økta{items.filter(item=>item.exercise_name.trim()).length ? ` · ${items.filter(item=>item.exercise_name.trim()).length} øvingar` : ' utan øvingar'}</button></section>}
       {items.length > 0 && format!=='Stasjonssirkel' && <section className="engine-section">
         <div className="engine-section-title"><h4>{format==='Stasjonssirkel'?'Stasjonane i økta':'WOD / øvingsrekkjefølgje'}</h4><span>{format==='Stasjonssirkel'?'Alle stasjonar – roter etter eiga startplassering':'Vel øvinga du arbeider med'}</span></div>
         <div className={format==='Stasjonssirkel'?'timer-station-grid':'wod-list'}>{items.map((item, index) => format==='Stasjonssirkel' ? <article className="timer-station-card" key={item.key}><span>STASJON {index+1}</span><strong>{item.exercise_name||'Øving'}</strong><small>{item.reps_mode==='amrap'?'AMRAP · maks reps':item.reps?item.reps+' reps':'Valfritt tal reps'}</small></article> : <button type="button" key={item.key} className={index === activeExerciseIndex ? 'secondary-button active' : 'secondary-button'} onClick={() => setActiveExerciseIndex(index)}>{index + 1}. {item.is_rest?'⏸ Pause · '+clock(Number(item.rest_duration_seconds)||30):item.exercise_name || 'Ny øving'}</button>)}</div>

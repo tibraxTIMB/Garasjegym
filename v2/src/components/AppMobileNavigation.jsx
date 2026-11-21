@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSwipeGesture } from '../hooks/useSwipeGesture.js'
-import { ChevronDown, ChevronUp, MoreHorizontal, X } from 'lucide-react'
+import { CalendarCheck2, ChevronDown, ChevronUp, History, MoreHorizontal, X } from 'lucide-react'
 
 // Match the main touch targets across roles, with the workout action centred.
 const MEMBER_PRIMARY = ['oversikt', 'wod', 'trening', 'timeplan']
@@ -29,7 +29,7 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
   const primary = preferred.map(id => items.find(item => item.id === id)).filter(Boolean).slice(0, 4)
   const primaryIds = new Set(primary.map(item => item.id))
   const secondary = items.filter(item => !primaryIds.has(item.id))
-  const activeInMore = secondary.some(item => item.id === active)
+  const activeInMore = ['mi-historikk','mi-trening'].includes(active) || secondary.some(item => item.id === active)
   function closeMore() {
     setMoreOpen(false)
     setMoreExpanded(false)
@@ -164,6 +164,10 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
                   <X size={20} />
                 </button>
               </div>
+            </div>
+            <div className="app-more-shortcuts" aria-label="Snarvegar til treninga di">
+              <button type="button" onClick={()=>{closeMore();onNavigate?.('mi-historikk')}}><History size={21} aria-hidden="true"/><span><strong>Treningslogg</strong><small>Øktene du har gjennomført</small></span></button>
+              <button type="button" onClick={()=>{closeMore();onNavigate?.('mi-trening')}}><CalendarCheck2 size={21} aria-hidden="true"/><span><strong>Min treningsplan</strong><small>Plan og tildelte økter</small></span></button>
             </div>
             <div className="app-more-grid" id="app-mobile-more-grid">
               {secondary.map(item => {

@@ -129,8 +129,9 @@
  .gg-cal-agenda-item>button { grid-column:2; justify-self:start; }
 }
 @media (orientation: landscape) and (max-height: 560px) and (max-width: 900px) {
- .app-shell .app-mobile-nav-item--start { transform:none; min-height:44px; margin-bottom:0; flex-direction:row; border-radius:12px; }
- .app-shell .app-mobile-nav-item--start svg { width:23px; height:23px; }
+ .app-shell .app-mobile-nav-item--start { transform:translateY(-5px); min-height:60px; margin-bottom:-5px; flex-direction:row; gap:6px; padding:6px 7px; border-radius:14px; box-shadow:0 5px 18px #000b,0 0 0 3px #4a3118; }
+ .app-shell .app-mobile-nav-item--start svg { width:28px; height:28px; }
+ .app-shell .app-mobile-nav-item--start span { font-size:12px; }
 }
 /* One-tap entry to completed training, directly from the workout page. */
 .workout-mode-intro .workout-log-shortcut{display:flex;align-items:center;gap:9px;align-self:stretch;margin-top:10px;min-height:46px;padding:10px 13px;border:1px solid #e1a451;border-radius:11px;background:linear-gradient(125deg,#3c3020,#262d2b);color:#ffd18b;font-size:14px;font-weight:900;text-align:left;cursor:pointer}

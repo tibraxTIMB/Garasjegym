@@ -80,6 +80,35 @@ test('the central ØKT button is orange and owner badges are tied to a user ID',
   assert.match(ptInfo, /<GarageOwnerBadge userId=\{m\.sender_id\}\/>/)
 })
 
+test('an active workout stays mounted across navigation and offers a one-tap return', () => {
+  const app = source('../src/App.jsx')
+  const timer = source('../src/components/Training.jsx')
+  const styles = source('../src/styles/mobile/app-shell.css')
+  assert.match(app, /trainingVisited\|\|active==='trening'/)
+  assert.match(app, /<Training visible=\{active==='trening'\} onBackground=/)
+  assert.match(app, /active === 'trening' \? null : active === 'timeplan'/)
+  assert.match(app, /timerSnapshot\.sessionOpen&&<button[^>]*className="ongoing-workout-return"/)
+  assert.match(timer, /sessionOpen:mode==='active'/)
+  assert.match(timer, /const stageVisible = focused && !stop && visible/)
+  assert.match(timer, /const nextElapsed = elapsedSecondsFromTimestamp\(timerRunStartedAt\.current, timerRunBaseElapsed\.current\)/)
+  assert.match(timer, /onClick=\{returnToApp\} aria-label="Til appen – økta held fram"/)
+  assert.match(timer, /className="gg-live-timer__finish"[^>]*>[^]*?Avslutt<\/button>/)
+  assert.match(styles, /\.ongoing-workout-return\s*\{/)
+})
+
+test('landscape workout button remains large and training history is easy to find', () => {
+  const nav = source('../src/components/AppMobileNavigation.jsx')
+  const styles = source('../src/styles/mobile/calendar-unified.css')
+  assert.match(styles, /@media \(orientation: landscape\)[^]*?\.app-shell \.app-mobile-nav-item--start \{[^}]*min-height:60px/)
+  assert.match(styles, /\.app-shell \.app-mobile-nav-item--start svg \{ width:28px; height:28px;/)
+  assert.match(nav, /className="app-more-shortcuts"/)
+  assert.match(nav, /onNavigate\?\.\('mi-historikk'\)/)
+  assert.match(nav, /onNavigate\?\.\('mi-trening'\)/)
+  assert.match(nav, /Min treningsplan/)
+  assert.match(source('../src/components/Overview.jsx'), /Min treningsprofil/)
+  assert.match(source('../src/components/PTStudio.jsx'), /MIN AKTIVE PLAN/)
+})
+
 test('member invitation uses a server-side administrator gate, never a public service key', () => {
   const edge = source('../supabase/functions/admin-invite-user/index.ts')
   const admin = source('../src/components/Admin.jsx')
