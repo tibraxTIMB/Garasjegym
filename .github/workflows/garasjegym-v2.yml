@@ -210,6 +210,10 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
         run: psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/auth_signup_gate_full_supabase_postgres17.sql
+      - name: Verify guarded new owner admin bootstrap in rollback transaction
+        env:
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
+        run: psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/owner_admin_bootstrap_smoke_test.sql
       - name: Execute read-only clean-start preflight SQL on isolated replay
         env:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
