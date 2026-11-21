@@ -155,6 +155,10 @@ jobs:
           printf '%s\\n' "$result"
           expected='t|t|t|t|t|t|t|t|t|t|t|t'
           test "$result" = "$expected"
+      - name: Verify real Auth signup trigger and pending member gate
+        env:
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:54322/postgres
+        run: psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/auth_signup_gate_full_supabase_postgres17.sql
       - name: Stop ephemeral Supabase stack
         if: always()
         working-directory: v2
