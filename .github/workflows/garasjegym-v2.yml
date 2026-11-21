@@ -233,6 +233,26 @@ jobs:
           printf 'Read-only pre-reset inventory rows: '
           wc -l < /tmp/clean-start-readiness.out
           printf 'Post-reset acceptance is executed inside the full rollback clean-start rehearsal above.'
+      - name: Export reviewed target public schema without rows or secrets
+        run: |
+          mkdir -p release-schema
+          # Run pg_dump from the actual PostgreSQL 17 container so the client
+          # major version always matches the test database server.
+          mapfile -t db_containers < <(docker ps --filter 'name=supabase_db_' --format '{{.Names}}')
+          test "${#db_containers[@]}" -eq 1
+          docker exec "${db_containers[0]}" pg_dump -U postgres -d postgres --schema-only --schema=public --no-owner --no-privileges > release-schema/sturmkopf-target-public-schema.sql
+          test -s release-schema/sturmkopf-target-public-schema.sql
+          if grep -Eq '^(COPY|INSERT INTO|\\connect)' release-schema/sturmkopf-target-public-schema.sql; then
+            echo 'Unexpected data or connection command in schema-only export' >&2
+            exit 1
+          fi
+      - name: Archive schema-only comparison input
+        uses: actions/upload-artifact@v4
+        with:
+          name: sturmkopf-reviewed-target-public-schema-only
+          path: release-schema/sturmkopf-target-public-schema.sql
+          if-no-files-found: error
+          retention-days: 7
       - name: Stop ephemeral Supabase stack
         if: always()
         working-directory: v2
