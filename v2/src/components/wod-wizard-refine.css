@@ -102,6 +102,19 @@
 .gg-level-fields,.gg-quick-rowing { display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;min-width:0; }
 .gg-level-fields label,.gg-quick-rowing label { display:grid;gap:5px;min-width:0;font-size:12px;color:#d8e4e9;font-weight:750; }
 .gg-level-fields input,.gg-quick-rowing input,.gg-quick-rowing select { width:100%;min-width:0;min-height:44px;padding:8px 10px;box-sizing:border-box;border-radius:9px;border:1px solid #5d737e;background:#0c181e;color:#fff;font-size:16px; }
+.gg-reps-picker { grid-column:1/-1;display:grid;gap:7px;width:min(100%,350px);min-width:0; }
+.gg-reps-label { font-size:13px;font-weight:800;color:#e9f0f3; }
+.gg-reps-controls { display:grid;grid-template-columns:47px minmax(0,1fr) 47px;gap:7px; }
+.gg-reps-controls button { min-height:48px;border:1px solid #6e8490;border-radius:10px;background:#263b46;color:#fff;font-size:26px;font-weight:850; }
+.gg-reps-controls button:disabled { opacity:.35;cursor:not-allowed; }
+.gg-reps-controls input { width:100%;min-width:0;min-height:48px;text-align:center;background:#0d1a21;color:#fff;border:1px solid #78919e;border-radius:10px;font-size:23px;font-weight:850; }
+.gg-reps-quick-values { display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px; }
+.gg-reps-quick-values button { min-width:0;min-height:40px;padding:5px 0;border:1px solid #627683;border-radius:9px;background:#243740;color:#ebf3f6;font-size:15px;font-weight:800; }
+.gg-reps-quick-values button.selected { border-color:#ffbd64;background:#a95510;color:#fff; }
+.gg-reps-level-override { grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-width:0; }
+.gg-reps-level-override label { flex:1 1 110px; }
+.gg-reps-level-override button { min-height:42px;padding:7px 12px;border:1px solid #58717c;border-radius:9px;background:#293c46;color:#f4cc95;font-size:13px;font-weight:750; }
+.gg-reps-level-override button span { color:#d6e2e6; }
 .gg-box-height { grid-column:1/-1;display:grid;gap:6px; }
 .gg-box-height span { font-size:12px;font-weight:800;color:#d8e4e9; }
 .gg-box-height>div { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px; }

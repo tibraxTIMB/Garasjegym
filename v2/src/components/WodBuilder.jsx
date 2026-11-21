@@ -7,6 +7,7 @@ import {COMPLEX_EXERCISES,formatComplexSequence} from '../lib/wodComplexes.js'
 import { createWodEngineConfig, buildLegacyCompatibleBlock, normalizeWodEngine, scoreForWodFormat, PARTICIPATION_MODES, COLLABORATION_MODES, SCORE_TYPES } from '../lib/wodEngine.js'
 import { getFixedSlotTimerState } from '../lib/timerClock.js'
 import { wodFormatNeedsTime } from '../lib/wodTimeDial.js'
+import { applySharedReps, hasIndependentReps } from '../lib/wodReps.js'
 import WodTimeDial from './WodTimeDial.jsx'
 import './wod-ordering.css'
 import './wod-builder-contrast.css'
@@ -135,6 +136,22 @@ const equipmentIcon=value=>{const v=(value||'').toLowerCase();if(/power.?rack|sq
 const equipmentItems=value=>(value||'Kroppsvekt').split(/[,;+\\/\\n]+/).map(x=>x.trim()).filter(Boolean);
 const categoryTone=value=>{const v=(value||'').toLowerCase();return v.includes('kond')||v.includes('cardio')||v.includes('crossfit')?'conditioning':v.includes('kjern')||v.includes('core')||v.includes('pilates')?'core':v.includes('styr')||v.includes('strength')?'strength':v.includes('mobil')?'mobility':v.includes('golf')?'golf':v.includes('rehab')||v.includes('fysio')?'rehab':'other'}
 
+const quickReps=[5,8,10,12,15]
+function RepsPicker({value,label,onChange}) {
+ const textValue=String(value??'')
+ const singleNumber=/^\d+$/.test(textValue)
+ const amount=Number(textValue)
+ return <div className="gg-reps-picker" role="group" aria-label={label}>
+  <span className="gg-reps-label">{label}</span>
+  <div className="gg-reps-controls">
+   <button type="button" aria-label="Ein repetisjon mindre" disabled={!singleNumber||amount<=1} onClick={()=>onChange(String(Math.max(1,amount-1)))}>−</button>
+   <input aria-label={`${label} · skriv repetisjonar`} type="text" inputMode="numeric" value={textValue} onChange={e=>onChange(e.target.value)} placeholder="Reps"/>
+   <button type="button" aria-label="Ein repetisjon meir" disabled={!singleNumber} onClick={()=>onChange(String(amount+1))}>+</button>
+  </div>
+  <div className="gg-reps-quick-values" role="group" aria-label="Hurtigval repetisjonar">{quickReps.map(n=><button type="button" key={n} aria-pressed={textValue===String(n)} className={textValue===String(n)?'selected':''} onClick={()=>onChange(String(n))}>{n}</button>)}</div>
+ </div>
+}
+
 function QuickDoseLevels({exercise,isStationCircuit,updateLevel,updateItem,copyRxToLevels}) {
  const fields=doseFieldsFor(exercise)
  const levels=exercise.levels||makeLevels(exercise.reps,exercise.prescription_profiles||{})
@@ -146,6 +163,7 @@ function QuickDoseLevels({exercise,isStationCircuit,updateLevel,updateItem,copyR
   const dose=levels[level]||(level==='intermediate'?levels.rx:{})||{}
   const update=patch=>updateLevel(exercise.key,level,patch)
   const noReps=rowing||['distance','calories','time'].includes(metric)||(isStationCircuit&&(exercise.repsMode||'fixed')==='amrap')
+  const independent=level!=='rx'&&hasIndependentReps(levels,level)
   const rowUnit=exercise.rowUnit||'m'
   const rowField=metricField[rowUnit]||'distanceMeters'
   const storedRowAmount=level==='rx'?exercise.rowValue??'':dose[rowField]??''
@@ -153,7 +171,7 @@ function QuickDoseLevels({exercise,isStationCircuit,updateLevel,updateItem,copyR
   return <section key={level} className={'gg-level-row gg-level-'+level}>
    <strong>{labels[level]}</strong>
    <div className="gg-level-fields">
-    {!noReps&&<label>{exercise.is_complex?'Syklusar':'Reps'}<input type="text" inputMode="numeric" value={dose.reps??''} onChange={e=>update({reps:e.target.value})}/></label>}
+    {!noReps&&(level==='rx'?<RepsPicker value={dose.reps??''} label={exercise.is_complex?'Syklusar':'Reps'} onChange={reps=>update({reps})}/>:<div className="gg-reps-level-override">{independent?<><label>{exercise.is_complex?'Syklusar':'Reps'}<input type="text" inputMode="numeric" value={dose.reps??''} onChange={e=>update({reps:e.target.value,repsOverride:true})}/></label><button type="button" onClick={()=>update({reps:levels.rx?.reps??'',repsOverride:false})}>Bruk RX-reps</button></>:<button type="button" onClick={()=>update({reps:levels.rx?.reps??'',repsOverride:true})}>Endra reps <span>({levels.rx?.reps??''} som RX)</span></button>}</div>)}
     {rowing&&<><label>{rowUnit==='cal'?'Kaloriar':rowUnit==='m'?'Distanse (m)':rowUnit==='min'?'Tid (min)':'Tid (sek)'}<input type="number" min="1" value={rowAmount} onChange={e=>{if(level==='rx'){updateItem(exercise.key,{rowValue:e.target.value});update(rowingDosePatch(rowUnit,e.target.value))}else update({[rowField]:rowUnit==='min'&&e.target.value!==''?String(Number(e.target.value)*60):e.target.value})}}/></label>{level==='rx'&&<label>Mål<select value={rowUnit} onChange={e=>{updateItem(exercise.key,{rowUnit:e.target.value,rowValue:''});update(rowingDosePatch(e.target.value,''))}}><option value="m">Meter</option><option value="cal">Kaloriar</option><option value="s">Sekund</option><option value="min">Minutt</option></select></label>}</>}
     {!rowing&&metric==='time'&&<label>Tid (sek)<input type="number" min="1" value={dose.durationSeconds??''} onChange={e=>update({durationSeconds:e.target.value})}/></label>}
     {!rowing&&metric==='distance'&&<label>Distanse (m)<input type="number" min="1" value={dose.distanceMeters??''} onChange={e=>update({distanceMeters:e.target.value})}/></label>}
@@ -314,7 +332,17 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  function addPause(){setError('');setSelected(rows=>[...rows,{...blankItem({id:null,name:'Pause',category:'Pause',body_area:'Heile kroppen',equipment:'Ingen',description:'Planlagd pause mellom øvingar.',is_rest:true}),is_rest:true,pauseSeconds:'30',reps:''}]);setLibraryOpen(false)}
  function suggestUniqueWodName(){const existing=new Set(libraryWods.map(w=>(w.name||'').trim().toLowerCase()));for(let i=0;i<60;i++){const candidate=randomWodName();if(!existing.has(candidate.toLowerCase())&&candidate.toLowerCase()!==name.trim().toLowerCase())return candidate}return randomWodName()+' '+String(Date.now()).slice(-4)}
  function updateItem(key,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,...patch}:x))}
- function updateLevel(key,level,patch){setSelected(rows=>rows.map(x=>{if(x.key!==key)return x;const levels=x.levels||makeLevels(x.reps,x.prescription_profiles||{});return {...x,levels:{...levels,[level]:{...(levels[level]||(level==='intermediate'?levels.rx:{})),...patch}}}}))}
+ function updateLevel(key,level,patch){setSelected(rows=>rows.map(x=>{
+  if(x.key!==key)return x
+  const levels=x.levels||makeLevels(x.reps,x.prescription_profiles||{})
+  if(level==='rx'&&Object.hasOwn(patch,'reps')){
+   const shared=applySharedReps(levels,patch.reps)
+   return {...x,reps:String(patch.reps),levels:{...shared,rx:{...shared.rx,...patch}}}
+  }
+  const original=levels[level]||(level==='intermediate'?levels.rx:{})
+  const implicitOverride=level!=='rx'&&Object.hasOwn(patch,'reps')&&!Object.hasOwn(patch,'repsOverride')?{repsOverride:true}:{}
+  return {...x,levels:{...levels,[level]:{...original,...patch,...implicitOverride}}}
+ }))}
  function copyRxToLevels(key){setSelected(rows=>rows.map(x=>{
   if(x.key!==key)return x
   const levels=x.levels||makeLevels(x.reps,x.prescription_profiles||{})
