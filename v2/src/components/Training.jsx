@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Activity, CheckCircle2, Clock3, Dumbbell, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2 } from 'lucide-react'
+import { Activity, CheckCircle2, Clock3, Dumbbell, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2, Settings2, List, Volume2, VolumeX, Maximize2, Minimize2, X } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { RELEASE_NAME } from '../lib/release.js'
 import HeartRateTrainingPanel from './HeartRateTrainingPanel.jsx'
@@ -78,6 +78,9 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [laps, setLaps] = useState([])
   const [soundOn, setSoundOn] = useState(true)
   const [showTimerSettings, setShowTimerSettings] = useState(false)
+  const [stagePanel, setStagePanel] = useState(null)
+  const [confirmReset, setConfirmReset] = useState(false)
+  const [browserFullscreen, setBrowserFullscreen] = useState(false)
   const deviceProfile = useDeviceProfile()
   const [designMode, setDesignMode] = useState(false)
   const defaultPanelLayout={clock:{span:6,height:520},info:{span:3,height:360},laps:{span:3,height:360},music:{span:12,height:90}}
@@ -268,22 +271,22 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   useEffect(() => {
     if (!stop) return
     setRunning(false)
-    setFocused(false)
     if (document.fullscreenElement === timerContainerRef.current) {
       document.exitFullscreen?.().catch(() => {})
     }
   }, [stop])
   useEffect(() => {
-    const sync = () => setFocused(document.fullscreenElement === timerContainerRef.current)
+    const sync = () => setBrowserFullscreen(document.fullscreenElement === timerContainerRef.current)
     document.addEventListener('fullscreenchange', sync)
     return () => document.removeEventListener('fullscreenchange', sync)
   }, [])
+  const stageVisible = focused && !stop
   useEffect(() => {
-    if (!focused) return undefined
+    if (!stageVisible) return undefined
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = previousOverflow }
-  }, [focused])
+  }, [stageVisible])
 
   // Derive elapsed time from wall-clock timestamps. Interval callbacks only refresh
   // the display; they never accumulate time, so background throttling cannot create drift.
@@ -338,11 +341,18 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   async function toggleFocus() {
     if (!focused) {
       setFocused(true)
-      try { await timerContainerRef.current?.requestFullscreen?.() } catch { /* Nettlesarar utan fullskjerm får eit fullskjerms visingslag. */ }
     } else {
       try { if (document.fullscreenElement === timerContainerRef.current) await document.exitFullscreen?.() } catch { /* Ignorer. */ }
+      setStagePanel(null)
       setFocused(false)
     }
+  }
+
+  async function toggleBrowserFullscreen() {
+    try {
+      if (document.fullscreenElement === timerContainerRef.current) await document.exitFullscreen?.()
+      else await timerContainerRef.current?.requestFullscreen?.()
+    } catch { /* CSS-flata fungerer òg når nettlesaren nektar ekte fullskjerm. */ }
   }
 
   const isAmrap = format === 'AMRAP' || (['Couplet','Triplet'].includes(format) && schema?.combination_mode === 'AMRAP')
@@ -354,7 +364,64 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const lapAction = () => { if(!running)return; setLaps(value => [...value, splitDuration(elapsed, value)]); setRound(value => value + 1); cue(1200, 0.1) }
   const splitAction = () => { if(!running)return; setLaps(value => [...value, splitDuration(elapsed, value)]); cue(1200, 0.1) }
   const toggleRunning = () => { if (running) { setRunning(false); setPhase('PAUSE'); return } if (phase === 'FERDIG' || phase === 'TIDSGRENSE') return; setHasStarted(true); setPhase('PÅGÅR'); setRunning(true) }
-  return <div ref={timerContainerRef} className={focused ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
+  const visibleStationIndex = Math.min(stationCount - 1, fixedSlotState.currentSlotIndex % stationCount)
+  const currentStationName = stationList[visibleStationIndex]?.exercise_name || stationList[visibleStationIndex]?.name || `Stasjon ${visibleStationIndex + 1}`
+  const stageExerciseName = isStationCircuit ? currentStationName : isTimedInterval ? currentIntervalExercise : isEMOM ? currentEmomExercise : activeExercise || exerciseList[0]?.exercise_name || exerciseList[0]?.name || ''
+  const stageNextExercise = isStationCircuit ? stationList[(visibleStationIndex + 1) % stationCount]?.exercise_name : isTimedInterval ? exerciseList[(intervalExerciseIndex + 1) % intervalExerciseCount]?.exercise_name : nextExercise
+  const stageTimeLabel = isCountdown ? 'TID ATT' : isStationCircuit ? (inWorkPhase ? 'ARBEID ATT' : 'BYTE ATT') : isTimedInterval ? (inWorkPhase ? 'ARBEID ATT' : 'KVILE ATT') : isEMOM ? (isEmomWorkPhase ? 'ARBEID ATT' : isEmomRestPhase ? 'KVILE ATT' : 'NESTE START') : 'MEDGÅTT TID'
+  const stageIsComplete = phase === 'FERDIG' || phase === 'TIDSGRENSE'
+  const stageRows = (isStationCircuit ? stationList : exerciseList).filter(item => !item.is_rest).map(item => {
+    const reps = (item.sets || []).map(set => String(set.reps ?? '').trim()).filter(Boolean)
+    const uniqueReps = [...new Set(reps)]
+    return { id: item.key || item.exercise_id || item.station_number || item.exercise_name, name: item.exercise_name || item.name || 'Øving', dose: uniqueReps.length === 1 ? `${uniqueReps[0]} reps` : uniqueReps.length > 1 ? uniqueReps.join(' / ') + ' reps' : item.reps ? `${item.reps} reps` : item.prescription_label || '' }
+  })
+  const resetTimer = () => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
+  return <div ref={timerContainerRef} className={stageVisible ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
+    {stageVisible ? <section className="gg-live-timer" aria-label="Fullskjermsklokke for treningsøkt">
+      <header className="gg-live-timer__header">
+        <div className="gg-live-timer__identity"><span className="gg-live-timer__brand">GARASJEGYM</span><strong>{format}</strong><span className="gg-live-timer__origin">{originLabel}</span></div>
+        <div className="gg-live-timer__tools">
+          <button type="button" className={stagePanel==='wod'?'is-selected':''} onClick={()=>setStagePanel(value=>value==='wod'?null:'wod')} aria-label="Vis WOD og øvingar" title="Vis WOD og øvingar" aria-expanded={stagePanel==='wod'}><List size={21}/></button>
+          <button type="button" onClick={()=>setSoundOn(value=>!value)} aria-label={soundOn?'Slå av lyd':'Slå på lyd'} title={soundOn?'Lyd på':'Lyd av'}>{soundOn?<Volume2 size={21}/>:<VolumeX size={21}/>}</button>
+          <button type="button" onClick={toggleBrowserFullscreen} aria-label={browserFullscreen?'Vis nettlesarfelt':'Skjul nettlesarfelt – ekte fullskjerm'} title="Fullskjerm">{browserFullscreen?<Minimize2 size={21}/>:<Maximize2 size={21}/>}</button>
+          <button type="button" className={stagePanel==='settings'?'is-selected':''} onClick={()=>setStagePanel(value=>value==='settings'?null:'settings')} aria-label="Tilpass klokka" title="Tilpass klokka" aria-expanded={stagePanel==='settings'}><Settings2 size={21}/></button>
+          <button type="button" onClick={toggleFocus} aria-label="Minimer klokka" title="Minimer klokka"><X size={21}/></button>
+        </div>
+      </header>
+      <div className="gg-live-timer__body">
+        <div className="gg-live-timer__clock-area">
+          <div className="gg-live-timer__phase"><span className={running?'gg-live-timer__dot is-running':'gg-live-timer__dot'}/>{stageIsComplete?'FERDIG':!hasStarted?'KLAR':!running?'PAUSE':(isEMOM||isTimedInterval||isStationCircuit)?currentPhase:'PÅGÅR'}</div>
+          <div className="gg-live-timer__time" style={{'--gg-time-scale': Math.max(.78,Math.min(1.16,appearance.clockSize/112))}} role="timer" aria-label={`${stageTimeLabel}: ${clock(primaryTime)}`}>{clock(primaryTime)}</div>
+          <div className="gg-live-timer__time-label">{stageTimeLabel}</div>
+          {(isCountdown||isEMOM||isTimedInterval||isStationCircuit||hasTimeCap)&&<div className="gg-live-timer__time-secondary"><span>{isCountdown?'Medgått':isEMOM?'Økta att':isTimedInterval||isStationCircuit?'Økta att':'Tid att'}</span><b>{clock(isCountdown?elapsed:remainingTotal)}</b></div>}
+        </div>
+        <div className="gg-live-timer__context">
+          {isAmrap&&<div className="gg-live-timer__rounds"><span>FULLFØRTE RUNDER</span><strong>{laps.length}</strong></div>}
+          {(isTimedInterval||isStationCircuit||isEMOM)&&<div className="gg-live-timer__rounds"><span>{isStationCircuit?'STASJON · RUNDE':isEMOM?'MINUTT':'RUNDE'}</span><strong>{isStationCircuit?`${visibleStationIndex+1}/${stationCount} · ${Math.min(currentRound,Number(rounds)||1)}/${rounds}`:isEMOM?currentEmomRound:`${roundsShown}/${rounds}`}</strong></div>}
+          <div className="gg-live-timer__exercise"><span>{isAmrap?'WOD-ØVINGAR':isStationCircuit?'NO · STASJON':isEMOM?'DENNE RUNDA':'AKTUELL ØVING'}</span>
+            {isAmrap?<ol>{stageRows.slice(0,4).map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span>{item.dose&&<small>{item.dose}</small>}</li>)}</ol>:<strong>{stageExerciseName||'Sjå øvingslista'}</strong>}
+            {isAmrap&&stageRows.length>4&&<button type="button" className="gg-live-timer__more" onClick={()=>setStagePanel('wod')}>+ {stageRows.length-4} fleire øvingar</button>}
+            {!isAmrap&&stageNextExercise&&stageNextExercise!==stageExerciseName&&<small className="gg-live-timer__next">Neste: {stageNextExercise}</small>}
+          </div>
+        </div>
+      </div>
+      <footer className="gg-live-timer__footer">
+        <button type="button" className="gg-live-timer__pause" onClick={toggleRunning} disabled={stageIsComplete}>{running?<><Pause size={21}/> Pause</>:phase==='PAUSE'?<><Play size={21}/> Hald fram</>:<><Play size={21}/> Start</>}</button>
+        {isAmrap&&<button type="button" className="gg-live-timer__round-button" onClick={lapAction} disabled={!running}><Plus size={21}/> Runde</button>}
+        {(isStopwatch||isForTime)&&<button type="button" className="gg-live-timer__split" onClick={splitAction} disabled={!running}>Mellomtid</button>}
+        <button type="button" className="gg-live-timer__finish" onClick={onFinish} disabled={!hasStarted}><CheckCircle2 size={20}/> Fullfør</button>
+      </footer>
+      {stagePanel&&<div className="gg-live-timer__scrim" onClick={()=>setStagePanel(null)} role="presentation"/>}
+      {stagePanel==='wod'&&<aside className="gg-live-timer__drawer" aria-label="Øvingar i WOD-en"><header><strong>Øvingar · {stageRows.length}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk øvingslista"><X size={20}/></button></header><ol className="gg-live-timer__all-exercises">{stageRows.map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span><small>{item.dose}</small></li>)}</ol>{!stageRows.length&&<p>Ingen øvingar er lagde til.</p>}</aside>}
+      {stagePanel==='settings'&&<aside className="gg-live-timer__drawer" aria-label="Tilpass klokka"><header><strong>Tilpass klokka</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk innstillingane"><X size={20}/></button></header>
+        <label className="gg-live-timer__setting">Storleik på klokka <input type="range" min="88" max="130" step="7" value={Math.max(88,Math.min(130,appearance.clockSize))} onChange={e=>setAppearance(value=>({...value,clockSize:Number(e.target.value)}))}/></label>
+        <label className="gg-live-timer__setting">Klokkefarge <input type="color" value={appearance.accent} onChange={e=>setAppearance(value=>({...value,accent:e.target.value}))}/></label>
+        {(isCountdown||isEMOM||hasTimeCap)&&<div className="gg-live-timer__setting"><span>Øktlengd</span><div className="gg-live-timer__inline-inputs"><label>Min<input type="number" min="0" max="240" value={Math.floor(target/60)} onChange={e=>setDurationOverride(Math.max(1,Math.max(0,Number(e.target.value)||0)*60+(target%60)))}/></label><label>Sek<input type="number" min="0" max="59" value={target%60} onChange={e=>setDurationOverride(Math.max(1,Math.floor(target/60)*60+Math.max(0,Math.min(59,Number(e.target.value)||0))))}/></label></div></div>}
+        {(isTimedInterval||isStationCircuit||isEMOM)&&<div className="gg-live-timer__setting"><span>Intervall</span><div className="gg-live-timer__inline-inputs"><label>Arbeid (sek)<input type="number" min="1" max="600" value={workSeconds} onChange={e=>setWorkSeconds(Math.max(1,Math.min(600,Number(e.target.value)||1)))}/></label><label>Pause (sek)<input type="number" min="0" max="600" value={restSeconds} onChange={e=>setRestSeconds(Math.max(0,Math.min(600,Number(e.target.value)||0)))}/></label>{!isEMOM&&<label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(Math.max(1,Math.min(100,Number(e.target.value)||1)))}/></label>}</div></div>}
+        <button type="button" className="gg-live-timer__fullscreen-button" onClick={toggleBrowserFullscreen}>{browserFullscreen?'Vis nettlesarfelt':'Skjul nettlesarfelt'}</button>
+        {!confirmReset?<button type="button" className="gg-live-timer__reset" onClick={()=>setConfirmReset(true)}><RotateCcw size={17}/> Nullstill økta</button>:<div className="gg-live-timer__reset-confirm"><strong>Nullstille tid og rundar?</strong><button type="button" onClick={resetTimer}>Ja, nullstill</button><button type="button" onClick={()=>setConfirmReset(false)}>Avbryt</button></div>}
+      </aside>}
+    </section> : <>
     <div className="timer-topline">
       <div className="timer-context"><span className="timer-origin-chip">{originLabel}</span><span className="timer-format-chip">{format.toUpperCase()}</span></div>
       <button type="button" className="timer-customize-trigger" onClick={() => setShowTimerSettings(value => !value)} aria-expanded={showTimerSettings}>{showTimerSettings ? 'Lukk oppsett' : 'Timeroppsett'}</button>
@@ -430,6 +497,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
 
     <small>{isStationCircuit ? 'Stasjonssirkel · roterande stasjonar · fast tal rundar' : isTimedInterval ? 'Arbeid / kvile · samla økttid og tid att' : isCountdown ? 'AMRAP · registrer kvar fullførte runde' : isEMOM ? `${emomEvery>1?`E${emomEvery}MOM`:'E1MOM'} · ${effectiveEmomWorkSeconds}s arbeid / ${effectiveEmomRestSeconds}s pause` : isDeathBy ? 'Aukande arbeid for kvar minutt' : isForTime ? 'Stoppeklokke med eventuell tidsgrense' : 'Stoppeklokke – tel medgått tid'}</small>
   </div>
+  </>}
   </div>
 }
 

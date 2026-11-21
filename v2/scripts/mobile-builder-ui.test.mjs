@@ -24,6 +24,23 @@ test('fullscreen timer targets its own DOM node and restores scrolling on exit',
   assert.match(viewport, /\.timer-panel-clock/)
 })
 
+test('live timer is one viewport-locked surface with portrait and landscape layouts', () => {
+  const timer = source('../src/components/Training.jsx')
+  const styles = source('../src/components/timer-viewport.css')
+  assert.match(timer, /const stageVisible = focused && !stop/)
+  assert.match(timer, /className="gg-live-timer" aria-label="Fullskjermsklokke/)
+  assert.match(timer, /className="gg-live-timer__footer"/)
+  assert.match(timer, /stagePanel==='wod'/)
+  assert.match(timer, /stagePanel==='settings'/)
+  assert.match(timer, /onClick=\{toggleBrowserFullscreen\}/)
+  assert.match(styles, /\.engine-timer\.timer-focused\s*\{[^}]*overflow:\s*hidden\s*!important/s)
+  assert.match(styles, /\.gg-live-timer\s*\{[^}]*grid-template-rows:\s*auto minmax\(0, 1fr\) auto/s)
+  assert.match(styles, /@media \(orientation: portrait\)\s*\{/)
+  assert.match(styles, /@media \(orientation: landscape\) and \(max-height: 480px\)\s*\{/)
+  assert.match(styles, /\.gg-live-timer__body\s*\{[^}]*overflow:\s*hidden/s)
+  assert.doesNotMatch(styles.match(/\.gg-live-timer\s*\{[^}]*\}/s)?.[0] || '', /overflow-y:\s*auto/)
+})
+
 test('class builder and PT Studio use dark, readable field and selected-item surfaces', () => {
   assert.match(source('../src/components/Booking.jsx'), /import '\.\/builder-form-contrast\.css'/)
   assert.match(source('../src/components/PTStudio.jsx'), /import '\.\/builder-form-contrast\.css'/)

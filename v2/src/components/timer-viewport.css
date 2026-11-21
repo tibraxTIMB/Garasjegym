@@ -120,3 +120,193 @@
     font-size: clamp(64px, 21dvh, 120px) !important;
   }
 }
+
+/* The live clock is a separate, viewport-locked surface. Legacy draggable
+   timer panels must never determine its height or button placement. */
+.engine-timer.timer-focused {
+  gap: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  background: #070c10 !important;
+}
+
+.gg-live-timer, .gg-live-timer * { box-sizing: border-box; }
+.gg-live-timer {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(9px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  color: #f3f7f8;
+  background: radial-gradient(ellipse at 42% 43%, #15232a 0%, #0a1218 52%, #070c10 100%);
+  font-family: inherit;
+}
+.gg-live-timer button { cursor: pointer; touch-action: manipulation; font: inherit; }
+.gg-live-timer button:focus-visible { outline: 3px solid #f2b34e; outline-offset: 2px; }
+.gg-live-timer button:disabled { opacity: .45; cursor: not-allowed; }
+.gg-live-timer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  min-height: 46px;
+  padding: 0 0 8px;
+  border-bottom: 1px solid rgba(169, 193, 198, .19);
+}
+.gg-live-timer__identity { display: flex; flex-direction: column; justify-content: center; gap: 1px; min-width: 0; overflow: hidden; }
+.gg-live-timer__brand { color: #e1a34c; font-size: 10px; font-weight: 900; letter-spacing: .13em; }
+.gg-live-timer__identity strong { overflow: hidden; color: #f6f7f8; font-size: 14px; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
+.gg-live-timer__origin { display: none; }
+.gg-live-timer__tools { display: flex; flex: 0 0 auto; gap: 3px; align-items: center; }
+.gg-live-timer__tools button {
+  display: grid;
+  place-items: center;
+  width: 39px;
+  min-width: 0;
+  height: 39px;
+  padding: 0;
+  border: 1px solid rgba(181, 203, 211, .24);
+  border-radius: 10px;
+  background: #19262e;
+  color: #e4edef;
+}
+.gg-live-timer__tools button.is-selected { border-color: #f0a33a; color: #f0a33a; }
+.gg-live-timer__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+  gap: clamp(8px, 2vw, 22px);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: clamp(6px, 1.6dvh, 16px) 0;
+}
+.gg-live-timer__clock-area {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  gap: clamp(3px, 1dvh, 10px);
+  text-align: center;
+}
+.gg-live-timer__phase { display: flex; align-items: center; gap: 8px; color: #d6e1e4; font-size: clamp(12px, 2.5dvh, 16px); font-weight: 900; letter-spacing: .12em; }
+.gg-live-timer__dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: #6c7579; }
+.gg-live-timer__dot.is-running { background: #73dbaa; box-shadow: 0 0 14px #73dbaa66; }
+.gg-live-timer__time {
+  width: 100%;
+  color: var(--timer-accent, #f0a33a);
+  font-size: min(calc(17vw * var(--gg-time-scale, 1)), calc(40dvh * var(--gg-time-scale, 1)), 214px);
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -.065em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: center;
+}
+.gg-live-timer__time-label { color: #abbfc7; font-size: clamp(11px, 2dvh, 14px); font-weight: 800; letter-spacing: .13em; }
+.gg-live-timer__time-secondary { display: flex; justify-content: center; align-items: baseline; gap: 10px; color: #b9cbd1; font-size: 13px; }
+.gg-live-timer__time-secondary b { color: #f3f7f8; font-size: clamp(16px, 3.5dvh, 25px); font-variant-numeric: tabular-nums; }
+.gg-live-timer__context {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(5px, 1.6dvh, 15px);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: clamp(8px, 1.8vw, 18px);
+  border: 1px solid rgba(169, 193, 198, .22);
+  border-radius: 14px;
+  background: rgba(13, 23, 29, .86);
+}
+.gg-live-timer__rounds { display: flex; flex-direction: column; gap: 1px; color: #b1c1c6; }
+.gg-live-timer__rounds > span, .gg-live-timer__exercise > span { color: #9eafb5; font-size: 11px; font-weight: 850; letter-spacing: .09em; }
+.gg-live-timer__rounds strong { color: #f2b45b; font-size: clamp(22px, 5dvh, 40px); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.gg-live-timer__exercise { display: flex; flex-direction: column; gap: 5px; min-width: 0; min-height: 0; }
+.gg-live-timer__exercise > strong { color: #f3f7f8; font-size: clamp(17px, 3dvh, 24px); line-height: 1.2; overflow-wrap: anywhere; }
+.gg-live-timer__exercise ol { display: grid; gap: 4px; list-style: none; margin: 0; padding: 0; min-width: 0; }
+.gg-live-timer__exercise li { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; font-size: clamp(12px, 2.5dvh, 16px); line-height: 1.25; }
+.gg-live-timer__exercise li > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gg-live-timer__exercise li small { flex: 0 0 auto; color: #d0a565; font-size: 12px; white-space: nowrap; }
+.gg-live-timer__more { align-self: flex-start; padding: 2px 0; border: 0; background: transparent; color: #f2b45b; font-size: 13px; font-weight: 800; }
+.gg-live-timer__next { color: #a8c1c8; font-size: 13px; line-height: 1.25; }
+.gg-live-timer__footer { display: flex; gap: 7px; align-items: stretch; width: 100%; min-width: 0; padding-top: 9px; border-top: 1px solid rgba(169,193,198,.2); }
+.gg-live-timer__footer button { display: flex; flex: 1 1 0; justify-content: center; align-items: center; gap: 7px; min-width: 0; min-height: 56px; padding: 8px; border-radius: 12px; font-size: clamp(13px, 2.6vw, 17px); font-weight: 850; white-space: nowrap; }
+.gg-live-timer__pause { border: 1px solid #92a7b0; background: #263740; color: #f7fafb; }
+.gg-live-timer__round-button { border: 1px solid #f3ac45; background: #f0a33a; color: #161d20; }
+.gg-live-timer__split { border: 1px solid #92a7b0; background: #23333b; color: #fff; }
+.gg-live-timer__finish { border: 1px solid #a17d46; background: #1b2429; color: #f3b45d; }
+.gg-live-timer__scrim { position: absolute; z-index: 10; inset: 0; background: #010608bc; }
+.gg-live-timer__drawer {
+  position: absolute;
+  z-index: 11;
+  top: max(8px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  bottom: max(9px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(390px, calc(100% - 20px));
+  padding: 16px;
+  border: 1px solid #61747c;
+  border-radius: 15px;
+  background: #17242b;
+  color: #f3f7f8;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.gg-live-timer__drawer header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex: 0 0 auto; }
+.gg-live-timer__drawer header strong { font-size: 20px; }
+.gg-live-timer__drawer header button { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid #62747c; border-radius: 9px; color: #fff; background: #263942; }
+.gg-live-timer__all-exercises { display: grid; gap: 9px; padding: 0; margin: 0; list-style: none; }
+.gg-live-timer__all-exercises li { display: flex; justify-content: space-between; gap: 14px; padding-bottom: 8px; border-bottom: 1px solid #45545b; font-size: 16px; }
+.gg-live-timer__all-exercises li small { color: #f2b45b; white-space: nowrap; }
+.gg-live-timer__setting { display: flex; flex-direction: column; gap: 9px; font-size: 15px; font-weight: 750; }
+.gg-live-timer__setting input[type=range] { width: 100%; accent-color: #f0a33a; }
+.gg-live-timer__setting input[type=color] { width: 58px; height: 40px; padding: 3px; border: 1px solid #92a7b0; border-radius: 8px; background: #10191e; }
+.gg-live-timer__inline-inputs { display: flex; gap: 8px; flex-wrap: wrap; }
+.gg-live-timer__inline-inputs label { display: flex; flex: 1 1 75px; flex-direction: column; gap: 5px; min-width: 0; color: #b9ccd1; font-size: 13px; }
+.gg-live-timer__inline-inputs input { width: 100%; min-width: 0; min-height: 45px; padding: 8px; border: 1px solid #667a83; border-radius: 8px; background: #101b21; color: #fff; font-size: 18px; }
+.gg-live-timer__fullscreen-button, .gg-live-timer__reset { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 8px 12px; border: 1px solid #62747c; border-radius: 9px; background: #22343c; color: #f7fafb; }
+.gg-live-timer__reset-confirm { display: grid; gap: 8px; }
+.gg-live-timer__reset-confirm button { min-height: 44px; border: 1px solid #ba9d7a; border-radius: 8px; background: #28353a; color: #fff; }
+
+@media (orientation: portrait) {
+  .gg-live-timer__body { grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0, 1.35fr) minmax(0, .85fr); gap: 7px; }
+  .gg-live-timer__time { font-size: min(calc(29vw * var(--gg-time-scale,1)), calc(24dvh * var(--gg-time-scale,1)), 176px); }
+  .gg-live-timer__context { padding: clamp(8px, 1.7dvh, 16px) 12px; }
+  .gg-live-timer__rounds { flex-direction: row; align-items: center; justify-content: space-between; }
+  .gg-live-timer__rounds strong { font-size: clamp(23px, 4.5dvh, 36px); }
+  .gg-live-timer__footer button { min-height: 59px; }
+}
+@media (orientation: landscape) and (max-height: 480px) {
+  .gg-live-timer { padding-top: max(4px, env(safe-area-inset-top)); padding-bottom: max(4px, env(safe-area-inset-bottom)); }
+  .gg-live-timer__header { min-height: 39px; padding-bottom: 4px; }
+  .gg-live-timer__tools button { width: 35px; height: 35px; }
+  .gg-live-timer__body { padding: 5px 0; }
+  .gg-live-timer__context { padding: 6px 10px; }
+  .gg-live-timer__footer { padding-top: 5px; }
+  .gg-live-timer__footer button { min-height: 48px; }
+}
+@media (max-width: 380px) {
+  .gg-live-timer__tools button { width: 33px; height: 37px; }
+  .gg-live-timer__tools svg { width: 18px; height: 18px; }
+  .gg-live-timer__footer button { gap: 4px; padding: 6px 3px; }
+  .gg-live-timer__footer svg { width: 18px; height: 18px; }
+}
+@media (max-height: 600px) and (orientation: portrait) {
+  .gg-live-timer__body { grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr); }
+  .gg-live-timer__footer button { min-height: 49px; }
+  .gg-live-timer__time { font-size: min(calc(26vw * var(--gg-time-scale,1)), calc(22dvh * var(--gg-time-scale,1))); }
+  .gg-live-timer__context { gap: 4px; }
+  .gg-live-timer__exercise li:nth-child(n+4) { display: none; }
+}
