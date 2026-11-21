@@ -1,64 +1,10 @@
 -- Read-only post-reset acceptance checks. This file contains no DML/DDL.
--- SUPERSEDES the old 56-exercise / existing-admin acceptance contract.
--- Run only after an owner-authorized clean-start reset on an isolated rehearsal target.
-WITH core_exercise_contract(name,category) AS (
-  VALUES
-    ('Air Squat','CrossFit'),
-    ('Back Squat','CrossFit'),
-    ('Bike Erg','CrossFit'),
-    ('Box Jump','CrossFit'),
-    ('Box Step-up','CrossFit'),
-    ('Burpee','CrossFit'),
-    ('Burpee Box Jump Over','CrossFit'),
-    ('Chest-to-Bar Pull-up','CrossFit'),
-    ('Clean and Jerk','CrossFit'),
-    ('Deadlift','CrossFit'),
-    ('Double Under','CrossFit'),
-    ('Farmer Carry','CrossFit'),
-    ('Front Squat','CrossFit'),
-    ('Handstand Push-up','CrossFit'),
-    ('Kettlebell Swing','CrossFit'),
-    ('Overhead Squat','CrossFit'),
-    ('Power Clean','CrossFit'),
-    ('Power Snatch','CrossFit'),
-    ('Pull-up','CrossFit'),
-    ('Push Jerk','CrossFit'),
-    ('Push Press','CrossFit'),
-    ('Row','CrossFit'),
-    ('Single Under','CrossFit'),
-    ('SkiErg','CrossFit'),
-    ('Snatch','CrossFit'),
-    ('Squat Clean','CrossFit'),
-    ('Thruster','CrossFit'),
-    ('Toes-to-Bar','CrossFit'),
-    ('Walking Lunge','CrossFit'),
-    ('Wall Ball Shot','CrossFit'),
-    ('Pilates Cat Stretch','Pilates'),
-    ('Pilates Clam','Pilates'),
-    ('Pilates Criss Cross','Pilates'),
-    ('Pilates Double Leg Stretch','Pilates'),
-    ('Pilates Hundred','Pilates'),
-    ('Pilates Mermaid','Pilates'),
-    ('Pilates Roll Up','Pilates'),
-    ('Pilates Saw','Pilates'),
-    ('Pilates Shoulder Bridge','Pilates'),
-    ('Pilates Side Kick','Pilates'),
-    ('Pilates Side Plank','Pilates'),
-    ('Pilates Single Leg Stretch','Pilates'),
-    ('Pilates Spine Stretch Forward','Pilates'),
-    ('Pilates Swan Prep','Pilates'),
-    ('Pilates Swimming','Pilates'),
-    ('Barbell Row','Styrke'),
-    ('Bench Press','Styrke'),
-    ('Biceps Curl','Styrke'),
-    ('Bulgarian Split Squat','Styrke'),
-    ('Dumbbell Shoulder Press','Styrke'),
-    ('Hip Thrust','Styrke'),
-    ('Lat Pulldown','Styrke'),
-    ('Leg Press','Styrke'),
-    ('Plank','Styrke'),
-    ('Romanian Deadlift','Styrke'),
-    ('Triceps Pushdown','Styrke')
+-- Binding clean-start contract: exactly one newly created owner admin/Auth identity,
+-- no legacy profiles/users or operational history, and exactly 135 provisional
+-- system exercises with no custom exercise rows.
+-- Run only on an isolated Production-derived rehearsal target after reset.
+-- Also run exercise_catalogue_manifest_assertions.sql for exact names/categories.
+WITH profiles_state AS (
 ),
 profiles_state AS (
   SELECT count(*) profile_count,
@@ -81,12 +27,6 @@ orphan_profile_state AS (
 ),
 exercise_state AS (
   SELECT count(*) FILTER (WHERE created_by IS NOT NULL) custom_exercises,
-         (SELECT count(*) FROM core_exercise_contract c
-          WHERE EXISTS (
-            SELECT 1 FROM public.exercises e
-            WHERE lower(trim(e.name))=lower(trim(c.name))
-              AND e.category=c.category AND e.created_by IS NULL
-          )) core_exercises_preserved,
          count(*) FILTER (WHERE created_by IS NULL) system_catalog_total
   FROM public.exercises
 ),
@@ -102,6 +42,7 @@ operational_counts AS (
   UNION ALL SELECT 'coffee_orders',count(*) FROM public.coffee_orders
   UNION ALL SELECT 'coffee_product_reviews',count(*) FROM public.coffee_product_reviews
   UNION ALL SELECT 'coffee_products',count(*) FROM public.coffee_products
+  UNION ALL SELECT 'coffee_settings',count(*) FROM public.coffee_settings
   UNION ALL SELECT 'daily_wod',count(*) FROM public.daily_wod
   UNION ALL SELECT 'exercise_favorites',count(*) FROM public.exercise_favorites
   UNION ALL SELECT 'member_preferences',count(*) FROM public.member_preferences
@@ -149,10 +90,10 @@ SELECT 'auth','exactly_one_owner_auth_identity',
               auth_users,linked_users,auth_without_profile,profile_without_auth)
 FROM auth_state CROSS JOIN orphan_profile_state
 UNION ALL
-SELECT 'exercise_catalogue','reconciled_catalogue_minimum_94_with_56_legacy_core_and_no_custom_rows',
-       CASE WHEN core_exercises_preserved=56 AND system_catalog_total>=94 AND custom_exercises=0 THEN 'PASS' ELSE 'FAIL' END,
-       format('legacy_core_preserved=%s/56 total_system_catalog=%s (minimum 94) custom=%s',
-              core_exercises_preserved,system_catalog_total,custom_exercises)
+SELECT 'exercise_catalogue','exactly_135_system_exercises_and_no_custom_rows',
+       CASE WHEN system_catalog_total=135 AND custom_exercises=0 THEN 'PASS' ELSE 'FAIL' END,
+       format('total_system_catalog=%s/135 provisional_manifest custom=%s; exact names/categories must also pass exercise_catalogue_manifest_assertions.sql',
+              system_catalog_total,custom_exercises)
 FROM exercise_state
 UNION ALL
 SELECT 'operational_data',table_name,
