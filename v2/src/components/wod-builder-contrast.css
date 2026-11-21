@@ -1,0 +1,26 @@
+/* WOD Studio: readable form controls and automatic score summary on dark panels. */
+.wod-builder input:not([type="checkbox"]),
+.wod-builder select,
+.wod-builder textarea,
+.wod-library-portal input {
+  color: #f6f8f8;
+  background-color: #142026;
+  caret-color: #ffc46b;
+}
+.wod-builder select option { background-color: #142026; color: #f6f8f8; }
+.wod-builder input::placeholder,
+.wod-library-portal input::placeholder { color: #aebbc0; opacity: 1; }
+.wod-library-portal .wod-exercise-info > strong { color: #f6f8f8 !important; }
+.wod-auto-score {
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #52646c;
+  border-radius: 10px;
+  background: #16252b;
+  color: #e9f0ef;
+}
+.wod-auto-score span { font-size: 12px; color: #bdcbd0; }
+.wod-auto-score strong { font-size: 16px; color: #ffcd78; }

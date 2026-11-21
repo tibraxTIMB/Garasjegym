@@ -5,9 +5,10 @@ import {supabase} from '../lib/supabase.js'
 import {addWodSortOrder,getWodSchemaItems,moveWodItemByKey,moveWodItemToPosition,sortWodItems} from '../lib/wodOrdering.js'
 import {COMPLEX_EXERCISES,formatComplexSequence} from '../lib/wodComplexes.js'
 import WodImportPanel from './WodImportPanel.jsx'
-import { createWodEngineConfig, buildLegacyCompatibleBlock, normalizeWodEngine, PARTICIPATION_MODES, COLLABORATION_MODES, SCORE_TYPES } from '../lib/wodEngine.js'
+import { createWodEngineConfig, buildLegacyCompatibleBlock, normalizeWodEngine, scoreForWodFormat, PARTICIPATION_MODES, COLLABORATION_MODES, SCORE_TYPES } from '../lib/wodEngine.js'
 import { getFixedSlotTimerState } from '../lib/timerClock.js'
 import './wod-ordering.css'
+import './wod-builder-contrast.css'
 
 const categories=['Alle','Functional Fitness','Styrke','Complex','Kondisjon','Gymnastikk','Pilates','Yoga Flow','Mobilitet','Rehab','Golf']
 const areas=['Alle område','Heile kroppen','Overkropp','Underkropp','Kjerne','Hofte og sete','Rygg','Skuldrer og armar','Bryst','Fullkropp','Bein','Mage']
@@ -133,7 +134,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const [prescription,setPrescription]=useState('rx'),[customInstructions,setCustomInstructions]=useState(''),[customUseSets,setCustomUseSets]=useState(false),[combinationMode,setCombinationMode]=useState('For Time')
  const [wizardStep,setWizardStep]=useState(1),[libraryOpen,setLibraryOpen]=useState(false),[rxNotes,setRxNotes]=useState(''),[scaledNotes,setScaledNotes]=useState(''),[intensity,setIntensity]=useState('2')
  const [editingSelectedKey,setEditingSelectedKey]=useState(null),[doseLevelByKey,setDoseLevelByKey]=useState({})
- const [participation,setParticipation]=useState('individual'),[collaboration,setCollaboration]=useState('solo'),[partnerCount,setPartnerCount]=useState('3'),[scoreType,setScoreType]=useState('reps'),[scoreFields,setScoreFields]=useState(['reps'])
+ const [participation,setParticipation]=useState('individual'),[collaboration,setCollaboration]=useState('solo'),[partnerCount,setPartnerCount]=useState('3')
 
  async function loadWodForEdit(id){
   if(!id)return
@@ -142,7 +143,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   if(e){setError('Kunne ikkje opna WOD for redigering: '+e.message);setLoading(false);return}
   const schema=w.timer_settings?.workout_schema||{}
   const items=sortWodItems(getWodSchemaItems(schema))
-  const engine=normalizeWodEngine(schema,{format:w.format});setParticipation(engine.participation);setCollaboration(engine.collaboration);setPartnerCount(String(engine.participant_count||3));setScoreType(engine.scoring?.type||'reps');setScoreFields(engine.scoring?.fields||['reps']);setEditingWodId(w.id);setName(w.name);const legacyFormat=w.format||'AMRAP';const emomMatch=/^EMOM(?: ([1-7]))?$/.exec(legacyFormat);const mappedFormat=emomMatch?'E'+Math.max(1,Math.min(7,Number(emomMatch[1]||schema.interval?.work_every_minutes)||1))+'MOM':legacyFormat==='Pyramid'?'Strength':legacyFormat==='Couplet / Triplet'?(schema.items?.filter(item=>!item.is_rest).length>=3?'Triplet':'Couplet'):legacyFormat==='Ladder / Death By'?(schema.ladder?.type==='Death By'?'Death By':'Ladder'):legacyFormat==='Intervall / Tabata'?(schema.interval?.work_seconds===20&&schema.interval?.rest_seconds===10?'Tabata':'Intervall'):legacyFormat;setFormat(mappedFormat);setPublishToMembers(canPublishWod&&!!w.is_published);const storedLibraryCategory=schema.library_category||(w.category==='warmup'?'warmup':'standard');const normalizedLibraryCategory=storedLibraryCategory==='daily'?'standard':storedLibraryCategory;const knownLibraryCategories=['warmup','standard','benchmark','assessment','rehab','recovery','other'];setLibraryCategory(knownLibraryCategories.includes(normalizedLibraryCategory)?normalizedLibraryCategory:'custom');setCustomLibraryCategory(knownLibraryCategories.includes(normalizedLibraryCategory)?'':normalizedLibraryCategory)
+  const engine=normalizeWodEngine(schema,{format:w.format});setParticipation(engine.participation);setCollaboration(engine.collaboration);setPartnerCount(String(engine.participant_count||3));setEditingWodId(w.id);setName(w.name);const legacyFormat=w.format||'AMRAP';const emomMatch=/^EMOM(?: ([1-7]))?$/.exec(legacyFormat);const mappedFormat=emomMatch?'E'+Math.max(1,Math.min(7,Number(emomMatch[1]||schema.interval?.work_every_minutes)||1))+'MOM':legacyFormat==='Pyramid'?'Strength':legacyFormat==='Couplet / Triplet'?(schema.items?.filter(item=>!item.is_rest).length>=3?'Triplet':'Couplet'):legacyFormat==='Ladder / Death By'?(schema.ladder?.type==='Death By'?'Death By':'Ladder'):legacyFormat==='Intervall / Tabata'?(schema.interval?.work_seconds===20&&schema.interval?.rest_seconds===10?'Tabata':'Intervall'):legacyFormat;setFormat(mappedFormat);setPublishToMembers(canPublishWod&&!!w.is_published);const storedLibraryCategory=schema.library_category||(w.category==='warmup'?'warmup':'standard');const normalizedLibraryCategory=storedLibraryCategory==='daily'?'standard':storedLibraryCategory;const knownLibraryCategories=['warmup','standard','benchmark','assessment','rehab','recovery','other'];setLibraryCategory(knownLibraryCategories.includes(normalizedLibraryCategory)?normalizedLibraryCategory:'custom');setCustomLibraryCategory(knownLibraryCategories.includes(normalizedLibraryCategory)?'':normalizedLibraryCategory)
   setMinutes(String(schema.duration_seconds?Math.floor(schema.duration_seconds/60):w.duration_minutes||20));setDurationSeconds(String(schema.duration_seconds?schema.duration_seconds%60:0))
   setNotes(schema.coach_notes||w.notes||'');setStimulus(schema.stimulus||'Jamn intensitet · teknisk kvalitet · kontrollert tempo')
   setIntensity(String(schema.intensity||2));setPrescription(schema.prescription||'rx');setCustomInstructions(schema.custom_instructions||'');setRxNotes(schema.rx_notes||'');setScaledNotes(schema.scaled_notes||'');setWizardStep(1)
@@ -199,6 +200,8 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const isStationCircuit=format==='Stasjonssirkel'
  const isCustom=format==='Eigen økt'
   const isElapsedFormat=showSets||isLadder||isForTime||(isCoupletTriplet&&combinationMode!=='AMRAP')||isCustom||format==='Complex'
+ const automaticScoring=scoreForWodFormat(format,combinationMode)
+ const automaticScoreLabel=SCORE_TYPES.find(item=>item.value===automaticScoring.type)?.label||'Repetisjonar'
  function loadClassicWod(){
   const preset=CLASSIC_WODS.find(x=>x.name===classicChoice)
   if(!preset)return
@@ -354,7 +357,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
      minute_slot:x.minuteSlot||null,superset_group:x.group||'A',prescription:x.prescription||null,levels:x.levels||makeLevels(x.reps,x.prescription_profiles||{})
     }))
    }
-   const engineConfig=createWodEngineConfig({participation,collaboration,partnerCount:Number(partnerCount),scoreType,scoreFields})
+   const engineConfig=createWodEngineConfig({participation,collaboration,partnerCount:Number(partnerCount),scoreType:automaticScoring.type,scoreFields:automaticScoring.fields})
    schema.wod_engine={...engineConfig,blocks:[buildLegacyCompatibleBlock({format:savedFormat,items:schema.items,durationSeconds:schema.duration_seconds,engine:engineConfig,interval:schema.interval})]}
    const movements=selected.map((x,i)=>(i+1)+'. '+(x.is_rest?`Pause · ${Number(x.pauseSeconds)||30} sek`:buildPrescription(x))).join('\n')
    const stationDuration=schema.duration_seconds
@@ -404,10 +407,9 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
       <label>Utøvaroppsett<select value={participation} onChange={e=>{const value=e.target.value;setParticipation(value);setCollaboration(value==='individual'?'solo':'free_split');setPartnerCount(value==='partner'?'2':'3')}}>{PARTICIPATION_MODES.map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label>
       {participation!=='individual'&&<label>Samarbeidsform<select value={collaboration} onChange={e=>setCollaboration(e.target.value)}>{COLLABORATION_MODES.filter(x=>x.value!=='solo').map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label>}
       {participation==='team'&&<label>Tal utøvarar<input type="number" min="3" max="30" value={partnerCount} onChange={e=>setPartnerCount(e.target.value)}/></label>}
-      <label>Primær scoring<select value={scoreType} onChange={e=>{setScoreType(e.target.value);setScoreFields(e.target.value==='multi'?['rounds_reps','distance']:[e.target.value])}}>{SCORE_TYPES.map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label>
+      <div className="wod-auto-score" role="status"><span>Scoring blir valt automatisk etter format</span><strong>{automaticScoreLabel}</strong></div>
     </div>
-    {scoreType==='multi'&&<fieldset className="wod-engine-score-fields"><legend>Resultatfelt</legend>{SCORE_TYPES.filter(x=>x.value!=='multi').map(x=><label key={x.value}><input type="checkbox" checked={scoreFields.includes(x.value)} onChange={e=>setScoreFields(current=>e.target.checked?[...current,x.value]:current.filter(v=>v!==x.value))}/>{x.label}</label>)}</fieldset>}
-    <p className="wod-help">Dette blir lagra som strukturert WOD-data. Individuell gjennomføring er standard. Partner og team får eigne samarbeids- og scoringinnstillingar.</p>
+    <p className="wod-help">Vel formatet nedanfor. Resultattypen følgjer automatisk formatet, også når du endrar tidsstruktur. Partner og team kan framleis veljast ovanfor.</p>
   </section>}
   {wizardStep===1&&<section className="wod-classic-picker"><div className="wod-classic-copy"><span className="wod-classic-kicker">BENCHMARK COLLECTION</span><strong>Klassiske WOD-ar</strong><small>The Girls · Hero WODs · originaloppsett</small></div><div className="wod-classic-controls"><select className="wod-classic-select" value={classicChoice} onChange={e=>setClassicChoice(e.target.value)}><option value="">Vel ei klassisk økt …</option><optgroup label="The Girls">{CLASSIC_WODS.filter(x=>x.group==='The Girls').map(x=><option key={x.name} value={x.name}>{x.name}</option>)}</optgroup><optgroup label="Hero WODs">{CLASSIC_WODS.filter(x=>x.group==='Hero WODs').map(x=><option key={x.name} value={x.name}>{x.name}</option>)}</optgroup></select><button type="button" className="secondary-button" disabled={!classicChoice} onClick={loadClassicWod}>Last inn</button></div></section>}
   {wizardStep===1&&<WodImportPanel exerciseCatalog={exercises} onApply={applyImportedWod}/>}

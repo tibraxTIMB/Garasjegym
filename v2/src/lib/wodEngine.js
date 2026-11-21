@@ -26,6 +26,24 @@ export const SCORE_TYPES = Object.freeze([
   { value: 'multi', label: 'Fleire resultatfelt' },
 ]);
 
+// One source of truth for the primary score shown and stored by the builder.
+// The selected workout format, not a separate technical dropdown, determines it.
+export function scoreForWodFormat(format, combinationMode = 'For Time') {
+  const chosen = String(format || '').trim();
+  if (chosen === 'AMRAP' || (['Couplet', 'Triplet'].includes(chosen) && combinationMode === 'AMRAP')) {
+    return { type: 'rounds_reps', fields: ['rounds_reps'] };
+  }
+  if (['For Time', 'Chipper', 'Ladder', 'Death By'].includes(chosen)
+    || (['Couplet', 'Triplet'].includes(chosen) && combinationMode === 'For Time')) {
+    return { type: 'time', fields: ['time'] };
+  }
+  if (['Strength', 'Superset', 'Complex'].includes(chosen)) {
+    return { type: 'load', fields: ['load'] };
+  }
+  if (chosen === 'Row Intervals') return { type: 'distance', fields: ['distance'] };
+  return { type: 'reps', fields: ['reps'] };
+}
+
 export function parseIntervalNotation(value) {
   const text = String(value || '').trim().toUpperCase().replace(/\s+/g, '');
   const match = text.match(/^E(\d+(?:\.\d+)?)MOM$/);

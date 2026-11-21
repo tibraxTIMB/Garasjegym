@@ -6,7 +6,22 @@ import {
   formatParticipation,
   normalizeWodEngine,
   parseIntervalNotation,
+  scoreForWodFormat,
 } from '../src/lib/wodEngine.js';
+
+test('WOD format automatically selects the matching result type', () => {
+  for (const [format, expected] of [
+    ['AMRAP', 'rounds_reps'], ['For Time', 'time'], ['Chipper', 'time'],
+    ['Strength', 'load'], ['Superset', 'load'], ['Complex', 'load'],
+    ['Ladder', 'time'], ['Row Intervals', 'distance'],
+    ['Tabata', 'reps'], ['E2MOM', 'reps'], ['Eigen økt', 'reps'],
+  ]) {
+    assert.deepEqual(scoreForWodFormat(format), { type: expected, fields: [expected] }, format);
+  }
+  assert.equal(scoreForWodFormat('Couplet', 'AMRAP').type, 'rounds_reps');
+  assert.equal(scoreForWodFormat('Triplet', 'For Time').type, 'time');
+  assert.equal(scoreForWodFormat('Triplet', 'Open').type, 'reps');
+});
 
 test('partner configuration defaults to two athletes and free split', () => {
   const config = createWodEngineConfig({ participation: 'partner' });
