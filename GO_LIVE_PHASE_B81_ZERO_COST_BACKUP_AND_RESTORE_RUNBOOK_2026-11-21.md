@@ -1,3 +1,5 @@
+> **Clean-start policy update (2026-11-21):** This runbook's earlier Auth-preserving restore, existing-admin, 56-exercise and coffee-settings-retention instructions are superseded by **B83 – Clean-start data contract**. The approved target is one newly created owner admin, exactly 94 reviewed system exercises, and no legacy Auth users or operational history (including group classes and messages). Keep a protected rollback backup, but do not require old Auth identities to be restored into the new operating database. Do not reset or deploy Production until every B83 gate is met and the owner gives explicit final GO LIVE authorization.
+
 # B81 – Zero-cost production backup and isolated restore runbook
 Date: 2026-11-21
 Release: SturmKopf Feuer 1.1
