@@ -52,12 +52,75 @@ table_inventory AS (
          to_regclass(format('public.%I',e.table_name)) IS NOT NULL AS exists_in_schema
   FROM expected_tables e
 ),
+core_exercise_contract(name,category) AS (
+  VALUES
+    ('Air Squat','CrossFit'),
+    ('Back Squat','CrossFit'),
+    ('Bike Erg','CrossFit'),
+    ('Box Jump','CrossFit'),
+    ('Box Step-up','CrossFit'),
+    ('Burpee','CrossFit'),
+    ('Burpee Box Jump Over','CrossFit'),
+    ('Chest-to-Bar Pull-up','CrossFit'),
+    ('Clean and Jerk','CrossFit'),
+    ('Deadlift','CrossFit'),
+    ('Double Under','CrossFit'),
+    ('Farmer Carry','CrossFit'),
+    ('Front Squat','CrossFit'),
+    ('Handstand Push-up','CrossFit'),
+    ('Kettlebell Swing','CrossFit'),
+    ('Overhead Squat','CrossFit'),
+    ('Power Clean','CrossFit'),
+    ('Power Snatch','CrossFit'),
+    ('Pull-up','CrossFit'),
+    ('Push Jerk','CrossFit'),
+    ('Push Press','CrossFit'),
+    ('Row','CrossFit'),
+    ('Single Under','CrossFit'),
+    ('SkiErg','CrossFit'),
+    ('Snatch','CrossFit'),
+    ('Squat Clean','CrossFit'),
+    ('Thruster','CrossFit'),
+    ('Toes-to-Bar','CrossFit'),
+    ('Walking Lunge','CrossFit'),
+    ('Wall Ball Shot','CrossFit'),
+    ('Pilates Cat Stretch','Pilates'),
+    ('Pilates Clam','Pilates'),
+    ('Pilates Criss Cross','Pilates'),
+    ('Pilates Double Leg Stretch','Pilates'),
+    ('Pilates Hundred','Pilates'),
+    ('Pilates Mermaid','Pilates'),
+    ('Pilates Roll Up','Pilates'),
+    ('Pilates Saw','Pilates'),
+    ('Pilates Shoulder Bridge','Pilates'),
+    ('Pilates Side Kick','Pilates'),
+    ('Pilates Side Plank','Pilates'),
+    ('Pilates Single Leg Stretch','Pilates'),
+    ('Pilates Spine Stretch Forward','Pilates'),
+    ('Pilates Swan Prep','Pilates'),
+    ('Pilates Swimming','Pilates'),
+    ('Barbell Row','Styrke'),
+    ('Bench Press','Styrke'),
+    ('Biceps Curl','Styrke'),
+    ('Bulgarian Split Squat','Styrke'),
+    ('Dumbbell Shoulder Press','Styrke'),
+    ('Hip Thrust','Styrke'),
+    ('Lat Pulldown','Styrke'),
+    ('Leg Press','Styrke'),
+    ('Plank','Styrke'),
+    ('Romanian Deadlift','Styrke'),
+    ('Triceps Pushdown','Styrke')
+),
 exercise_baseline AS (
-  SELECT count(*) FILTER (WHERE created_by IS NULL) AS standard_count,
+  SELECT count(*) FILTER (WHERE created_by IS NULL) AS system_exercise_count,
          count(*) FILTER (WHERE created_by IS NOT NULL) AS custom_count,
-         count(*) FILTER (WHERE created_by IS NULL AND category='CrossFit') AS crossfit_count,
-         count(*) FILTER (WHERE created_by IS NULL AND category='Pilates') AS pilates_count,
-         count(*) FILTER (WHERE created_by IS NULL AND category='Styrke') AS styrke_count
+         (SELECT count(*) FROM core_exercise_contract c
+          WHERE EXISTS (
+            SELECT 1 FROM public.exercises e
+            WHERE lower(trim(e.name))=lower(trim(c.name))
+              AND e.category=c.category
+              AND e.created_by IS NULL
+          )) AS core_exercise_count
   FROM public.exercises
 ),
 profile_state AS (
@@ -87,11 +150,10 @@ SELECT 'schema_table' AS section,
        retain_policy AS detail
 FROM table_inventory
 UNION ALL
-SELECT 'exercise_baseline','standard_exercises',
-       CASE WHEN standard_count=56 AND crossfit_count=30 AND pilates_count=15 AND styrke_count=11
-            THEN 'PASS' ELSE 'CHECK' END,
-       format('standard=%s CrossFit=%s Pilates=%s Styrke=%s custom=%s',
-              standard_count,crossfit_count,pilates_count,styrke_count,custom_count)
+SELECT 'exercise_baseline','core_exercise_contract',
+       CASE WHEN core_exercise_count=56 AND custom_count=0 THEN 'PASS' ELSE 'CHECK' END,
+       format('core_exercises_found=%s/56 system_catalog_total=%s custom_exercises=%s; original contract 30 CrossFit, 15 Pilates, 11 Styrke',
+              core_exercise_count,system_exercise_count,custom_count)
 FROM exercise_baseline
 UNION ALL
 SELECT 'profile_state','owner_admin_count',
