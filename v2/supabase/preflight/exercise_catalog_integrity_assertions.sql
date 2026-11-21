@@ -1,10 +1,11 @@
 -- STURMKOPF FEUER 1.1 – exercise catalogue integrity gate.
 -- READ ONLY. Run against the restored/test database before any clean-start reset.
--- The canonical seeded catalogue must remain >= 90 rows; production currently
--- has 56 while the tested STURMKOPF database has 94.
+-- The catalogue must contain >90 seeded rows AND preserve the 15 Pilates exercises
+-- verified in the current production catalogue. A count-only gate is insufficient.
 DO $$
 DECLARE
   seeded_count integer;
+  pilates_count integer;
   missing_categories text[];
   duplicate_names integer;
 BEGIN
@@ -16,11 +17,20 @@ BEGIN
     RAISE EXCEPTION 'Exercise catalogue gate failed: expected at least 90 seeded exercises, found %', seeded_count;
   END IF;
 
+  SELECT count(*) INTO pilates_count
+  FROM public.exercises
+  WHERE created_by IS NULL
+    AND lower(trim(category)) = 'pilates';
+
+  IF pilates_count < 15 THEN
+    RAISE EXCEPTION 'Exercise catalogue gate failed: expected all 15 Pilates exercises to be preserved, found %', pilates_count;
+  END IF;
+
   SELECT array_agg(required.category ORDER BY required.category)
   INTO missing_categories
   FROM (VALUES
-    ('CrossFit'), ('Kjerne'), ('Kondisjon'),
-    ('Mobilitet'), ('Rehab / fysio'), ('Styrke')
+    ('CrossFit'), ('Kjerne'), ('Kondisjon'), ('Mobilitet'),
+    ('Pilates'), ('Rehab / fysio'), ('Styrke')
   ) AS required(category)
   WHERE NOT EXISTS (
     SELECT 1 FROM public.exercises e
@@ -46,6 +56,6 @@ BEGIN
     RAISE EXCEPTION 'Exercise catalogue gate failed: % duplicate seeded exercise names', duplicate_names;
   END IF;
 
-  RAISE NOTICE 'Exercise catalogue gate passed: % seeded exercises; all six required categories present; no duplicate seeded names.',
-    seeded_count;
+  RAISE NOTICE 'Exercise catalogue gate passed: % seeded exercises including % Pilates exercises; all seven required categories present; no duplicate seeded names.',
+    seeded_count, pilates_count;
 END $$;
