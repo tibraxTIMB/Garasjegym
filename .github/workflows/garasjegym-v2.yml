@@ -180,7 +180,10 @@ jobs:
           cp supabase/test-fixtures/migrations/*.sql supabase/migrations/
       - name: Start isolated Supabase stack
         working-directory: v2
-        run: supabase start
+        timeout-minutes: 12
+        # Keep Postgres, Auth, API, Storage and Realtime for contract tests.
+        # Studio, email-inbox UI and image proxy are not needed for this replay.
+        run: supabase start --exclude studio,inbucket,imgproxy
       - name: Replay the complete versioned migration chain from an empty database
         working-directory: v2
         run: supabase db reset
