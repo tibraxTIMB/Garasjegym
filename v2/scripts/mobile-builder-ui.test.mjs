@@ -53,12 +53,12 @@ test('AMRAP round splits stay visible without growing the clock page', () => {
   assert.match(styles, /@media \(orientation: landscape\)\s*\{[^]*?\.gg-live-timer__clock-area\s*\{[^}]*grid-template-rows:\s*auto minmax\(0,1fr\) auto auto/s)
 })
 
-test('mobile WOD browsing keeps category and search visible but folds away secondary filters', () => {
+test('mobile WOD browsing stays compact without a global hero and folds away secondary filters', () => {
   const app = source('../src/App.jsx')
   const hub = source('../src/components/WodHub.jsx')
   const library = source('../src/components/WodLibrary.jsx')
   const styles = source('../src/components/wod-compact.css')
-  assert.match(app, /welcome-wod-compact/)
+  assert.doesNotMatch(app, /Bygd for å <em>prestera/)
   assert.match(hub, /wod-hub-compact-head/)
   assert.match(hub, /import '\.\/wod-compact\.css'/)
   assert.match(library, /wod-library-compact-heading/)
@@ -67,7 +67,6 @@ test('mobile WOD browsing keeps category and search visible but folds away secon
   assert.match(library, /wod-library-expanded-filters/)
   assert.match(styles, /\.wod-library-expanded-filters \{ display: none; \}/)
   assert.match(styles, /\.wod-library-expanded-filters\.is-open \{ display: grid;/)
-  assert.match(styles, /\.welcome-wod-compact h1/)
 })
 
 test('WOD library cards keep RX and Scaled visible without long action stacks', () => {

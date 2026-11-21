@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { useSwipeGesture } from '../hooks/useSwipeGesture.js'
 import { ChevronDown, ChevronUp, MoreHorizontal, X } from 'lucide-react'
 
-const MEMBER_PRIMARY = ['oversikt', 'trening', 'wod', 'timeplan']
-const STAFF_PRIMARY = ['oversikt', 'trening', 'pt-studio', 'wod']
-const COACH_PRIMARY = ['oversikt', 'trening', 'pt-studio', 'wod']
+// Match the main touch targets across roles, with the workout action centred.
+const MEMBER_PRIMARY = ['oversikt', 'wod', 'trening', 'timeplan']
+const STAFF_PRIMARY = MEMBER_PRIMARY
+const COACH_PRIMARY = MEMBER_PRIMARY
 
 function shortLabel(item) {
   if (item.id === 'oversikt') return 'Heim'
+  if (item.id === 'trening') return 'ØKT'
   if (item.id === 'timeplan') return 'Timeplan'
   if (item.id === 'pt-studio') return 'PT Studio'
   if (item.id === 'fellesskap') return 'Fellesskap'
@@ -103,7 +105,7 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
             <button
               key={item.id}
               type="button"
-              className={selected ? 'app-mobile-nav-item is-active' : 'app-mobile-nav-item'}
+              className={'app-mobile-nav-item'+(item.id==='trening'?' app-mobile-nav-item--start':'')+(selected?' is-active':'')}
               aria-current={selected ? 'page' : undefined}
               onClick={() => choose(item)}
             >

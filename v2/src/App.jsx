@@ -7,6 +7,7 @@ import {
   Coffee,
   Music2,
   Dumbbell,
+  PlayCircle,
   LayoutDashboard,
   LogOut,
   ShieldCheck,
@@ -44,7 +45,7 @@ import { RELEASE_NAME, RELEASE_SHORT } from './lib/release.js'
 
 const sections = [
   { id: 'oversikt', label: 'Oversikt', icon: LayoutDashboard, note: 'Dashboard og treningsstatus' },
-  { id: 'trening', label: 'Trening', icon: Dumbbell, note: 'WOD, fri trening, logg og PR' },
+  { id: 'trening', label: 'Økt', icon: PlayCircle, note: 'Start ei økt med timer, logging og resultat' },
   { id: 'timeplan', label: 'Timeplan og booking', icon: CalendarDays, note: 'Gruppetimar og påmelding' },
   { id: 'pt-studio', label: 'PT Studio', icon: UserRound, note: 'PT-kundar, progresjon og gruppetimeadministrasjon' },
   { id: 'wod', label: 'WOD', icon: Dumbbell, note: 'WOD-bibliotek og programmering' },
@@ -183,7 +184,7 @@ export default function App() {
   const [simpleModeSaving,setSimpleModeSaving]=useState(false)
   const [newPtWodCount,setNewPtWodCount]=useState(0)
   const [appFullscreen,setAppFullscreen]=useState(Boolean(document.fullscreenElement))
-  const [scheduleTab,setScheduleTab]=useState('booking')
+  const [scheduleTab,setScheduleTab]=useState('mine')
   const [ptStudioWorkspace,setPTStudioWorkspace]=useState('studio')
   const [ptStudioInitialTab,setPTStudioInitialTab]=useState('oversikt')
   const [infotainmentActive,setInfotainmentActive]=useState(()=>{try{return sessionStorage.getItem('garasjegym:infotainment-active')==='1'}catch{return false}})
@@ -191,7 +192,7 @@ export default function App() {
   const handleTimerSnapshot=useCallback(snapshot=>setTimerSnapshot(snapshot),[])
   function navigateTo(next){if(!next||next===active)return;setNavigationStack(stack=>[...stack,active].slice(-12));setActive(next)}
   function navigateRoot(next){setNavigationStack([]);setActive(next)}
-  function handleSectionNavigate(id){if(id==='pt-studio'){setPTStudioWorkspace('studio');setPTStudioInitialTab('oversikt')}navigateRoot(id)}
+  function handleSectionNavigate(id){if(id==='pt-studio'){setPTStudioWorkspace('studio');setPTStudioInitialTab('oversikt')}if(id==='timeplan')setScheduleTab('mine');navigateRoot(id)}
   function navigateBack(fallback='oversikt'){const previous=navigationStack[navigationStack.length-1]||fallback;setNavigationStack(stack=>stack.slice(0,-1));setActive(previous)}
   useEffect(()=>{const sync=()=>setAppFullscreen(Boolean(document.fullscreenElement));document.addEventListener('fullscreenchange',sync);return()=>document.removeEventListener('fullscreenchange',sync)},[])
   useEffect(()=>{
@@ -336,7 +337,7 @@ export default function App() {
 
   if (!simpleModeReady) return <LoadingScreen text="Hentar medlemsinnstillingar …" />
 
-  const staffNavigation=sections.filter(item=>item.id!=='pt-info'&&item.id!=='timeplan')
+  const staffNavigation=sections.filter(item=>item.id!=='pt-info')
   const memberNavigation=[sections[0],sections[1],sections[4],sections[2],{...sections[3],label:'PT-oppfølging',note:'Dine program, mål og kontakt med PT'},sections[8],sections[5],sections[6],sections[7]]
   const coachNavigation=memberNavigation.map(item=>item.id==='pt-studio'?{...item,label:'PT Studio',note:'Dine tildelte kundar, program og PT-oppfølging'}:item)
   const visibleSections = simpleMode ? [] : (isStaff(profile) ? staffNavigation.concat([{id:'admin',label:'Administrasjon',icon:Settings,note:'Medlemmer og drift'}]) : isPTCoach ? coachNavigation : memberNavigation)
@@ -393,15 +394,11 @@ export default function App() {
             {isStaff(profile)&&<button className="icon-button" onClick={()=>setInfotainmentActive(true)} title="Opna infotainment" aria-label="Opna infotainment"><MonitorPlay size={16}/></button>}<button className="icon-button" onClick={toggleAppFullscreen} title={appFullscreen?"Avslutt fullskjerm":"Fullskjerm"} aria-label={appFullscreen?"Avslutt fullskjerm":"Fullskjerm"}>{appFullscreen?<Minimize size={16}/>:<Maximize size={16}/>}</button><button className="icon-button" onClick={() => supabase.auth.signOut()} title="Logg ut" aria-label="Logg ut"><LogOut size={16} /></button>
           </div>
         </header>
-        {simpleMode ? <section className="welcome simple-welcome">
+        {simpleMode && active==='oversikt' ? <section className="welcome simple-welcome">
           <div className="eyebrow"><Activity size={14} /> GARASJEGYM · SUPERENKEL</div>
           <h1>Hei, <em>{profile.display_name?.split(' ')[0]||'der'}.</em></h1>
           
-        </section> : <section className={active === 'wod' ? 'welcome welcome-wod-compact' : 'welcome'}>
-          <div className="eyebrow"><Activity size={14} /> GARASJEGYM · NY GENERASJON</div>
-          <h1>Bygd for å <em>prestera.</em></h1>
-          <p>Ein felles plattform for trening, booking og fellesskap.</p>
-        </section>}{active==='oversikt'&&dailyWod&&<button type="button" className="app-daily-wod-strip" onClick={()=>{setFocusWodId(dailyWod.id);navigateTo('wod')}}><span>DAGENS WOD</span><strong>{dailyWod.name}</strong><small>{dailyWod.format} · {dailyWod.duration_minutes||'–'} min · Opne WOD-kortet →</small></button>}
+        </section> : null}{active==='oversikt'&&dailyWod&&<button type="button" className="app-daily-wod-strip" onClick={()=>{setFocusWodId(dailyWod.id);navigateTo('wod')}}><span>DAGENS WOD</span><strong>{dailyWod.name}</strong><small>{dailyWod.format} · {dailyWod.duration_minutes||'–'} min · Opne WOD-kortet →</small></button>}
         <Suspense fallback={<section className="content-card training-content" role="status" aria-live="polite"><div className="training-state">Lastar modul …</div></section>}>
         {active === 'oversikt' ? <section className="content-card training-content">{simpleMode?<div className="simple-home"><h2>Kva vil du gjera?</h2><div className="simple-home-grid"><button className="simple-home-action" onClick={()=>{setQuickStart(true);navigateTo("trening")}}><Dumbbell/><span><strong>Fri økt</strong><small>Start treninga med ein gong</small></span></button><button className="simple-home-action" onClick={()=>{setFocusWodId(null);navigateTo("wod")}}><Activity/><span><strong>Vel sjølv WOD</strong><small>Finn ei økt i WOD-biblioteket</small></span></button><button className="simple-home-action" onClick={openMyTraining}><CalendarDays/><span><strong>Tildelt økt</strong><small>Start økta frå PT</small></span>{newPtWodCount>0&&<span className="simple-home-new-badge" aria-label={newPtWodCount+" nye tildelte økter"}><b>NY</b><strong>{newPtWodCount}</strong></span>}</button><button className="simple-home-action" onClick={()=>{setQuickManualEntry(true);navigateTo("trening")}}><Activity/><span><strong>Etterregistrer</strong><small>Logg ei økt du alt har gjort</small></span></button><button className="simple-home-action" onClick={()=>{setScheduleTab("booking");navigateTo("timeplan")}}><UsersIcon/><span><strong>Gruppetime</strong><small>Sjå timar og start fellesøkt</small></span></button><button className="simple-home-action" onClick={()=>navigateTo("mi-side")}><Activity/><span><strong>Resultat og historikk</strong><small>Full treningslogg og PR-senter</small></span></button></div><button type="button" className="simple-coffee-link" onClick={()=>navigateTo("kaffi")}><Coffee size={18}/> Bestill kaffi</button><button type="button" className="simple-coffee-link" onClick={()=>{setPTStudioInitialTab(isPTCoach?"oversikt":"meldingar");navigateTo("pt-studio")}}><UserRoundIcon size={18}/> {isPTCoach?"PT Studio":"Frå PT"}</button></div>:<Overview profile={profile} dailyWod={dailyWod} onNavigate={navigateTo} onOpenWorkout={openWorkout} onOpenWod={(id)=>{setFocusWodId(id);navigateTo('wod')}} />}</section> : active === 'trening' ? <section className="content-card training-content workout-entry"><div className="workout-mode-intro"><span className="section-kicker">WORKOUT MODE</span><h2>Trening</h2><p>Vel økt og gå rett inn i treningsverktøyet med timer, rundar og resultatregistrering.</p></div><Training onSaved={()=>navigateBack('oversikt')} onDiscard={()=>navigateBack('oversikt')} onTimerSnapshot={handleTimerSnapshot} quickManualEntry={quickManualEntry} onQuickManualEntryConsumed={()=>setQuickManualEntry(false)} launchWodId={launchWodId} launchClassSessionId={launchClassSessionId} launchAssignmentId={launchAssignmentId} launchProgramSessionId={launchProgramSessionId} launchProgramSessionTitle={launchProgramSessionTitle} onLaunchConsumed={() => { setLaunchWodId(null); setLaunchClassSessionId(null); setLaunchAssignmentId(null); setLaunchProgramSessionId(null); setLaunchProgramSessionTitle('') }} simpleMode={simpleMode} quickStart={quickStart} onQuickStartConsumed={()=>setQuickStart(false)} /></section> : active === 'timeplan' ? <section className="content-card training-content"><ScheduleHub simpleMode={simpleMode} profile={profile} onOpenWod={(wodId,sessionId)=>{setFocusWodId(wodId);setLaunchClassSessionId(sessionId||null);setLaunchAssignmentId(null);navigateTo('wod')}} initialClassId={focusGroupClassId} initialTab={scheduleTab} onTabChange={setScheduleTab} focusRequestId={focusPTRequestId} onFocusConsumed={()=>setFocusPTRequestId(null)} onLogResult={(wodId,sessionId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(sessionId);navigateTo('trening')}} onLaunchWorkout={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);navigateTo('trening')}} /></section> : active === 'pt-studio' ? <section className="content-card training-content"><PTStudio profile={profile} coachMode={isPTCoach} initialClientId={focusPTClientId} initialWorkspace={ptStudioWorkspace} initialTab={ptStudioInitialTab} focusRequestId={focusPTRequestId} focusGroupClassId={focusGroupClassId} focusPanel={focusPTPanel} onFocusPanelConsumed={()=>setFocusPTPanel(null)} onFocusRequestConsumed={()=>setFocusPTRequestId(null)} onFocusGroupClassConsumed={()=>setFocusGroupClassId(null)} onLaunchWorkout={(wodId,programSessionId,sessionTitle)=>{setLaunchWodId(wodId||null);setLaunchClassSessionId(null);setLaunchAssignmentId(null);setLaunchProgramSessionId(programSessionId||null);setLaunchProgramSessionTitle(sessionTitle||'');navigateTo('trening')}} /></section> : active === 'mi-trening' ? <section className="content-card training-content"><MyTraining simpleMode={simpleMode} onOpenWod={(wodId,assignmentId)=>{setLaunchWodId(wodId);setLaunchAssignmentId(assignmentId||null);setLaunchClassSessionId(null);navigateTo('trening')}} /></section> : active === 'wod' ? <section className="content-card training-content"><WodHub staff={isStaff(profile)} isAdmin={profile?.role==='admin'} initialImportedWod={pendingWodImport} onImportConsumed={()=>setPendingWodImport(null)} simpleMode={simpleMode} launchAssignmentId={launchAssignmentId} launchClassSessionId={launchClassSessionId} focusWodId={focusWodId} onFocusConsumed={()=>setFocusWodId(null)} onLaunchWod={(wodId,assignmentId,sessionId)=>{setLaunchWodId(wodId);setLaunchAssignmentId(assignmentId||null);setLaunchClassSessionId(sessionId||null);navigateTo('trening')}} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community profile={profile} /></section> : active === 'kaffi' ? <section className="content-card training-content"><CoffeeBar profile={profile} focusReviewId={focusCoffeeReviewId} onFocusReviewConsumed={()=>setFocusCoffeeReviewId(null)} /></section> : active === 'musikk' ? <section className="content-card training-content"><Music /></section> : active === 'mi-side' || active === 'pr-senter' || active === 'mi-historikk' ? <section className="content-card training-content"><MyPage profile={profile} email={session.user.email} onOpenWorkout={openWorkout} onLaunchWod={(wodId,assignmentId,sessionId)=>{setLaunchWodId(wodId);setLaunchAssignmentId(assignmentId||null);setLaunchClassSessionId(sessionId||null);navigateTo('trening')}} simpleMode={simpleMode} onSimpleModeChange={changeSimpleMode} simpleModeError={simpleModeError} simpleModeSaving={simpleModeSaving} initialTab={active==='pr-senter'?'records':active==='mi-historikk'?'history':'profile'} /></section> : active === 'admin' ? <section className="content-card training-content"><Admin profile={profile} onOpenWodImport={parsed=>{setPendingWodImport(parsed);navigateTo('wod')}} /></section> : <section className="content-card">
           <div className="section-icon"><Icon size={22} /></div>
