@@ -1,8 +1,8 @@
--- SturmKopf Feuer 1.1: seed the complete reconciled exercise catalogue.
+-- SturmKopf Feuer 1.1: seed the full reconciled 135-name catalogue.
 -- Source of truth: v2/supabase/catalog/exercise_catalogue_manifest_sturmKopf_feuer_1_1.json
--- Adds only entries absent from Production by case/space-normalized name.
--- Does not delete or overwrite existing exercise rows.
--- 79 rows are absent from Production: 78 TEST-only plus the expansion-only Kettlebell markløft.
+-- Existing Production exercise rows are not overwritten or deleted.
+-- Adds the 78 TEST-only names and one expansion-only name missing from Production.
+-- Existing legacy rows receive only a NULL body_area enrichment; other fields remain untouched.
 WITH catalogue(name,category,equipment,description,video_url,is_active,body_area,is_rehab) AS (
 VALUES
   ('Ankle rocks', 'Mobilitet', 'Kroppsvekt', 'Mobilitet for ankelledd.', NULL, true, 'Bein / ankel', false),
@@ -93,3 +93,33 @@ WHERE NOT EXISTS (
   SELECT 1 FROM public.exercises e
   WHERE lower(trim(e.name))=lower(trim(c.name))
 );
+
+-- Enrich only missing body-area values on legacy Production rows.
+WITH body_areas(name,body_area) AS (VALUES
+  ('Air Squat','Bein'),
+  ('Back Squat','Bein'),
+  ('Bench Press','Overkropp'),
+  ('Bike Erg','Bein / kondisjon'),
+  ('Box Jump','Bein / kondisjon'),
+  ('Bulgarian Split Squat','Bein'),
+  ('Burpee','Fullkropp'),
+  ('Deadlift','Rygg / bein'),
+  ('Front Squat','Bein'),
+  ('Hip Thrust','Bein / sete'),
+  ('Plank','Kjerne'),
+  ('Pull-up','Rygg / overkropp'),
+  ('Romanian Deadlift','Bein / rygg'),
+  ('Row','Fullkropp'),
+  ('SkiErg','Fullkropp'),
+  ('Walking Lunge','Bein')
+)
+UPDATE public.exercises e
+SET body_area=b.body_area
+FROM body_areas b
+WHERE lower(trim(e.name))=lower(trim(b.name))
+  AND e.created_by IS NULL
+  AND e.body_area IS NULL;
+
+UPDATE public.exercises
+SET body_area='Fullkropp'
+WHERE created_by IS NULL AND body_area IS NULL;
