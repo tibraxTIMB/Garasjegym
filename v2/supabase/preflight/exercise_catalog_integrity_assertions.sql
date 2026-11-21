@@ -13,8 +13,8 @@ BEGIN
   FROM public.exercises
   WHERE created_by IS NULL;
 
-  IF seeded_count < 90 THEN
-    RAISE EXCEPTION 'Exercise catalogue gate failed: expected at least 90 seeded exercises, found %', seeded_count;
+  IF seeded_count <> 94 THEN
+    RAISE EXCEPTION 'Exercise catalogue gate failed: expected exactly 94 seeded exercises, found %', seeded_count;
   END IF;
 
   SELECT count(*) INTO pilates_count
