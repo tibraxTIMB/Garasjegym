@@ -79,6 +79,8 @@ On the restored, isolated copy:
 ## Clean-start rehearsal – isolated restored copy only
 Only after the Production restore and rollback checks pass, prepare and rehearse the clean-start procedure on the isolated restored copy.
 
+The current local-only, guarded dependency-aware rehearsal SQL is `v2/supabase/preflight/clean_start_reset_isolated_rehearsal.sql`. It requires the transaction-local setting `app.clean_start_target='isolated-rehearsal'`, checks the 46-table schema, 135 provisional system exercises and absence of Storage objects, then clears the operational tables, custom exercises and Auth users in the disposable rehearsal database. It is explicitly **not** a Production reset script. Production Auth deletion must use the Auth Admin API/Dashboard and a separately reviewed Production runbook after final owner authorization.
+
 The clean-start result must satisfy all of the following:
 1. Preserve application schema, migrations, functions, triggers, constraints, indexes, RLS policies, grants and required configuration.
 2. Remove all legacy Auth users, identities, sessions, MFA factors, profiles, members and managers. Create exactly one new owner-controlled admin/Auth identity and verify that it can sign in.
