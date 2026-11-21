@@ -3,6 +3,8 @@ Target release: SturmKopf Feuer 1.1
 Production project: `kultdmklwmilhoytrrig`
 Policy: ZERO COST. No paid Supabase branch/project/plan. No Production reset or deployment without separate explicit final owner GO LIVE authorization.
 
+> **Owner risk decision, 2026-11-21:** The owner explicitly accepted proceeding without a backup or isolated backup-restore rehearsal, including the risk of permanent loss of legacy data and Auth identities. Sections 1–2 and the corresponding backup/restore checkboxes below remain recommended recovery practice but are **waived as launch prerequisites** for this clean start. This waiver **does not** authorize an untested schema upgrade, replay of TEST-only migrations, removal of the only working admin before a new admin login is verified, or publication against incompatible schema. Continue with production-derived reconciliation, clean-start functional acceptance and one-new-owner-admin sign-in first. Do not claim that any recovery copy exists.
+
 > **Binding clean-start contract (supersedes older 56-exercise / existing-admin-retention instructions in earlier GO LIVE documents):** The new operational installation starts with exactly one newly created owner-controlled admin/Auth identity and no legacy Auth users, identities, profiles, members or managers. Clear all legacy operational data, including coffee settings/products/orders, WODs, workout history, PRs, PT and class records, messages, notifications, calendar and social content. Preserve the complete application schema, functions, triggers, constraints, indexes, RLS policies, grants and required integration configuration. Preserve the reconciled standard exercise catalogue; its current 135-name manifest remains provisional until alias/category review. Modules remain functional but start empty. The old Production admin is preserved only in the protected rollback backup and isolated restore, not carried into the clean-start target.
 
 ## Status
@@ -10,7 +12,7 @@ This is an owner execution checklist, not evidence that backup/restore/reset has
 - Production backup: NOT VERIFIED.
 - Isolated restore and old owner-admin rollback login: NOT VERIFIED.
 - Clean-start rehearsal and new owner-admin login: NOT VERIFIED.
-- Production reset/deploy: NOT AUTHORIZED.
+- Production reset/deploy: NOT PERFORMED; owner's earlier GO LIVE direction and backup-risk waiver are recorded, but technical schema/Auth readiness remains BLOCKED.
 
 ## 1. Protected zero-cost Production backup
 Follow the detailed current procedure in:
