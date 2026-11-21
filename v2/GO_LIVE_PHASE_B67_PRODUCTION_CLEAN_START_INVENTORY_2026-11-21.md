@@ -1,4 +1,7 @@
 # GO LIVE Phase B67 – production clean-start inventory and sole-admin preservation
+
+> **SUPERSEDED CLEAN-START DECISION (2026-11-21):** The row counts below remain a historical read-only snapshot, but the old treatment to retain the existing admin identity and 56 exercises is no longer the launch contract. The clean-start target creates exactly one new owner-controlled admin/Auth identity, carries over no old Auth users/profiles/members/managers, clears all operational data (including coffee settings), and preserves the reviewed 135-name provisional standard exercise catalogue plus all schema/security/modules. The old admin remains only in the protected rollback backup/restore. See B81, B87–B89 and `GO_LIVE_OWNER_BACKUP_RESTORE_AND_ADMIN_CHECKLIST.md`.
+
 **Date:** 2026-11-21  
 **Release:** SturmKopf Feuer 1.1  
 **Production project:** `kultdmklwmilhoytrrig`  
