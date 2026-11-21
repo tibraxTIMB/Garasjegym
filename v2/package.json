@@ -29,15 +29,15 @@
     "test:membership-candidate": "node --test scripts/membership-candidate.test.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.57.0",
-    "lucide-react": "^0.468.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "tesseract.js": "^6.0.1"
+    "@supabase/supabase-js": "2.119.2",
+    "lucide-react": "0.468.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "tesseract.js": "6.0.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.0.7"
+    "@vitejs/plugin-react": "4.7.0",
+    "vite": "6.4.6"
   },
   "overrides": {
     "@babel/parser": "7.29.14"

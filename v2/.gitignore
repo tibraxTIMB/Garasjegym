@@ -1,0 +1,9 @@
+# Generated dependencies and bundles; reproducible from package-lock.json.
+node_modules/
+dist/
+
+# Local credentials and machine-specific configuration.
+.env
+.env.local
+.env.*.local
+!.env.example
