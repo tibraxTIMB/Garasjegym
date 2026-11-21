@@ -1,6 +1,7 @@
 -- Additively preserve Production's existing seeded exercise identities and metadata.
 -- Source: read-only snapshot of Production exercises (created_by IS NULL), 2026-11-21.
 -- Rows already present by normalized name are left untouched. No existing exercise is deleted or updated.
+-- TEST requires body_area; Production has NULL for these legacy rows, so use the schema default.
 WITH production_catalog(name, category, equipment, description, video_url, is_active, body_area, is_rehab) AS (
   VALUES
   ('Barbell Row', 'Styrke', 'Vektstong', 'Framoverbøygd roing med stabil overkropp.', NULL, true, NULL, false),
@@ -47,7 +48,7 @@ WITH production_catalog(name, category, equipment, description, video_url, is_ac
 INSERT INTO public.exercises
   (name, category, equipment, description, video_url, is_active, body_area, is_rehab, created_by)
 SELECT c.name, c.category, c.equipment, c.description, c.video_url,
-       c.is_active, c.body_area, c.is_rehab, NULL
+       c.is_active, coalesce(c.body_area, 'Fullkropp'), c.is_rehab, NULL
 FROM production_catalog c
 WHERE NOT EXISTS (
   SELECT 1 FROM public.exercises e
