@@ -24,7 +24,7 @@ The expansion-only entry is `Kettlebell markløft`. It is added by the new forwa
 - Forward additive migration: `v2/supabase/migrations/20261121100000_seed_reconciled_exercise_catalogue.sql`
 - Read-only exact acceptance: `v2/supabase/preflight/exercise_catalogue_manifest_assertions.sql`
 
-The manifest preserves source provenance and source-specific category/equipment metadata. For names already in Production, the migration leaves their existing names, categories, equipment, descriptions, video URLs, active and rehab flags untouched. It fills only missing `body_area` values: from the exact TEST counterpart where available, otherwise `Fullkropp`. It adds the 78 TEST-only names and the one expansion-only name. No exercise is deleted.
+The manifest preserves source provenance and source-specific category/equipment metadata. For names already in Production, the migration leaves their existing names, categories, equipment, descriptions, video URLs, active and rehab flags untouched. It fills only missing `body_area` values: from the exact TEST counterpart where available, otherwise `Fullkropp`. It inserts any of the 135 manifest names missing from the target. On current Production, 79 names are absent (78 TEST-only plus one expansion-only); on current TEST, only the expansion-only name is absent. On a clean no-data replay it also fills names not supplied by the small demo fixture or earlier expansion migrations. No exercise is deleted.
 
 ## Provisional category distribution
 Based on the manifest's Production-first metadata precedence:
@@ -95,4 +95,4 @@ The rehearsal was repeated with both catalogue migrations applied twice in the s
 
 
 ## Safety and next gate
-The migration is additive and forward-only. It has not been applied to Production or TEST by this work. Run the new exact manifest assertion against the isolated PostgreSQL 17 replay after the full migration/fixture replay. Then review aliases, category decisions, metadata and the build/test results. Production backup, lineage, Auth/RLS and explicit final GO LIVE gates remain outstanding.
+The migration is additive and forward-only. It inserts from the complete 135-name manifest, guarded by normalized name, so the same migration can safely run against Production, the current TEST project, or a clean no-data replay without overwriting existing rows. It has not been applied to Production or TEST by this work. Run the new exact manifest assertion against the isolated PostgreSQL 17 replay after the full migration/fixture replay. Then review aliases, category decisions, metadata and the build/test results. Production backup, lineage, Auth/RLS and explicit final GO LIVE gates remain outstanding.
