@@ -18,6 +18,11 @@ auth_state AS (
          count(*) FILTER (WHERE p.id IS NULL) auth_without_profile
   FROM auth.users u LEFT JOIN public.profiles p ON p.id=u.id
 ),
+auth_identity_state AS (
+  SELECT count(*) identity_count,
+         count(*) FILTER (WHERE i.user_id NOT IN (SELECT id FROM auth.users)) foreign_identities
+  FROM auth.identities i
+),
 orphan_profile_state AS (
   SELECT count(*) profile_without_auth
   FROM public.profiles p LEFT JOIN auth.users u ON u.id=p.id
@@ -87,6 +92,11 @@ SELECT 'auth','exactly_one_owner_auth_identity',
        format('auth_users=%s linked=%s auth_without_profile=%s profile_without_auth=%s',
               auth_users,linked_users,auth_without_profile,profile_without_auth)
 FROM auth_state CROSS JOIN orphan_profile_state
+UNION ALL
+SELECT 'auth','exactly_one_identity_linked_to_owner',
+       CASE WHEN identity_count=1 AND foreign_identities=0 THEN 'PASS' ELSE 'FAIL' END,
+       format('identities=%s foreign_or_legacy_identities=%s',identity_count,foreign_identities)
+FROM auth_identity_state
 UNION ALL
 SELECT 'exercise_catalogue','exactly_135_system_exercises_and_no_custom_rows',
        CASE WHEN system_catalog_total=135 AND custom_exercises=0 THEN 'PASS' ELSE 'FAIL' END,
