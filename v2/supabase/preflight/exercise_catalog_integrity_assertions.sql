@@ -1,7 +1,8 @@
 -- STURMKOPF FEUER 1.1 – exercise catalogue integrity gate.
 -- READ ONLY. Run against the restored/test database before any clean-start reset.
--- The catalogue must contain >90 seeded rows AND preserve the 15 Pilates exercises
--- verified in the current production catalogue. A count-only gate is insufficient.
+-- The clean-start catalogue target is exactly 94 system exercises. The gate also
+-- requires all seven functional categories, at least 15 Pilates rows and no
+-- duplicate system names. A count-only gate is insufficient.
 DO $$
 DECLARE
   seeded_count integer;
