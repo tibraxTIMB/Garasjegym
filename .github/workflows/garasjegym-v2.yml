@@ -195,6 +195,12 @@ jobs:
           printf '%s\\n' "$result"
           expected='t|t|t|t|t|t|t|t|t|t|t|t'
           test "$result" = "$expected"
+      - name: Verify release Auth and RLS security contract
+        env:
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
+        run: |
+          psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -At -F '|' -f v2/supabase/preflight/release_security_contract_assertions.sql | tee /tmp/release-security-contract.out
+          test "$(tail -n 1 /tmp/release-security-contract.out)" = "t"
       - name: Verify real Auth signup trigger and pending member gate
         env:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
