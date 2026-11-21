@@ -188,6 +188,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
+      - name: Verify exact reconciled exercise catalogue
+        env:
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
+        run: psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/exercise_catalogue_manifest_assertions.sql
       - name: Verify full schema, RPC grants and privacy policies on local Supabase
         env:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
