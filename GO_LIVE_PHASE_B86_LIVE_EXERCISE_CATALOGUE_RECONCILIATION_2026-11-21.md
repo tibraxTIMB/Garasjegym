@@ -46,5 +46,8 @@ Based on the manifest's Production-first metadata precedence:
 ## Plyo-box measurement contract
 The application measurement resolver identifies box jump, step-up and box-over movements as height-based and uses centimetres. Externally loaded variants can record both height (cm) and load (kg). This behaviour is retained; the catalogue migration does not replace measurement logic or create inches-based values.
 
+## Transactional migration rehearsal (2026-11-21)
+The two forward catalogue migrations (Production catalogue preservation + reconciled 79-row seed) and the exact 135-name assertion were executed inside explicit `BEGIN ... ROLLBACK` transactions against both Production and TEST. Both dry-runs completed without SQL errors and the assertion passed in-transaction. Post-rollback read-only checks confirmed no persistent changes: Production remains 56 system exercises with 56 legacy NULL body-area values; TEST remains 94 system exercises with zero missing body-area values. No migration was applied or recorded in either environment.
+
 ## Safety and next gate
 The migration is additive and forward-only. It has not been applied to Production or TEST by this work. Run the new exact manifest assertion against the isolated PostgreSQL 17 replay after the full migration/fixture replay. Then review aliases, category decisions, metadata and the build/test results. Production backup, lineage, Auth/RLS and explicit final GO LIVE gates remain outstanding.
