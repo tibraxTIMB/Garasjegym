@@ -84,6 +84,11 @@ orphan_profiles AS (
   FROM public.profiles p
   LEFT JOIN auth.users u ON u.id=p.id
   WHERE u.id IS NULL
+),
+auth_identity_state AS (
+  SELECT count(*) AS identity_count,
+         count(*) FILTER (WHERE i.user_id NOT IN (SELECT id FROM auth.users)) AS foreign_identities
+  FROM auth.identities i
 )
 SELECT 'schema_table' AS section,
        table_name AS item,
@@ -98,18 +103,23 @@ SELECT 'exercise_catalogue','reconciled_manifest_count',
 FROM exercise_baseline
 UNION ALL
 SELECT 'profile_state','owner_admin_count',
-       CASE WHEN active_approved_admins=1 THEN 'PASS' ELSE 'CHECK' END,
+       CASE WHEN profile_count=1 AND active_approved_admins=1 AND managers=0 AND members=0 THEN 'PASS' ELSE 'CHECK' END,
        format('profiles=%s admins=%s managers=%s members=%s non_approved_or_inactive=%s',
               profile_count,active_approved_admins,managers,members,not_active_approved)
 FROM profile_state
 UNION ALL
 SELECT 'auth_linkage','auth_profile_links',
-       CASE WHEN auth_user_count=auth_users_with_profile AND auth_users_without_profile=0
+       CASE WHEN auth_user_count=1 AND auth_users_with_profile=1 AND auth_users_without_profile=0
                  AND profile_rows_without_auth_user=0
             THEN 'PASS' ELSE 'CHECK' END,
        format('auth_users=%s linked=%s auth_without_profile=%s profile_without_auth=%s',
               auth_user_count,auth_users_with_profile,auth_users_without_profile,profile_rows_without_auth_user)
 FROM auth_linkage CROSS JOIN orphan_profiles
+UNION ALL
+SELECT 'auth_identity_state','exactly_one_owner_identity',
+       CASE WHEN identity_count=1 AND foreign_identities=0 THEN 'PASS' ELSE 'CHECK' END,
+       format('identities=%s foreign_or_legacy_identities=%s',identity_count,foreign_identities)
+FROM auth_identity_state
 UNION ALL
 SELECT 'operational_data', table_name,
        CASE WHEN row_count=0 THEN 'PASS' ELSE 'CHECK' END,
