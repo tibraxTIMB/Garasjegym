@@ -12,6 +12,7 @@ import PerformanceCenter from './PerformanceCenter.jsx'
 import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration } from '../lib/timerClock.js'
 import { getExerciseMeasurementFlags } from '../lib/exerciseMeasurements.js'
 import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
+import './timer-viewport.css'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E1.25MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', uses_height: false, uses_load: true, equipment:'', rowValue:'', rowUnit:'m', workSeconds:'', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] })
@@ -68,7 +69,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [rounds, setRounds] = useState(timerSettings?.rounds ?? timerSettings?.workout_schema?.station_circuit?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
   const [durationOverride, setDurationOverride] = useState(null)
   const [emomEveryOverride, setEmomEveryOverride] = useState(null)
-  const [focused, setFocused] = useState(Boolean(document.fullscreenElement))
+  // Phone and tablet sessions open with the clock using the whole viewport.
+  // Desktop keeps the wider training workspace until the user expands it.
+  const [focused, setFocused] = useState(() => readDeviceProfile().device !== 'desktop')
+  const timerContainerRef = useRef(null)
   const [hasStarted, setHasStarted] = useState(false)
   const [phase, setPhase] = useState('Klar')
   const [laps, setLaps] = useState([])
@@ -261,8 +265,25 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     setRunning(true)
   }, [autoStartToken])
 
-  useEffect(() => { if (stop) setRunning(false) }, [stop])
-  useEffect(() => { const sync = () => setFocused(Boolean(document.fullscreenElement)); document.addEventListener('fullscreenchange', sync); return () => document.removeEventListener('fullscreenchange', sync) }, [])
+  useEffect(() => {
+    if (!stop) return
+    setRunning(false)
+    setFocused(false)
+    if (document.fullscreenElement === timerContainerRef.current) {
+      document.exitFullscreen?.().catch(() => {})
+    }
+  }, [stop])
+  useEffect(() => {
+    const sync = () => setFocused(document.fullscreenElement === timerContainerRef.current)
+    document.addEventListener('fullscreenchange', sync)
+    return () => document.removeEventListener('fullscreenchange', sync)
+  }, [])
+  useEffect(() => {
+    if (!focused) return undefined
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previousOverflow }
+  }, [focused])
 
   // Derive elapsed time from wall-clock timestamps. Interval callbacks only refresh
   // the display; they never accumulate time, so background throttling cannot create drift.
@@ -316,10 +337,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
 
   async function toggleFocus() {
     if (!focused) {
-      try { await document.documentElement.requestFullscreen?.() } catch { /* Fullscreen er valfri. */ }
       setFocused(true)
+      try { await timerContainerRef.current?.requestFullscreen?.() } catch { /* Nettlesarar utan fullskjerm får eit fullskjerms visingslag. */ }
     } else {
-      try { if (document.fullscreenElement) await document.exitFullscreen?.() } catch { /* Ignorer. */ }
+      try { if (document.fullscreenElement === timerContainerRef.current) await document.exitFullscreen?.() } catch { /* Ignorer. */ }
       setFocused(false)
     }
   }
@@ -333,7 +354,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const lapAction = () => { if(!running)return; setLaps(value => [...value, splitDuration(elapsed, value)]); setRound(value => value + 1); cue(1200, 0.1) }
   const splitAction = () => { if(!running)return; setLaps(value => [...value, splitDuration(elapsed, value)]); cue(1200, 0.1) }
   const toggleRunning = () => { if (running) { setRunning(false); setPhase('PAUSE'); return } if (phase === 'FERDIG' || phase === 'TIDSGRENSE') return; setHasStarted(true); setPhase('PÅGÅR'); setRunning(true) }
-  return <div className={focused ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
+  return <div ref={timerContainerRef} className={focused ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
     <div className="timer-topline">
       <div className="timer-context"><span className="timer-origin-chip">{originLabel}</span><span className="timer-format-chip">{format.toUpperCase()}</span></div>
       <button type="button" className="timer-customize-trigger" onClick={() => setShowTimerSettings(value => !value)} aria-expanded={showTimerSettings}>{showTimerSettings ? 'Lukk oppsett' : 'Timeroppsett'}</button>
@@ -599,7 +620,6 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
 
   function startWorkout(wod = null, { autoStart = Boolean(wod) } = {}) {
     setManualEntry(false)
-    try { document.documentElement.requestFullscreen?.().catch(() => {}) } catch { /* Fullscreen er valfri på eininga. */ }
     // A free session opens with the timer ready at zero; a selected WOD starts directly.
     setTimerLaunchId(autoStart ? value => value + 1 : 0)
     setClassSessionId(null)

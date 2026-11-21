@@ -9,6 +9,7 @@ import ScheduleHub from './ScheduleHub.jsx'
 import WodPicker from './WodPicker.jsx'
 import { isStaff } from '../lib/auth.js'
 import './pt-studio-refine.css'
+import './builder-form-contrast.css'
 
 const GOALS = ['Bli sterkare','Betre kondisjon og uthald','Auka muskelmasse','Gå ned i vekt','Meir energi og overskot','Betre mobilitet','Betre teknikk','Koma i gang med trening','Førebyggja plager','Prestera betre i idrett']
 const FOCUS = ['Styrke','Muskelbygging','Kondisjon','Uthald','Vektreduksjon','Aktivitetsoppbygging','Mobilitet','Kjernestabilitet','Teknikk','Eksplosivitet','Rehabilitering','Seniortrening','Golf og idrett','Generell helse']

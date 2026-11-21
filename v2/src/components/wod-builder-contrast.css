@@ -24,3 +24,8 @@
 }
 .wod-auto-score span { font-size: 12px; color: #bdcbd0; }
 .wod-auto-score strong { font-size: 16px; color: #ffcd78; }
+.wod-library-portal .wod-library-ok-top:disabled {
+  background: #39474b !important;
+  color: #d1dadd !important;
+  cursor: not-allowed;
+}

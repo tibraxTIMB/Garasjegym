@@ -1,0 +1,89 @@
+/* Group class and PT builders must keep labels, choices and typed values legible
+   even where an older component falls back to light theme surface variables. */
+:is(.class-wizard, .class-detail-modal, .pt2, .pt2-modal, .pt2-customer-picker-modal) {
+  color: #f2f5f6;
+  color-scheme: dark;
+}
+
+:is(.class-wizard, .class-detail-modal, .pt2, .pt2-modal, .pt2-customer-picker-modal)
+  :is(input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]), select, textarea) {
+  background-color: #101b21 !important;
+  color: #f6fafb !important;
+  caret-color: #ffcb86;
+  border-color: #5b6c74 !important;
+  color-scheme: dark;
+}
+
+:is(.class-wizard, .class-detail-modal, .pt2, .pt2-modal, .pt2-customer-picker-modal)
+  :is(input, textarea)::placeholder {
+  color: #b2c1c8 !important;
+  opacity: 1;
+}
+
+:is(.class-wizard, .class-detail-modal, .pt2, .pt2-modal, .pt2-customer-picker-modal)
+  :is(input, select, textarea):focus-visible {
+  outline: 2px solid #edaa51 !important;
+  outline-offset: 2px;
+}
+
+:is(.class-wizard, .pt2, .pt2-modal) :is(option, optgroup) {
+  background: #14232b;
+  color: #f8fafb;
+}
+
+:is(.class-wizard, .pt2, .pt2-modal) label,
+:is(.class-wizard, .pt2, .pt2-modal) .pt2-field > span {
+  color: #e5eef0;
+}
+
+.class-wizard .class-wizard-progress button {
+  color: #d8e3e7;
+}
+
+.class-wizard .class-wizard-progress button.active {
+  color: #fff !important;
+  background: #22323b;
+  border-color: #cf8c39;
+}
+
+:is(.class-wizard, .pt2, .pt2-modal) .wod-picker,
+:is(.class-wizard, .pt2, .pt2-modal) .wod-picker-option,
+:is(.class-wizard, .pt2, .pt2-modal) .wod-picker-search,
+.pt2 .pt2-workspace-switch,
+.pt2 .pt2-template-card,
+.pt2 .pt2-template-search,
+.pt2 .pt2-progression-step,
+.pt2 .pt2-progression-summary,
+.pt2-customer-picker-modal .pt2-customer-search {
+  background: #1b292f !important;
+  color: #f0f6f7 !important;
+  border-color: #465960 !important;
+}
+
+:is(.class-wizard, .pt2, .pt2-modal) .wod-picker-option.selected {
+  background: #32434c !important;
+  color: #fff !important;
+  border-color: #edaa51 !important;
+}
+
+.pt2 .pt2-workspace-switch button {
+  color: #e5eef0 !important;
+}
+
+.pt2 .pt2-workspace-switch button.selected,
+.pt2-customer-picker-list > button.selected {
+  background: #34454e !important;
+  color: #fff !important;
+  border-color: #edaa51 !important;
+}
+
+.pt2-customer-picker-list > button {
+  background: #1b292f !important;
+  color: #eaf2f4 !important;
+  border-color: #384b55 !important;
+}
+
+.pt2-customer-picker-list > button:focus-visible {
+  outline: 2px solid #edaa51;
+  outline-offset: 1px;
+}

@@ -6,6 +6,7 @@ import Notifications from './Notifications.jsx'
 import WodPicker from './WodPicker.jsx'
 import { getGroupClassLiveTimer } from '../lib/groupClassLiveTimer.js'
 import { validateClassCapacity } from '../lib/classCapacity.js'
+import './builder-form-contrast.css'
 
 const LIVE_SESSION_FIELDS = 'id,class_id,status,started_at,session_title,wod_id,wod_ids,active_wod_index,timer_format,timer_duration_seconds,timer_settings,timer_started_at,timer_elapsed_seconds,timer_status,results_published_at'
 const LIVE_SESSION_BASE_FIELDS = 'id,class_id,status,started_at,session_title,wod_id,wod_ids,active_wod_index'

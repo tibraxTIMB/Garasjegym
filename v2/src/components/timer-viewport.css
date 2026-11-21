@@ -1,0 +1,122 @@
+/* The timer itself owns fullscreen, so it is not constrained by the app shell. */
+.engine-timer.timer-focused {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483000 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: clamp(6px, 1.5dvh, 14px) !important;
+  box-sizing: border-box !important;
+  width: 100vw !important;
+  max-width: none !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  max-height: 100dvh !important;
+  margin: 0 !important;
+  padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #050a0e !important;
+  color: #f5f8f9 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.engine-timer.timer-focused .timer-topline,
+.engine-timer.timer-focused .timer-caption { flex: 0 0 auto; }
+
+.engine-timer.timer-focused .timer-dashboard-reflow,
+.engine-timer.timer-focused .timer-panel-canvas {
+  flex: 1 0 auto;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+
+.engine-timer.timer-focused .timer-panel-canvas {
+  display: grid !important;
+  grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+}
+
+.engine-timer.timer-focused .timer-panel-clock {
+  grid-column: 1 / -1 !important;
+  height: auto !important;
+  min-height: max(350px, calc(100dvh - 155px)) !important;
+  max-height: none !important;
+  border-color: #52616b;
+}
+
+.engine-timer.timer-focused .timer-panel-clock .timer-panel-content {
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.engine-timer.timer-focused .timer-panel-clock .timer-center {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: 12px;
+  min-height: max(320px, calc(100dvh - 175px));
+  padding: clamp(12px, 2dvh, 28px) clamp(10px, 3vw, 36px);
+}
+
+.engine-timer.timer-focused .timer-panel-clock .timer-main-clock {
+  font-size: clamp(68px, 18vw, 260px) !important;
+  line-height: 1 !important;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.engine-timer.timer-focused .timer-panel-info,
+.engine-timer.timer-focused .timer-panel-laps {
+  grid-column: span 6 !important;
+  height: min(260px, 40dvh) !important;
+  min-height: 150px !important;
+  max-height: none !important;
+}
+
+.engine-timer.timer-focused .timer-panel-music {
+  grid-column: 1 / -1 !important;
+  height: auto !important;
+  min-height: 80px !important;
+  max-height: none !important;
+}
+
+@media (max-width: 700px) {
+  .engine-timer.timer-focused .timer-panel-info,
+  .engine-timer.timer-focused .timer-panel-laps,
+  .engine-timer.timer-focused .timer-panel-music {
+    grid-column: 1 / -1 !important;
+  }
+
+  .engine-timer.timer-focused .timer-panel-clock .timer-main-clock {
+    font-size: clamp(62px, 19vw, 132px) !important;
+    letter-spacing: -.055em;
+  }
+
+  .engine-timer.timer-focused .timer-panel-clock .timer-center {
+    gap: 10px;
+    padding: 12px 8px;
+  }
+
+  .engine-timer.timer-focused .timer-actions button {
+    min-height: 44px;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .engine-timer.timer-focused .timer-panel-clock,
+  .engine-timer.timer-focused .timer-panel-clock .timer-center {
+    min-height: max(260px, calc(100dvh - 95px)) !important;
+  }
+
+  .engine-timer.timer-focused .timer-panel-clock .timer-main-clock {
+    font-size: clamp(64px, 21dvh, 120px) !important;
+  }
+}
