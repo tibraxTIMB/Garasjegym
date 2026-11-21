@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration } from '../v2/src/lib/timerClock.js'
+import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration, summarizeLapSplits } from '../v2/src/lib/timerClock.js'
 
 test('timer clock is derived from timestamps rather than refresh count', () => {
   assert.equal(elapsedSecondsFromTimestamp(10_000, 12, 15_450), 17)
@@ -21,6 +21,17 @@ test('countdown completion is clamped to its configured target', () => {
 test('lap split records only the time since the previous split', () => {
   assert.equal(splitDuration(35, [12, 10]), 13)
   assert.equal(splitDuration(12, []), 12)
+})
+
+test('round overview shows per-round splits and cumulative elapsed times', () => {
+  const splits = [splitDuration(37), splitDuration(89, [37]), splitDuration(130, [37, 52])]
+  assert.deepEqual(splits, [37, 52, 41])
+  assert.deepEqual(summarizeLapSplits(splits), [
+    { round: 1, duration: 37, at: 37 },
+    { round: 2, duration: 52, at: 89 },
+    { round: 3, duration: 41, at: 130 },
+  ])
+  assert.deepEqual(summarizeLapSplits(null), [])
 })
 
 

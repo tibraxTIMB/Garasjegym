@@ -27,6 +27,15 @@ export function splitDuration(elapsed, previousSplits = []) {
   return Math.max(0, total - recorded)
 }
 
+export function summarizeLapSplits(splits = []) {
+  let elapsed = 0
+  return (Array.isArray(splits) ? splits : []).map((value, index) => {
+    const duration = Math.max(0, Math.floor(Number(value) || 0))
+    elapsed += duration
+    return { round: index + 1, duration, at: elapsed }
+  })
+}
+
 /**
  * Derive a finite work/rest timer made of repeated slots.
  * There is no rest period after the final work slot.

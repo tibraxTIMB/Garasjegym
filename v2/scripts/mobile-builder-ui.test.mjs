@@ -41,6 +41,18 @@ test('live timer is one viewport-locked surface with portrait and landscape layo
   assert.doesNotMatch(styles.match(/\.gg-live-timer\s*\{[^}]*\}/s)?.[0] || '', /overflow-y:\s*auto/)
 })
 
+test('AMRAP round splits stay visible without growing the clock page', () => {
+  const timer = source('../src/components/Training.jsx')
+  const styles = source('../src/components/timer-viewport.css')
+  assert.match(timer, /summarizeLapSplits\(laps\)/)
+  assert.match(timer, /stageLapHistory\.slice\(-3\)/)
+  assert.match(timer, /stagePanel==='laps'/)
+  assert.match(timer, /Vis alle \(\{laps\.length\}\)/)
+  assert.match(styles, /\.gg-live-timer__lap-preview\s*\{[^}]*display:\s*flex/s)
+  assert.match(styles, /\.gg-live-timer__body--with-laps/)
+  assert.match(styles, /@media \(orientation: landscape\)\s*\{[^]*?\.gg-live-timer__clock-area\s*\{[^}]*grid-template-rows:\s*auto minmax\(0,1fr\) auto auto/s)
+})
+
 test('class builder and PT Studio use dark, readable field and selected-item surfaces', () => {
   assert.match(source('../src/components/Booking.jsx'), /import '\.\/builder-form-contrast\.css'/)
   assert.match(source('../src/components/PTStudio.jsx'), /import '\.\/builder-form-contrast\.css'/)
