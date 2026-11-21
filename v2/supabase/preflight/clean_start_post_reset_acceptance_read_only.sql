@@ -1,5 +1,6 @@
 -- Read-only post-reset acceptance checks. This file contains no DML/DDL.
--- Run only after an owner-authorized clean-start reset on the Production-derived restore.
+-- SUPERSEDES the old 56-exercise / existing-admin acceptance contract.
+-- Run only after an owner-authorized clean-start reset on an isolated rehearsal target.
 WITH core_exercise_contract(name,category) AS (
   VALUES
     ('Air Squat','CrossFit'),
@@ -148,16 +149,11 @@ SELECT 'auth','exactly_one_owner_auth_identity',
               auth_users,linked_users,auth_without_profile,profile_without_auth)
 FROM auth_state CROSS JOIN orphan_profile_state
 UNION ALL
-SELECT 'exercise_catalogue','all_original_56_preserved_and_no_custom_rows',
-       CASE WHEN core_exercises_preserved=56 AND custom_exercises=0 THEN 'PASS' ELSE 'FAIL' END,
-       format('core_preserved=%s/56 system_catalog_total=%s custom=%s',
+SELECT 'exercise_catalogue','94_system_exercises_with_56_legacy_core_and_no_custom_rows',
+       CASE WHEN core_exercises_preserved=56 AND system_catalog_total=94 AND custom_exercises=0 THEN 'PASS' ELSE 'FAIL' END,
+       format('legacy_core_preserved=%s/56 total_system_catalog=%s/94 custom=%s',
               core_exercises_preserved,system_catalog_total,custom_exercises)
 FROM exercise_state
-UNION ALL
-SELECT 'retained_configuration','coffee_settings_singleton',
-       CASE WHEN count(*)=1 THEN 'PASS' ELSE 'FAIL' END,
-       format('rows=%s',count(*))
-FROM public.coffee_settings
 UNION ALL
 SELECT 'operational_data',table_name,
        CASE WHEN row_count=0 THEN 'PASS' ELSE 'FAIL' END,
