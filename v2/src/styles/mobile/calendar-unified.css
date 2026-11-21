@@ -132,3 +132,8 @@
  .app-shell .app-mobile-nav-item--start { transform:none; min-height:44px; margin-bottom:0; flex-direction:row; border-radius:12px; }
  .app-shell .app-mobile-nav-item--start svg { width:23px; height:23px; }
 }
+/* One-tap entry to completed training, directly from the workout page. */
+.workout-mode-intro .workout-log-shortcut{display:flex;align-items:center;gap:9px;align-self:stretch;margin-top:10px;min-height:46px;padding:10px 13px;border:1px solid #e1a451;border-radius:11px;background:linear-gradient(125deg,#3c3020,#262d2b);color:#ffd18b;font-size:14px;font-weight:900;text-align:left;cursor:pointer}
+.workout-mode-intro .workout-log-shortcut svg{flex:0 0 auto}
+.workout-mode-intro .workout-log-shortcut span{margin-left:auto;color:#c9d0d0;font-size:11px;font-weight:650}
+@media(max-width:420px){.workout-mode-intro .workout-log-shortcut span{font-size:10px}}
