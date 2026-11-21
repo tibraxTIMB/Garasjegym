@@ -5,6 +5,13 @@
 .workout-detail-back{border:1px solid #687b82;background:#24343b;color:#f1f5f6}
 .workout-detail-edit{margin-left:auto;border:1px solid #edb45f;background:linear-gradient(140deg,#eaa64b,#ce7d30);color:#211607}
 .workout-detail-header-tag{display:inline-flex;align-items:center;gap:5px;margin-left:auto;color:#75dbab;font-size:11px;font-weight:900;letter-spacing:.04em}
+.workout-detail-options{position:relative;margin-left:0}
+.workout-detail-header .workout-detail-more{min-width:43px;padding:8px;border:1px solid #5e7077;background:#26373f;color:#e9f0f0}
+.workout-detail-menu{position:absolute;z-index:25;top:calc(100% + 8px);right:0;display:grid;min-width:210px;padding:6px;border:1px solid #6b7c7f;border-radius:12px;background:#25343b;box-shadow:0 12px 30px #0009}
+.workout-detail-menu button{justify-content:flex-start;text-align:left;border:0;background:transparent;color:#f0f4f4;font-size:12px}
+.workout-detail-menu button:hover{background:#354b54}
+.workout-detail-menu .workout-detail-menu-delete{color:#ffb1aa}
+.workout-detail-correction-warning{margin:0;border:1px solid #8b6a44;border-radius:11px;padding:12px 14px;color:#f5cca0;background:#50391d44;font-size:12px;line-height:1.6}
 .workout-detail-scroll{display:grid;align-content:start;gap:18px;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:20px 24px 26px}
 .workout-detail-intro{display:grid;gap:7px}
 .workout-detail-intro h2{margin:0;font-size:clamp(25px,4.5vw,34px);line-height:1.12;letter-spacing:-.04em;overflow-wrap:anywhere}

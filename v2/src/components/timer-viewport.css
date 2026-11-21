@@ -355,3 +355,12 @@
   .gg-live-timer__exercise ol { gap: 2px; }
   .gg-live-timer__exercise li { font-size: 12px; line-height: 1.15; }
 }
+.free-session-setup{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:15px;padding:18px;border:1px solid #a5793d;border-radius:15px;background:linear-gradient(120deg,#342717,#1a282b)}
+.free-session-setup>div{display:grid;gap:8px;flex:1 1 260px}
+.free-session-setup strong{font-size:clamp(17px,3vw,23px);color:#f8efd9}
+.free-session-setup p{margin:0;color:#d0c3af;font-size:13px;line-height:1.6}
+.free-session-setup .primary-button,.free-session-setup-bottom .primary-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px}
+.free-session-setup-bottom{display:flex;justify-content:flex-end;margin:0 0 24px}
+.training-side-picker{display:flex;align-items:center;flex-wrap:wrap;gap:10px;color:#cbd8d8;font-size:12px;font-weight:800}
+.training-side-picker select{min-height:40px;min-width:185px;padding:7px 10px;border:1px solid #647276;border-radius:9px;background:#1d2c30;color:#f7f8f7}
+@media(max-width:600px){.free-session-setup .primary-button,.free-session-setup-bottom .primary-button{width:100%}}

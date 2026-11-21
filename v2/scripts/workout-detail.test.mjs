@@ -28,12 +28,15 @@ test('optional result fields accept empty input and refuse negative or invalid n
  assert.throws(()=>optionalNumber('abc'))
 })
 
-test('workout dialog has back, edit and save controls with owned database writes',()=>{
+test('workout dialog keeps history read-only, with notes and corrections behind a menu',()=>{
  const component=read('../src/components/WorkoutDetail.jsx')
  const app=read('../src/App.jsx')
  const styles=read('../src/components/workout-detail.css')
  assert.match(component,/> Tilbake<\/button>/)
- assert.match(component,/> Rediger<\/button>/)
+ assert.match(component,/Fleire val for økta/)
+ assert.match(component,/Rediger notat/)
+ assert.match(component,/Korriger feil i resultat/)
+ assert.match(component,/editMode==='note'\?\[\]:exercises\.flatMap/)
  assert.match(component,/Lagre endringar/)
  assert.match(component,/\.eq\('member_id',memberId\)/)
  assert.match(component,/from\('workout_sets'\)\.update/)

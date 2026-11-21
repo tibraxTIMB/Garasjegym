@@ -423,7 +423,7 @@ export default function App() {
           </div>
         </section>}
         </Suspense>
-        {selectedWorkout&&<WorkoutDetail workout={selectedWorkout} memberId={session.user.id} onBack={()=>setSelectedWorkout(null)} onSaved={handleWorkoutSaved}/>}
+        {selectedWorkout&&<WorkoutDetail workout={selectedWorkout} memberId={session.user.id} onBack={()=>setSelectedWorkout(null)} onSaved={handleWorkoutSaved} onDeleted={()=>{setSelectedWorkout(null);setWorkoutRevision(value=>value+1)}}/>}
         <footer>GARASJEGYM · {RELEASE_NAME}</footer>
       </main>
       <AppMobileNavigation items={mobileNavItems} active={active} staff={!simpleMode&&isStaff(profile)} coach={isPTCoach} onNavigate={handleSectionNavigate}/>

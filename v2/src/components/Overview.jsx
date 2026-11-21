@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react'
 import {Activity,CalendarDays,ClipboardList,Dumbbell,LoaderCircle,Trophy,ArrowRight} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import Notifications from './Notifications.jsx'
+import {deriveBenchmarkRecords,deriveExerciseRecords} from '../lib/prMetrics.js'
 export const RANK_TITLES = ["Garasjekadett","Kraftknøtt","Schwitzling","Kneipenkrieger","Tattenmaester","Kraftknöchel","Kraftbengel","Kraftritter","Kraftbaron","Kraftfürst","Kraftmeister","Kraftgeneral","Kraftkaiser","Kraftkoloss","Kraftlegende","Kraftheld","Kraftkobold","Kraftochse","Kraftpanzer","Kraftorkan","Kraftmagier","Kraftmonarch","Krafttitan","Kraftüberlord","Kraftweltmeister","Muskelknöchel","Muskelbengel","Muskelritter","Muskelbaron","Muskelfürst","Muskelmeister","Muskelgeneral","Muskelkaiser","Muskelkoloss","Muskellegende","Muskelheld","Muskelkobold","Muskelochse","Muskelpanzer","Muskelorkan","Muskelmagier","Muskelmonarch","Muskeltitan","Muskelüberlord","Muskelweltmeister","Hantelknöchel","Hantelbengel","Hantelritter","Hantelbaron","Hantelfürst","Hantelmeister","Hantelgeneral","Hantelkaiser","Hantelkoloss","Hantellegende","Hantelheld","Hantelkobold","Hantelochse","Hantelpanzer","Hantelorkan","Hantelmagier","Hantelmonarch","Hanteltitan","Hantelüberlord","Hantelweltmeister","Schwitzknöchel","Schwitzbengel","Schwitzritter","Schwitzbaron","Schwitzfürst","Schwitzmeister","Schwitzgeneral","Schwitzkaiser","Schwitzkoloss","Schwitzlegende","Schwitzheld","Schwitzkobold","Schwitzochse","Schwitzpanzer","Schwitzorkan","Schwitzmagier","Schwitzmonarch","Schwitztitan","Schwitzüberlord","Schwitzweltmeister","Eisenknöchel","Eisenbengel","Eisenritter","Eisenbaron","Eisenfürst","Eisenmeister","Eisengeneral","Eisenkaiser","Eisenkoloss","Eisenlegende","Eisenheld","Eisenkobold","Eisenochse","Eisenpanzer","Eisenorkan","Eisenmagier","Eisenmonarch","Eisentitan","Eisenüberlord","Eisenweltmeister","Pumpenknöchel","Pumpenbengel","Pumpenritter","Pumpenbaron","Pumpenfürst","Pumpenmeister","Pumpengeneral","Pumpenkaiser","Pumpenkoloss","Pumpenlegende","Pumpenheld","Pumpenkobold","Pumpenochse","Pumpenpanzer","Pumpenorkan","Pumpenmagier","Pumpenmonarch","Pumpentitan","Pumpenüberlord","Pumpenweltmeister","Bizepsknöchel","Bizepsbengel","Bizepsritter","Bizepsbaron","Bizepsfürst","Bizepsmeister","Bizepsgeneral","Bizepskaiser","Bizepskoloss","Bizepslegende","Bizepsheld","Bizepskobold","Bizepsochse","Bizepspanzer","Bizepsorkan","Bizepsmagier","Bizepsmonarch","Bizepstitan","Bizepsüberlord","Bizepsweltmeister","Garagenknöchel","Garagenbengel","Garagenritter","Garagenbaron","Garagenfürst","Garagenmeister","Garagengeneral","Garagenkaiser","Garagenkoloss","Garagenlegende","Garagenheld","Garagenkobold","Garagenochse","Garagenpanzer","Garagenorkan","Garagenmagier","Garagenmonarch","Garagentitan","Garagenüberlord","Garagenweltmeister","Schnitzelknöchel","Schnitzelbengel","Schnitzelritter","Schnitzelbaron","Schnitzelfürst","Schnitzelmeister","Schnitzelgeneral","Schnitzelkaiser","Schnitzelkoloss","Schnitzellegende","Schnitzelheld","Schnitzelkobold","Schnitzelochse","Schnitzelpanzer","Schnitzelorkan","Schnitzelmagier","Schnitzelmonarch","Schnitzeltitan","Schnitzelüberlord","Schnitzelweltmeister","Knödelknöchel","Knödelbengel","Knödelritter","Knödelbaron","Knödelfürst","Knödelmeister","Knödelgeneral","Knödelkaiser","Knödelkoloss","Knödellegende","Knödelheld","Knödelkobold","Knödelochse","Knödelpanzer","Tattenkaiser Supreme"]
 export const rankForCount = count => { const n=Math.max(0,Number(count)||0); if(n>=600)return {level:200,stars:3,title:RANK_TITLES[199],next:600,gold:true}; if(n===0)return {level:1,stars:0,title:RANK_TITLES[0],next:1,gold:false}; const level=Math.min(200,Math.floor((n-1)/3)+1),stars=((n-1)%3)+1; return {level,stars,title:RANK_TITLES[level-1],next:level*3,gold:false} }
 
@@ -16,9 +17,8 @@ export default function Overview({profile,onNavigate,onOpenWorkout,onOpenWod=()=
     const {data:{user},error:authError}=await supabase.auth.getUser()
     if(authError)throw authError
     if(!user){if(live&&requestId===loadSequence.current)setLoading(false);return}
-    const [l,p,count,a,b,leaderboard]=await Promise.all([
-     supabase.from('workout_logs').select('id,title,workout_date,format,score_rounds,score_reps,note').eq('member_id',user.id).order('workout_date',{ascending:false}).limit(100),
-     supabase.from('personal_records').select('id,exercise_name,result,unit,record_date').eq('member_id',user.id).order('record_date',{ascending:false}).limit(100),
+    const [l,count,a,b,leaderboard]=await Promise.all([
+     supabase.from('workout_logs').select('id,title,workout_date,format,source_wod_id,score_rounds,score_reps,score_time_seconds,result_data,note,workout_exercises(id,exercise_id,exercise_name,sort_order,workout_sets(id,reps,load_kg,height_cm,time_seconds))').eq('member_id',user.id).order('workout_date',{ascending:false}).limit(200),
      supabase.from('workout_logs').select('id',{count:'exact',head:true}).eq('member_id',user.id),
      supabase.from('pt_wod_assignments').select('id,status,due_date,wods(name,format,duration_minutes)').eq('member_id',user.id).in('status',['assigned','in_progress']).order('due_date',{ascending:true,nullsFirst:false}).limit(5),
      supabase.from('class_bookings').select('id,status,classes(id,title,starts_at,duration_minutes,cancelled_at)').eq('member_id',user.id).eq('status','confirmed').limit(100),
@@ -26,8 +26,13 @@ export default function Overview({profile,onNavigate,onOpenWorkout,onOpenWod=()=
     ])
     if(!live||requestId!==loadSequence.current)return
     const failures=[]
-    if(l.error)failures.push('Treningshistorikk: '+l.error.message);else setLogs(l.data||[])
-    if(p.error)failures.push('Personlege rekordar: '+p.error.message);else setPrs(p.data||[])
+    if(l.error)failures.push('Treningshistorikk: '+l.error.message);else{
+     const rows=l.data||[]
+     setLogs(rows)
+     const exercisePRs=deriveExerciseRecords(rows).flatMap(exercise=>exercise.records.map(item=>({id:exercise.key+'-'+item.key,exercise_name:exercise.label+' · '+item.label,result:item.value,unit:item.unit,record_date:item.date})))
+     const wodPRs=deriveBenchmarkRecords(rows).map(wod=>({id:wod.key,exercise_name:wod.name+' · '+wod.level.toUpperCase(),result:wod.score.rounds!=null?`${wod.score.rounds} + ${wod.score.reps}`:`${Math.floor(wod.score.value/60)}:${String(Math.round(wod.score.value%60)).padStart(2,'0')}`,unit:wod.score.rounds!=null?'rundar/reps':'min:sek',record_date:wod.date}))
+     setPrs([...exercisePRs,...wodPRs].sort((a,b)=>String(b.record_date||'').localeCompare(String(a.record_date||''))))
+    }
     if(count.error)failures.push('Treningsstatistikk: '+count.error.message);else setTotalCount(count.count||0)
     if(a.error)failures.push('PT-tildelingar: '+a.error.message);else setAssignments((a.data||[]).filter(x=>x.wods))
     if(b.error)failures.push('Gruppetimebooking: '+b.error.message);else setBookings((b.data||[]).filter(x=>x.classes&&!x.classes.cancelled_at&&new Date(x.classes.starts_at)>=new Date()).map(x=>x.classes).sort((x,y)=>new Date(x.starts_at)-new Date(y.starts_at)))

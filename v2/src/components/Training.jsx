@@ -11,7 +11,7 @@ import { formatParticipation, normalizeWodEngine, parseIntervalNotation } from '
 import PerformanceCenter from './PerformanceCenter.jsx'
 import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration, summarizeLapSplits } from '../lib/timerClock.js'
 import { getExerciseMeasurementFlags } from '../lib/exerciseMeasurements.js'
-import { getWodSideLabel } from '../lib/wodSides.js'
+import { getWodSideLabel, isSideSelectableExercise, WOD_SIDE_OPTIONS } from '../lib/wodSides.js'
 import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
 import './timer-viewport.css'
 
@@ -535,11 +535,6 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [libraryQuery,setLibraryQuery]=useState('')
   const [history, setHistory] = useState([])
   const [records, setRecords] = useState([])
-  const [prName, setPrName] = useState('')
-  const [prResult, setPrResult] = useState('')
-  const [prUnit, setPrUnit] = useState('kg')
-  const [prNote, setPrNote] = useState('')
-  const [prSaving, setPrSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -549,6 +544,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [reviewOpen,setReviewOpen]=useState(false)
   const [finishOpen,setFinishOpen]=useState(false)
   const [manualEntry,setManualEntry]=useState(false)
+  const [sessionPrepared,setSessionPrepared]=useState(false)
   const [source, setSource] = useState(null)
   const [wodLevel,setWodLevel]=useState('rx')
   const [classSessionId, setClassSessionId] = useState(null)
@@ -683,7 +679,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
 
   useEffect(() => {
     if (!quickStart || !simpleMode || loading || mode !== 'home') return
-    startWorkout(null, { autoStart: true })
+    startWorkout(null, { autoStart: false })
     onQuickStartConsumed?.()
   }, [quickStart, simpleMode, loading, mode])
 
@@ -709,7 +705,8 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
 
   function startWorkout(wod = null, { autoStart = Boolean(wod) } = {}) {
     setManualEntry(false)
-    // A free session opens with the timer ready at zero; a selected WOD starts directly.
+    // A free session must be composed before the timer takes over the phone.
+    setSessionPrepared(Boolean(wod))
     setTimerLaunchId(autoStart ? value => value + 1 : 0)
     setClassSessionId(null)
     setLaunchLinkContext(emptyTrainingLaunchContext())
@@ -787,6 +784,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
 
   function startManualWorkout(){
     setManualEntry(true)
+    setSessionPrepared(false)
     setTimerLaunchId(0);setClassSessionId(null);setLaunchLinkContext(emptyTrainingLaunchContext());setSaveToken(crypto.randomUUID());setSource(null);setWodLevel('rx')
     setTitle('Manuell trening');setFormat('Fri trening');setDuration('0');setDurationSeconds('0');setWorkoutDate(localDateISO())
     setNote('');setItems([]);setQuery('');setActiveExerciseIndex(0);setManualWodIds([]);setManualWodSelect('')
@@ -899,7 +897,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         load_kg:scoreLoad===''?null:Number(scoreLoad),
         calories:scoreCalories===''?null:Number(scoreCalories),
         distance:scoreDistance===''?null:Number(scoreDistance),distance_unit:scoreUnit,
-        exercise_results:items.map(item=>({exercise_name:item.exercise_name,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps.map(step=>({name:step.name,reps:Number(step.reps)||1})):[],row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm)}))}))
+        exercise_results:items.map(item=>({exercise_name:item.exercise_name,side_mode:item.side_mode||null,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps.map(step=>({name:step.name,reps:Number(step.reps)||1})):[],row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm)}))}))
       }
       const payload = {
         member_id:user.id,save_token:saveToken,title:title.trim(),source_wod_id:source?.id||manualWodIds[0]||null,
@@ -925,66 +923,9 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       if(saveError)throw saveError
       if(!workoutId)throw new Error('Databasen returnerte ikkje ID for den lagra økta.')
       const programSyncMessage = ''
-      // Derive automatic PRs from actual logged sets and the workout result, separated by RX/Scaled/Foundation.
-      let prMessage = programSyncMessage
-      try {
-        const { data: existingPRs, error: prReadError } = await supabase.from('personal_records')
-          .select('exercise_name,result,unit,note').eq('member_id', user.id).in('unit', ['kg','cm','reps','sek','meter','cal'])
-        if (prReadError) throw prReadError
-        const levelKey=String(wodLevel||'rx').toLowerCase()
-        const bestByNameUnit = new Map()
-        ;(existingPRs || []).forEach(record => {
-          const value = Number(String(record.result).replace(',', '.'))
-          const recordLevel=(String(record.note||'').match(/^(RX|SCALED|FOUNDATION)\s*[·:-]/i)?.[1]||'RX').toLowerCase()
-          const key = record.exercise_name.toLowerCase() + '|' + record.unit + '|' + recordLevel
-          if (Number.isFinite(value)) {
-            const current=bestByNameUnit.get(key)
-            bestByNameUnit.set(key,record.unit==='sek'?(current==null?value:Math.min(current,value)):(current==null?value:Math.max(current,value)))
-          }
-        })
-        const newPRs = []
-        const addCandidate=(exercise,unit,values,direction='max')=>{
-          const numbers=values.map(Number).filter(value=>Number.isFinite(value)&&value>0)
-          if(!numbers.length)return
-          const candidate=direction==='min'?Math.min(...numbers):Math.max(...numbers)
-          const key=exercise.exercise_name.toLowerCase()+'|'+unit+'|'+levelKey
-          const current=bestByNameUnit.get(key)
-          const improved=direction==='min'?(current==null||candidate<current):(current==null||candidate>current)
-          if(!improved)return
-          newPRs.push({member_id:user.id,workout_log_id:workoutId,exercise_name:exercise.exercise_name,result:String(candidate),unit,record_date:payload.workout_date,note:levelKey.toUpperCase()+' · Automatisk PR frå økta «'+payload.title+'»'})
-          bestByNameUnit.set(key,candidate)
-        }
-        payload.exercises.forEach(exercise => {
-          addCandidate(exercise,'kg',exercise.sets.map(set=>set.load_kg))
-          addCandidate(exercise,'cm',exercise.sets.map(set=>set.height_cm))
-          addCandidate(exercise,'reps',exercise.sets.map(set=>set.reps))
-          addCandidate(exercise,'sek',exercise.sets.map(set=>set.time_seconds),'min')
-          if(exercise.row_unit==='m'||exercise.row_unit==='km')addCandidate(exercise,'meter',[exercise.row_unit==='km'?Number(exercise.row_value)*1000:exercise.row_value])
-          if(exercise.row_unit==='cal')addCandidate(exercise,'cal',[exercise.row_value])
-          if(exercise.row_unit==='s')addCandidate(exercise,'sek',[exercise.row_value],'min')
-          if(exercise.row_unit==='min')addCandidate(exercise,'sek',[Number(exercise.row_value)*60],'min')
-          if(payload.exercises.length===1){
-            addCandidate(exercise,'kg',[payload.score_load_kg])
-            addCandidate(exercise,'reps',[payload.score_reps])
-            addCandidate(exercise,'sek',[payload.score_time_seconds],'min')
-            addCandidate(exercise,'cal',[payload.score_calories])
-            const distance=Number(payload.score_distance)
-            if(distance>0){if(payload.score_unit==='cal')addCandidate(exercise,'cal',[distance]);else addCandidate(exercise,'meter',[payload.score_unit==='km'?distance*1000:distance])}
-          }
-        })
-        if(newPRs.length){
-          const {data:recordedPRs,error:prWriteError}=await supabase.rpc('record_workout_prs',{
-            p_workout_id:workoutId,
-            p_records:newPRs
-          })
-          if(prWriteError)throw prWriteError
-          prMessage=recordedPRs?.length
-            ?' Nye PR-ar registrerte ('+levelKey.toUpperCase()+'): '+recordedPRs.map(pr=>pr.exercise_name+' '+pr.result+' '+pr.unit).join(', ')
-            :' PR-kontrollen er fullført. Ingen nye rekordar over det beste resultatet vart registrerte.'
-        }
-      } catch(prError) {
-        prMessage=' Automatisk PR-kontroll kunne ikkje fullførast: '+(prError.message||'ukjend feil')
-      }
+      // PRs are derived from saved workout sets on Mi side. Older independent
+      // personal_records remain visible in the archive but aren't duplicated.
+      const prMessage = programSyncMessage+' Rekordoversikta blir oppdatert frå øvingane og resultata i treningsloggen.'
       setNotice('Økta er lagra i treningsloggen.' + prMessage)
       setFinishOpen(false); setMode('home'); setReviewOpen(false)
       clearTimerSnapshot()
@@ -997,29 +938,6 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       setSaving(false)
     }
   }
-  async function savePersonalRecord(event) {
-    event.preventDefault()
-    if (prSaving) return
-    if (!prName.trim() || !prResult.trim()) return
-    const normalizedResult=Number(prResult.trim().replace(',','.'))
-    if(!Number.isFinite(normalizedResult)||normalizedResult<=0){setError('Ein personleg rekord må vera eit gyldig tal større enn null.');return}
-    setPrSaving(true); setError(''); setNotice('')
-    try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) throw new Error('Logg inn på nytt før du lagrar.')
-      const { error: insertError } = await supabase.from('personal_records').insert({
-        member_id: user.id, exercise_name: prName.trim(), result: prResult.trim(),
-        unit: prUnit, note: prNote.trim() || null,
-      })
-      if (insertError) throw insertError
-      setPrName(''); setPrResult(''); setPrNote('')
-      setNotice('Personleg rekord er lagra.')
-      await loadAll()
-    } catch (err) { setError(err.message || 'Kunne ikkje lagra rekorden.') }
-    finally { setPrSaving(false) }
-  }
-
-
   if (loading) return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar treningsdata …</div>
 
   return <div className={simpleMode && mode === "home" ? "training-module simple-mode" : "training-module"}>
@@ -1036,7 +954,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         {['AMRAP','Nedteljing','E1MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM'].includes(format) && <label>Øktlengd (minutt)<input type="number" min="1" max="600" value={duration} onChange={e => setDuration(e.target.value)}/></label>}
       </div>
       {source?.timer_settings?.workout_schema?.library_category==='warmup'&&<section className="warmup-execution-guide" aria-label="Oppvarming i to delar"><header><span className="section-kicker">OPPVARMING · TO DELAR</span><strong>Førebu kroppen og finn arbeidsnivået</strong></header><div className="warmup-execution-columns"><article><span>1</span><div><strong>Felles oppvarming</strong><p>Gradvis spissing mot hovud-WOD sin stimulus og rørsleform.</p><ul>{items.filter(item=>item.warmup_phase!=='movement_rehearsal'&&!item.is_rest).map(item=><li key={item.key}>{item.exercise_name}</li>)}</ul></div></article><article><span>2</span><div><strong>Fri teknisk innøving</strong><p>Prøv hovudrørsla med lette vekter. Auk gradvis og finn ditt eige arbeidsnivå for WOD-en.</p><ul>{items.filter(item=>item.warmup_phase==='movement_rehearsal'&&!item.is_rest).map(item=><li key={item.key}>{item.exercise_name}</li>)}</ul></div></article></div></section>}
-       {manualEntry ? <section className="manual-entry-intro" aria-label="Manuell treningsregistrering"><div><span className="section-kicker">ETTERREGISTRERING</span><strong>Registrer ei økt du allereie har gjennomført</strong><p>Legg inn øvingar, sett, reps, vekt, høgd, tid eller distanse. Ingen timer blir starta.</p></div><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Kontroller og lagre</button></section> : <><Timer autoStartToken={timerLaunchId} format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} nextExercise={items[activeExerciseIndex + 1]?.exercise_name || ''} exerciseList={items} prescriptionLevel={wodLevel} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={() => setFinishOpen(true)} originLabel={classSessionId ? 'GRUPPETIME' : launchAssignmentId ? 'TILDELT FRÅ PT' : source ? 'EIGEN WOD' : 'EIGA ØKT'}/><HeartRateTrainingPanel /><div className="workout-finish-actions"><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Gå til resultat og lagre økt</button></div></>}
+       {manualEntry ? <section className="manual-entry-intro" aria-label="Manuell treningsregistrering"><div><span className="section-kicker">ETTERREGISTRERING</span><strong>Registrer ei økt du allereie har gjennomført</strong><p>Legg inn øvingar, sett, reps, vekt, høgd, tid eller distanse. Ingen timer blir starta.</p></div><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Kontroller og lagre</button></section> : sessionPrepared ? <><Timer autoStartToken={timerLaunchId} format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} nextExercise={items[activeExerciseIndex + 1]?.exercise_name || ''} exerciseList={items} prescriptionLevel={wodLevel} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={() => setFinishOpen(true)} originLabel={classSessionId ? 'GRUPPETIME' : launchAssignmentId ? 'TILDELT FRÅ PT' : source ? 'EIGEN WOD' : 'EIGA ØKT'}/><HeartRateTrainingPanel /><div className="workout-finish-actions"><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Gå til resultat og lagre økt</button></div></> : <section className="free-session-setup" aria-label="Førebu fri økt"><div><span className="section-kicker">STEG 1 AV 2 · FRI ØKT</span><strong>Vel øvingar før du startar klokka</strong><p>Søk i øvingsbiblioteket nedanfor, legg til øvingane du vil trene, og juster sett eller belastning. Timeren opnar først når du vel «Start økta».</p></div><button type="button" className="primary-button" onClick={()=>{setSessionPrepared(true);setTimerLaunchId(value=>value+1)}}><Play size={18}/> Start økta{items.filter(item=>item.exercise_name.trim()).length ? ` · ${items.filter(item=>item.exercise_name.trim()).length} øvingar` : ' utan øvingar'}</button></section>}
       {items.length > 0 && format!=='Stasjonssirkel' && <section className="engine-section">
         <div className="engine-section-title"><h4>{format==='Stasjonssirkel'?'Stasjonane i økta':'WOD / øvingsrekkjefølgje'}</h4><span>{format==='Stasjonssirkel'?'Alle stasjonar – roter etter eiga startplassering':'Vel øvinga du arbeider med'}</span></div>
         <div className={format==='Stasjonssirkel'?'timer-station-grid':'wod-list'}>{items.map((item, index) => format==='Stasjonssirkel' ? <article className="timer-station-card" key={item.key}><span>STASJON {index+1}</span><strong>{item.exercise_name||'Øving'}</strong><small>{item.reps_mode==='amrap'?'AMRAP · maks reps':item.reps?item.reps+' reps':'Valfritt tal reps'}</small></article> : <button type="button" key={item.key} className={index === activeExerciseIndex ? 'secondary-button active' : 'secondary-button'} onClick={() => setActiveExerciseIndex(index)}>{index + 1}. {item.is_rest?'⏸ Pause · '+clock(Number(item.rest_duration_seconds)||30):item.exercise_name || 'Ny øving'}</button>)}</div>
@@ -1050,6 +968,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
           <div className="engine-exercise-head"><strong>{index + 1}. {item.exercise_name || 'Ny øving'}</strong>{item.is_complex&&<span className="training-complex-tag">COMPLEX</span>}<button type="button" className="danger-icon" aria-label="Fjern øving" onClick={() => setItems(current => current.filter(x => x.key !== item.key))}><Trash2 size={16}/></button></div>
           {item.is_complex&&Array.isArray(item.complex_steps)&&<div className="training-complex-sequence"><strong>Rørslesekvens</strong><ol>{item.complex_steps.map((step,stepIndex)=><li key={stepIndex}><span>{step.name}</span><b>{step.reps} ×</b></li>)}</ol></div>}
           {!item.exercise_id && <input aria-label="Namn på øving" value={item.exercise_name} onChange={e => updateExercise(item.key,{exercise_name:e.target.value})} placeholder="Namn på øving"/>}
+          {isSideSelectableExercise({name:item.exercise_name,equipment:item.equipment})&&<label className="training-side-picker">Arm/side <select aria-label={'Vel arm eller side for '+item.exercise_name} value={item.side_mode||''} onChange={e=>updateExercise(item.key,{side_mode:e.target.value})}>{WOD_SIDE_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>}
           {item.prescription_levels&&<div className="wod-prescription-target"><strong>Planlagt dosering · {wodLevel.toUpperCase()}</strong><span>{doseLabel({levels:item.prescription_levels},wodLevel)||'Ikkje dosert på dette nivået'}</span></div>}{item.sets.map((set, i) => <div className={item.uses_height&&item.uses_load?"set-grid height-load-set-grid":item.uses_height?"set-grid height-set-grid":"set-grid"} key={i}>
             <span>{item.is_complex?`Syklus ${i+1}`:`Sett ${i+1}`}</span><input type="number" min="0" step="1" value={set.reps} onChange={e => updateSet(item.key,i,{reps:e.target.value})} placeholder={item.is_complex?"Syklusar":"Reps"}/>
             {item.uses_height&&<input type="number" min="1" step="1" value={set.height_cm||''} onChange={e=>updateSet(item.key,i,{height_cm:e.target.value})} placeholder="Høgd (cm)" aria-label={`Høgd i centimeter, sett ${i+1}`}/>}
@@ -1061,6 +980,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         </article>)}
         <button type="button" className="secondary-button" onClick={() => setItems(current => [...current, emptyExercise()])}><Plus size={15}/> Legg til eiga øving</button>
       </section>
+      {!manualEntry&&!sessionPrepared&&<div className="free-session-setup-bottom"><button type="button" className="primary-button" onClick={()=>{setSessionPrepared(true);setTimerLaunchId(value=>value+1)}}><Play size={18}/> Start økta{items.filter(item=>item.exercise_name.trim()).length ? ` med ${items.filter(item=>item.exercise_name.trim()).length} øvingar` : ' utan øvingar'}</button></div>}
       {finishOpen&&<div className="workout-finish-backdrop" role="presentation">
         <section className="workout-finish-dialog" role="dialog" aria-modal="true" aria-labelledby="finish-workout-title">
           <div className="workout-finish-head"><div><span className="section-kicker">ØKTA ER FERDIG</span><h3 id="finish-workout-title">{title||'Treningsøkt'}</h3></div><button type="button" className="danger-icon" aria-label="Lukk" onClick={()=>setFinishOpen(false)}>×</button></div>
@@ -1108,7 +1028,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
     </form> : <>
       <div className="training-heading"><div><div className="section-kicker">{simpleMode ? "SUPERENKEL MODUS · TRENING" : "TRENING · MOTOR"}</div><h3>{simpleMode ? "Kva vil du gjera i dag?" : "Vel øktform"}</h3>{simpleMode&&<p>Vel ei ferdig økt eller start di eiga. Resultatet blir lagra på profilen din.</p>}</div>{!simpleMode&&<span className="count-pill">{RELEASE_NAME}</span>}</div>
       <div className={simpleMode ? "engine-entry-grid simple-entry-grid" : "engine-entry-grid"}>
-        <button type="button" onClick={() => startWorkout()}><Dumbbell size={20}/><strong>{simpleMode ? "Start trening" : "Fri trening"}</strong><small>{simpleMode ? "Start klokka og tren" : "Bygg økta frå botnen"}</small></button>
+        <button type="button" onClick={() => startWorkout()}><Dumbbell size={20}/><strong>{simpleMode ? "Start trening" : "Fri trening"}</strong><small>{simpleMode ? "Vel øvingar og start klokka" : "Bygg økta frå botnen"}</small></button>
         <button type="button" onClick={() => setMode('wods')}><Activity size={20}/><strong>{simpleMode ? "Følg eit opplegg" : "Start ein WOD"}</strong><small>{simpleMode ? "Vel ei økt som er laga for deg" : "Vel ei publisert økt"}</small></button>
         <button type="button" onClick={startManualWorkout}><Activity size={20}/><strong>Registrer manuell trening</strong><small>Legg inn ei økt du alt har gjennomført</small></button>
       </div>
@@ -1148,16 +1068,6 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       </section>
       <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
         <PerformanceCenter history={history} records={records}/>
-        <div className="engine-section pr-manual-entry">
-          <div className="training-heading"><div><div className="section-kicker">MANUELL REGISTRERING</div><h3>Legg inn ein PR</h3></div></div>
-          <form className="pr-form" onSubmit={savePersonalRecord}>
-            <input value={prName} onChange={e => setPrName(e.target.value)} placeholder="Øving, t.d. Markløft" required/>
-            <input value={prResult} onChange={e => setPrResult(e.target.value)} placeholder="Resultat, t.d. 120" required/>
-            <select value={prUnit} onChange={e => setPrUnit(e.target.value)}><option value="kg">kg</option><option value="cm">cm</option><option value="reps">reps</option><option value="sek">sek</option><option value="min">min</option><option value="meter">meter</option><option value="watt">watt</option></select>
-            <input value={prNote} onChange={e => setPrNote(e.target.value)} placeholder="Notat (valfritt)"/>
-            <button className="secondary-button" type="submit" disabled={prSaving}>{prSaving ? 'Lagrar …' : 'Registrer PR'}</button>
-          </form>
-        </div>
       </section>
       <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
         <div className="training-heading"><div><div className="section-kicker">BIBLIOTEK</div><h3>Øvingsbibliotek</h3></div><span className="count-pill">{exercises.length} øvingar</span></div>
