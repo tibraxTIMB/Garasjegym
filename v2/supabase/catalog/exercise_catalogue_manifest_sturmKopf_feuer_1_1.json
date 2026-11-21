@@ -1,0 +1,3710 @@
+{
+  "schema_version": 1,
+  "release": "SturmKopf Feuer 1.1",
+  "generated_at": "2026-11-21",
+  "source_counts": {
+    "production": 56,
+    "test": 94,
+    "expansion_candidates": 41
+  },
+  "reconciliation": {
+    "exact_name_overlap_production_test": 16,
+    "production_only": 40,
+    "test_only": 78,
+    "expansion_only": 1,
+    "unique_normalized_names": 135
+  },
+  "rule": "No row is discarded in this manifest. Metadata prefers TEST where an exact normalized name exists; otherwise Production, then expansion. Source-specific category/equipment values are retained for review.",
+  "semantic_alias_candidates": [
+    {
+      "names": [
+        "Barbell Row",
+        "Bent-over row"
+      ],
+      "reason": "Same apparent barbell bent-over rowing movement; confirm grip/stance and whether separate variant is intended."
+    },
+    {
+      "names": [
+        "Dumbbell row",
+        "One-arm Dumbbell Row"
+      ],
+      "reason": "Both described as one-arm dumbbell row; likely duplicate naming."
+    },
+    {
+      "names": [
+        "Kettlebell Deadlift / Markløft",
+        "Kettlebell markløft"
+      ],
+      "reason": "Both describe kettlebell deadlift from floor; likely duplicate naming."
+    },
+    {
+      "names": [
+        "Pull-up",
+        "Strict pull-up"
+      ],
+      "reason": "Related but may be distinct due to assistance/strict execution; retain pending variant check."
+    },
+    {
+      "names": [
+        "Step-up",
+        "Box Step-up",
+        "Dumbbell Step-up"
+      ],
+      "reason": "Same step-up pattern but load/equipment variants may be intentional; retain pending review."
+    },
+    {
+      "names": [
+        "Push-up",
+        "Dips"
+      ],
+      "reason": "Different movement patterns; do not merge."
+    }
+  ],
+  "exercises": [
+    {
+      "name": "Air squat",
+      "normalized_name": "air squat",
+      "category": "Styrke",
+      "equipment": "Kroppsvekt",
+      "body_area": "Bein",
+      "description": "Knebøy med eigen kroppsvekt.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Kroppsvekt",
+        "test": "Kroppsvekt",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Ankle rocks",
+      "normalized_name": "ankle rocks",
+      "category": "Mobilitet",
+      "equipment": "Kroppsvekt",
+      "body_area": "Bein / ankel",
+      "description": "Mobilitet for ankelledd.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Mobilitet",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kroppsvekt",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Back squat",
+      "normalized_name": "back squat",
+      "category": "Styrke",
+      "equipment": "Stong og rack",
+      "body_area": "Bein",
+      "description": "Knebøy med stong på ryggen.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vektstong",
+        "test": "Stong og rack",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Band external rotation",
+      "normalized_name": "band external rotation",
+      "category": "Rehab / fysio",
+      "equipment": "Strikk",
+      "body_area": "Skulder",
+      "description": "Lett utrotasjon av skulder med strikk. Bruk berre etter tilråding frå fysioterapeut.",
+      "is_rehab": true,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Rehab / fysio",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Strikk",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Band pull-apart",
+      "normalized_name": "band pull apart",
+      "category": "Styrke",
+      "equipment": "Strikk",
+      "body_area": "Overkropp / rygg",
+      "description": "Lett aktivering av øvre rygg.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Strikk",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Barbell Row",
+      "normalized_name": "barbell row",
+      "category": "Styrke",
+      "equipment": "Vektstong",
+      "body_area": "Fullkropp",
+      "description": "Framoverbøygd roing med stabil overkropp.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Styrke",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vektstong",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Bench press",
+      "normalized_name": "bench press",
+      "category": "Styrke",
+      "equipment": "Stong/benk",
+      "body_area": "Overkropp",
+      "description": "Benkpress med stong.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Styrke",
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vektstong / benk",
+        "test": "Stong/benk",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Bench press – manualar, flat",
+      "normalized_name": "bench press manualar flat",
+      "category": "Styrke",
+      "equipment": "Manualar / flat benk",
+      "body_area": "Bryst",
+      "description": "Press manualane kontrollert frå brysthøgd på flat benk.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar / flat benk",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Bent-over row",
+      "normalized_name": "bent over row",
+      "category": "Styrke",
+      "equipment": "Stong",
+      "body_area": "Rygg",
+      "description": "Framoverbøygd roing.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Stong",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Biceps Curl",
+      "normalized_name": "biceps curl",
+      "category": "Styrke",
+      "equipment": "Manualar",
+      "body_area": "Fullkropp",
+      "description": "Albuebøy med kontrollert tempo.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Styrke",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Manualar",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Bike erg",
+      "normalized_name": "bike erg",
+      "category": "Kondisjon",
+      "equipment": "Ergometersykkel",
+      "body_area": "Bein / kondisjon",
+      "description": "Kondisjonsarbeid på sykkel.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": "Kondisjon",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "BikeErg",
+        "test": "Ergometersykkel",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Bird dog",
+      "normalized_name": "bird dog",
+      "category": "Kjerne",
+      "equipment": "Matte",
+      "body_area": "Kjerne / rygg",
+      "description": "Diagonal strekk med stabil overkropp.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Kjerne",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Matte",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Box jump",
+      "normalized_name": "box jump",
+      "category": "Kondisjon",
+      "equipment": "Kasse",
+      "body_area": "Bein / kondisjon",
+      "description": "Hopp opp på kasse med trygg nedstiging.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": "Kondisjon",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Plyoboks",
+        "test": "Kasse",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Box Jump Over",
+      "normalized_name": "box jump over",
+      "category": "Kondisjon",
+      "equipment": "Kasse",
+      "body_area": "Bein / kondisjon",
+      "description": "Hopp opp på kassa og vidare over til motsett side. Land mjukt og kontrollert. Skaler med step-over ved behov.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Kondisjon",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kasse",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Box Step-up",
+      "normalized_name": "box step up",
+      "category": "CrossFit",
+      "equipment": "Plyoboks",
+      "body_area": "Fullkropp",
+      "description": "Steg kontrollert opp og ned frå boks.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Plyoboks",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Bulgarian split squat",
+      "normalized_name": "bulgarian split squat",
+      "category": "Styrke",
+      "equipment": "Benk/manualar",
+      "body_area": "Bein",
+      "description": "Einsidig knebøy med bakre fot på benk.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Styrke",
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Manualar / benk",
+        "test": "Benk/manualar",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Burpee",
+      "normalized_name": "burpee",
+      "category": "Kondisjon",
+      "equipment": "Kroppsvekt",
+      "body_area": "Fullkropp",
+      "description": "Kroppsvektøving med puls.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": "Kondisjon",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Kroppsvekt",
+        "test": "Kroppsvekt",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Burpee Box Jump Over",
+      "normalized_name": "burpee box jump over",
+      "category": "CrossFit",
+      "equipment": "Plyoboks",
+      "body_area": "Fullkropp",
+      "description": "Burpee med passering over boks.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Plyoboks",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Calf raise",
+      "normalized_name": "calf raise",
+      "category": "Styrke",
+      "equipment": "Kroppsvekt/manualar",
+      "body_area": "Bein",
+      "description": "Tåhev for leggmuskulatur.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kroppsvekt/manualar",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Calf stretch",
+      "normalized_name": "calf stretch",
+      "category": "Mobilitet",
+      "equipment": "Vegg",
+      "body_area": "Bein / legg",
+      "description": "Rolig tøying av legg.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Mobilitet",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Vegg",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Cat-cow",
+      "normalized_name": "cat cow",
+      "category": "Mobilitet",
+      "equipment": "Matte",
+      "body_area": "Rygg",
+      "description": "Rolig mobilitet for ryggsøyla.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Mobilitet",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Matte",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Chest-supported Dumbbell Row",
+      "normalized_name": "chest supported dumbbell row",
+      "category": "Styrke",
+      "equipment": "Manualar / skråbenk",
+      "body_area": "Rygg",
+      "description": "Bryststøtta roing. Trekk albogane bakover utan å løfta brystet frå benken.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar / skråbenk",
+        "expansion": "Manualar / skråbenk"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Chest-to-Bar Pull-up",
+      "normalized_name": "chest to bar pull up",
+      "category": "CrossFit",
+      "equipment": "Pull-up-stong",
+      "body_area": "Fullkropp",
+      "description": "Pull-up med brystet til stonga.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Pull-up-stong",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Clean and Jerk",
+      "normalized_name": "clean and jerk",
+      "category": "CrossFit",
+      "equipment": "Vektstong",
+      "body_area": "Fullkropp",
+      "description": "To-delt løft frå golv til over hovudet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vektstong",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dead bug",
+      "normalized_name": "dead bug",
+      "category": "Kjerne",
+      "equipment": "Matte",
+      "body_area": "Kjerne",
+      "description": "Kontrollert diagonal arm- og beinrørsle.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Kjerne",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Matte",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Deadlift",
+      "normalized_name": "deadlift",
+      "category": "Styrke",
+      "equipment": "Stong",
+      "body_area": "Rygg / bein",
+      "description": "Markløft frå golvet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vektstong",
+        "test": "Stong",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Devil Press",
+      "normalized_name": "devil press",
+      "category": "CrossFit",
+      "equipment": "Manualar",
+      "body_area": "Fullkropp",
+      "description": "Burpee med manualar og samanhengande sving til låst posisjon over hovudet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "CrossFit",
+        "expansion": "CrossFit"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar",
+        "expansion": "Manualar"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dips",
+      "normalized_name": "dips",
+      "category": "Styrke",
+      "equipment": "Stativ/ringar",
+      "body_area": "Overkropp",
+      "description": "Dips med kontrollert rørsle.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Stativ/ringar",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Double Under",
+      "normalized_name": "double under",
+      "category": "CrossFit",
+      "equipment": "Hoppetau",
+      "body_area": "Fullkropp",
+      "description": "To taupasseringar per hopp.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Hoppetau",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell Box Step-over",
+      "normalized_name": "dumbbell box step over",
+      "category": "CrossFit",
+      "equipment": "Manualar / kasse",
+      "body_area": "Bein / kondisjon",
+      "description": "Gå kontrollert over kassa med manualar eller kroppsvekt.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "CrossFit",
+        "expansion": "CrossFit"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar / kasse",
+        "expansion": "Manualar / kasse"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell Floor Press",
+      "normalized_name": "dumbbell floor press",
+      "category": "Styrke",
+      "equipment": "Manualar",
+      "body_area": "Bryst / triceps",
+      "description": "Brystpress liggjande på golvet. Overarmane møter golvet kontrollert i botn.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar",
+        "expansion": "Manualar"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell Front Squat",
+      "normalized_name": "dumbbell front squat",
+      "category": "Styrke",
+      "equipment": "Manualar",
+      "body_area": "Bein",
+      "description": "Hald manualane ved skuldrene og utfør knebøy med oppreist overkropp.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar",
+        "expansion": "Manualar"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell Hang Clean",
+      "normalized_name": "dumbbell hang clean",
+      "category": "CrossFit",
+      "equipment": "Manualar",
+      "body_area": "Fullkropp",
+      "description": "Eksplosivt løft frå heng til skulderposisjon med to manualar.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "CrossFit",
+        "expansion": "CrossFit"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar",
+        "expansion": "Manualar"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell Lateral Raise",
+      "normalized_name": "dumbbell lateral raise",
+      "category": "Styrke",
+      "equipment": "Manualar",
+      "body_area": "Skulder",
+      "description": "Løft manualane ut til sida med mjuke olbogar og kontrollert senkefase.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar",
+        "expansion": "Manualar"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell Overhead Triceps Extension",
+      "normalized_name": "dumbbell overhead triceps extension",
+      "category": "Styrke",
+      "equipment": "Manual",
+      "body_area": "Triceps",
+      "description": "Tricepsstrekk over hovudet. Hald albogane peikande framover.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manual",
+        "expansion": "Manual"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell Pullover",
+      "normalized_name": "dumbbell pullover",
+      "category": "Styrke",
+      "equipment": "Manual / benk",
+      "body_area": "Bryst / rygg",
+      "description": "Før manualen kontrollert bak hovudet frå brystposisjon. Unngå stor svai i korsryggen.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manual / benk",
+        "expansion": "Manual / benk"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell Push Press",
+      "normalized_name": "dumbbell push press",
+      "category": "Styrke",
+      "equipment": "Manualar",
+      "body_area": "Skulder / bein",
+      "description": "Kort dip og drive for å pressa manualane over hovudet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar",
+        "expansion": "Manualar"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell Rear Delt Fly",
+      "normalized_name": "dumbbell rear delt fly",
+      "category": "Styrke",
+      "equipment": "Manualar",
+      "body_area": "Skulder / øvre rygg",
+      "description": "Framoverbøygd omvendt flyes. Før armane ut til sida utan å rykkja.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar",
+        "expansion": "Manualar"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell Reverse Lunge",
+      "normalized_name": "dumbbell reverse lunge",
+      "category": "Styrke",
+      "equipment": "Manualar",
+      "body_area": "Bein / sete",
+      "description": "Bakoverutfall med manualar. Hald overkroppen stabil og press gjennom fremste fot.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar",
+        "expansion": "Manualar"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell Romanian Deadlift",
+      "normalized_name": "dumbbell romanian deadlift",
+      "category": "Styrke",
+      "equipment": "Manualar",
+      "body_area": "Bein / rygg",
+      "description": "Hoftehinge med lett knevinkel og manualar langs låra. Senk til du kjenner strekk i bakside lår.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar",
+        "expansion": "Manualar"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell row",
+      "normalized_name": "dumbbell row",
+      "category": "Styrke",
+      "equipment": "Manual",
+      "body_area": "Rygg",
+      "description": "Einsidig roing med manual.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manual",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell Shoulder Press",
+      "normalized_name": "dumbbell shoulder press",
+      "category": "Styrke",
+      "equipment": "Manualar",
+      "body_area": "Fullkropp",
+      "description": "Press manualar over hovudet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Styrke",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Manualar",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell Snatch",
+      "normalized_name": "dumbbell snatch",
+      "category": "CrossFit",
+      "equipment": "Manual",
+      "body_area": "Fullkropp",
+      "description": "Einarms eksplosivt løft frå golv til over hovudet. Byt arm etter avtalt reps.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "CrossFit",
+        "expansion": "CrossFit"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manual",
+        "expansion": "Manual"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell Step-up",
+      "normalized_name": "dumbbell step up",
+      "category": "Styrke",
+      "equipment": "Manualar / kasse",
+      "body_area": "Bein / sete",
+      "description": "Steg opp på kasse med manualar. Bruk fremste bein til å løfta kroppen kontrollert.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar / kasse",
+        "expansion": "Manualar / kasse"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Dumbbell Thruster",
+      "normalized_name": "dumbbell thruster",
+      "category": "CrossFit",
+      "equipment": "Manualar",
+      "body_area": "Fullkropp",
+      "description": "Front squat direkte over i press med manualar.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "CrossFit",
+        "expansion": "CrossFit"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar",
+        "expansion": "Manualar"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Farmer Carry",
+      "normalized_name": "farmer carry",
+      "category": "CrossFit",
+      "equipment": "Manualar / kettlebells",
+      "body_area": "Fullkropp",
+      "description": "Gå med last i begge hender og stabil overkropp.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Manualar / kettlebells",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Front squat",
+      "normalized_name": "front squat",
+      "category": "Styrke",
+      "equipment": "Stong og rack",
+      "body_area": "Bein",
+      "description": "Knebøy med stong framme på skuldrene.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vektstong",
+        "test": "Stong og rack",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Glute bridge",
+      "normalized_name": "glute bridge",
+      "category": "Styrke",
+      "equipment": "Matte",
+      "body_area": "Bein / sete",
+      "description": "Hoftehev frå golvet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Matte",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Goblet squat",
+      "normalized_name": "goblet squat",
+      "category": "Styrke",
+      "equipment": "Kettlebell/manual",
+      "body_area": "Bein",
+      "description": "Knebøy med vekt framfor brystet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kettlebell/manual",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Hammer Curl",
+      "normalized_name": "hammer curl",
+      "category": "Styrke",
+      "equipment": "Manualar",
+      "body_area": "Armar",
+      "description": "Bicepscurl med nøytralt grep. Hald overarmane rolege.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar",
+        "expansion": "Manualar"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Handstand Push-up",
+      "normalized_name": "handstand push up",
+      "category": "CrossFit",
+      "equipment": "Vegg / matte",
+      "body_area": "Fullkropp",
+      "description": "Armheving opp ned med kontrollert hovudposisjon.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vegg / matte",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Heel slide",
+      "normalized_name": "heel slide",
+      "category": "Rehab / fysio",
+      "equipment": "Matte",
+      "body_area": "Kne / hofte",
+      "description": "Kontrollert hælglid på matte. Bruk berre etter tilråding frå fysioterapeut.",
+      "is_rehab": true,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Rehab / fysio",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Matte",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Hip flexor stretch",
+      "normalized_name": "hip flexor stretch",
+      "category": "Mobilitet",
+      "equipment": "Matte",
+      "body_area": "Bein / hofte",
+      "description": "Tøying av hoftebøyar.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Mobilitet",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Matte",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Hip thrust",
+      "normalized_name": "hip thrust",
+      "category": "Styrke",
+      "equipment": "Stong/benk",
+      "body_area": "Bein / sete",
+      "description": "Hoftehev med belastning.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Styrke",
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Stong / benk",
+        "test": "Stong/benk",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Hollow hold",
+      "normalized_name": "hollow hold",
+      "category": "Kjerne",
+      "equipment": "Matte",
+      "body_area": "Kjerne",
+      "description": "Statisk kjernestyrke.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Kjerne",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Matte",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Incline bench press – manualar",
+      "normalized_name": "incline bench press manualar",
+      "category": "Styrke",
+      "equipment": "Manualar / skråbenk",
+      "body_area": "Bryst",
+      "description": "Press manualane kontrollert frå øvre bryst på skråbenk.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar / skråbenk",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Incline bench press – stong",
+      "normalized_name": "incline bench press stong",
+      "category": "Styrke",
+      "equipment": "Vektstong / skråbenk",
+      "body_area": "Bryst",
+      "description": "Press stonga kontrollert frå øvre bryst på skråbenk.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Vektstong / skråbenk",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Incline Dumbbell Press",
+      "normalized_name": "incline dumbbell press",
+      "category": "Styrke",
+      "equipment": "Manualar / skråbenk",
+      "body_area": "Bryst / skulder",
+      "description": "Skrå brystpress med manualar. Hald skulderblada stabile mot benken.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar / skråbenk",
+        "expansion": "Manualar / skråbenk"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Jogging",
+      "normalized_name": "jogging",
+      "category": "Kondisjon",
+      "equipment": "Løping",
+      "body_area": "Fullkropp",
+      "description": "Løping i sjølvvald tempo.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Kondisjon",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Løping",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Jump rope",
+      "normalized_name": "jump rope",
+      "category": "Kondisjon",
+      "equipment": "Hoppetau",
+      "body_area": "Fullkropp",
+      "description": "Hoppetau i jamn rytme.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Kondisjon",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Hoppetau",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Kettlebell Clean",
+      "normalized_name": "kettlebell clean",
+      "category": "Styrke",
+      "equipment": "Kettlebell",
+      "body_area": "Fullkropp",
+      "description": "Før kula frå heng til rack-posisjon tett rundt underarmen utan hardt slag.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kettlebell",
+        "expansion": "Kettlebell"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Kettlebell Clean and Press",
+      "normalized_name": "kettlebell clean and press",
+      "category": "Styrke",
+      "equipment": "Kettlebell",
+      "body_area": "Fullkropp / skulder",
+      "description": "Clean til rack og press kula kontrollert over hovudet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kettlebell",
+        "expansion": "Kettlebell"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Kettlebell Dead-stop Swing",
+      "normalized_name": "kettlebell dead stop swing",
+      "category": "CrossFit",
+      "equipment": "Kettlebell",
+      "body_area": "Hofte / kondisjon",
+      "description": "Start kvar sving frå golvet. Skap kraft med hofteekstensjon og hald ryggen stabil.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "CrossFit",
+        "expansion": "CrossFit"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kettlebell",
+        "expansion": "Kettlebell"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Kettlebell Deadlift / Markløft",
+      "normalized_name": "kettlebell deadlift markl ft",
+      "category": "Styrke",
+      "equipment": "Kettlebell",
+      "body_area": "Rygg / bein",
+      "description": "Markløft med kettlebell frå golvet. Hald ryggen stabil, spenn opp og driv hofta fram for å reise deg.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kettlebell",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Kettlebell Front Rack Squat",
+      "normalized_name": "kettlebell front rack squat",
+      "category": "Styrke",
+      "equipment": "Kettlebell",
+      "body_area": "Bein / kjerne",
+      "description": "Knebøy med ei eller to kettlebells i rack-posisjon.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kettlebell",
+        "expansion": "Kettlebell"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Kettlebell High Pull",
+      "normalized_name": "kettlebell high pull",
+      "category": "CrossFit",
+      "equipment": "Kettlebell",
+      "body_area": "Fullkropp",
+      "description": "Eksplosiv hofteekstensjon med trekking av kula mot brysthøgd.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "CrossFit",
+        "expansion": "CrossFit"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kettlebell",
+        "expansion": "Kettlebell"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Kettlebell markløft",
+      "normalized_name": "kettlebell markl ft",
+      "category": "Styrke",
+      "equipment": "Kettlebell",
+      "body_area": "Rygg / bein",
+      "description": "Markløft med kula mellom føtene. Hald ryggen stabil og driv rørsla med hofte og bein.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": false,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": null,
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": null,
+        "expansion": "Kettlebell"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Kettlebell Push Press",
+      "normalized_name": "kettlebell push press",
+      "category": "Styrke",
+      "equipment": "Kettlebell",
+      "body_area": "Skulder / bein",
+      "description": "Kort dip og kraftfull drive for å pressa kula over hovudet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kettlebell",
+        "expansion": "Kettlebell"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Kettlebell Reverse Lunge",
+      "normalized_name": "kettlebell reverse lunge",
+      "category": "Styrke",
+      "equipment": "Kettlebell",
+      "body_area": "Bein / sete",
+      "description": "Bakoverutfall med kettlebell i goblet- eller rack-posisjon.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kettlebell",
+        "expansion": "Kettlebell"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Kettlebell Single-arm Row",
+      "normalized_name": "kettlebell single arm row",
+      "category": "Styrke",
+      "equipment": "Kettlebell",
+      "body_area": "Rygg",
+      "description": "Einarms roing med støtte. Trekk kula mot hofta og hald ryggen stabil.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kettlebell",
+        "expansion": "Kettlebell"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Kettlebell Snatch",
+      "normalized_name": "kettlebell snatch",
+      "category": "CrossFit",
+      "equipment": "Kettlebell",
+      "body_area": "Fullkropp",
+      "description": "Eksplosiv hoftehinge som fører kula til låst posisjon over hovudet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "CrossFit",
+        "expansion": "CrossFit"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kettlebell",
+        "expansion": "Kettlebell"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Kettlebell Suitcase Deadlift",
+      "normalized_name": "kettlebell suitcase deadlift",
+      "category": "Styrke",
+      "equipment": "Kettlebell",
+      "body_area": "Rygg / kjerne",
+      "description": "Markløft med kula på utsida av eine foten. Hald kroppen rett og unngå sidebøy.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kettlebell",
+        "expansion": "Kettlebell"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Kettlebell Swing",
+      "normalized_name": "kettlebell swing",
+      "category": "CrossFit",
+      "equipment": "Kettlebell",
+      "body_area": "Fullkropp",
+      "description": "Hofteekstensjon som svingar kula til vald høgd.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Kettlebell",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Kettlebell Thruster",
+      "normalized_name": "kettlebell thruster",
+      "category": "CrossFit",
+      "equipment": "Kettlebell",
+      "body_area": "Fullkropp",
+      "description": "Knebøy med kettlebell i rack-posisjon direkte over i press.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "CrossFit",
+        "expansion": "CrossFit"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kettlebell",
+        "expansion": "Kettlebell"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Kettlebell Windmill",
+      "normalized_name": "kettlebell windmill",
+      "category": "Styrke",
+      "equipment": "Kettlebell",
+      "body_area": "Skulder / kjerne",
+      "description": "Kontrollert hoftehinge med kula over hovudet. Start lett og prioriter skulderkontroll.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kettlebell",
+        "expansion": "Kettlebell"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Lat Pulldown",
+      "normalized_name": "lat pulldown",
+      "category": "Styrke",
+      "equipment": "Kabelapparat",
+      "body_area": "Fullkropp",
+      "description": "Trekk handtak ned mot øvre bryst.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Styrke",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Kabelapparat",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Leg Press",
+      "normalized_name": "leg press",
+      "category": "Styrke",
+      "equipment": "Beinpress",
+      "body_area": "Fullkropp",
+      "description": "Press plattforma frå kontrollert kne- og hoftevinkel.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Styrke",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Beinpress",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Man Maker",
+      "normalized_name": "man maker",
+      "category": "CrossFit",
+      "equipment": "Manualar",
+      "body_area": "Fullkropp",
+      "description": "Kombiner push-up, roing, clean og thruster med manualar. Prioriter kontroll framfor fart.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "CrossFit",
+        "expansion": "CrossFit"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar",
+        "expansion": "Manualar"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Markløft med manualar",
+      "normalized_name": "markl ft med manualar",
+      "category": "Styrke",
+      "equipment": "Manualar",
+      "body_area": "Rygg / bein",
+      "description": "Hinge frå golvet med ein manual i kvar hand. Hald manualane tett på kroppen og press golvet frå deg.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manualar",
+        "expansion": "Manualar"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Markløft med medisinball",
+      "normalized_name": "markl ft med medisinball",
+      "category": "Styrke",
+      "equipment": "Medisinball",
+      "body_area": "Rygg / bein",
+      "description": "Løft ballen frå golvet med kontrollert hoftehinge. Bruk ei ballvekt som kan haldast tett på kroppen.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Medisinball",
+        "expansion": "Medisinball"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Medicine Ball Bear-hug Squat",
+      "normalized_name": "medicine ball bear hug squat",
+      "category": "Styrke",
+      "equipment": "Medisinball",
+      "body_area": "Bein / kjerne",
+      "description": "Knebøy med ballen i bjørneklem framfor brystet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Medisinball",
+        "expansion": "Medisinball"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Medicine Ball Clean",
+      "normalized_name": "medicine ball clean",
+      "category": "CrossFit",
+      "equipment": "Medisinball",
+      "body_area": "Fullkropp",
+      "description": "Før ballen frå golvet til front rack med kontrollert hofte- og kneekstensjon.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "CrossFit",
+        "expansion": "CrossFit"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Medisinball",
+        "expansion": "Medisinball"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Medicine Ball Reverse Lunge",
+      "normalized_name": "medicine ball reverse lunge",
+      "category": "Styrke",
+      "equipment": "Medisinball",
+      "body_area": "Bein / kjerne",
+      "description": "Bakoverutfall medan ballen blir halden tett mot brystet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Medisinball",
+        "expansion": "Medisinball"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Medicine Ball Slam",
+      "normalized_name": "medicine ball slam",
+      "category": "CrossFit",
+      "equipment": "Medisinball",
+      "body_area": "Fullkropp",
+      "description": "Løft ballen over hovudet og slam han kontrollert i golvet. Bruk ball som toler slamming.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "CrossFit",
+        "expansion": "CrossFit"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Medisinball",
+        "expansion": "Medisinball"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Medicine Ball Squat",
+      "normalized_name": "medicine ball squat",
+      "category": "Styrke",
+      "equipment": "Medisinball",
+      "body_area": "Bein / kjerne",
+      "description": "Knebøy med ballen halden framfor brystet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Medisinball",
+        "expansion": "Medisinball"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Mountain climber",
+      "normalized_name": "mountain climber",
+      "category": "Kondisjon",
+      "equipment": "Kroppsvekt",
+      "body_area": "Kjerne / kondisjon",
+      "description": "Dynamisk knedriv frå plankeposisjon.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Kondisjon",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kroppsvekt",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "One-arm Dumbbell Row",
+      "normalized_name": "one arm dumbbell row",
+      "category": "Styrke",
+      "equipment": "Manual",
+      "body_area": "Rygg",
+      "description": "Einarms roing med støtte på benk. Trekk manualen mot hofta utan å rotera overkroppen.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Manual",
+        "expansion": "Manual"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Overhead Squat",
+      "normalized_name": "overhead squat",
+      "category": "CrossFit",
+      "equipment": "Vektstong",
+      "body_area": "Fullkropp",
+      "description": "Knebøy med stabil stong over hovudet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vektstong",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pilates Cat Stretch",
+      "normalized_name": "pilates cat stretch",
+      "category": "Pilates",
+      "equipment": "Matte",
+      "body_area": "Fullkropp",
+      "description": "Mobiliser ryggrada roleg på alle fire.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Pilates",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pilates Clam",
+      "normalized_name": "pilates clam",
+      "category": "Pilates",
+      "equipment": "Matte / miniband",
+      "body_area": "Fullkropp",
+      "description": "Sideleie med hælar samla og kontrollert kneopning.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Pilates",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte / miniband",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pilates Criss Cross",
+      "normalized_name": "pilates criss cross",
+      "category": "Pilates",
+      "equipment": "Matte",
+      "body_area": "Fullkropp",
+      "description": "Rotasjon med motsett skulder mot kne.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Pilates",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pilates Double Leg Stretch",
+      "normalized_name": "pilates double leg stretch",
+      "category": "Pilates",
+      "equipment": "Matte",
+      "body_area": "Fullkropp",
+      "description": "Strekk armar og bein ut og samle kontrollert.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Pilates",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pilates Hundred",
+      "normalized_name": "pilates hundred",
+      "category": "Pilates",
+      "equipment": "Matte",
+      "body_area": "Fullkropp",
+      "description": "Pusterytme og kjernestabilitet i hundre-pulsen.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Pilates",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pilates Mermaid",
+      "normalized_name": "pilates mermaid",
+      "category": "Pilates",
+      "equipment": "Matte",
+      "body_area": "Fullkropp",
+      "description": "Sidebøy frå sitjande med lang rygg.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Pilates",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pilates Roll Up",
+      "normalized_name": "pilates roll up",
+      "category": "Pilates",
+      "equipment": "Matte",
+      "body_area": "Fullkropp",
+      "description": "Rull kontrollert frå liggjande til sitjande og tilbake.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Pilates",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pilates Saw",
+      "normalized_name": "pilates saw",
+      "category": "Pilates",
+      "equipment": "Matte",
+      "body_area": "Fullkropp",
+      "description": "Rotasjon og framoverstrekk mot motsett fot.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Pilates",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pilates Shoulder Bridge",
+      "normalized_name": "pilates shoulder bridge",
+      "category": "Pilates",
+      "equipment": "Matte",
+      "body_area": "Fullkropp",
+      "description": "Rull bekken og rygg opp i skulderbru.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Pilates",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pilates Side Kick",
+      "normalized_name": "pilates side kick",
+      "category": "Pilates",
+      "equipment": "Matte",
+      "body_area": "Fullkropp",
+      "description": "Sideleie med kontrollert fram- og tilbakespark.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Pilates",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pilates Side Plank",
+      "normalized_name": "pilates side plank",
+      "category": "Pilates",
+      "equipment": "Matte",
+      "body_area": "Fullkropp",
+      "description": "Sideplanke med stabil skulder og hofte.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Pilates",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pilates Single Leg Stretch",
+      "normalized_name": "pilates single leg stretch",
+      "category": "Pilates",
+      "equipment": "Matte",
+      "body_area": "Fullkropp",
+      "description": "Vekslande knedrag med stabil overkropp.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Pilates",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pilates Spine Stretch Forward",
+      "normalized_name": "pilates spine stretch forward",
+      "category": "Pilates",
+      "equipment": "Matte",
+      "body_area": "Fullkropp",
+      "description": "Sitjande segmentert framoverrulling av ryggen.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Pilates",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pilates Swan Prep",
+      "normalized_name": "pilates swan prep",
+      "category": "Pilates",
+      "equipment": "Matte",
+      "body_area": "Fullkropp",
+      "description": "Skånsam ryggstrekk med kontrollert brystløft.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Pilates",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pilates Swimming",
+      "normalized_name": "pilates swimming",
+      "category": "Pilates",
+      "equipment": "Matte",
+      "body_area": "Fullkropp",
+      "description": "Diagonal arm- og beinløft i mageleie.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Pilates",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Plank",
+      "normalized_name": "plank",
+      "category": "Kjerne",
+      "equipment": "Kroppsvekt",
+      "body_area": "Kjerne",
+      "description": "Statisk stabilisering av mage og rygg.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Styrke",
+        "test": "Kjerne",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Matte",
+        "test": "Kroppsvekt",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Power Clean",
+      "normalized_name": "power clean",
+      "category": "CrossFit",
+      "equipment": "Vektstong",
+      "body_area": "Fullkropp",
+      "description": "Eksplosivt løft frå golv til front rack utan full knebøy.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vektstong",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Power Snatch",
+      "normalized_name": "power snatch",
+      "category": "CrossFit",
+      "equipment": "Vektstong",
+      "body_area": "Fullkropp",
+      "description": "Eksplosivt snatch med mottak over parallell.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vektstong",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Pull-up",
+      "normalized_name": "pull up",
+      "category": "Styrke",
+      "equipment": "Pull-up-stong",
+      "body_area": "Rygg / overkropp",
+      "description": "Pull-up med valfri assistanse.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Pull-up-stong",
+        "test": "Pull-up-stong",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Push Jerk",
+      "normalized_name": "push jerk",
+      "category": "CrossFit",
+      "equipment": "Vektstong",
+      "body_area": "Fullkropp",
+      "description": "Dip, drive og mottak med nytt knebøy.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vektstong",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Push Press",
+      "normalized_name": "push press",
+      "category": "CrossFit",
+      "equipment": "Vektstong / manualar",
+      "body_area": "Fullkropp",
+      "description": "Dip og drive for å presse last over hovudet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vektstong / manualar",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Push-up",
+      "normalized_name": "push up",
+      "category": "Styrke",
+      "equipment": "Kroppsvekt",
+      "body_area": "Overkropp",
+      "description": "Armheving.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kroppsvekt",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Quad set",
+      "normalized_name": "quad set",
+      "category": "Rehab / fysio",
+      "equipment": "Matte",
+      "body_area": "Kne",
+      "description": "Isometrisk aktivering av framside lår. Bruk berre etter tilråding frå fysioterapeut.",
+      "is_rehab": true,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Rehab / fysio",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Matte",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Ring row",
+      "normalized_name": "ring row",
+      "category": "Styrke",
+      "equipment": "Ringar",
+      "body_area": "Rygg",
+      "description": "Roing med kroppsvekt i ringar.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Ringar",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Romanian deadlift",
+      "normalized_name": "romanian deadlift",
+      "category": "Styrke",
+      "equipment": "Stong/manualar",
+      "body_area": "Bein / rygg",
+      "description": "Hoftehinge med lett bøy i knea.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Styrke",
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vektstong / manualar",
+        "test": "Stong/manualar",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Row",
+      "normalized_name": "row",
+      "category": "Kondisjon",
+      "equipment": "Romaskin",
+      "body_area": "Fullkropp",
+      "description": "Romaskin. Legg inn meter eller tid i roemodulen.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": "Kondisjon",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Romaskin",
+        "test": "Romaskin",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Russian twist",
+      "normalized_name": "russian twist",
+      "category": "Kjerne",
+      "equipment": "Matte/vekt",
+      "body_area": "Kjerne",
+      "description": "Rotasjon med kontrollert tempo.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Kjerne",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Matte/vekt",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Scapular retraction",
+      "normalized_name": "scapular retraction",
+      "category": "Rehab / fysio",
+      "equipment": "Strikk",
+      "body_area": "Rygg / skulder",
+      "description": "Skulderbladskontroll med lett motstand. Bruk berre etter tilråding frå fysioterapeut.",
+      "is_rehab": true,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Rehab / fysio",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Strikk",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Shoulder pass-through",
+      "normalized_name": "shoulder pass through",
+      "category": "Mobilitet",
+      "equipment": "Strikk/pinne",
+      "body_area": "Overkropp",
+      "description": "Skuldermobilitet med lett rørsle.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Mobilitet",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Strikk/pinne",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Side plank",
+      "normalized_name": "side plank",
+      "category": "Kjerne",
+      "equipment": "Kroppsvekt",
+      "body_area": "Kjerne",
+      "description": "Sideplanke for sidestabilitet.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Kjerne",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kroppsvekt",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Single Under",
+      "normalized_name": "single under",
+      "category": "CrossFit",
+      "equipment": "Hoppetau",
+      "body_area": "Fullkropp",
+      "description": "Ei taupassering per hopp.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Hoppetau",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Sit-to-stand",
+      "normalized_name": "sit to stand",
+      "category": "Rehab / fysio",
+      "equipment": "Stol",
+      "body_area": "Bein",
+      "description": "Reis og set deg kontrollert. Bruk berre etter tilråding frå fysioterapeut.",
+      "is_rehab": true,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Rehab / fysio",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Stol",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Sit-up",
+      "normalized_name": "sit up",
+      "category": "Kjerne",
+      "equipment": "Matte",
+      "body_area": "Kjerne",
+      "description": "Kontrollert sit-up.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Kjerne",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Matte",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "SkiErg",
+      "normalized_name": "skierg",
+      "category": "Kondisjon",
+      "equipment": "SkiErg",
+      "body_area": "Fullkropp",
+      "description": "Kondisjonsarbeid på SkiErg.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": "Kondisjon",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "SkiErg",
+        "test": "SkiErg",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Snatch",
+      "normalized_name": "snatch",
+      "category": "CrossFit",
+      "equipment": "Vektstong",
+      "body_area": "Fullkropp",
+      "description": "Løft frå golv til over hovudet i eitt samanhengande drag.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vektstong",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Squat Clean",
+      "normalized_name": "squat clean",
+      "category": "CrossFit",
+      "equipment": "Vektstong",
+      "body_area": "Fullkropp",
+      "description": "Clean med mottak i full knebøy.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vektstong",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Step-up",
+      "normalized_name": "step up",
+      "category": "Styrke",
+      "equipment": "Kasse/manualar",
+      "body_area": "Bein",
+      "description": "Steg opp på kasse eller benk.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kasse/manualar",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Strict press",
+      "normalized_name": "strict press",
+      "category": "Styrke",
+      "equipment": "Stong/manualar",
+      "body_area": "Overkropp",
+      "description": "Skulderpress ståande.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Stong/manualar",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Strict pull-up",
+      "normalized_name": "strict pull up",
+      "category": "Styrke",
+      "equipment": "Pull-up-stong",
+      "body_area": "Rygg / overkropp",
+      "description": "Streng pull-up.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Pull-up-stong",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Thoracic rotation",
+      "normalized_name": "thoracic rotation",
+      "category": "Mobilitet",
+      "equipment": "Matte",
+      "body_area": "Rygg",
+      "description": "Rotasjon i brystrygg.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Mobilitet",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Matte",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Thruster",
+      "normalized_name": "thruster",
+      "category": "CrossFit",
+      "equipment": "Vektstong / manualar",
+      "body_area": "Fullkropp",
+      "description": "Front squat direkte over i press.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Vektstong / manualar",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Toes-to-Bar",
+      "normalized_name": "toes to bar",
+      "category": "CrossFit",
+      "equipment": "Pull-up-stong",
+      "body_area": "Fullkropp",
+      "description": "Hengande løft av tærne til stonga.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Pull-up-stong",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Triceps Pushdown",
+      "normalized_name": "triceps pushdown",
+      "category": "Styrke",
+      "equipment": "Kabel",
+      "body_area": "Fullkropp",
+      "description": "Strekk albogen ned mot strake armar.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "Styrke",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Kabel",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Turkish Get-up",
+      "normalized_name": "turkish get up",
+      "category": "Styrke",
+      "equipment": "Kettlebell",
+      "body_area": "Fullkropp / kjerne",
+      "description": "Reis deg frå liggjande til ståande med kula over hovudet gjennom kontrollerte delposisjonar.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": true
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Styrke",
+        "expansion": "Styrke"
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Kettlebell",
+        "expansion": "Kettlebell"
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Walking lunge",
+      "normalized_name": "walking lunge",
+      "category": "Styrke",
+      "equipment": "Kroppsvekt/manualar",
+      "body_area": "Bein",
+      "description": "Gåande utfall.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": "Styrke",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Kroppsvekt / manualar",
+        "test": "Kroppsvekt/manualar",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "Wall Ball Shot",
+      "normalized_name": "wall ball shot",
+      "category": "CrossFit",
+      "equipment": "Medisinball / veggmål",
+      "body_area": "Fullkropp",
+      "description": "Knebøy med kast av ball mot mål.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": true,
+        "test": false,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": "CrossFit",
+        "test": null,
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": "Medisinball / veggmål",
+        "test": null,
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    },
+    {
+      "name": "World greatest stretch",
+      "normalized_name": "world greatest stretch",
+      "category": "Mobilitet",
+      "equipment": "Matte",
+      "body_area": "Fullkropp",
+      "description": "Dynamisk mobilitet for hofte og brystrygg.",
+      "is_rehab": false,
+      "is_active": true,
+      "video_url": null,
+      "source": {
+        "production": false,
+        "test": true,
+        "expansion": false
+      },
+      "source_categories": {
+        "production": null,
+        "test": "Mobilitet",
+        "expansion": null
+      },
+      "source_equipment": {
+        "production": null,
+        "test": "Matte",
+        "expansion": null
+      },
+      "review_status": "pending_semantic_alias_and_category_review"
+    }
+  ]
+}
