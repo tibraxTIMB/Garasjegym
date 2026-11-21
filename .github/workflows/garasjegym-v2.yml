@@ -156,16 +156,16 @@ jobs:
               "db.pooler": {"port": "55429"},
           }
           for section, values in port_map.items():
-              pattern = re.compile(rf"(?ms)(^\\[{re.escape(section)}\\]\\s*\\n)(.*?)(?=^\\[|\\Z)")
+              pattern = re.compile(rf"(?ms)(^\[{re.escape(section)}\]\s*\n)(.*?)(?=^\[|\Z)")
               match = pattern.search(text)
               if not match:
                   continue
               body = match.group(2)
               for key, value in values.items():
-                  line = re.compile(rf"(?m)^\\s*{re.escape(key)}\\s*=.*$")
+                  line = re.compile(rf"(?m)^\s*{re.escape(key)}\s*=.*$")
                   body, count = line.subn(f"{key} = {value}", body, count=1)
                   if count == 0:
-                      body += f"\\n{key} = {value}\\n"
+                      body += f"\n{key} = {value}\n"
               text = text[:match.start(2)] + body + text[match.end(2):]
           path.write_text(text)
           PY
