@@ -122,6 +122,10 @@ DECLARE
   v_auth_users integer;
   v_profiles integer;
   v_identities integer;
+  v_auth_sessions integer;
+  v_auth_refresh_tokens integer;
+  v_auth_mfa_factors integer;
+  v_auth_mfa_challenges integer;
   v_nonempty_operational_tables integer;
   v_storage_objects boolean := false;
 BEGIN
@@ -130,6 +134,10 @@ BEGIN
   SELECT count(*) INTO v_auth_users FROM auth.users;
   SELECT count(*) INTO v_profiles FROM public.profiles;
   SELECT count(*) INTO v_identities FROM auth.identities;
+  SELECT count(*) INTO v_auth_sessions FROM auth.sessions;
+  SELECT count(*) INTO v_auth_refresh_tokens FROM auth.refresh_tokens;
+  SELECT count(*) INTO v_auth_mfa_factors FROM auth.mfa_factors;
+  SELECT count(*) INTO v_auth_mfa_challenges FROM auth.mfa_challenges;
 
   SELECT count(*) INTO v_nonempty_operational_tables
   FROM (
@@ -189,11 +197,16 @@ BEGIN
      OR v_auth_users <> 0
      OR v_profiles <> 0
      OR v_identities <> 0
+     OR v_auth_sessions <> 0
+     OR v_auth_refresh_tokens <> 0
+     OR v_auth_mfa_factors <> 0
+     OR v_auth_mfa_challenges <> 0
      OR v_nonempty_operational_tables <> 0
      OR v_storage_objects THEN
     RAISE EXCEPTION
-      'Clean-start postcondition failed: system_exercises=% custom_exercises=% auth_users=% profiles=% identities=% nonempty_operational_tables=% storage_objects=%',
+      'Clean-start postcondition failed: system_exercises=% custom_exercises=% auth_users=% profiles=% identities=% sessions=% refresh_tokens=% mfa_factors=% mfa_challenges=% nonempty_operational_tables=% storage_objects=%',
       v_system_exercises,v_custom_exercises,v_auth_users,v_profiles,v_identities,
+      v_auth_sessions,v_auth_refresh_tokens,v_auth_mfa_factors,v_auth_mfa_challenges,
       v_nonempty_operational_tables,v_storage_objects;
   END IF;
 
