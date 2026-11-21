@@ -21,6 +21,10 @@ DECLARE
   v_profiles bigint;
   v_identities bigint;
 BEGIN
+  IF current_setting('app.clean_start_target', true) IS DISTINCT FROM 'isolated-rehearsal' THEN
+    RAISE EXCEPTION 'Refusing owner bootstrap: app.clean_start_target must be isolated-rehearsal';
+  END IF;
+
   SELECT count(*) INTO v_auth_users FROM auth.users;
   SELECT count(*) INTO v_profiles FROM public.profiles;
   SELECT count(*) INTO v_identities FROM auth.identities;
