@@ -143,6 +143,18 @@ jobs:
       - name: Replay the complete versioned migration chain from an empty database
         working-directory: v2
         run: supabase db reset
+      - name: Install PostgreSQL client for local contract checks
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Verify full schema, RPC grants and privacy policies on local Supabase
+        env:
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:54322/postgres
+        run: |
+          result="$(psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -At -F '|' -f v2/supabase/preflight/full_supabase_postgres17_contract_assertions.sql)"
+          printf '%s\\n' "$result"
+          expected='t|t|t|t|t|t|t|t|t|t|t|t'
+          test "$result" = "$expected"
       - name: Stop ephemeral Supabase stack
         if: always()
         working-directory: v2
