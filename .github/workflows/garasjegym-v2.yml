@@ -117,6 +117,10 @@ jobs:
   full-supabase-migration-replay:
     if: github.event_name == 'push'
     name: Clean local Supabase PostgreSQL 17 full migration replay
+    # Serialize full local Supabase stacks; they otherwise contend for host ports.
+    concurrency:
+      group: sturmkopf-full-supabase-replay-${{ github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -137,6 +141,34 @@ jobs:
           else
             printf '\n[db]\nmajor_version = 17\n' >> supabase/config.toml
           fi
+          # Use a dedicated port range to avoid collisions with other CI jobs.
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          path = Path("supabase/config.toml")
+          text = path.read_text()
+          port_map = {
+              "api": {"port": "55421"},
+              "db": {"port": "55422", "shadow_port": "55420"},
+              "studio": {"port": "55423"},
+              "inbucket": {"port": "55424"},
+              "analytics": {"port": "55427"},
+              "db.pooler": {"port": "55429"},
+          }
+          for section, values in port_map.items():
+              pattern = re.compile(rf"(?ms)(^\\[{re.escape(section)}\\]\\s*\\n)(.*?)(?=^\\[|\\Z)")
+              match = pattern.search(text)
+              if not match:
+                  continue
+              body = match.group(2)
+              for key, value in values.items():
+                  line = re.compile(rf"(?m)^\\s*{re.escape(key)}\\s*=.*$")
+                  body, count = line.subn(f"{key} = {value}", body, count=1)
+                  if count == 0:
+                      body += f"\\n{key} = {value}\\n"
+              text = text[:match.start(2)] + body + text[match.end(2):]
+          path.write_text(text)
+          PY
       - name: Start isolated Supabase stack
         working-directory: v2
         run: supabase start
@@ -149,7 +181,7 @@ jobs:
           sudo apt-get install -y postgresql-client
       - name: Verify full schema, RPC grants and privacy policies on local Supabase
         env:
-          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:54322/postgres
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
         run: |
           result="$(psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -At -F '|' -f v2/supabase/preflight/full_supabase_postgres17_contract_assertions.sql)"
           printf '%s\\n' "$result"
@@ -157,7 +189,7 @@ jobs:
           test "$result" = "$expected"
       - name: Verify real Auth signup trigger and pending member gate
         env:
-          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:54322/postgres
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
         run: psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/auth_signup_gate_full_supabase_postgres17.sql
       - name: Stop ephemeral Supabase stack
         if: always()
