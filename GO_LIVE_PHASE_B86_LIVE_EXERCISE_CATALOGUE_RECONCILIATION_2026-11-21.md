@@ -91,6 +91,8 @@ The application measurement resolver identifies box jump, step-up and box-over m
 
 ## Transactional migration rehearsal (2026-11-21)
 The two forward catalogue migrations (Production catalogue preservation + reconciled 79-row seed) and the exact 135-name assertion were executed inside explicit `BEGIN ... ROLLBACK` transactions against both Production and TEST. Both dry-runs completed without SQL errors and the assertion passed in-transaction. Post-rollback read-only checks confirmed no persistent changes: Production remains 56 system exercises with 56 legacy NULL body-area values; TEST remains 94 system exercises with zero missing body-area values. No migration was applied or recorded in either environment.
+The rehearsal was repeated with both catalogue migrations applied twice in the same rolled-back transaction on both environments. Both second-pass runs also completed without error and the exact 135-name assertion passed, confirming idempotent name-based insertion. No rows or migration ledger entries persisted.
+
 
 ## Safety and next gate
 The migration is additive and forward-only. It has not been applied to Production or TEST by this work. Run the new exact manifest assertion against the isolated PostgreSQL 17 replay after the full migration/fixture replay. Then review aliases, category decisions, metadata and the build/test results. Production backup, lineage, Auth/RLS and explicit final GO LIVE gates remain outstanding.
