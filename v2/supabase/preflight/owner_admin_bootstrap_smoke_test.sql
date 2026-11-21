@@ -25,11 +25,11 @@ BEGIN
   );
 
   INSERT INTO auth.identities(
-    provider_id,user_id,identity_data,provider,email,created_at,updated_at
+    provider_id,user_id,identity_data,provider,created_at,updated_at
   ) VALUES (
     v_email,v_user_id,
     jsonb_build_object('sub',v_user_id::text,'email',v_email),
-    'email',v_email,now(),now()
+    'email',now(),now()
   );
 END;
 $owner_fixture$;
