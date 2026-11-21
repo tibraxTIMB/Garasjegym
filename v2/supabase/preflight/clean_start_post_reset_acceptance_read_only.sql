@@ -4,6 +4,117 @@
 -- system exercises with no custom exercise rows.
 -- Run only on an isolated Production-derived rehearsal target after reset.
 -- Also run exercise_catalogue_manifest_assertions.sql for exact names/categories.
+-- Fail the CI/rehearsal if any acceptance condition is not met. The SELECT below
+-- remains as a human-readable row-by-row report after these assertions pass.
+DO $clean_start_acceptance_guard$
+DECLARE
+  v_profiles bigint;
+  v_admins bigint;
+  v_non_admins bigint;
+  v_auth_users bigint;
+  v_linked_users bigint;
+  v_auth_without_profile bigint;
+  v_profile_without_auth bigint;
+  v_identities bigint;
+  v_foreign_identities bigint;
+  v_system_exercises bigint;
+  v_custom_exercises bigint;
+  v_nonempty_operational_tables bigint;
+  v_storage_objects boolean := false;
+BEGIN
+  SELECT count(*),
+         count(*) FILTER (WHERE role='admin' AND active=true AND membership_status='approved'),
+         count(*) FILTER (WHERE role<>'admin')
+  INTO v_profiles,v_admins,v_non_admins
+  FROM public.profiles;
+
+  SELECT count(*),
+         count(*) FILTER (WHERE p.id IS NOT NULL),
+         count(*) FILTER (WHERE p.id IS NULL)
+  INTO v_auth_users,v_linked_users,v_auth_without_profile
+  FROM auth.users u LEFT JOIN public.profiles p ON p.id=u.id;
+
+  SELECT count(*) INTO v_profile_without_auth
+  FROM public.profiles p LEFT JOIN auth.users u ON u.id=p.id
+  WHERE u.id IS NULL;
+
+  SELECT count(*),
+         count(*) FILTER (WHERE i.user_id NOT IN (SELECT id FROM auth.users))
+  INTO v_identities,v_foreign_identities
+  FROM auth.identities i;
+
+  SELECT count(*) FILTER (WHERE created_by IS NULL),
+         count(*) FILTER (WHERE created_by IS NOT NULL)
+  INTO v_system_exercises,v_custom_exercises
+  FROM public.exercises;
+
+  SELECT count(*) INTO v_nonempty_operational_tables
+  FROM (
+    SELECT count(*)::bigint AS n FROM public.calendar_events
+    UNION ALL SELECT count(*) FROM public.challenge_participants
+    UNION ALL SELECT count(*) FROM public.challenges
+    UNION ALL SELECT count(*) FROM public.class_bookings
+    UNION ALL SELECT count(*) FROM public.class_live_sessions
+    UNION ALL SELECT count(*) FROM public.class_session_wod_completions
+    UNION ALL SELECT count(*) FROM public.classes
+    UNION ALL SELECT count(*) FROM public.coffee_order_items
+    UNION ALL SELECT count(*) FROM public.coffee_orders
+    UNION ALL SELECT count(*) FROM public.coffee_product_reviews
+    UNION ALL SELECT count(*) FROM public.coffee_products
+    UNION ALL SELECT count(*) FROM public.coffee_settings
+    UNION ALL SELECT count(*) FROM public.daily_wod
+    UNION ALL SELECT count(*) FROM public.exercise_favorites
+    UNION ALL SELECT count(*) FROM public.member_preferences
+    UNION ALL SELECT count(*) FROM public.notifications
+    UNION ALL SELECT count(*) FROM public.personal_records
+    UNION ALL SELECT count(*) FROM public.pt_bookings
+    UNION ALL SELECT count(*) FROM public.pt_checkins
+    UNION ALL SELECT count(*) FROM public.pt_client_assignments
+    UNION ALL SELECT count(*) FROM public.pt_client_goals
+    UNION ALL SELECT count(*) FROM public.pt_client_notes
+    UNION ALL SELECT count(*) FROM public.pt_coaches
+    UNION ALL SELECT count(*) FROM public.pt_intakes
+    UNION ALL SELECT count(*) FROM public.pt_messages
+    UNION ALL SELECT count(*) FROM public.pt_program_sessions
+    UNION ALL SELECT count(*) FROM public.pt_program_templates
+    UNION ALL SELECT count(*) FROM public.pt_programs
+    UNION ALL SELECT count(*) FROM public.pt_requests
+    UNION ALL SELECT count(*) FROM public.pt_service_requests
+    UNION ALL SELECT count(*) FROM public.pt_services
+    UNION ALL SELECT count(*) FROM public.pt_session_exercises
+    UNION ALL SELECT count(*) FROM public.pt_sessions
+    UNION ALL SELECT count(*) FROM public.pt_wod_assignments
+    UNION ALL SELECT count(*) FROM public.social_comments
+    UNION ALL SELECT count(*) FROM public.social_posts
+    UNION ALL SELECT count(*) FROM public.training_session_wods
+    UNION ALL SELECT count(*) FROM public.training_sessions
+    UNION ALL SELECT count(*) FROM public.wod_daily_schedules
+    UNION ALL SELECT count(*) FROM public.wod_favorites
+    UNION ALL SELECT count(*) FROM public.wods
+    UNION ALL SELECT count(*) FROM public.workout_exercises
+    UNION ALL SELECT count(*) FROM public.workout_logs
+    UNION ALL SELECT count(*) FROM public.workout_sets
+  ) counts
+  WHERE n <> 0;
+
+  IF to_regclass('storage.objects') IS NOT NULL THEN
+    EXECUTE 'SELECT EXISTS (SELECT 1 FROM storage.objects)' INTO v_storage_objects;
+  END IF;
+
+  IF v_profiles <> 1 OR v_admins <> 1 OR v_non_admins <> 0
+     OR v_auth_users <> 1 OR v_linked_users <> 1 OR v_auth_without_profile <> 0
+     OR v_profile_without_auth <> 0 OR v_identities <> 1 OR v_foreign_identities <> 0
+     OR v_system_exercises <> 135 OR v_custom_exercises <> 0
+     OR v_nonempty_operational_tables <> 0 OR v_storage_objects THEN
+    RAISE EXCEPTION
+      'Clean-start acceptance failed: profiles=% admins=% non_admin_profiles=% auth_users=% linked=% auth_without_profile=% profile_without_auth=% identities=% foreign_identities=% system_exercises=% custom_exercises=% nonempty_operational_tables=% storage_objects=%',
+      v_profiles,v_admins,v_non_admins,v_auth_users,v_linked_users,v_auth_without_profile,
+      v_profile_without_auth,v_identities,v_foreign_identities,v_system_exercises,
+      v_custom_exercises,v_nonempty_operational_tables,v_storage_objects;
+  END IF;
+END;
+$clean_start_acceptance_guard$;
+
 WITH profiles_state AS (
   SELECT count(*) profile_count,
          count(*) FILTER (WHERE role='admin' AND active=true AND membership_status='approved') valid_admin_count,
@@ -78,6 +189,7 @@ operational_counts AS (
   UNION ALL SELECT 'workout_exercises',count(*) FROM public.workout_exercises
   UNION ALL SELECT 'workout_logs',count(*) FROM public.workout_logs
   UNION ALL SELECT 'workout_sets',count(*) FROM public.workout_sets
+  UNION ALL SELECT 'storage.objects',count(*) FROM storage.objects
 )
 SELECT 'owner_admin' section,'exactly_one_active_approved_admin' item,
        CASE WHEN profile_count=1 AND valid_admin_count=1 AND non_admin_profiles=0
