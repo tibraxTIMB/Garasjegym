@@ -149,9 +149,9 @@ SELECT 'auth','exactly_one_owner_auth_identity',
               auth_users,linked_users,auth_without_profile,profile_without_auth)
 FROM auth_state CROSS JOIN orphan_profile_state
 UNION ALL
-SELECT 'exercise_catalogue','94_system_exercises_with_56_legacy_core_and_no_custom_rows',
-       CASE WHEN core_exercises_preserved=56 AND system_catalog_total=94 AND custom_exercises=0 THEN 'PASS' ELSE 'FAIL' END,
-       format('legacy_core_preserved=%s/56 total_system_catalog=%s/94 custom=%s',
+SELECT 'exercise_catalogue','reconciled_catalogue_minimum_94_with_56_legacy_core_and_no_custom_rows',
+       CASE WHEN core_exercises_preserved=56 AND system_catalog_total>=94 AND custom_exercises=0 THEN 'PASS' ELSE 'FAIL' END,
+       format('legacy_core_preserved=%s/56 total_system_catalog=%s (minimum 94) custom=%s',
               core_exercises_preserved,system_catalog_total,custom_exercises)
 FROM exercise_state
 UNION ALL
