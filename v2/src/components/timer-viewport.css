@@ -218,24 +218,26 @@
 .gg-live-timer__context {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   gap: clamp(5px, 1.6dvh, 15px);
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: clamp(8px, 1.8vw, 18px);
   border: 1px solid rgba(169, 193, 198, .22);
   border-radius: 14px;
   background: rgba(13, 23, 29, .86);
 }
-.gg-live-timer__rounds { display: flex; flex-direction: column; gap: 1px; color: #b1c1c6; }
+.gg-live-timer__rounds { display: flex; flex: 0 0 auto; flex-direction: column; gap: 1px; color: #b1c1c6; }
 .gg-live-timer__rounds > span, .gg-live-timer__exercise > span { color: #9eafb5; font-size: 11px; font-weight: 850; letter-spacing: .09em; }
 .gg-live-timer__rounds strong { color: #f2b45b; font-size: clamp(22px, 5dvh, 40px); line-height: 1.1; font-variant-numeric: tabular-nums; }
-.gg-live-timer__exercise { display: flex; flex-direction: column; gap: 5px; min-width: 0; min-height: 0; }
+.gg-live-timer__exercise { display: flex; flex: 0 0 auto; flex-direction: column; gap: 5px; min-width: 0; }
 .gg-live-timer__exercise > strong { color: #f3f7f8; font-size: clamp(17px, 3dvh, 24px); line-height: 1.2; overflow-wrap: anywhere; }
 .gg-live-timer__exercise ol { display: grid; gap: 4px; list-style: none; margin: 0; padding: 0; min-width: 0; }
 .gg-live-timer__exercise li { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; font-size: clamp(12px, 2.5dvh, 16px); line-height: 1.25; }
-.gg-live-timer__exercise li > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gg-live-timer__exercise li > span { min-width: 0; overflow-wrap: anywhere; }
 .gg-live-timer__exercise li small { flex: 0 0 auto; color: #d0a565; font-size: 12px; white-space: nowrap; }
 .gg-live-timer__more { align-self: flex-start; padding: 2px 0; border: 0; background: transparent; color: #f2b45b; font-size: 13px; font-weight: 800; }
 .gg-live-timer__next { color: #a8c1c8; font-size: 13px; line-height: 1.25; }
@@ -298,12 +300,17 @@
    time reserved grid rows so a large clock cannot push them off-screen. */
 @media (orientation: landscape) {
   .gg-live-timer__clock-area { display: grid; grid-template-rows: auto minmax(0,1fr) auto auto; justify-items: center; align-items: center; align-content: stretch; gap: 3px; }
-  .gg-live-timer__time { font-size: min(calc(15vw * var(--gg-time-scale,1)), calc(32dvh * var(--gg-time-scale,1)), 180px); }
+  .gg-live-timer__time { font-size: min(calc(13vw * var(--gg-time-scale,1)), calc(24dvh * var(--gg-time-scale,1)), 150px); line-height: .95; }
   .gg-live-timer__phase { align-self: center; }
   .gg-live-timer__time-label { align-self: center; }
   .gg-live-timer__time-secondary { align-self: center; }
-  .gg-live-timer__context { gap: 5px; }
-  .gg-live-timer__exercise li { font-size: clamp(12px,2.2dvh,15px); }
+  .gg-live-timer__context { gap: 4px; }
+  .gg-live-timer__rounds { flex-direction: row; align-items: center; justify-content: space-between; }
+  .gg-live-timer__rounds strong { font-size: clamp(19px, 4.5dvh, 27px); }
+  .gg-live-timer__exercise { gap: 3px; }
+  .gg-live-timer__exercise ol { gap: 2px; }
+  .gg-live-timer__exercise li { gap: 5px; font-size: clamp(11px,2.4dvh,14px); line-height: 1.12; }
+  .gg-live-timer__exercise li small { font-size: clamp(10px,2dvh,12px); }
 }
 @media (orientation: portrait) {
   .gg-live-timer__body { grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0, 1.35fr) minmax(0, .85fr); gap: 7px; }
@@ -320,7 +327,7 @@
   .gg-live-timer__tools button { width: 35px; height: 35px; }
   .gg-live-timer__body { padding: 5px 0; }
   .gg-live-timer__context { padding: 6px 10px; }
-  .gg-live-timer__time { font-size: min(calc(14vw * var(--gg-time-scale,1)), calc(29dvh * var(--gg-time-scale,1)), 154px); }
+  .gg-live-timer__time { font-size: min(calc(12vw * var(--gg-time-scale,1)), calc(23dvh * var(--gg-time-scale,1)), 132px); }
   .gg-live-timer__lap-preview li { padding: 3px 2px; }
   .gg-live-timer__footer { padding-top: 5px; }
   .gg-live-timer__footer button { min-height: 48px; }
@@ -336,5 +343,6 @@
   .gg-live-timer__footer button { min-height: 49px; }
   .gg-live-timer__time { font-size: min(calc(26vw * var(--gg-time-scale,1)), calc(22dvh * var(--gg-time-scale,1))); }
   .gg-live-timer__context { gap: 4px; }
-  .gg-live-timer__exercise li:nth-child(n+4) { display: none; }
+  .gg-live-timer__exercise ol { gap: 2px; }
+  .gg-live-timer__exercise li { font-size: 12px; line-height: 1.15; }
 }

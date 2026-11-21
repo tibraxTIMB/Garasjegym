@@ -11,6 +11,7 @@ import { formatParticipation, normalizeWodEngine, parseIntervalNotation } from '
 import PerformanceCenter from './PerformanceCenter.jsx'
 import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration, summarizeLapSplits } from '../lib/timerClock.js'
 import { getExerciseMeasurementFlags } from '../lib/exerciseMeasurements.js'
+import { getWodSideLabel } from '../lib/wodSides.js'
 import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
 import './timer-viewport.css'
 
@@ -60,7 +61,7 @@ function TimerPanel({id,title,layout,onMove,onResize,onLock,locked,children,devi
   <div className="timer-panel-content">{children}</div>
  </section>
 }
-function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, originLabel = 'EIGA ØKT', autoStartToken = 0 }) {
+function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], prescriptionLevel = 'rx', timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, originLabel = 'EIGA ØKT', autoStartToken = 0 }) {
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [round, setRound] = useState(1)
@@ -372,12 +373,24 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const stageIsComplete = phase === 'FERDIG' || phase === 'TIDSGRENSE'
   const stageLapLabel = isAmrap ? 'RUNDETIDER' : 'MELLOMTIDER'
   const stageLapHistory = useMemo(()=>summarizeLapSplits(laps),[laps])
-  const stageRows = (isStationCircuit ? stationList : exerciseList).filter(item => !item.is_rest).map(item => {
-    const reps = (item.sets || []).map(set => String(set.reps ?? '').trim()).filter(Boolean)
-    const uniqueReps = [...new Set(reps)]
-    return { id: item.key || item.exercise_id || item.station_number || item.exercise_name, name: item.exercise_name || item.name || 'Øving', dose: uniqueReps.length === 1 ? `${uniqueReps[0]} reps` : uniqueReps.length > 1 ? uniqueReps.join(' / ') + ' reps' : item.reps ? `${item.reps} reps` : item.prescription_label || '' }
+  // Keep the complete WOD visible, including repeated exercises and pauses.
+  // The selected level also carries side instructions such as Høgre/Venstre.
+  const stageRows = (isStationCircuit ? stationList : exerciseList).map(item => {
+    const savedLevel=item.prescription_levels?.[prescriptionLevel] || item.levels?.[prescriptionLevel] || item.prescription_levels?.rx || item.levels?.rx
+    const setReps=(item.sets||[]).map(set=>String(set.reps??'').trim()).filter(Boolean)
+    const uniqueReps=[...new Set(setReps)]
+    const reps=savedLevel?.reps != null ? String(savedLevel.reps).trim() : uniqueReps.join(' / ') || String(item.reps??'').trim()
+    const side=getWodSideLabel(item,prescriptionLevel)
+    const details=item.is_rest?[`${Number(item.rest_duration_seconds)||30} sek`]:[
+      reps ? `${reps} reps${side==='per side'?' per side':''}` : '',
+      savedLevel?.heightCm ? `${savedLevel.heightCm} cm` : '',
+      savedLevel?.durationSeconds ? `${savedLevel.durationSeconds} sek` : '',
+      savedLevel?.distanceMeters ? `${savedLevel.distanceMeters} m` : '',
+      savedLevel?.calories ? `${savedLevel.calories} cal` : '',
+      side && side!=='per side' ? side : '',
+    ]
+    return {id:item.key||item.exercise_id||item.station_number||item.exercise_name,name:item.is_rest?'Pause':item.exercise_name||item.name||'Øving',dose:details.filter(Boolean).join(' · ')||item.prescription_label||''}
   })
-  const stageExercisePreviewLimit = laps.length ? 3 : 4
   const resetTimer = () => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
   return <div ref={timerContainerRef} className={stageVisible ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
     {stageVisible ? <section className="gg-live-timer" aria-label="Fullskjermsklokke for treningsøkt">
@@ -402,8 +415,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           {isAmrap&&<div className="gg-live-timer__rounds"><span>FULLFØRTE RUNDER</span><strong>{laps.length}</strong></div>}
           {(isTimedInterval||isStationCircuit||isEMOM)&&<div className="gg-live-timer__rounds"><span>{isStationCircuit?'STASJON · RUNDE':isEMOM?'MINUTT':'RUNDE'}</span><strong>{isStationCircuit?`${visibleStationIndex+1}/${stationCount} · ${Math.min(currentRound,Number(rounds)||1)}/${rounds}`:isEMOM?currentEmomRound:`${roundsShown}/${rounds}`}</strong></div>}
           <div className="gg-live-timer__exercise"><span>{isAmrap?'WOD-ØVINGAR':isStationCircuit?'NO · STASJON':isEMOM?'DENNE RUNDA':'AKTUELL ØVING'}</span>
-            {isAmrap?<ol>{stageRows.slice(0,stageExercisePreviewLimit).map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span>{item.dose&&<small>{item.dose}</small>}</li>)}</ol>:<strong>{stageExerciseName||'Sjå øvingslista'}</strong>}
-            {isAmrap&&stageRows.length>stageExercisePreviewLimit&&<button type="button" className="gg-live-timer__more" onClick={()=>setStagePanel('wod')}>+ {stageRows.length-stageExercisePreviewLimit} fleire øvingar</button>}
+            {isAmrap?<ol>{stageRows.map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span>{item.dose&&<small>{item.dose}</small>}</li>)}</ol>:<strong>{stageExerciseName||'Sjå øvingslista'}</strong>}
             {!isAmrap&&stageNextExercise&&stageNextExercise!==stageExerciseName&&<small className="gg-live-timer__next">Neste: {stageNextExercise}</small>}
           </div>
           {stageLapHistory.length>0&&<div className="gg-live-timer__laps" aria-label={stageLapLabel}>
@@ -731,6 +743,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         rest_duration_seconds: item.rest_duration_seconds == null ? null : Number(item.rest_duration_seconds),
         reps_mode: item.reps_mode || 'fixed',
         prescription_levels: item.levels || null,
+        side_mode: item.side_mode || null,
         prescription_label: doseLabel(item,'rx'),
         rowValue:'',rowUnit:item.row_unit||'m',workSeconds:'',
         equipment: item.equipment || exercises.find(exercise => exercise.id === item.exercise_id)?.equipment || '',
@@ -1022,7 +1035,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         {['AMRAP','Nedteljing','E1MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM'].includes(format) && <label>Øktlengd (minutt)<input type="number" min="1" max="600" value={duration} onChange={e => setDuration(e.target.value)}/></label>}
       </div>
       {source?.timer_settings?.workout_schema?.library_category==='warmup'&&<section className="warmup-execution-guide" aria-label="Oppvarming i to delar"><header><span className="section-kicker">OPPVARMING · TO DELAR</span><strong>Førebu kroppen og finn arbeidsnivået</strong></header><div className="warmup-execution-columns"><article><span>1</span><div><strong>Felles oppvarming</strong><p>Gradvis spissing mot hovud-WOD sin stimulus og rørsleform.</p><ul>{items.filter(item=>item.warmup_phase!=='movement_rehearsal'&&!item.is_rest).map(item=><li key={item.key}>{item.exercise_name}</li>)}</ul></div></article><article><span>2</span><div><strong>Fri teknisk innøving</strong><p>Prøv hovudrørsla med lette vekter. Auk gradvis og finn ditt eige arbeidsnivå for WOD-en.</p><ul>{items.filter(item=>item.warmup_phase==='movement_rehearsal'&&!item.is_rest).map(item=><li key={item.key}>{item.exercise_name}</li>)}</ul></div></article></div></section>}
-       {manualEntry ? <section className="manual-entry-intro" aria-label="Manuell treningsregistrering"><div><span className="section-kicker">ETTERREGISTRERING</span><strong>Registrer ei økt du allereie har gjennomført</strong><p>Legg inn øvingar, sett, reps, vekt, høgd, tid eller distanse. Ingen timer blir starta.</p></div><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Kontroller og lagre</button></section> : <><Timer autoStartToken={timerLaunchId} format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} nextExercise={items[activeExerciseIndex + 1]?.exercise_name || ''} exerciseList={items} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={() => setFinishOpen(true)} originLabel={classSessionId ? 'GRUPPETIME' : launchAssignmentId ? 'TILDELT FRÅ PT' : source ? 'EIGEN WOD' : 'EIGA ØKT'}/><HeartRateTrainingPanel /><div className="workout-finish-actions"><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Gå til resultat og lagre økt</button></div></>}
+       {manualEntry ? <section className="manual-entry-intro" aria-label="Manuell treningsregistrering"><div><span className="section-kicker">ETTERREGISTRERING</span><strong>Registrer ei økt du allereie har gjennomført</strong><p>Legg inn øvingar, sett, reps, vekt, høgd, tid eller distanse. Ingen timer blir starta.</p></div><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Kontroller og lagre</button></section> : <><Timer autoStartToken={timerLaunchId} format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} nextExercise={items[activeExerciseIndex + 1]?.exercise_name || ''} exerciseList={items} prescriptionLevel={wodLevel} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={() => setFinishOpen(true)} originLabel={classSessionId ? 'GRUPPETIME' : launchAssignmentId ? 'TILDELT FRÅ PT' : source ? 'EIGEN WOD' : 'EIGA ØKT'}/><HeartRateTrainingPanel /><div className="workout-finish-actions"><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Gå til resultat og lagre økt</button></div></>}
       {items.length > 0 && format!=='Stasjonssirkel' && <section className="engine-section">
         <div className="engine-section-title"><h4>{format==='Stasjonssirkel'?'Stasjonane i økta':'WOD / øvingsrekkjefølgje'}</h4><span>{format==='Stasjonssirkel'?'Alle stasjonar – roter etter eiga startplassering':'Vel øvinga du arbeider med'}</span></div>
         <div className={format==='Stasjonssirkel'?'timer-station-grid':'wod-list'}>{items.map((item, index) => format==='Stasjonssirkel' ? <article className="timer-station-card" key={item.key}><span>STASJON {index+1}</span><strong>{item.exercise_name||'Øving'}</strong><small>{item.reps_mode==='amrap'?'AMRAP · maks reps':item.reps?item.reps+' reps':'Valfritt tal reps'}</small></article> : <button type="button" key={item.key} className={index === activeExerciseIndex ? 'secondary-button active' : 'secondary-button'} onClick={() => setActiveExerciseIndex(index)}>{index + 1}. {item.is_rest?'⏸ Pause · '+clock(Number(item.rest_duration_seconds)||30):item.exercise_name || 'Ny øving'}</button>)}</div>

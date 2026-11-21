@@ -8,6 +8,7 @@ import { createWodEngineConfig, buildLegacyCompatibleBlock, normalizeWodEngine, 
 import { getFixedSlotTimerState } from '../lib/timerClock.js'
 import { wodFormatNeedsTime } from '../lib/wodTimeDial.js'
 import { applySharedReps, hasIndependentReps } from '../lib/wodReps.js'
+import { WOD_SIDE_OPTIONS, getWodSideLabel, getWodSideMode, isSideSelectableExercise } from '../lib/wodSides.js'
 import WodTimeDial from './WodTimeDial.jsx'
 import './wod-ordering.css'
 import './wod-builder-contrast.css'
@@ -184,6 +185,7 @@ function QuickDoseLevels({exercise,isStationCircuit,updateLevel,updateItem,copyR
  }
  return <div className="gg-quick-dosage">
   <div className="gg-quick-dose-heading"><strong>RX · hovuddosering</strong><small>Felta følgjer øvingstypen</small></div>
+  {isSideSelectableExercise(exercise)&&<label className="gg-dose-side-choice">Arm / side<select value={exercise.sideMode||''} onChange={e=>updateItem(exercise.key,{sideMode:e.target.value})}>{WOD_SIDE_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>}
   {renderDose('rx')}
   <details className="gg-secondary-dosage"><summary>Tilpass nivå · Intermediate / Scaled</summary><p>Valfritt. Juster berre det som skal skilja seg frå RX.</p>{renderDose('intermediate')}{renderDose('scaled')}<button type="button" className="gg-copy-rx" onClick={()=>copyRxToLevels(exercise.key)}>Kopier RX til dei andre nivåa</button></details>
  </div>
@@ -251,7 +253,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    const found=item.is_rest?{id:null,name:'Pause',category:'Pause',body_area:'Heile kroppen',equipment:'Ingen',description:'Planlagd pause mellom øvingar.',is_rest:true}:exercises.find(x=>x.id===item.exercise_id)||{id:item.exercise_id||null,name:item.exercise_name,category:item.category||'Styrke',body_area:item.body_area||'Fullkropp',equipment:item.equipment||'',description:'',video_url:null}
    const base=blankItem(found)
    const sets=(item.sets||[]).map(s=>({...newSet(),reps:String(s.reps??''),loadMode:s.load_mode||'none',loadKg:String(s.load_kg??''),percent1rm:String(s.percent_1rm??''),rir:s.rir==null?'':String(s.rir),rpe:s.rpe==null?'':String(s.rpe),restSeconds:String(s.rest_seconds??120),tempo:s.tempo||''}))
-   return {...base,warmup_phase:item.warmup_phase||'specific_prep',is_rest:!!item.is_rest,is_complex:!!item.is_complex||Array.isArray(item.complex_steps),complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps:[],pauseSeconds:String(item.rest_duration_seconds??30),levels:item.levels||makeLevels(String(item.reps??''),{}),prescription:item.prescription||{rx_m:null,rx_f:null,scaled_m:null,scaled_f:null,unit:'kg',source:'manual',overridden:false},reps:String(item.reps??''),rowValue:String(item.row_value??item.meters??item.calories??item.work_seconds??''),rowUnit:item.row_unit||(item.calories?'cal':item.work_seconds?'s':'m'),loadMode:item.load_mode||'none',loadKg:String(item.load_kg??''),percent1rm:String(item.percent_1rm??''),rir:item.rir==null?'':String(item.rir),rpe:item.rpe==null?'':String(item.rpe),restSeconds:String(item.rest_seconds??''),tempo:item.tempo||'',coachNote:item.coach_note||'',minuteSlot:item.minute_slot||'',group:item.superset_group||'A',sets:sets.length?sets:[newSet()]}
+   return {...base,warmup_phase:item.warmup_phase||'specific_prep',is_rest:!!item.is_rest,is_complex:!!item.is_complex||Array.isArray(item.complex_steps),complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps:[],pauseSeconds:String(item.rest_duration_seconds??30),sideMode:getWodSideMode(item),levels:item.levels||makeLevels(String(item.reps??''),{}),prescription:item.prescription||{rx_m:null,rx_f:null,scaled_m:null,scaled_f:null,unit:'kg',source:'manual',overridden:false},reps:String(item.reps??''),rowValue:String(item.row_value??item.meters??item.calories??item.work_seconds??''),rowUnit:item.row_unit||(item.calories?'cal':item.work_seconds?'s':'m'),loadMode:item.load_mode||'none',loadKg:String(item.load_kg??''),percent1rm:String(item.percent_1rm??''),rir:item.rir==null?'':String(item.rir),rpe:item.rpe==null?'':String(item.rpe),restSeconds:String(item.rest_seconds??''),tempo:item.tempo||'',coachNote:item.coach_note||'',minuteSlot:item.minute_slot||'',group:item.superset_group||'A',sets:sets.length?sets:[newSet()]}
   })
   setSelected(hydrated.map((item,index)=>({...item,repsMode:items[index]?.reps_mode||items[index]?.station_reps_mode||'fixed'})));setNotice('WOD-en er opna for redigering. Endringane blir lagra på same WOD.');setLoading(false)
  }
@@ -391,7 +393,8 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    const measured=metric==='distance'?`${d.distanceMeters||'–'} m`:metric==='calories'?`${d.calories||'–'} cal`:metric==='time'?`${d.durationSeconds||'–'} sek`:(d.reps||'–')+' reps'
    const target=isStationCircuit&&x.repsMode==='amrap'?'AMRAP · så mange som mogleg på '+stationWork+' sek.':isRow(x)?(x.rowValue?x.rowValue+' '+({s:'sek',min:'min',m:'m',cal:'cal'}[x.rowUnit]||'m'):'ikkje dosert'):measured
    const dose=showSets?[(d.sets?d.sets+' sett':''),(d.reps?d.reps+' reps':''),doseLoadLabel(d)].filter(Boolean).join(' · '):target+(doseLoadLabel(d)?' · '+doseLoadLabel(d):'')
-   return x.name+' – '+dose+(d.tempo?' · tempo '+d.tempo:'')+(x.coachNote?' · '+x.coachNote:'')
+   const side=getWodSideLabel(x,prescription)
+   return x.name+' – '+dose+(side?' · '+side:'')+(d.tempo?' · tempo '+d.tempo:'')+(x.coachNote?' · '+x.coachNote:'')
   }
  async function findActiveAssignment(memberId,wodId){
   const {data,error:e}=await supabase.from('pt_wod_assignments')
@@ -468,7 +471,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
     superset_groups:showSets&&format==='Superset'?Array.from(new Set(selected.map(x=>x.group))):[],
     complex_order:format==='Complex'?selected.map(x=>x.name):[],
     items:addWodSortOrder(selected).map(x=>({
-       sort_order:x.sort_order,warmup_phase:libraryCategory==='warmup'?(x.warmup_phase||'specific_prep'):null,exercise_id:x.is_rest||x.is_golf||x.is_complex?null:(x.id||null),exercise_name:x.name,category:x.is_rest?'Pause':x.is_complex?'Complex':isRehabExercise(x)?'Rehab':x.category,body_area:x.body_area,equipment:x.equipment,golf_focus:x.golf_focus||null,is_rest:!!x.is_rest,rest_duration_seconds:x.is_rest?Number(x.pauseSeconds):null,is_complex:!!x.is_complex,complex_family:x.complex_family||null,complex_steps:Array.isArray(x.complex_steps)?x.complex_steps:[],
+       sort_order:x.sort_order,warmup_phase:libraryCategory==='warmup'?(x.warmup_phase||'specific_prep'):null,exercise_id:x.is_rest||x.is_golf||x.is_complex?null:(x.id||null),exercise_name:x.name,category:x.is_rest?'Pause':x.is_complex?'Complex':isRehabExercise(x)?'Rehab':x.category,body_area:x.body_area,equipment:x.equipment,golf_focus:x.golf_focus||null,side_mode:x.sideMode===''?'none':x.sideMode||null,is_rest:!!x.is_rest,rest_duration_seconds:x.is_rest?Number(x.pauseSeconds):null,is_complex:!!x.is_complex,complex_family:x.complex_family||null,complex_steps:Array.isArray(x.complex_steps)?x.complex_steps:[],
       sets:showSets?Array.from({length:Math.max(1,Math.min(30,Number(doseForItem(x).sets)||1))},()=>({reps:Number(doseForItem(x).reps)||null,load_mode:doseForItem(x).loadMode,load_kg:doseForItem(x).loadKgMen?Number(doseForItem(x).loadKgMen):(doseForItem(x).loadKgWomen?Number(doseForItem(x).loadKgWomen):null),percent_1rm:doseForItem(x).percent1rm?Number(doseForItem(x).percent1rm):null,rir:doseForItem(x).rir!==''?Number(doseForItem(x).rir):null,rpe:null,rest_seconds:0,tempo:doseForItem(x).tempo||null})):null,
       reps:showSets||x.is_rest?null:(isStationCircuit&&(x.repsMode||'fixed')==='amrap'?null:Number(doseForItem(x).reps)||null),reps_mode:isStationCircuit?(x.repsMode||'fixed'):null,load_mode:showSets?null:doseForItem(x).loadMode,load_kg:doseForItem(x).loadKgMen?Number(doseForItem(x).loadKgMen):(doseForItem(x).loadKgWomen?Number(doseForItem(x).loadKgWomen):null),percent_1rm:doseForItem(x).percent1rm?Number(doseForItem(x).percent1rm):null,rir:doseForItem(x).rir!==''?Number(doseForItem(x).rir):null,rpe:null,
      row_value:isRow(x)?Number(x.rowValue):null,row_unit:isRow(x)?x.rowUnit:null,meters:isRow(x)&&x.rowUnit==='m'?Number(x.rowValue):null,calories:isRow(x)&&x.rowUnit==='cal'?Number(x.rowValue):null,work_seconds:isRow(x)&&x.rowUnit==='s'?Number(x.rowValue):null,

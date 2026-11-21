@@ -93,6 +93,8 @@
 .gg-quick-dose-heading { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px; }
 .gg-quick-dose-heading strong { font-size:15px;color:#fff; }
 .gg-quick-dose-heading small { font-size:12px;color:#b8cbd2; }
+.gg-dose-side-choice { display:grid;gap:5px;max-width:420px;color:#d5e2e7;font-size:13px;font-weight:750; }
+.gg-dose-side-choice select { width:100%;min-height:43px;padding:8px 10px;border:1px solid #60757e;border-radius:9px;background:#17252d;color:#fff; }
 .gg-quick-dose-heading button { min-height:40px;padding:8px 11px;border-radius:9px;border:1px solid #6b7478;background:#22343d;color:#ffce91;font-size:12px;font-weight:800; }
 .gg-level-row { display:grid;grid-template-columns:minmax(70px,.14fr) minmax(0,1fr);gap:12px;min-width:0;padding:12px;border:1px solid #455861;border-left:4px solid #89d8a7;border-radius:12px;background:#17252c; }
 .gg-level-row.gg-level-intermediate { border-left-color:#f0c46d; }

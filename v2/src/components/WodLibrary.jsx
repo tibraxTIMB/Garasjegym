@@ -2,6 +2,7 @@ import {useEffect,useMemo,useRef,useState} from 'react'
 import {BookOpen,Search,Eye,EyeOff,LoaderCircle,Clock3,Dumbbell,Play,Layers,UserPlus,Trash2,Archive,Edit3,Star,CalendarDays,Info,MoreHorizontal,ChevronDown,ChevronUp} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import {formatComplexSequence} from '../lib/wodComplexes.js'
+import {getWodSideLabel} from '../lib/wodSides.js'
 const formatDose=(item,level)=>{const d=item?.levels?.[level]||{};const parts=[];if(d.sets)parts.push(d.sets+' sett');if(d.reps)parts.push(d.reps+' reps');if(d.heightCm)parts.push(d.heightCm+' cm');if(d.durationSeconds)parts.push(d.durationSeconds+' sek');if(d.distanceMeters)parts.push(d.distanceMeters+' m');if(d.calories)parts.push(d.calories+' cal');if(d.loadMode==='kg'){const v=[d.loadKgMen!=null&&d.loadKgMen!==''?'M '+d.loadKgMen+' kg':'',d.loadKgWomen!=null&&d.loadKgWomen!==''?'K '+d.loadKgWomen+' kg':''].filter(Boolean);if(v.length)parts.push(v.join(' / '))}else if(d.loadMode==='percent'&&d.percent1rm)parts.push(d.percent1rm+' % 1RM');else if(d.loadMode==='rir'&&d.rir!=='')parts.push('RIR '+d.rir);else if(d.loadMode==='bodyweight')parts.push('Kroppsvekt');if(d.tempo)parts.push('Tempo '+d.tempo);if(d.variant)parts.push('Variant: '+d.variant);if(d.instruction)parts.push(d.instruction);return parts.join(' · ')};
 const localDateISO=(value=new Date())=>{const y=value.getFullYear(),m=String(value.getMonth()+1).padStart(2,'0'),d=String(value.getDate()).padStart(2,'0');return `${y}-${m}-${d}`}
 const categoryOf=w=>{const stored=w?.timer_settings?.workout_schema?.library_category||w?.category;if(!stored||stored==='main')return 'standard';return stored}
@@ -24,6 +25,8 @@ const compactDose=(item,level)=>{
   else if(men!=null||women!=null)values.push(`${men??women} kg`)
  }else if(d.loadMode==='percent'&&d.percent1rm)values.push(`${d.percent1rm} % 1RM`)
  else if(d.loadMode==='bodyweight')values.push('kroppsvekt')
+ const side=getWodSideLabel(item,level)
+ if(side)values.push(side)
  return values.join(' · ')
 }
 
@@ -229,12 +232,12 @@ export default function WodLibrary({onLaunchWod,onEditWod,staff=true,isAdmin=fal
     <div className="wod-library-meta"><span>{w.format}</span><span><Clock3 size={14}/>{w.duration_minutes||'–'} min</span><span><Dumbbell size={14}/>{items.length||w.movements?.split('\n').filter(Boolean).length||0} øvingar</span></div>
     {!simpleMode&&(w.timer_settings?.workout_schema?.stimulus||(staff?w.notes:''))&&<p className="wod-card-short-stimulus">{w.timer_settings?.workout_schema?.stimulus||(staff?w.notes:'')}</p>}
     {!simpleMode&&<div className="wod-card-exercise-preview wod-card-exercise-compact">
-      {items.length?items.slice(0,3).map((item,index)=>{
+      {items.length?(expanded===w.id?items:items.slice(0,3)).map((item,index)=>{
        const rx=compactDose(item,'rx'),scaled=compactDose(item,'scaled')
        const dose=[rx?'RX '+rx:'',scaled?'Scaled '+scaled:''].filter(Boolean).join('  |  ')||[item.reps?item.reps+' reps':'',item.load_kg?item.load_kg+' kg':''].filter(Boolean).join(' · ')
        return <div className="wod-card-exercise-line" key={item.id||index}><strong>{index+1}. {item.exercise_name||item.name||'Øving'}</strong>{dose&&<small>{dose}</small>}</div>
-      }):w.movements?.split('\n').filter(Boolean).slice(0,3).map((name,index)=><div className="wod-card-exercise-line" key={index}><strong>{index+1}. {name}</strong></div>)}
-      {items.length>3&&<small className="wod-card-exercise-more">+ {items.length-3} fleire øvingar</small>}
+      }):(expanded===w.id?w.movements?.split('\n').filter(Boolean):w.movements?.split('\n').filter(Boolean).slice(0,3))?.map((name,index)=><div className="wod-card-exercise-line" key={index}><strong>{index+1}. {name}</strong></div>)}
+      {expanded!==w.id&&items.length>3&&<small className="wod-card-exercise-more">+ {items.length-3} fleire øvingar · trykk «Vis detaljar»</small>}
      </div>}
     <button type="button" className="wod-card-details-toggle" aria-expanded={expanded===w.id} onClick={()=>{setExpanded(value=>value===w.id?null:w.id);setOpenCardMenu(null)}}>{expanded===w.id?'Skjul detaljar':'Vis detaljar'} {expanded===w.id?<ChevronUp size={15}/>:<ChevronDown size={15}/>}</button>
     <div className="wod-library-actions wod-card-primary-actions">
