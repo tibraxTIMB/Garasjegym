@@ -94,5 +94,7 @@ The two forward catalogue migrations (Production catalogue preservation + reconc
 The rehearsal was repeated with both catalogue migrations applied twice in the same rolled-back transaction on both environments. Both second-pass runs also completed without error and the exact 135-name assertion passed, confirming idempotent name-based insertion. No rows or migration ledger entries persisted.
 
 
+After expanding the second migration to seed the entire 135-name manifest (rather than only the 79 names absent from current Production), the updated pair was rehearsed again twice in a single explicit rollback transaction against both live projects. The exact 135-name assertion passed in both environments, and a second application remained idempotent. Post-rollback counts remain unchanged at Production 56 and TEST 94; no migration was applied or recorded.
+
 ## Safety and next gate
 The migration is additive and forward-only. It inserts from the complete 135-name manifest, guarded by normalized name, so the same migration can safely run against Production, the current TEST project, or a clean no-data replay without overwriting existing rows. It has not been applied to Production or TEST by this work. Run the new exact manifest assertion against the isolated PostgreSQL 17 replay after the full migration/fixture replay. Then review aliases, category decisions, metadata and the build/test results. Production backup, lineage, Auth/RLS and explicit final GO LIVE gates remain outstanding.
