@@ -55,6 +55,9 @@ const sections = [
 ]
 
 function AuthScreen({ recovery = false, onRecoveryComplete }) {
+  // Explicit release-only switch. Public signups are not part of normal use;
+  // server-side Auth/DB rules must enforce the verified owner bootstrap.
+  const ownerRegistrationEnabled = import.meta.env.VITE_OWNER_BOOTSTRAP_SIGNUP === 'true'
   const [mode, setMode] = useState(recovery ? 'update' : 'login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -81,6 +84,18 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo })
         if (resetError) throw resetError
         setMessage('Dersom e-postadressa er registrert, får du ei lenkje for å velja nytt passord.')
+      } else if (mode === 'register') {
+        if (!ownerRegistrationEnabled) throw new Error('Eigarregistrering er ikkje open.')
+        const redirectTo = getAppBaseUrl(window.location.origin, import.meta.env.BASE_URL)
+        const { error: signupError } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: { emailRedirectTo: redirectTo },
+        })
+        if (signupError) throw signupError
+        setMessage('Kontroller e-posten din og stadfest kontoen. Administratortilgang blir aktivert først etter eigarkontroll.')
+        setMode('login')
+        setPassword('')
       } else {
         const { error: authError } = await supabase.auth.signInWithPassword({
           email: email.trim(),
@@ -103,8 +118,8 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
           <div><strong>GARASJEGYM</strong><span>{RELEASE_NAME}</span></div>
         </div>
         <div className="eyebrow"><ShieldCheck size={14} /> MEDLEMSOMRÅDE</div>
-        <h1>{mode === 'login' ? <>Velkomen <em>tilbake.</em></> : <>Nytt <em>passord.</em></>}</h1>
-        <p className="auth-intro">{mode === 'reset' ? 'Skriv inn e-postadressa di, så sender me ei lenkje for å nullstilla passordet.' : mode === 'update' ? 'Vel eit unikt passord på minst 12 teikn for GarasjeGym-kontoen din.' : 'Logg inn med den personlege GarasjeGym-kontoen din.'}</p>
+        <h1>{mode === 'login' ? <>Velkomen <em>tilbake.</em></> : mode === 'register' ? <>Aktiver <em>eigar.</em></> : <>Nytt <em>passord.</em></>}</h1>
+        <p className="auth-intro">{mode === 'reset' ? 'Skriv inn e-postadressa di, så sender me ei lenkje for å nullstilla passordet.' : mode === 'update' ? 'Vel eit unikt passord på minst 12 teikn for GarasjeGym-kontoen din.' : mode === 'register' ? 'Eingongsregistrering for eigaren. Bruk tibrakestad@gmail.com og eit unikt passord på minst 12 teikn.' : 'Logg inn med den personlege GarasjeGym-kontoen din.'}</p>
         <form className="auth-form" onSubmit={submit}>
           {mode !== 'update' && <label>
             E-post
@@ -112,17 +127,18 @@ function AuthScreen({ recovery = false, onRecoveryComplete }) {
           </label>}
           {mode !== 'reset' && <label>
             Passord
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={mode === 'update' ? 12 : undefined} placeholder="Passord" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={mode === 'update' || mode === 'register' ? 12 : undefined} placeholder="Passord" />
           </label>}
           {error && <div className="auth-error" role="alert">{error}</div>}
           {message && <div className="auth-message" role="status">{message}</div>}
           <button className="primary-button" type="submit" disabled={busy}>
-            {busy ? 'Arbeider …' : mode === 'login' ? 'Logg inn' : mode === 'reset' ? 'Send lenkje' : 'Lagra nytt passord'}
+            {busy ? 'Arbeider …' : mode === 'login' ? 'Logg inn' : mode === 'reset' ? 'Send lenkje' : mode === 'register' ? 'Registrer eigarkonto' : 'Lagra nytt passord'}
           </button>
         </form>
         <div className="auth-switch">
           {mode !== 'login' && <button type="button" onClick={() => { if (mode === 'update') onRecoveryComplete?.(); setMode('login'); setError(''); setMessage('') }}>Tilbake til innlogging</button>}
           {mode === 'login' && <button type="button" onClick={() => { setMode('reset'); setError(''); setMessage('') }}>Gløymt passord?</button>}
+          {mode === 'login' && ownerRegistrationEnabled && <button type="button" onClick={() => { setMode('register'); setError(''); setMessage(''); setEmail('tibrakestad@gmail.com') }}>Aktiver eigarkonto</button>}
         </div>
         <p className="auth-footnote">Medlemskontoar blir oppretta av administrator.</p>
       </div>
