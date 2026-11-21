@@ -53,6 +53,7 @@ No Production schema, data, Auth, function, setting, migration ledger or deploym
 - Recover exact 11-entry Production migration lineage or derive and rehearse forward-only reconciliation from the verified Production restore.
 - Reconcile Production's 46-table schema, membership helper functions, PT booking boundary and RLS policy drift; the Production security contract previously failed 8/8 assertions.
 - Deploy `admin-delete-user` with JWT verification enabled after schema reconciliation and function authorization tests; it is missing in Production although the current app invokes it. Keep `admin-create-user` disabled.
+- Disable public Auth signups in Supabase Auth General configuration; verify invitation-only dashboard flow and pending-member approval. Current Production setting remains unverified.
 - Enable leaked-password protection.
 - Review semantic exercise aliases and category mapping; 135 remains provisional.
 - Complete isolated Production-restore clean-start rehearsal and final owner review.
