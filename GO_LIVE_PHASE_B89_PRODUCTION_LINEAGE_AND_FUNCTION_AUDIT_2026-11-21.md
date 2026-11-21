@@ -26,6 +26,18 @@ Production has 11 applied migration records. The active branch has 166 migration
 
 The four suffix matches have different timestamps. They are not proof of byte-identical historical SQL and must not be substituted into the live ledger. No original SQL has been reconstructed or fabricated. Continue searching owner-controlled local backups/release archives; if unavailable, derive and rehearse a forward-only reconciliation from the verified Production restore.
 
+## Production RLS policy drift – launch blocker
+The earlier read-only policy identity/expression comparison remains material:
+- Production has 49 public RLS policies versus 144 in TEST.
+- 104 TEST policy identities are absent in Production; 9 Production-only policies exist; 23 shared policy identities have different expressions.
+- The release security contract passes 8/8 assertions on TEST but fails 8/8 on Production.
+- Production class-booking reads allow members to see other members' confirmed bookings; TEST scopes member reads to own bookings or staff.
+- Production class reads include unpublished classes; TEST requires publication for member visibility.
+- Production PT-session visibility is broader for client-linked sessions; TEST restricts those to the client, assigned coach and staff.
+- PT session-exercise reads are broader in Production; assigned-coach restrictions are missing in some Production PT workflows.
+
+Do not copy TEST policies blindly into Production. Derive the forward-only policy reconciliation from the verified Production restore, then test both positive and negative access paths using member A, member B, assigned coach, unassigned coach, manager and admin identities. The test must prove that no member can read another member's class booking, PT notes/messages, client-linked sessions or session exercises, and that unpublished classes remain hidden.
+
 ## Read-only function comparison
 Four functions trigger the Production security advisor warning for authenticated execution of SECURITY DEFINER functions. The function definitions and grants were compared between Production and TEST.
 
