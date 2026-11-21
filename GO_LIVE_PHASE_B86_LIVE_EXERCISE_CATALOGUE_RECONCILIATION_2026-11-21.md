@@ -43,6 +43,49 @@ Based on the manifest's Production-first metadata precedence:
 - Five semantic alias/variant groups are explicitly flagged in the manifest. Three look like possible duplicates; two need variant confirmation. They are retained for now to avoid silently deleting distinct movements.
 - The final count is therefore a provisional 135, not a release claim until the alias decisions and category mapping are reviewed.
 
+### Category conflicts on exact-name overlaps
+
+| Exercise | Production | TEST |
+|---|---|---|
+| Air Squat | CrossFit | Styrke |
+| Back Squat | CrossFit | Styrke |
+| Bike Erg | CrossFit | Kondisjon |
+| Box Jump | CrossFit | Kondisjon |
+| Burpee | CrossFit | Kondisjon |
+| Deadlift | CrossFit | Styrke |
+| Front Squat | CrossFit | Styrke |
+| Plank | Styrke | Kjerne |
+| Pull-up | CrossFit | Styrke |
+| Row | CrossFit | Kondisjon |
+| SkiErg | CrossFit | Kondisjon |
+| Walking Lunge | CrossFit | Styrke |
+
+### Equipment conflicts on exact-name overlaps
+
+| Exercise | Production | TEST |
+|---|---|---|
+| Back Squat | Vektstong | Stong og rack |
+| Bench Press | Vektstong / benk | Stong/benk |
+| Bike Erg | BikeErg | Ergometersykkel |
+| Box Jump | Plyoboks | Kasse |
+| Bulgarian Split Squat | Manualar / benk | Benk/manualar |
+| Deadlift | Vektstong | Stong |
+| Front Squat | Vektstong | Stong og rack |
+| Hip Thrust | Stong / benk | Stong/benk |
+| Plank | Matte | Kroppsvekt |
+| Romanian Deadlift | Vektstong / manualar | Stong/manualar |
+| Walking Lunge | Kroppsvekt / manualar | Kroppsvekt/manualar |
+
+### Alias candidates retained pending review
+
+| Names | Assessment |
+|---|---|
+| Barbell Row / Bent-over row | Same apparent barbell bent-over rowing movement; compare grip/stance and source intent. |
+| Dumbbell row / One-arm Dumbbell Row | Both source descriptions specify one-arm dumbbell rowing. |
+| Kettlebell Deadlift / Markløft / Kettlebell markløft | Both describe kettlebell deadlift from the floor. |
+| Pull-up / Strict pull-up | Strict and assisted/general variants may be materially different. |
+| Step-up / Box Step-up / Dumbbell Step-up | Bodyweight, box and externally loaded variants may be distinct. |
+
 ## Plyo-box measurement contract
 The application measurement resolver identifies box jump, step-up and box-over movements as height-based and uses centimetres. Externally loaded variants can record both height (cm) and load (kg). This behaviour is retained; the catalogue migration does not replace measurement logic or create inches-based values.
 
