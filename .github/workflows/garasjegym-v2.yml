@@ -206,6 +206,13 @@ jobs:
         run: |
           psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -At -F '|' -f v2/supabase/preflight/release_security_contract_assertions.sql | tee /tmp/release-security-contract.out
           test "$(tail -n 1 /tmp/release-security-contract.out)" = "t"
+      - name: Reject unreviewed privileged RPC exposure
+        env:
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
+        run: |
+          result="$(psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -At -F '|' -f v2/supabase/preflight/public_definer_rpc_contract_read_only.sql)"
+          printf 'Privileged RPC release contract: %s\n' "$result"
+          test "$result" = 't|t|t|t|t|t'
       - name: Verify real Auth signup trigger and pending member gate
         env:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
