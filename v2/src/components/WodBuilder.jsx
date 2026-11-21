@@ -1,13 +1,16 @@
-import {useEffect,useMemo,useState} from 'react'
+import {useEffect,useMemo,useRef,useState} from 'react'
 import {createPortal} from 'react-dom'
 import {Plus,Search,Trash2,ArrowUp,ArrowDown,Save,LoaderCircle,WandSparkles,Dices,Info,Copy,Dumbbell,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
-import {addWodSortOrder,getWodSchemaItems,moveWodItemByKey,moveWodItemToPosition,sortWodItems} from '../lib/wodOrdering.js'
+import {addWodSortOrder,getWodSchemaItems,moveWodItemByKey,sortWodItems} from '../lib/wodOrdering.js'
 import {COMPLEX_EXERCISES,formatComplexSequence} from '../lib/wodComplexes.js'
 import { createWodEngineConfig, buildLegacyCompatibleBlock, normalizeWodEngine, scoreForWodFormat, PARTICIPATION_MODES, COLLABORATION_MODES, SCORE_TYPES } from '../lib/wodEngine.js'
 import { getFixedSlotTimerState } from '../lib/timerClock.js'
+import { wodFormatNeedsTime } from '../lib/wodTimeDial.js'
+import WodTimeDial from './WodTimeDial.jsx'
 import './wod-ordering.css'
 import './wod-builder-contrast.css'
+import './wod-wizard-refine.css'
 
 const categories=['Alle','Functional Fitness','Styrke','Complex','Kondisjon','Gymnastikk','Pilates','Yoga Flow','Mobilitet','Rehab','Golf']
 const areas=['Alle område','Heile kroppen','Overkropp','Underkropp','Kjerne','Hofte og sete','Rygg','Skuldrer og armar','Bryst','Fullkropp','Bein','Mage']
@@ -20,6 +23,15 @@ const formats=[
  {group:'Anna',items:['Eigen økt']}
 ]
 const allFormats=formats.flatMap(x=>x.items)
+const featuredFormats=[
+ {name:'AMRAP',description:'Flest mogleg rundar på fast tid'},
+ {name:'For Time',description:'Fullfør arbeidet raskast mogleg'},
+ {name:'E1MOM',description:'Start ny oppgåve kvart minutt'},
+ {name:'Tabata',description:'Arbeid og pause i intervall'},
+ {name:'Stasjonssirkel',description:'Roter mellom stasjonar'},
+ {name:'Strength',description:'Sett, repetisjonar og belastning'},
+]
+const otherFormats=allFormats.filter(item=>!featuredFormats.some(x=>x.name===item))
 const GOLF_EXERCISES=[
  ['Golf – Open Book','Mobilitet','Rygg','Matte','Rotasjon i brystrygg. Ligg på sida med knær samla, før øvste arm roleg bakover og følg handa med blikket. 8–10 per side.'],
  ['Golf – Thread the Needle','Mobilitet','Rygg','Matte','Rotasjon og kontroll i brystrygg på alle fire. Før armen under kroppen og opna opp. 8 per side.'],
@@ -121,7 +133,56 @@ const equipmentIcon=value=>{const v=(value||'').toLowerCase();if(/power.?rack|sq
 const equipmentItems=value=>(value||'Kroppsvekt').split(/[,;+\\/\\n]+/).map(x=>x.trim()).filter(Boolean);
 const categoryTone=value=>{const v=(value||'').toLowerCase();return v.includes('kond')||v.includes('cardio')||v.includes('crossfit')?'conditioning':v.includes('kjern')||v.includes('core')||v.includes('pilates')?'core':v.includes('styr')||v.includes('strength')?'strength':v.includes('mobil')?'mobility':v.includes('golf')?'golf':v.includes('rehab')||v.includes('fysio')?'rehab':'other'}
 
+function QuickDoseLevels({exercise,showSets,isStationCircuit,updateLevel,updateItem,copyRxToLevels}) {
+ const fields=doseFieldsFor(exercise)
+ const levels=exercise.levels||makeLevels(exercise.reps,exercise.prescription_profiles||{})
+ const labels={rx:'RX',scaled:'Scaled',foundation:'Foundation'}
+ return <div className="gg-quick-dosage">
+  <div className="gg-quick-dose-heading"><strong>Dosering for alle nivå</strong><button type="button" onClick={()=>copyRxToLevels(exercise.key)}>Kopier RX til dei andre</button></div>
+  {isRow(exercise)&&<div className="gg-quick-rowing"><label>Roing · mengd<input type="number" min="1" value={exercise.rowValue||''} onChange={e=>updateItem(exercise.key,{rowValue:e.target.value})}/></label><label>Eining<select value={exercise.rowUnit||'m'} onChange={e=>updateItem(exercise.key,{rowUnit:e.target.value})}><option value="m">Meter</option><option value="cal">Kaloriar</option><option value="s">Sekund</option><option value="min">Minutt</option></select></label></div>}
+  {['rx','scaled','foundation'].map(level=>{
+   const dose=levels[level]||{}
+   const update=patch=>updateLevel(exercise.key,level,patch)
+   const noReps=isRow(exercise)||(isStationCircuit&&(exercise.repsMode||'fixed')==='amrap')
+   return <section key={level} className={'gg-level-row gg-level-'+level}>
+    <strong>{labels[level]}</strong>
+    <div className="gg-level-fields">
+     {showSets&&<label>Sett<input type="number" min="1" max="30" value={dose.sets??''} onChange={e=>update({sets:e.target.value})}/></label>}
+     {!noReps&&<label>{exercise.is_complex?'Syklusar':'Reps'}<input type="text" inputMode="numeric" value={dose.reps??''} onChange={e=>update({reps:e.target.value})}/></label>}
+     {fields.time&&<label>Tid (sek)<input type="number" min="1" value={dose.durationSeconds??''} onChange={e=>update({durationSeconds:e.target.value})}/></label>}
+     {fields.distance&&!isRow(exercise)&&<label>Distanse (m)<input type="number" min="1" value={dose.distanceMeters??''} onChange={e=>update({distanceMeters:e.target.value})}/></label>}
+     {fields.calories&&!isRow(exercise)&&<label>Kaloriar<input type="number" min="1" value={dose.calories??''} onChange={e=>update({calories:e.target.value})}/></label>}
+     {fields.height&&<div className="gg-box-height"><span>Bokshøgd · cm</span><div role="group" aria-label={`${labels[level]} bokshøgd`}>{[50,60,75].map(n=><button type="button" key={n} className={Number(dose.heightCm)===n?'selected':''} aria-pressed={Number(dose.heightCm)===n} onClick={()=>update({heightCm:String(n)})}>{n}</button>)}</div></div>}
+     {fields.load&&!['percent','rir','bodyweight'].includes(dose.loadMode)&&<><label>Vekt M (kg)<input type="number" min="0" step="0.5" value={dose.loadKgMen??''} onChange={e=>update({loadMode:'kg',loadKgMen:e.target.value})}/></label><label>Vekt K (kg)<input type="number" min="0" step="0.5" value={dose.loadKgWomen??''} onChange={e=>update({loadMode:'kg',loadKgWomen:e.target.value})}/></label></>}
+     {['percent','rir','bodyweight'].includes(dose.loadMode)&&<small className="gg-dose-alt-mode">{dose.loadMode==='percent'?'% 1RM':dose.loadMode==='rir'?'RIR':'Kroppsvekt'} · endra under Avansert</small>}
+    </div>
+   </section>
+  })}
+  <small>Vel «Avansert dosering» for prosentar, RIR, eigne høgder og instruksjonar.</small>
+ </div>
+}
+
+function WodReviewOrder({ selected, onMove, onEdit }) {
+ const labels={rx:'RX',scaled:'Scaled',foundation:'Foundation'}
+ const describe=(ex,level)=>{
+  if(ex.is_rest)return `${Number(ex.pauseSeconds)||30} sek pause`
+  const d=ex.levels?.[level]||{}
+  const kg=d.loadMode==='kg'?[d.loadKgMen?'M '+d.loadKgMen+' kg':'',d.loadKgWomen?'K '+d.loadKgWomen+' kg':''].filter(Boolean).join(' / '):''
+  return [isRow(ex)?`${ex.rowValue||'–'} ${ex.rowUnit||'m'}`:d.reps?`${d.reps} reps`:'',d.sets?`${d.sets} sett`:'',d.heightCm?`${d.heightCm} cm`:'',d.durationSeconds?`${d.durationSeconds} sek`:'',d.distanceMeters?`${d.distanceMeters} m`:'',kg,d.loadMode==='percent'?`${d.percent1rm||'–'} % 1RM`:''].filter(Boolean).join(' · ')||'Ikkje dosert'
+ }
+ return <section className="gg-review-order" aria-label="Rekkjefølgje og dosering">
+  <div className="gg-review-order-head"><strong>Øvingar og rekkjefølgje</strong><small>Endra rekkjefølgja her eller gå rett til dosering</small></div>
+  {selected.map((ex,i)=><article className="gg-review-item" key={ex.key}>
+   <div className="gg-review-item-top"><span className="wod-order">{i+1}</span><strong>{ex.name}</strong><div className="gg-reorder-buttons"><button type="button" aria-label={'Flytt '+ex.name+' opp'} disabled={!i} onClick={()=>onMove(ex.key,-1)}><ArrowUp size={17}/></button><button type="button" aria-label={'Flytt '+ex.name+' ned'} disabled={i===selected.length-1} onClick={()=>onMove(ex.key,1)}><ArrowDown size={17}/></button></div></div>
+   <div className="gg-review-levels">{(ex.is_rest?['rx']:['rx','scaled','foundation']).map(level=><div key={level}><b>{labels[level]}</b><span>{describe(ex,level)}</span></div>)}</div>
+   <button type="button" className="gg-review-edit" onClick={()=>onEdit(ex.key)}>Endra dosering</button>
+  </article>)}
+ </section>
+}
+
 export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=null,initialImport=null,onImportConsumed,onSaved,onCancel}){
+ const wizardTopRef=useRef(null)
+ const previousWizardStep=useRef(0)
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område'),[equipmentFilter,setEquipmentFilter]=useState('all'),[movementFilter,setMovementFilter]=useState('all'),[openFilter,setOpenFilter]=useState('')
  const rehabBodyAreas=['hofte','skulder','kne','nakke']
  const isRehabExercise=x=>!!(x.is_rehab||x.category==='Rehab / fysio'||rehabBodyAreas.includes((x.body_area||'').toLowerCase()))
@@ -131,9 +192,14 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const [ladderStart,setLadderStart]=useState('2'),[ladderStep,setLadderStep]=useState('2'),[ladderDirection,setLadderDirection]=useState('up')
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[canPublishWod,setCanPublishWod]=useState(false),[publishRoleReady,setPublishRoleReady]=useState(false)
  const [prescription,setPrescription]=useState('rx'),[customInstructions,setCustomInstructions]=useState(''),[customUseSets,setCustomUseSets]=useState(false),[combinationMode,setCombinationMode]=useState('For Time')
- const [wizardStep,setWizardStep]=useState(1),[libraryOpen,setLibraryOpen]=useState(false),[rxNotes,setRxNotes]=useState(''),[scaledNotes,setScaledNotes]=useState(''),[intensity,setIntensity]=useState('2')
+ const [wizardStep,setWizardStep]=useState(0),[libraryOpen,setLibraryOpen]=useState(false),[rxNotes,setRxNotes]=useState(''),[scaledNotes,setScaledNotes]=useState(''),[intensity,setIntensity]=useState('2')
  const [editingSelectedKey,setEditingSelectedKey]=useState(null),[doseLevelByKey,setDoseLevelByKey]=useState({})
  const [participation,setParticipation]=useState('individual'),[collaboration,setCollaboration]=useState('solo'),[partnerCount,setPartnerCount]=useState('3')
+ useEffect(()=>{
+  if(previousWizardStep.current===wizardStep)return
+  previousWizardStep.current=wizardStep
+  wizardTopRef.current?.scrollIntoView({block:'start',behavior:'instant'})
+ },[wizardStep])
 
  async function loadWodForEdit(id){
   if(!id)return
@@ -145,7 +211,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   const engine=normalizeWodEngine(schema,{format:w.format});setParticipation(engine.participation);setCollaboration(engine.collaboration);setPartnerCount(String(engine.participant_count||3));setEditingWodId(w.id);setName(w.name);const legacyFormat=w.format||'AMRAP';const emomMatch=/^EMOM(?: ([1-7]))?$/.exec(legacyFormat);const mappedFormat=emomMatch?'E'+Math.max(1,Math.min(7,Number(emomMatch[1]||schema.interval?.work_every_minutes)||1))+'MOM':legacyFormat==='Pyramid'?'Strength':legacyFormat==='Couplet / Triplet'?(schema.items?.filter(item=>!item.is_rest).length>=3?'Triplet':'Couplet'):legacyFormat==='Ladder / Death By'?(schema.ladder?.type==='Death By'?'Death By':'Ladder'):legacyFormat==='Intervall / Tabata'?(schema.interval?.work_seconds===20&&schema.interval?.rest_seconds===10?'Tabata':'Intervall'):legacyFormat;setFormat(mappedFormat);setPublishToMembers(canPublishWod&&!!w.is_published);const storedLibraryCategory=schema.library_category||(w.category==='warmup'?'warmup':'standard');const normalizedLibraryCategory=storedLibraryCategory==='daily'?'standard':storedLibraryCategory;const knownLibraryCategories=['warmup','standard','benchmark','assessment','rehab','recovery','other'];setLibraryCategory(knownLibraryCategories.includes(normalizedLibraryCategory)?normalizedLibraryCategory:'custom');setCustomLibraryCategory(knownLibraryCategories.includes(normalizedLibraryCategory)?'':normalizedLibraryCategory)
   setMinutes(String(schema.duration_seconds?Math.floor(schema.duration_seconds/60):w.duration_minutes||20));setDurationSeconds(String(schema.duration_seconds?schema.duration_seconds%60:0))
   setNotes(schema.coach_notes||w.notes||'');setStimulus(schema.stimulus||'Jamn intensitet · teknisk kvalitet · kontrollert tempo')
-  setIntensity(String(schema.intensity||2));setPrescription(schema.prescription||'rx');setCustomInstructions(schema.custom_instructions||'');setRxNotes(schema.rx_notes||'');setScaledNotes(schema.scaled_notes||'');setWizardStep(1)
+  setIntensity(String(schema.intensity||2));setPrescription(schema.prescription||'rx');setCustomInstructions(schema.custom_instructions||'');setRxNotes(schema.rx_notes||'');setScaledNotes(schema.scaled_notes||'');setWizardStep(0)
   if(schema.time_cap_seconds){setTimeCap(String(Math.floor(schema.time_cap_seconds/60)));setTimeCapSeconds(String(schema.time_cap_seconds%60))}else{setTimeCap('');setTimeCapSeconds('0')}
   if(schema.rounds)setRounds(String(schema.rounds))
   if(schema.interval){if(schema.interval.work_seconds)setWorkSeconds(String(schema.interval.work_seconds));if(schema.interval.rest_seconds!=null)setRestSeconds(String(schema.interval.rest_seconds))}
@@ -216,7 +282,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    return {...base,reps,rowValue:'',coachNote:'',loadMode:'none'}
   })
   setSelected(rows);setName(preset.name);setFormat(preset.format);setMinutes(String(preset.minutes));setDurationSeconds('0');setTimeCap(String(preset.minutes));setTimeCapSeconds('0');setRounds(String(preset.rounds||1));setNotes(preset.notes);setStimulus('Klassisk benchmark WOD · registrer resultat og samanlikn ved seinare gjennomføring.')
-  setPrescription('rx');setClassicChoice('');setNotice(preset.name+' er lasta inn. Kontroller øvingar, RX-belastning og skalering før publisering.');setError('')
+  setPrescription('rx');setClassicChoice('');setWizardStep(2);setNotice(preset.name+' er lasta inn. Kontroller øvingar, RX-belastning og skalering før publisering.');setError('')
  }
  function applyImportedWod(parsed){
   const imported=parsed.items.map(row=>{
@@ -255,7 +321,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  }
  function reset(){
   setSelected([]);setIntensity('2');setNotes('');setCustomInstructions('');setCustomUseSets(false);setCombinationMode('For Time');setStimulus('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
-  setName(suggestUniqueWodName());setError('');setNotice('Økta er forkasta. Du kan byrja på nytt.')
+  setName(suggestUniqueWodName());setWizardStep(0);setError('');setNotice('Økta er forkasta. Du kan byrja på nytt.')
  }
   function doseForItem(x,level=prescription){
    const base=(x.levels||makeLevels(x.reps,x.prescription_profiles||{}))[level]||{}
@@ -393,28 +459,62 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
     savedWodId=savedWod?.id||savedWodId
    }
    setNotice(assignedClientId?(canPublishWod&&publishToMembers?'WOD er publisert og tildelt kunden.':'Privat WOD er lagra og tildelt kunden.'):editingWodId?'WOD-en er oppdatert.':canPublishWod&&publishToMembers?'WOD lagra i biblioteket og publisert for medlemmene.':'WOD lagra i det interne biblioteket som utkast.')
-   setSelected([]);setNotes('');setLibraryCategory('standard');setCustomInstructions('');setRxNotes('');setScaledNotes('');setWizardStep(1);setName(suggestUniqueWodName());setEditingWodId(null);onSaved?.()
+   setSelected([]);setNotes('');setLibraryCategory('standard');setCustomInstructions('');setRxNotes('');setScaledNotes('');setWizardStep(0);setName(suggestUniqueWodName());setEditingWodId(null);onSaved?.()
   }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{setBusy(false)}
  }
-  function goToStep(next){setError('');if(next===2)setLibraryOpen(false);if(next===3){setEditingSelectedKey(selected[0]?.key||null);setDoseLevelByKey({})}if(next===2&&isAmrap&&(!Number.isInteger(Number(timeCap))||Number(timeCap)<1||Number(timeCap)>600)){setError('AMRAP krev ei tidsramme på mellom 1 og 600 minutt.');return}if(next===2&&isStationCircuit&&selected.length>Number(stationCount))setSelected(rows=>rows.slice(0,Number(stationCount)));if((next===3||next===4)&&!selected.length){setError('Legg minst ei øving til WOD-en før du går vidare.');return}if((next===3||next===4)&&((format==='Couplet'&&selected.length!==2)||(format==='Triplet'&&selected.length!==3))){setError(`${format} krev nøyaktig ${format==='Couplet'?2:3} øvingar.`);return}setWizardStep(next)}
- return <div className={'wod-builder wod-builder-step-'+wizardStep+(libraryOpen?' wod-library-open':'')}>
+  function chooseFormat(item){
+   const changed=item!==format
+   setFormat(item);setError('');setNotice('')
+   if(changed){
+    if(['Strength','Superset','Complex','Eigen økt','Ladder','Death By'].includes(item)){setTimeCap('');setTimeCapSeconds('0')}
+    else if(['For Time','Chipper','Couplet','Triplet'].includes(item)&&!timeCap){setTimeCap('20')}
+    if(item==='Tabata'){setWorkSeconds('20');setRestSeconds('10');setRounds('8');setIntervalExerciseCount('1')}
+    if(item==='Intervall'||item==='Row Intervals'){setWorkSeconds('60');setRestSeconds('10');setRounds('5');setIntervalExerciseCount('1')}
+    if(isEmomFormat(item)){setWorkSeconds('45');setRestSeconds('15')}
+    if(item==='Stasjonssirkel')setSelected(rows=>rows.map(x=>({...x,repsMode:x.repsMode||'amrap'})))
+   }
+   setWizardStep(wodFormatNeedsTime(item)?1:2)
+  }
+  function goToStep(next){
+   setError('')
+   if(next===2){
+    setLibraryOpen(false)
+    if(isAmrap&&(!Number.isInteger(Number(timeCap))||Number(timeCap)<1||Number(timeCap)>600)){setError('AMRAP krev ei tidsramme på mellom 1 og 600 minutt.');return}
+    if(isStationCircuit&&selected.length>Number(stationCount)){setError('Du har fleire øvingar enn stasjonar. Endra stasjonstalet eller fjern ei øving før du held fram.');return}
+   }
+   if(next===3){setEditingSelectedKey(current=>current&&selected.some(x=>x.key===current)?current:selected[0]?.key||null)}
+   if((next===3||next===4)&&!selected.length){setError('Legg minst ei øving til WOD-en før du går vidare.');return}
+   if((next===3||next===4)&&isInterval&&selected.length!==Number(intervalExerciseCount)){setError(`Vel ${intervalExerciseCount} øvingar/drag før du går vidare.`);return}
+   if((next===3||next===4)&&isStationCircuit&&selected.length!==Number(stationCount)){setError(`Vel ${stationCount} øvingar – éi per stasjon – før du går vidare.`);return}
+   if((next===3||next===4)&&((format==='Couplet'&&selected.length!==2)||(format==='Triplet'&&selected.length!==3))){setError(`${format} krev nøyaktig ${format==='Couplet'?2:3} øvingar.`);return}
+   setWizardStep(next)
+  }
+ return <div ref={wizardTopRef} className={'wod-builder wod-builder-step-'+wizardStep+(libraryOpen?' wod-library-open':'')}>
   <div className="training-heading wod-builder-heading"><div><div className="section-kicker">GARASJEGYM · PROGRAMMERINGSVERKSTAD</div><h3>{editingWodId?'Rediger WOD':'WOD Studio'}</h3><p>Bygg, tilpass og publiser treningsøkter i GarasjeGym.</p></div><div className="wod-builder-heading-actions"><span className="count-pill"><WandSparkles size={14}/> PRO</span>{onCancel&&<button type="button" className="secondary-button" onClick={()=>{if((editingWodId||selected.length>0)&&!window.confirm('Avbryta? Ulagra endringar i WOD-byggaren blir forkasta.'))return;onCancel()}}>Avbryt · WOD-bibliotek</button>}</div></div>
-  <div className="wod-wizard-steps" aria-label="Framdrift i WOD-byggjaren">{[{n:1,label:'Format'},{n:2,label:'Øvingsval'},{n:3,label:'Dosering'},{n:4,label:'Gjennomgang'}].map(step=><span key={step.n} className={wizardStep===step.n?'active':wizardStep>step.n?'complete':''}><b>{wizardStep>step.n?'✓':step.n}</b>{step.label}</span>)}</div>
+  <div className="wod-wizard-steps gg-wizard-progress" aria-label="Framdrift i WOD-byggjaren">{[{n:0,label:'Format'},{n:1,label:'Tid'},{n:2,label:'Øvingar'},{n:3,label:'Dosering'},{n:4,label:'Lagre'}].filter(step=>step.n!==1||wodFormatNeedsTime(format)).map((step,index)=><button type="button" key={step.n} className={wizardStep===step.n?'active':wizardStep>step.n?'complete':''} disabled={step.n>wizardStep} onClick={()=>goToStep(step.n)} aria-current={wizardStep===step.n?'step':undefined}><b>{wizardStep>step.n?'✓':index+1}</b>{step.label}</button>)}</div>
   {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message">{notice}</div>}
   {assignedClientId&&<div className="pt-wod-mode-switch"><button type="button" className={builderMode==='library'?'selected':''} onClick={()=>setBuilderMode('library')}>Finn WOD i biblioteket</button><button type="button" className={builderMode==='build'?'selected':''} onClick={()=>setBuilderMode('build')}>Bygg ny WOD</button></div>}
   {assignedClientId&&builderMode==='library'?<section className="pt-wod-library-panel"><div className="engine-section-title"><div><h4>Vel frå WOD-biblioteket</h4><p>Bruk same publiserte WOD på fleire kundar utan å laga kopiar.</p></div><span>{libraryWods.length} WOD-ar</span></div><div className="wod-search"><Search size={16}/><input value={librarySearch} onChange={e=>setLibrarySearch(e.target.value)} placeholder="Søk etter namn eller format …"/></div><div className="pt-wod-library-list">{libraryWods.filter(w=>(w.name+' '+w.format).toLowerCase().includes(librarySearch.toLowerCase())).map(w=><button type="button" key={w.id} className={selectedLibraryWod===w.id?'selected':''} onClick={()=>setSelectedLibraryWod(w.id)}><span><strong>{w.name}</strong><small>{w.format} · {w.duration_minutes||'–'} min · {w.movements?.split('\n').filter(Boolean).length||0} øvingar</small></span><span>{selectedLibraryWod===w.id?'Vald':'Vel'}</span></button>)}</div><button type="button" className="primary-button" disabled={!selectedLibraryWod||busy} onClick={assignLibraryWod}><Plus size={15}/>{busy?'Tildeler …':'Tildel vald WOD til kunden'}</button></section>:<div className="pt-wod-builder-form">
-  {wizardStep===1&&<section className="wod-engine-setup">
-    <div className="engine-section-title"><div><h4>Gjennomføringsmodell</h4><p>Vel kven som trenar saman og korleis resultatet skal registrerast.</p></div><span>WOD ENGINE 2.0</span></div>
+  {wizardStep===0&&<section className="gg-format-wizard" aria-label="Vel WOD-format">
+   <div className="gg-wizard-intro"><span className="wod-classic-kicker">STEG 1 · BYGG WOD</span><h2>Kva slags økt vil du byggja?</h2><p>Vel formatet. Du får berre dei innstillingane økta treng.</p></div>
+   <div className="gg-featured-formats">{featuredFormats.map(item=><button type="button" key={item.name} onClick={()=>chooseFormat(item.name)}><span className="gg-format-icon" aria-hidden="true">{formatIcons[item.name]||'◷'}</span><strong>{item.name==='E1MOM'?'EMOM':item.name==='Strength'?'Styrke':item.name}</strong><small>{item.description}</small></button>)}</div>
+   <details className="gg-other-formats"><summary>Fleire WOD-format</summary><div>{otherFormats.map(item=><button type="button" key={item} onClick={()=>chooseFormat(item)}>{item}</button>)}</div><small>Couplet og Triplet er spesialoppsett. Dei kan gjennomførast både på tid og som AMRAP.</small></details>
+   <p className="gg-wizard-subtle">Scoring blir automatisk tilpassa det valde formatet. Du kan gå tilbake og endra format seinare.</p>
+  </section>}
+  {wizardStep===3&&<section className="wod-engine-setup gg-participation-section">
+    <div className="engine-section-title"><div><h4>Gjennomføring</h4><p>Individuell er standard. Vel partner eller lag berre når utøvarane deler arbeidet.</p></div></div>
+    <div className="gg-participation-choices" role="group" aria-label="Gjennomføringsform">
+      {PARTICIPATION_MODES.map(item=><button type="button" key={item.value} aria-pressed={participation===item.value} className={participation===item.value?'selected':''} onClick={()=>{setParticipation(item.value);setCollaboration(item.value==='individual'?'solo':'free_split');setPartnerCount(item.value==='partner'?'2':'3')}}>{item.label}</button>)}
+    </div>
     <div className="wod-engine-fields">
-      <label>Utøvaroppsett<select value={participation} onChange={e=>{const value=e.target.value;setParticipation(value);setCollaboration(value==='individual'?'solo':'free_split');setPartnerCount(value==='partner'?'2':'3')}}>{PARTICIPATION_MODES.map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label>
       {participation!=='individual'&&<label>Samarbeidsform<select value={collaboration} onChange={e=>setCollaboration(e.target.value)}>{COLLABORATION_MODES.filter(x=>x.value!=='solo').map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label>}
       {participation==='team'&&<label>Tal utøvarar<input type="number" min="3" max="30" value={partnerCount} onChange={e=>setPartnerCount(e.target.value)}/></label>}
       <div className="wod-auto-score" role="status"><span>Scoring blir valt automatisk etter format</span><strong>{automaticScoreLabel}</strong></div>
     </div>
-    <p className="wod-help">Vel formatet nedanfor. Resultattypen følgjer automatisk formatet, også når du endrar tidsstruktur. Partner og team kan framleis veljast ovanfor.</p>
+    <p className="wod-help">Gruppetime er ikkje det same som lagøkt. Ein gruppetime kan godt ha individuell scoring.</p>
   </section>}
-  {wizardStep===1&&<section className="wod-classic-picker"><div className="wod-classic-copy"><span className="wod-classic-kicker">BENCHMARK COLLECTION</span><strong>Klassiske WOD-ar</strong><small>The Girls · Hero WODs · originaloppsett</small></div><div className="wod-classic-controls"><select className="wod-classic-select" value={classicChoice} onChange={e=>setClassicChoice(e.target.value)}><option value="">Vel ei klassisk økt …</option><optgroup label="The Girls">{CLASSIC_WODS.filter(x=>x.group==='The Girls').map(x=><option key={x.name} value={x.name}>{x.name}</option>)}</optgroup><optgroup label="Hero WODs">{CLASSIC_WODS.filter(x=>x.group==='Hero WODs').map(x=><option key={x.name} value={x.name}>{x.name}</option>)}</optgroup></select><button type="button" className="secondary-button" disabled={!classicChoice} onClick={loadClassicWod}>Last inn</button></div></section>}
-  {wizardStep===1&&<div className="wod-studio-tools"><button type="button" className="primary-button" onClick={randomWod}><Dices size={17}/> Generer tilfeldig WOD</button><button type="button" className="secondary-button" onClick={reset}><Trash2 size={15}/> Forkast økt</button></div>}
+  {wizardStep===0&&<section className="wod-classic-picker"><div className="wod-classic-copy"><span className="wod-classic-kicker">BENCHMARK COLLECTION</span><strong>Klassiske WOD-ar</strong><small>The Girls · Hero WODs · originaloppsett</small></div><div className="wod-classic-controls"><select className="wod-classic-select" value={classicChoice} onChange={e=>setClassicChoice(e.target.value)}><option value="">Vel ei klassisk økt …</option><optgroup label="The Girls">{CLASSIC_WODS.filter(x=>x.group==='The Girls').map(x=><option key={x.name} value={x.name}>{x.name}</option>)}</optgroup><optgroup label="Hero WODs">{CLASSIC_WODS.filter(x=>x.group==='Hero WODs').map(x=><option key={x.name} value={x.name}>{x.name}</option>)}</optgroup></select><button type="button" className="secondary-button" disabled={!classicChoice} onClick={loadClassicWod}>Last inn</button></div></section>}
+  {wizardStep===0&&<div className="wod-studio-tools"><button type="button" className="primary-button" onClick={()=>{randomWod();setWizardStep(2)}}><Dices size={17}/> Generer tilfeldig WOD</button><button type="button" className="secondary-button" onClick={reset}><Trash2 size={15}/> Forkast økt</button></div>}
   <div className="wod-builder-layout">
    {wizardStep===2&&<aside className="wod-setup-summary"><div className="wod-setup-summary-kicker">WOD-OPPSETT</div><h4>{name||'Namlaus WOD'}</h4><div className="wod-setup-summary-row"><span>Format</span><strong>{format}</strong></div><div className="wod-setup-summary-row"><span>Tidsramme</span><strong>{isAmrap?(timeCap?timeCap+' min':'Open AMRAP'):isForTime?(timeCap?timeCap+' min':'Fri tid'):isElapsedFormat?'Medgått tid':minutes+' min'}</strong></div><div className="wod-setup-summary-row"><span>Intensitet</span><strong>{intensity==='1'?'Kontrollert':intensity==='3'?'Høg':'Utfordrande'}</strong></div><div className="wod-setup-summary-hint">Oppsettet er klart. Vel øvingar i biblioteket og legg dei til i ønskt rekkjefølgje.</div></aside>}
    {wizardStep===2&&libraryOpen&&createPortal(<section className="engine-section wod-library wod-library-portal" aria-label="Vel øvingar til WOD"><div className="wod-library-fullscreen-head"><strong>Vel øvingar <span>{selected.length} valde</span></strong><button type="button" className="wod-library-ok-top" disabled={!selected.length} onClick={()=>{setLibraryOpen(false);goToStep(3)}}>Vidare · {selected.length} valde →</button><button type="button" aria-label="Tilbake til WOD-byggjaren" title="Tilbake til WOD-byggjaren" onClick={()=>setLibraryOpen(false)}>×</button></div><div className="engine-section-title"><h4>Øvingsbibliotek</h4><span>{filtered.length} øvingar</span></div>
@@ -434,8 +534,10 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
           {ex.is_complex&&<small className="wod-complex-sequence">{formatComplexSequence(ex.complex_steps)}</small>}{ex.video_url&&<a href={ex.video_url} target="_blank" rel="noreferrer">Sjå video</a>}</div><button className="wod-add-button" type="button" onClick={()=>add(ex)} aria-label="Legg til øving i WOD" title="Legg til øving i WOD"><Plus size={20}/></button></article>})}</div>:<div className="empty-state">Ingen øvingar treff søket.</div>}
    </section>,document.body)}
    <aside className="engine-section wod-composer">
-    <div className="engine-section-title"><h4>{wizardStep===1?"1 · Format og tidsramme":wizardStep===2?"2 · Valde øvingar":wizardStep===3?"3 · Dosering":"4 · Ferdigstilling og publisering"}</h4><span>{isInterval?selected.length+'/'+intervalExerciseCount+' øvingar':selected.length+' øvingar'}</span></div>
+    <div className="engine-section-title"><h4>{wizardStep===0?'Vel format':wizardStep===1?'Tid og rammer':wizardStep===2?'Vel øvingar':wizardStep===3?'Dosering':'Gjennomgang og lagring'}</h4><span>{isInterval?selected.length+'/'+intervalExerciseCount+' øvingar':selected.length+' øvingar'}</span></div>
     <form className="admin-create-form" onSubmit={save}>
+     {wizardStep===1&&<div className="gg-wizard-intro gg-time-intro"><span className="wod-classic-kicker">TIDSOPPSETT · {format}</span><h2>Still inn økta</h2><p>Vel eit snøggval, dra visaren på klokka eller skriv inn nøyaktig tid.</p></div>}
+     {wizardStep===4&&<section className="gg-review-before"><div className="gg-wizard-intro"><span className="wod-classic-kicker">SISTE STEG</span><h2>Sjå over og lagre</h2><p>Kontroller WOD-en, flytt øvingar eller gå rett tilbake til dosering.</p></div><div className="gg-review-name"><label>WOD-namn<input value={name} onChange={e=>setName(e.target.value)} required maxLength={120} placeholder="Gi økta eit namn"/></label><button type="button" className="secondary-button" onClick={()=>setName(suggestUniqueWodName())}>Foreslå namn</button></div><p className="gg-review-context">{format} · {isStationCircuit?`${stationCount} stasjonar, ${stationRounds} rundar`:isAmrap?`${timeCap||'–'} minutt`:isTimed?`${minutes} minutt`:isForTime?timeCap?`${timeCap} min tidsgrense`:'Utan tidsgrense':'Etter øvingsoppsettet'} · {selected.length} øvingar</p><WodReviewOrder selected={selected} onMove={moveByKey} onEdit={key=>{setEditingSelectedKey(key);setWizardStep(3)}}/><details className="gg-review-notes"><summary>Mål og instruksjon for økta (valfritt)</summary><label>Planlagt treningsstimulus<textarea rows="2" value={stimulus} onChange={e=>setStimulus(e.target.value)}/></label><label>Intensitet<select value={intensity} onChange={e=>setIntensity(e.target.value)}><option value="1">Kontrollert / teknikk</option><option value="2">Utfordrande</option><option value="3">Høg intensitet</option></select></label><label>Instruktørnotat<textarea rows="2" value={notes} onChange={e=>setNotes(e.target.value)}/></label></details></section>}
      {wizardStep===1&&<div className="wizard-format-panel"><div className="wod-name-field"><label>WOD-namn<input value={name} onChange={e=>setName(e.target.value)} required placeholder="Gje økta eit namn …"/></label><button type="button" className="secondary-button" onClick={()=>setName(suggestUniqueWodName())}>Nytt namn</button></div>
      
      <div className="wod-setup-format">
@@ -445,12 +547,12 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
       </div>
      </div>
      <label className="wod-category-early">Kategori<select value={libraryCategory} onChange={event=>setLibraryCategory(event.target.value)}><option value="warmup">Oppvarming · 2 delar</option><option value="standard">Standard-WOD</option><option value="benchmark">Benchmark-WOD</option><option value="assessment">Test og evaluering</option><option value="rehab">Rehabilitering / tilpassa</option><option value="recovery">Restitusjon og mobilitet</option><option value="other">Anna / spesialøkt</option></select></label><small className="wod-category-help">Kategori seier kva føremål økta har. Format styrer korleis ho blir gjennomført og skåra. Dagens WOD blir planlagt separat i kalenderen.</small>{libraryCategory==='warmup'&&<aside className="warmup-builder-guide"><strong>Oppvarminga har to delar</strong><p><b>1. Felles oppvarming:</b> bygg gradvis opp mot hovud-WOD sin stimulus og rørsleform.</p><p><b>2. Fri teknisk innøving:</b> kvar deltakar prøver hovudrørsla med lette vekter og finn sitt eige arbeidsnivå.</p></aside>}<div className="engine-fields">{!isTimed&&!isStationCircuit&&!isAmrap&&!isInterval&&!showSets&&!isLadder&&!isForTime&&!(isCoupletTriplet&&combinationMode!=='Open')&&<label>Planlagd tid (minutt)<input type="number" min="1" max="600" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label>}</div>
-     {isStationCircuit&&<div className="wod-advanced-fields station-circuit-settings"><label>Tal stasjonar<select value={stationCount} onChange={e=>{const count=Number(e.target.value);setStationCount(String(count));setSelected(current=>current.slice(0,count))}}>{[2,3,4,5,6,7,8].map(n=><option key={n} value={n}>{n}</option>)}</select></label><label>Arbeid per stasjon (sek.)<input type="number" min="1" max="600" step="1" value={stationWork} onChange={e=>setStationWork(e.target.value)}/></label><label>Bytetid (sek.)<input type="number" min="0" max="600" step="1" value={stationTransition} onChange={e=>setStationTransition(e.target.value)}/></label><label>Tal rundar<input type="number" min="1" max="20" step="1" value={stationRounds} onChange={e=>setStationRounds(e.target.value)}/></label><p className="wod-help">Vel 2–8 stasjonar og legg inn éi øving per stasjon i rett rekkjefølgje. Alle grupper startar på kvar si stasjon og roterer samtidig. Total tid blir rekna automatisk.</p></div>}
-      {isTimed&&<div className="wod-advanced-fields"><label>Øktlengd (minutt)<input type="number" min="1" max="600" value={minutes} onChange={e=>setMinutes(e.target.value)}/></label><p className="wod-help">Arbeidet startar {timedLabel(format)}. Reps-feltet i doseringa er målet per arbeidsintervall.</p></div>}
-      {isInterval&&<div className="wod-advanced-fields">{format!=='Tabata'&&<label>Tal øvingar / drag<select value={intervalExerciseCount} onChange={e=>{setIntervalExerciseCount(e.target.value);setSelected(rows=>rows.slice(0,Number(e.target.value)))}}>{[1,2,3,4,5,6,7,8].map(n=><option key={n} value={n}>{n} {n===1?'øving/drag':'øvingar/drag'}</option>)}</select></label>}<label>Tal rundar<select value={rounds} onChange={e=>setRounds(e.target.value)}>{[1,2,3,4,5,6,7,8].map(n=><option key={n} value={n}>{n} {n===1?'runde':'rundar'}</option>)}</select></label><label>Arbeid (sekund)<input type="number" min="1" max="600" step="1" value={workSeconds} onChange={e=>setWorkSeconds(e.target.value)}/></label><label>Pause (sekund)<input type="number" min="0" max="600" step="1" value={restSeconds} onChange={e=>setRestSeconds(e.target.value)}/></label><p className="wod-help">{format==='Tabata'?'Standard Tabata: 20 sek arbeid / 10 sek pause × 8 rundar.':'Vel arbeidstid, pause, tal rundar og drag. Øvingane blir gjennomførte i vald rekkjefølgje.'}</p></div>}
+     {isStationCircuit&&<div className="wod-advanced-fields station-circuit-settings"><WodTimeDial label="Arbeid per stasjon" unit="sek" value={stationWork} onChange={setStationWork} presets={[30,40,45,60]}/><label>Tal stasjonar<select value={stationCount} onChange={e=>{const count=Number(e.target.value);setStationCount(String(count));if(selected.length>count)setNotice('Du har fleire øvingar enn stasjonar. Gå til øvingsvalet og fjern overflødige øvingar.')}}>{[2,3,4,5,6,7,8].map(n=><option key={n} value={n}>{n}</option>)}</select></label><label>Bytetid (sek.)<input type="number" min="0" max="600" step="1" value={stationTransition} onChange={e=>setStationTransition(e.target.value)}/></label><label>Tal rundar<input type="number" min="1" max="20" step="1" value={stationRounds} onChange={e=>setStationRounds(e.target.value)}/></label><p className="wod-help">Vel 2–8 stasjonar, arbeidstid, bytetid og rundar. Alle gruppene roterer samtidig; total tid blir rekna automatisk.</p></div>}
+      {isTimed&&<div className="wod-advanced-fields"><WodTimeDial label="Øktlengd" value={minutes} onChange={setMinutes} presets={[10,15,20,30]}/><p className="wod-help">Arbeidet startar {timedLabel(format)}. Reps-feltet i doseringa er målet per arbeidsintervall.</p></div>}
+      {isInterval&&<div className="wod-advanced-fields"><WodTimeDial label="Arbeid per intervall" unit="sek" value={workSeconds} onChange={setWorkSeconds} presets={[20,30,40,60]}/>{format!=='Tabata'&&<label>Tal øvingar / drag<select value={intervalExerciseCount} onChange={e=>{setIntervalExerciseCount(e.target.value);if(selected.length>Number(e.target.value))setNotice('Fjern overflødige øvingar i øvingssteget før du held fram.')}}>{[1,2,3,4,5,6,7,8].map(n=><option key={n} value={n}>{n} {n===1?'øving/drag':'øvingar/drag'}</option>)}</select></label>}<label>Tal rundar<select value={rounds} onChange={e=>setRounds(e.target.value)}>{[1,2,3,4,5,6,7,8].map(n=><option key={n} value={n}>{n} {n===1?'runde':'rundar'}</option>)}</select></label><label>Pause (sekund)<input type="number" min="0" max="600" step="1" value={restSeconds} onChange={e=>setRestSeconds(e.target.value)}/></label><p className="wod-help">{format==='Tabata'?'Standard Tabata: 20 sek arbeid / 10 sek pause × 8 rundar.':'Vel arbeidstid, pause, tal rundar og drag. Øvingane blir gjennomførte i vald rekkjefølgje.'}</p></div>}
       {isLadder&&<div className="wod-advanced-fields"><label>Startreps<input type="number" min="1" value={ladderStart} onChange={e=>setLadderStart(e.target.value)}/></label><label>Endring per runde<input type="number" min="1" value={ladderStep} onChange={e=>setLadderStep(e.target.value)}/></label><label>Retning<select value={ladderDirection} onChange={e=>setLadderDirection(e.target.value)}><option value="up">Aukande</option><option value="down">Minkande</option></select></label></div>}
-     {isAmrap&&<div className="wod-advanced-fields"><label>Tidsramme (min) · obligatorisk<input type="number" min="1" max="600" required value={timeCap} onChange={e=>setTimeCap(e.target.value)} placeholder="T.d. 16"/></label><p className="wod-help">AMRAP skal alltid ha ei fast tidsramme. Resultatet blir registrert som rundar + ekstra repetisjonar.</p></div>}
-      {(isForTime||isLadder||showSets)&&<div className="wod-advanced-fields"><label>Time Cap (valfri, minutt)<input type="number" min="0" max="600" value={timeCap} onChange={e=>{setTimeCap(e.target.value);setTimeCapSeconds('0')}}/></label>{isForTime&&format!=='Chipper'&&<label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(e.target.value)}/></label>}<p className="wod-help">Time Cap er valfri. Når tida går ut, blir økta registrert som fullført på tidsgrensa, med utført arbeid lagra.</p></div>}
+     {isAmrap&&<div className="wod-advanced-fields"><WodTimeDial label="Kor lenge skal AMRAP-en vara?" value={timeCap} onChange={setTimeCap} presets={[8,12,16,20]}/><p className="wod-help">AMRAP har alltid fast tid. Resultatet blir registrert som rundar og ekstra repetisjonar.</p></div>}
+      {(isForTime||isLadder||showSets)&&<div className="wod-advanced-fields"><div className="gg-cap-choice"><strong>Tidsgrense (valfri)</strong><button type="button" aria-pressed={!timeCap} className={!timeCap?'selected':''} onClick={()=>setTimeCap('')}>Utan tidsgrense</button><button type="button" aria-pressed={!!timeCap} className={timeCap?'selected':''} onClick={()=>setTimeCap(current=>current||'20')}>Med tidsgrense</button></div>{timeCap!==''&&<WodTimeDial label="Tidsgrense" value={timeCap} onChange={setTimeCap} presets={[10,15,20,30]}/>} {isForTime&&format!=='Chipper'&&<label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(e.target.value)}/></label>}<p className="wod-help">Tidsgrensa er valfri. Når ho går ut, blir utført arbeid lagra.</p></div>}
       {isCoupletTriplet&&<div className="wod-advanced-fields"><label>Tidsstruktur<select value={combinationMode} onChange={e=>setCombinationMode(e.target.value)}><option value="For Time">For Time</option><option value="AMRAP">AMRAP</option><option value="Open">Open / utan klokke</option></select></label>{combinationMode!=='Open'&&<label>Tidsgrense (min)<input type="number" min="1" max="300" value={timeCap} onChange={e=>setTimeCap(e.target.value)}/></label>}<p className="wod-help">{format} krev {format==='Couplet'?2:3} øvingar. Tidsstrukturen avgjer korleis dei blir gjennomførte.</p></div>}
       
      {format==='Superset'&&<p className="wod-help">Gruppér øvingar med same bokstav. Utfør gruppa etter kvarandre, kvil etterpå.</p>}
@@ -459,7 +561,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
      {isCustom&&<><label className="wod-custom-sets"><input type="checkbox" checked={customUseSets} onChange={e=>setCustomUseSets(e.target.checked)}/> Bruk sett-programmering på øvingane</label><label>Fri struktur / instruksjon<textarea rows="3" value={customInstructions} onChange={e=>setCustomInstructions(e.target.value)} placeholder="Beskriv struktur, sett, rundar, pausar og gjennomføring …"/></label></>}
      </div>}{wizardStep===2&&!libraryOpen&&<div className="wizard-selected-stage">
        <div className="wizard-stage-intro"><strong>Øvingane i WOD-en</strong><span>Vel øvingar, sorter dei og gå vidare til eitt samla doseringssteg.</span></div>
-       <button type="button" className="primary-button wod-open-library" onClick={()=>setLibraryOpen(true)}><Plus size={17}/> Legg til øving</button>
+       <div className="gg-exercise-actions"><button type="button" className="primary-button wod-open-library" onClick={()=>setLibraryOpen(true)}><Plus size={17}/> Legg til øving</button><button type="button" className="secondary-button gg-add-pause" onClick={addPause}><Plus size={16}/> Legg til pause</button></div>
        <div className="wod-selected-list">
         {selected.length?selected.map((ex,i)=><article data-order={i+1} className={"wod-selected-card wod-category-"+categoryTone(ex.category)} key={ex.key}>
          <span className={"wod-order wod-order-"+categoryTone(ex.category)}>{i+1}</span>
@@ -474,20 +576,21 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
          <div className="wod-reorder-controls">
           <button type="button" title="Flytt opp" aria-label={`Flytt ${ex.name} opp`} disabled={!i} onClick={()=>moveByKey(ex.key,-1)}><ArrowUp size={16}/></button>
           <button type="button" title="Flytt ned" aria-label={`Flytt ${ex.name} ned`} disabled={i===selected.length-1} onClick={()=>moveByKey(ex.key,1)}><ArrowDown size={16}/></button>
-          <label className="wod-order-picker wod-position-control" title="Vel plassering"><span>Pos.</span><select aria-label={`Flytt ${ex.name} til posisjon`} value={i+1} onChange={event=>{const position=Number(event.target.value);setSelected(rows=>moveWodItemToPosition(rows,ex.key,position));setNotice(ex.name+' er flytta til plass '+position+'.')}}>{selected.map((_,position)=><option key={position+1} value={position+1}>{position+1}</option>)}</select></label>
           <button type="button" title="Fjern øving" aria-label={`Fjern ${ex.name}`} onClick={()=>setSelected(rows=>rows.filter(x=>x.key!==ex.key))}><Trash2 size={16}/></button>
          </div>
         </article>):<div className="empty-state">Vel «Legg til øving» for å byggja WOD-en.</div>}
        </div>
        <p className="wod-order-feedback" role="status" aria-live="polite" aria-atomic="true">Rekkjefølgje: {selected.map((ex,i)=>(i+1)+'. '+ex.name).join(' → ')}</p>
-      <div className="wizard-stage-actions wizard-stage-actions-sticky"><button type="button" className="secondary-button" onClick={()=>setWizardStep(1)}>Tilbake</button><button type="button" className="primary-button" disabled={!selected.length||(isInterval&&selected.length!==Number(intervalExerciseCount))} onClick={()=>goToStep(3)}>Vidare · {selected.length} {selected.length===1?"øving":"øvingar"} →</button></div></div>}
-     {wizardStep===1&&<div className="wizard-stage-actions"><button type="button" className="primary-button" onClick={()=>goToStep(2)}>Vidare til øvingsval →</button></div>}
+      <div className="wizard-stage-actions wizard-stage-actions-sticky"><button type="button" className="secondary-button" onClick={()=>setWizardStep(wodFormatNeedsTime(format)?1:0)}>Tilbake</button><button type="button" className="primary-button" disabled={!selected.length||(isInterval&&selected.length!==Number(intervalExerciseCount))} onClick={()=>goToStep(3)}>Vidare · {selected.length} {selected.length===1?"øving":"øvingar"}</button></div></div>}
+     {wizardStep===1&&<div className="wizard-stage-actions gg-time-next"><button type="button" className="secondary-button" onClick={()=>setWizardStep(0)}>Tilbake til format</button><button type="button" className="primary-button" onClick={()=>goToStep(2)}>Vidare til øvingar</button></div>}
      {wizardStep===3&&<div className="wizard-dose-stage">
-      <div className="wizard-dose-intro"><div><span className="wod-classic-kicker">STEG 3 AV 4</span><h2>Dosering og nivå</h2><p>Set reps, belastning og tilpass nivå for kvar øving.</p></div><span className="wod-dose-count">{selected.length} øvingar</span></div>
+      <div className="wizard-dose-intro"><div><span className="wod-classic-kicker">DOSERING</span><h2>Dosering og nivå</h2><p>Set reps, belastning og tilpass nivå for kvar øving. Bruk pilene for å endra rekkefølgja.</p></div><span className="wod-dose-count">{selected.length} øvingar</span></div>
+      {isCustom&&<details className="gg-dose-advanced gg-custom-options"><summary>Eigne instruksjonar og fri struktur</summary><label><input type="checkbox" checked={customUseSets} onChange={e=>setCustomUseSets(e.target.checked)}/> Bruk sett-programmering</label><label>Beskriv gjennomføringa<textarea rows="3" value={customInstructions} onChange={e=>setCustomInstructions(e.target.value)} placeholder="Struktur, sett, rundar og pausar …"/></label></details>}
+      {showSets&&<details className="gg-dose-advanced gg-custom-options"><summary>Valfri tidsgrense for styrke</summary><label>Time Cap (minutt)<input type="number" min="0" max="600" value={timeCap} onChange={e=>setTimeCap(e.target.value)}/></label><small>La feltet stå tomt for styrke utan tidsgrense.</small></details>}
       <div className="wizard-dose-exercises">{selected.map((ex,i)=>{const level=doseLevelByKey[ex.key]||'rx';const dose=(ex.levels||makeLevels(ex.reps,ex.prescription_profiles||{}))[level]||makeLevels(ex.reps,ex.prescription_profiles||{})[level];const update=patch=>updateLevel(ex.key,level,patch);const summary=(key)=>{const d=(ex.levels||makeLevels(ex.reps,ex.prescription_profiles||{}))[key]||{};const load=d.loadMode==='kg'?[d.loadKgMen!==''?'M '+d.loadKgMen+' kg':'',d.loadKgWomen!==''?'K '+d.loadKgWomen+' kg':''].filter(Boolean).join(' / '):d.loadMode==='percent'&&d.percent1rm?d.percent1rm+' % 1RM':d.loadMode==='rir'&&d.rir!==''?'RIR '+d.rir:d.loadMode==='bodyweight'?'Kroppsvekt':'';return [ex.is_rest?'Pause · '+(Number(ex.pauseSeconds)||30)+' sek':ex.is_complex?(d.reps||5)+' komplekssyklusar':isRow(ex)?(ex.rowValue||'–')+' '+ex.rowUnit:d.reps?d.reps+' reps':'Ikkje dosert',d.heightCm?d.heightCm+' cm':'',d.durationSeconds?d.durationSeconds+' sek':'',d.distanceMeters?d.distanceMeters+' m':'',d.calories?d.calories+' cal':'',load,].filter(Boolean).join(' · ')};return <article className="wizard-dose-card" key={ex.key}>
-       <button type="button" className="wizard-dose-card-head" onClick={()=>setEditingSelectedKey(current=>current===ex.key?null:ex.key)}><span className="wod-order">{i+1}</span><strong>{ex.name}</strong><span className="wizard-dose-card-summary">{summary('rx')}</span><span>{editingSelectedKey===ex.key?'⌃':'⌄'}</span></button>
+       <div className="gg-dose-card-bar"><button type="button" className="wizard-dose-card-head" aria-expanded={editingSelectedKey===ex.key} onClick={()=>setEditingSelectedKey(current=>current===ex.key?null:ex.key)}><span className="wod-order">{i+1}</span><strong>{ex.name}</strong><span className="wizard-dose-card-summary">{summary('rx')}</span><span>{editingSelectedKey===ex.key?'⌃':'⌄'}</span></button><div className="gg-reorder-buttons"><button type="button" aria-label={`Flytt ${ex.name} opp`} title="Flytt opp" disabled={!i} onClick={()=>moveByKey(ex.key,-1)}><ArrowUp size={17}/></button><button type="button" aria-label={`Flytt ${ex.name} ned`} title="Flytt ned" disabled={i===selected.length-1} onClick={()=>moveByKey(ex.key,1)}><ArrowDown size={17}/></button></div></div>
        {editingSelectedKey===ex.key&&<div className="wizard-dose-card-body">{ex.is_complex&&<div className="wizard-dose-complex-sequence"><strong>Kompleksrekkjefølgje</strong><ol>{ex.complex_steps.map((step,stepIndex)=><li key={stepIndex}>{step.reps} × {step.name}</li>)}</ol></div>}
-         {ex.is_rest?<label className="wizard-dose-pause">Pausevarigheit · sekund<input type="number" min="1" max="3600" value={ex.pauseSeconds||'30'} onChange={e=>updateItem(ex.key,{pauseSeconds:e.target.value})}/></label>:<> <div className="wizard-dose-level-tabs">{[{id:'rx',label:'RX'},{id:'scaled',label:'Scaled'},{id:'foundation',label:'Foundation'}].map(x=><button type="button" key={x.id} className={level===x.id?'active':''} onClick={()=>setDoseLevelByKey(v=>({...v,[ex.key]:x.id}))}>{x.label}</button>)}</div>
+         {ex.is_rest?<label className="wizard-dose-pause">Pausevarigheit · sekund<input type="number" min="1" max="3600" value={ex.pauseSeconds||'30'} onChange={e=>updateItem(ex.key,{pauseSeconds:e.target.value})}/></label>:<><QuickDoseLevels exercise={ex} showSets={showSets} isStationCircuit={isStationCircuit} updateLevel={updateLevel} updateItem={updateItem} copyRxToLevels={copyRxToLevels}/><details className="gg-dose-advanced"><summary>Avansert dosering og instruksjonar</summary><div className="wizard-dose-level-tabs">{[{id:'rx',label:'RX'},{id:'scaled',label:'Scaled'},{id:'foundation',label:'Foundation'}].map(x=><button type="button" key={x.id} className={level===x.id?'active':''} onClick={()=>setDoseLevelByKey(v=>({...v,[ex.key]:x.id}))}>{x.label}</button>)}</div>
         {doseFieldsFor(ex).load&&<div className="wizard-dose-suggestion"><strong>Øvingsprofil · {ex.prescription_profiles?.variant_label||ex.equipment||'Uspesifisert variant'}</strong><span>{dose.loadKgMen!==''||dose.loadKgWomen!==''?'Standardverdiar frå øvingsbiblioteket':'Ingen standardverdiar registrerte for dette nivået.'}</span><small>PT-konfigurerte verdiar per øving og variant – ikkje automatisk skalerte frå RX.</small></div>}
         <div className="wizard-dose-fields">
            {showSets&&<label>Sett<input type="number" min="1" max="30" value={dose.sets??''} onChange={e=>update({sets:e.target.value})} placeholder="T.d. 3"/></label>}
@@ -509,7 +612,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
           <label>Alternativ øving / variant<input type="text" value={dose.variant||''} onChange={e=>update({variant:e.target.value})} placeholder="Valfri skalering av rørsla"/></label>
           <label className="wizard-dose-instruction">Instruksjon (valfritt)<textarea rows="2" value={dose.instruction||''} onChange={e=>update({instruction:e.target.value})} placeholder="Teknikk, krav og gjennomføring …"/></label>
          </div>
-        <div className="wizard-dose-copy"><span>{level==='rx'?'Føreskriven standard':level==='scaled'?'Tilpassa nivå':'Grunnnivå'}</span><span>Verdiane er uavhengige per nivå</span></div>
+        <div className="wizard-dose-copy"><span>{level==='rx'?'Føreskriven standard':level==='scaled'?'Tilpassa nivå':'Grunnnivå'}</span><span>Verdiane er uavhengige per nivå</span></div></details>
          </>}
         </div>}
       </article>})}</div>

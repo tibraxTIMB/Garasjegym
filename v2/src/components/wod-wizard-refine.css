@@ -1,0 +1,174 @@
+/* One decision per screen, with the same dark, touch-sized controls throughout. */
+.wod-builder { scroll-margin-top:76px; }
+.wod-builder .gg-wizard-progress {
+  display:flex!important;flex-wrap:wrap!important;gap:7px!important;
+  align-items:center!important;min-width:0!important;margin:8px 0 16px!important;
+}
+.wod-builder .gg-wizard-progress button {
+  display:flex;align-items:center;gap:7px;flex:1 1 90px;min-width:0;
+  padding:8px 10px;min-height:44px;background:#172329;color:#dce6e8;
+  border:1px solid #43535d;border-radius:11px;font-size:12px;font-weight:750;
+}
+.wod-builder .gg-wizard-progress button b {
+  display:grid;place-items:center;width:24px;height:24px;flex:0 0 24px;
+  background:#2b414b;color:#f6f8f8;border-radius:50%;font-size:12px;
+}
+.wod-builder .gg-wizard-progress button.active { background:#46301c;border-color:#e4a049;color:#fff; }
+.wod-builder .gg-wizard-progress button.active b { background:#e9a044;color:#101619; }
+.wod-builder .gg-wizard-progress button.complete { color:#d4efdf; }
+.wod-builder .gg-wizard-progress button:disabled { opacity:.58;cursor:default; }
+
+.wod-builder-step-0 .wod-builder-layout { display:none!important; }
+.wod-builder-step-0 .pt-wod-builder-form,
+.wod-builder-step-0 .gg-format-wizard { width:100%!important;max-width:920px!important;min-width:0!important;margin-inline:auto!important; }
+.gg-format-wizard { display:grid;gap:18px;padding:clamp(14px,3vw,26px);border:1px solid #40535b;border-radius:18px;background:#0e191e;color:#f6fafb; }
+.gg-wizard-intro { display:grid;gap:6px;min-width:0; }
+.gg-wizard-intro h2 { margin:0;font-size:clamp(24px,4vw,34px);line-height:1.15;color:#fff; }
+.gg-wizard-intro p { margin:0;color:#b6c4ca;font-size:15px;line-height:1.5; }
+.gg-featured-formats { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px; }
+.gg-featured-formats>button { display:grid;justify-items:start;align-content:center;gap:7px;min-width:0;min-height:132px;padding:16px;background:linear-gradient(140deg,#20313a,#111c22);color:#f7fafb;text-align:left;border:1px solid #4b606b;border-radius:15px;cursor:pointer; }
+.gg-featured-formats>button:focus-visible,.gg-featured-formats>button:hover { outline:2px solid #e6a24c;outline-offset:1px; }
+.gg-featured-formats strong { font-size:20px;line-height:1.2; }
+.gg-featured-formats small { font-size:13px;color:#bccbd2;line-height:1.35; }
+.gg-format-icon { display:grid;place-items:center;width:38px;height:38px;background:#48311c;color:#ffc679;border-radius:12px;font-size:23px; }
+.gg-other-formats { padding:11px;border:1px solid #42545c;border-radius:12px;background:#152229; }
+.gg-other-formats summary { padding:7px 5px;min-height:36px;cursor:pointer;color:#f5bd79;font-weight:800; }
+.gg-other-formats>div { display:flex;flex-wrap:wrap;gap:8px;padding:10px 0; }
+.gg-other-formats button { min-height:44px;padding:8px 13px;border:1px solid #667680;border-radius:10px;background:#253540;color:#fff;font-weight:750; }
+.gg-other-formats small,.gg-wizard-subtle { color:#b7c4cb;font-size:13px;line-height:1.5;margin:0; }
+
+/* Format and WOD metadata are chosen elsewhere, so the timing step is focused. */
+.wod-builder-step-1 .wod-composer .wod-name-field,
+.wod-builder-step-1 .wod-composer .wod-setup-format,
+.wod-builder-step-1 .wod-category-early,
+.wod-builder-step-1 .wod-category-help,
+.wod-builder-step-1 .warmup-builder-guide,
+.wod-builder-step-1 .wod-live-preview { display:none!important; }
+.wod-builder-step-1 .wod-builder-layout>.wod-composer { width:min(100%,780px)!important;max-width:780px!important;margin-inline:auto!important; }
+.wod-builder-step-1 .wod-composer .wizard-format-panel { display:flex!important;flex-direction:column!important;gap:14px!important;padding:14px!important; }
+.wod-builder-step-1 .wod-composer .wizard-format-panel>.engine-fields:empty { display:none!important; }
+.wod-builder-step-1 .wod-composer .wod-advanced-fields { display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:13px!important;align-items:start!important; }
+.wod-builder-step-1 .wod-composer .wod-advanced-fields>.gg-analog-time,
+.wod-builder-step-1 .wod-composer .wod-advanced-fields>.gg-cap-choice,
+.wod-builder-step-1 .wod-composer .wod-advanced-fields>.wod-help { grid-column:1/-1; }
+.wod-builder .gg-time-next { display:flex!important;gap:10px!important;justify-content:space-between!important;margin-top:16px!important; }
+
+/* Functional analogue duration selector. A number field remains the precise fallback. */
+.gg-analog-time { display:grid;justify-items:stretch;gap:14px;width:100%;min-width:0;padding:14px;border:1px solid #445b66;border-radius:16px;background:linear-gradient(150deg,#17272e,#090f14);color:#f7f9fa;box-sizing:border-box; }
+.gg-analog-time-head { display:grid;gap:4px;text-align:center; }
+.gg-analog-time-head strong { font-size:18px; }
+.gg-analog-time-head small { color:#bfccd2;font-size:12px; }
+.gg-time-presets { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px; }
+.gg-time-presets button,.gg-cap-choice button { min-height:44px;padding:7px 5px;background:#25353e;color:#ecf2f5;border:1px solid #526671;border-radius:10px;font-size:13px;font-weight:800; }
+.gg-time-presets button.active,.gg-cap-choice button.selected { background:#9c4910;color:#fff;border-color:#eda448; }
+.gg-analog-time-wheel { position:relative;width:min(100%,300px);aspect-ratio:1;margin:0 auto; }
+.gg-time-clock-face { display:block;width:100%;height:100%;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none; }
+.gg-time-clock-face:active { cursor:grabbing; }
+.gg-time-clock-face:focus-visible { outline:2px solid #f3a74a;outline-offset:3px;border-radius:50%; }
+.gg-time-clock-readout { position:absolute;inset:0;display:grid;place-items:center;pointer-events:none; }
+.gg-time-clock-readout strong { font-size:clamp(34px,6vw,54px);font-variant-numeric:tabular-nums;color:#fff;letter-spacing:-.05em; }
+.gg-time-adjust { display:grid;grid-template-columns:48px minmax(0,1fr) 48px;gap:10px;align-items:end;width:min(100%,330px);margin:auto; }
+.gg-time-adjust>button { height:50px;background:#eaa44e;color:#13181c;border:0;border-radius:11px;font-size:28px;font-weight:850; }
+.gg-time-adjust label { display:grid;gap:5px;min-width:0;font-size:12px;color:#cbd5d9;text-align:center; }
+.gg-time-adjust input { width:100%;min-height:50px;padding:7px;color:#fff;background:#15242b;border:1px solid #657780;border-radius:11px;text-align:center;font-size:21px;font-weight:850;box-sizing:border-box; }
+.gg-time-overflow-note { color:#d9c89d;text-align:center; }
+.gg-cap-choice { display:flex;flex-wrap:wrap;gap:8px;align-items:center; }
+.gg-cap-choice strong { flex:1 1 100%; }
+.gg-cap-choice button { flex:1 1 145px; }
+
+/* Dosing: one stable ordered list and direct, readable RX/Scaled/Foundation. */
+.wod-builder-step-3 .wizard-dose-exercises { display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:12px!important; }
+.wod-builder-step-3 .wizard-dose-card { width:100%!important; }
+.wod-builder-step-3 .wizard-dose-method { display:none!important; }
+.gg-dose-card-bar { display:flex;align-items:stretch;gap:6px;min-width:0; }
+.wod-builder-step-3 .gg-dose-card-bar .wizard-dose-card-head { width:auto!important;flex:1 1 auto!important;min-width:0!important; }
+.gg-dose-card-bar .wizard-dose-card-head>strong { flex:1;min-width:0;overflow-wrap:break-word; }
+.gg-reorder-buttons { display:flex;align-items:center;gap:5px;flex:0 0 auto;padding:6px; }
+.gg-reorder-buttons button { display:grid;place-items:center;width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border:1px solid #60717a;border-radius:9px;background:#22323b;color:#f5f8fa; }
+.gg-reorder-buttons button:disabled { opacity:.3;cursor:not-allowed; }
+.gg-quick-dosage { display:grid;gap:11px;padding-top:12px;min-width:0; }
+.gg-quick-dose-heading { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px; }
+.gg-quick-dose-heading strong { font-size:15px;color:#fff; }
+.gg-quick-dose-heading button { min-height:40px;padding:8px 11px;border-radius:9px;border:1px solid #6b7478;background:#22343d;color:#ffce91;font-size:12px;font-weight:800; }
+.gg-level-row { display:grid;grid-template-columns:minmax(80px,.2fr) minmax(0,1fr);gap:12px;min-width:0;padding:12px;border:1px solid #455861;border-left:4px solid #89d8a7;border-radius:12px;background:#17252c; }
+.gg-level-row.gg-level-scaled { border-left-color:#92c9fb; }
+.gg-level-row.gg-level-foundation { border-left-color:#dcb2fd; }
+.gg-level-row>strong { color:#fff;font-size:14px;padding-top:9px; }
+.gg-level-fields,.gg-quick-rowing { display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;min-width:0; }
+.gg-level-fields label,.gg-quick-rowing label { display:grid;gap:5px;min-width:0;font-size:12px;color:#d8e4e9;font-weight:750; }
+.gg-level-fields input,.gg-quick-rowing input,.gg-quick-rowing select { width:100%;min-width:0;min-height:44px;padding:8px 10px;box-sizing:border-box;border-radius:9px;border:1px solid #5d737e;background:#0c181e;color:#fff;font-size:16px; }
+.gg-box-height { grid-column:1/-1;display:grid;gap:6px; }
+.gg-box-height span { font-size:12px;font-weight:800;color:#d8e4e9; }
+.gg-box-height>div { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px; }
+.gg-box-height button { min-height:44px;border:1px solid #5e7580;border-radius:9px;background:#263943;color:#fff;font-weight:850;font-size:15px; }
+.gg-box-height button.selected { background:#ac560e;border-color:#eda448; }
+.gg-dose-alt-mode { grid-column:1/-1;color:#c7d1d7;padding:8px; }
+.gg-quick-dosage>small { color:#aebfc8;font-size:12px; }
+.gg-dose-advanced { border:1px solid #415864;border-radius:11px;padding:8px 11px;margin-top:13px;background:#111f26; }
+.gg-dose-advanced summary { cursor:pointer;color:#ffcb84;min-height:42px;display:flex;align-items:center;font-weight:800;font-size:14px; }
+.gg-dose-advanced[open] summary { border-bottom:1px solid #3a4a52;margin-bottom:10px; }
+.gg-participation-section { display:grid;gap:12px;width:min(100%,980px);margin:12px auto 0;border:1px solid #43545d;border-radius:15px;padding:14px;background:#15242a; }
+.gg-participation-choices { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px; }
+.gg-participation-choices button { min-height:46px;border:1px solid #60717c;border-radius:10px;background:#23343d;color:#f0f5f6;font-size:14px;font-weight:800; }
+.gg-participation-choices button.selected { background:#b35b14;border-color:#e6a04d;color:#fff; }
+
+/* Dosing and review need the complete width, particularly on tablets. */
+.wod-builder-step-3 .wod-builder-layout,
+.wod-builder-step-4 .wod-builder-layout { grid-template-columns:minmax(0,1fr)!important; }
+.wod-builder-step-3 .wod-builder-layout>.wod-composer,
+.wod-builder-step-4 .wod-builder-layout>.wod-composer { width:min(100%,980px)!important;max-width:980px!important;margin-inline:auto!important; }
+.wod-builder-step-3 .wod-builder-layout>.wod-live-preview,
+.wod-builder-step-4 .wod-builder-layout>.wod-live-preview { display:none!important; }
+
+/* The final step is an editable review, not a nested three-column preview. */
+.wod-builder-step-4 .wod-final-preview { display:none!important; }
+.gg-review-before { display:grid;gap:15px;min-width:0; }
+.gg-review-name { display:flex;align-items:end;flex-wrap:wrap;gap:10px; }
+.gg-review-name label { display:grid;gap:7px;flex:1 1 210px;min-width:0;font-size:13px;color:#e6eef1;font-weight:800; }
+.gg-review-name input { min-height:48px;padding:10px 12px;background:#111f26;color:#fff;border:1px solid #6b7f89;border-radius:10px;font-size:16px; }
+.gg-review-name button { min-height:48px; }
+.gg-review-context { margin:0;padding:12px 14px;background:#192a32;border:1px solid #455862;border-radius:12px;color:#ffcf92;font-weight:850; }
+.gg-review-order { display:grid;gap:10px; }
+.gg-review-order-head { display:grid;gap:3px; }
+.gg-review-order-head strong { font-size:18px; }
+.gg-review-order-head small { color:#c0cbd1; }
+.gg-review-item { display:grid;gap:9px;min-width:0;padding:12px;border:1px solid #4b606b;border-radius:13px;background:#152229; }
+.gg-review-item-top { display:flex;gap:10px;align-items:center;min-width:0; }
+.gg-review-item-top>.wod-order { display:grid;place-items:center;width:31px;height:31px;flex:0 0 31px;border-radius:50%;background:#a6510e;color:white;font-weight:900; }
+.gg-review-item-top>strong { flex:1;min-width:0;overflow-wrap:break-word;font-size:16px; }
+.gg-review-levels { display:grid;gap:5px; }
+.gg-review-levels>div { display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:#e0e8ea; }
+.gg-review-levels b { min-width:94px;color:#f7bf72; }
+.gg-review-levels span { flex:1;min-width:0;overflow-wrap:break-word; }
+.gg-review-edit { justify-self:start;min-height:42px;padding:7px 13px;border-radius:9px;background:#283c47;border:1px solid #657881;color:#fff;font-weight:800; }
+.gg-review-notes { border:1px solid #4d6068;border-radius:12px;padding:10px 12px; }
+.gg-review-notes summary { color:#f8bb70;cursor:pointer;min-height:42px;font-weight:800; }
+.gg-review-notes label { display:grid;gap:6px;margin:12px 0;color:#e6eff2;font-size:13px; }
+.gg-review-notes select,.gg-review-notes textarea { padding:10px;background:#13242b;color:#fff;border:1px solid #62747c;border-radius:9px; }
+.wod-builder-step-2 .wod-reorder-controls { min-width:0!important;flex-wrap:nowrap!important; }
+.gg-exercise-actions { display:flex;gap:9px;flex-wrap:wrap; }
+.gg-exercise-actions button { min-height:46px;flex:1 1 160px; }
+.wod-builder-step-2 .wod-composer .wod-selected-list { max-height:none!important;overflow:visible!important; }
+.gg-custom-options label { display:grid;gap:6px;margin:9px 0;color:#e3edf0;font-size:13px; }
+.gg-custom-options input:not([type=checkbox]),.gg-custom-options textarea { width:100%;padding:10px;background:#12222a;color:#fff;border:1px solid #566b76;border-radius:9px; }
+
+@media(max-width:720px) {
+ .gg-featured-formats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .gg-featured-formats>button { min-height:120px;padding:12px; }
+ .gg-featured-formats strong { font-size:17px; }
+ .gg-level-row { grid-template-columns:minmax(0,1fr);gap:7px; }
+ .gg-level-row>strong { padding:0; }
+ .gg-level-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .gg-review-item-top { flex-wrap:wrap; }
+ .gg-review-item-top .gg-reorder-buttons { margin-left:auto; }
+ .wod-builder-step-3 .gg-dose-card-bar .wizard-dose-card-summary { display:none!important; }
+ .wod-builder-step-1 .wod-composer .wod-advanced-fields { grid-template-columns:minmax(0,1fr)!important; }
+ .gg-participation-choices button { font-size:12px; }
+}
+@media(max-width:390px){
+ .gg-featured-formats { gap:8px; }
+ .gg-featured-formats>button { min-height:116px;padding:10px; }
+ .gg-time-presets button { font-size:12px; }
+ .gg-reorder-buttons { gap:3px;padding:3px; }
+ .gg-reorder-buttons button { width:42px;min-width:42px;height:42px; }
+}
