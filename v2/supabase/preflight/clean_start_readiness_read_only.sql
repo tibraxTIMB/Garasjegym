@@ -165,5 +165,6 @@ FROM (
   UNION ALL SELECT 'workout_exercises',count(*) FROM public.workout_exercises
   UNION ALL SELECT 'workout_logs',count(*) FROM public.workout_logs
   UNION ALL SELECT 'workout_sets',count(*) FROM public.workout_sets
+  UNION ALL SELECT 'storage.objects',count(*) FROM storage.objects
 ) operational_counts
 ORDER BY section,item;
