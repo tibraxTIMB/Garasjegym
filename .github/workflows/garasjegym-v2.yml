@@ -210,6 +210,18 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
         run: psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/auth_signup_gate_full_supabase_postgres17.sql
+      - name: Execute read-only clean-start preflight SQL on isolated replay
+        env:
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
+        run: |
+          psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/clean_start_readiness_read_only.sql > /tmp/clean-start-readiness.out
+          psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/clean_start_post_reset_acceptance_read_only.sql > /tmp/clean-start-acceptance.out
+          test -s /tmp/clean-start-readiness.out
+          test -s /tmp/clean-start-acceptance.out
+          printf 'Read-only readiness rows: '
+          wc -l < /tmp/clean-start-readiness.out
+          printf 'Read-only acceptance rows: '
+          wc -l < /tmp/clean-start-acceptance.out
       - name: Stop ephemeral Supabase stack
         if: always()
         working-directory: v2
