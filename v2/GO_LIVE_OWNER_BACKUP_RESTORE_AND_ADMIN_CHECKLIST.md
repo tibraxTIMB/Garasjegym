@@ -103,6 +103,8 @@ The current catalogue has 135 distinct names, but this is provisional until sema
 - [ ] Free isolated restore completed and old owner-admin rollback login verified.
 - [ ] Exact Production migration lineage recovered or forward-only reconciliation derived from the verified restore.
 - [ ] Production-shaped schema/RLS/Auth/functions reconciliation rehearsed.
+- [ ] `admin-delete-user` deployed with JWT verification enabled after schema reconciliation and all positive/negative function tests pass; it is currently missing in Production although the client invokes it.
+- [ ] `admin-create-user` remains disabled (HTTP 410); no in-app account creation.
 - [ ] Positive and negative class/PT/member-isolation tests pass.
 - [ ] Leaked-password protection enabled and verified.
 - [ ] Exercise semantic aliases and category mapping reviewed; exact catalogue manifest approved.
