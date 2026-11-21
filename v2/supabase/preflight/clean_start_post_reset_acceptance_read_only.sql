@@ -17,6 +17,10 @@ DECLARE
   v_profile_without_auth bigint;
   v_identities bigint;
   v_foreign_identities bigint;
+  v_auth_sessions bigint;
+  v_auth_refresh_tokens bigint;
+  v_auth_mfa_factors bigint;
+  v_auth_mfa_challenges bigint;
   v_system_exercises bigint;
   v_custom_exercises bigint;
   v_nonempty_operational_tables bigint;
@@ -42,6 +46,10 @@ BEGIN
          count(*) FILTER (WHERE i.user_id NOT IN (SELECT id FROM auth.users))
   INTO v_identities,v_foreign_identities
   FROM auth.identities i;
+  SELECT count(*) INTO v_auth_sessions FROM auth.sessions;
+  SELECT count(*) INTO v_auth_refresh_tokens FROM auth.refresh_tokens;
+  SELECT count(*) INTO v_auth_mfa_factors FROM auth.mfa_factors;
+  SELECT count(*) INTO v_auth_mfa_challenges FROM auth.mfa_challenges;
 
   SELECT count(*) FILTER (WHERE created_by IS NULL),
          count(*) FILTER (WHERE created_by IS NOT NULL)
@@ -104,13 +112,16 @@ BEGIN
   IF v_profiles <> 1 OR v_admins <> 1 OR v_non_admins <> 0
      OR v_auth_users <> 1 OR v_linked_users <> 1 OR v_auth_without_profile <> 0
      OR v_profile_without_auth <> 0 OR v_identities <> 1 OR v_foreign_identities <> 0
+     OR v_auth_sessions <> 0 OR v_auth_refresh_tokens <> 0
+     OR v_auth_mfa_factors <> 0 OR v_auth_mfa_challenges <> 0
      OR v_system_exercises <> 135 OR v_custom_exercises <> 0
      OR v_nonempty_operational_tables <> 0 OR v_storage_objects THEN
     RAISE EXCEPTION
-      'Clean-start acceptance failed: profiles=% admins=% non_admin_profiles=% auth_users=% linked=% auth_without_profile=% profile_without_auth=% identities=% foreign_identities=% system_exercises=% custom_exercises=% nonempty_operational_tables=% storage_objects=%',
+      'Clean-start acceptance failed: profiles=% admins=% non_admin_profiles=% auth_users=% linked=% auth_without_profile=% profile_without_auth=% identities=% foreign_identities=% sessions=% refresh_tokens=% mfa_factors=% mfa_challenges=% system_exercises=% custom_exercises=% nonempty_operational_tables=% storage_objects=%',
       v_profiles,v_admins,v_non_admins,v_auth_users,v_linked_users,v_auth_without_profile,
-      v_profile_without_auth,v_identities,v_foreign_identities,v_system_exercises,
-      v_custom_exercises,v_nonempty_operational_tables,v_storage_objects;
+      v_profile_without_auth,v_identities,v_foreign_identities,v_auth_sessions,v_auth_refresh_tokens,
+      v_auth_mfa_factors,v_auth_mfa_challenges,v_system_exercises,v_custom_exercises,
+      v_nonempty_operational_tables,v_storage_objects;
   END IF;
 END;
 $clean_start_acceptance_guard$;
