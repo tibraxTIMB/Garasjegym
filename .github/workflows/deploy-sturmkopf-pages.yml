@@ -1,4 +1,4 @@
-name: Deploy STURMKOPF preview
+name: Deploy STURMKOPF production
 
 on:
   push:
@@ -35,11 +35,15 @@ jobs:
       - name: Install dependencies
         working-directory: v2
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify application and owner bootstrap
+        working-directory: v2
+        run: npm test
       - name: Build mobile web app
         working-directory: v2
         env:
           VITE_SUPABASE_URL: https://izwzwvlexqxqewzijhhd.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_jZyaYhD8_jZgpgutKF7lRg_EcJ0EGSQ
+          VITE_OWNER_BOOTSTRAP_SIGNUP: 'true'
           VITE_SPOTIFY_CLIENT_ID: ${{ vars.VITE_SPOTIFY_CLIENT_ID }}
         run: npm run build
       - name: Check built release artifact environment and secrets
@@ -51,9 +55,9 @@ jobs:
           path: v2/dist
 
   deploy:
-    # Push events build the preview only. Publishing to the shared Pages URL
-    # requires an explicit manual opt-in from a workflow_dispatch event.
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_preview }}
+    # Owner approved the existing GitHub Pages address for the production
+    # cutover. Every push to this release branch now deploys after checks.
+    if: ${{ github.event_name == 'push' || inputs.publish_preview }}
     permissions:
       pages: write
       id-token: write
