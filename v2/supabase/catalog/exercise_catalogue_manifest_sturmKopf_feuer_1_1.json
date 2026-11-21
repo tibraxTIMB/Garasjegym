@@ -8,41 +8,166 @@
     "expansion_candidates": 41
   },
   "reconciliation": {
-    "exact_name_overlap_production_test": 16,
+    "production_test_exact_normalized_overlap": 16,
     "production_only": 40,
     "test_only": 78,
     "expansion_only": 1,
     "unique_normalized_names": 135
   },
-  "rule": "No row is discarded in this manifest. Metadata prefers TEST where an exact normalized name exists; otherwise Production, then expansion. Source-specific category/equipment values are retained for review.",
+  "metadata_precedence": "Preserve Production metadata for any name already in Production. Use TEST metadata only for TEST-only names. Use expansion migration metadata only for expansion-only names. For legacy Production rows with NULL body_area, enrich from the exact-name TEST counterpart when available; otherwise use Fullkropp. No existing name/category/equipment/description/video/is_rehab/is_active values are overwritten.",
+  "metadata_conflicts": {
+    "category": [
+      {
+        "name": "Air Squat",
+        "production": "CrossFit",
+        "test": "Styrke"
+      },
+      {
+        "name": "Back Squat",
+        "production": "CrossFit",
+        "test": "Styrke"
+      },
+      {
+        "name": "Bike Erg",
+        "production": "CrossFit",
+        "test": "Kondisjon"
+      },
+      {
+        "name": "Box Jump",
+        "production": "CrossFit",
+        "test": "Kondisjon"
+      },
+      {
+        "name": "Burpee",
+        "production": "CrossFit",
+        "test": "Kondisjon"
+      },
+      {
+        "name": "Deadlift",
+        "production": "CrossFit",
+        "test": "Styrke"
+      },
+      {
+        "name": "Front Squat",
+        "production": "CrossFit",
+        "test": "Styrke"
+      },
+      {
+        "name": "Plank",
+        "production": "Styrke",
+        "test": "Kjerne"
+      },
+      {
+        "name": "Pull-up",
+        "production": "CrossFit",
+        "test": "Styrke"
+      },
+      {
+        "name": "Row",
+        "production": "CrossFit",
+        "test": "Kondisjon"
+      },
+      {
+        "name": "SkiErg",
+        "production": "CrossFit",
+        "test": "Kondisjon"
+      },
+      {
+        "name": "Walking Lunge",
+        "production": "CrossFit",
+        "test": "Styrke"
+      }
+    ],
+    "equipment": [
+      {
+        "name": "Back Squat",
+        "production": "Vektstong",
+        "test": "Stong og rack"
+      },
+      {
+        "name": "Bench Press",
+        "production": "Vektstong / benk",
+        "test": "Stong/benk"
+      },
+      {
+        "name": "Bike Erg",
+        "production": "BikeErg",
+        "test": "Ergometersykkel"
+      },
+      {
+        "name": "Box Jump",
+        "production": "Plyoboks",
+        "test": "Kasse"
+      },
+      {
+        "name": "Bulgarian Split Squat",
+        "production": "Manualar / benk",
+        "test": "Benk/manualar"
+      },
+      {
+        "name": "Deadlift",
+        "production": "Vektstong",
+        "test": "Stong"
+      },
+      {
+        "name": "Front Squat",
+        "production": "Vektstong",
+        "test": "Stong og rack"
+      },
+      {
+        "name": "Hip Thrust",
+        "production": "Stong / benk",
+        "test": "Stong/benk"
+      },
+      {
+        "name": "Plank",
+        "production": "Matte",
+        "test": "Kroppsvekt"
+      },
+      {
+        "name": "Romanian Deadlift",
+        "production": "Vektstong / manualar",
+        "test": "Stong/manualar"
+      },
+      {
+        "name": "Walking Lunge",
+        "production": "Kroppsvekt / manualar",
+        "test": "Kroppsvekt/manualar"
+      }
+    ]
+  },
   "semantic_alias_candidates": [
     {
       "names": [
         "Barbell Row",
         "Bent-over row"
       ],
-      "reason": "Same apparent barbell bent-over rowing movement; confirm grip/stance and whether separate variant is intended."
+      "status": "possible_duplicate",
+      "reason": "Same apparent barbell bent-over rowing movement; compare grip/stance and source intent."
     },
     {
       "names": [
         "Dumbbell row",
         "One-arm Dumbbell Row"
       ],
-      "reason": "Both described as one-arm dumbbell row; likely duplicate naming."
+      "status": "possible_duplicate",
+      "reason": "Both source descriptions specify one-arm dumbbell rowing."
     },
     {
       "names": [
         "Kettlebell Deadlift / Markløft",
         "Kettlebell markløft"
       ],
-      "reason": "Both describe kettlebell deadlift from floor; likely duplicate naming."
+      "status": "possible_duplicate",
+      "reason": "Both describe kettlebell deadlift from the floor."
     },
     {
       "names": [
         "Pull-up",
         "Strict pull-up"
       ],
-      "reason": "Related but may be distinct due to assistance/strict execution; retain pending variant check."
+      "status": "keep_pending_variant_check",
+      "reason": "Strict and assisted/general variants may be materially different."
     },
     {
       "names": [
@@ -50,24 +175,18 @@
         "Box Step-up",
         "Dumbbell Step-up"
       ],
-      "reason": "Same step-up pattern but load/equipment variants may be intentional; retain pending review."
-    },
-    {
-      "names": [
-        "Push-up",
-        "Dips"
-      ],
-      "reason": "Different movement patterns; do not merge."
+      "status": "keep_pending_variant_check",
+      "reason": "Bodyweight, box and externally loaded variants may be distinct."
     }
   ],
   "exercises": [
     {
-      "name": "Air squat",
+      "name": "Air Squat",
       "normalized_name": "air squat",
-      "category": "Styrke",
+      "category": "CrossFit",
       "equipment": "Kroppsvekt",
       "body_area": "Bein",
-      "description": "Knebøy med eigen kroppsvekt.",
+      "description": "Knebøy med kroppsvekt til kontrollert djupn.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
@@ -116,12 +235,12 @@
       "review_status": "pending_semantic_alias_and_category_review"
     },
     {
-      "name": "Back squat",
+      "name": "Back Squat",
       "normalized_name": "back squat",
-      "category": "Styrke",
-      "equipment": "Stong og rack",
+      "category": "CrossFit",
+      "equipment": "Vektstong",
       "body_area": "Bein",
-      "description": "Knebøy med stong på ryggen.",
+      "description": "Knebøy med stonga på øvre rygg.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
@@ -224,12 +343,12 @@
       "review_status": "pending_semantic_alias_and_category_review"
     },
     {
-      "name": "Bench press",
+      "name": "Bench Press",
       "normalized_name": "bench press",
       "category": "Styrke",
-      "equipment": "Stong/benk",
+      "equipment": "Vektstong / benk",
       "body_area": "Overkropp",
-      "description": "Benkpress med stong.",
+      "description": "Press stonga kontrollert frå brystet.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
@@ -332,12 +451,12 @@
       "review_status": "pending_semantic_alias_and_category_review"
     },
     {
-      "name": "Bike erg",
+      "name": "Bike Erg",
       "normalized_name": "bike erg",
-      "category": "Kondisjon",
-      "equipment": "Ergometersykkel",
+      "category": "CrossFit",
+      "equipment": "BikeErg",
       "body_area": "Bein / kondisjon",
-      "description": "Kondisjonsarbeid på sykkel.",
+      "description": "Sykling målt i meter, tid eller kaloriar.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
@@ -386,12 +505,12 @@
       "review_status": "pending_semantic_alias_and_category_review"
     },
     {
-      "name": "Box jump",
+      "name": "Box Jump",
       "normalized_name": "box jump",
-      "category": "Kondisjon",
-      "equipment": "Kasse",
+      "category": "CrossFit",
+      "equipment": "Plyoboks",
       "body_area": "Bein / kondisjon",
-      "description": "Hopp opp på kasse med trygg nedstiging.",
+      "description": "Hopp opp på boks og strekk ut i topposisjon.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
@@ -467,12 +586,12 @@
       "review_status": "pending_semantic_alias_and_category_review"
     },
     {
-      "name": "Bulgarian split squat",
+      "name": "Bulgarian Split Squat",
       "normalized_name": "bulgarian split squat",
       "category": "Styrke",
-      "equipment": "Benk/manualar",
+      "equipment": "Manualar / benk",
       "body_area": "Bein",
-      "description": "Einsidig knebøy med bakre fot på benk.",
+      "description": "Eittbeins knebøy med bakre fot på benk.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
@@ -496,10 +615,10 @@
     {
       "name": "Burpee",
       "normalized_name": "burpee",
-      "category": "Kondisjon",
+      "category": "CrossFit",
       "equipment": "Kroppsvekt",
       "body_area": "Fullkropp",
-      "description": "Kroppsvektøving med puls.",
+      "description": "Ned til golvet og opp att med kontrollert hopp.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
@@ -739,10 +858,10 @@
     {
       "name": "Deadlift",
       "normalized_name": "deadlift",
-      "category": "Styrke",
-      "equipment": "Stong",
+      "category": "CrossFit",
+      "equipment": "Vektstong",
       "body_area": "Rygg / bein",
-      "description": "Markløft frå golvet.",
+      "description": "Løft frå golv med stabil rygg og kontrollert hoftehinge.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
@@ -1304,12 +1423,12 @@
       "review_status": "pending_semantic_alias_and_category_review"
     },
     {
-      "name": "Front squat",
+      "name": "Front Squat",
       "normalized_name": "front squat",
-      "category": "Styrke",
-      "equipment": "Stong og rack",
+      "category": "CrossFit",
+      "equipment": "Vektstong",
       "body_area": "Bein",
-      "description": "Knebøy med stong framme på skuldrene.",
+      "description": "Knebøy med stonga i front rack.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
@@ -1493,12 +1612,12 @@
       "review_status": "pending_semantic_alias_and_category_review"
     },
     {
-      "name": "Hip thrust",
+      "name": "Hip Thrust",
       "normalized_name": "hip thrust",
       "category": "Styrke",
-      "equipment": "Stong/benk",
+      "equipment": "Stong / benk",
       "body_area": "Bein / sete",
-      "description": "Hoftehev med belastning.",
+      "description": "Hofteekstensjon med skuldrer på benk.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
@@ -2845,10 +2964,10 @@
     {
       "name": "Plank",
       "normalized_name": "plank",
-      "category": "Kjerne",
-      "equipment": "Kroppsvekt",
+      "category": "Styrke",
+      "equipment": "Matte",
       "body_area": "Kjerne",
-      "description": "Statisk stabilisering av mage og rygg.",
+      "description": "Statisk støtte med stabil kjerne.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
@@ -2926,10 +3045,10 @@
     {
       "name": "Pull-up",
       "normalized_name": "pull up",
-      "category": "Styrke",
+      "category": "CrossFit",
       "equipment": "Pull-up-stong",
       "body_area": "Rygg / overkropp",
-      "description": "Pull-up med valfri assistanse.",
+      "description": "Hengande kroppsheving til haka over stonga.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
@@ -3086,12 +3205,12 @@
       "review_status": "pending_semantic_alias_and_category_review"
     },
     {
-      "name": "Romanian deadlift",
+      "name": "Romanian Deadlift",
       "normalized_name": "romanian deadlift",
       "category": "Styrke",
-      "equipment": "Stong/manualar",
+      "equipment": "Vektstong / manualar",
       "body_area": "Bein / rygg",
-      "description": "Hoftehinge med lett bøy i knea.",
+      "description": "Hoftehinge med lett knevinkel og fokus på bakside lår.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
@@ -3115,10 +3234,10 @@
     {
       "name": "Row",
       "normalized_name": "row",
-      "category": "Kondisjon",
+      "category": "CrossFit",
       "equipment": "Romaskin",
       "body_area": "Fullkropp",
-      "description": "Romaskin. Legg inn meter eller tid i roemodulen.",
+      "description": "Roing målt i meter, tid eller kaloriar.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
@@ -3331,10 +3450,10 @@
     {
       "name": "SkiErg",
       "normalized_name": "skierg",
-      "category": "Kondisjon",
+      "category": "CrossFit",
       "equipment": "SkiErg",
       "body_area": "Fullkropp",
-      "description": "Kondisjonsarbeid på SkiErg.",
+      "description": "Staking med heile kroppen, målt i meter eller kaloriar.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
@@ -3626,12 +3745,12 @@
       "review_status": "pending_semantic_alias_and_category_review"
     },
     {
-      "name": "Walking lunge",
+      "name": "Walking Lunge",
       "normalized_name": "walking lunge",
-      "category": "Styrke",
-      "equipment": "Kroppsvekt/manualar",
+      "category": "CrossFit",
+      "equipment": "Kroppsvekt / manualar",
       "body_area": "Bein",
-      "description": "Gåande utfall.",
+      "description": "Gåande utfall med kontrollert steg.",
       "is_rehab": false,
       "is_active": true,
       "video_url": null,
