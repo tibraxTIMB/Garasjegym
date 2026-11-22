@@ -1,0 +1,74 @@
+name: Regenerer gratis hjelpevideoar
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'garasjegym-2.0-sturm­kopf'
+    paths:
+      - 'v2/src/lib/helpContent.js'
+      - 'v2/src/lib/helpVideos.js'
+      - 'v2/scripts/generate-help-videos.mjs'
+      - 'v2/scripts/render-help-videos-offline.py'
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: garasjegym-help-videos
+  cancel-in-progress: true
+
+jobs:
+  render:
+    if: github.ref == 'refs/heads/garasjegym-2.0-sturm­kopf'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Sjekk om rettleiingane er endra
+        id: stale
+        working-directory: v2
+        run: |
+          if npm run help:videos:check; then
+            echo 'needs_render=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'needs_render=true' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-python@v5
+        if: steps.stale.outputs.needs_render == 'true'
+        with:
+          python-version: '3.12'
+      - name: Installer gratis renderverktøy
+        if: steps.stale.outputs.needs_render == 'true'
+        run: |
+          python -m pip install 'Pillow==11.3.0'
+          command -v ffmpeg
+      - name: Lag videoane utan nettlesar eller medlemsdata
+        if: steps.stale.outputs.needs_render == 'true'
+        working-directory: v2
+        run: npm run help:videos
+      - name: Kontroller videoane
+        if: steps.stale.outputs.needs_render == 'true'
+        working-directory: v2
+        run: npm run test:help-videos
+      - name: Lagre oppdaterte videoar på arbeidsgrena
+        id: changed
+        if: steps.stale.outputs.needs_render == 'true'
+        run: |
+          git add v2/public/help/videos
+          if git diff --cached --quiet; then
+            echo 'published=false' >> "$GITHUB_OUTPUT"
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'Regenerate illustrated help videos from help centre'
+            git push origin HEAD:"$GITHUB_REF_NAME"
+            echo 'published=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publiser nye videoar på eksisterande Pages-adresse
+        if: steps.changed.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-sturmkopf-pages.yml --ref "$GITHUB_REF_NAME" -f publish_preview=true
