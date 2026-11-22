@@ -1,0 +1,9 @@
+.gg-video-demo{min-height:100vh}
+.gg-video-demo .main{padding-bottom:0}
+.gg-video-demo-content{padding-bottom:130px}
+.gg-video-caption{position:fixed;z-index:9999;bottom:calc(var(--gg-shell-nav-height,68px) + 6px);left:9px;right:9px;min-height:99px;max-height:135px;padding:10px 14px;border:1px solid #b88845;border-radius:13px;background:#132122f4;box-shadow:0 5px 30px #000a;pointer-events:none;transition:opacity .2s}
+.gg-video-caption.is-hidden{opacity:0}
+.gg-video-caption span{display:block;color:#efad5a;font-size:10px;letter-spacing:1.1px;font-weight:900}
+.gg-video-caption p{color:#fff7eb;font-size:15px;font-weight:750;line-height:1.35;margin:5px 0 0;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.gg-video-demo .app-mobile-nav{z-index:10000}
+@media(min-width:901px){.gg-video-caption{max-width:680px;margin-inline:auto}.gg-video-demo .main{max-width:100%}}

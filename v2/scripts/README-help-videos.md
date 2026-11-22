@@ -1,35 +1,50 @@
-# Hjelpevideoar i GarasjeGym
+# Automatisk instruksjonsvideo med ekte appvising
 
-Fem korte, illustrerte videoar ligg under `Mi side → Hjelp og rettleiing`.
-Dei bruker tekst direkte frå `src/lib/helpContent.js` og tema frå
-`src/lib/helpVideos.js`.
+Dei fem videoane i `Mi side → Hjelp og rettleiing → Videoar` blir tekne opp
+automatisk frå **dei verkelege React-komponentane** i GarasjeGym. Opptaka
+viser mobilvisinga (390 × 844) og korte forklaringar på nynorsk.
 
-- Generatoren brukar **Pillow og FFmpeg**, ikkje eit betalt AI- eller videotilbod.
-- Kvar video blir lagra som MP4 med tilhøyrande PNG-plakat i `public/help/videos/`.
-- Illustrasjonane etterliknar designretninga, men er **ikkje skjermopptak**.
-- Det blir ikkje brukt ekte brukarnamn, e-post, innlogging eller medlemsdata.
-- Videoane er utan forteljarstemme. All informasjon finst på nynorsk i videoen
-  og som vanleg tekst i hjelpesenteret.
-- Admin-rettleiinga for vedlikehald visast berre for admin, i samsvar med tilgangen
-  til dei tilhøyrande hjelpetema.
+**Ingen medlemsdata eller innlogging:** `video-demo.html` blir berre bygd med
+`vite.video-demo.config.js`. Alle Supabase-kall blir då erstatta med
+`videoDemoSupabase.js`, som lagrar demodata i minnet. Nettlesaren får berre
+tilgang til den lokale Vite-tenaren. Det blir aldri brukt e-post, passord,
+verkelege namn, produksjonsdata eller eksterne tenester i opptaket.
 
-## Regenerer etter ei endring
+## Kva skjer ved publisering?
 
-Med Python 3, `pip install pillow`, FFmpeg og Node tilgjengeleg:
+1. GitHub Actions installerer gratis Playwright/Chromium og brukar FFmpeg.
+2. Ei lokal demovisning viser ekte Heim, Mi side, Hjelp, Fri trening, WOD,
+   treningsklokke, PT, gruppetime og vedlikehaldslista.
+3. Playwright klikkar gjennom fem flytar. Nynorske tekstplakatar blir henta frå
+   hjelpetekstane i `src/lib/helpContent.js`.
+4. Kvar video blir lagra som MP4 og PNG-plakat under `public/help/videos/`,
+   og blir med i Pages-publiseringa. Opptak vert ikkje skrivne tilbake til git.
+5. Byggejobben kontrollerer at alle fem videoane er ekte opptak før publisering.
+
+Dette kostar ikkje noko i programvarelisensar. Opptaka har ingen
+forteljarstemme, og all instruksjonstekst finst også som vanleg, tilgjengeleg
+tekst i hjelpesenteret. Admin-videoen blir berre vist for administratorar.
+
+## Utvikling og vedlikehald
+
+For å opna demovisninga lokalt:
 
 ```sh
 cd v2
-npm run help:videos
-npm run help:videos:check
-npm run test:help-videos
+npm run help:demo
 ```
 
-Alle videoar blir bygde frå hjelpetekstane i ei køyring. `--check` les
-innhaldssignaturen og varslar om videoane må oppdaterast. GitHub Actions-
-arbeidsflyten `Regenerer gratis hjelpevideoar` køyrer ved relevante
-hjelpetekstendringar på STURMKOPF-greina, eller manuelt. Ved endringar
-publiserer han oppdaterte videoar på eksisterande testadresse.
+For å ta opp på nytt (krev Python 3, `pip install playwright`, installert
+Chromium for Playwright og FFmpeg):
 
-Ved større designendringar må menneske kontrollera at dei illustrerte stega
-framleis samsvarar med appen. Denne generatoren kan ikkje automatisk forstå
-ei endra brukarreise utan oppdatert rettleiing.
+```sh
+cd v2
+npm run help:videos:live
+npm run help:videos:live-check
+```
+
+`help:videos` og den gamle Pillow-generatoren blir berre tekne vare på som
+offline-reserve for lokal utvikling. Dei blir **ikkje** brukte ved publisering.
+Skiftar knappetekst eller brukarflate, må opptaksstega i
+`scripts/record-real-help-videos.py` oppdaterast. Om eit steg ikkje finst,
+stoppar publiseringa før feil video går ut.
