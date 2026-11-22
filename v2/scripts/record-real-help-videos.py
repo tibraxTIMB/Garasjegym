@@ -6,6 +6,7 @@ from that server are blocked at the browser-context level.
 
 import argparse
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -15,6 +16,7 @@ from urllib.parse import quote
 
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from help_video_narration import VoiceTimeline
+from help_video_pronunciation import EnglishWorkoutPronunciation
 
 
 def show_caption(page, text, seconds=2.8):
@@ -88,8 +90,9 @@ def record_steps(page, video):
     show_caption(page, video['scenes'][-1]['text'], 2.5)
 
 
-def build_video(browser, video, base_url, output, tmp, voice):
-    narration = VoiceTimeline(voice, video['scenes'], tmp / video['id'])
+def build_video(browser, video, base_url, output, tmp, voice, pronunciation, voice_config):
+    narration = VoiceTimeline(voice, video['scenes'], tmp / video['id'],
+                              pronunciation=pronunciation, syn_config=voice_config)
     context = browser.new_context(
         viewport={'width': 390, 'height': 844}, device_scale_factor=1,
         record_video_dir=str(tmp), record_video_size={'width': 390, 'height': 844},
@@ -178,14 +181,24 @@ def main():
     dest = Path(args.output)
     dest.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='gg-live-video-') as directory, sync_playwright() as pw:
-        from piper import PiperVoice
+        from piper import PiperVoice, SynthesisConfig
+        from piper.phonemize_espeak import ESPEAK_DATA_DIR, EspeakPhonemizer
         voice = PiperVoice.load(args.voice_model)
-        browser = pw.chromium.launch(headless=True, args=['--no-sandbox'])
+        pronunciation = EnglishWorkoutPronunciation(voice, EspeakPhonemizer(ESPEAK_DATA_DIR))
+        # User-approved pilot 2.1: keep one Norwegian voice throughout, with
+        # slightly clearer diction and gentler English/Nynorsk code switching.
+        voice_config = SynthesisConfig(length_scale=1.06, noise_scale=0.40,
+                                       noise_w_scale=0.25, normalize_audio=True)
+        browser = pw.chromium.launch(
+            headless=True, args=['--no-sandbox'],
+            executable_path=os.environ.get('HELP_VIDEO_CHROMIUM_PATH') or None,
+        )
         try:
             for video in videos:
                 folder = Path(directory) / video['id']
                 folder.mkdir(parents=True, exist_ok=True)
-                build_video(browser,video,args.base_url,dest,Path(directory),voice)
+                build_video(browser,video,args.base_url,dest,Path(directory),voice,
+                            pronunciation,voice_config)
             verify_inline_player(browser,args.base_url)
         finally:
             browser.close()

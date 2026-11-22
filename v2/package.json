@@ -16,7 +16,7 @@
     "test:infotainment": "node --test scripts/infotainment-events.test.mjs scripts/infotainment-timer.test.mjs",
     "test:wod-complexes": "node --test scripts/wod-complexes.test.mjs",
     "test:wod-import": "node --test scripts/wod-import.test.mjs",
-    "test": "npm run test:production-migrations && npm run test:wod-order && npm run test:exercise-measurements && npm run test:pr-metrics && npm run test:pr-directory && npm run test:invitation-flow && npm run test:training-launch-context && npm run test:app-base-url && npm run test:infotainment && npm run test:wod-complexes && npm run test:wod-import && npm run test:wod-engine && npm run test:timer-clock && npm run test:group-class-live-timer && npm run test:spotify-devices && npm run test:gestures && npm run test:heart-rate && npm run test:membership-access && npm run test:membership-candidate && npm run test:mobile-builder-ui && npm run test:wod-wizard && npm run test:wod-sides && npm run test:pt-calendar && npm run test:calendar-ux && npm run test:workout-detail && npm run test:maintenance && npm run test:help-videos && npm run test:member-customer-journey",
+    "test": "npm run test:production-migrations && npm run test:wod-order && npm run test:exercise-measurements && npm run test:pr-metrics && npm run test:pr-directory && npm run test:invitation-flow && npm run test:training-launch-context && npm run test:app-base-url && npm run test:infotainment && npm run test:wod-complexes && npm run test:wod-import && npm run test:wod-engine && npm run test:timer-clock && npm run test:group-class-live-timer && npm run test:spotify-devices && npm run test:gestures && npm run test:heart-rate && npm run test:membership-access && npm run test:membership-candidate && npm run test:mobile-builder-ui && npm run test:wod-wizard && npm run test:wod-sides && npm run test:pt-calendar && npm run test:calendar-ux && npm run test:workout-detail && npm run test:maintenance && npm run test:pt-notifications && npm run test:help-videos && npm run test:member-customer-journey",
     "test:maintenance": "node --test scripts/maintenance-plan.test.mjs",
     "test:pr-metrics": "node --test scripts/pr-metrics.test.mjs",
     "test:pr-directory": "node --test scripts/pr-directory.test.mjs",
@@ -43,6 +43,7 @@
     "help:videos:live-check": "node scripts/check-real-help-videos.mjs",
     "help:videos:check": "node scripts/generate-help-videos.mjs --check",
     "test:help-videos": "node --test scripts/help-videos.test.mjs scripts/media-playback.test.mjs && python3 -m unittest discover -s scripts -p test_help_video_narration.py",
+    "test:pt-notifications": "node --test scripts/pt-notification-flow.test.mjs",
     "test:membership-access": "node --test scripts/membership-access.test.mjs",
     "test:membership-candidate": "node --test scripts/membership-candidate.test.mjs"
   },

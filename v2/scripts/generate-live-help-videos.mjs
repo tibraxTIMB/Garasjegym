@@ -30,8 +30,8 @@ try {
   })
   if(result.error)throw result.error
   if(result.status!==0)throw new Error(`Videoopptaket feila med kode ${result.status}`)
-  writeFileSync(manifest,JSON.stringify({sourceHash:storyboardHash(),renderer:'real-ui-demo',narration:'piper-no_NO-talesyntese-medium',videos:HELP_VIDEOS.map(v=>v.id)},null,2)+'\n')
-  console.log('Fem ekte skjermvisingar med norsk opplesing av nynorsk hjelpetekst.')
+  writeFileSync(manifest,JSON.stringify({sourceHash:storyboardHash(),renderer:'real-ui-demo',narration:'piper-no_NO-talesyntese-medium-en-ipa-v2.1',videos:HELP_VIDEOS.map(v=>v.id)},null,2)+'\n')
+  console.log('Fem ekte skjermvisingar med naturleg nynorsk og engelsk uttale av treningsord.')
 } finally {
   server.kill('SIGTERM')
 }

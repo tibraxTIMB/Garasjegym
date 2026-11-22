@@ -433,9 +433,10 @@ export default function App() {
           {active!=='oversikt'&&navigationStack.length>0&&<button type="button" className={simpleMode?'simple-back-button':'route-back-button'} onClick={()=>navigateBack('oversikt')}>← Tilbake</button>}
           <div className="top-meta">
             <span className="member-name">{profile.display_name || session.user.email}</span>
-            <Notifications isAdmin={profile.role==='admin'} onNavigate={(item) => {
+            <Notifications isAdmin={profile.role==='admin'} staff={isStaff(profile)} onNavigate={(item) => {
               const href=item.href||''
               if(href==='admin-maintenance'&&profile.role==='admin'){setAdminInitialTab('drift');setAdminFocusToken(value=>value+1);navigateTo('admin')}
+              else if(href.startsWith('pt-service-request:')&&isStaff(profile)){setFocusPTRequestId(null);setFocusPTPanel(null);setPTStudioWorkspace('studio');setPTStudioInitialTab('administrasjon');navigateTo('pt-studio')}
               else if(href.startsWith('pt-request:')){setFocusPTRequestId(href.slice(11));setFocusPTPanel('forespurnader');setPTStudioWorkspace('studio');setPTStudioInitialTab('pt-timar');navigateTo('pt-studio')}
                else if(href.startsWith('pt-checkin:')){setFocusPTRequestId(null);setFocusPTClientId(href.slice(11));setFocusPTPanel(null);setPTStudioWorkspace('studio');setPTStudioInitialTab('status');navigateTo('pt-studio')}
                else if(href.startsWith('pt-intake:')){setFocusPTRequestId(null);setFocusPTClientId(href.slice(10));setFocusPTPanel(null);setPTStudioWorkspace('studio');setPTStudioInitialTab('kartlegging');navigateTo('pt-studio')}

@@ -17,7 +17,13 @@ verkelege namn, produksjonsdata eller eksterne tenester i opptaket.
    treningsklokke, PT, gruppetime og vedlikehaldslista.
 3. Playwright klikkar gjennom fem flytar. Nynorske tekstplakatar blir henta frå
    hjelpetekstane i `src/lib/helpContent.js`.
-4. Ei lokal, gratis Piper-stemme les den nynorske teksten. Kvar video blir
+4. Ei lokal, gratis Piper-stemme les den nynorske teksten. Den godkjende
+   **uttalevarianten 2.1** brukar den vanlege norske setningsuttalen, men
+   engelske treningsord (WOD, RX, Scaled, Foundation m.m.) får engelske
+   fonem frå gratis eSpeak NG. Same norske stemme blir brukt heile tida,
+   med jamnare tempo, kortare pausar og naturleg omskriving av uttrykk
+   som «WOD-ar» og «PT-ane» berre i den opplesne teksten.
+   Kvar video blir
    lagra med tale i både MP4 og WebM, pluss PNG-plakat under `public/help/videos/`,
    og blir med i Pages-publiseringa. Opptak vert ikkje skrivne tilbake til git.
 5. Byggejobben kontrollerer at alle fem videoane er ekte opptak før publisering.
@@ -34,6 +40,13 @@ Nettlesaren får ein tydeleg startknapp, automatisk formatval mellom MP4 og
 WebM, og eigne direktelenkjer dersom den innebygde spelaren ikkje fungerer.
 Appens offline-mellomlager tek ikkje lenger over byte-førespurnader for
 MP4/video og lyd. Slik kan Chrome på Android spela av og spola i filene.
+
+**Kvifor ikkje heile uttalebiblioteket?** Den forkasta pilot 3 prøvde å
+overstyra alle nynorske ord med X-SAMPA-fonem frå Lingit-lista. Den vart
+unaturleg. Me brukar difor ikkje slike overstyringar i videoane: Nynorsk
+setningsmelodi kjem frå Piper som før, og berre ei eksplisitt liste med
+engelske treningsuttrykk får eigen uttale. Lista ligg i
+`scripts/help_video_pronunciation.py` og er med i automatisk testing.
 
 ## Utvikling og vedlikehald
 

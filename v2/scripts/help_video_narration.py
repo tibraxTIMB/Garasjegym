@@ -1,7 +1,7 @@
 """Offline Norwegian narration timed to real help-video screen captures.
 
 The script never contacts a speech API. A locally installed Piper voice reads
-the Nynorsk help text and embeds the result in both published video formats.
+natural Nynorsk with English gym terms pronounced in English (pilot 2.1).
 """
 
 import re
@@ -10,21 +10,35 @@ import wave
 from pathlib import Path
 
 
-def spoken_text(text):
-    # Keep the visible Nynorsk intact, but make UI abbreviations and arrows
-    # sound like spoken directions rather than punctuation.
-    result = text.replace('→', ', deretter ')
-    result = re.sub(r'\bPT-en\b', 'den personlege trenaren', result)
+def spoken_text(text, pronunciation=None):
+    # Narration is NOT the text shown on screen. Expand the handful of
+    # Norwegian-inflected English/abbreviated compounds before doing the
+    # English IPA substitution. Otherwise e.g. WOD-ar is spoken as a clipped
+    # English word followed by an unnatural Norwegian suffix.
+    result = text.replace('→', ', og deretter ').replace(' · ', ', ')
+    compounds = (
+        (r'\bMi PT-oversikt\b', 'oversikta di over personleg trening'),
+        (r'\bPT-oversikt\b', 'oversikt over personleg trening'),
+        (r'\bPT-førespurnad\b', 'førespurnad om personleg trening'),
+        (r'\bPT-hjelp\b', 'hjelp frå ein personleg trenar'),
+        (r'\bPT-ane\b', 'dei personlege trenarane'),
+        (r'\bPT-en\b', 'den personlege trenaren'),
+        (r'\bWOD-ar\b', 'ferdige treningsøkter'),
+        (r'\bWOD-kortet\b', 'kortet med økta'),
+    )
+    for pattern, spoken in compounds:
+        result = re.sub(pattern, spoken, result, flags=re.IGNORECASE)
     result = re.sub(r'\bPT\b', 'personleg trenar', result)
-    result = result.replace(' · ', ', ')
-    return result
+    return pronunciation.render(result) if pronunciation else result
 
 
 class VoiceTimeline:
     """Pre-render each line so narration never interrupts the video recording."""
 
-    def __init__(self, voice, scenes, folder):
+    def __init__(self, voice, scenes, folder, pronunciation=None, syn_config=None):
         self.folder = Path(folder)
+        self.pronunciation = pronunciation
+        self.syn_config = syn_config
         self.clips = []
         self.cues = []
         self.next_clip = 0
@@ -34,7 +48,11 @@ class VoiceTimeline:
             text = scene['text']
             path = self.folder / f'voice-{index:02}.wav'
             with wave.open(str(path), 'wb') as wav_file:
-                voice.synthesize_wav(spoken_text(text), wav_file)
+                spoken = spoken_text(text, pronunciation=self.pronunciation)
+                if self.syn_config is None:
+                    voice.synthesize_wav(spoken, wav_file)
+                else:
+                    voice.synthesize_wav(spoken, wav_file, syn_config=self.syn_config)
             with wave.open(str(path), 'rb') as wav_file:
                 if wav_file.getnchannels() != 1 or wav_file.getsampwidth() != 2:
                     raise ValueError('Piper må laga mono 16-bit lyd')

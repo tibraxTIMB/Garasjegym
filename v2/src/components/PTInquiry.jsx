@@ -18,7 +18,7 @@ const requestStatus = status => ({
   reviewing: 'Garasjen ser på førespurnaden',
   assigned: 'Du har fått tildelt PT',
   cancelled: 'Trekt tilbake',
-  rejected: 'Avslutta',
+  declined: 'Avslått',
 }[status] || status)
 
 export default function PTInquiry({ profile, onGroupSchedule = () => {} }) {

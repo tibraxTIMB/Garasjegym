@@ -2,6 +2,7 @@ import {useEffect,useMemo,useRef,useState} from 'react'
 import {Bell,CheckCheck,Coffee,CalendarDays,MessageCircle,UserRound,Info,Check,AlertTriangle,Clock3,Archive,ArrowUpRight,ClipboardCheck,RefreshCw,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import {maintenanceOverview,maintenanceReminders} from '../lib/maintenancePlan.js'
+import {missingPtLeadAlerts} from '../lib/ptNotificationSafety.js'
 
 const icons={coffee:Coffee,booking:CalendarDays,pt:UserRound,community:MessageCircle,system:Info,general:Bell,group:CalendarDays}
 const priorityMeta={
@@ -10,12 +11,13 @@ const priorityMeta={
  normal:{label:'Vanleg',tone:'normal',icon:Info},
  low:{label:'Info',tone:'low',icon:Info}
 }
-const hrefLabel=href=>href?.startsWith('coffee-review:')?'Sjå produktvurdering':href?.startsWith('pt-request:')?'Opna PT-førespurnad':href?.startsWith('pt-checkin:')?'Opna statussjekk':href?.startsWith('pt-intake:')?'Opna PT-kartlegging':href?.startsWith('pt-client:')?'Opna PT-oppfølging':href?.startsWith('group-class:')?'Opna gruppetime':href?.startsWith('booking:')?'Opna booking':href==='admin-maintenance'?'Opna vedlikehald':href==='pt-studio'?'Opna PT-oppfølging':href==='pt-info'?'Opna PT-meldingar':href==='pt'?'Opna PT Studio':href==='mi-trening'?'Opna Mi trening':href==='booking'||href==='/timeplan'?'Opna timeplan':href==='kaffi'?'Opna kaffibar':'Opna'
+const hrefLabel=href=>href?.startsWith('coffee-review:')?'Sjå produktvurdering':href?.startsWith('pt-service-request:')?'Handsama PT-førespurnad':href?.startsWith('pt-request:')?'Opna PT-førespurnad':href?.startsWith('pt-checkin:')?'Opna statussjekk':href?.startsWith('pt-intake:')?'Opna PT-kartlegging':href?.startsWith('pt-client:')?'Opna PT-oppfølging':href?.startsWith('group-class:')?'Opna gruppetime':href?.startsWith('booking:')?'Opna booking':href==='admin-maintenance'?'Opna vedlikehald':href==='pt-studio'?'Opna PT-oppfølging':href==='pt-info'?'Opna PT-meldingar':href==='pt'?'Opna PT Studio':href==='mi-trening'?'Opna Mi trening':href==='booking'||href==='/timeplan'?'Opna timeplan':href==='kaffi'?'Opna kaffibar':'Opna'
 const isExpired=item=>item.expires_at&&new Date(item.expires_at)<new Date()
 
-export default function Notifications({onNavigate=()=>{},compact=false,hideWhenEmpty=false,context='oversikt',isAdmin=false}){
+export default function Notifications({onNavigate=()=>{},compact=false,hideWhenEmpty=false,context='oversikt',isAdmin=false,staff=false}){
  const [items,setItems]=useState([])
  const [maintenanceItems,setMaintenanceItems]=useState([])
+ const [ptLeadItems,setPtLeadItems]=useState([])
  const [open,setOpen]=useState(false)
  const [loading,setLoading]=useState(true)
  const [error,setError]=useState('')
@@ -26,7 +28,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
  const [loadingMore,setLoadingMore]=useState(false)
  const loadingMoreRef=useRef(false)
  const loadSequence=useRef(0)
- const allItems=useMemo(()=>[...maintenanceItems,...items],[maintenanceItems,items])
+ const allItems=useMemo(()=>[...maintenanceItems,...ptLeadItems,...items],[maintenanceItems,ptLeadItems,items])
  const urgent=allItems.filter(x=>x.priority==='urgent'&&x.status==='open'&&!x.archived_at&&!isExpired(x)).length
  const actionItems=allItems.filter(x=>x.requires_action&&x.status==='open'&&!x.archived_at&&!isExpired(x))
  const ackItems=allItems.filter(x=>x.requires_ack&&!x.acknowledged_at&&x.status==='open'&&!x.archived_at&&!isExpired(x))
@@ -53,9 +55,30 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
    if(e)throw e
    if(requestId!==loadSequence.current)return
    const rows=data||[]
+   let ptLeadError=''
+   // Critical safety net: derive an alert from *actual pending PT enquiries*
+   // when a database notification is missing or was prematurely dismissed.
+   // Only approved staff can read this source table under RLS.
+   if(staff){
+    const [{data:leads,error:leadError},{data:ptNotices,error:noticeError}]=await Promise.all([
+     supabase.from('pt_service_requests')
+      .select('id,service_title,created_at,status').in('status',['pending','reviewing']).order('created_at',{ascending:false}).limit(500),
+     // Query all active PT notices directly: the main inbox is paginated and
+     // may not contain an older PT lead among the most recent 100 entries.
+     supabase.from('notifications').select('id,href,status,archived_at')
+      .eq('recipient_id',user.id).eq('status','open').is('archived_at',null)
+      .like('href','pt-service-request:%'),
+    ])
+    if(requestId!==loadSequence.current)return
+    if(leadError){setPtLeadItems([]);ptLeadError='Kan ikkje kontrollera opne PT-førespurnader: '+leadError.message}
+    else{
+     setPtLeadItems(missingPtLeadAlerts(leads||[],noticeError?rows:ptNotices||[]))
+     if(noticeError)ptLeadError='Kan ikkje kontrollera alle PT-varsla: '+noticeError.message
+    }
+   }else setPtLeadItems([])
    setHasMore(rows.length===100)
    setItems(current=>append?[...current,...rows.filter(row=>!current.some(existing=>existing.id===row.id))]:rows)
-   setError('')
+   setError(ptLeadError)
    if(isAdmin){
     const [schedule,receipts]=await Promise.all([
      supabase.from('garage_maintenance_schedule').select('started_at').eq('id',true).maybeSingle(),
@@ -92,7 +115,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
   const onMaintenanceUpdated=()=>{if(live&&isAdmin)load()}
   window.addEventListener('gg:maintenance-updated',onMaintenanceUpdated)
   return()=>{live=false;loadSequence.current+=1;if(channel)supabase.removeChannel(channel);window.clearInterval(refreshTimer);window.removeEventListener('gg:maintenance-updated',onMaintenanceUpdated)}
- },[context,compact,isAdmin])
+ },[context,compact,isAdmin,staff])
  async function patch(id,values){
   setBusy(id);setError('')
   try{
@@ -111,7 +134,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
  async function resolve(item){return patch(item.id,{is_read:true,read_at:new Date().toISOString(),status:'resolved',resolved_at:new Date().toISOString()})}
  async function archive(item){return patch(item.id,{archived_at:new Date().toISOString(),status:item.status==='open'?'dismissed':item.status})}
  async function openItem(item){
-  if(item.virtualMaintenance){onNavigate(item);if(!compact)setOpen(false);return}
+  if(item.virtualMaintenance||item.virtualPTLead){onNavigate(item);if(!compact)setOpen(false);return}
   if(!item.is_read){
    const marked=await markRead(item)
    if(!marked)return
@@ -133,7 +156,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
     {!compact&&<div className="notification-actions-v2">
      {(item.href||item.requires_action)&&<button type="button" className="notification-open-action" disabled={busy===item.id} onClick={()=>openItem(item)}>{hrefLabel(item.href)} <ArrowUpRight size={13}/></button>}
      {!item.virtualMaintenance&&item.requires_ack&&!item.acknowledged_at&&<button type="button" className="notification-ack-action" disabled={busy===item.id} onClick={()=>acknowledge(item)}><ClipboardCheck size={13}/> Stadfest lest</button>}
-     {!item.virtualMaintenance&&item.requires_action&&pending&&<button type="button" className="notification-done-action" disabled={busy===item.id} onClick={()=>resolve(item)}><Check size={13}/> Marker løyst</button>}
+     {!item.virtualMaintenance&&!item.virtualPTLead&&!item.href?.startsWith('pt-service-request:')&&item.requires_action&&pending&&<button type="button" className="notification-done-action" disabled={busy===item.id} onClick={()=>resolve(item)}><Check size={13}/> Marker løyst</button>}
      {!item.virtualMaintenance&&!item.requires_action&&!item.requires_ack&&pending&&<button type="button" className="notification-dismiss-action" disabled={busy===item.id} onClick={()=>archive(item)}><Archive size={13}/> Skjul</button>}
     </div>}
    </div>

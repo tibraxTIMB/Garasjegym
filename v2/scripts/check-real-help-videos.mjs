@@ -7,7 +7,7 @@ import {storyboardHash} from './generate-help-videos.mjs'
 const folder=fileURLToPath(new URL('../public/help/videos/',import.meta.url))
 const manifest=JSON.parse(readFileSync(folder+'manifest.json','utf8'))
 if(manifest.renderer!=='real-ui-demo')throw new Error('Forventa skjermopptak, men fann illustrerte videoar.')
-if(manifest.narration!=='piper-no_NO-talesyntese-medium')throw new Error('Manglar automatisk norsk opplesing.')
+if(manifest.narration!=='piper-no_NO-talesyntese-medium-en-ipa-v2.1')throw new Error('Manglar godkjend norsk opplesing 2.1 med engelsk uttale av treningsord.')
 if(manifest.sourceHash!==storyboardHash())throw new Error('Videoane er ikkje baserte på gjeldande hjelpetekst.')
 for(const video of HELP_VIDEOS){
   if(!manifest.videos.includes(video.id))throw new Error(`Manglar videokapittel: ${video.id}`)
