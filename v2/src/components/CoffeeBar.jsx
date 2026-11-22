@@ -1,8 +1,10 @@
 import {useEffect,useMemo,useState} from 'react'
-import {CheckCircle2,Coffee,LoaderCircle,Minus,Plus,ShoppingBag,Star,MessageSquareText,Bell,Clock3,PackageCheck,Store,BarChart3,ClipboardList,Eye,EyeOff,Archive,RefreshCw,Edit3} from 'lucide-react'
+import {CheckCircle2,Coffee,LoaderCircle,Minus,Plus,ShoppingBag,Star,MessageSquareText,Bell,Clock3,PackageCheck,Store,BarChart3,ClipboardList,Eye,EyeOff,Archive,RefreshCw,Edit3,BookOpen,ArrowRight,Trash2} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import {isStaff} from '../lib/auth.js'
+import {addCoffeeCartItem,availableCoffeeCartItems,changeCoffeeCartItem,coffeeCartTotal} from '../lib/coffeeCart.js'
 import GarageOwnerBadge from './GarageOwnerBadge.jsx'
+import './coffee-order-flow.css'
 
 const statusMeta={
  new:{label:'Motteken',className:'new',next:'confirmed',nextLabel:'Stadfest'},
@@ -16,20 +18,23 @@ const formatMoney=value=>Number(value||0).toLocaleString('nn-NO',{minimumFractio
 const formatDate=value=>new Date(value).toLocaleString('nn-NO',{dateStyle:'short',timeStyle:'short'})
 const parseOptionGroups=value=>(value||'').split('\n').map(line=>line.trim()).filter(Boolean).map(line=>{
  const [name,...rest]=line.split(':')
- return {name:name.trim(),choices:rest.join(':').split(',').map(x=>x.trim()).filter(Boolean),required:false}
+ return {name:name.trim().replace(/!$/,'').trim(),choices:rest.join(':').split(',').map(x=>x.trim()).filter(Boolean),required:name.trim().endsWith('!')}
 }).filter(group=>group.name&&group.choices.length)
-const optionText=groups=>(groups||[]).map(group=>(group.name||'Val')+': '+(group.choices||[]).join(', ')).join('\n')
+const optionText=groups=>(groups||[]).map(group=>(group.name||'Val')+(group.required?'!':'')+': '+(group.choices||[]).join(', ')).join('\n')
 const optionSummary=options=>(options||[]).map(item=>item.group+': '+item.choice).join(' · ')
+const coffeePrice=value=>Number(value||0)===0?'Gratis':formatMoney(value)
+const coffeeProgress=['new','confirmed','preparing','ready','collected']
+const cartDraftKey=userId=>'garasjegym:coffee-cart:'+userId
 
-export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,onFocusReviewConsumed}){
+export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,onFocusReviewConsumed,onHelp=()=>{}}){
  const staff=isStaff(profile)
- const [products,setProducts]=useState([]),[orders,setOrders]=useState([]),[cart,setCart]=useState({})
+ const [products,setProducts]=useState([]),[orders,setOrders]=useState([]),[cart,setCart]=useState(()=>{try{const saved=JSON.parse(sessionStorage.getItem(cartDraftKey(profile.id))||'[]');return Array.isArray(saved)?saved.filter(row=>row&&typeof row.key==='string'&&typeof row.product_id==='string'&&Number.isInteger(row.quantity)&&Array.isArray(row.options)):[]}catch{return[]}})
  const [settings,setSettings]=useState({is_open:true,closed_message:'Kaffebaren er stengd akkurat no.'})
  const [reviews,setReviews]=useState([]),[reviewNotifications,setReviewNotifications]=useState([])
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [activeTab,setActiveTab]=useState(staff?'orders':'menu'),[orderView,setOrderView]=useState(staff?'active':'all')
  const [categoryFilter,setCategoryFilter]=useState('Alle'),[reviewFilter,setReviewFilter]=useState('unread'),[reviewProductFilter,setReviewProductFilter]=useState('Alle'),[reviewRatingFilter,setReviewRatingFilter]=useState('Alle'),[selectedReview,setSelectedReview]=useState(null)
- const [note,setNote]=useState(''),[milk,setMilk]=useState('Vanleg mjølk'),[syrup,setSyrup]=useState('Ingen')
+ const [note,setNote]=useState('')
  const [optionSelections,setOptionSelections]=useState({})
  const [newName,setNewName]=useState(''),[newPrice,setNewPrice]=useState(''),[newDesc,setNewDesc]=useState(''),[newCategory,setNewCategory]=useState('Kaffi'),[newOptions,setNewOptions]=useState(''),[newPrepMinutes,setNewPrepMinutes]=useState(''),[newImageUrl,setNewImageUrl]=useState('')
  const [editingProduct,setEditingProduct]=useState(null),[staffComments,setStaffComments]=useState({})
@@ -93,12 +98,20 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
 
  const categories=useMemo(()=>['Alle',...new Set(products.map(p=>p.category||'Kaffi').filter(Boolean))],[products])
  const visibleProducts=products.filter(p=>p.is_active||staff).filter(p=>categoryFilter==='Alle'||(p.category||'Kaffi')===categoryFilter)
- const cartItems=useMemo(()=>products.filter(p=>cart[p.id]>0).map(p=>({product_id:p.id,quantity:cart[p.id],options:(p.option_groups||[]).map(group=>({group:group.name,choice:optionSelections[p.id]?.[group.name]||''})).filter(x=>x.choice)})),[products,cart,optionSelections])
- const total=cartItems.reduce((sum,item)=>{const product=products.find(p=>p.id===item.product_id);return sum+Number(product?.price||0)*item.quantity},0)
+ const cartItems=useMemo(()=>availableCoffeeCartItems(cart,products),[cart,products])
+ const cartQuantity=cartItems.reduce((sum,item)=>sum+item.quantity,0)
+ const total=coffeeCartTotal(cartItems,products)
+ const unavailableCartCount=cart.length-cartItems.length
  const averageRating=reviews.length?reviews.reduce((sum,review)=>sum+Number(review.rating),0)/reviews.length:0
  const unreadReviews=reviews.filter(review=>{const noticeRow=reviewNotifications.find(item=>item.href==='coffee-review:'+review.id);return noticeRow?!noticeRow.is_read:true}).length
 
- function change(id,delta){setCart(v=>({...v,[id]:Math.max(0,Math.min(20,(v[id]||0)+delta))}))}
+ useEffect(()=>{try{sessionStorage.setItem(cartDraftKey(profile.id),JSON.stringify(cart))}catch{}},[cart,profile.id])
+ function addToCart(product){
+  setError('');setNotice('')
+  try{const next=addCoffeeCartItem(cart,product,optionSelections[product.id]||{});setCart(next);setOrderRequestId(null);setNotice(product.name+' er lagt i handlekorga.')}
+  catch(e){setError(e.message||'Kunne ikkje leggja til drikka.')}
+ }
+ function changeCartQuantity(key,delta){setCart(current=>changeCoffeeCartItem(current,key,delta));setOrderRequestId(null)}
  function setOption(productId,group,choice){setOptionSelections(current=>({...current,[productId]:{...(current[productId]||{}),[group]:choice}}))}
  function resetProductForm(){setNewName('');setNewPrice('');setNewDesc('');setNewCategory('Kaffi');setNewOptions('');setNewPrepMinutes('');setNewImageUrl('');setEditingProduct(null)}
  async function order(){
@@ -108,10 +121,10 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
    const requestId=orderRequestId||crypto.randomUUID()
    if(!orderRequestId)setOrderRequestId(requestId)
    const payload=cartItems.map(({product_id,quantity,options})=>({product_id,quantity,options:options.filter(x=>x.choice)}))
-   const pNote=[note,milk!=='Ingen'?'Mjølk: '+milk:'',syrup!=='Ingen'?'Sirup/smak: '+syrup:''].filter(Boolean).join(' · ')
+   const pNote=note.trim()
    const {data,error:e}=await supabase.rpc('place_coffee_order_v2',{p_items:payload,p_note:pNote,p_request_id:requestId})
    if(e)throw e
-   setCart({});setNote('');setOrderRequestId(null);setActiveTab('orders');setNotice('Bestillinga er sendt til kaffibaren.');await load(true)
+   setCart([]);setNote('');setOrderRequestId(null);setActiveTab('orders');setNotice('Bestillinga er sendt til kaffibaren.');await load(true)
   }catch(e){setError(e.message||'Kunne ikkje senda bestillinga.')}
   finally{setBusy('')}
  }
@@ -147,6 +160,16 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
    if(e)throw e
    setNotice('Ordrestatus oppdatert.');await load(true)
   }catch(e){setError(e.message||'Kunne ikkje oppdatera status.')}finally{setBusy('')}
+ }
+ async function cancelOwnOrder(orderRow){
+  if(!['new','confirmed'].includes(orderRow.status)||!window.confirm('Vil du avbestilla kaffien før tilbereding?'))return
+  setBusy('cancel-'+orderRow.id);setError('');setNotice('')
+  try{
+   const {data,error:e}=await supabase.from('coffee_orders').update({status:'cancelled'}).eq('id',orderRow.id).eq('member_id',profile.id).in('status',['new','confirmed']).select('id')
+   if(e)throw e
+   if(!data?.length)throw new Error('Ordren kan ha gått vidare til tilbereding. Oppdater status og ta kontakt med kaffibaren.')
+   setNotice('Bestillinga er avbestilt.');await load(true)
+  }catch(e){setError(e.message||'Kunne ikkje avbestilla ordren.')}finally{setBusy('')}
  }
  async function saveStaffComment(orderRow){
   setBusy('comment-'+orderRow.id);setError('')
@@ -196,7 +219,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
  return <div className="coffee-module">
   <div className="training-heading coffee-heading">
    <div><div className="section-kicker">GARASJEGYM · KAFFEBAR</div><h3>Kaffebaren</h3><p>{settings.is_open?'Open for bestilling':'Stengd for bestilling'}</p></div>
-   <span className="count-pill">{products.filter(product=>product.is_active).length} produkt</span>
+   <div className="coffee-heading-actions"><button type="button" className="secondary-button coffee-help-button" onClick={()=>onHelp('coffee-order')}><BookOpen size={15}/> Hjelp</button><span className="count-pill">{products.filter(product=>product.is_active).length} produkt</span></div>
   </div>
   {error&&<div className="auth-error" role="alert">{error}</div>}{notice&&<div className="auth-message" role="status"><CheckCircle2 size={15}/>{notice}</div>}
   {!settings.is_open&&!staff&&<div className="coffee-closed-banner"><Store size={18}/><div><strong>Kaffebaren er stengd</strong><span>{settings.closed_message||'Du kan sjå menyen, men ikkje leggja inn bestilling akkurat no.'}</span></div></div>}
@@ -207,7 +230,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
    <button type="button" className={activeTab==='stats'?'selected':''} onClick={()=>setActiveTab('stats')}><BarChart3 size={15}/> Statistikk</button>
   </nav>}
   {!staff&&!ordersOnly&&<nav className="coffee-tabs" aria-label="Kaffebar">
-   <button type="button" className={activeTab==='menu'?'selected':''} onClick={()=>setActiveTab('menu')}><Coffee size={15}/> Meny</button>
+   <button type="button" className={activeTab==='menu'?'selected':''} onClick={()=>setActiveTab('menu')}><Coffee size={15}/> Bestill kaffi</button>
    <button type="button" className={activeTab==='orders'?'selected':''} onClick={()=>setActiveTab('orders')}><ShoppingBag size={15}/> Mine bestillingar</button>
   </nav>}
   {staff&&activeTab==='orders'&&<>
@@ -225,6 +248,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
    </section>
   </>}
   {activeTab==='menu'&&!ordersOnly&&<>
+   {staff&&<p className="coffee-admin-price-hint">Menyen er sett opp med 0 kr som startpris (vist som «Gratis» for medlemmar). Rediger produktprisane dersom Garasjen ønskjer å ta betalt. Appen tek ikkje imot betaling.</p>}
    {staff&&<form className="coffee-add-product coffee-add-product-extended" onSubmit={addProduct}>
     <strong>{editingProduct?'Rediger produkt':'Legg til produkt'}</strong>
     <input value={newName} onChange={e=>setNewName(e.target.value)} placeholder="Produktnamn" required/>
@@ -233,24 +257,27 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
     <input value={newPrepMinutes} onChange={e=>setNewPrepMinutes(e.target.value)} type="number" min="1" max="120" placeholder="Minutt"/>
     <input value={newImageUrl} onChange={e=>setNewImageUrl(e.target.value)} type="url" placeholder="Bilete-URL (valfri)"/>
     <input value={newDesc} onChange={e=>setNewDesc(e.target.value)} placeholder="Kort skildring"/>
-    <label className="coffee-option-config">Tilval – eitt per linje, t.d. «Mjølk: Vanleg, Havre, Ingen»<textarea rows="2" value={newOptions} onChange={e=>setNewOptions(e.target.value)} placeholder={'Mjølk: Vanleg mjølk, Havremjølk, Ingen\nShot: Enkel, Dobbel'}/></label>
+    <label className="coffee-option-config">Tilval – eitt per linje. Bruk ! etter namnet når valet må gjerast, t.d. «Mjølk!: Vanleg, Havre»<textarea rows="2" value={newOptions} onChange={e=>setNewOptions(e.target.value)} placeholder={'Mjølk!: Vanleg mjølk, Havremjølk, Laktosefri\nSmak: Ingen, Vanilje, Karamell'}/></label>
     <div className="coffee-form-actions"><button className="primary-button" disabled={busy==='product'}>{busy==='product'?'Lagrar …':editingProduct?'Lagre produkt':'Legg til produkt'}</button>{editingProduct&&<button type="button" className="secondary-button" onClick={resetProductForm}>Avbryt</button>}</div>
    </form>}
    <div className="calendar-view-switch coffee-category-filters">{categories.map(category=><button type="button" key={category} className={categoryFilter===category?'selected':''} onClick={()=>setCategoryFilter(category)}>{category}</button>)}</div>
+   {!staff&&cartQuantity>0&&<button type="button" className="coffee-cart-jump" onClick={()=>document.getElementById('gg-coffee-checkout')?.scrollIntoView({behavior:'smooth',block:'start'})}><ShoppingBag size={19}/><strong>{cartQuantity} {cartQuantity===1?'drikk':'drikkar'} i handlekorga</strong><span>{coffeePrice(total)}</span><ArrowRight size={17}/></button>}
+   {!visibleProducts.length&&<div className="empty-state">Det ligg ikkje nokon drikkar i denne kategorien enno. {staff?'Legg til produkt over.':'Vel ein annan kategori eller prøv att seinare.'}</div>}
    <div className="coffee-product-grid">{visibleProducts.map(product=><article className={'coffee-product '+(!product.is_active?'is-inactive':'')} key={product.id}>
     {product.image_url?<img className="coffee-product-image" src={product.image_url} alt={product.name}/>:<div className="coffee-product-icon"><Coffee size={22}/></div>}
-    <div className="coffee-product-info"><strong>{product.name}</strong><p>{product.description}</p><b>{formatMoney(product.price)}</b>{product.prep_minutes&&<small><Clock3 size={12}/> Ca. {product.prep_minutes} min</small>}</div>
-    {!staff&&<div className="coffee-product-options">{(product.option_groups||[]).map(group=><label key={group.name}>{group.name}<select value={optionSelections[product.id]?.[group.name]||''} onChange={e=>setOption(product.id,group.name,e.target.value)}><option value="">Vel (valfritt)</option>{(group.choices||[]).map(choice=><option key={choice} value={choice}>{choice}</option>)}</select></label>)}</div>}
-    {staff?<div className="coffee-product-admin-actions"><button type="button" className="secondary-button" onClick={()=>editProduct(product)}><Edit3 size={13}/> Rediger</button><button type="button" className="secondary-button" disabled={busy==='product-'+product.id} onClick={()=>toggleProduct(product)}>{product.is_active?'Marker utseld':'Gjer tilgjengeleg'}</button></div>:<div className="coffee-quantity"><button type="button" onClick={()=>change(product.id,-1)} aria-label="Fjern ein"><Minus size={14}/></button><strong>{cart[product.id]||0}</strong><button type="button" onClick={()=>change(product.id,1)} aria-label="Legg til ein"><Plus size={14}/></button></div>}
+    <div className="coffee-product-info"><strong>{product.name}</strong><p>{product.description}</p><b>{coffeePrice(product.price)}</b>{product.prep_minutes&&<small><Clock3 size={12}/> Ca. {product.prep_minutes} min</small>}</div>
+    {!staff&&<div className="coffee-product-options">{(product.option_groups||[]).map(group=><label key={group.name}>{group.name}<select value={optionSelections[product.id]?.[group.name]||''} onChange={e=>setOption(product.id,group.name,e.target.value)}><option value="">{group.required?'Vel eit alternativ':'Vel (valfritt)'}</option>{(group.choices||[]).map(choice=><option key={choice} value={choice}>{choice}</option>)}</select></label>)}</div>}
+    {staff?<div className="coffee-product-admin-actions"><button type="button" className="secondary-button" onClick={()=>editProduct(product)}><Edit3 size={13}/> Rediger</button><button type="button" className="secondary-button" disabled={busy==='product-'+product.id} onClick={()=>toggleProduct(product)}>{product.is_active?'Marker utseld':'Gjer tilgjengeleg'}</button></div>:<div className="coffee-product-buy"><button type="button" className="secondary-button" disabled={!settings.is_open} onClick={()=>addToCart(product)}><Plus size={17}/>{settings.is_open?'Legg i handlekorg':'Stengd'}</button></div>}
    </article>)}</div>
    {!staff&&!settings.is_open&&<p className="coffee-closed-note">Bestilling er mellombels stengd.</p>}
-   {!staff&&<section className="coffee-checkout"><div className="training-heading"><div><div className="section-kicker">BESTILLING</div><h3>Handlekorg</h3></div><span className="count-pill">{cartItems.reduce((sum,item)=>sum+item.quantity,0)} varer</span></div>
-    {cartItems.length?<><div className="coffee-cart-lines">{cartItems.map(item=>{const product=products.find(row=>row.id===item.product_id);return <div key={item.product_id}><span>{product.name} × {item.quantity}{item.options.length>0?' · '+optionSummary(item.options):''}</span><b>{formatMoney(Number(product.price)*item.quantity)}</b></div>})}</div>
-     <div className="engine-fields"><label>Mjølk (felles for bestillinga)<select value={milk} onChange={e=>setMilk(e.target.value)}><option>Vanleg mjølk</option><option>Havremjølk</option><option>Ingen</option></select></label><label>Sirup / smak (felles for bestillinga)<select value={syrup} onChange={e=>setSyrup(e.target.value)}><option>Ingen</option><option>Vanilje</option><option>Karamell</option><option>Sjokolade</option></select></label></div>
-     <textarea value={note} onChange={e=>setNote(e.target.value)} rows="2" placeholder="Melding om ønskje (valfritt)"/>
-     <div className="coffee-total"><span>Totalt</span><strong>{formatMoney(total)}</strong></div>
-     <button className="primary-button" onClick={order} disabled={busy==='order'||!settings.is_open}><ShoppingBag size={16}/>{busy==='order'?'Sender …':'BESTILL'}</button>
-    </>:<div className="empty-state">Vel drikke frå menyen for å leggja i handlekorga.</div>}
+   {!staff&&<section className="coffee-checkout" id="gg-coffee-checkout"><div className="training-heading"><div><div className="section-kicker">DI BESTILLING</div><h3>Handlekorg</h3></div><span className="count-pill">{cartQuantity} {cartQuantity===1?'drikk':'drikkar'}</span></div>
+    {unavailableCartCount>0&&<p className="coffee-cart-warning">Nokre tidlegare val er ikkje lenger tilgjengelege og blir ikkje sende med bestillinga.</p>}
+    {cartItems.length?<><div className="coffee-cart-lines">{cartItems.map(item=>{const product=products.find(row=>row.id===item.product_id);return <div className="coffee-cart-line" key={item.key}><div className="coffee-cart-line-info"><strong>{product.name}</strong>{item.options.length>0&&<small>{optionSummary(item.options)}</small>}<b>{coffeePrice(Number(product.price)*item.quantity)}</b></div><div className="coffee-cart-quantity"><button type="button" aria-label={'Fjern ein '+product.name} onClick={()=>changeCartQuantity(item.key,-1)}><Minus size={16}/></button><strong>{item.quantity}</strong><button type="button" aria-label={'Legg til ein '+product.name} onClick={()=>changeCartQuantity(item.key,1)} disabled={item.quantity>=20}><Plus size={16}/></button><button type="button" className="coffee-cart-remove" aria-label={'Fjern '+product.name+' frå handlekorga'} onClick={()=>changeCartQuantity(item.key,-item.quantity)}><Trash2 size={15}/></button></div></div>})}</div>
+     <label className="coffee-order-note">Melding til baristaen (valfritt)<textarea value={note} onChange={e=>setNote(e.target.value)} maxLength="500" rows="2" placeholder="Til dømes når du kjem for å henta …"/></label>
+     <div className="coffee-total"><span>Totalt</span><strong>{coffeePrice(total)}</strong></div>
+     <button className="primary-button coffee-place-order" onClick={order} disabled={busy==='order'||!settings.is_open}><ShoppingBag size={17}/>{busy==='order'?'Sender …':'Send bestilling'}</button>
+     <small className="coffee-order-note-hint">Kontroller drikkar og tilval før du sender. Det er ikkje ei nettbetaling i appen.</small>
+    </>:<div className="empty-state">Vel ei drikk frå menyen og trykk «Legg i handlekorg».</div>}
    </section>}
   </>}
   {!staff&&activeTab==='orders'&&<section className="engine-section coffee-orders-section">
@@ -258,12 +285,14 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
    <div className="calendar-view-switch coffee-order-views"><button type="button" className={orderView==='all'?'selected':''} onClick={()=>setOrderView('all')}>Alle</button><button type="button" className={orderView==='active'?'selected':''} onClick={()=>setOrderView('active')}>Pågåande</button><button type="button" className={orderView==='completed'?'selected':''} onClick={()=>setOrderView('completed')}>Ferdige</button></div>
    {orders.length?orders.map(orderRow=><article className="history-card coffee-order-card" key={orderRow.id}>
     <div className="history-card-top"><div><strong>Bestilling #{orderRow.id.replaceAll('-','').slice(0,8).toUpperCase()}</strong><small>{formatDate(orderRow.created_at)}</small></div><span className={'coffee-status status-'+(statusMeta[orderRow.status]?.className||orderRow.status)}>{statusMeta[orderRow.status]?.label||orderRow.status}</span></div>
+    {orderRow.status!=='cancelled'&&<div className="coffee-order-progress" aria-label="Framdrift for bestillinga">{coffeeProgress.map((step,index)=><span key={step} className={index<=coffeeProgress.indexOf(orderRow.status)?'done':''}>{statusMeta[step].label}</span>)}</div>}
     {(orderRow.coffee_order_items||[]).map(item=><div className="coffee-member-item" key={item.id}><div className="history-exercise coffee-order-item"><div><b>{item.product_name} × {item.quantity}</b>{item.options?.length>0&&<small>{optionSummary(item.options)}</small>}</div><span>{formatMoney(Number(item.unit_price)*Number(item.quantity))}</span></div>
      {orderRow.status==='collected'&&!item.review&&!item.review_skipped_at&&<div className="coffee-review-prompt"><div><strong>Korleis var {item.product_name.toLowerCase()}?</strong><small>Vurderinga er heilt frivillig.</small></div><button type="button" className="secondary-button" onClick={()=>setReviewDrafts(current=>({...current,[item.id]:current[item.id]||{rating:5,comment:''}}))}>Gi vurdering</button><button type="button" className="text-button" disabled={busy==='skip-'+item.id} onClick={()=>skipReview(item)}>Ikkje no</button></div>}
      {orderRow.status==='collected'&&reviewDrafts[item.id]&&!item.review&&<div className="coffee-review-editor"><strong>Korleis var produktet?</strong><div className="coffee-star-select" role="radiogroup" aria-label="Stjernevurdering">{[1,2,3,4,5].map(rating=><button key={rating} type="button" aria-label={rating+' av 5 stjerner'} aria-pressed={(reviewDrafts[item.id].rating||5)===rating} onClick={()=>setReviewDrafts(current=>({...current,[item.id]:{...current[item.id],rating}}))}><Star size={25} fill={rating<=(reviewDrafts[item.id].rating||5)?'currentColor':'none'}/></button>)}</div><label>Kommentar (valfri)<textarea rows="2" maxLength="500" value={reviewDrafts[item.id].comment||''} onChange={e=>setReviewDrafts(current=>({...current,[item.id]:{...current[item.id],comment:e.target.value}}))} placeholder="Noko me kan gjera betre?"/></label><div className="coffee-form-actions"><button type="button" className="primary-button" disabled={busy==='review-'+item.id} onClick={()=>submitReview(item)}>{busy==='review-'+item.id?'Sender …':'Send vurdering'}</button><button type="button" className="secondary-button" disabled={busy==='skip-'+item.id} onClick={()=>{setReviewDrafts(current=>{const next={...current};delete next[item.id];return next});skipReview(item)}}>Lukk / ikkje no</button></div><small>Du kan òg lukka dette utan å senda noko.</small></div>}
      {item.review&&<div className="coffee-review-thanks"><span>{'★'.repeat(item.review.rating)}{'☆'.repeat(5-item.review.rating)}</span><small>Takk for vurderinga di.</small></div>}
     </div>)}
     <div className="coffee-total"><span>Sum</span><strong>{formatMoney(orderRow.total)}</strong></div>
+    {['new','confirmed'].includes(orderRow.status)&&<button type="button" className="secondary-button coffee-cancel-own" disabled={busy==='cancel-'+orderRow.id} onClick={()=>cancelOwnOrder(orderRow)}>{busy==='cancel-'+orderRow.id?'Avbestiller …':'Avbestill før tilbereding'}</button>}
    </article>):<div className="empty-state">Du har ingen bestillingar enno.</div>}
   </section>}
   {staff&&!ordersOnly&&activeTab==='reviews'&&<section className="engine-section coffee-review-admin">

@@ -108,13 +108,13 @@ test('Spotify options open above the live timer dock and profile links to music 
   assert.match(styles, /\.gg-live-timer__music-dock:has\(\.spotify-mini-tools\)\s*\{\s*overflow:visible;/)
   assert.match(styles, /\.gg-live-timer__music-dock \.spotify-mini-tools\s*\{\s*position:absolute;/)
   assert.match(profile, /Musikk og Spotify <span>Søk, spelelister og innstillingar/)
-  assert.match(app, /<MyPage onProfileUpdated=\{display_name=>setProfile\(p=>\(\{\.\.\.p,display_name\}\)\)\} onMusic=\{\(\)=>navigateTo\('musikk'\)\}/)
+  assert.match(app, /<MyPage [^\n]*onProfileUpdated=\{display_name=>setProfile\(p=>\(\{\.\.\.p,display_name\}\)\)\} onMusic=\{\(\)=>navigateTo\('musikk'\)\}/)
 })
 
 test('the workout button returns to the live session instead of replacing its draft', () => {
   const app = source('../src/App.jsx')
   const timer = source('../src/components/Training.jsx')
-  assert.match(app, /function handleSectionNavigate\(id\)\{if\(id===active\)return/)
+  assert.match(app, /function handleSectionNavigate\(id\)\{setHelpTopic\(null\);if\(id===active\)return/)
   assert.doesNotMatch(app, /workoutReselectToken/)
   assert.match(timer, /function returnToWorkoutTypes\(\)/)
   assert.match(timer, /window\.confirm\('Byta økttype\?/)

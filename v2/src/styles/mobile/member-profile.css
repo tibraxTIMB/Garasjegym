@@ -42,6 +42,12 @@
 .my-profile-name-form small { color: #bac7c3; }
 .my-profile-name-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .my-profile-name-actions button { flex: 1; }
+.my-profile-help-shortcut { display:flex;align-items:center;gap:12px;width:100%;min-height:78px;padding:13px 15px;border:1px solid #cb914b;border-radius:13px;background:linear-gradient(110deg,#41301f,#1d2929);color:#fff;text-align:left;cursor:pointer; }
+.my-profile-help-shortcut>svg:first-child { color:#ffca78;flex:none; }
+.my-profile-help-shortcut>svg:last-child { margin-left:auto;flex:none;color:#ffca78; }
+.my-profile-help-shortcut>span { display:grid;gap:4px;min-width:0; }
+.my-profile-help-shortcut strong { font-size:17px; }
+.my-profile-help-shortcut small { color:#d1d7d0;font-size:12px;line-height:1.4; }
 
 .history-toolbar {
   min-width: 0;

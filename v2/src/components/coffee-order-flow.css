@@ -1,0 +1,31 @@
+.coffee-heading-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:7px}
+.coffee-admin-price-hint{margin:0;padding:12px 14px;border-left:3px solid #e4ad61;border-radius:8px;background:#342b1d;color:#f5d7ad;font-size:13px;line-height:1.5}
+.coffee-help-button{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:8px 10px;font-size:12px}
+.coffee-cart-jump{position:sticky;top:62px;z-index:24;display:flex;align-items:center;gap:10px;width:100%;min-height:53px;padding:11px 15px;border:1px solid #ffbf68;border-radius:12px;background:linear-gradient(110deg,#e7a13f,#ffc26d);color:#211c15;box-shadow:0 6px 24px #0005;text-align:left;font:inherit;cursor:pointer}
+.coffee-cart-jump strong{flex:1;min-width:0;font-size:14px}
+.coffee-cart-jump span{white-space:nowrap;font-size:13px;font-weight:850}
+.coffee-cart-jump svg{flex:none}
+.coffee-product-buy{display:flex;min-width:0}
+.coffee-product-buy .secondary-button{display:inline-flex;justify-content:center;align-items:center;gap:7px;min-height:44px;margin:0;padding:9px 13px;border-color:#c18d4d;color:#ffd08c;font-weight:850}
+.coffee-product-buy .secondary-button:disabled{opacity:.6}
+.coffee-checkout{scroll-margin-top:90px}
+.coffee-cart-line{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:12px 0;border-bottom:1px solid #47524e}
+.coffee-cart-line-info{min-width:0;flex:1;display:grid;gap:4px}
+.coffee-cart-line-info strong{font-size:14px}
+.coffee-cart-line-info small{color:#c3d1c8;font-size:12px;line-height:1.4}
+.coffee-cart-line-info b{color:#ffd18c;font-size:13px}
+.coffee-cart-quantity{display:flex;align-items:center;gap:7px;flex:none}
+.coffee-cart-quantity button{display:grid;place-items:center;width:38px;height:38px;border:1px solid #67756f;border-radius:9px;background:#25302e;color:#f6c57e;cursor:pointer}
+.coffee-cart-quantity button:disabled{opacity:.4}
+.coffee-cart-quantity strong{min-width:16px;text-align:center}
+.coffee-cart-quantity .coffee-cart-remove{margin-left:4px;color:#f3aba0;border-color:#8b5b55}
+.coffee-order-note{display:grid;gap:8px;color:#e7eae5;font-size:13px;font-weight:750}
+.coffee-order-note textarea{min-height:78px}
+.coffee-order-note-hint{font-size:12px;color:#b9c8be;line-height:1.4}
+.coffee-place-order{min-height:52px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:850}
+.coffee-cart-warning{margin:0;padding:10px;border-left:3px solid #f0ac57;background:#3b3022;color:#f7d7a4;font-size:12px;line-height:1.45}
+.coffee-order-progress{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin:8px 0 13px}
+.coffee-order-progress span{padding:8px 3px;border-top:3px solid #47514d;color:#9eaaa5;font-size:10px;line-height:1.25;text-align:center}
+.coffee-order-progress span.done{border-color:#76c99e;color:#c7e9d2}
+.coffee-cancel-own{margin:10px 0 0;min-height:42px;border-color:#ad7066;color:#efb5a6}
+@media(max-width:620px){.coffee-product{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:10px}.coffee-product-icon,.coffee-product-image{grid-column:1}.coffee-product-info{grid-column:2}.coffee-product-options,.coffee-product-buy,.coffee-product-admin-actions{grid-column:1/-1;width:100%;max-width:none}.coffee-product-options{grid-template-columns:repeat(auto-fit,minmax(min(100%,135px),1fr));gap:9px}.coffee-product-options label{font-size:12px}.coffee-product-options select{min-height:43px;font-size:13px}.coffee-product-buy .secondary-button{width:100%}.coffee-cart-jump{top:60px}.coffee-cart-line{align-items:flex-start;flex-direction:column}.coffee-cart-quantity{align-self:flex-end}.coffee-order-progress span{font-size:9px;word-break:break-word}.coffee-heading-actions .count-pill{display:none}}
