@@ -199,6 +199,8 @@
   gap: clamp(3px, 1dvh, 10px);
   text-align: center;
 }
+.gg-live-timer__status { display:flex; flex-direction:column; justify-content:center; align-items:center; gap:3px; min-width:0; max-width:100%; }
+.gg-live-timer__wod-name { display:block; max-width:min(60vw,340px); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:#e0b477; font-size:clamp(11px,1.8dvh,14px); font-weight:800; letter-spacing:.035em; line-height:1.2; }
 .gg-live-timer__phase { display: flex; align-items: center; gap: 8px; color: #d6e1e4; font-size: clamp(12px, 2.5dvh, 16px); font-weight: 900; letter-spacing: .12em; }
 .gg-live-timer__dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: #6c7579; }
 .gg-live-timer__dot.is-running { background: #73dbaa; box-shadow: 0 0 14px #73dbaa66; }
@@ -398,7 +400,7 @@
     column-gap:clamp(7px,1.4vw,16px);
     row-gap:1px;
   }
-  .gg-live-timer__body--with-laps .gg-live-timer__phase{grid-area:phase;justify-self:center;align-self:end}
+  .gg-live-timer__body--with-laps .gg-live-timer__status{grid-area:phase;justify-self:center;align-self:end}
   .gg-live-timer__body--with-laps .gg-live-timer__time{grid-area:time;align-self:center;font-size:min(calc(10vw * var(--gg-time-scale,1)),calc(24dvh * var(--gg-time-scale,1)),135px)}
   .gg-live-timer__body--with-laps .gg-live-timer__time-label{grid-area:label;justify-self:center}
   .gg-live-timer__body--with-laps .gg-live-timer__time-secondary{grid-area:secondary;justify-self:center;align-self:start}

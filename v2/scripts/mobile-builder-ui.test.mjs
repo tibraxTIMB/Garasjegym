@@ -79,6 +79,15 @@ test('live timer reclaims the generic footer margin for music and round splits',
   assert.match(styles, /\.gg-live-timer\.gg-live-timer--with-laps\{grid-template-rows:auto minmax\(0,1fr\) auto auto auto\}/)
 })
 
+test('fullscreen timer shows a compact WOD name above the running state, not on free workouts', () => {
+  const timer = source('../src/components/Training.jsx')
+  const styles = source('../src/components/timer-viewport.css')
+  assert.match(timer, /wodName=\{source\?\.name\|\|''\}/)
+  assert.match(timer, /className="gg-live-timer__status">\{wodName&&<span className="gg-live-timer__wod-name"/)
+  assert.match(styles, /\.gg-live-timer__wod-name\s*\{[^}]*text-overflow:ellipsis;/)
+  assert.match(styles, /\.gg-live-timer__body--with-laps \.gg-live-timer__status\{grid-area:phase;/)
+})
+
 test('result exercise tabs stay compact while retaining their exercise names', () => {
   const style = source('../src/styles/mobile/experience-system.css')
   const timer = source('../src/components/Training.jsx')
