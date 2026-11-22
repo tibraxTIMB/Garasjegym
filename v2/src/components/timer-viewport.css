@@ -247,6 +247,7 @@
 .gg-live-timer__exercise-title { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .gg-live-timer__exercise-title > span { color: #9eafb5; font-size: 11px; font-weight: 850; letter-spacing: .09em; }
 .gg-live-timer__exercise-title button { padding: 2px 0; border: 0; background: none; color: #f2b45b; font-size: 11px; font-weight: 800; white-space: nowrap; }
+.gg-live-timer__empty-add{display:inline-flex;align-items:center;gap:8px;align-self:start;width:max-content;max-width:100%;min-height:39px;padding:7px 13px;border:1px solid #bc894c;border-radius:10px;background:#34291e;color:#f9c47a;font:inherit;font-size:clamp(12px,2.5vw,15px);font-weight:800;cursor:pointer}
 .gg-live-timer__body--with-laps .gg-live-timer__clock-area { padding-bottom: 0; }
 .gg-live-timer__clock-laps { position: static; display: flex; align-items: center; gap: 4px; flex: 0 0 auto; width: 100%; min-width: 0; padding: 3px 4px; border: 1px solid rgba(169,193,198,.18); border-radius: 9px; background: rgba(11,22,27,.78); text-align: left; }
 .gg-live-timer__clock-laps .gg-live-timer__lap-preview li { min-width: 0; }
@@ -385,6 +386,38 @@
 .training-side-picker{display:flex;align-items:center;flex-wrap:wrap;gap:10px;color:#cbd8d8;font-size:12px;font-weight:800}
 .training-side-picker select{min-height:40px;min-width:185px;padding:7px 10px;border:1px solid #647276;border-radius:9px;background:#1d2c30;color:#f7f8f7}
 @media(max-width:600px){.free-session-setup .primary-button,.free-session-setup-bottom .primary-button{width:100%}}
+
+/* One shared workout entry, with optional editing while the same timer runs. */
+.training-entry-compact{max-width:820px;gap:11px;margin:12px 0 8px}
+.training-entry-compact>button{min-height:116px;padding:17px;border:1px solid #876639;border-radius:14px;background:linear-gradient(145deg,#2b251c,#182124);align-content:center}
+.training-entry-compact>button strong{font-size:clamp(18px,2.7vw,22px)}
+.training-entry-compact>button small{font-size:12px;line-height:1.45}
+.training-afterregister-link{display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;margin:0 auto 20px;padding:10px 15px;border:0;background:transparent;color:#cbd4d1;font:inherit;font-size:13px;font-weight:750;cursor:pointer}
+.training-afterregister-link svg:first-child{color:#efb265}
+.training-choose-hub{display:grid;gap:14px;max-width:760px}
+.training-choose-links{display:grid;gap:9px}
+.training-choose-links>button{display:flex;align-items:center;gap:13px;width:100%;min-height:79px;padding:14px;border:1px solid #6f5b43;border-radius:13px;background:#1a2426;color:#f5f4ef;text-align:left;font:inherit;cursor:pointer}
+.training-choose-links>button>svg:first-child{flex:none;color:#ffbd62}
+.training-choose-links>button>svg:last-child{flex:none;margin-left:auto;transform:rotate(-90deg);color:#c1c9c7}
+.training-choose-links>button span{flex:1;min-width:0;display:grid;gap:5px}
+.training-choose-links>button strong{font-size:16px}
+.training-choose-links>button small{color:#bfc9c6;font-size:12px;line-height:1.4}
+.free-session-editor-head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:14px 16px;border:1px solid #aa7941;border-radius:13px;background:linear-gradient(110deg,#302618,#172526)}
+.free-session-editor-head>div{display:grid;gap:5px}
+.free-session-editor-head strong{font-size:19px}
+.free-session-editor-head small{color:#c6d0cd;font-size:12px}
+.free-session-editor-head>.primary-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px}
+.training-session-workspace{display:grid;gap:15px}
+.free-session-editor-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.free-session-editor-actions button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:48px}
+@media(max-width:620px){
+  .training-entry-compact{grid-template-columns:1fr}
+  .training-entry-compact>button{min-height:82px;padding:13px 16px;gap:5px}
+  .training-entry-compact>button strong{font-size:18px}
+  .free-session-editor-head>.primary-button{width:100%}
+  .free-session-editor-actions{grid-template-columns:1fr 1fr}
+  .free-session-editor-actions button{font-size:12px;padding:9px 6px}
+}
 
 /* Round splits stay out of the clock and exercises: left of the clock in
    landscape, directly below the music dock in portrait. */

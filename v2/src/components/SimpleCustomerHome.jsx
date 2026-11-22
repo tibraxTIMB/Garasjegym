@@ -10,8 +10,8 @@ export default function SimpleCustomerHome({ onPlan, onFree, onWod, onManual, on
       {newPtWodCount > 0 ? <span className="customer-plan-new">{newPtWodCount} ny{newPtWodCount === 1 ? '' : 'e'}</span> : <ChevronRight size={22} />}
     </button>
     <div className="simple-home-grid customer-home-grid">
-      <button type="button" className="simple-home-action" onClick={onFree}><Dumbbell /><span><strong>Fri økt</strong><small>Vel øvingar sjølv</small></span></button>
-      <button type="button" className="simple-home-action" onClick={onWod}><Activity /><span><strong>Vel ein WOD</strong><small>Ferdige økter</small></span></button>
+      <button type="button" className="simple-home-action" onClick={onFree}><Dumbbell /><span><strong>Fri trening</strong><small>Start klokka. Legg til øvingar når du vil.</small></span></button>
+      <button type="button" className="simple-home-action" onClick={onWod}><Activity /><span><strong>Vel ein WOD</strong><small>Finn ei ferdig økt og start.</small></span></button>
       <button type="button" className="simple-home-action" onClick={onSchedule}><Users /><span><strong>Timeplan</strong><small>PT og gruppetimar</small></span></button>
       <button type="button" className="simple-home-action" onClick={onHistory}><History /><span><strong>Treningslogg</strong><small>Øktene du har gjort</small></span></button>
     </div>

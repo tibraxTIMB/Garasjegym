@@ -109,21 +109,24 @@ test('Spotify options open above the live timer dock and profile links to music 
   assert.match(app, /<MyPage onMusic=\{\(\)=>navigateTo\('musikk'\)\}/)
 })
 
-test('the workout button can return to workout types without silently losing a draft', () => {
+test('the workout button returns to the live session instead of replacing its draft', () => {
   const app = source('../src/App.jsx')
   const timer = source('../src/components/Training.jsx')
-  assert.match(app, /id==='trening'&&active==='trening'\)\{setWorkoutReselectToken/)
-  assert.match(app, /<Training reselectToken=\{workoutReselectToken\}/)
+  assert.match(app, /function handleSectionNavigate\(id\)\{if\(id===active\)return/)
+  assert.doesNotMatch(app, /workoutReselectToken/)
   assert.match(timer, /function returnToWorkoutTypes\(\)/)
   assert.match(timer, /window\.confirm\('Byta økttype\?/)
-  assert.match(timer, /useEffect\(\(\)=>\{if\(reselectToken>0\)returnToWorkoutTypes\(\)/)
   assert.match(timer, /← Vel økttype/)
 })
 
-test('WOD selection shows a dedicated visible screen instead of content below the entry buttons', () => {
+test('WOD and PT selection share the existing library and training plan', () => {
   const timer = source('../src/components/Training.jsx')
-  assert.match(timer, /mode==='wods' \? <div className="training-wod-chooser-head"/)
-  assert.match(timer, /mode === 'wods' && <section className="engine-section wod-library-screen"/)
+  const app = source('../src/App.jsx')
+  assert.match(timer, /mode==='choose' \? <section className="training-choose-hub"/)
+  assert.match(timer, /onOpenWodLibrary\(\)/)
+  assert.match(timer, /onOpenTrainingPlan\(\)/)
+  assert.doesNotMatch(timer, /mode === 'wods' && <section className="engine-section wod-library-screen"/)
+  assert.match(app, /onOpenWodLibrary=\{\(\)=>\{setFocusWodId\(null\);navigateTo\('wod'\)\}\}/)
   assert.match(timer, /mode==='home'&&<details className="training-extra-tools"/)
   assert.match(timer, /className="manual-wod-picker-toggle" aria-expanded=\{manualWodPickerOpen\}/)
   assert.match(timer, /className="manual-wod-picker-options"/)
@@ -180,7 +183,7 @@ test('an active workout stays mounted across navigation and offers a one-tap ret
   const timer = source('../src/components/Training.jsx')
   const styles = source('../src/styles/mobile/app-shell.css')
   assert.match(app, /trainingVisited\|\|active==='trening'/)
-  assert.match(app, /<Training reselectToken=\{workoutReselectToken\} memberId=\{session\.user\.id\} visible=\{active==='trening'\} onBackground=/)
+  assert.match(app, /<Training memberId=\{session\.user\.id\} visible=\{active==='trening'\} onBackground=/)
   assert.match(app, /active === 'trening' \? null : active === 'timeplan'/)
   assert.match(app, /timerSnapshot\.sessionOpen&&<button[^>]*className="ongoing-workout-return"/)
   assert.match(timer, /sessionOpen:mode==='active'/)
