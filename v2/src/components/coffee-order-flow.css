@@ -1,4 +1,6 @@
 .coffee-heading-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:7px}
+.coffee-option-field{display:grid;gap:6px;min-width:0}
+.coffee-option-field>span{font-size:12px;font-weight:750;color:#e1e9e3}
 .coffee-admin-price-hint{margin:0;padding:12px 14px;border-left:3px solid #e4ad61;border-radius:8px;background:#342b1d;color:#f5d7ad;font-size:13px;line-height:1.5}
 .coffee-help-button{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:8px 10px;font-size:12px}
 .coffee-cart-jump{position:sticky;top:62px;z-index:24;display:flex;align-items:center;gap:10px;width:100%;min-height:53px;padding:11px 15px;border:1px solid #ffbf68;border-radius:12px;background:linear-gradient(110deg,#e7a13f,#ffc26d);color:#211c15;box-shadow:0 6px 24px #0005;text-align:left;font:inherit;cursor:pointer}

@@ -15,7 +15,7 @@ export default function SimpleCustomerHome({ onPlan, onFree, onWod, onManual, on
       <button type="button" className="simple-home-action" onClick={onSchedule}><Users /><span><strong>Gruppetimar</strong><small>Vel ei tid og meld deg på saman med andre.</small></span></button>
       <button type="button" className="simple-home-action" onClick={onHistory}><History /><span><strong>Treningslogg</strong><small>Øktene du har gjort</small></span></button>
     </div>
-    {!coach&&<button type="button" className="customer-pt-invite" onClick={onContactPT}><MessageSquareText size={23}/><span><strong>Nysgjerrig på personleg trening?</strong><small>Møt PT-ane våre og spør om hjelp – heilt uforpliktande.</small></span><ChevronRight size={20}/></button>}
+    {!coach&&<button type="button" className="customer-pt-invite" onClick={onContactPT}><MessageSquareText size={23}/><span><strong>Mi PT-oversikt</strong><small>Finn ein PT, følg førespurnader og sjå oppfølginga di.</small></span><ChevronRight size={20}/></button>}
     <div className="customer-home-quick-actions">
       <button type="button" onClick={onManual}><ClipboardList size={17} /> Etterregistrer</button>
       <button type="button" onClick={onCoffee}><Coffee size={17} /> Bestill kaffi</button>

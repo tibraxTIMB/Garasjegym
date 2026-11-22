@@ -1,0 +1,16 @@
+.gg-garage-select{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-width:0;min-height:46px;padding:10px 12px;border:1px solid #698078;border-radius:10px;background:#132328;color:#f8f8f4;text-align:left;font:inherit;font-size:14px;cursor:pointer}
+.gg-garage-select>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gg-garage-select svg{flex:none;color:#f5b967}
+.gg-garage-select-placeholder{color:#b3c2bb}
+.gg-garage-select:disabled{opacity:.6;cursor:not-allowed}
+.gg-select-backdrop{position:fixed;z-index:2500;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:12px 10px max(12px,env(safe-area-inset-bottom));background:#000b;backdrop-filter:blur(4px)}
+.gg-select-sheet{width:min(100%,540px);max-height:min(78dvh,690px);display:grid;grid-template-rows:auto minmax(0,1fr);gap:10px;padding:15px;border:1px solid #9d7e51;border-radius:20px;background:#1a2729;box-shadow:0 20px 70px #000b;color:#f4f5ef}
+.gg-select-sheet>header{display:flex;align-items:start;justify-content:space-between;gap:10px}
+.gg-select-sheet h2{margin:5px 0 0;font-size:19px;line-height:1.25}
+.gg-select-close{display:grid;place-items:center;flex:none;width:42px;height:42px;border:1px solid #5b716d;border-radius:11px;background:#283638;color:#f2e9da;cursor:pointer}
+.gg-select-options{display:grid;align-content:start;gap:6px;min-height:0;overflow:auto;overscroll-behavior:contain;padding:2px}
+.gg-select-options button{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:49px;padding:12px;border:1px solid #546763;border-radius:10px;background:#223133;color:#f4f6f3;text-align:left;font:inherit;font-size:14px;cursor:pointer}
+.gg-select-options button.selected{border-color:#e9a951;background:#493724;color:#ffd193;font-weight:800}
+.gg-select-options button svg{flex:none}
+.gg-garage-select:focus-visible,.gg-select-options button:focus-visible,.gg-select-close:focus-visible{outline:2px solid #ffc76e;outline-offset:2px}
+@media(min-width:700px){.gg-select-backdrop{align-items:center}.gg-select-sheet{border-radius:16px}}

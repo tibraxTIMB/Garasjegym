@@ -132,10 +132,10 @@
     bottom: 0;
     left: 0;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(62px, 1.16fr) repeat(3, minmax(0, 1fr));
     gap: 2px;
     min-height: var(--gg-shell-nav-height);
-    padding: 6px 8px max(6px, env(safe-area-inset-bottom));
+    padding: 6px 5px max(6px, env(safe-area-inset-bottom));
     border-top: 1px solid var(--gg-shell-border);
     background: rgba(22, 28, 30, .97);
     box-shadow: 0 -10px 30px rgba(0, 0, 0, .24);
@@ -150,7 +150,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 3px;
     padding: 4px 2px;
     border: 0;
     border-radius: 11px;
@@ -166,7 +166,7 @@
     max-width: 100%;
     overflow: hidden;
     color: inherit;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 750;
     line-height: 1.1;
     text-overflow: ellipsis;

@@ -46,7 +46,7 @@ test('the home and group timetable lead to a genuine PT enquiry', () => {
   const schedule = src('../src/components/ScheduleHub.jsx')
   const studio = src('../src/components/PTStudio.jsx')
   const app = src('../src/App.jsx')
-  assert.match(home, /Nysgjerrig på personleg trening\?/)
+  assert.match(home, /Mi PT-oversikt/)
   assert.match(home, /<strong>Gruppetimar<\/strong>/)
   assert.match(schedule, /Spør om PT/)
   assert.match(studio, /<PTInquiry profile=\{profile\}/)

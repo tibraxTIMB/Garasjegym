@@ -107,7 +107,7 @@ test('Spotify options open above the live timer dock and profile links to music 
   assert.match(music, /toolsTab==='genres'\?<GenreButtons music=\{music\} compact\/>/)
   assert.match(styles, /\.gg-live-timer__music-dock:has\(\.spotify-mini-tools\)\s*\{\s*overflow:visible;/)
   assert.match(styles, /\.gg-live-timer__music-dock \.spotify-mini-tools\s*\{\s*position:absolute;/)
-  assert.match(profile, /Musikk og Spotify <span>Søk, spelelister og innstillingar/)
+  assert.match(profile, /<strong>Musikk og Spotify<\/strong><small>Søk, spelelister og innstillingar/)
   assert.match(app, /<MyPage [^\n]*onProfileUpdated=\{display_name=>setProfile\(p=>\(\{\.\.\.p,display_name\}\)\)\} onMusic=\{\(\)=>navigateTo\('musikk'\)\}/)
 })
 

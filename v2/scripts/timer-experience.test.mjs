@@ -26,6 +26,7 @@ test('the post-workout review clearly separates WOD prescription and actual erg 
   assert.match(timer,/Siste kontroll før lagring/)
   assert.match(timer,/Planlagt: \{items\[activeExerciseIndex\]\.prescription_label\}/)
   assert.match(timer,/isErgExercise\(items\[activeExerciseIndex\]\)\?<div className="workout-result-erg"/)
-  assert.match(timer,/\<option value="cal"\>Kaloriar/)
+  assert.match(timer,/value:'cal',label:'Kaloriar \(cal\)'/)
+  assert.match(timer,/GarageSelect label="Eining for ro-\/ergresultat"/)
   assert.match(timer,/Talet ovanfor er WOD-målet, ikkje registrert resultat/)
 })

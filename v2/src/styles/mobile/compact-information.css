@@ -1,0 +1,43 @@
+/* Passive information stays concise on phones; actionable controls keep touch size. */
+@media (max-width: 900px) {
+  .app-shell .empty-state {
+    padding: 10px 12px;
+    border-radius: 9px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .app-shell .training-state {
+    min-height: 42px;
+    padding: 10px 2px;
+    font-size: 12px;
+  }
+
+  .app-shell .engine-section-title > span {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .app-shell .engine-section-title > p {
+    margin-block: 3px 0;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+}
+
+.training-choice-field {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+}
+.training-choice-field > span {
+  color: #e4eee7;
+  font-size: 12px;
+  font-weight: 750;
+}
+.training-choice-field > small {
+  color: #b5c2bc;
+  font-size: 11px;
+  line-height: 1.4;
+}

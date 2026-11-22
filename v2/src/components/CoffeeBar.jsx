@@ -4,6 +4,7 @@ import {supabase} from '../lib/supabase.js'
 import {isStaff} from '../lib/auth.js'
 import {addCoffeeCartItem,availableCoffeeCartItems,changeCoffeeCartItem,coffeeCartTotal} from '../lib/coffeeCart.js'
 import GarageOwnerBadge from './GarageOwnerBadge.jsx'
+import GarageSelect from './GarageSelect.jsx'
 import './coffee-order-flow.css'
 
 const statusMeta={
@@ -266,7 +267,7 @@ export default function CoffeeBar({profile,ordersOnly=false,focusReviewId=null,o
    <div className="coffee-product-grid">{visibleProducts.map(product=><article className={'coffee-product '+(!product.is_active?'is-inactive':'')} key={product.id}>
     {product.image_url?<img className="coffee-product-image" src={product.image_url} alt={product.name}/>:<div className="coffee-product-icon"><Coffee size={22}/></div>}
     <div className="coffee-product-info"><strong>{product.name}</strong><p>{product.description}</p><b>{coffeePrice(product.price)}</b>{product.prep_minutes&&<small><Clock3 size={12}/> Ca. {product.prep_minutes} min</small>}</div>
-    {!staff&&<div className="coffee-product-options">{(product.option_groups||[]).map(group=><label key={group.name}>{group.name}<select value={optionSelections[product.id]?.[group.name]||''} onChange={e=>setOption(product.id,group.name,e.target.value)}><option value="">{group.required?'Vel eit alternativ':'Vel (valfritt)'}</option>{(group.choices||[]).map(choice=><option key={choice} value={choice}>{choice}</option>)}</select></label>)}</div>}
+    {!staff&&<div className="coffee-product-options">{(product.option_groups||[]).map(group=><div className="coffee-option-field" key={group.name}><span>{group.name}{group.required?' *':''}</span><GarageSelect label={product.name+' · '+group.name} value={optionSelections[product.id]?.[group.name]||''} onChange={choice=>setOption(product.id,group.name,choice)} placeholder={group.required?'Vel eit alternativ':'Valfritt'} options={[{value:'',label:group.required?'Vel eit alternativ':'Ingen'},...(group.choices||[]).map(choice=>({value:choice,label:choice}))]}/></div>)}</div>}
     {staff?<div className="coffee-product-admin-actions"><button type="button" className="secondary-button" onClick={()=>editProduct(product)}><Edit3 size={13}/> Rediger</button><button type="button" className="secondary-button" disabled={busy==='product-'+product.id} onClick={()=>toggleProduct(product)}>{product.is_active?'Marker utseld':'Gjer tilgjengeleg'}</button></div>:<div className="coffee-product-buy"><button type="button" className="secondary-button" disabled={!settings.is_open} onClick={()=>addToCart(product)}><Plus size={17}/>{settings.is_open?'Legg i handlekorg':'Stengd'}</button></div>}
    </article>)}</div>
    {!staff&&!settings.is_open&&<p className="coffee-closed-note">Bestilling er mellombels stengd.</p>}

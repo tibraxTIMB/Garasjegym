@@ -85,3 +85,41 @@ test('help is reachable from Mi side, simple home and the coffee menu', () => {
   assert.match(coffee,/cancelOwnOrder/)
   assert.match(src('../../supabase/migrations/20261122105513_coffee_menu_and_member_cancellation.sql'),/coffee_orders_member_cancel_guard/)
 })
+
+test('help keeps users in the reading flow while moving between topics and back to the list', () => {
+  const help=src('../src/components/HelpCenter.jsx')
+  assert.match(help,/const \[activeId, setActiveId\] = useState/) // Topic state is separate from the overview.
+  assert.match(help,/if \(activeId\) \{ setActiveId\(null\); setView\(returnView\) \}/)
+  assert.match(help,/aria-label="Bla mellom rettleiingar"/)
+  assert.match(help,/> Førre<\/button>/)
+  assert.match(help,/Neste <ChevronRight/)
+  assert.match(help,/Dette opnar funksjonen utanfor hjelpesenteret/)
+  assert.doesNotMatch(help,/expanded === topic\.id/)
+})
+
+test('Mi side is a genuine main-menu destination and passive info stays compact', () => {
+  const nav=src('../src/components/AppMobileNavigation.jsx')
+  const profile=src('../src/components/MyPage.jsx')
+  const css=src('../src/styles/mobile/compact-information.css')
+  assert.match(nav,/MEMBER_PRIMARY = \['oversikt', 'wod', 'trening', 'timeplan', 'mi-side'\]/)
+  assert.match(profile,/tab==='home'&&<div className="my-hub-dashboard"/)
+  assert.match(profile,/tab==='pulse'&&<HeartRateSettings\/>/)
+  assert.match(profile,/tab==='profile'&&<>/)
+  assert.match(profile,/Mi PT-oversikt/)
+  assert.match(css,/\.app-shell \.empty-state \{\s*padding: 10px 12px/)
+  assert.match(css,/\.app-shell \.training-state \{[^}]*padding: 10px 2px/s)
+})
+
+test('key customer choice menus use GarasjeGym panels instead of Android selects', () => {
+  const picker=src('../src/components/GarageSelect.jsx')
+  const coffee=src('../src/components/CoffeeBar.jsx')
+  const pt=src('../src/components/PTInquiry.jsx')
+  const training=src('../src/components/Training.jsx')
+  assert.match(picker,/createPortal\(/)
+  assert.match(picker,/role="dialog" aria-modal="true"/)
+  assert.match(picker,/key==='Escape'/)
+  assert.match(coffee,/GarageSelect label=\{product\.name\+' · '\+group\.name\}/)
+  assert.match(pt,/GarageSelect label="Vel personleg trenar"/)
+  assert.match(training,/GarageSelect label="Treningsformat"/)
+  assert.match(training,/GarageSelect label="Eining for ro-\/ergresultat"/)
+})

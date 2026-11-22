@@ -3,7 +3,7 @@ import { useSwipeGesture } from '../hooks/useSwipeGesture.js'
 import { CalendarCheck2, ChevronDown, ChevronUp, History, MoreHorizontal, X } from 'lucide-react'
 
 // Match the main touch targets across roles, with the workout action centred.
-const MEMBER_PRIMARY = ['oversikt', 'wod', 'trening', 'timeplan']
+const MEMBER_PRIMARY = ['oversikt', 'wod', 'trening', 'timeplan', 'mi-side']
 const STAFF_PRIMARY = MEMBER_PRIMARY
 const COACH_PRIMARY = MEMBER_PRIMARY
 
@@ -27,11 +27,11 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
   const moreButtonRef = useRef(null)
   const moreSheetRef = useRef(null)
   const preferred = staff ? STAFF_PRIMARY : coach ? COACH_PRIMARY : MEMBER_PRIMARY
-  const primary = preferred.map(id => items.find(item => item.id === id)).filter(Boolean).slice(0, 4)
+  const primary = preferred.map(id => items.find(item => item.id === id)).filter(Boolean).slice(0, 5)
   const primaryIds = new Set(primary.map(item => item.id))
   // The plan already has a dedicated, descriptive shortcut above this grid.
   const secondary = items.filter(item => !primaryIds.has(item.id) && item.id !== 'mi-trening')
-  const activeInMore = ['mi-historikk','mi-trening'].includes(active) || secondary.some(item => item.id === active)
+  const activeInMore = active === 'mi-trening' || secondary.some(item => item.id === active)
   function closeMore() {
     setMoreOpen(false)
     setMoreExpanded(false)
@@ -102,7 +102,7 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
       <nav className="app-mobile-nav" aria-label="Hovudnavigasjon">
         {primary.map(item => {
           const Icon = item.icon
-          const selected = active === item.id
+          const selected = active === item.id || (item.id === 'mi-side' && ['mi-historikk','pr-senter'].includes(active))
           return (
             <button
               key={item.id}

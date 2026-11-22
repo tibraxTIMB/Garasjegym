@@ -29,7 +29,7 @@ test('database date-only values retain their local day',()=>{
 test('mobile navigation centres a distinct ØKT action and exposes timeplan for staff',()=>{
  const nav=read('../src/components/AppMobileNavigation.jsx')
  const app=read('../src/App.jsx')
- assert.match(nav,/\['oversikt', 'wod', 'trening', 'timeplan'\]/)
+ assert.match(nav,/\['oversikt', 'wod', 'trening', 'timeplan', 'mi-side'\]/)
  assert.match(nav,/id === 'trening'\) return 'ØKT'/)
  assert.match(nav,/app-mobile-nav-item--start/)
  assert.match(app,/const staffNavigation=sections\.filter\(item=>item\.id!=='pt-info'\)/)
