@@ -163,17 +163,17 @@ button, [role="button"], summary { touch-action: manipulation; }
 }
 
 /* Workout result entry — exercise tabs and one focused set editor. */
-.workout-result-entry { display:grid; gap:13px; min-width:0; }
+.workout-result-entry { display:grid; gap:10px; min-width:0; }
 .workout-result-tabs {
-  display:flex; gap:8px; max-width:100%; overflow-x:auto;
+  display:flex; gap:6px; max-width:100%; overflow-x:auto;
   overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch;
-  padding:3px 1px 9px; scrollbar-width:thin;
+  padding:2px 1px 6px; scrollbar-width:thin;
 }
 .workout-result-tabs button {
-  flex:0 0 auto; min-height:48px; max-width:220px; padding:10px 16px;
+  flex:0 0 auto; min-height:35px; max-width:160px; padding:6px 11px;
   border:1px solid var(--gg-shell-border,rgba(255,255,255,.13));
-  border-radius:999px; background:transparent; color:inherit;
-  font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  border-radius:10px; background:transparent; color:inherit;
+  font-size:12px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .workout-result-tabs button.selected {
   background:var(--gg-shell-accent,#d99a33); color:#17191c;
@@ -213,10 +213,14 @@ button, [role="button"], summary { touch-action: manipulation; }
   .workout-result-exercise { padding:12px; }
   .workout-result-set-head,.workout-result-set { grid-template-columns:32px minmax(58px,1fr) minmax(72px,1fr) 24px; gap:6px; }
   .workout-result-set>input,.workout-result-measure input { min-height:52px; font-size:17px; }
-  .workout-result-tabs button { min-height:50px; }
+  .workout-result-tabs button { min-height:36px; max-width:145px; padding:6px 10px; }
   .workout-result-actions { align-items:stretch; }
   .workout-result-actions button { flex:1 1 100%; min-height:48px; }
 }
+.my-profile-music-shortcut { display:flex; align-items:center; justify-content:flex-start; gap:9px; min-height:44px; width:100%; padding:9px 12px; text-align:left; }
+.my-profile-music-shortcut>span { margin-left:auto; font-size:11px; color:var(--gg-shell-muted,#abb9ba); font-weight:500; }
+.my-profile-music-shortcut>svg:last-child { flex:0 0 auto; }
+@media(max-width:480px) { .my-profile-music-shortcut>span { max-width:43%; font-size:10px; line-height:1.25; text-align:right; } }
 
 /* WOD category and two-part warm-up workflow. */
 .wod-category-early,.warmup-phase-picker { display:grid; gap:7px; min-width:0; margin:12px 0; }

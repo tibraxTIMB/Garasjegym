@@ -79,6 +79,27 @@ test('live timer reclaims the generic footer margin for music and round splits',
   assert.match(styles, /\.gg-live-timer\.gg-live-timer--with-laps\{grid-template-rows:auto minmax\(0,1fr\) auto auto auto\}/)
 })
 
+test('result exercise tabs stay compact while retaining their exercise names', () => {
+  const style = source('../src/styles/mobile/experience-system.css')
+  const timer = source('../src/components/Training.jsx')
+  assert.match(style, /\.workout-result-tabs button\s*\{[^}]*min-height:35px; max-width:160px; padding:6px 11px/s)
+  assert.match(timer, /role="tab" aria-selected=\{activeExerciseIndex===index\}[^]*?title=\{item\.exercise_name/)
+  assert.match(timer, /\{index\+1\}\. \{item\.exercise_name\|\|'Øving'\}/)
+})
+
+test('Spotify options open above the live timer dock and profile links to music settings', () => {
+  const music = source('../src/components/Music.jsx')
+  const styles = source('../src/components/timer-viewport.css')
+  const profile = source('../src/components/MyPage.jsx')
+  const app = source('../src/App.jsx')
+  assert.match(music, /Opna musikkval: søk, spelelister og sjanger/)
+  assert.match(music, /toolsTab==='genres'\?<GenreButtons music=\{music\} compact\/>/)
+  assert.match(styles, /\.gg-live-timer__music-dock:has\(\.spotify-mini-tools\)\s*\{\s*overflow:visible;/)
+  assert.match(styles, /\.gg-live-timer__music-dock \.spotify-mini-tools\s*\{\s*position:absolute;/)
+  assert.match(profile, /Musikk og Spotify <span>Søk, spelelister og innstillingar/)
+  assert.match(app, /<MyPage onMusic=\{\(\)=>navigateTo\('musikk'\)\}/)
+})
+
 test('the workout button can return to workout types without silently losing a draft', () => {
   const app = source('../src/App.jsx')
   const timer = source('../src/components/Training.jsx')

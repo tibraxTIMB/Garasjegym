@@ -449,7 +449,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         <div className="gg-live-timer__identity"><span className="gg-live-timer__brand">GARASJEGYM</span><strong>{format}</strong><span className="gg-live-timer__origin">{originLabel}</span></div>
         <div className="gg-live-timer__tools">
           <button type="button" className={stagePanel==='wod'?'is-selected':''} onClick={()=>setStagePanel(value=>value==='wod'?null:'wod')} aria-label="Vis WOD og øvingar" title="Vis WOD og øvingar" aria-expanded={stagePanel==='wod'}><List size={21}/></button>
-          <button type="button" onClick={()=>setSoundOn(value=>!value)} aria-label={soundOn?'Slå av lyd':'Slå på lyd'} title={soundOn?'Lyd på':'Lyd av'}>{soundOn?<Volume2 size={21}/>:<VolumeX size={21}/>}</button>
+          <button type="button" onClick={()=>setSoundOn(value=>!value)} aria-label={soundOn?'Slå av lydsignal frå timeren':'Slå på lydsignal frå timeren'} title={soundOn?'Timerlyd på':'Timerlyd av'}>{soundOn?<Volume2 size={21}/>:<VolumeX size={21}/>}</button>
           <button type="button" onClick={toggleBrowserFullscreen} aria-label={browserFullscreen?'Vis nettlesarfelt':'Skjul nettlesarfelt – ekte fullskjerm'} title="Fullskjerm">{browserFullscreen?<Minimize2 size={21}/>:<Maximize2 size={21}/>}</button>
           <button type="button" className={stagePanel==='settings'?'is-selected':''} onClick={()=>setStagePanel(value=>value==='settings'?null:'settings')} aria-label="Tilpass klokka" title="Tilpass klokka" aria-expanded={stagePanel==='settings'}><Settings2 size={21}/></button>
           <button type="button" onClick={returnToApp} aria-label="Til oversikt – økta held fram" title="Til oversikt – økta held fram"><House size={20}/></button>
@@ -1089,7 +1089,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           </div>
           {items.length>0&&<section className="workout-result-entry">
             <div className="workout-result-tabs" role="tablist" aria-label="Vel øving for resultat">
-              {items.map((item,index)=><button type="button" key={item.key} role="tab" aria-selected={activeExerciseIndex===index} className={activeExerciseIndex===index?'selected':''} onClick={()=>setActiveExerciseIndex(index)}>{item.exercise_name||'Øving '+(index+1)}</button>)}
+              {items.map((item,index)=><button type="button" key={item.key} role="tab" aria-selected={activeExerciseIndex===index} className={activeExerciseIndex===index?'selected':''} title={item.exercise_name||'Øving '+(index+1)} onClick={()=>setActiveExerciseIndex(index)}>{index+1}. {item.exercise_name||'Øving'}</button>)}
             </div>
             {items[activeExerciseIndex]&&<div className="workout-result-exercise">
               <header><div><span className="section-kicker">RESULTAT · ØVING {activeExerciseIndex+1} AV {items.length}</span><h4>{items[activeExerciseIndex].exercise_name}</h4>{items[activeExerciseIndex].prescription_label&&<small>{items[activeExerciseIndex].prescription_label}</small>}</div><span className="count-pill">{items[activeExerciseIndex].sets?.length||0} sett</span></header>

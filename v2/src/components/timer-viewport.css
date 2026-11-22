@@ -252,7 +252,9 @@
 .gg-live-timer__more { align-self: flex-start; padding: 2px 0; border: 0; background: transparent; color: #f2b45b; font-size: 13px; font-weight: 800; }
 .gg-live-timer__next { color: #a8c1c8; font-size: 13px; line-height: 1.25; }
 .gg-live-timer__body--with-laps .gg-live-timer__context { justify-content: flex-start; gap: 7px; }
-.gg-live-timer__music-dock { flex: 0 0 auto; min-width: 0; width: 100%; max-height: 50px; overflow: hidden; padding: 2px 0; }
+.gg-live-timer__music-dock { position:relative; flex: 0 0 auto; min-width: 0; width: 100%; max-height: 50px; overflow: hidden; padding: 2px 0; }
+.gg-live-timer__music-dock:has(.spotify-mini-tools) { overflow:visible; z-index:8; }
+.gg-live-timer__music-dock .spotify-mini-tools { position:absolute; right:0; bottom:calc(100% + 8px); width:min(430px,100%); max-height:min(55dvh,350px); overflow:auto; z-index:9; box-shadow:0 15px 40px #000b; }
 .gg-live-timer__music-dock .timer-music-stack { margin: 0; gap: 0; }
 .gg-live-timer__music-dock .timer-spotify-mini-line { flex-wrap: nowrap; min-height: 36px; padding: 3px 7px; background: #17272b; border-color: #40535a; }
 .gg-live-timer__music-dock .timer-spotify-mini-track { flex: 1 1 0; min-width: 0; }

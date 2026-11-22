@@ -688,13 +688,13 @@ export function MusicMiniPlayer({liveCompact=false}) {
         <button type="button" className="main" onClick={()=>music.spotifyAction(music.spotifyPlaying?'pause':'play')} disabled={music.spotifyBusy||!music.spotifyCanControl||!music.spotifyDeviceId} aria-label={music.spotifyPlaying?'Pause':'Spel av'}>{music.spotifyPlaying?<Pause size={14}/>:<Play size={14}/>}</button>
         <button type="button" onClick={()=>music.spotifyAction('next')} disabled={music.spotifyBusy||!music.spotifyCanControl||!music.spotifyDeviceId} aria-label="Neste song"><SkipForward size={13}/></button>
       </div>:<button type="button" className="spotify-mini-connect" onClick={music.connectSpotify}><LogIn size={13}/> Kople til</button>}
-      <button type="button" className={'timer-spotify-tools-toggle'+(toolsOpen?' selected':'')} onClick={()=>setToolsOpen(value=>!value)} aria-expanded={toolsOpen} aria-label={toolsOpen?'Lukk musikkverktøy':'Opna søk og spelelister'}>{toolsOpen?<X size={14}/>:<Search size={14}/>}</button>
+      <button type="button" className={'timer-spotify-tools-toggle'+(toolsOpen?' selected':'')} onClick={()=>setToolsOpen(value=>!value)} aria-expanded={toolsOpen} aria-label={toolsOpen?'Lukk musikkval':'Opna musikkval: søk, spelelister og sjanger'} title="Fleire musikkval">{toolsOpen?<X size={14}/>:<ListMusic size={16}/>}</button>
     </div>
     {!liveCompact&&<GenreButtons music={music} compact/>}
     {toolsOpen&&<div className="spotify-mini-tools" role="dialog" aria-label="Spotify-søk og spelelister">
-      <div className="spotify-mini-tools-head"><strong>Spotify</strong><button type="button" onClick={()=>setToolsOpen(false)} aria-label="Lukk"><X size={14}/></button></div>
+      <div className="spotify-mini-tools-head"><strong>Musikkval · Spotify</strong><button type="button" onClick={()=>setToolsOpen(false)} aria-label="Lukk"><X size={14}/></button></div>
       {!music.spotifyConnected?<div className="empty-state">Kople til Spotify-profilen for å søka og sjå spelelister.</div>:<>
-        <nav className="spotify-mini-tabs"><button type="button" className={toolsTab==='search'?'selected':''} onClick={()=>setToolsTab('search')}><Search size={12}/> Søk</button><button type="button" className={toolsTab==='playlists'?'selected':''} onClick={()=>setToolsTab('playlists')}><ListMusic size={12}/> Spelelister</button></nav>
+        <nav className="spotify-mini-tabs"><button type="button" className={toolsTab==='search'?'selected':''} onClick={()=>setToolsTab('search')}><Search size={12}/> Søk</button><button type="button" className={toolsTab==='playlists'?'selected':''} onClick={()=>setToolsTab('playlists')}><ListMusic size={12}/> Spelelister</button><button type="button" className={toolsTab==='genres'?'selected':''} onClick={()=>setToolsTab('genres')}><Music2 size={12}/> Sjanger</button></nav>
         {toolsTab==='search'?<>
           <label className="spotify-search-field"><Search size={13}/><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Song eller artist …"/></label>
           {query.trim().length>=2&&search.busy&&<div className="spotify-panel-loading"><LoaderCircle size={13} className="spin"/> Søkjer …</div>}
@@ -702,7 +702,7 @@ export function MusicMiniPlayer({liveCompact=false}) {
           {search.results.tracks.slice(0,5).map(track=><TrackRow key={track.id} track={track} onPlay={music.playTrack} busy={music.spotifyBusy} compact/>)}
           {search.results.artists.slice(0,3).map(artist=><article className="spotify-artist-row compact" key={artist.id}><strong>{artist.name}</strong>{artist.external_urls?.spotify&&<a href={artist.external_urls.spotify} target="_blank" rel="noreferrer">Opna <ExternalLink size={11}/></a>}</article>)}
           {query.trim().length>=2&&!search.busy&&!search.error&&!search.results.tracks.length&&!search.results.artists.length&&<small className="spotify-panel-hint">Ingen treff.</small>}
-        </>:<>
+        </>:toolsTab==='genres'?<GenreButtons music={music} compact/>:<>
           <label className="spotify-search-field"><Search size={13}/><input value={playlistQuery} onChange={event=>setPlaylistQuery(event.target.value)} placeholder="Filtrer spelelister …"/></label>
           <div className="spotify-mini-playlists">{visiblePlaylists.slice(0,10).map(playlist=><div className="spotify-mini-playlist" key={playlist.id}><span><strong>{playlist.name}</strong><small>{playlist.tracks?.total??playlist.items?.total??'–'} songar</small></span><button type="button" onClick={()=>music.playPlaylist(playlist.uri)} disabled={music.spotifyBusy} aria-label={'Spel '+playlist.name}><Play size={13}/></button></div>)}</div>
         </>}

@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
-import {UserRound,Trophy,Activity,LoaderCircle,Mail,ShieldCheck,ArrowRight,TrendingUp,ToggleLeft,ToggleRight,ChevronLeft,ChevronRight,Trash2,List,Calendar} from 'lucide-react'
+import {UserRound,Trophy,Activity,LoaderCircle,Mail,ShieldCheck,ArrowRight,TrendingUp,ToggleLeft,ToggleRight,ChevronLeft,ChevronRight,Trash2,List,Calendar,Music2} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import GroupClassResults from './GroupClassResults.jsx'
 import HeartRateSettings from './HeartRateSettings.jsx'
@@ -21,7 +21,7 @@ function ProgressChart({records}){
  return <div className="pr-progress"><label>Vel øving<select value={selected} onChange={e=>setSelected(e.target.value)}>{groups.map(([name])=><option key={name}>{name}</option>)}</select></label><svg viewBox="0 0 320 112" role="img" aria-label={'Progresjon for '+selected}><path d="M14 94 H306 M14 18 V94" stroke="currentColor" opacity=".28" fill="none"/><polyline points={points.map(p=>p.x+','+p.y).join(' ')} fill="none" stroke="#f0a33a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>{points.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="4" fill="#ffd15e"/>)}</svg><div className="pr-chart-foot"><span>{series[0]?.record_date}</span><strong>{series[series.length-1]?.value} {series[series.length-1]?.unit}</strong><span>{series[series.length-1]?.record_date}</span></div></div>
 }
 
-export default function MyPage({profile,email,onOpenWorkout,onLaunchWod=()=>{},initialTab='profile',simpleMode=false,onSimpleModeChange=()=>{},simpleModeError='',simpleModeSaving=false,refreshToken=0}){
+export default function MyPage({profile,email,onOpenWorkout,onLaunchWod=()=>{},onMusic=()=>{},initialTab='profile',simpleMode=false,onSimpleModeChange=()=>{},simpleModeError='',simpleModeSaving=false,refreshToken=0}){
  const [logs,setLogs]=useState([]),[prs,setPrs]=useState([]),[favoriteWods,setFavoriteWods]=useState([]),[bookings,setBookings]=useState([]),[assignments,setAssignments]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[tab,setTab]=useState(initialTab),[selectedPR,setSelectedPR]=useState(null),[historyView,setHistoryView]=useState('list'),[calendarMonth,setCalendarMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1)),[selectedDay,setSelectedDay]=useState(new Date().toLocaleDateString('en-CA')),[selectedEvent,setSelectedEvent]=useState(null),[deleting,setDeleting]=useState('')
  const loadSequence=useRef(0)
  useEffect(()=>{setTab(initialTab)},[initialTab])
@@ -85,6 +85,7 @@ export default function MyPage({profile,email,onOpenWorkout,onLaunchWod=()=>{},i
 
  return <div className="my-page">
   <div className="training-heading"><div>{!simpleMode&&<span className="section-kicker">MEDLEMSPROFIL</span>}<h3>{simpleMode?(tab==='history'?'Treningslogg':tab==='records'?'Mine resultat':'Mi side'):'Mi side'}</h3>{!simpleMode&&<p>Personleg treningsprofil, resultat og utvikling.</p>}</div><button type="button" className="count-pill my-profile-shortcut" onClick={()=>setTab('profile')} aria-label="Opne profil"><UserRound size={14}/> Profil <ArrowRight size={13}/></button></div>
+  {tab==='profile'&&<button type="button" className="secondary-button my-profile-music-shortcut" onClick={onMusic}><Music2 size={17}/> Musikk og Spotify <span>Søk, spelelister og innstillingar</span><ArrowRight size={16}/></button>}
   <GroupClassResults onLaunchWod={(wodId,assignmentId,sessionId)=>onLaunchWod?.(wodId,assignmentId,sessionId)} />
   <div className={simpleMode?"hub-tabs my-page-tabs simple-result-tabs":"hub-tabs my-page-tabs"}><button className={tab==='profile'?'active':''} onClick={()=>setTab('profile')}>Profil</button><button className={tab==='records'?'active':''} onClick={()=>setTab('records')}>{simpleMode?"Resultat":"PR-senter"}</button><button className={tab==='history'?'active':''} onClick={()=>setTab('history')}>{simpleMode?"Logg":"Økthistorikk"} ({logs.length})</button><button className={tab==='favorites'?'active':''} onClick={()=>setTab('favorites')}>Favoritt-WODs ({favoriteWods.length})</button></div>
   {error&&<div className="auth-error">{error}</div>}
