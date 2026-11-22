@@ -1,11 +1,15 @@
 const CACHE_PREFIX = 'garasjegym-app-shell-'
-// v2 clears the old shell cache, which could contain partial video responses.
-const CACHE_NAME = CACHE_PREFIX + 'v2-media-fix'
+// A fresh cache also discards older shell assets and cached partial media responses.
+const CACHE_NAME = CACHE_PREFIX + 'v3-gorilla-49'
 const APP_SCOPE = '/Garasjegym/'
 const SHELL_FILES = [
   APP_SCOPE,
   APP_SCOPE + 'manifest.webmanifest',
-  APP_SCOPE + 'garasjegym-icon.svg',
+  APP_SCOPE + 'garasjegym-49-192.png',
+  APP_SCOPE + 'garasjegym-49-512.png',
+  APP_SCOPE + 'garasjegym-49-maskable-512.png',
+  APP_SCOPE + 'garasjegym-49-favicon-48.png',
+  APP_SCOPE + 'garasjegym-49-apple-180.png',
 ]
 
 self.addEventListener('install', event => {
