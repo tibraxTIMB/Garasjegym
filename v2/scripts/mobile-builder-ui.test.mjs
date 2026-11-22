@@ -70,6 +70,15 @@ test('timer puts splits left of the clock in landscape and below Spotify in port
   assert.match(timer, /Alle øvingar \(\{stageRows\.length\}\)/)
 })
 
+test('live timer reclaims the generic footer margin for music and round splits', () => {
+  const styles = source('../src/components/timer-viewport.css')
+  const footer = styles.match(/\.gg-live-timer__footer\s*\{[^}]*\}/)?.[0] || ''
+  assert.match(footer, /margin:\s*0\s*;/)
+  assert.match(footer, /padding:\s*9px 0 0\s*;/)
+  assert.match(footer, /max-width:\s*none\s*;/)
+  assert.match(styles, /\.gg-live-timer\.gg-live-timer--with-laps\{grid-template-rows:auto minmax\(0,1fr\) auto auto auto\}/)
+})
+
 test('the workout button can return to workout types without silently losing a draft', () => {
   const app = source('../src/App.jsx')
   const timer = source('../src/components/Training.jsx')
