@@ -444,7 +444,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   })
   const resetTimer = () => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; scheduledStartedAt.current=null; setCountdownDeadline(null);setCountdownRemaining(0); setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
   return <div ref={timerContainerRef} className={stageVisible ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
-    {stageVisible ? <section className="gg-live-timer" aria-label="Fullskjermsklokke for treningsøkt">
+    {stageVisible ? <section className={stageLapHistory.length ? 'gg-live-timer gg-live-timer--with-laps' : 'gg-live-timer'} aria-label="Fullskjermsklokke for treningsøkt">
       <header className="gg-live-timer__header">
         <div className="gg-live-timer__identity"><span className="gg-live-timer__brand">GARASJEGYM</span><strong>{format}</strong><span className="gg-live-timer__origin">{originLabel}</span></div>
         <div className="gg-live-timer__tools">
@@ -476,6 +476,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         </div>
       </div>
       <div className="gg-live-timer__music-dock" aria-label="Musikkstyring"><MusicMiniPlayer liveCompact/></div>
+      {stageLapHistory.length>0&&<div className="gg-live-timer__laps-portrait" aria-label={stageLapLabel}>
+        <ol className="gg-live-timer__lap-preview">{stageLapHistory.slice(-3).map(lap=><li key={lap.round}><span>{isAmrap?'R':'M'}{lap.round}</span><b>{clock(lap.duration)}</b></li>)}</ol>
+        <button type="button" className="gg-live-timer__lap-all" onClick={()=>setStagePanel('laps')} aria-label={`Vis alle ${laps.length} rundetider`}>+{laps.length}</button>
+      </div>}
       <footer className="gg-live-timer__footer">
         <button type="button" className="gg-live-timer__pause" onClick={toggleRunning} disabled={stageIsComplete}>{countdownDeadline!==null?<><X size={21}/> Avbryt</>:running?<><Pause size={21}/> Pause</>:phase==='PAUSE'?<><Play size={21}/> Hald fram</>:<><Play size={21}/> Start no</>}</button>
         {!hasStarted&&countdownDeadline===null&&<button type="button" className="gg-live-timer__round-button" onClick={()=>beginWorkout(true)}><Play size={21}/> Start · 10 sek</button>}

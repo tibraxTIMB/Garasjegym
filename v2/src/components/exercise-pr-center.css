@@ -39,3 +39,49 @@
 .exercise-pr-archive article small{color:#b0bebe}
 .exercise-pr-archive>p{color:#b9c6c6;font-size:12px;line-height:1.5}
 @media(max-width:560px){.exercise-pr-grid{grid-template-columns:minmax(0,1fr)}.exercise-pr-tabs button{font-size:12px}.exercise-pr-archive article{flex-direction:column;gap:2px}}
+
+/* Standardløft skal vere synlege med eitt blikk, også utan tidlegare resultat. */
+.exercise-pr-title-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.exercise-pr-add{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:8px 12px;font-size:12px}
+.exercise-pr-featured-heading{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.exercise-pr-featured-heading strong{font-size:15px;color:#f5f5ef}
+.exercise-pr-featured-heading span{color:#b3c3c4;font-size:11px}
+.exercise-pr-featured{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.exercise-pr-featured button{display:flex;align-items:center;justify-content:space-between;gap:7px;min-width:0;min-height:62px;padding:11px 12px;border:1px solid #475d60;border-radius:11px;background:linear-gradient(120deg,#243235,#1a2527);color:#f1f6f6;text-align:left}
+.exercise-pr-featured button.selected,.exercise-pr-featured button:hover{border-color:#eba442;background:linear-gradient(120deg,#403522,#222b2c)}
+.exercise-pr-featured button span{font-size:12px;font-weight:780;overflow-wrap:anywhere}
+.exercise-pr-featured button strong{flex:0 0 auto;color:#f7b359;font-size:15px;font-weight:950;font-variant-numeric:tabular-nums}
+.exercise-pr-detail{display:grid;gap:13px;min-width:0;padding:13px;border:1px solid #7f6b4b;border-radius:14px;background:linear-gradient(155deg,#212b2b,#151f23);scroll-margin-top:110px}
+.exercise-pr-detail-head{display:flex;justify-content:space-between;gap:7px}
+.exercise-pr-detail-head button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:8px 12px;font-size:12px}
+.exercise-pr-detail .exercise-pr-summary strong{font-size:21px}
+.exercise-pr-exercise-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;min-width:0}
+.exercise-pr-exercise-list button{display:flex;align-items:center;justify-content:space-between;gap:7px;min-width:0;min-height:60px;padding:9px 11px;border:1px solid #405558;border-radius:10px;background:#19272a;color:#f3f8f7;text-align:left}
+.exercise-pr-exercise-list button:hover{border-color:#dca253}
+.exercise-pr-exercise-list button>span{display:grid;gap:3px;min-width:0}
+.exercise-pr-exercise-list button strong{font-size:12px;line-height:1.3;overflow-wrap:anywhere}
+.exercise-pr-exercise-list button small{color:#aebfbe;font-size:10px}
+.exercise-pr-exercise-list button>b{margin-left:auto;color:#f0ad50;font-size:12px;white-space:nowrap}
+.exercise-pr-exercise-list button>svg{flex:0 0 auto;color:#a7baba}
+.exercise-pr-more{justify-self:center}
+.exercise-pr-manual-list{display:grid;gap:8px}
+.exercise-pr-manual-list h4{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:15px}
+.exercise-pr-manual-list h4 span{display:grid;place-items:center;min-width:24px;min-height:24px;border-radius:50%;background:#304044;color:#f5b760;font-size:11px}
+.exercise-pr-manual-list article{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;padding:10px;border:1px solid #46595a;border-radius:10px;background:#162326}
+.exercise-pr-manual-list article>div{display:grid;gap:3px;min-width:0}
+.exercise-pr-manual-list article strong{color:#f3ba68;font-size:17px}
+.exercise-pr-manual-list article span,.exercise-pr-manual-list article small{color:#becdce;font-size:11px;overflow-wrap:anywhere}
+.exercise-pr-manual-list>p{margin:0;color:#b9c8ca;font-size:12px}
+.exercise-pr-delete{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;padding:9px;border:1px solid #935d57;border-radius:8px;background:#382524;color:#ffceca;font-size:12px}
+.exercise-pr-note{color:#ecc395;font-size:12px}
+.exercise-pr-modal-backdrop{position:fixed;z-index:2147483002;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(2,8,10,.86);overflow-y:auto}
+.exercise-pr-modal{display:grid;gap:13px;width:min(510px,100%);max-height:calc(100dvh - 28px);padding:19px;border:1px solid #b1834c;border-radius:16px;background:#1b272b;color:#f8f9f9;overflow-y:auto}
+.exercise-pr-modal header{display:flex;align-items:center;justify-content:space-between}
+.exercise-pr-modal h3{margin:4px 0 0;font-size:24px}
+.exercise-pr-modal header button{display:grid;place-items:center;width:39px;height:39px;border:1px solid #627579;border-radius:9px;background:#2d3a3d;color:#fff}
+.exercise-pr-modal label{display:grid;gap:5px;min-width:0;color:#e0e7e6;font-size:12px;font-weight:800}
+.exercise-pr-modal input,.exercise-pr-modal select,.exercise-pr-modal textarea{width:100%;min-width:0;min-height:43px;padding:9px 10px;border:1px solid #6c7d80;border-radius:8px;background:#0c191d;color:#f5f7f6;font:inherit;font-size:15px;color-scheme:dark}
+.exercise-pr-modal textarea{resize:vertical}
+.exercise-pr-manual-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.exercise-pr-modal>.primary-button{min-height:46px}
+@media(max-width:500px){.exercise-pr-exercise-list{grid-template-columns:minmax(0,1fr)}.exercise-pr-featured button{flex-direction:column;align-items:flex-start;justify-content:center}.exercise-pr-manual-fields{grid-template-columns:minmax(0,1fr)}.exercise-pr-detail{padding:9px}.exercise-pr-featured button strong{font-size:16px}}

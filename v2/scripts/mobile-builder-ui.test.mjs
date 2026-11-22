@@ -28,7 +28,7 @@ test('live timer is one viewport-locked surface with portrait and landscape layo
   const timer = source('../src/components/Training.jsx')
   const styles = source('../src/components/timer-viewport.css')
   assert.match(timer, /const stageVisible = focused && !stop/)
-  assert.match(timer, /className="gg-live-timer" aria-label="Fullskjermsklokke/)
+  assert.match(timer, /'gg-live-timer gg-live-timer--with-laps' : 'gg-live-timer'\} aria-label="Fullskjermsklokke/)
   assert.match(timer, /className="gg-live-timer__footer"/)
   assert.match(timer, /stagePanel==='wod'/)
   assert.match(timer, /stagePanel==='settings'/)
@@ -53,16 +53,20 @@ test('AMRAP round splits stay visible without growing the clock page', () => {
   assert.match(styles, /\.gg-live-timer__clock-laps\s*\{[^}]*position:\s*static/s)
 })
 
-test('timer puts round pills by the clock and keeps the exercise overview before compact music', () => {
+test('timer puts splits left of the clock in landscape and below Spotify in portrait', () => {
   const timer = source('../src/components/Training.jsx')
   const music = source('../src/components/Music.jsx')
   const styles = source('../src/components/timer-viewport.css')
   assert.match(timer, /<MusicMiniPlayer liveCompact\/>/)
   assert.ok(timer.indexOf('className="gg-live-timer__clock-laps"') < timer.indexOf('className="gg-live-timer__context"'))
   assert.ok(timer.indexOf('className="gg-live-timer__exercise"') < timer.indexOf('className="gg-live-timer__music-dock"'))
+  assert.ok(timer.indexOf('className="gg-live-timer__laps-portrait"') > timer.indexOf('className="gg-live-timer__music-dock"'))
+  assert.ok(timer.indexOf('className="gg-live-timer__laps-portrait"') < timer.indexOf('className="gg-live-timer__footer"'))
   assert.match(music, /!liveCompact&&<GenreButtons/)
   assert.match(styles, /\.gg-live-timer__music-dock \.timer-spotify-mini-line/)
   assert.match(styles, /\.gg-live-timer__clock-laps\s*\{[^}]*position: static/)
+  assert.match(styles, /grid-template-areas:"laps phase" "laps time" "laps label" "laps secondary"/)
+  assert.match(styles, /@media\(orientation:portrait\)\{[^]*?\.gg-live-timer__clock-laps\{display:none\}/)
   assert.match(timer, /Alle øvingar \(\{stageRows\.length\}\)/)
 })
 

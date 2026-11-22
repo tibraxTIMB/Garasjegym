@@ -1,34 +1,122 @@
-import {useMemo,useState} from 'react'
-import {Activity,ArrowRight,Dumbbell,Search,Trophy} from 'lucide-react'
-import {deriveBenchmarkRecords,deriveExerciseRecords} from '../lib/prMetrics.js'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Activity, ArrowLeft, ArrowRight, CheckCircle2, Dumbbell, Plus, Search, Trash2, Trophy, X } from 'lucide-react'
+import { supabase } from '../lib/supabase.js'
+import { deriveBenchmarkRecords, deriveExerciseRecords } from '../lib/prMetrics.js'
+import { STANDARD_PR_LIFTS, buildPRDirectory, bestLoad, defaultPRUnit, isValidManualPR, primaryPR } from '../lib/prDirectory.js'
 import './exercise-pr-center.css'
 
-const dateLabel = value => value ? new Date(`${value}T12:00:00`).toLocaleDateString('nn-NO',{day:'numeric',month:'short',year:'numeric'}) : 'Ukjend dato'
-const timeLabel = seconds => `${String(Math.floor(seconds / 60)).padStart(2,'0')}:${String(Math.round(seconds % 60)).padStart(2,'0')}`
-const RECORD_CATEGORIES=[{key:'all',label:'Alle'},{key:'load',label:'Løft og vekt'},{key:'reps',label:'Kroppsvekt / reps'},{key:'hold',label:'Statiske hald'},{key:'height',label:'Boks / høgd'},{key:'endurance',label:'Kondisjon'}]
+const dateLabel = value => value ? new Date(`${String(value).slice(0,10)}T12:00:00`).toLocaleDateString('nn-NO', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Ukjend dato'
+const timeLabel = seconds => `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(Math.round(seconds % 60)).padStart(2, '0')}`
+const today = () => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}` }
+const RECORD_CATEGORIES = [{ key: 'all', label: 'Alle' }, { key: 'load', label: 'Løft og vekt' }, { key: 'reps', label: 'Kroppsvekt / reps' }, { key: 'hold', label: 'Statiske hald' }, { key: 'height', label: 'Boks / høgd' }, { key: 'endurance', label: 'Kondisjon' }]
 
-export default function ExercisePRCenter({history=[],legacyRecords=[],onOpenWorkout}){
- const exercises=useMemo(()=>deriveExerciseRecords(history),[history])
- const benchmarks=useMemo(()=>deriveBenchmarkRecords(history),[history])
- const [category,setCategory]=useState('exercise')
- const [recordCategory,setRecordCategory]=useState('all')
- const [search,setSearch]=useState('')
- const [selectedKey,setSelectedKey]=useState('')
- const visibleExercises=useMemo(()=>exercises.filter(exercise=>(recordCategory==='all'||exercise.type===recordCategory)&&exercise.label.toLocaleLowerCase('nn').includes(search.trim().toLocaleLowerCase('nn'))),[exercises,recordCategory,search])
- const current=visibleExercises.find(exercise=>exercise.key===selectedKey)||visibleExercises[0]
- const openSource=id=>{const log=history.find(row=>row.id===id);if(log)onOpenWorkout?.(log)}
- return <section className="exercise-pr-center">
-  <header className="exercise-pr-intro"><span className="section-kicker">PERSONLEGE REKORDAR</span><h3><Trophy size={23}/> Mine PR-ar</h3><p>Rekordane blir rekna frå øvingar, sett og resultat i treningsloggen. Du treng ikkje fylle ut eit eige PR-skjema.</p></header>
-  <div className="exercise-pr-tabs" role="group" aria-label="Vel rekordtype"><button type="button" className={category==='exercise'?'active':''} onClick={()=>setCategory('exercise')}><Dumbbell size={17}/> Øvingar <span>{exercises.length}</span></button><button type="button" className={category==='benchmark'?'active':''} onClick={()=>setCategory('benchmark')}><Trophy size={17}/> Benchmark-WOD <span>{benchmarks.length}</span></button></div>
-  {category==='exercise'&&<div className="exercise-pr-filters" aria-label="Filtrer PR-øvingar"><div className="exercise-pr-category-scroll" role="group" aria-label="Øvingskategori">{RECORD_CATEGORIES.map(option=><button key={option.key} type="button" aria-pressed={recordCategory===option.key} className={recordCategory===option.key?'active':''} onClick={()=>setRecordCategory(option.key)}>{option.label} <span>{option.key==='all'?exercises.length:exercises.filter(exercise=>exercise.type===option.key).length}</span></button>)}</div><label className="exercise-pr-search"><Search size={16}/><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Søk etter øving …" aria-label="Søk etter PR-øving"/></label></div>}
-  {category==='exercise'&&(current?<>
-   <label className="exercise-pr-select">Vel øving<select value={current.key} onChange={event=>setSelectedKey(event.target.value)}>{visibleExercises.map(exercise=><option key={exercise.key} value={exercise.key}>{exercise.label}</option>)}</select></label>
-   <div className="exercise-pr-summary"><strong>{current.label}</strong><span>{current.sessions} registrerte økter</span></div>
-   {current.records.length?<div className="exercise-pr-grid">{current.records.map(item=><article className="exercise-pr-record" key={item.key}><small>{item.label}</small><strong>{item.value.toLocaleString('nn-NO')} <span>{item.unit}</span></strong><p>{item.detail||'Beste dokumenterte resultat'}</p><footer><span>{dateLabel(item.date)}</span><button type="button" onClick={()=>openSource(item.logId)}>Sjå økta <ArrowRight size={14}/></button></footer></article>)}</div>:<div className="empty-state">Det er ikkje registrert målbare resultat for denne øvinga enno. Loggfør sett, reps, belastning eller tid i ei ny økt.</div>}
-   <p className="exercise-pr-explainer"><Activity size={14}/> For vektøvingar tel tunge sett når belastninga er minst 80 % av høgaste registrerte vekt. For andre øvingar blir måla tilpassa: reps, høgd, tid eller distanse.</p>
-  </>:<div className="empty-state">{exercises.length?'Ingen PR-øvingar passar dette filteret. Vel ein annan kategori eller fjern søket.':'Ingen øvingsresultat enno. Start ei fri økt, vel øvingar og lagre resultat for å få dei første PR-ane.'}</div>)}
-  {category==='benchmark'&&(benchmarks.length?<div className="exercise-pr-benchmarks">{benchmarks.map(wod=><article className="exercise-pr-benchmark" key={wod.key}><div><strong>{wod.name}</strong><small>{wod.format.toUpperCase()} · {wod.level.toUpperCase()} · {wod.count} gjennomføringar</small></div><span>{wod.score.rounds!=null?`${wod.score.rounds} rundar + ${wod.score.reps} reps`:timeLabel(wod.score.value)}</span><footer><small>{dateLabel(wod.date)}</small><button type="button" onClick={()=>openSource(wod.logId)}>Opne beste økt <ArrowRight size={14}/></button></footer></article>)}</div>:<div className="empty-state">Ingen benchmark-WOD-ar med samanliknbare resultat enno. Fullfør ein AMRAP eller For Time-WOD og lagre resultatet.</div>)}
-  {category==='benchmark'&&<p className="exercise-pr-explainer">Benchmarkar blir samanlikna berre innan same WOD, format og nivå (RX/Scaled). Dersom sjølve WOD-oppsettet blir endra, bør det lagrast som ein ny versjon.</p>}
-  {legacyRecords.length>0&&<details className="exercise-pr-archive"><summary>Tidlegare PR-noteringar ({legacyRecords.length})</summary><div>{legacyRecords.map(record=><article key={record.id}><strong>{record.exercise_name}</strong><span>{record.result} {record.unit}</span><small>{dateLabel(record.record_date)}</small></article>)}</div><p>Desse eldre registreringane kan mangle informasjon om dosering, sett og øvingsvariant. Dei blir viste separat frå rekordar som kan reknast ut frå treningsloggen.</p></details>}
- </section>
+export default function ExercisePRCenter({ history = [], legacyRecords = [], onOpenWorkout, onRecordAdded, onRecordDeleted }) {
+  const derived = useMemo(() => deriveExerciseRecords(history), [history])
+  const benchmarks = useMemo(() => deriveBenchmarkRecords(history), [history])
+  const [catalogue, setCatalogue] = useState([])
+  const [catalogueError, setCatalogueError] = useState('')
+  const [category, setCategory] = useState('exercise')
+  const [recordCategory, setRecordCategory] = useState('all')
+  const [search, setSearch] = useState('')
+  const [selectedKey, setSelectedKey] = useState(null)
+  const [showAll, setShowAll] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [form, setForm] = useState({ exerciseName: 'Bench press', value: '', unit: 'kg', date: today(), side: '', note: '' })
+  const [saveError, setSaveError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
+  const detailRef = useRef(null)
+
+  useEffect(() => {
+    let live = true
+    supabase.from('exercises').select('id,name,category').eq('is_active', true).order('name').then(({ data, error }) => {
+      if (!live) return
+      if (error) setCatalogueError('Øvingsbiblioteket kunne ikkje lastast. Du kan framleis registrera PR på kjende øvingar.')
+      else setCatalogue(data || [])
+    })
+    return () => { live = false }
+  }, [])
+
+  const directory = useMemo(() => buildPRDirectory(catalogue, derived, legacyRecords), [catalogue, derived, legacyRecords])
+  const standards = STANDARD_PR_LIFTS.map(pin => ({ ...pin, entry: directory.find(item => item.key === pin.name.toLocaleLowerCase('nn-NO')) }))
+  const selected = directory.find(item => item.key === selectedKey)
+  const standardKeys = new Set(STANDARD_PR_LIFTS.map(pin => pin.name.toLocaleLowerCase('nn-NO')))
+  const visibleExercises = directory.filter(item => !standardKeys.has(item.key) && (recordCategory === 'all' || item.type === recordCategory) && item.name.toLocaleLowerCase('nn-NO').includes(search.trim().toLocaleLowerCase('nn-NO')))
+  const visibleSlice = showAll || search ? visibleExercises : visibleExercises.slice(0, 36)
+
+  const openSource = id => { const log = history.find(row => row.id === id); if (log) onOpenWorkout?.(log) }
+  function chooseExercise(key) {
+    setSelectedKey(key)
+    setNotice('')
+    window.setTimeout(() => detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
+  }
+  function startManual(exercise) {
+    const entry = exercise || directory.find(item => item.name === form.exerciseName) || directory[0]
+    setForm({ exerciseName: entry?.name || 'Bench press', value: '', unit: defaultPRUnit(entry?.type || 'load'), date: today(), side: '', note: '' })
+    setSaveError('')
+    setEditing(true)
+  }
+  async function saveManual(event) {
+    event.preventDefault()
+    const exerciseName = form.exerciseName.trim() + (form.side ? ` · ${form.side}` : '')
+    if (!isValidManualPR({ exerciseName, result: form.value, unit: form.unit })) { setSaveError('Vel ei øving og registrer eit positivt resultat med gyldig måleeining.'); return }
+    setBusy(true); setSaveError('')
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) throw new Error('Logg inn på nytt.')
+      const { data, error } = await supabase.from('personal_records').insert({ member_id: user.id, exercise_name: exerciseName, result: String(Number(String(form.value).replace(',', '.'))), unit: form.unit, record_date: form.date, note: form.note.trim() || null, workout_log_id: null }).select('id,exercise_name,result,unit,record_date,note,workout_log_id').single()
+      if (error) throw error
+      onRecordAdded?.(data)
+      setSelectedKey(directory.find(item => item.name === form.exerciseName)?.key || null)
+      setNotice('PR-en er registrert på profilen din.')
+      setEditing(false)
+    } catch (error) { setSaveError(error.message || 'Kunne ikkje lagra PR-en.') }
+    finally { setBusy(false) }
+  }
+  async function deleteSaved(record) {
+    if (deletingId || !window.confirm(`Sletta PR-noteringa «${record.exercise_name}: ${record.result} ${record.unit}»? Dette slettar ikkje sjølve treningsøkta.`)) return
+    setDeletingId(record.id); setNotice(''); setSaveError('')
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) throw new Error('Logg inn på nytt.')
+      const { data, error } = await supabase.from('personal_records').delete().eq('id', record.id).eq('member_id', user.id).select('id')
+      if (error) throw error
+      if (!data?.length) throw new Error('PR-en vart ikkje funnen eller kunne ikkje slettast.')
+      onRecordDeleted?.(record.id)
+      setNotice('PR-noteringa er sletta. Resultat frå treningsloggen blir framleis rekna automatisk.')
+    } catch (error) { setSaveError(error.message || 'Kunne ikkje sletta PR-en.') }
+    finally { setDeletingId(null) }
+  }
+
+  return <section className="exercise-pr-center">
+    <header className="exercise-pr-intro"><span className="section-kicker">PERSONLEGE REKORDAR</span><div className="exercise-pr-title-row"><h3><Trophy size={23} /> PR-senter</h3><button type="button" className="primary-button exercise-pr-add" onClick={() => startManual(selected)}><Plus size={17} /> Registrer PR</button></div><p>Vel ei øving for rekordar og historikk. Du kan òg leggja inn ein PR manuelt.</p></header>
+    {notice && <div className="auth-message" role="status"><CheckCircle2 size={16} /> {notice}</div>}
+    {saveError && !editing && <div className="auth-error" role="alert">{saveError}</div>}
+    <div className="exercise-pr-tabs" role="group" aria-label="Vel rekordtype"><button type="button" className={category === 'exercise' ? 'active' : ''} onClick={() => setCategory('exercise')}><Dumbbell size={17} /> Øvingar</button><button type="button" className={category === 'benchmark' ? 'active' : ''} onClick={() => setCategory('benchmark')}><Trophy size={17} /> Benchmark-WOD <span>{benchmarks.length}</span></button></div>
+
+    {category === 'exercise' && <>
+      <div className="exercise-pr-featured-heading"><strong>7 standardløft</strong><span>Trykk for å sjå PR</span></div>
+      <div className="exercise-pr-featured">{standards.map(({ name, label, entry }) => { const value = bestLoad(entry); return <button type="button" className={selectedKey === entry?.key ? 'selected' : ''} key={name} onClick={() => chooseExercise(entry?.key)}><span>{label}</span><strong>{value ? `${value.toLocaleString('nn-NO')} kg` : '–'}</strong></button> })}</div>
+
+      {selected ? <div className="exercise-pr-detail" id="pr-ovingsdetaljar" ref={detailRef}>
+        <div className="exercise-pr-detail-head"><button type="button" className="secondary-button" onClick={() => setSelectedKey(null)}><ArrowLeft size={16} /> Alle øvingar</button><button type="button" className="primary-button" onClick={() => startManual(selected)}><Plus size={16} /> Ny PR</button></div>
+        <div className="exercise-pr-summary"><strong>{selected.name}</strong><span>{selected.sessions} registrerte økter</span></div>
+        {selected.derived.some(group => group.records.length) ? <div className="exercise-pr-grid">{selected.derived.flatMap(group => group.records.map(item => <article className="exercise-pr-record" key={`${group.key}-${item.key}`}><small>{group.side ? `${group.label} · ` : ''}{item.label}</small><strong>{item.value.toLocaleString('nn-NO')} <span>{item.unit}</span></strong><p>{item.detail || 'Frå treningsloggen'}</p><footer><span>{dateLabel(item.date)}</span>{item.logId && <button type="button" onClick={() => openSource(item.logId)}>Sjå økta <ArrowRight size={14} /></button>}</footer></article>))}</div> : <div className="empty-state">Ingen PR frå treningsloggen enno. Du kan registrera resultatet manuelt.</div>}
+        <div className="exercise-pr-manual-list"><h4>Registrerte PR-noteringar <span>{selected.saved.length}</span></h4>{selected.saved.length ? [...selected.saved].sort((a,b) => String(b.record_date).localeCompare(String(a.record_date))).map(record => <article key={record.id}><div><strong>{record.result} {record.unit}</strong><span>{record.exercise_name !== selected.name ? `${record.exercise_name} · ` : ''}{dateLabel(record.record_date)}</span>{record.note && <small>{record.note}</small>}<small>{record.workout_log_id ? 'Registrert frå ei økt' : 'Manuelt registrert'}</small></div><button type="button" className="exercise-pr-delete" disabled={Boolean(deletingId)} aria-label={`Slett PR ${record.exercise_name} ${record.result} ${record.unit}`} onClick={() => deleteSaved(record)}><Trash2 size={17} /> Slett</button></article>) : <p>Ingen tidlegare PR-noteringar på denne øvinga.</p>}</div>
+        <p className="exercise-pr-explainer"><Activity size={14} /> Rekordar frå sett blir rekna på nytt frå treningsloggen. Sletting her fjernar ei PR-notering, ikkje økta eller rekna resultat frå henne.</p>
+      </div> : <>
+        <div className="exercise-pr-filters" aria-label="Filtrer PR-øvingar"><div className="exercise-pr-category-scroll" role="group" aria-label="Øvingskategori">{RECORD_CATEGORIES.map(option => <button key={option.key} type="button" aria-pressed={recordCategory === option.key} className={recordCategory === option.key ? 'active' : ''} onClick={() => { setRecordCategory(option.key); setShowAll(false) }}>{option.label} <span>{option.key === 'all' ? directory.length : directory.filter(item => item.type === option.key).length}</span></button>)}</div><label className="exercise-pr-search"><Search size={16} /><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Søk etter øving …" aria-label="Søk etter PR-øving" /></label></div>
+        {catalogueError && <small className="exercise-pr-note">{catalogueError}</small>}
+        <div className="exercise-pr-exercise-list">{visibleSlice.map(entry => { const top = primaryPR(entry); return <button type="button" key={entry.key} onClick={() => chooseExercise(entry.key)}><span><strong>{entry.name}</strong><small>{entry.sessions ? `${entry.sessions} økter` : 'Ikkje registrert enno'}</small></span><b>{top ? `${top.value.toLocaleString('nn-NO')} ${top.unit}` : '–'}</b><ArrowRight size={17} /></button> })}</div>
+        {!visibleSlice.length && <div className="empty-state">Ingen øvingar passar søket.</div>}
+        {!showAll && !search && visibleExercises.length > 36 && <button type="button" className="secondary-button exercise-pr-more" onClick={() => setShowAll(true)}>Vis alle {visibleExercises.length} øvingane</button>}
+      </>}
+    </>}
+
+    {category === 'benchmark' && (benchmarks.length ? <div className="exercise-pr-benchmarks">{benchmarks.map(wod => <article className="exercise-pr-benchmark" key={wod.key}><div><strong>{wod.name}</strong><small>{wod.format.toUpperCase()} · {wod.level.toUpperCase()} · {wod.count} gjennomføringar</small></div><span>{wod.score.rounds != null ? `${wod.score.rounds} rundar + ${wod.score.reps} reps` : timeLabel(wod.score.value)}</span><footer><small>{dateLabel(wod.date)}</small><button type="button" onClick={() => openSource(wod.logId)}>Opne beste økt <ArrowRight size={14} /></button></footer></article>)}</div> : <div className="empty-state">Ingen benchmark-WOD-ar med samanliknbare resultat enno.</div>)}
+    {category === 'benchmark' && <p className="exercise-pr-explainer">Benchmarkar blir samanlikna innan same WOD, format og nivå (RX/Scaled).</p>}
+
+    {editing && <div className="exercise-pr-modal-backdrop" role="presentation" onClick={() => !busy && setEditing(false)}><form className="exercise-pr-modal" role="dialog" aria-modal="true" aria-label="Registrer personleg rekord" onClick={event => event.stopPropagation()} onSubmit={saveManual}><header><div><span className="section-kicker">PERSONLEG REKORD</span><h3>Registrer PR</h3></div><button type="button" aria-label="Lukk" onClick={() => setEditing(false)} disabled={busy}><X size={21} /></button></header><label>Øving<select value={form.exerciseName} onChange={event => { const name = event.target.value; const entry = directory.find(item => item.name === name); setForm(value => ({ ...value, exerciseName: name, unit: defaultPRUnit(entry?.type) })) }}>{directory.map(item => <option key={item.key} value={item.name}>{item.name}</option>)}</select></label><div className="exercise-pr-manual-fields"><label>Resultat<input type="number" min="0.01" step="any" inputMode="decimal" required value={form.value} onChange={event => setForm(value => ({ ...value, value: event.target.value }))} placeholder="Til dømes 60" /></label><label>Måleeining<select value={form.unit} onChange={event => setForm(value => ({ ...value, unit: event.target.value }))}>{[['kg','kg'],['reps','reps'],['cm','cm'],['sek','sekund'],['meter','meter'],['cal','kaloriar']].map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label></div><div className="exercise-pr-manual-fields"><label>Dato<input type="date" required max={today()} value={form.date} onChange={event => setForm(value => ({ ...value, date: event.target.value }))} /></label><label>Side (valfritt)<select value={form.side} onChange={event => setForm(value => ({ ...value, side: event.target.value }))}><option value="">Begge / ikkje relevant</option><option value="Høgre">Høgre</option><option value="Venstre">Venstre</option></select></label></div><label>Notat (valfritt)<textarea maxLength={500} rows={2} placeholder="Til dømes 1RM, 5 reps eller teknikk" value={form.note} onChange={event => setForm(value => ({ ...value, note: event.target.value }))} /></label>{saveError && <p className="auth-error" role="alert">{saveError}</p>}<button type="submit" className="primary-button" disabled={busy}>{busy ? 'Lagrar …' : 'Lagra PR'}</button></form></div>}
+  </section>
 }

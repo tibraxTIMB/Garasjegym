@@ -378,3 +378,36 @@
 .training-side-picker{display:flex;align-items:center;flex-wrap:wrap;gap:10px;color:#cbd8d8;font-size:12px;font-weight:800}
 .training-side-picker select{min-height:40px;min-width:185px;padding:7px 10px;border:1px solid #647276;border-radius:9px;background:#1d2c30;color:#f7f8f7}
 @media(max-width:600px){.free-session-setup .primary-button,.free-session-setup-bottom .primary-button{width:100%}}
+
+/* Round splits stay out of the clock and exercises: left of the clock in
+   landscape, directly below the music dock in portrait. */
+.gg-live-timer__laps-portrait{display:none}
+@media(orientation:landscape){
+  .gg-live-timer__body--with-laps .gg-live-timer__clock-area{
+    display:grid;
+    grid-template-columns:minmax(92px,29%) minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr) auto auto;
+    grid-template-areas:"laps phase" "laps time" "laps label" "laps secondary";
+    justify-content:stretch;
+    align-items:center;
+    column-gap:clamp(7px,1.4vw,16px);
+    row-gap:1px;
+  }
+  .gg-live-timer__body--with-laps .gg-live-timer__phase{grid-area:phase;justify-self:center;align-self:end}
+  .gg-live-timer__body--with-laps .gg-live-timer__time{grid-area:time;align-self:center;font-size:min(calc(10vw * var(--gg-time-scale,1)),calc(24dvh * var(--gg-time-scale,1)),135px)}
+  .gg-live-timer__body--with-laps .gg-live-timer__time-label{grid-area:label;justify-self:center}
+  .gg-live-timer__body--with-laps .gg-live-timer__time-secondary{grid-area:secondary;justify-self:center;align-self:start}
+  .gg-live-timer__clock-laps{grid-area:laps;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:5px;width:100%;max-height:100%;min-height:0;overflow:hidden;padding:7px;background:rgba(12,23,29,.9);border-color:#3c535a;border-radius:11px}
+  .gg-live-timer__clock-laps .gg-live-timer__lap-preview{display:flex;flex-direction:column;flex:0 1 auto;gap:5px;min-height:0;overflow:hidden}
+  .gg-live-timer__clock-laps .gg-live-timer__lap-preview li{display:flex;flex:0 0 auto;justify-content:space-between;align-items:center;min-height:31px;padding:5px 8px}
+  .gg-live-timer__clock-laps .gg-live-timer__lap-all{align-self:center;min-height:25px}
+}
+@media(orientation:portrait){
+  .gg-live-timer.gg-live-timer--with-laps{grid-template-rows:auto minmax(0,1fr) auto auto auto}
+  .gg-live-timer__clock-laps{display:none}
+  .gg-live-timer__laps-portrait{display:flex;align-items:center;gap:5px;min-width:0;min-height:43px;padding:4px 3px 6px}
+  .gg-live-timer__laps-portrait .gg-live-timer__lap-preview{display:flex;gap:5px;min-width:0}
+  .gg-live-timer__laps-portrait .gg-live-timer__lap-preview li{min-height:32px;align-items:center;justify-content:center;padding:5px 3px}
+  .gg-live-timer__laps-portrait .gg-live-timer__lap-all{min-width:36px;padding:2px 4px}
+  .gg-live-timer__body--with-laps{grid-template-rows:minmax(0,1.2fr) minmax(0,.9fr)}
+}
