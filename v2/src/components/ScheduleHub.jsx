@@ -6,7 +6,7 @@ import CalendarAdmin from './CalendarAdmin.jsx'
 import PersonalCalendar from './PersonalCalendar.jsx'
 import {isStaff} from '../lib/auth.js'
 
-export default function ScheduleHub({profile,onLogResult,onLaunchWorkout,onOpenWod,focusRequestId,onFocusConsumed,initialClassId=null,initialTab='mine',onTabChange=()=>{},simpleMode=false,hidePTTab=false,onInitialClassConsumed=()=>{}}){
+export default function ScheduleHub({profile,onLogResult,onLaunchWorkout,onOpenWod,onContactPT=()=>{},focusRequestId,onFocusConsumed,initialClassId=null,initialTab='mine',onTabChange=()=>{},simpleMode=false,hidePTTab=false,onInitialClassConsumed=()=>{}}){
  const [tab,setTab]=useState(initialTab)
  const [focusClassId,setFocusClassId]=useState(initialClassId)
  const [focusPTClientId,setFocusPTClientId]=useState(null)
@@ -20,6 +20,7 @@ export default function ScheduleHub({profile,onLogResult,onLaunchWorkout,onOpenW
   <div className="hub-tabs" role="tablist" aria-label="Timeplan og booking">
    {!hidePTTab&&<button type="button" role="tab" aria-selected={activeTab==='mine'} className={activeTab==='mine'?'selected':''} onClick={()=>changeTab('mine')}><CalendarDays size={16}/> Min kalender</button>}
    <button type="button" role="tab" aria-selected={activeTab==='booking'} className={activeTab==='booking'?'selected':''} onClick={()=>changeTab('booking')}><Users size={16}/> Gruppetimar</button>
+   {simpleMode&&!hidePTTab&&<button type="button" role="tab" aria-selected={false} onClick={onContactPT}><UserRound size={16}/> Spør om PT</button>}
    {!simpleMode&&!hidePTTab&&<button type="button" role="tab" aria-selected={activeTab==='pt'} className={activeTab==='pt'?'selected':''} onClick={()=>changeTab('pt')}><UserRound size={16}/> PT-studio</button>}
    {isStaff(profile)&&<button type="button" role="tab" aria-selected={activeTab==='calendar'} className={activeTab==='calendar'?'selected':''} onClick={()=>changeTab('calendar')}><CalendarDays size={16}/> Administrer</button>}
   </div>

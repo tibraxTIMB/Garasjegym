@@ -40,3 +40,35 @@ test('customers have one canonical plan and both PT-program and WOD launch paths
   assert.match(plan, /onLaunchProgramSession/)
   assert.match(nav, /item\.id !== 'mi-trening'/)
 })
+
+test('the home and group timetable lead to a genuine PT enquiry', () => {
+  const home = src('../src/components/SimpleCustomerHome.jsx')
+  const schedule = src('../src/components/ScheduleHub.jsx')
+  const studio = src('../src/components/PTStudio.jsx')
+  const app = src('../src/App.jsx')
+  assert.match(home, /Nysgjerrig på personleg trening\?/)
+  assert.match(home, /<strong>Gruppetimar<\/strong>/)
+  assert.match(schedule, /Spør om PT/)
+  assert.match(studio, /<PTInquiry profile=\{profile\}/)
+  assert.match(app, /setPTStudioInitialTab\(isPTCoach\?'oversikt':'tenester'\)/)
+})
+
+test('PT enquiries work without published services and have an honest status and cancellation', () => {
+  const inquiry = src('../src/components/PTInquiry.jsx')
+  assert.match(inquiry, /service_id: service\?\.id \|\| null/)
+  assert.match(inquiry, /Uforpliktande PT-prat/)
+  assert.match(inquiry, /Dette er ikkje ei timebestilling/)
+  assert.match(inquiry, /Spør om denne PT-en/)
+  assert.match(inquiry, /Trekk tilbake førespurnad/)
+  assert.match(inquiry, /pt_service_requests/)
+})
+
+test('Mi side updates only the user display name with a database guard', () => {
+  const profile = src('../src/components/MyPage.jsx')
+  const migration = src('../../supabase/migrations/20261122101026_member_profile_name_and_public_pt_coaches.sql')
+  assert.match(profile, /update\(\{display_name:next\}\)\.eq\('id',profile\.id\)/)
+  assert.match(profile, /onProfileUpdated\(data\.display_name\)/)
+  assert.match(migration, /to_jsonb\(new\) - 'display_name' - 'updated_at'/)
+  assert.match(migration, /on public\.profiles for update to authenticated/)
+  assert.match(migration, /pt_coaches add column public_name/)
+})

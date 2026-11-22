@@ -35,6 +35,13 @@
 
 .my-profile-card > div:last-child { min-width: 0; }
 .my-profile-card h3 { overflow-wrap: anywhere; }
+.my-profile-edit-name { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; padding: 9px 11px; border: 1px solid #786142; border-radius: 10px; background: #2c271f; color: #ffce89; font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
+.my-profile-name-form { display: grid; gap: 9px; padding: 15px; border: 1px solid #6e573c; border-radius: 12px; background: #1b2425; }
+.my-profile-name-form label { font-weight: 750; font-size: 13px; }
+.my-profile-name-form input { width: 100%; min-height: 46px; padding: 10px 12px; border-radius: 9px; border: 1px solid #647174; background: #0f1719; color: #fff; font: inherit; }
+.my-profile-name-form small { color: #bac7c3; }
+.my-profile-name-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.my-profile-name-actions button { flex: 1; }
 
 .history-toolbar {
   min-width: 0;

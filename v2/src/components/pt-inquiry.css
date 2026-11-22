@@ -1,0 +1,59 @@
+.pt-enquiry { display: grid; gap: 18px; width: 100%; max-width: 890px; margin-inline: auto; color: #eef0ed; }
+.pt-enquiry h3 { margin: 5px 0 9px; font-size: clamp(21px, 4.6vw, 28px); line-height: 1.2; }
+.pt-enquiry h4 { margin: 0; font-size: 17px; }
+.pt-enquiry p { line-height: 1.55; }
+.pt-enquiry-hero { display: grid; gap: 4px; padding: clamp(17px, 4vw, 27px); border: 1px solid #b58443; border-radius: 16px; background: linear-gradient(120deg,#44311f,#1c2929 75%); }
+.pt-enquiry-hero p { margin: 0 0 9px; max-width: 620px; color: #e0dcd3; font-size: 15px; }
+.pt-enquiry-hero-cta { display: inline-flex; justify-content: center; align-items: center; gap: 8px; justify-self: start; min-height: 46px; margin-top: 9px; padding: 10px 20px; border: 0; border-radius: 10px; background: #efa33f; color: #1e1914; font: inherit; font-size: 15px; font-weight: 850; cursor: pointer; }
+.pt-enquiry-promise { display: flex; align-items: start; gap: 8px; padding: 11px 13px; border-radius: 10px; background: #1b322d; color: #a6e2c3; font-size: 13px; line-height: 1.5; }
+.pt-enquiry-promise svg { flex: none; margin-top: 1px; }
+.pt-enquiry-compare { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
+.pt-enquiry-compare article { padding: 17px; border: 1px solid #49585a; border-radius: 13px; background: #1b2426; }
+.pt-enquiry-compare article:first-child { border-color: #aa7d43; }
+.pt-enquiry-compare article > svg { color: #ffbe63; margin-bottom: 10px; }
+.pt-enquiry-compare p { color: #c4cecb; margin: 9px 0 13px; font-size: 13px; }
+.pt-enquiry-compare strong { font-size: 12px; color: #f4c079; }
+.pt-enquiry-compare button { display: inline-flex; gap: 6px; align-items: center; padding: 0; color: #ffcc83; background: transparent; border: 0; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+.pt-enquiry-tabs { display: flex; flex-wrap: wrap; gap: 7px; border-bottom: 1px solid #455253; padding-bottom: 10px; }
+.pt-enquiry-tabs button { flex: 1; min-width: 130px; padding: 12px 9px; border: 1px solid #536062; border-radius: 10px; background: #192124; color: #e6ece9; font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; }
+.pt-enquiry-tabs button.selected { background: #e9a13c; border-color: #e9a13c; color: #181918; }
+.pt-enquiry-section { display: grid; gap: 9px; }
+.pt-enquiry-section > p { margin: 0 0 8px; font-size: 13px; color: #c0ceca; }
+.pt-enquiry-coaches { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,260px),1fr)); gap: 12px; }
+.pt-enquiry-coach { display: grid; gap: 12px; padding: 17px; border: 1px solid #62706d; border-radius: 13px; background: #1b2426; }
+.pt-enquiry-coach-head { display: flex; align-items: center; gap: 11px; }
+.pt-enquiry-coach-head small { color: #aab8b3; }
+.pt-enquiry-avatar { display: grid; place-items: center; width: 48px; height: 48px; border: 1px solid #a87c45; border-radius: 100%; background: #45311c; color: #ffd08a; }
+.pt-enquiry-coach p { font-size: 13px; color: #c7d0cd; margin: 0; white-space: pre-wrap; }
+.pt-enquiry-coach button { justify-self: start; }
+.pt-enquiry-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.pt-enquiry-tags span { padding: 5px 8px; border-radius: 99px; background: #293b3b; color: #c4ddcf; font-size: 11px; }
+.pt-enquiry-empty, .pt-enquiry-existing { display: flex; gap: 12px; align-items: start; border: 1px dashed #68726d; border-radius: 12px; padding: 17px; background: #1c2828; }
+.pt-enquiry-empty > svg, .pt-enquiry-existing > svg { color: #eab16c; flex: none; }
+.pt-enquiry-empty p, .pt-enquiry-existing p { margin: 5px 0 10px; font-size: 13px; color: #c2cfca; }
+.pt-enquiry-services { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,210px),1fr)); gap: 10px; }
+.pt-enquiry-services button { display: grid; align-content: start; gap: 7px; text-align: left; padding: 14px; border: 1px solid #64716b; border-radius: 12px; background: #192426; color: #fff; cursor: pointer; }
+.pt-enquiry-services button.selected { border-color: #ffc46f; background: #383023; }
+.pt-enquiry-services span { font-size: 12px; color: #c7cecb; line-height: 1.45; }
+.pt-enquiry-services small { color: #ffd095; }
+.pt-enquiry-form-section { display: grid; gap: 15px; padding: clamp(16px, 4vw, 24px); border: 1px solid #a77b40; border-radius: 16px; background: #192425; scroll-margin-top: 90px; }
+.pt-enquiry-form-heading { display: flex; align-items: start; gap: 10px; }
+.pt-enquiry-form-heading > svg { flex: none; color: #ffc475; margin-top: 5px; }
+.pt-enquiry-form-heading p { margin: 0; font-size: 13px; color: #c5d0cc; }
+.pt-enquiry-form { display: grid; gap: 15px; }
+.pt-enquiry-form label { display: grid; gap: 7px; color: #e8ebe7; font-size: 13px; font-weight: 750; }
+.pt-enquiry-form label small { display: inline; color: #adbbb6; font-weight: 450; }
+.pt-enquiry-form select, .pt-enquiry-form textarea { display: block; width: 100%; min-width: 0; min-height: 48px; padding: 11px 12px; border: 1px solid #6c7a78; border-radius: 10px; background: #101a1d; color: #fff; font: inherit; font-size: 14px; }
+.pt-enquiry-form textarea { min-height: 95px; resize: vertical; }
+.pt-enquiry-form button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 51px; font-weight: 850; }
+.pt-enquiry-fineprint { margin: -2px 0 0; color: #bdc9c3; font-size: 12px; }
+.pt-required { color: #ffc06d; }
+.pt-enquiry-request-list { display: grid; gap: 10px; }
+.pt-enquiry-request-list article { padding: 16px; border: 1px solid #52635f; border-radius: 12px; background: #1a2628; }
+.pt-enquiry-request-list small { color: #b5c0bc; }
+.pt-enquiry-request-list p { white-space: pre-line; color: #ccd3cf; font-size: 13px; }
+.pt-enquiry-request-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.pt-enquiry-request-head span { padding: 5px 8px; border-radius: 99px; background: #3b3021; color: #f5cb91; font-size: 11px; font-weight: 800; }
+.pt-enquiry-request-head span.assigned { color: #a5ecc4; background: #244339; }
+.pt-enquiry-request-list .pt-enquiry-next { padding: 9px; background: #203f33; border-radius: 8px; color: #a5e4c4; }
+@media (max-width: 560px) { .pt-enquiry { gap: 14px; } .pt-enquiry-compare { grid-template-columns: 1fr; } .pt-enquiry-compare article { padding: 14px; } .pt-enquiry-tabs button { font-size: 12px; } .pt-enquiry-coach button { width: 100%; } }

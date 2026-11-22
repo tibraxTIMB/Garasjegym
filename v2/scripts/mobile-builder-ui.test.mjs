@@ -108,7 +108,7 @@ test('Spotify options open above the live timer dock and profile links to music 
   assert.match(styles, /\.gg-live-timer__music-dock:has\(\.spotify-mini-tools\)\s*\{\s*overflow:visible;/)
   assert.match(styles, /\.gg-live-timer__music-dock \.spotify-mini-tools\s*\{\s*position:absolute;/)
   assert.match(profile, /Musikk og Spotify <span>Søk, spelelister og innstillingar/)
-  assert.match(app, /<MyPage onMusic=\{\(\)=>navigateTo\('musikk'\)\}/)
+  assert.match(app, /<MyPage onProfileUpdated=\{display_name=>setProfile\(p=>\(\{\.\.\.p,display_name\}\)\)\} onMusic=\{\(\)=>navigateTo\('musikk'\)\}/)
 })
 
 test('the workout button returns to the live session instead of replacing its draft', () => {

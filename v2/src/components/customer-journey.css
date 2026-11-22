@@ -51,8 +51,15 @@
 .customer-plan-contact > span { flex: 1; display: grid; gap: 3px; }
 .customer-plan-contact small { color: #b9c7c3; }
 .customer-plan-contact > svg:first-child { color: #ffbe66; }
-.pt2-member-primary-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.pt2-member-primary-tabs { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: thin; }
 .pt2-member-primary-tabs button { min-width: 0; text-align: center; justify-content: center; padding: 10px 5px; }
+.pt2-member-primary-tabs button { flex: 1 0 auto; font-size: 12px; }
+.customer-pt-invite { display: flex; align-items: center; width: 100%; gap: 12px; padding: 15px; border: 1px solid #d79c4b; border-radius: 14px; background: linear-gradient(110deg,#3f2d1c,#202b2c); color: #fff; cursor: pointer; text-align: left; }
+.customer-pt-invite > svg:first-child { color: #ffc574; flex: none; }
+.customer-pt-invite > svg:last-child { margin-left: auto; color: #ffc574; flex: none; }
+.customer-pt-invite span { display: grid; gap: 4px; min-width: 0; }
+.customer-pt-invite strong { font-size: clamp(15px,3.5vw,19px); }
+.customer-pt-invite small { color: #d4ccc1; line-height: 1.35; font-size: 12px; }
 .pt2-member-extra { border: 1px solid #435154; border-radius: 11px; padding: 0 10px; margin: 5px 0 17px; }
 .pt2-member-extra summary { min-height: 40px; display: flex; align-items: center; cursor: pointer; color: #c8d1ce; font-size: 13px; font-weight: 750; }
 .pt2-member-extra[open] summary { border-bottom: 1px solid #435154; }

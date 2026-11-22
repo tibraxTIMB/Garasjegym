@@ -202,3 +202,7 @@
  .calendar-upcoming { align-items:flex-start; flex-direction:column; gap:5px; }
  .calendar-modal-actions { grid-template-columns:minmax(0,1fr); }
 }
+.pt-admin-row:has(.pt-coach-edit) { flex-wrap: wrap; }
+.pt-coach-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.pt-coach-edit { flex-basis: 100%; width: 100%; padding: 13px; border: 1px solid #65716d; border-radius: 11px; background: #202b2c; }
+.pt-coach-edit .pt2-field { min-width: 0; }
