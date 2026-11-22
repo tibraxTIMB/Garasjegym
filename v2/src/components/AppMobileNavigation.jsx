@@ -16,6 +16,7 @@ function shortLabel(item) {
   if (item.id === 'kaffi') return 'Kaffi'
   if (item.id === 'musikk') return 'Musikk'
   if (item.id === 'mi-side') return 'Mi side'
+  if (item.id === 'mi-trening') return 'Min treningsplan'
   if (item.id === 'admin') return 'Drift'
   return item.label
 }
@@ -28,7 +29,8 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
   const preferred = staff ? STAFF_PRIMARY : coach ? COACH_PRIMARY : MEMBER_PRIMARY
   const primary = preferred.map(id => items.find(item => item.id === id)).filter(Boolean).slice(0, 4)
   const primaryIds = new Set(primary.map(item => item.id))
-  const secondary = items.filter(item => !primaryIds.has(item.id))
+  // The plan already has a dedicated, descriptive shortcut above this grid.
+  const secondary = items.filter(item => !primaryIds.has(item.id) && item.id !== 'mi-trening')
   const activeInMore = ['mi-historikk','mi-trening'].includes(active) || secondary.some(item => item.id === active)
   function closeMore() {
     setMoreOpen(false)

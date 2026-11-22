@@ -1,0 +1,61 @@
+.customer-home { gap: 12px; max-width: 720px; }
+.customer-home-intro { display: grid; gap: 3px; }
+.customer-home-intro h2 { font-size: clamp(24px, 5vw, 34px); }
+.customer-plan-hero { display: flex; width: 100%; align-items: center; gap: 13px; min-height: 112px; padding: 16px 18px; border: 1.5px solid #e6a13e; border-radius: 16px; background: linear-gradient(115deg, #53341b, #332b1f 53%, #1b2625); color: #fff; box-shadow: 0 8px 25px #0003; cursor: pointer; text-align: left; }
+.customer-plan-hero-icon { flex: none; display: grid; place-items: center; width: 51px; height: 51px; border-radius: 13px; background: #f1ac4d; color: #21170d; }
+.customer-plan-hero-copy { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.customer-plan-hero-copy strong { font-size: clamp(19px, 4vw, 24px); line-height: 1.13; }
+.customer-plan-hero-copy small { color: #e0d4c4; font-size: 12px; line-height: 1.35; }
+.customer-plan-hero > svg { flex: none; color: #ffcc81; }
+.customer-plan-new { flex: none; border-radius: 999px; padding: 5px 9px; background: #a8322d; color: #fff; font-size: 12px; font-weight: 850; }
+.customer-home-grid { gap: 9px; }
+.customer-home-grid .simple-home-action { min-height: 103px; padding: 13px; border-color: #6c5132; gap: 7px; }
+.customer-home-grid .simple-home-action svg { width: 24px; height: 24px; }
+.customer-home-grid .simple-home-action strong { font-size: clamp(16px, 3.6vw, 19px); }
+.customer-home-grid .simple-home-action small { font-size: 11px; }
+.customer-home-quick-actions { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 7px; }
+.customer-home-quick-actions button, .customer-home-advanced { display: inline-flex; justify-content: center; align-items: center; gap: 7px; border: 1px solid #425153; border-radius: 10px; min-height: 42px; padding: 10px 12px; color: #e4e9e7; background: #1c2729; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.customer-home-quick-actions button { flex: 1; }
+.customer-home-advanced { justify-self: center; margin: 2px auto 0; background: transparent; color: #c9d3d0; border-color: transparent; min-height: 36px; }
+.customer-training-plan { max-width: 830px; margin-inline: auto; }
+.customer-plan-heading { display: flex; gap: 12px; align-items: start; justify-content: space-between; }
+.customer-plan-heading h3 { margin-top: 4px; }
+.customer-plan-heading p { max-width: 520px; color: #bfcac6; }
+.customer-plan-refresh { flex: none; min-height: 40px; }
+.customer-plan-program { display: grid; gap: 15px; padding: clamp(16px, 4vw, 23px); border: 1px solid #907044; border-radius: 16px; background: linear-gradient(145deg, #292821, #172327 70%); }
+.customer-plan-program-head { display: flex; gap: 9px; align-items: start; justify-content: space-between; }
+.customer-plan-program-head h4 { margin: 6px 0 0; font-size: clamp(18px, 4vw, 23px); }
+.customer-plan-state { display: flex; align-items: center; gap: 4px; color: #7bd3aa; font-size: 12px; font-weight: 800; }
+.customer-plan-description, .customer-plan-muted { margin: 0; color: #c5cecb; line-height: 1.5; font-size: 13px; }
+.customer-plan-progress-label { display: flex; justify-content: space-between; gap: 9px; color: #d0dad6; font-size: 13px; }
+.customer-plan-progress-label strong { color: #ffc36b; }
+.customer-plan-progress-track { height: 9px; border-radius: 99px; overflow: hidden; background: #384447; margin-top: -9px; }
+.customer-plan-progress-track span { display: block; height: 100%; background: linear-gradient(90deg, #42b88a, #88ddaf); border-radius: inherit; }
+.customer-next-session { display: grid; gap: 9px; border: 1px solid #755938; border-radius: 12px; padding: 15px; background: #182324; }
+.customer-next-session h4 { margin: 0; font-size: 20px; }
+.customer-next-session p { margin: 0; color: #c5cecb; font-size: 12px; line-height: 1.5; }
+.customer-next-session button { justify-content: center; min-height: 50px; margin-top: 4px; }
+.customer-plan-complete { display: flex; gap: 8px; color: #9edcbd; font-weight: 750; }
+.customer-plan-details { border-top: 1px solid #435154; padding-top: 11px; }
+.customer-plan-details summary { display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: #ffc77d; font-weight: 800; min-height: 38px; }
+.customer-plan-details summary span { font-size: 12px; color: #c0c9c5; }
+.customer-plan-weeks { display: grid; gap: 17px; padding-top: 11px; }
+.customer-plan-weeks h5 { margin: 0 0 7px; color: #e0c293; font-size: 14px; }
+.customer-plan-session { display: flex; align-items: center; gap: 9px; justify-content: space-between; padding: 11px 0; border-top: 1px solid #364145; }
+.customer-plan-session-copy { min-width: 0; flex: 1; display: grid; gap: 4px; }
+.customer-plan-session-copy strong { font-size: 13px; }
+.customer-plan-session-copy small, .customer-plan-session-copy p { margin: 0; color: #c1cbca; font-size: 11px; line-height: 1.4; }
+.customer-plan-session button { padding: 8px 10px; min-height: 38px; font-size: 12px; flex: none; }
+.customer-session-done, .customer-session-note { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #8ed3ad; white-space: nowrap; }
+.customer-session-note { color: #c0c9c5; }
+.customer-plan-contact { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px; border: 1px solid #4e5f61; border-radius: 12px; background: #1b292b; color: #fff; text-align: left; cursor: pointer; }
+.customer-plan-contact > span { flex: 1; display: grid; gap: 3px; }
+.customer-plan-contact small { color: #b9c7c3; }
+.customer-plan-contact > svg:first-child { color: #ffbe66; }
+.pt2-member-primary-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.pt2-member-primary-tabs button { min-width: 0; text-align: center; justify-content: center; padding: 10px 5px; }
+.pt2-member-extra { border: 1px solid #435154; border-radius: 11px; padding: 0 10px; margin: 5px 0 17px; }
+.pt2-member-extra summary { min-height: 40px; display: flex; align-items: center; cursor: pointer; color: #c8d1ce; font-size: 13px; font-weight: 750; }
+.pt2-member-extra[open] summary { border-bottom: 1px solid #435154; }
+.pt2-member-extra nav { margin: 10px 0; }
+@media(max-width: 400px) { .customer-plan-hero { padding: 13px; gap: 10px; min-height: 103px; } .customer-plan-hero-icon { width: 43px; height: 43px; } .customer-home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .customer-home-grid .simple-home-action { min-height: 112px; flex-direction: column; align-items: flex-start; } .customer-home-quick-actions button { min-width: 130px; } .customer-plan-refresh { font-size: 0; padding: 9px; } .customer-plan-refresh svg { width: 20px; height: 20px; } }

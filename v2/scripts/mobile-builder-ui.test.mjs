@@ -104,9 +104,12 @@ test('WOD clock waits for a deliberate start and retains a ten-second countdown'
 
 test('member dashboard shows rank progress compactly and promotes the assigned PT session', () => {
   const app = source('../src/App.jsx')
+  const home = source('../src/components/SimpleCustomerHome.jsx')
   const overview = source('../src/components/Overview.jsx')
-  assert.match(app, /Gjennomfør PT-økta/)
-  assert.match(app, /Økta som PT-en har tildelt deg/)
+  assert.match(app, /<SimpleCustomerHome/)
+  assert.match(app, /onPlan={openMyTraining}/)
+  assert.match(home, /Min treningsplan/)
+  assert.match(home, /Programmet ditt, neste økt/)
   assert.match(overview, /overview-rank-progressbar/)
   assert.match(overview, /1 økt → ★/)
   assert.match(overview, /<details className="engine-section overview-ranking">/)
