@@ -47,6 +47,18 @@
 .gg-help-glossary article{min-width:0;padding:14px;border:1px solid #536360;border-radius:12px;background:#192426}
 .gg-help-glossary strong{font-size:15px;color:#ffce88}
 .gg-help-glossary p{margin:6px 0 0;font-size:12px;line-height:1.5;color:#d1dad5}
+.gg-help-glossary-categories{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.gg-help-glossary-categories button{display:flex;align-items:center;gap:8px;min-width:0;min-height:82px;padding:12px;border:1px solid #596b63;border-radius:11px;background:linear-gradient(125deg,#2b2a24,#192829);color:#f1f4ed;text-align:left;font:inherit;cursor:pointer}
+.gg-help-glossary-categories button>span:first-child{display:grid;gap:5px;flex:1;min-width:0}
+.gg-help-glossary-categories button strong{font-size:13px;line-height:1.3}
+.gg-help-glossary-categories button small{font-size:11px;line-height:1.3;color:#bcc9c1}
+.gg-help-glossary-count{display:grid;place-items:center;min-width:24px;height:24px;padding:0 5px;border-radius:99px;background:#473623;color:#ffca85;font-size:12px;font-weight:800}
+.gg-help-glossary-categories button>svg{flex:none;color:#f0b96c}
+.gg-help-glossary-categories .gg-help-glossary-all{grid-column:1/-1;min-height:57px}
+.gg-help-glossary-nav{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:3px 1px 9px;border-bottom:1px solid #3d514a}
+.gg-help-glossary-nav button{display:flex;align-items:center;gap:5px;border:0;background:transparent;color:#ffcb8c;font:inherit;font-size:12px;font-weight:750;cursor:pointer}
+.gg-help-glossary-nav strong{flex:1;font-size:14px}
+.gg-help-glossary-nav small{color:#e8b876}
 .gg-help-faq{border:1px solid #52625f;border-radius:11px;overflow:hidden;background:#192426}
 .gg-help-faq>button{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:14px;border:0;background:transparent;color:#f0f4ef;font:inherit;font-size:14px;text-align:left;cursor:pointer}
 .gg-help-faq>button svg{flex:none;color:#f4bd75;transition:transform .15s}
@@ -90,6 +102,11 @@
 .gg-help-video-toggle small{font-size:11px;color:#d2c7b5}
 .gg-help-player{display:grid;justify-items:center;gap:8px;padding:9px;border-radius:10px;background:#0d1619}
 .gg-help-player video{display:block;aspect-ratio:9/16;width:min(100%,320px);height:auto;max-height:76vh;object-fit:contain;background:#081217;border:1px solid #53615e;border-radius:9px}
+.gg-help-player-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:min(100%,360px)}
+.gg-help-player-actions button,.gg-help-player-actions a{display:flex;align-items:center;justify-content:center;gap:6px;min-height:43px;padding:8px 10px;border-radius:9px;font:inherit;font-size:12px;font-weight:800;text-decoration:none;cursor:pointer}
+.gg-help-player-actions a{border:1px solid #a47e50;color:#ffd194;background:#28281f}
+.gg-help-player-actions button{border:1px solid #efa43f;background:#efa43f;color:#1b1b18}
+.gg-help-player .gg-help-video-error{padding:10px;border:1px solid #ba7860;border-radius:8px;background:#462920;color:#ffd0c3;font-size:12px}
 .gg-help-player p{margin:0;color:#bdc9c1;font-size:11px;line-height:1.4;text-align:center}
 .gg-help-quick{display:grid;gap:7px;min-width:0}
 .gg-help-quick-strip{display:flex;gap:7px;overflow-x:auto;padding:2px 1px 8px;scrollbar-width:thin;overscroll-behavior-x:contain}
@@ -109,4 +126,4 @@
 .gg-help-video-grid button strong{font-size:13px;line-height:1.32}
 .gg-help-video-grid button small{font-size:11px;line-height:1.35;color:#c5d2c9}
 @media(max-width:900px){.gg-help-detail-nav{bottom:calc(var(--gg-shell-nav-height,68px) + env(safe-area-inset-bottom) + 8px)}}
-@media(max-width:600px){.gg-help{gap:11px}.gg-help-view-tabs button{flex-direction:column;gap:3px;font-size:10px;min-height:52px;padding:7px 2px}.gg-help-category-grid button{padding:8px 7px;gap:5px}.gg-help-category-grid strong{font-size:11px}.gg-help-category-grid button>svg:last-child{display:none}.gg-help-video-grid button{min-height:120px}.gg-help-glossary{grid-template-columns:1fr}.gg-help-topic-toggle{padding:12px 11px}.gg-help-topic-body{padding:0 12px 14px}}
+@media(max-width:600px){.gg-help{gap:11px}.gg-help-view-tabs button{flex-direction:column;gap:3px;font-size:10px;min-height:48px;padding:6px 2px}.gg-help-category-grid button{padding:8px 7px;gap:5px}.gg-help-category-grid strong{font-size:11px}.gg-help-category-grid button>svg:last-child{display:none}.gg-help-video-grid button{min-height:120px}.gg-help-glossary{grid-template-columns:1fr}.gg-help-glossary-categories{grid-template-columns:1fr 1fr}.gg-help-glossary-categories button{padding:9px;min-height:78px}.gg-help-glossary-categories button>svg{display:none}.gg-help-topic-toggle{padding:12px 11px}.gg-help-topic-body{padding:0 12px 14px}}

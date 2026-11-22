@@ -119,6 +119,30 @@ def build_video(browser, video, base_url, output, tmp):
     print(f'{video["title"]}: ekte GarasjeGym-vising ({out.stat().st_size // 1024} KiB)',flush=True)
 
 
+def verify_inline_player(browser, base_url):
+    """The in-app play button must start the new MP4, not just render a poster."""
+    context = browser.new_context(viewport={'width': 390, 'height': 844}, locale='nn-NO')
+    context.route('**/*', lambda route: route.continue_() if route.request.url.startswith(base_url) else route.abort())
+    try:
+        page = context.new_page()
+        page.goto(base_url + '/video-demo.html?scenario=home', wait_until='domcontentloaded', timeout=30000)
+        click(page, 'Mi side')
+        click(page, 'Hjelp og rettleiing')
+        page.get_by_role('tab', name='Videoar').click(timeout=8000)
+        click(page, 'Finn fram i GarasjeGym')
+        page.get_by_role('button', name='Spel videoen').click(timeout=8000)
+        page.wait_for_function('''() => {
+            const video = document.querySelector('.gg-help-player video');
+            return video && !video.paused && video.currentTime > 0.3 && !video.error;
+        }''', timeout=15000)
+        link = page.get_by_role('link', name='Opna direkte')
+        if '/help/videos/kom-i-gang.mp4' not in (link.get_attribute('href') or ''):
+            raise AssertionError('Direktelenkja til videoen manglar')
+        print('Mobil hjelpespelar: ekte MP4 starta ved trykk og direktelenkja er tilgjengeleg.', flush=True)
+    finally:
+        context.close()
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--base-url', default='http://127.0.0.1:4173')
@@ -132,6 +156,7 @@ def main():
         try:
             for video in videos:
                 build_video(browser,video,args.base_url,dest,Path(directory))
+            verify_inline_player(browser,args.base_url)
         finally:
             browser.close()
 

@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, BookOpen, ChevronDown, ChevronLeft, ChevronRight, Coffee, Dumbbell, HelpCircle, Home, Lightbulb, MessageSquareText, PlayCircle, Search, Settings, ShieldCheck, Timer, Trophy, Users, Video } from 'lucide-react'
-import { HELP_CATEGORIES, HELP_FAQS, HELP_GLOSSARY, searchHelpTopics, visibleHelpTopics } from '../lib/helpContent.js'
+import { HELP_CATEGORIES, HELP_FAQS, HELP_GLOSSARY, HELP_GLOSSARY_GROUPS, searchHelpTopics, visibleHelpTopics } from '../lib/helpContent.js'
 import { helpVideoForTopic, visibleHelpVideos } from '../lib/helpVideos.js'
 import './help-center.css'
 
@@ -12,10 +12,13 @@ export default function HelpCenter({ profile, isCoach = false, initialTopic = nu
   const [view, setView] = useState('guides')
   const [returnView, setReturnView] = useState('guides')
   const [category, setCategory] = useState('all')
+  const [glossaryCategory, setGlossaryCategory] = useState('all')
   const [activeId, setActiveId] = useState(initialTopic && initialTopic !== 'navigation' ? initialTopic : null)
   const [expandedQuestion, setExpandedQuestion] = useState('')
   const [videoOpen, setVideoOpen] = useState(null)
+  const [videoStatus, setVideoStatus] = useState('ready')
   const headerRef = useRef(null)
+  const playerRef = useRef(null)
   const topics = useMemo(() => visibleHelpTopics(profile, isCoach), [profile?.role, isCoach])
   const videos = useMemo(() => visibleHelpVideos(topics), [topics])
   const activeTopic = topics.find(topic => topic.id === activeId)
@@ -23,16 +26,34 @@ export default function HelpCenter({ profile, isCoach = false, initialTopic = nu
   const siblings = activeTopic ? topics.filter(topic => topic.category === activeTopic.category) : []
   const siblingIndex = siblings.findIndex(topic => topic.id === activeId)
   const shownTopics = searchHelpTopics(topics, query).filter(topic => query.trim() || category === 'all' || topic.category === category)
-  const shownTerms = HELP_GLOSSARY.filter(([term, explanation]) => (term + ' ' + explanation).toLocaleLowerCase('nn-NO').includes(query.trim().toLocaleLowerCase('nn-NO')))
+  const shownTerms = HELP_GLOSSARY.filter(([term, explanation]) => (
+    (glossaryCategory === 'all' || glossaryCategory === 'all-terms' || HELP_GLOSSARY_GROUPS.find(group => group.id === glossaryCategory)?.terms.includes(term))
+    && (term + ' ' + explanation).toLocaleLowerCase('nn-NO').includes(query.trim().toLocaleLowerCase('nn-NO'))
+  ))
   const shownQuestions = HELP_FAQS.filter(item => (item.question + ' ' + item.answer).toLocaleLowerCase('nn-NO').includes(query.trim().toLocaleLowerCase('nn-NO')))
   const shownCategories = HELP_CATEGORIES.filter(group => topics.some(topic => topic.category === group.id))
   const chosenCategory = shownCategories.find(group => group.id === category)
   const shownVideos = videos.filter(video => !query.trim() || `${video.title} ${video.summary}`.toLocaleLowerCase('nn-NO').includes(query.trim().toLocaleLowerCase('nn-NO')))
+  const videoRevision = import.meta.env.VITE_HELP_VIDEO_REV ? `?v=${import.meta.env.VITE_HELP_VIDEO_REV.slice(0, 12)}` : ''
+  const videoUrl = activeVideo ? `${import.meta.env.BASE_URL}help/videos/${activeVideo.id}.mp4${videoRevision}` : ''
+
+  function switchView(next) {
+    setActiveId(null); setVideoOpen(null); setVideoStatus('ready'); setView(next); setQuery('')
+    requestAnimationFrame(() => headerRef.current?.scrollIntoView({ behavior:'smooth', block:'start' }))
+  }
+
+  function togglePlayback() {
+    const player = playerRef.current
+    if (!player) return
+    if (!player.paused) { player.pause(); setVideoStatus('paused'); return }
+    const started = player.play()
+    if (started?.catch) started.catch(() => setVideoStatus('error'))
+  }
 
   function openTopic(id) {
     if (!topics.some(topic => topic.id === id)) return
     if (!activeId) setReturnView(view)
-    if (activeId !== id) setVideoOpen(null)
+    if (activeId !== id) { setVideoOpen(null); setVideoStatus('ready') }
     setActiveId(id)
     requestAnimationFrame(() => headerRef.current?.scrollIntoView({ behavior:'smooth', block:'start' }))
   }
@@ -47,21 +68,21 @@ export default function HelpCenter({ profile, isCoach = false, initialTopic = nu
 
   return <section className="gg-help" ref={headerRef}>
     <header className="gg-help-header">
-      <button type="button" className="gg-help-back" onClick={goBack}><ArrowLeft size={17} /> {activeTopic ? 'Tilbake til oversikta' : view !== 'guides' ? 'Til rettleiingane' : category !== 'all' ? 'Til kategoriane' : 'Mi side'}</button>
+      <button type="button" className="gg-help-back" onClick={goBack}><ArrowLeft size={17} /> {activeTopic ? 'Til oversikta' : view !== 'guides' ? 'Til hovudval' : category !== 'all' ? 'Alle kategoriar' : 'Lukk hjelpa · Mi side'}</button>
       <div className="gg-help-intro"><span className="section-kicker">GARASJEGYM · HJELPESENTER</span><h2>{activeTopic?.title || 'Hjelp og rettleiing'}</h2>{activeTopic&&<p>{activeTopic.summary}</p>}</div>
-      {!activeTopic&&<label className="gg-help-search"><Search size={19}/><span className="sr-only">Søk i hjelpa</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Søk etter funksjon eller spørsmål …"/>{query && <button type="button" onClick={() => setQuery('')} aria-label="Tøm søket">×</button>}</label>}
+      {!activeTopic&&<label className="gg-help-search"><Search size={19}/><span className="sr-only">Søk i hjelpa</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder={view==='glossary'?'Søk etter ord eller forklaring …':view==='videos'?'Søk etter video …':view==='faq'?'Søk i spørsmåla …':'Søk etter funksjon eller spørsmål …'}/>{query && <button type="button" onClick={() => setQuery('')} aria-label="Tøm søket">×</button>}</label>}
     </header>
 
-    {activeTopic&&<><div className="gg-help-detail-meta"><span>{HELP_CATEGORIES.find(group => group.id === activeTopic.category)?.title}</span><span>{activeTopic.time} lesetid</span></div><article className="gg-help-detail">{activeVideo&&<section className="gg-help-video-detail"><button type="button" className="gg-help-video-toggle" aria-expanded={videoOpen===activeTopic.id} onClick={()=>setVideoOpen(open=>open===activeTopic.id?null:activeTopic.id)}><PlayCircle size={21}/><span><strong>{videoOpen===activeTopic.id?'Lukk videoen':'Sjå kort instruksjonsvideo'}</strong><small>{activeVideo.title} · tekst på nynorsk</small></span><ChevronDown size={18}/></button>{videoOpen===activeTopic.id&&<div className="gg-help-player"><video key={activeVideo.id} controls playsInline preload="metadata" poster={`${import.meta.env.BASE_URL}help/videos/${activeVideo.id}.png`} src={`${import.meta.env.BASE_URL}help/videos/${activeVideo.id}.mp4`} aria-label={`Instruksjonsvideo: ${activeVideo.title}`}>Nettlesaren din støttar ikkje video. Bruk stega nedanfor.</video><p>Opptak frå den ekte appvisinga, med lokale demodata og utan medlemsopplysningar. Teksten nedanfor er den fullstendige bruksrettleiinga.</p></div>}</section>}<ol className="gg-help-steps">{activeTopic.steps.map((step,i)=><li key={i}><span className="gg-help-step-number">{i+1}</span><p>{step}</p></li>)}</ol>{activeTopic.tip&&<div className="gg-help-tip"><Lightbulb size={18}/><p>{activeTopic.tip}</p></div>}{activeTopic.action&&<div className="gg-help-deep-link"><button type="button" className="primary-button gg-help-action" onClick={()=>onNavigate(activeTopic.action)}>{activeTopic.actionLabel||'Opna funksjonen'} <ArrowRight size={16}/></button><small>Dette opnar funksjonen utanfor hjelpesenteret.</small></div>}</article><nav className="gg-help-detail-nav" aria-label="Bla mellom rettleiingar"><button type="button" disabled={siblingIndex<=0} onClick={()=>openTopic(siblings[siblingIndex-1]?.id)}><ChevronLeft size={17}/> Førre</button><button type="button" onClick={goBack}><BookOpen size={17}/> Alle tema</button><button type="button" disabled={siblingIndex<0||siblingIndex>=siblings.length-1} onClick={()=>openTopic(siblings[siblingIndex+1]?.id)}>Neste <ChevronRight size={17}/></button></nav><section className="gg-help-related"><strong>Fleire tema om det same</strong><div>{siblings.filter(topic=>topic.id!==activeId).slice(0,3).map(topic=><button type="button" key={topic.id} onClick={()=>openTopic(topic.id)}>{topic.title}<ArrowRight size={13}/></button>)}</div></section></>}
+    <nav className="gg-help-view-tabs" role="tablist" aria-label="Byt område i hjelpa">
+      <button type="button" role="tab" aria-selected={view === 'guides'} className={view === 'guides' ? 'selected' : ''} onClick={() => switchView('guides')}><BookOpen size={16}/> Rettleiingar</button>
+      <button type="button" role="tab" aria-selected={view === 'videos'} className={view === 'videos' ? 'selected' : ''} onClick={() => switchView('videos')}><Video size={16}/> Videoar</button>
+      <button type="button" role="tab" aria-selected={view === 'glossary'} className={view === 'glossary' ? 'selected' : ''} onClick={() => switchView('glossary')}><HelpCircle size={16}/> Ordliste</button>
+      <button type="button" role="tab" aria-selected={view === 'faq'} className={view === 'faq' ? 'selected' : ''} onClick={() => switchView('faq')}><MessageSquareText size={16}/> Spørsmål</button>
+    </nav>
+
+    {activeTopic&&<><div className="gg-help-detail-meta"><span>{HELP_CATEGORIES.find(group => group.id === activeTopic.category)?.title} · {siblingIndex+1} av {siblings.length}</span><span>{activeTopic.time} lesetid</span></div><article className="gg-help-detail">{activeVideo&&<section className="gg-help-video-detail"><button type="button" className="gg-help-video-toggle" aria-expanded={videoOpen===activeTopic.id} onClick={()=>{setVideoStatus('ready');setVideoOpen(open=>open===activeTopic.id?null:activeTopic.id)}}><PlayCircle size={21}/><span><strong>{videoOpen===activeTopic.id?'Lukk videoen':'Sjå kort instruksjonsvideo'}</strong><small>{activeVideo.title} · tekst på nynorsk</small></span><ChevronDown size={18}/></button>{videoOpen===activeTopic.id&&<div className="gg-help-player"><video key={activeVideo.id} ref={playerRef} controls playsInline preload="auto" poster={`${import.meta.env.BASE_URL}help/videos/${activeVideo.id}.png${videoRevision}`} src={videoUrl} onPlay={()=>setVideoStatus('playing')} onPause={()=>setVideoStatus('paused')} onError={()=>setVideoStatus('error')} onEnded={()=>setVideoStatus('paused')} aria-label={`Instruksjonsvideo: ${activeVideo.title}`}>Nettlesaren din støttar ikkje video. Bruk stega nedanfor.</video><div className="gg-help-player-actions"><button type="button" className="primary-button" onClick={togglePlayback}><PlayCircle size={17}/>{videoStatus==='playing'?'Pause videoen':'Spel videoen'}</button><a href={videoUrl} target="_blank" rel="noopener noreferrer">Opna direkte <ArrowRight size={15}/></a></div>{videoStatus==='error'&&<p className="gg-help-video-error" role="alert">Videoen kunne ikkje spelast her. Prøv «Opna direkte». Rettleiinga står også i tekst nedanfor.</p>}<p>Reelt skjermopptak med demodata og nynorsk tekst. Videoen er utan tale.</p></div>}</section>}<ol className="gg-help-steps">{activeTopic.steps.map((step,i)=><li key={i}><span className="gg-help-step-number">{i+1}</span><p>{step}</p></li>)}</ol>{activeTopic.tip&&<div className="gg-help-tip"><Lightbulb size={18}/><p>{activeTopic.tip}</p></div>}{activeTopic.action&&<div className="gg-help-deep-link"><button type="button" className="primary-button gg-help-action" onClick={()=>onNavigate(activeTopic.action)}>{activeTopic.actionLabel||'Opna funksjonen'} <ArrowRight size={16}/></button><small>Dette opnar funksjonen utanfor hjelpesenteret.</small></div>}</article><nav className="gg-help-detail-nav" aria-label="Bla mellom rettleiingar"><button type="button" disabled={siblingIndex<=0} onClick={()=>openTopic(siblings[siblingIndex-1]?.id)}><ChevronLeft size={17}/> Førre</button><button type="button" onClick={goBack}><BookOpen size={17}/> {returnView==='videos'?'Videooversikt':'Temaliste'}</button><button type="button" disabled={siblingIndex<0||siblingIndex>=siblings.length-1} onClick={()=>openTopic(siblings[siblingIndex+1]?.id)}>Neste <ChevronRight size={17}/></button></nav><section className="gg-help-related"><strong>Fleire tema om det same</strong><div>{siblings.filter(topic=>topic.id!==activeId).slice(0,3).map(topic=><button type="button" key={topic.id} onClick={()=>openTopic(topic.id)}>{topic.title}<ArrowRight size={13}/></button>)}</div></section></>}
 
     {!activeTopic&&<>
-
-    <div className="gg-help-view-tabs" role="tablist" aria-label="Type hjelp">
-      <button type="button" role="tab" aria-selected={view === 'guides'} className={view === 'guides' ? 'selected' : ''} onClick={() => setView('guides')}><BookOpen size={16}/> Rettleiingar</button>
-      <button type="button" role="tab" aria-selected={view === 'videos'} className={view === 'videos' ? 'selected' : ''} onClick={() => setView('videos')}><Video size={16}/> Videoar</button>
-      <button type="button" role="tab" aria-selected={view === 'glossary'} className={view === 'glossary' ? 'selected' : ''} onClick={() => setView('glossary')}><HelpCircle size={16}/> Ordliste</button>
-      <button type="button" role="tab" aria-selected={view === 'faq'} className={view === 'faq' ? 'selected' : ''} onClick={() => setView('faq')}><MessageSquareText size={16}/> Spørsmål</button>
-    </div>
 
     {view === 'guides' && <>
       {!query.trim() && category === 'all' && <>
@@ -76,7 +97,17 @@ export default function HelpCenter({ profile, isCoach = false, initialTopic = nu
 
     {view === 'videos' && <section className="gg-help-results"><div className="gg-help-result-head"><div><h3>Korte videoar</h3><p>Skjermopptak frå GarasjeGym med trygge demodata og nynorsk tekst. I rettleiingane finn du stega forklart.</p></div><small>{shownVideos.length} videoar</small></div><div className="gg-help-video-grid">{shownVideos.map(video=><button type="button" key={video.id} onClick={()=>{openTopic(video.topicIds[0]);setVideoOpen(video.topicIds[0])}}><span className="gg-help-video-play"><PlayCircle size={22}/></span><strong>{video.title}</strong><small>{video.summary}</small></button>)}</div>{!shownVideos.length&&<div className="gg-help-empty">Ingen videoar passar søket. Prøv eit anna ord.</div>}</section>}
 
-    {view === 'glossary' && <section className="gg-help-results"><div className="gg-help-result-head"><div><h3>Ord og uttrykk</h3><p>Ei enkel forklaring på ord frå trening, WOD og kaffibaren.</p></div><small>{shownTerms.length} ord</small></div><div className="gg-help-glossary">{shownTerms.map(([term,explanation]) => <article key={term}><strong>{term}</strong><p>{explanation}</p></article>)}{!shownTerms.length && <div className="gg-help-empty">Ingen ord passar søket.</div>}</div></section>}
+    {view === 'glossary' && <section className="gg-help-results">
+      <div className="gg-help-result-head"><div><h3>Ord og uttrykk</h3><p>Finn forklaringar etter tema, eller søk etter eit ord.</p></div><small>{HELP_GLOSSARY.length} ord</small></div>
+      {!query.trim() && glossaryCategory === 'all' ?
+        <div className="gg-help-glossary-categories">
+          {HELP_GLOSSARY_GROUPS.map(group => <button type="button" key={group.id} onClick={()=>setGlossaryCategory(group.id)}><span><strong>{group.title}</strong><small>{group.summary}</small></span><span className="gg-help-glossary-count">{group.terms.length}</span><ChevronRight size={16}/></button>)}
+          <button type="button" className="gg-help-glossary-all" onClick={()=>setGlossaryCategory('all-terms')}><span><strong>Sjå alle ord alfabetisk</strong><small>Heile ordlista samla på éi side</small></span><span className="gg-help-glossary-count">{HELP_GLOSSARY.length}</span><ChevronRight size={16}/></button>
+        </div> : <>
+          <div className="gg-help-glossary-nav"><button type="button" onClick={()=>{setGlossaryCategory('all');setQuery('')}}><ChevronLeft size={16}/> Kategoriar</button><strong>{query.trim()?'Søkeresultat':HELP_GLOSSARY_GROUPS.find(group=>group.id===glossaryCategory)?.title || 'Alle ord'}</strong><small>{shownTerms.length}</small></div>
+          <div className="gg-help-glossary">{shownTerms.map(([term,explanation]) => <article key={term}><strong>{term}</strong><p>{explanation}</p></article>)}{!shownTerms.length && <div className="gg-help-empty">Ingen ord passar søket. Prøv eit kortare ord.</div>}</div>
+        </>}
+    </section>}
 
     {view === 'faq' && <section className="gg-help-results"><div className="gg-help-result-head"><h3>Vanlege spørsmål</h3><small>{shownQuestions.length} svar</small></div>{shownQuestions.map(item => { const open = expandedQuestion === item.question; return <article className="gg-help-faq" key={item.question}><button type="button" aria-expanded={open} onClick={() => setExpandedQuestion(open ? '' : item.question)}><strong>{item.question}</strong><ChevronDown size={18}/></button>{open && <div><p>{item.answer}</p><button type="button" className="gg-help-more" onClick={() => openTopic(item.topic)}>Sjå steg-for-steg <ArrowRight size={15}/></button></div>}</article> })}{!shownQuestions.length && <div className="gg-help-empty">Ingen spørsmål passar søket.</div>}</section>}
 

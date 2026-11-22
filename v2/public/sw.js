@@ -1,5 +1,6 @@
 const CACHE_PREFIX = 'garasjegym-app-shell-'
-const CACHE_NAME = CACHE_PREFIX + 'v1'
+// v2 clears the old shell cache, which could contain partial video responses.
+const CACHE_NAME = CACHE_PREFIX + 'v2-media-fix'
 const APP_SCOPE = '/Garasjegym/'
 const SHELL_FILES = [
   APP_SCOPE,
@@ -31,6 +32,12 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(request.url)
   if (url.origin !== self.location.origin || !url.pathname.startsWith(APP_SCOPE)) return
+
+  // Let the browser request byte ranges directly. Cached 206 responses can
+  // break HTML5 video seeking/playback (especially on Android Chrome).
+  if (request.headers.has('range') ||
+      request.destination === 'video' || request.destination === 'audio' ||
+      /\.(mp4|m4v|webm|mp3|m4a|wav|ogg)$/i.test(url.pathname)) return
 
   if (request.mode === 'navigate') {
     event.respondWith((async () => {

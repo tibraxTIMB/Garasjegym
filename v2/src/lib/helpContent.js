@@ -266,6 +266,16 @@ export const HELP_GLOSSARY = [
   ['Venteliste','Du står i kø dersom ein gruppetime er full. Ein plass er ikkje stadfesta før du er teken inn.'],
 ]
 
+// Eitt fast område per omgrep. Det gjer ordlista lettare å bla i på mobil.
+export const HELP_GLOSSARY_GROUPS = [
+  {id:'wod',title:'WOD og øktformat',summary:'Økter, intervall og treningsklokke',terms:['AMRAP','Benchmark','Chipper','Complex','EMOM','For Time','Intervall','Stasjonssirkel','Tabata','Time cap','WOD']},
+  {id:'level',title:'Nivå og dosering',summary:'Korleis treninga blir tilpassa',terms:['Foundation','Reps','RIR','RPE','RX','Scaled','Set','1RM','%1RM']},
+  {id:'results',title:'Måling og resultat',summary:'Einingar, rundar og personlege rekordar',terms:['Cal','Kg','M / km','PR','R1, R2, R3']},
+  {id:'pt',title:'PT og gruppetimar',summary:'Trenar, påmelding og venteliste',terms:['PT','Gruppetime','Venteliste']},
+  {id:'movement',title:'Rørsle og teknikk',summary:'Kroppskontroll og hjelp til øvingar',terms:['Assistanse','Mobilitet']},
+  {id:'coffee',title:'Kaffibaren',summary:'Ord frå kaffimenyen',terms:['Doppio']},
+]
+
 export const HELP_FAQS = [
   { question:'Må eg velja øvingar for å starta ei fri økt?', answer:'Nei. Du kan starta klokka direkte, trena som du vil og lagra berre varigheita.', topic:'free-workout' },
   { question:'Eg har gløymt passordet eller manglar invitasjon. Kva gjer eg?', answer:'Bruk «Gløymt passord?» på innloggingssida. Er du ny, treng du ei personleg invitasjon frå administrator.', topic:'login-help' },

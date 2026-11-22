@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { existsSync, readFileSync, statSync } from 'node:fs'
-import { HELP_TOPICS, visibleHelpTopics } from '../src/lib/helpContent.js'
+import { HELP_TOPICS, HELP_GLOSSARY, HELP_GLOSSARY_GROUPS, visibleHelpTopics } from '../src/lib/helpContent.js'
 import { HELP_VIDEOS, helpVideoForTopic, visibleHelpVideos } from '../src/lib/helpVideos.js'
 import { makeVideoStoryboards, storyboardHash } from './generate-help-videos.mjs'
 
@@ -45,14 +45,26 @@ test('generated videos and posters exist and are not zero-byte placeholders', ()
   }
 })
 
-test('video is optional; the step-by-step text and next/previous navigation remain', () => {
+test('video has an explicit play action, direct mobile fallback and the complete text guide', () => {
   const help = read('../src/components/HelpCenter.jsx')
   assert.match(help, /visibleHelpVideos\(topics\)/)
   assert.match(help, /videoOpen===activeTopic\.id/)
-  assert.match(help, /controls playsInline preload="metadata"/)
+  assert.match(help, /controls playsInline preload="auto"/)
+  assert.match(help, /onClick=\{togglePlayback\}/)
+  assert.match(help, /Opna direkte/)
+  assert.match(help, /videoStatus==='error'/)
   assert.match(help, /activeTopic\.steps\.map/)
   assert.match(help, /Bla mellom rettleiingar/)
   assert.doesNotMatch(help, /autoPlay/)
+})
+
+test('glossary categories account for every word exactly once', () => {
+  const all = HELP_GLOSSARY.map(([term]) => term)
+  const grouped = HELP_GLOSSARY_GROUPS.flatMap(group => group.terms)
+  assert.equal(new Set(grouped).size, all.length)
+  assert.deepEqual([...grouped].sort(), [...all].sort())
+  assert.ok(HELP_GLOSSARY_GROUPS.some(group => group.id === 'wod'))
+  assert.ok(HELP_GLOSSARY_GROUPS.some(group => group.id === 'pt'))
 })
 
 test('help landing page offers category choices and an independent video tab', () => {
@@ -64,5 +76,7 @@ test('help landing page offers category choices and an independent video tab', (
   assert.match(help, /view === 'videos'/)
   assert.match(help, /role="tab" aria-selected=\{view === 'videos'\}/)
   assert.match(help, /setCategory\('all'\)/)
+  assert.match(help, /switchView\('videos'\)/)
+  assert.match(help, /gg-help-glossary-categories/)
   assert.match(css, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/)
 })

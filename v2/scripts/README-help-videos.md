@@ -20,10 +20,15 @@ verkelege namn, produksjonsdata eller eksterne tenester i opptaket.
 4. Kvar video blir lagra som MP4 og PNG-plakat under `public/help/videos/`,
    og blir med i Pages-publiseringa. Opptak vert ikkje skrivne tilbake til git.
 5. Byggejobben kontrollerer at alle fem videoane er ekte opptak før publisering.
+   Han prøver også «Spel videoen» i sjølve hjelpesenteret på mobilbreidd.
 
 Dette kostar ikkje noko i programvarelisensar. Opptaka har ingen
 forteljarstemme, og all instruksjonstekst finst også som vanleg, tilgjengeleg
 tekst i hjelpesenteret. Admin-videoen blir berre vist for administratorar.
+Nettlesaren får ein tydeleg startknapp og ei direktelenkje dersom den
+innebygde spelaren ikkje fungerer på ein mobil.
+Appens offline-mellomlager tek ikkje lenger over byte-førespurnader for
+MP4/video og lyd. Slik kan Chrome på Android spela av og spola i filene.
 
 ## Utvikling og vedlikehald
 
