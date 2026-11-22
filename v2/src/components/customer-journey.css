@@ -14,9 +14,8 @@
 .customer-home-grid .simple-home-action strong { font-size: clamp(16px, 3.6vw, 19px); }
 .customer-home-grid .simple-home-action small { font-size: 11px; }
 .customer-home-quick-actions { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 7px; }
-.customer-home-quick-actions button, .customer-home-advanced { display: inline-flex; justify-content: center; align-items: center; gap: 7px; border: 1px solid #425153; border-radius: 10px; min-height: 42px; padding: 10px 12px; color: #e4e9e7; background: #1c2729; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.customer-home-quick-actions button { display: inline-flex; justify-content: center; align-items: center; gap: 7px; border: 1px solid #425153; border-radius: 10px; min-height: 42px; padding: 10px 12px; color: #e4e9e7; background: #1c2729; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
 .customer-home-quick-actions button { flex: 1; }
-.customer-home-advanced { justify-self: center; margin: 2px auto 0; background: transparent; color: #c9d3d0; border-color: transparent; min-height: 36px; }
 .customer-training-plan { max-width: 830px; margin-inline: auto; }
 .customer-plan-heading { display: flex; gap: 12px; align-items: start; justify-content: space-between; }
 .customer-plan-heading h3 { margin-top: 4px; }

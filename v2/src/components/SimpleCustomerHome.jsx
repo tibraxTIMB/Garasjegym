@@ -1,7 +1,7 @@
-import { Activity, CalendarCheck2, CalendarDays, ChevronRight, ClipboardList, Coffee, Dumbbell, History, MessageSquareText, Settings2, Users } from 'lucide-react'
+import { Activity, CalendarCheck2, ChevronRight, ClipboardList, Coffee, Dumbbell, History, MessageSquareText, Users } from 'lucide-react'
 import './customer-journey.css'
 
-export default function SimpleCustomerHome({ onPlan, onFree, onWod, onManual, onSchedule, onHistory, onCoffee, onContactPT, onAdvanced, newPtWodCount = 0, coach = false }) {
+export default function SimpleCustomerHome({ onPlan, onFree, onWod, onManual, onSchedule, onHistory, onCoffee, onContactPT, newPtWodCount = 0, coach = false }) {
   return <div className="simple-home customer-home">
     <div className="customer-home-intro"><span className="section-kicker">DIN TRENING</span><h2>Kva vil du gjera?</h2></div>
     <button type="button" className="customer-plan-hero" onClick={onPlan}>
@@ -20,6 +20,5 @@ export default function SimpleCustomerHome({ onPlan, onFree, onWod, onManual, on
       <button type="button" onClick={onCoffee}><Coffee size={17} /> Bestill kaffi</button>
       <button type="button" onClick={onContactPT}><MessageSquareText size={17} /> {coach ? 'PT Studio' : 'Kontakt PT'}</button>
     </div>
-    <button type="button" className="customer-home-advanced" onClick={onAdvanced}><Settings2 size={16} /> Slå på avansert visning <ChevronRight size={15} /></button>
   </div>
 }

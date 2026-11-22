@@ -19,6 +19,16 @@ test('an explicit choice is written to the personal preference record', () => {
   assert.equal(displayModePreference('test-user', true).super_simple_mode, true)
 })
 
+test('the simple/advanced view control exists only on Mi side', () => {
+  const home = src('../src/components/SimpleCustomerHome.jsx')
+  const myPage = src('../src/components/MyPage.jsx')
+  const app = src('../src/App.jsx')
+  assert.doesNotMatch(home, /onAdvanced|simple-mode-toggle|Slå på avansert visning/)
+  assert.match(myPage, /simple-mode-setting/)
+  assert.match(myPage, /onSimpleModeChange\(!simpleMode\)/)
+  assert.match(app, /onSimpleModeChange=\{changeSimpleMode\}/)
+})
+
 test('customers have one canonical plan and both PT-program and WOD launch paths', () => {
   const app = src('../src/App.jsx')
   const plan = src('../src/components/MyTraining.jsx')
