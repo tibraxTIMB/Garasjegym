@@ -1,8 +1,9 @@
 -- READ ONLY: exact catalogue acceptance against the isolated replay target.
 -- Run only after the full migration + TEST fixture replay has completed.
 -- Source of truth: the original 135-name reconciled manifest, extended by
--- migration 20261121223000_expand_trx_olympic_core_library.sql (43 additions).
--- Exact acceptance: 178 distinct normalized system names.
+-- migration 20261121223000_expand_trx_olympic_core_library.sql (43 additions)
+-- and 20261122010000_expand_burpees_and_accessory_strength.sql (20 additions).
+-- Exact acceptance: 198 distinct normalized system names; two old names are inactive.
 DO $$
 DECLARE
   expanded_names text[] := ARRAY[
@@ -19,6 +20,16 @@ DECLARE
     'Hang Power Snatch', 'Hang Squat Snatch', 'High Hang Snatch',
     'Snatch Pull', 'Muscle Snatch', 'Tall Snatch',
     'Split Jerk', 'Power Jerk', 'Squat Jerk', 'Snatch Balance'
+  ];
+  accessory_names text[] := ARRAY[
+    'Bar-facing Burpee Over Barbell', 'Lateral Burpee Over Barbell',
+    'Burpee Over Dumbbell', 'Burpee Broad Jump', 'Burpee Pull-up',
+    'Burpee to Target', 'EZ Bar Skull Crusher', 'Dumbbell Skull Crusher',
+    'Dumbbell Biceps Curl', 'EZ Bar Biceps Curl', 'Barbell Biceps Curl',
+    'Incline Dumbbell Biceps Curl', 'Alternating Dumbbell Biceps Curl',
+    'Preacher EZ Bar Curl', 'Dumbbell Arnold Press', 'Dumbbell Front Raise',
+    'Cable Lateral Raise', 'Dumbbell Upright Row', 'Dumbbell Triceps Kickback',
+    'Overhead Cable Triceps Extension'
   ];
   expected_count integer;
   actual_count integer;
@@ -165,7 +176,7 @@ BEGIN
     ('Wall Ball Shot'),
     ('World greatest stretch')
   )
-  SELECT count(*) + cardinality(expanded_names) INTO expected_count FROM expected;
+  SELECT count(*) + cardinality(expanded_names) + cardinality(accessory_names) INTO expected_count FROM expected;
 
   SELECT count(*) INTO actual_count
   FROM public.exercises WHERE created_by IS NULL;
@@ -323,6 +334,14 @@ BEGIN
       AND lower(trim(e.name)) = lower(trim(added.name))
   );
 
+  SELECT missing_count + count(*) INTO missing_count
+  FROM unnest(accessory_names) AS added(name)
+  WHERE NOT EXISTS (
+    SELECT 1 FROM public.exercises e
+    WHERE e.created_by IS NULL
+      AND lower(trim(e.name)) = lower(trim(added.name))
+  );
+
   WITH expected(name) AS (VALUES
     ('Air Squat'),
     ('Ankle rocks'),
@@ -470,6 +489,10 @@ BEGIN
     AND NOT EXISTS (
       SELECT 1 FROM unnest(expanded_names) AS added(name)
       WHERE lower(trim(added.name)) = lower(trim(e.name))
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM unnest(accessory_names) AS added(name)
+      WHERE lower(trim(added.name)) = lower(trim(e.name))
     );
 
   SELECT count(*) INTO duplicate_count
@@ -497,7 +520,7 @@ BEGIN
       AND lower(trim(e.category)) = lower(trim(required.category))
   );
 
-  IF expected_count <> 178 OR actual_count <> expected_count
+  IF expected_count <> 198 OR actual_count <> expected_count
      OR missing_count > 0 OR unexpected_count > 0
      OR duplicate_count > 0 OR missing_body_area > 0
      OR coalesce(array_length(missing_categories, 1), 0) > 0 THEN

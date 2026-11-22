@@ -9,12 +9,13 @@ import { getFixedSlotTimerState } from '../lib/timerClock.js'
 import { wodFormatNeedsTime } from '../lib/wodTimeDial.js'
 import { applySharedReps, hasIndependentReps } from '../lib/wodReps.js'
 import { WOD_SIDE_OPTIONS, getWodSideLabel, getWodSideMode, isSideSelectableExercise } from '../lib/wodSides.js'
+import { exerciseBrowseCategory } from '../lib/exerciseCategories.js'
 import WodTimeDial from './WodTimeDial.jsx'
 import './wod-ordering.css'
 import './wod-builder-contrast.css'
 import './wod-wizard-refine.css'
 
-const categories=['Alle','Functional Fitness','Styrke','Complex','Kondisjon','Gymnastikk','Pilates','Yoga Flow','Mobilitet','Rehab','Golf']
+const categories=['Alle','CrossFit','Burpees','Olympiske løft','TRX','Kettlebell','Manualar','Vektstong','Styrke','Complex','Kjerne','Kondisjon','Gymnastikk','Pilates','Yoga','Mobilitet','Rehab','Golf']
 const areas=['Alle område','Heile kroppen','Overkropp','Underkropp','Kjerne','Hofte og sete','Rygg','Skuldrer og armar','Bryst','Fullkropp','Bein','Mage']
 const formatIcons={'AMRAP':'⏱','For Time':'🏁','Chipper':'☷','Couplet':'2×','Triplet':'3×','Ladder':'↗','Death By':'↘','Stasjonssirkel':'⌘','E1MOM':'◷','E1.25MOM':'◷','E2MOM':'◷','E3MOM':'◷','E4MOM':'◷','E5MOM':'◷','E6MOM':'◷','E7MOM':'◷','Intervall':'▥','Tabata':'▥','Row Intervals':'🚣','Strength':'🏋','Superset':'⇄','Complex':'▤','Eigen økt':'✳'}
 const formats=[
@@ -276,7 +277,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const equipmentOptions=[{value:'all',label:'Alt utstyr'},{value:'manual',label:'🏋️ Manualar'},{value:'kettlebell',label:'🔔 Kettlebell'},{value:'stong',label:'🏋️ Vektstong'},{value:'medisinball',label:'⚽ Medisinball'},{value:'kroppsvekt',label:'🤸 Kroppsvekt'},{value:'strikk',label:'〰️ Strikk'},{value:'romaskin',label:'🚣 Romaskin'},{value:'trx',label:'TRX'},{value:'box',label:'📦 Plyo box'}]
  const filtered=useMemo(()=>[...exercises,...GOLF_EXERCISES,...REHAB_EXERCISES,...COMPLEX_EXERCISES].filter(x=>{
   const rehab=isRehabExercise(x)
-  const exCategory=(x.category||'').toLowerCase();const matchesCategory=category==='Alle'||(category==='Rehab'?rehab:category==='Functional Fitness'?(!rehab&&!['pilates','yoga flow','yoga'].includes(exCategory)):category==='Gymnastikk'?(/pull|push|gymnast|handstand|hang|toes|muscle/.test((x.name||'').toLowerCase())&&!rehab):category==='Yoga Flow'?exCategory==='yoga flow'||exCategory==='yoga':!rehab&&exCategory===category.toLowerCase())
+  const exCategory=(x.category||'').toLowerCase();const matchesCategory=category==='Alle'||(category==='Rehab'?rehab:category==='Golf'?(x.name||'').startsWith('Golf –'):category==='Gymnastikk'?exerciseBrowseCategory(x)==='Gymnastikk':category==='Yoga'?exCategory==='yoga flow'||exCategory==='yoga':!rehab&&exerciseBrowseCategory(x)===category)
   const searchable=[x.name,x.category,x.equipment,x.body_area,x.description].filter(Boolean).join(' ').toLowerCase()
   const movementTags=movementTagsFor(x);const matchesMovement=movementFilter==='all'||movementTags.includes(movementFilter)
   const matchesSearch=!search||searchable.includes(search.toLowerCase())||movementTags.some(tag=>tag.includes(search.toLowerCase()))

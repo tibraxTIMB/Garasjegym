@@ -623,3 +623,27 @@
  .gg-training-session .manual-entry-intro { grid-template-columns:minmax(0,1fr); }
  .gg-training-session .manual-entry-intro button { width:100%; }
 }
+
+/* Three compact, closed-by-default exercise families; opening one uses a full row. */
+.gg-training-session .exercise-library-groups {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 7px;
+}
+.gg-training-session .exercise-library-group { min-width: 0; margin: 0; border-radius: 10px; }
+.gg-training-session .exercise-library-group[open] { grid-column: 1 / -1; }
+.gg-training-session .exercise-library-group > summary {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  min-height: 65px;
+  padding: 8px 4px;
+  text-align: center;
+}
+.gg-training-session .exercise-library-group[open] > summary { min-height: 42px; flex-direction: row; justify-content: space-between; padding-inline: 12px; }
+.gg-training-session .exercise-library-group > summary strong { font-size: clamp(10px, 2.4vw, 12px); line-height: 1.18; overflow-wrap: anywhere; }
+.gg-training-session .exercise-library-group > summary span { color: #efb257; font-size: 12px; font-weight: 800; }
+.gg-training-session .exercise-library-group .exercise-list { border: 0; background: transparent; }

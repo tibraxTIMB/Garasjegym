@@ -145,9 +145,12 @@
 .overview-dashboard .overview-rank-label { align-items: stretch; gap: 5px; width: 100%; padding: 10px 12px; border: 1px solid #93723f; border-radius: 12px; background: linear-gradient(110deg,#28271f,#172226); }
 .overview-rank-main { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 7px; }
 .overview-dashboard .overview-rank-title { flex: 0 1 auto; min-width: 0; padding: 6px 12px; font-size: clamp(12px,2vw,16px); overflow-wrap: anywhere; }
+.overview-dashboard .overview-rank-title::before,
+.overview-dashboard .overview-rank-title::after { display: none; }
 .overview-dashboard .overview-rank-stars { flex: 0 0 auto; min-width: 0; gap: 3px; padding: 4px 7px; }
 .overview-dashboard .overview-rank-stars span { font-size: 21px; }
-.overview-rank-progress { display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; color: #d2d6d2; font-size: 11px; }
+.overview-rank-progress { display: flex; justify-content: space-between; gap: 6px; flex-wrap: nowrap; color: #d2d6d2; font-size: 11px; }
+.overview-rank-progress > span,.overview-rank-progress small { white-space: nowrap; }
 .overview-rank-progress small { color: #f5c47c; font-size: 11px; }
 .overview-rank-progressbar { height: 4px; overflow: hidden; border-radius: 5px; background: #3f4746; }
 .overview-rank-progressbar span { display: block; height: 100%; border-radius: inherit; background: #e9a442; transition: width .2s ease; }

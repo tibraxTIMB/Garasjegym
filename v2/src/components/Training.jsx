@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Activity, CheckCircle2, ChevronDown, Clock3, Dumbbell, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2, Settings2, List, Volume2, VolumeX, Maximize2, Minimize2, X } from 'lucide-react'
+import { Activity, CheckCircle2, ChevronDown, Clock3, Dumbbell, House, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2, Settings2, List, Volume2, VolumeX, Maximize2, Minimize2, X } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { RELEASE_NAME } from '../lib/release.js'
 import HeartRateTrainingPanel from './HeartRateTrainingPanel.jsx'
@@ -14,6 +14,8 @@ import { getExerciseMeasurementFlags } from '../lib/exerciseMeasurements.js'
 import { exerciseRecordType } from '../lib/prMetrics.js'
 import { getWodSideLabel, isSideSelectableExercise, WOD_SIDE_OPTIONS } from '../lib/wodSides.js'
 import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
+import { exerciseBrowseCategory, exerciseBrowseOrder } from '../lib/exerciseCategories.js'
+import { restoreWorkoutDraft, saveWorkoutDraft, clearWorkoutDraft, resumedElapsedSeconds } from '../lib/workoutDraft.js'
 import './timer-viewport.css'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E1.25MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
@@ -62,10 +64,12 @@ function TimerPanel({id,title,layout,onMove,onResize,onLock,locked,children,devi
   <div className="timer-panel-content">{children}</div>
  </section>
 }
-function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], prescriptionLevel = 'rx', timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, onBackground = () => {}, visible = true, originLabel = 'EIGA ØKT', autoStartToken = 0 }) {
-  const [elapsed, setElapsed] = useState(0)
-  const [running, setRunning] = useState(false)
-  const [round, setRound] = useState(1)
+function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], prescriptionLevel = 'rx', timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, onBackground = () => {}, visible = true, originLabel = 'EIGA ØKT', autoStartToken = 0, resumeState = null }) {
+  const timerConfigKey = JSON.stringify({format,minutes,seconds,timerSettings})
+  const lastTimerConfigKey = useRef(timerConfigKey)
+  const [elapsed, setElapsed] = useState(() => resumedElapsedSeconds(resumeState))
+  const [running, setRunning] = useState(() => Boolean(resumeState?.running))
+  const [round, setRound] = useState(() => Number(resumeState?.currentRound) || 1)
   const [workSeconds, setWorkSeconds] = useState(getDefaultWorkSeconds(format,timerSettings))
   const [restSeconds, setRestSeconds] = useState(getDefaultRestSeconds(format,timerSettings))
   const [rounds, setRounds] = useState(timerSettings?.rounds ?? timerSettings?.workout_schema?.station_circuit?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
@@ -75,9 +79,12 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   // Desktop keeps the wider training workspace until the user expands it.
   const [focused, setFocused] = useState(() => readDeviceProfile().device !== 'desktop')
   const timerContainerRef = useRef(null)
-  const [hasStarted, setHasStarted] = useState(false)
-  const [phase, setPhase] = useState('Klar')
-  const [laps, setLaps] = useState([])
+  const [hasStarted, setHasStarted] = useState(() => Boolean(resumeState?.hasStarted))
+  const [countdownDeadline, setCountdownDeadline] = useState(() => resumeState?.countdownDeadline || null)
+  const [countdownRemaining, setCountdownRemaining] = useState(() => resumeState?.countdownDeadline ? Math.max(0, Math.ceil((resumeState.countdownDeadline - Date.now()) / 1000)) : 0)
+  const scheduledStartedAt = useRef(null)
+  const [phase, setPhase] = useState(() => resumeState?.phase || 'Klar')
+  const [laps, setLaps] = useState(() => Array.isArray(resumeState?.laps) ? resumeState.laps : [])
   const [soundOn, setSoundOn] = useState(true)
   const [showTimerSettings, setShowTimerSettings] = useState(false)
   const [stagePanel, setStagePanel] = useState(null)
@@ -241,23 +248,27 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   }
 
   useEffect(() => {
+    // Never erase an in-progress clock on the initial mount/StrictMode replay.
+    if (lastTimerConfigKey.current === timerConfigKey) return
+    lastTimerConfigKey.current = timerConfigKey
     timerRunStartedAt.current = null
     timerRunBaseElapsed.current = 0
     elapsedRef.current = 0
     setElapsed(0); setRunning(false); setRound(1); setPhase('Klar'); setLaps([])
+    setHasStarted(false); setCountdownDeadline(null); setCountdownRemaining(0); scheduledStartedAt.current = null
     setWorkSeconds(getDefaultWorkSeconds(format,timerSettings))
     setRestSeconds(getDefaultRestSeconds(format,timerSettings))
     setRounds(timerSettings?.rounds ?? timerSettings?.workout_schema?.station_circuit?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
     setDurationOverride(null); setEmomEveryOverride(null)
-  }, [format, minutes, seconds, timerSettings?.work_seconds, timerSettings?.workout_schema?.station_circuit?.work_seconds, timerSettings?.workout_schema?.station_circuit?.transition_seconds, timerSettings?.rest_seconds, timerSettings?.rounds, timerSettings?.workout_schema?.duration_seconds, timerSettings?.workout_schema?.time_cap_seconds, timerSettings?.workout_schema?.interval?.work_seconds, timerSettings?.workout_schema?.interval?.work_every_minutes, timerSettings?.workout_schema?.interval?.rest_seconds, timerSettings?.workout_schema?.rounds, timerSettings?.workout_schema?.station_circuit?.rounds])
+  }, [timerConfigKey])
 
-  // Starting a WOD from the library or a PT assignment launches the timer
-  // immediately. The token also retriggers this when the Timer component stays mounted.
+  // Opening a WOD prepares the clock. The athlete chooses a 10-second countdown
+  // or an immediate start from the full-screen clock itself.
   useEffect(() => {
     if (!autoStartToken) return
     timerRunBaseElapsed.current = 0
     elapsedRef.current = 0
-    timerRunStartedAt.current = Date.now()
+    timerRunStartedAt.current = null
     setElapsed(0)
     setRound(1)
     setLaps([])
@@ -265,10 +276,31 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     setWorkSeconds(getDefaultWorkSeconds(format,timerSettings))
     setRestSeconds(getDefaultRestSeconds(format,timerSettings))
     setRounds(timerSettings?.rounds ?? timerSettings?.workout_schema?.station_circuit?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
-    setHasStarted(true)
-    setPhase('PÅGÅR')
-    setRunning(true)
+    scheduledStartedAt.current = null
+    setCountdownDeadline(null); setCountdownRemaining(0)
+    setHasStarted(false)
+    setPhase('Klar')
+    setRunning(false)
   }, [autoStartToken])
+
+  useEffect(() => {
+    if (countdownDeadline === null) return undefined
+    const refresh = () => {
+      const secondsLeft = Math.max(0, Math.ceil((countdownDeadline - Date.now()) / 1000))
+      setCountdownRemaining(secondsLeft)
+      if (secondsLeft > 0) return
+      // The original deadline is retained so a sleeping browser catches up.
+      scheduledStartedAt.current = countdownDeadline
+      setCountdownDeadline(null)
+      setHasStarted(true)
+      setPhase('PÅGÅR')
+      setRunning(true)
+    }
+    refresh()
+    const id = window.setInterval(refresh, 150)
+    document.addEventListener('visibilitychange', refresh)
+    return () => { window.clearInterval(id); document.removeEventListener('visibilitychange', refresh) }
+  }, [countdownDeadline])
 
   useEffect(() => {
     if (!stop) return
@@ -299,7 +331,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   useEffect(() => {
     if (running) {
       timerRunBaseElapsed.current = elapsedRef.current
-      timerRunStartedAt.current = Date.now()
+      timerRunStartedAt.current = scheduledStartedAt.current ?? Date.now()
+      scheduledStartedAt.current = null
       const refresh = () => {
         if (timerRunStartedAt.current == null) return
         const nextElapsed = elapsedSecondsFromTimestamp(timerRunStartedAt.current, timerRunBaseElapsed.current)
@@ -307,7 +340,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       }
       refresh()
       const id = window.setInterval(refresh, 200)
-      return () => window.clearInterval(id)
+      document.addEventListener('visibilitychange', refresh)
+      return () => { window.clearInterval(id); document.removeEventListener('visibilitychange', refresh) }
     }
     if (timerRunStartedAt.current != null) {
       const finalElapsed = elapsedSecondsFromTimestamp(timerRunStartedAt.current, timerRunBaseElapsed.current)
@@ -317,7 +351,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     return undefined
   }, [running])
 
-  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isStationCircuit ? fixedSlotState.roundsCompleted : isAmrap ? laps.length : round, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isTimedInterval||isStationCircuit||hasTimeCap, currentRound }) }, [elapsed, laps, round, phase, running, isCountdown, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, currentRound])
+  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isStationCircuit ? fixedSlotState.roundsCompleted : isAmrap ? laps.length : round, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isTimedInterval||isStationCircuit||hasTimeCap, currentRound, hasStarted, countdownDeadline, savedAt:Date.now() }) }, [elapsed, laps, round, phase, running, isCountdown, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, currentRound, hasStarted, countdownDeadline])
 
   useEffect(() => {
     if (!running) return
@@ -371,7 +405,17 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const completedRounds = isAmrap ? laps.length : round
   const lapAction = () => { if(!running)return; setLaps(value => [...value, splitDuration(elapsed, value)]); setRound(value => value + 1); cue(1200, 0.1) }
   const splitAction = () => { if(!running)return; setLaps(value => [...value, splitDuration(elapsed, value)]); cue(1200, 0.1) }
-  const toggleRunning = () => { if (running) { setRunning(false); setPhase('PAUSE'); return } if (phase === 'FERDIG' || phase === 'TIDSGRENSE') return; setHasStarted(true); setPhase('PÅGÅR'); setRunning(true) }
+  const beginWorkout = (withCountdown = false) => {
+    if (hasStarted || running || countdownDeadline !== null) return
+    if (withCountdown) {
+      setCountdownRemaining(10)
+      setCountdownDeadline(Date.now() + 10000)
+      setPhase('NEDTELJING')
+      return
+    }
+    setHasStarted(true); setPhase('PÅGÅR'); setRunning(true)
+  }
+  const toggleRunning = () => { if (countdownDeadline !== null) { setCountdownDeadline(null);setCountdownRemaining(0);setPhase('Klar');return } if (!hasStarted) { beginWorkout(false); return } if (running) { setRunning(false); setPhase('PAUSE'); return } if (phase === 'FERDIG' || phase === 'TIDSGRENSE') return; setPhase('PÅGÅR'); setRunning(true) }
   const visibleStationIndex = Math.min(stationCount - 1, fixedSlotState.currentSlotIndex % stationCount)
   const currentStationName = stationList[visibleStationIndex]?.exercise_name || stationList[visibleStationIndex]?.name || `Stasjon ${visibleStationIndex + 1}`
   const stageExerciseName = isStationCircuit ? currentStationName : isTimedInterval ? currentIntervalExercise : isEMOM ? currentEmomExercise : activeExercise || exerciseList[0]?.exercise_name || exerciseList[0]?.name || ''
@@ -398,7 +442,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     ]
     return {id:item.key||item.exercise_id||item.station_number||item.exercise_name,name:item.is_rest?'Pause':item.exercise_name||item.name||'Øving',dose:details.filter(Boolean).join(' · ')||item.prescription_label||''}
   })
-  const resetTimer = () => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
+  const resetTimer = () => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; scheduledStartedAt.current=null; setCountdownDeadline(null);setCountdownRemaining(0); setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
   return <div ref={timerContainerRef} className={stageVisible ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
     {stageVisible ? <section className="gg-live-timer" aria-label="Fullskjermsklokke for treningsøkt">
       <header className="gg-live-timer__header">
@@ -408,18 +452,18 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           <button type="button" onClick={()=>setSoundOn(value=>!value)} aria-label={soundOn?'Slå av lyd':'Slå på lyd'} title={soundOn?'Lyd på':'Lyd av'}>{soundOn?<Volume2 size={21}/>:<VolumeX size={21}/>}</button>
           <button type="button" onClick={toggleBrowserFullscreen} aria-label={browserFullscreen?'Vis nettlesarfelt':'Skjul nettlesarfelt – ekte fullskjerm'} title="Fullskjerm">{browserFullscreen?<Minimize2 size={21}/>:<Maximize2 size={21}/>}</button>
           <button type="button" className={stagePanel==='settings'?'is-selected':''} onClick={()=>setStagePanel(value=>value==='settings'?null:'settings')} aria-label="Tilpass klokka" title="Tilpass klokka" aria-expanded={stagePanel==='settings'}><Settings2 size={21}/></button>
-          <button type="button" onClick={returnToApp} aria-label="Til appen – økta held fram" title="Til appen – økta held fram"><X size={21}/></button>
+          <button type="button" onClick={returnToApp} aria-label="Til oversikt – økta held fram" title="Til oversikt – økta held fram"><House size={20}/></button>
         </div>
       </header>
       <div className={laps.length?'gg-live-timer__body gg-live-timer__body--with-laps':'gg-live-timer__body'}>
         <div className="gg-live-timer__clock-area">
-          <div className="gg-live-timer__phase"><span className={running?'gg-live-timer__dot is-running':'gg-live-timer__dot'}/>{stageIsComplete?'FERDIG':!hasStarted?'KLAR':!running?'PAUSE':(isEMOM||isTimedInterval||isStationCircuit)?currentPhase:'PÅGÅR'}</div>
-          <div className="gg-live-timer__time" style={{'--gg-time-scale': Math.max(.78,Math.min(1.16,appearance.clockSize/112))}} role="timer" aria-label={`${stageTimeLabel}: ${clock(primaryTime)}`}>{clock(primaryTime)}</div>
-          <div className="gg-live-timer__time-label">{stageTimeLabel}</div>
+          <div className="gg-live-timer__phase"><span className={running?'gg-live-timer__dot is-running':'gg-live-timer__dot'}/>{countdownDeadline!==null?'GJER DEG KLAR':stageIsComplete?'FERDIG':!hasStarted?'KLAR':!running?'PAUSE':(isEMOM||isTimedInterval||isStationCircuit)?currentPhase:'PÅGÅR'}</div>
+          <div className="gg-live-timer__time" style={{'--gg-time-scale': Math.max(.78,Math.min(1.16,appearance.clockSize/112))}} role="timer" aria-label={countdownDeadline!==null?`Startar om ${countdownRemaining} sekund`:`${stageTimeLabel}: ${clock(primaryTime)}`}>{countdownDeadline!==null?countdownRemaining:clock(primaryTime)}</div>
+          <div className="gg-live-timer__time-label">{countdownDeadline!==null?'STARTAR OM':stageTimeLabel}</div>
           {(isCountdown||isEMOM||isTimedInterval||isStationCircuit||hasTimeCap)&&<div className="gg-live-timer__time-secondary"><span>{isCountdown?'Medgått':isEMOM?'Økta att':isTimedInterval||isStationCircuit?'Økta att':'Tid att'}</span><b>{clock(isCountdown?elapsed:remainingTotal)}</b></div>}
           {stageLapHistory.length>0&&<div className="gg-live-timer__clock-laps" aria-label={stageLapLabel}>
-            <div className="gg-live-timer__laps-heading"><span>RUNDETIDER</span><button type="button" onClick={()=>setStagePanel('laps')}>Vis alle ({laps.length})</button></div>
             <ol className="gg-live-timer__lap-preview">{stageLapHistory.slice(-3).map(lap=><li key={lap.round}><span>{isAmrap?'R':'M'}{lap.round}</span><b>{clock(lap.duration)}</b></li>)}</ol>
+            <button type="button" className="gg-live-timer__lap-all" onClick={()=>setStagePanel('laps')} aria-label={`Vis alle ${laps.length} rundetider`}>+{laps.length}</button>
           </div>}
         </div>
         <div className="gg-live-timer__context">
@@ -429,14 +473,15 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
             {isAmrap?<ol>{stageRows.map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span>{item.dose&&<small>{item.dose}</small>}</li>)}</ol>:<strong>{stageExerciseName||'Sjå øvingslista'}</strong>}
             {!isAmrap&&stageNextExercise&&stageNextExercise!==stageExerciseName&&<small className="gg-live-timer__next">Neste: {stageNextExercise}</small>}
           </div>
-          <div className="gg-live-timer__music" aria-label="Musikkstyring"><MusicMiniPlayer liveCompact/></div>
         </div>
       </div>
+      <div className="gg-live-timer__music-dock" aria-label="Musikkstyring"><MusicMiniPlayer liveCompact/></div>
       <footer className="gg-live-timer__footer">
-        <button type="button" className="gg-live-timer__pause" onClick={toggleRunning} disabled={stageIsComplete}>{running?<><Pause size={21}/> Pause</>:phase==='PAUSE'?<><Play size={21}/> Hald fram</>:<><Play size={21}/> Start</>}</button>
-        {isAmrap&&<button type="button" className="gg-live-timer__round-button" onClick={lapAction} disabled={!running}><Plus size={21}/> Runde</button>}
-        {(isStopwatch||isForTime)&&<button type="button" className="gg-live-timer__split" onClick={splitAction} disabled={!running}>Mellomtid</button>}
-        <button type="button" className="gg-live-timer__finish" onClick={onFinish} disabled={!hasStarted}><CheckCircle2 size={20}/> Avslutt</button>
+        <button type="button" className="gg-live-timer__pause" onClick={toggleRunning} disabled={stageIsComplete}>{countdownDeadline!==null?<><X size={21}/> Avbryt</>:running?<><Pause size={21}/> Pause</>:phase==='PAUSE'?<><Play size={21}/> Hald fram</>:<><Play size={21}/> Start no</>}</button>
+        {!hasStarted&&countdownDeadline===null&&<button type="button" className="gg-live-timer__round-button" onClick={()=>beginWorkout(true)}><Play size={21}/> Start · 10 sek</button>}
+        {hasStarted&&isAmrap&&<button type="button" className="gg-live-timer__round-button" onClick={lapAction} disabled={!running}><Plus size={21}/> Runde</button>}
+        {hasStarted&&(isStopwatch||isForTime)&&<button type="button" className="gg-live-timer__split" onClick={splitAction} disabled={!running}>Mellomtid</button>}
+        {hasStarted&&<button type="button" className="gg-live-timer__finish" onClick={onFinish}><CheckCircle2 size={20}/> Avslutt</button>}
       </footer>
       {stagePanel&&<div className="gg-live-timer__scrim" onClick={()=>setStagePanel(null)} role="presentation"/>}
       {stagePanel==='wod'&&<aside className="gg-live-timer__drawer" aria-label="Øvingar i WOD-en"><header><strong>Øvingar · {stageRows.length}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk øvingslista"><X size={20}/></button></header><ol className="gg-live-timer__all-exercises">{stageRows.map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span><small>{item.dose}</small></li>)}</ol>{!stageRows.length&&<p>Ingen øvingar er lagde til.</p>}</aside>}
@@ -529,7 +574,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   </div>
 }
 
-export default function Training({ launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, onTimerSnapshot, onBackground, visible = true, reselectToken = 0, simpleMode = false, quickStart = false, onQuickStartConsumed, quickManualEntry = false, onQuickManualEntryConsumed, onSaved, onDiscard }) {
+export default function Training({ memberId = '', launchWodId = null, launchClassSessionId = null, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, onTimerSnapshot, onBackground, visible = true, reselectToken = 0, simpleMode = false, quickStart = false, onQuickStartConsumed, quickManualEntry = false, onQuickManualEntryConsumed, onSaved, onDiscard }) {
+  const savedDraft = useRef(restoreWorkoutDraft(memberId)).current
   const [wods, setWods] = useState([])
   const [dailyWodId,setDailyWodId]=useState(null)
   const [exercises, setExercises] = useState([])
@@ -546,39 +592,50 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [saving, setSaving] = useState(false)
-  const [saveToken, setSaveToken] = useState(() => crypto.randomUUID())
-  const [mode, setMode] = useState('home')
+  const [saveToken, setSaveToken] = useState(() => savedDraft?.saveToken || crypto.randomUUID())
+  const [mode, setMode] = useState(() => savedDraft?.mode || 'home')
   const [reviewOpen,setReviewOpen]=useState(false)
   const [finishOpen,setFinishOpen]=useState(false)
-  const [manualEntry,setManualEntry]=useState(false)
-  const [sessionPrepared,setSessionPrepared]=useState(false)
-  const [source, setSource] = useState(null)
-  const [wodLevel,setWodLevel]=useState('rx')
-  const [classSessionId, setClassSessionId] = useState(null)
-  const [launchLinkContext,setLaunchLinkContext]=useState(emptyTrainingLaunchContext)
-  const [title, setTitle] = useState('')
-  const [workoutDate,setWorkoutDate]=useState(()=>localDateISO())
-  const [manualWodIds,setManualWodIds]=useState([])
+  const [manualEntry,setManualEntry]=useState(() => Boolean(savedDraft?.manualEntry))
+  const [sessionPrepared,setSessionPrepared]=useState(() => Boolean(savedDraft?.sessionPrepared))
+  const [source, setSource] = useState(() => savedDraft?.source || null)
+  const [wodLevel,setWodLevel]=useState(() => savedDraft?.wodLevel || 'rx')
+  const [classSessionId, setClassSessionId] = useState(() => savedDraft?.classSessionId || null)
+  const [launchLinkContext,setLaunchLinkContext]=useState(() => savedDraft?.launchLinkContext || emptyTrainingLaunchContext())
+  const [title, setTitle] = useState(() => savedDraft?.title || '')
+  const [workoutDate,setWorkoutDate]=useState(()=>savedDraft?.workoutDate || localDateISO())
+  const [manualWodIds,setManualWodIds]=useState(() => savedDraft?.manualWodIds || [])
   const [manualWodSelect,setManualWodSelect]=useState('')
   const [manualWodPickerOpen,setManualWodPickerOpen]=useState(false)
   const [manualWodQuery,setManualWodQuery]=useState('')
-  const [format, setFormat] = useState('Fri trening')
-  const [duration, setDuration] = useState('10')
-  const [durationSeconds, setDurationSeconds] = useState('0')
-  const [note, setNote] = useState('')
-  const [items, setItems] = useState([])
+  const [format, setFormat] = useState(() => savedDraft?.format || 'Fri trening')
+  const [duration, setDuration] = useState(() => savedDraft?.duration || '10')
+  const [durationSeconds, setDurationSeconds] = useState(() => savedDraft?.durationSeconds || '0')
+  const [note, setNote] = useState(() => savedDraft?.note || '')
+  const [items, setItems] = useState(() => savedDraft?.items || [])
   const [query, setQuery] = useState('')
-  const [scoreRounds, setScoreRounds] = useState('')
-  const [scoreReps, setScoreReps] = useState('')
-  const [scoreTime, setScoreTime] = useState('')
-  const [scoreLoad, setScoreLoad] = useState('')
-  const [scoreCalories, setScoreCalories] = useState('')
-  const [scoreDistance, setScoreDistance] = useState('')
-  const [scoreUnit, setScoreUnit] = useState('m')
-  const [activeExerciseIndex, setActiveExerciseIndex] = useState(0)
-  const [timerSnapshot, setTimerSnapshot] = useState({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
+  const [scoreRounds, setScoreRounds] = useState(() => savedDraft?.scoreRounds || '')
+  const [scoreReps, setScoreReps] = useState(() => savedDraft?.scoreReps || '')
+  const [scoreTime, setScoreTime] = useState(() => savedDraft?.scoreTime || '')
+  const [scoreLoad, setScoreLoad] = useState(() => savedDraft?.scoreLoad || '')
+  const [scoreCalories, setScoreCalories] = useState(() => savedDraft?.scoreCalories || '')
+  const [scoreDistance, setScoreDistance] = useState(() => savedDraft?.scoreDistance || '')
+  const [scoreUnit, setScoreUnit] = useState(() => savedDraft?.scoreUnit || 'm')
+  const [activeExerciseIndex, setActiveExerciseIndex] = useState(() => savedDraft?.activeExerciseIndex || 0)
+  const [timerSnapshot, setTimerSnapshot] = useState(() => savedDraft?.timerSnapshot || { elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
+  const [restoredTimerSnapshot,setRestoredTimerSnapshot] = useState(() => savedDraft?.timerSnapshot ? {...savedDraft.timerSnapshot,restored:true} : null)
   const [timerLaunchId, setTimerLaunchId] = useState(0)
   const loadSequence = useRef(0)
+  useEffect(() => {
+    if (mode !== 'active') { clearWorkoutDraft(memberId); return }
+    saveWorkoutDraft(memberId, {
+      mode, manualEntry, sessionPrepared, source, wodLevel, classSessionId,
+      launchLinkContext, title, workoutDate, manualWodIds, format, duration,
+      durationSeconds, note, items, scoreRounds, scoreReps, scoreTime, scoreLoad,
+      scoreCalories, scoreDistance, scoreUnit, saveToken,
+      activeExerciseIndex, timerSnapshot,
+    })
+  }, [memberId,mode,manualEntry,sessionPrepared,source,wodLevel,classSessionId,launchLinkContext,title,workoutDate,manualWodIds,format,duration,durationSeconds,note,items,scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance,scoreUnit,saveToken,activeExerciseIndex,timerSnapshot])
   useEffect(()=>{onTimerSnapshot?.({...timerSnapshot,title,format,sessionOpen:mode==='active',sessionPrepared})},[timerSnapshot,title,format,mode,sessionPrepared,onTimerSnapshot])
   useEffect(()=>()=>onTimerSnapshot?.({
     elapsed:0,laps:[],roundsCompleted:0,phase:'Klar',running:false,
@@ -711,6 +768,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       const hasUnsavedWorkout = sessionPrepared || manualEntry || timerSnapshot.elapsed > 0 || items.some(item=>item.exercise_name.trim())
       if (hasUnsavedWorkout && !window.confirm('Byta økttype? Den uferdige økta og registrerte rundar blir forkasta.')) return
       setFinishOpen(false)
+      setRestoredTimerSnapshot(null)
       setSessionPrepared(false)
       setManualEntry(false)
       setSource(null)
@@ -730,13 +788,14 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
 
   function leaveWorkout() {
     if (!window.confirm('Forkasta økta? Ho blir sletta utan å bli lagra i treningsloggen.')) return
-    setFinishOpen(false); setMode('home'); setSource(null); setClassSessionId(null); setItems([])
+    setFinishOpen(false); setMode('home'); setRestoredTimerSnapshot(null); setSource(null); setClassSessionId(null); setItems([])
     setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
     clearTimerSnapshot()
     onDiscard?.()
   }
 
   function startWorkout(wod = null, { autoStart = Boolean(wod) } = {}) {
+    setRestoredTimerSnapshot(null)
     setManualEntry(false)
     // A free session must be composed before the timer takes over the phone.
     setSessionPrepared(Boolean(wod))
@@ -816,6 +875,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
   }
 
   function startManualWorkout(){
+    setRestoredTimerSnapshot(null)
     setManualEntry(true)
     setSessionPrepared(false)
     setTimerLaunchId(0);setClassSessionId(null);setLaunchLinkContext(emptyTrainingLaunchContext());setSaveToken(crypto.randomUUID());setSource(null);setWodLevel('rx')
@@ -987,7 +1047,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         {['AMRAP','Nedteljing','E1MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM'].includes(format) && <label>Øktlengd (minutt)<input type="number" min="1" max="600" value={duration} onChange={e => setDuration(e.target.value)}/></label>}
       </div>
       {source?.timer_settings?.workout_schema?.library_category==='warmup'&&<section className="warmup-execution-guide" aria-label="Oppvarming i to delar"><header><span className="section-kicker">OPPVARMING · TO DELAR</span><strong>Førebu kroppen og finn arbeidsnivået</strong></header><div className="warmup-execution-columns"><article><span>1</span><div><strong>Felles oppvarming</strong><p>Gradvis spissing mot hovud-WOD sin stimulus og rørsleform.</p><ul>{items.filter(item=>item.warmup_phase!=='movement_rehearsal'&&!item.is_rest).map(item=><li key={item.key}>{item.exercise_name}</li>)}</ul></div></article><article><span>2</span><div><strong>Fri teknisk innøving</strong><p>Prøv hovudrørsla med lette vekter. Auk gradvis og finn ditt eige arbeidsnivå for WOD-en.</p><ul>{items.filter(item=>item.warmup_phase==='movement_rehearsal'&&!item.is_rest).map(item=><li key={item.key}>{item.exercise_name}</li>)}</ul></div></article></div></section>}
-       {manualEntry ? <section className="manual-entry-intro" aria-label="Manuell treningsregistrering"><div><span className="section-kicker">ETTERREGISTRERING</span><strong>Registrer ei økt du allereie har gjennomført</strong><p>Legg inn øvingar, sett, reps, vekt, høgd, tid eller distanse. Ingen timer blir starta.</p></div><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Kontroller og lagre</button></section> : sessionPrepared ? <><Timer visible={visible} onBackground={onBackground} autoStartToken={timerLaunchId} format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} nextExercise={items[activeExerciseIndex + 1]?.exercise_name || ''} exerciseList={items} prescriptionLevel={wodLevel} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={() => setFinishOpen(true)} originLabel={classSessionId ? 'GRUPPETIME' : launchAssignmentId ? 'TILDELT FRÅ PT' : source ? 'EIGEN WOD' : 'EIGA ØKT'}/><HeartRateTrainingPanel /><div className="workout-finish-actions"><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Avslutt økta · gå til resultat</button></div></> : <section className="free-session-setup" aria-label="Førebu fri økt"><div><span className="section-kicker">STEG 1 AV 2 · FRI ØKT</span><strong>Vel øvingar før du startar klokka</strong><p>Søk i øvingsbiblioteket nedanfor, legg til øvingane du vil trene, og juster sett eller belastning. Timeren opnar først når du vel «Start økta».</p></div><button type="button" className="primary-button" onClick={()=>{setSessionPrepared(true);setTimerLaunchId(value=>value+1)}}><Play size={18}/> Start økta{items.filter(item=>item.exercise_name.trim()).length ? ` · ${items.filter(item=>item.exercise_name.trim()).length} øvingar` : ' utan øvingar'}</button></section>}
+       {manualEntry ? <section className="manual-entry-intro" aria-label="Manuell treningsregistrering"><div><span className="section-kicker">ETTERREGISTRERING</span><strong>Registrer ei økt du allereie har gjennomført</strong><p>Legg inn øvingar, sett, reps, vekt, høgd, tid eller distanse. Ingen timer blir starta.</p></div><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Kontroller og lagre</button></section> : sessionPrepared ? <><Timer visible={visible} onBackground={onBackground} autoStartToken={timerLaunchId} resumeState={restoredTimerSnapshot} format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} nextExercise={items[activeExerciseIndex + 1]?.exercise_name || ''} exerciseList={items} prescriptionLevel={wodLevel} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={() => setFinishOpen(true)} originLabel={classSessionId ? 'GRUPPETIME' : launchAssignmentId ? 'TILDELT FRÅ PT' : source ? 'EIGEN WOD' : 'EIGA ØKT'}/><HeartRateTrainingPanel /><div className="workout-finish-actions"><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Avslutt økta · gå til resultat</button></div></> : <section className="free-session-setup" aria-label="Førebu fri økt"><div><span className="section-kicker">STEG 1 AV 2 · FRI ØKT</span><strong>Vel øvingar før du startar klokka</strong><p>Søk i øvingsbiblioteket nedanfor, legg til øvingane du vil trene, og juster sett eller belastning. Timeren opnar først når du vel «Start økta».</p></div><button type="button" className="primary-button" onClick={()=>{setSessionPrepared(true);setTimerLaunchId(value=>value+1)}}><Play size={18}/> Start økta{items.filter(item=>item.exercise_name.trim()).length ? ` · ${items.filter(item=>item.exercise_name.trim()).length} øvingar` : ' utan øvingar'}</button></section>}
       {items.length > 0 && format!=='Stasjonssirkel' && <section className="engine-section">
         <div className="engine-section-title"><h4>{format==='Stasjonssirkel'?'Stasjonane i økta':'WOD / øvingsrekkjefølgje'}</h4><span>{format==='Stasjonssirkel'?'Alle stasjonar – roter etter eiga startplassering':'Vel øvinga du arbeider med'}</span></div>
         <div className={format==='Stasjonssirkel'?'timer-station-grid':'wod-list'}>{items.map((item, index) => format==='Stasjonssirkel' ? <article className="timer-station-card" key={item.key}><span>STASJON {index+1}</span><strong>{item.exercise_name||'Øving'}</strong><small>{item.reps_mode==='amrap'?'AMRAP · maks reps':item.reps?item.reps+' reps':'Valfritt tal reps'}</small></article> : <button type="button" key={item.key} className={index === activeExerciseIndex ? 'secondary-button active' : 'secondary-button'} onClick={() => setActiveExerciseIndex(index)}>{index + 1}. {item.is_rest?'⏸ Pause · '+clock(Number(item.rest_duration_seconds)||30):item.exercise_name || 'Ny øving'}</button>)}</div>
@@ -1060,7 +1120,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
         </section>
       </div>}
     </form> : <>
-      {mode==='wods' ? <div className="training-wod-chooser-head"><div><span className="section-kicker">TRENING · WOD</span><h3>Vel ein WOD</h3><p>Trykk «Utfør WOD» for å opna den store klokka.</p></div><button type="button" className="secondary-button" onClick={()=>setMode('home')}>← Økttypar</button></div> : <>
+      {mode==='wods' ? <div className="training-wod-chooser-head"><div><span className="section-kicker">TRENING · WOD</span><h3>Vel ein WOD</h3><p>Opna klokka og vel start med 10 sekund nedteljing.</p></div><button type="button" className="secondary-button" onClick={()=>setMode('home')}>← Økttypar</button></div> : <>
       <div className="training-heading"><div><div className="section-kicker">{simpleMode ? "SUPERENKEL MODUS · TRENING" : "TRENING · MOTOR"}</div><h3>{simpleMode ? "Kva vil du gjera i dag?" : "Vel øktform"}</h3>{simpleMode&&<p>Vel ei ferdig økt eller start di eiga. Resultatet blir lagra på profilen din.</p>}</div>{!simpleMode&&<span className="count-pill">{RELEASE_NAME}</span>}</div>
       <div className={simpleMode ? "engine-entry-grid simple-entry-grid" : "engine-entry-grid"}>
         <button type="button" onClick={() => startWorkout()}><Dumbbell size={20}/><strong>{simpleMode ? "Start trening" : "Fri trening"}</strong><small>{simpleMode ? "Vel øvingar og start klokka" : "Bygg økta frå botnen"}</small></button>
@@ -1108,7 +1168,7 @@ export default function Training({ launchWodId = null, launchClassSessionId = nu
       </section>
       <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
         <div className="training-heading"><div><div className="section-kicker">BIBLIOTEK</div><h3>Øvingsbibliotek</h3></div><span className="count-pill">{exercises.length} øvingar</span></div>
-        {exercises.length ? <><div className="exercise-library-toolbar"><label className="exercise-library-search"><Search size={15}/><input value={libraryQuery} onChange={e => setLibraryQuery(e.target.value)} placeholder="Søk etter øving eller kategori …"/></label><button type="button" className={favoritesOnly ? 'secondary-button favorite-filter active' : 'secondary-button favorite-filter'} onClick={() => setFavoritesOnly(v => !v)}><Star size={14}/>{favoritesOnly ? 'Vis alle øvingar' : 'Favorittar'}</button></div>{(()=>{const q=libraryQuery.trim().toLowerCase();const filtered=exercises.filter(ex=>(!favoritesOnly||favoriteNames.includes(ex.name))&&(!q||[ex.name,ex.category,ex.equipment].some(v=>(v||'').toLowerCase().includes(q))));const categories=[...new Set(filtered.map(ex=>ex.category||'Anna'))].sort((a,b)=>a.localeCompare(b,'nn'));return <div className="exercise-library-groups">{categories.length?categories.map((category,index)=>{const group=filtered.filter(ex=>(ex.category||'Anna')===category);return <details className="exercise-library-group" key={category} open={!!q||index===0}><summary><strong>{category}</strong><span>{group.length} øvingar</span></summary><div className="exercise-list">{group.map(ex=><div className="exercise-row" key={ex.id}><Dumbbell size={16}/><div><strong>{ex.name}</strong><span>{[ex.category,ex.equipment].filter(Boolean).join(' · ')}</span></div><button type="button" className={favoriteNames.includes(ex.name)?'favorite-star selected':'favorite-star'} onClick={()=>toggleFavorite(ex)} aria-label={favoriteNames.includes(ex.name)?'Fjern favoritt':'Legg til favoritt'}><Star size={17} fill={favoriteNames.includes(ex.name)?'currentColor':'none'}/></button></div>)}</div></details>}) : <div className="empty-state">{favoritesOnly?'Du har ikkje merkt nokon øvingar som favoritt.':'Ingen øvingar passar søket.'}</div>}</div>})()}</> : <div className="empty-state">Øvingsbiblioteket er tomt. Øvingar kan leggjast inn av admin/manager.</div>}
+        {exercises.length ? <><div className="exercise-library-toolbar"><label className="exercise-library-search"><Search size={15}/><input value={libraryQuery} onChange={e => setLibraryQuery(e.target.value)} placeholder="Søk etter øving eller kategori …"/></label><button type="button" className={favoritesOnly ? 'secondary-button favorite-filter active' : 'secondary-button favorite-filter'} onClick={() => setFavoritesOnly(v => !v)}><Star size={14}/>{favoritesOnly ? 'Vis alle øvingar' : 'Favorittar'}</button></div>{(()=>{const q=libraryQuery.trim().toLowerCase();const filtered=exercises.filter(ex=>(!favoritesOnly||favoriteNames.includes(ex.name))&&(!q||[ex.name,ex.category,ex.equipment,exerciseBrowseCategory(ex)].some(v=>(v||'').toLowerCase().includes(q))));const categories=[...new Set(filtered.map(exerciseBrowseCategory))].sort(exerciseBrowseOrder);return <div className="exercise-library-groups">{categories.length?categories.map(category=>{const group=filtered.filter(ex=>exerciseBrowseCategory(ex)===category);return <details className="exercise-library-group" key={`${category}-${Boolean(q)}`} open={Boolean(q)}><summary><strong>{category}</strong><span>{group.length}</span></summary><div className="exercise-list">{group.map(ex=><div className="exercise-row" key={ex.id}><Dumbbell size={16}/><div><strong>{ex.name}</strong><span>{[ex.category,ex.equipment].filter(Boolean).join(' · ')}</span></div><button type="button" className={favoriteNames.includes(ex.name)?'favorite-star selected':'favorite-star'} onClick={()=>toggleFavorite(ex)} aria-label={favoriteNames.includes(ex.name)?'Fjern favoritt':'Legg til favoritt'}><Star size={17} fill={favoriteNames.includes(ex.name)?'currentColor':'none'}/></button></div>)}</div></details>}) : <div className="empty-state">{favoritesOnly?'Du har ikkje merkt nokon øvingar som favoritt.':'Ingen øvingar passar søket.'}</div>}</div>})()}</> : <div className="empty-state">Øvingsbiblioteket er tomt. Øvingar kan leggjast inn av admin/manager.</div>}
       </section>
       </details>}
     </>}
