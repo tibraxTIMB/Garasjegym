@@ -14,13 +14,11 @@ import time
 from urllib.parse import quote
 
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from help_video_narration import VoiceTimeline
 
 
 def show_caption(page, text, seconds=2.8):
-    # The instructions come directly from helpContent.js via the Node caller.
-    short = text if len(text) <= 160 else text[:157].rsplit(' ', 1)[0] + ' …'
-    page.evaluate('(text) => window.__ggVideo.setCaption(text)', short)
-    page.wait_for_timeout(int(seconds * 1000))
+    page._gg_narration.show_caption(page, text, seconds)
 
 
 def click(page, name, timeout=8000):
@@ -31,6 +29,7 @@ def click(page, name, timeout=8000):
 def record_steps(page, video):
     steps = [scene['text'] for scene in video['scenes'] if scene['kind'] == 'step']
     name = video['id']
+    show_caption(page, video['scenes'][0]['text'], 2.5)
     if name == 'kom-i-gang':
         show_caption(page, steps[0]); click(page, 'Mi side')
         show_caption(page, steps[1]); click(page, 'Profil og konto')
@@ -86,20 +85,24 @@ def record_steps(page, video):
         for step in steps[4:]: show_caption(page, step, 2.5)
     else:
         raise ValueError(f'Ukjend videoscenario: {name}')
+    show_caption(page, video['scenes'][-1]['text'], 2.5)
 
 
-def build_video(browser, video, base_url, output, tmp):
+def build_video(browser, video, base_url, output, tmp, voice):
+    narration = VoiceTimeline(voice, video['scenes'], tmp / video['id'])
     context = browser.new_context(
         viewport={'width': 390, 'height': 844}, device_scale_factor=1,
         record_video_dir=str(tmp), record_video_size={'width': 390, 'height': 844},
         locale='nn-NO', color_scheme='dark', reduced_motion='reduce',
     )
     context.route('**/*', lambda route: route.continue_() if route.request.url.startswith(base_url) else route.abort())
+    narration.start()
     page = context.new_page()
     errors = []
     page.on('pageerror', lambda exc: errors.append(str(exc)))
     scenario = 'maintenance' if video['id'] == 'reinhald-og-vedlikehald' else 'pt' if video['id'] == 'pt-og-gruppetime' else 'home'
     try:
+        page._gg_narration = narration
         page.goto(f'{base_url}/video-demo.html?scenario={quote(scenario)}', wait_until='domcontentloaded', timeout=30000)
         page.wait_for_function('Boolean(window.__ggVideo)', timeout=20000)
         page.wait_for_timeout(900)
@@ -110,16 +113,21 @@ def build_video(browser, video, base_url, output, tmp):
         path = page.video.path()
     finally:
         context.close()
+    raw_duration = float(subprocess.check_output(['ffprobe','-v','error','-show_entries',
+        'format=duration','-of','default=noprint_wrappers=1:nokey=1',str(path)], text=True).strip())
+    narration_file = tmp / f'{video["id"]}-tale.wav'
+    narration.write_wav(narration_file, raw_duration)
     out = output / f'{video["id"]}.mp4'
     subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(path),
-                    '-vf','scale=540:-2,format=yuv420p','-an','-c:v','libx264',
+                    '-i',str(narration_file),'-map','0:v:0','-map','1:a:0',
+                    '-vf','scale=540:-2,format=yuv420p','-c:a','aac','-b:a','80k','-c:v','libx264',
                     '-preset','veryfast','-crf','28','-movflags','+faststart',str(out)],check=True)
     # Chromium's open-source build cannot decode H.264 on every runner.
     # Offer WebM alongside the Android/iOS-compatible MP4 so that there is
     # always a standards-based, genuinely playable fallback.
     subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(out),
-                    '-an','-c:v','libvpx-vp9','-deadline','realtime','-cpu-used','6',
-                    '-crf','43','-b:v','0',str(output / f'{video["id"]}.webm')],check=True)
+                    '-map','0:v:0','-map','0:a:0','-c:v','libvpx-vp9','-deadline','realtime','-cpu-used','6',
+                    '-crf','43','-b:v','0','-c:a','libopus','-b:a','56k',str(output / f'{video["id"]}.webm')],check=True)
     subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-ss','1','-i',str(out),
                     '-frames:v','1',str(output / f'{video["id"]}.png')],check=True)
     print(f'{video["title"]}: ekte GarasjeGym-vising ({out.stat().st_size // 1024} KiB)',flush=True)
@@ -164,15 +172,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--base-url', default='http://127.0.0.1:4173')
     parser.add_argument('--output', required=True)
+    parser.add_argument('--voice-model', required=True)
     args = parser.parse_args()
     videos = json.load(sys.stdin)
     dest = Path(args.output)
     dest.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='gg-live-video-') as directory, sync_playwright() as pw:
+        from piper import PiperVoice
+        voice = PiperVoice.load(args.voice_model)
         browser = pw.chromium.launch(headless=True, args=['--no-sandbox'])
         try:
             for video in videos:
-                build_video(browser,video,args.base_url,dest,Path(directory))
+                folder = Path(directory) / video['id']
+                folder.mkdir(parents=True, exist_ok=True)
+                build_video(browser,video,args.base_url,dest,Path(directory),voice)
             verify_inline_player(browser,args.base_url)
         finally:
             browser.close()

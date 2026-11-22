@@ -42,7 +42,7 @@
     "help:videos:live": "node scripts/generate-live-help-videos.mjs",
     "help:videos:live-check": "node scripts/check-real-help-videos.mjs",
     "help:videos:check": "node scripts/generate-help-videos.mjs --check",
-    "test:help-videos": "node --test scripts/help-videos.test.mjs scripts/media-playback.test.mjs",
+    "test:help-videos": "node --test scripts/help-videos.test.mjs scripts/media-playback.test.mjs && python3 -m unittest discover -s scripts -p test_help_video_narration.py",
     "test:membership-access": "node --test scripts/membership-access.test.mjs",
     "test:membership-candidate": "node --test scripts/membership-candidate.test.mjs"
   },

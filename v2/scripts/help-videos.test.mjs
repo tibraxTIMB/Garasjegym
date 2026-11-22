@@ -55,10 +55,25 @@ test('video has an explicit play action, direct mobile fallback and the complete
   assert.match(help, /onClick=\{togglePlayback\}/)
   assert.match(help, /Opna direkte/)
   assert.match(help, /Prøv WebM/)
+  assert.match(help, /opplesing av nynorsk tekst/)
   assert.match(help, /videoStatus==='error'/)
   assert.match(help, /activeTopic\.steps\.map/)
   assert.match(help, /Bla mellom rettleiingar/)
   assert.doesNotMatch(help, /autoPlay/)
+})
+
+test('recorded help videos contain local Norwegian narration timed to screen captions', () => {
+  const recorder = read('./record-real-help-videos.py')
+  const narration = read('./help_video_narration.py')
+  const generator = read('./generate-live-help-videos.mjs')
+  const validator = read('./check-real-help-videos.mjs')
+  assert.match(recorder, /VoiceTimeline/)
+  assert.match(recorder, /'-c:a','aac'/)
+  assert.match(recorder, /'-c:a','libopus'/)
+  assert.match(narration, /voice\.synthesize_wav/)
+  assert.match(narration, /duration \+ 0\.65/)
+  assert.match(generator, /HELP_VIDEO_VOICE_MODEL/)
+  assert.match(validator, /MP4 manglar opplesing/)
 })
 
 test('glossary categories account for every word exactly once', () => {

@@ -17,14 +17,19 @@ verkelege namn, produksjonsdata eller eksterne tenester i opptaket.
    treningsklokke, PT, gruppetime og vedlikehaldslista.
 3. Playwright klikkar gjennom fem flytar. Nynorske tekstplakatar blir henta frå
    hjelpetekstane i `src/lib/helpContent.js`.
-4. Kvar video blir lagra som MP4, WebM og PNG-plakat under `public/help/videos/`,
+4. Ei lokal, gratis Piper-stemme les den nynorske teksten. Kvar video blir
+   lagra med tale i både MP4 og WebM, pluss PNG-plakat under `public/help/videos/`,
    og blir med i Pages-publiseringa. Opptak vert ikkje skrivne tilbake til git.
 5. Byggejobben kontrollerer at alle fem videoane er ekte opptak før publisering.
    Han prøver også «Spel videoen» i sjølve hjelpesenteret på mobilbreidd.
 
-Dette kostar ikkje noko i programvarelisensar. Opptaka har ingen
-forteljarstemme, og all instruksjonstekst finst også som vanleg, tilgjengeleg
-tekst i hjelpesenteret. Admin-videoen blir berre vist for administratorar.
+Dette kostar ikkje noko i programvarelisensar. Opptaka har syntetisk norsk
+forteljarstemme som les nynorsk manus, og all instruksjonstekst finst også som
+vanleg, tilgjengeleg tekst i hjelpesenteret. Stemmemodellen er trena på
+norsk uttale, ikkje ein eigen nynorsk dialekt. Admin-videoen blir berre vist
+for administratorar. Piper-modellen `no_NO-talesyntese-medium` kjem frå
+Språkbanken-materiale med CC0-lisens; han blir køyrd lokalt i byggjejobben
+og nyttar ingen ekstern taleservice eller medlemsdata.
 Nettlesaren får ein tydeleg startknapp, automatisk formatval mellom MP4 og
 WebM, og eigne direktelenkjer dersom den innebygde spelaren ikkje fungerer.
 Appens offline-mellomlager tek ikkje lenger over byte-førespurnader for
@@ -39,11 +44,13 @@ cd v2
 npm run help:demo
 ```
 
-For å ta opp på nytt (krev Python 3, `pip install playwright`, installert
-Chromium for Playwright og FFmpeg):
+For å ta opp på nytt (krev Python 3, `pip install playwright piper-tts`,
+Chromium for Playwright, FFmpeg og den gratis norske Piper-modellen):
 
 ```sh
 cd v2
+python -m piper.download_voices --data-dir ./piper-voices no_NO-talesyntese-medium
+export HELP_VIDEO_VOICE_MODEL=./piper-voices/no_NO-talesyntese-medium.onnx
 npm run help:videos:live
 npm run help:videos:live-check
 ```

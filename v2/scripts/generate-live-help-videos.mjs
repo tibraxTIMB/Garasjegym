@@ -1,7 +1,7 @@
 // Generate automatic walkthroughs from genuine React views using local demo
 // data. No account, test database, external video service or paid API is used.
 import {spawn, spawnSync} from 'node:child_process'
-import {writeFileSync} from 'node:fs'
+import {existsSync,writeFileSync} from 'node:fs'
 import {fileURLToPath} from 'node:url'
 import {makeVideoStoryboards,storyboardHash} from './generate-help-videos.mjs'
 import {HELP_VIDEOS} from '../src/lib/helpVideos.js'
@@ -11,6 +11,8 @@ const output=fileURLToPath(new URL('../public/help/videos/',import.meta.url))
 const manifest=fileURLToPath(new URL('../public/help/videos/manifest.json',import.meta.url))
 const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','--config','vite.video-demo.config.js'],{cwd:root,stdio:'inherit'})
 const base='http://127.0.0.1:4173'
+const voiceModel=process.env.HELP_VIDEO_VOICE_MODEL
+if(!voiceModel||!existsSync(voiceModel))throw new Error('Manglar lokal norsk Piper-stemme: set HELP_VIDEO_VOICE_MODEL til .onnx-fila')
 let ready=false
 
 try {
@@ -22,14 +24,14 @@ try {
   if(!ready)throw new Error('Videodemoen starta ikkje innan tidsfristen.')
   const python=process.env.HELP_VIDEO_PYTHON||'python3'
   const script=fileURLToPath(new URL('./record-real-help-videos.py',import.meta.url))
-  const result=spawnSync(python,[script,'--base-url',base,'--output',output],{
+  const result=spawnSync(python,[script,'--base-url',base,'--output',output,'--voice-model',voiceModel],{
     cwd:root,input:JSON.stringify(makeVideoStoryboards()),encoding:'utf8',stdio:['pipe','inherit','inherit'],
-    timeout:300000,
+    timeout:900000,
   })
   if(result.error)throw result.error
   if(result.status!==0)throw new Error(`Videoopptaket feila med kode ${result.status}`)
-  writeFileSync(manifest,JSON.stringify({sourceHash:storyboardHash(),renderer:'real-ui-demo',videos:HELP_VIDEOS.map(v=>v.id)},null,2)+'\n')
-  console.log('Fem ekte skjermvisingar lagra, berre med demodata.')
+  writeFileSync(manifest,JSON.stringify({sourceHash:storyboardHash(),renderer:'real-ui-demo',narration:'piper-no_NO-talesyntese-medium',videos:HELP_VIDEOS.map(v=>v.id)},null,2)+'\n')
+  console.log('Fem ekte skjermvisingar med norsk opplesing av nynorsk hjelpetekst.')
 } finally {
   server.kill('SIGTERM')
 }
