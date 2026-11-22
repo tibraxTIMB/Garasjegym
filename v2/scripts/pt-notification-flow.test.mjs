@@ -60,3 +60,37 @@ test('PT notifications have insert and status triggers, idempotent backfill and 
  assert.match(migration,/WHERE req\.status IN \('pending', 'reviewing'\)/)
  assert.match(migration,/REVOKE ALL ON FUNCTION public\.notify_staff_pt_service_request\(\) FROM PUBLIC, anon, authenticated/)
 })
+
+test('eigen adminkonto kan veljast som PT med GarasjeGym-knapp',()=>{
+ const management=read('../src/components/PTManagement.jsx')
+ assert.match(management,/\.in\('role',\['member','manager','admin'\]\)/)
+ assert.match(management,/m\.role==='admin'\?'administrator'/)
+ assert.match(management,/m\.id===profile\.id\?' \(deg\)'/)
+ assert.match(management,/<GarageSelect label="Vel brukar som PT"/)
+ assert.match(management,/const clientMembers=members\.filter\(m=>m\.role==='member'&&m\.membership_status==='approved'\)/)
+})
+
+test('PT-tildeling tillèt admin som trenar og førespurnader under behandling',()=>{
+ const migration=read('../supabase/migrations/20261122225344_allow_staff_as_pt_coaches_and_reviewed_requests.sql')
+ assert.match(migration,/cp\.role IN \('admin','manager'\)/)
+ assert.match(migration,/p\.role IN \('admin','manager'\)/)
+ assert.match(migration,/p\.role='member' AND p\.membership_status='approved'/)
+ assert.match(migration,/r\.status IN \('pending','reviewing'\)/)
+ assert.match(migration,/status IN \('pending','reviewing'\);/)
+})
+
+test('varsla på Heim er trykkbare og opnar den konkrete PT-førespurnaden',()=>{
+ const app=read('../src/App.jsx')
+ const overview=read('../src/components/Overview.jsx')
+ const studio=read('../src/components/PTStudio.jsx')
+ const management=read('../src/components/PTManagement.jsx')
+ const notifications=read('../src/components/Notifications.jsx')
+ assert.match(notifications,/const Root=compact\?'button':'article'/)
+ assert.match(notifications,/onClick=\{compact\?\(\)=>openItem\(item\):undefined\}/)
+ assert.match(overview,/onNavigate=\{onOpenNotification\}/)
+ assert.match(studio,/onNavigate=\{onOpenNotification\}/)
+ assert.match(app,/setFocusPTServiceRequest\(\{id:href\.slice\('pt-service-request:'\.length\),openedAt:Date\.now\(\)\}\)/)
+ assert.match(app,/onOpenNotification=\{handleNotificationNavigate\}/)
+ assert.match(management,/document\.getElementById\('pt-service-request-'\+focusServiceRequest\.id\)/)
+ assert.match(management,/id=\{"pt-service-request-"\+r\.id\}/)
+})

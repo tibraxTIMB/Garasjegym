@@ -23,7 +23,7 @@ function Pill({children,tone=''}) { return <span className={'pt2-pill '+tone}>{c
 function Empty({children}) { return <div className="pt2-empty">{children}</div> }
 function dateLabel(value) { return value ? new Date(value).toLocaleDateString('nn-NO',{day:'numeric',month:'short',year:'numeric'}) : 'Ikkje sett' }
 
-export default function PTStudio({ profile, coachMode=false, simpleMode=false, onLaunchWorkout, onGroupSchedule=()=>{}, initialClientId=null, initialWorkspace='studio', initialTab='oversikt', focusRequestId=null, focusGroupClassId=null, focusPanel=null, onFocusPanelConsumed, onFocusRequestConsumed, onFocusGroupClassConsumed }) {
+export default function PTStudio({ profile, coachMode=false, simpleMode=false, onLaunchWorkout, onGroupSchedule=()=>{}, onOpenNotification=()=>{}, focusServiceRequest=null, initialClientId=null, initialWorkspace='studio', initialTab='oversikt', focusRequestId=null, focusGroupClassId=null, focusPanel=null, onFocusPanelConsumed, onFocusRequestConsumed, onFocusGroupClassConsumed }) {
  const staff = isStaff(profile)
  const canManageClients = staff || coachMode
  const [loading,setLoading] = useState(true)
@@ -352,9 +352,9 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
 
  return <div className="pt2">
   <header className="pt2-head pt2-workspace-head"><div><div className="section-kicker">GARASJEGYM · {staff?'PT STUDIO':coachMode?'PT-ARBEIDSFLATE':'PERSONLEG TRENING'}</div><h2>{staff||coachMode?'PT Studio':'PT og oppfølging'}</h2><p>{staff?'Kundeoppfølging, treningsplanar og individuell PT i éi arbeidsflate.':coachMode?'Kundane du er tildelt, treningsplanane deira og PT-oppfølging.':'Bli kjend med trenarane, spør om hjelp eller følg opp ein avtale.'}</p></div>{staff?<nav className="pt2-workspace-switch"><button type="button" className={tab==='administrasjon'?'':'selected'} onClick={()=>setTab('oversikt')}>PT Studio</button><button type="button" onClick={()=>setWorkspace('groups')}>Gruppetimeadministrasjon</button><button type="button" className={tab==='administrasjon'?'selected':''} onClick={()=>setTab('administrasjon')}>PT-administrasjon</button></nav>:null}</header>
-  <Notifications compact hideWhenEmpty context="pt-studio"/>
+  <Notifications compact hideWhenEmpty context="pt-studio" staff={staff} isAdmin={profile.role==='admin'} onNavigate={onOpenNotification}/>
   {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message"><CheckCircle2 size={15}/> {notice}</div>}
-  {staff&&tab==='administrasjon'&&<PTManagement profile={profile}/>}
+  {staff&&tab==='administrasjon'&&<PTManagement profile={profile} focusServiceRequest={focusServiceRequest}/>}
   {!canManageClients&&showIntake&&<form className="pt2-panel pt2-form" onSubmit={submitIntake}>
    <div className="pt2-panel-head"><div><span className="section-kicker">KOM I GANG</span><h3>Fortel oss kva du ønskjer hjelp til</h3><p>Kort innmelding – PT-en går gjennom svara før de lagar ein plan saman.</p></div><button type="button" className="icon-button" onClick={()=>setShowIntake(false)}><X size={17}/></button></div>
    <div className="pt2-form-grid">

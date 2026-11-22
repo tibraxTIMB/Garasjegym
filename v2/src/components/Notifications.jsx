@@ -160,22 +160,21 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
  async function archive(item){return patch(item.id,{archived_at:new Date().toISOString(),status:item.status==='open'?'dismissed':item.status})}
  async function openItem(item){
   if(item.virtualMaintenance||item.virtualPTLead){onNavigate(item);if(!compact)setOpen(false);return}
-  if(!item.is_read){
-   const marked=await markRead(item)
-   if(!marked)return
-  }
+  // Ei manglande lesekvittering må aldri blokkera direkte opning av saka.
+  if(!item.is_read)void markRead(item)
   onNavigate(item)
   if(!compact)setOpen(false)
  }
  const renderItem=item=>{
+  const Root=compact?'button':'article'
   const ItemIcon=icons[item.category]||Bell
   const p=priorityMeta[item.priority]||priorityMeta.normal
   const PriorityIcon=p.icon
   const pending=item.status==='open'
-  return <article className={'notification-item-v2 priority-'+p.tone+(item.is_read?' read':'')} key={item.id}>
+  return <Root type={compact?'button':undefined} onClick={compact?()=>openItem(item):undefined} aria-label={compact?'Opna varsel: '+item.title:undefined} className={'notification-item-v2 priority-'+p.tone+(item.is_read?' read':'')} key={item.id}>
    <span className={'notification-item-icon-v2 '+p.tone}><ItemIcon size={17}/></span>
    <div className="notification-item-copy-v2">
-    <div className="notification-item-title"><strong>{item.title}</strong>{item.priority!=='normal'&&<span className={'notification-priority '+p.tone}><PriorityIcon size={11}/>{p.label}</span>}</div>
+    <div className="notification-item-title"><strong>{item.title}</strong>{compact&&<ArrowUpRight className="notification-tap-cue" size={16} aria-hidden="true"/>}{item.priority!=='normal'&&<span className={'notification-priority '+p.tone}><PriorityIcon size={11}/>{p.label}</span>}</div>
     <span>{item.body}</span>
     <div className="notification-meta-v2"><time>{new Date(item.created_at).toLocaleString('nn-NO',{dateStyle:'short',timeStyle:'short'})}</time>{item.requires_action&&pending&&<b className="notification-kind action">KREV HANDLING</b>}{item.requires_ack&&!item.acknowledged_at&&<b className="notification-kind ack">KVITTER LESING</b>}{item.status==='resolved'&&<b className="notification-kind done">LØYST</b>}</div>
     {!compact&&<div className="notification-actions-v2">
@@ -186,7 +185,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
     </div>}
    </div>
    {!item.is_read&&<i className="notification-unread-dot" aria-label="Ulest"/>}
-  </article>
+  </Root>
  }
  if(compact){
   const rows=allItems.filter(x=>!x.archived_at&&!isExpired(x)&&x.status==='open'&&(!x.requires_ack||!x.acknowledged_at)).filter(x=>context==='pt-studio'?x.category==='pt'||x.href?.startsWith('pt-'):context==='group'?x.category==='booking'||x.category==='group'||x.href?.startsWith('group-class:'):true).slice(0,4)

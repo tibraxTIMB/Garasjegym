@@ -66,3 +66,12 @@ test('Android touch gets one branded sheet while keyboard keeps native semantics
  assert.match(css,/:checked/)
  assert.match(css,/:focus-visible/)
 })
+
+test('valmenyen opnar etter at trykket er avslutta, utan å blinka bort på Android',()=>{
+ const source=read('../src/components/MobileNativeControls.jsx')
+ assert.match(source,/function onPointerUp\(event\)/)
+ assert.match(source,/document\.addEventListener\('pointerup',onPointerUp,true\)/)
+ assert.match(source,/document\.addEventListener\('pointercancel',onPointerCancel,true\)/)
+ assert.match(source,/window\.setTimeout\(\(\)=>\{\s*if\(next\.select\.isConnected\)setPicker/)
+ assert.doesNotMatch(source.split('function onPointerUp')[0],/setPicker\(/)
+})

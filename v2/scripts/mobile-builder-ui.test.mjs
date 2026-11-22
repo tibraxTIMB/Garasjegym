@@ -161,7 +161,7 @@ test('member dashboard shows rank progress compactly and promotes the assigned P
   assert.match(overview, /overview-rank-progressbar/)
   assert.match(overview, /1 økt → ★/)
   assert.match(overview, /<details className="engine-section overview-ranking">/)
-  assert.match(overview, /<Notifications compact hideWhenEmpty context="oversikt"\/>/)
+  assert.match(overview, /<Notifications compact hideWhenEmpty context="oversikt"[^>]*onNavigate=\{onOpenNotification\}[^>]*\/>/)
 })
 
 test('the central ØKT button is orange and owner badges are tied to a user ID', () => {

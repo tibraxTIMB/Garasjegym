@@ -19,6 +19,7 @@ export default function MobileNativeControls(){
 
  useEffect(()=>{
   let active=null
+  let pending=null
   let suppressUntil=0
   function onPointerDown(event){
    if(event.pointerType!=='touch'&&event.pointerType!=='pen')return
@@ -31,21 +32,40 @@ export default function MobileNativeControls(){
    event.preventDefault()
    event.stopPropagation()
    active=select
-   suppressUntil=performance.now()+500
-   lastSelectRef.current=select
-   select.blur()
-   setPicker({select,options,title:nativeSelectTitle(select),selectedIndex:select.selectedIndex})
+   pending={select,options,title:nativeSelectTitle(select),selectedIndex:select.selectedIndex,pointerId:event.pointerId}
+   suppressUntil=performance.now()+800
+  }
+  function onPointerUp(event){
+   if(!pending||event.pointerId!==pending.pointerId)return
+   event.preventDefault()
+   event.stopPropagation()
+   const next=pending
+   pending=null
+   lastSelectRef.current=next.select
+   next.select.blur()
+   // Vent til Android har sendt klikket til den gamle kontrollen.
+   // Å leggja arket over skjermen på pointerdown kunne opna og lukka det same trykket.
+   window.setTimeout(()=>{
+    if(next.select.isConnected)setPicker({select:next.select,options:next.options,title:next.title,selectedIndex:next.selectedIndex})
+   },0)
   }
   function suppressNativeClick(event){
-   if(active&&event.target===active&&performance.now()<suppressUntil){event.preventDefault();event.stopPropagation()}
+   if(active&&(event.target===active||event.target?.closest?.('label')?.contains(active))&&performance.now()<suppressUntil){
+    event.preventDefault();event.stopPropagation()
+   }
    active=null
   }
+  function onPointerCancel(){pending=null;active=null}
   function closeOnFullscreenChange(){setPicker(null)}
   document.addEventListener('pointerdown',onPointerDown,true)
+  document.addEventListener('pointerup',onPointerUp,true)
+  document.addEventListener('pointercancel',onPointerCancel,true)
   document.addEventListener('click',suppressNativeClick,true)
   document.addEventListener('fullscreenchange',closeOnFullscreenChange)
   return()=>{
    document.removeEventListener('pointerdown',onPointerDown,true)
+   document.removeEventListener('pointerup',onPointerUp,true)
+   document.removeEventListener('pointercancel',onPointerCancel,true)
    document.removeEventListener('click',suppressNativeClick,true)
    document.removeEventListener('fullscreenchange',closeOnFullscreenChange)
   }

@@ -206,3 +206,12 @@
 .pt-coach-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 .pt-coach-edit { flex-basis: 100%; width: 100%; padding: 13px; border: 1px solid #65716d; border-radius: 11px; background: #202b2c; }
 .pt-coach-edit .pt2-field { min-width: 0; }
+.pt-admin-row.is-focus-target{
+ border:1px solid #e8a243;
+ border-left:4px solid #f3b251;
+ border-radius:11px;
+ background:#2a271f;
+ box-shadow:0 0 0 2px rgba(240,163,58,.13);
+ scroll-margin-block:110px;
+}
+.pt-admin-row.is-focus-target:focus{outline:2px solid #ffd78e;outline-offset:3px}

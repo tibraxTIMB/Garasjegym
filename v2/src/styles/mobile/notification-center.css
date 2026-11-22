@@ -100,6 +100,22 @@
 }
 .notification-panel-v2 > footer button { min-height: 32px; font-size: 11px; }
 
+/* På Heim er sjølve varselkortet ein stor knapp med direkte navigering. */
+.notification-context button.notification-item-v2 {
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.notification-context button.notification-item-v2:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+.notification-context .notification-tap-cue{flex:0 0 auto;color:#f4b15a;margin-left:auto}
+
 /* On phones the bell must not collide with the brand or the back action. */
 @media (max-width: 600px) {
   .app-shell > .main > .topbar { gap: 6px; }
