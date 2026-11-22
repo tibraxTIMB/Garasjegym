@@ -54,3 +54,15 @@ test('video is optional; the step-by-step text and next/previous navigation rema
   assert.match(help, /Bla mellom rettleiingar/)
   assert.doesNotMatch(help, /autoPlay/)
 })
+
+test('help landing page offers category choices and an independent video tab', () => {
+  const help = read('../src/components/HelpCenter.jsx')
+  const css = read('../src/components/help-center.css')
+  assert.match(help, /category === 'all' && <>/)
+  assert.match(help, /gg-help-category-grid/)
+  assert.match(help, /gg-help-quick-strip/)
+  assert.match(help, /view === 'videos'/)
+  assert.match(help, /role="tab" aria-selected=\{view === 'videos'\}/)
+  assert.match(help, /setCategory\('all'\)/)
+  assert.match(css, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/)
+})
