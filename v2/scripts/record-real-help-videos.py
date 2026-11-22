@@ -44,7 +44,9 @@ def record_steps(page, video):
         page.get_by_role('timer').wait_for(timeout=15000)
         show_caption(page, steps[1]); click(page, 'Start · 10 sek')
         show_caption(page, steps[2]); show_caption(page, steps[3])
-        click(page, 'Avslutt økta · gå til resultat')
+        # The clock is full-screen: use its real finish action after 3–2–1.
+        page.get_by_role('button', name='Avslutt', exact=True).wait_for(timeout=15000)
+        click(page, 'Avslutt')
         for step in steps[4:]: show_caption(page, step, 2.4)
     elif name == 'pt-og-gruppetime':
         show_caption(page, steps[0])
