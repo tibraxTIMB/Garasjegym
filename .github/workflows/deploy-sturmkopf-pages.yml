@@ -44,6 +44,7 @@ jobs:
         run: |
           python -m pip install 'playwright==1.56.0'
           python -m playwright install --with-deps chromium
+          sudo apt-get install -y ffmpeg
       - name: Auto-record actual app components with local demo data
         working-directory: v2
         run: npm run help:videos:live
