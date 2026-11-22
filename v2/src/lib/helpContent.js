@@ -13,19 +13,19 @@ export const HELP_CATEGORIES = [
 
 export const HELP_TOPICS = [
   { id:'navigation', category:'start', title:'Finn fram i GarasjeGym', summary:'Kva finn du på Heim, WOD, ØKT, Timeplan og Mi side?', time:'1 min', steps:[
-    'Bruk botnmenyen til å gå mellom Heim, WOD, ØKT, Timeplan og Meir.',
+    'Bruk botnmenyen til å gå mellom Heim, WOD, ØKT, Timeplan, Mi side og Meir.',
     'Heim viser snarvegar til trening, treningsplan, gruppetimar og PT-hjelp.',
     'ØKT er inngangen til å gjennomføra trening. WOD er biblioteket med ferdige økter.',
-    'Mi side ligg under Meir og samlar profilen, loggen, rekordane og denne hjelpa.',
+    'Mi side har eigen knapp i botnmenyen og samlar profil, logg, rekordar og denne hjelpa.',
   ], tip:'Du kan alltid bruka tilbakeknappen. Ei pågåande treningsøkt blir teken vare på når du går til ein annan fane.', action:'home', actionLabel:'Gå til Heim' },
   { id:'simple-mode', category:'start', title:'Enkel eller avansert visning', summary:'Vel kor mykje av appen du vil sjå.', time:'1 min', steps:[
-    'Opna Meir og vel Mi side.',
-    'Under Profil finn du «Visning av GarasjeGym».',
+    'Opna Mi side frå botnmenyen, og vel «Profil og konto».',
+    'Der finn du «Visning av GarasjeGym».',
     'Vel avansert visning for fleire val, eller enkel visning for ein kortare veg til trening.',
     'Byt tilbake når du vil. Øktene, klokka og resultata er dei same i begge visningar.',
   ], tip:'Visningsvalet ligg berre på Mi side, ikkje på heimesida.', action:'profile', actionLabel:'Opna Mi side' },
   { id:'change-name', category:'start', title:'Endre namnet ditt', summary:'Byt visingsnamn utan å endra innlogginga.', time:'1 min', steps:[
-    'Gå til Mi side og opna Profil.',
+    'Gå til Mi side og opna «Profil og konto».',
     'Trykk «Endre namn» ved namnet ditt.',
     'Skriv namnet du ønskjer å visa i GarasjeGym og vel «Lagre namn».',
   ], tip:'E-postadressa og kontoen er dei same. Du kan berre endra ditt eige visingsnamn.', action:'profile', actionLabel:'Opna profilen' },
@@ -216,6 +216,14 @@ export const HELP_TOPICS = [
     'Bruk kommentarfeltet til å gje kunden ei kort melding ved behov.',
     'Steng kaffibaren for nye bestillingar når du ikkje kan ta imot fleire ordrar.',
   ], tip:'Endringar i produktregisteret skal ikkje omskriva historiske bestillingar.', action:'coffee', actionLabel:'Opna kaffiadministrasjon' },
+  { id:'garage-maintenance', category:'staff', title:'Reinhald og vedlikehald av garasjen', summary:'Tre korte sjekklister, kvitteringar og varsling til admin.', audience:'admin', time:'2 min', steps:[
+    'Opna Administrasjon og vel «Drift». Under «Reinhald og vedlikehald» ligg vekesjekk, månadskontroll og kvartalssjekk.',
+    'Opna den runden du vil gjera. Kryss av punkta etter kvart som du kontrollerer eller reingjer utstyret.',
+    'Har du funne ein skade eller noko som må rettast, merk «Noko er skadd eller må følgjast opp» og skriv ei kort merknad.',
+    'Trykk «Kvitter og lagre». Dato, namn og alle avkryssingane blir lagra i kvitteringshistorikken.',
+    'Når eit avvik er retta, skriv kva som vart gjort og vel «Kvitter som løyst».',
+    'Eit varsel kjem i varslingssenteret til admin når ein sjekk er forfallen eller eit avvik står ope.',
+  ], tip:'Det er ikkje krav om daglege kvitteringar. Tørk berre vekk synleg sveitte og set utstyr på plass etter bruk.', action:'maintenance', actionLabel:'Opna reinhald og vedlikehald' },
   { id:'staff-members', category:'staff', title:'Medlemmar, roller og tilgang', summary:'Invitasjonar og trygg tilgangsstyring.', audience:'admin', time:'3 min', steps:[
     'Bruk administrasjonen til å invitera nye medlemmar.',
     'Eit medlem må ha godkjend konto før vanlege medlemsfunksjonar er tilgjengelege.',

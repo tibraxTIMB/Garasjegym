@@ -1,0 +1,70 @@
+.gm-maintenance{display:grid;gap:12px;min-width:0;color:#edf3ed}
+.gm-maintenance-heading{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.gm-maintenance-heading h4{display:flex;align-items:center;gap:9px;margin:4px 0;font-size:clamp(19px,4vw,23px)}
+.gm-maintenance-heading h4 svg{color:#f1b05b}
+.gm-maintenance-heading p{margin:3px 0;font-size:12px;color:#b8c7be;line-height:1.45}
+.gm-maintenance-estimate{display:inline-flex;align-items:center;min-height:31px;padding:7px 10px;border:1px solid #60745b;border-radius:999px;color:#c2e3b8;font-size:11px;font-weight:800;white-space:nowrap}
+.gm-maintenance-status{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.gm-maintenance-status>span{display:flex;align-items:center;gap:6px;min-height:36px;padding:7px 10px;border:1px solid #4a5d58;border-radius:8px;background:#1c2a29;font-size:12px;color:#cad7ce}
+.gm-maintenance-status strong{color:#ffd18c;font-size:16px}
+.gm-maintenance-status svg{color:#dda767}
+.gm-maintenance-status .attention{border-color:#ae6e58;color:#ffba98}
+.gm-maintenance-status>button{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:7px 10px;margin-left:auto;border:1px solid #50635e;border-radius:8px;background:#1c2728;color:#d8e6dd;font:inherit;font-size:12px;cursor:pointer}
+.gm-maintenance-plans{display:grid;gap:9px}
+.gm-maintenance-card{min-width:0;overflow:hidden;border:1px solid #4b615a;border-radius:12px;background:#192728}
+.gm-maintenance-card.is-due{border-color:#ae854a}
+.gm-maintenance-trigger{display:flex;align-items:center;gap:10px;width:100%;min-height:69px;padding:11px;border:0;background:transparent;text-align:left;color:#f1f4ec;font:inherit;cursor:pointer}
+.gm-maintenance-period-icon{display:grid;place-items:center;flex:none;width:37px;height:37px;border-radius:10px;background:#3c3224;color:#e8b16d}
+.gm-maintenance-period-label{flex:1;min-width:0;display:grid;gap:4px}
+.gm-maintenance-period-label strong{font-size:15px}
+.gm-maintenance-period-label small{font-size:11px;color:#b6c5bc}
+.gm-maintenance-due{max-width:100px;flex:none;padding:6px 8px;border-radius:7px;background:#23352e;color:#c5debd;font-size:10px;line-height:1.25;font-weight:800;text-align:center}
+.gm-maintenance-due.due{background:#594021;color:#ffd08d}
+.gm-maintenance-trigger>svg{flex:none;color:#aabbb0;transition:transform .2s}
+.gm-maintenance-trigger>svg.open{transform:rotate(180deg)}
+.gm-maintenance-checklist{display:grid;gap:11px;padding:12px;border-top:1px solid #46564e;background:#172223}
+.gm-maintenance-checklist>p{margin:0;font-size:12px;line-height:1.5;color:#b9cabe}
+.gm-maintenance-checks{display:grid;gap:6px}
+.gm-maintenance-checks label{display:flex;align-items:center;gap:10px;min-height:51px;padding:9px 10px;border:1px solid #455b53;border-radius:9px;background:#1c2a29;cursor:pointer}
+.gm-maintenance-checks label.checked{background:#233a31;border-color:#6b9778}
+.gm-maintenance-checks input,.gm-maintenance-followup input{width:21px;height:21px;flex:none;margin:0;accent-color:#efa83d}
+.gm-maintenance-checks label>span{flex:1;min-width:0;font-size:13px;line-height:1.4}
+.gm-maintenance-checks label>svg{flex:none;color:#83d9a4}
+.gm-maintenance-progress{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font-size:12px}
+.gm-maintenance-progress strong{color:#ffd08d}
+.gm-maintenance-progress span{color:#b7c8bd}
+.gm-maintenance-followup{display:flex;align-items:center;gap:9px;min-height:42px;font-size:12px;color:#e9bf93;cursor:pointer}
+.gm-maintenance-note{display:grid;gap:7px;font-size:12px;font-weight:750}
+.gm-maintenance-note textarea{width:100%;min-height:68px;padding:10px 11px;border:1px solid #66776d;border-radius:9px;background:#101d1e;color:#f4f5ee;font:inherit;font-size:14px;resize:vertical}
+.gm-maintenance-save{display:inline-flex;justify-content:center;align-items:center;gap:8px;min-height:47px}
+.gm-maintenance-save:disabled{opacity:.43;cursor:not-allowed}
+.gm-maintenance-issues{display:grid;gap:8px;border:1px solid #a86550;border-radius:12px;padding:11px;background:#2b2420}
+.gm-maintenance-issues h5{display:flex;align-items:center;gap:8px;margin:0;color:#ffcc9c;font-size:15px}
+.gm-maintenance-issues article{display:grid;gap:8px;padding:11px;border:1px solid #806054;border-radius:10px;background:#201f1e}
+.gm-maintenance-issues article>strong{font-size:13px}
+.gm-maintenance-issues article>p{margin:0;font-size:13px;color:#f0c2ac;line-height:1.45;white-space:pre-wrap}
+.gm-maintenance-issues label{display:grid;gap:6px;font-size:12px;color:#e6ddd0}
+.gm-maintenance-issues input{min-height:44px;padding:10px;border:1px solid #806a5e;border-radius:9px;background:#161b1a;color:#fff;font:inherit;font-size:14px}
+.gm-maintenance-issues button{justify-self:start;min-height:43px}
+.gm-maintenance-history{border:1px solid #4c6259;border-radius:11px;overflow:hidden;background:#1b2929}
+.gm-maintenance-history>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:51px;padding:12px;cursor:pointer;list-style:none}
+.gm-maintenance-history>summary::-webkit-details-marker,.gm-maintenance-receipts summary::-webkit-details-marker{display:none}
+.gm-maintenance-history>summary>span{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800}
+.gm-maintenance-history>summary svg{color:#ffc476;flex:none}
+.gm-maintenance-history>summary small{font-weight:500;color:#adbfaf}
+.gm-maintenance-receipts{display:grid;gap:6px;padding:10px;border-top:1px solid #43584c}
+.gm-maintenance-receipts>details{border:1px solid #4b6159;border-radius:9px;overflow:hidden}
+.gm-maintenance-receipts>details>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:49px;padding:10px;cursor:pointer;list-style:none}
+.gm-maintenance-receipts summary>span:first-child{display:grid;gap:3px}
+.gm-maintenance-receipts summary strong{font-size:13px}
+.gm-maintenance-receipts summary small{font-size:11px;color:#b6c6b8}
+.gm-maintenance-receipts summary>svg{color:#79c998}
+.gm-maintenance-receipts details>div{padding:0 12px 10px;color:#c6d9ca;font-size:12px;line-height:1.55}
+.gm-maintenance-receipts ul{margin:3px 0;padding-left:18px}
+.gm-maintenance-receipts p{margin:7px 0;white-space:pre-wrap}
+.gm-receipt-issue,.gm-receipt-resolved{font-size:11px;font-weight:850;color:#ffb38c}
+.gm-receipt-resolved{color:#9cdfad}
+.gm-maintenance-history-empty{margin:0;padding:10px;font-size:12px;color:#bdcabc}
+.gm-maintenance-after-use{margin:0;padding:8px 10px;border-left:2px solid #6b957f;color:#b9c9be;font-size:11px;line-height:1.45}
+.gm-maintenance button:focus-visible,.gm-maintenance input:focus-visible,.gm-maintenance textarea:focus-visible{outline:2px solid #ffc270;outline-offset:2px}
+@media(max-width:550px){.gm-maintenance-heading{gap:6px}.gm-maintenance-trigger{gap:7px;padding:9px}.gm-maintenance-due{max-width:80px}.gm-maintenance-period-icon{width:34px;height:34px}.gm-maintenance-status>button{margin-left:0}}

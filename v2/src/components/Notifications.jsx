@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
 import {Bell,CheckCheck,Coffee,CalendarDays,MessageCircle,UserRound,Info,Check,AlertTriangle,Clock3,Archive,ArrowUpRight,ClipboardCheck,RefreshCw,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
+import {maintenanceOverview,maintenanceReminders} from '../lib/maintenancePlan.js'
 
 const icons={coffee:Coffee,booking:CalendarDays,pt:UserRound,community:MessageCircle,system:Info,general:Bell,group:CalendarDays}
 const priorityMeta={
@@ -9,11 +10,12 @@ const priorityMeta={
  normal:{label:'Vanleg',tone:'normal',icon:Info},
  low:{label:'Info',tone:'low',icon:Info}
 }
-const hrefLabel=href=>href?.startsWith('coffee-review:')?'Sjå produktvurdering':href?.startsWith('pt-request:')?'Opna PT-førespurnad':href?.startsWith('pt-checkin:')?'Opna statussjekk':href?.startsWith('pt-intake:')?'Opna PT-kartlegging':href?.startsWith('pt-client:')?'Opna PT-oppfølging':href?.startsWith('group-class:')?'Opna gruppetime':href?.startsWith('booking:')?'Opna booking':href==='pt-studio'?'Opna PT-oppfølging':href==='pt-info'?'Opna PT-meldingar':href==='pt'?'Opna PT Studio':href==='mi-trening'?'Opna Mi trening':href==='booking'||href==='/timeplan'?'Opna timeplan':href==='kaffi'?'Opna kaffibar':'Opna'
+const hrefLabel=href=>href?.startsWith('coffee-review:')?'Sjå produktvurdering':href?.startsWith('pt-request:')?'Opna PT-førespurnad':href?.startsWith('pt-checkin:')?'Opna statussjekk':href?.startsWith('pt-intake:')?'Opna PT-kartlegging':href?.startsWith('pt-client:')?'Opna PT-oppfølging':href?.startsWith('group-class:')?'Opna gruppetime':href?.startsWith('booking:')?'Opna booking':href==='admin-maintenance'?'Opna vedlikehald':href==='pt-studio'?'Opna PT-oppfølging':href==='pt-info'?'Opna PT-meldingar':href==='pt'?'Opna PT Studio':href==='mi-trening'?'Opna Mi trening':href==='booking'||href==='/timeplan'?'Opna timeplan':href==='kaffi'?'Opna kaffibar':'Opna'
 const isExpired=item=>item.expires_at&&new Date(item.expires_at)<new Date()
 
-export default function Notifications({onNavigate=()=>{},compact=false,hideWhenEmpty=false,context='oversikt'}){
+export default function Notifications({onNavigate=()=>{},compact=false,hideWhenEmpty=false,context='oversikt',isAdmin=false}){
  const [items,setItems]=useState([])
+ const [maintenanceItems,setMaintenanceItems]=useState([])
  const [open,setOpen]=useState(false)
  const [loading,setLoading]=useState(true)
  const [error,setError]=useState('')
@@ -24,17 +26,18 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
  const [loadingMore,setLoadingMore]=useState(false)
  const loadingMoreRef=useRef(false)
  const loadSequence=useRef(0)
- const urgent=items.filter(x=>x.priority==='urgent'&&x.status==='open'&&!x.archived_at&&!isExpired(x)).length
- const actionItems=items.filter(x=>x.requires_action&&x.status==='open'&&!x.archived_at&&!isExpired(x))
- const ackItems=items.filter(x=>x.requires_ack&&!x.acknowledged_at&&x.status==='open'&&!x.archived_at&&!isExpired(x))
- const unread=items.filter(x=>!x.is_read&&!x.archived_at&&!isExpired(x)).length
- const visible=useMemo(()=>items.filter(x=>!x.archived_at&&!isExpired(x)).filter(x=>{
+ const allItems=useMemo(()=>[...maintenanceItems,...items],[maintenanceItems,items])
+ const urgent=allItems.filter(x=>x.priority==='urgent'&&x.status==='open'&&!x.archived_at&&!isExpired(x)).length
+ const actionItems=allItems.filter(x=>x.requires_action&&x.status==='open'&&!x.archived_at&&!isExpired(x))
+ const ackItems=allItems.filter(x=>x.requires_ack&&!x.acknowledged_at&&x.status==='open'&&!x.archived_at&&!isExpired(x))
+ const unread=allItems.filter(x=>!x.is_read&&!x.archived_at&&!isExpired(x)).length
+ const visible=useMemo(()=>allItems.filter(x=>!x.archived_at&&!isExpired(x)).filter(x=>{
   if(tab==='action')return x.requires_action&&x.status==='open'
   if(tab==='ack')return x.requires_ack&&!x.acknowledged_at&&x.status==='open'
   if(tab==='info')return !x.requires_action&&!x.requires_ack&&x.status==='open'
   if(tab==='history')return x.status!=='open'||x.acknowledged_at
   return x.status==='open'&&(!x.requires_ack||!x.acknowledged_at)
- }).slice(0,showAll?items.length:30),[items,tab,showAll])
+ }).slice(0,showAll?allItems.length:30),[allItems,tab,showAll])
  async function load(append=false){
   if(append&&loadingMoreRef.current)return
   if(append){loadingMoreRef.current=true;setLoadingMore(true)}
@@ -53,6 +56,15 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
    setHasMore(rows.length===100)
    setItems(current=>append?[...current,...rows.filter(row=>!current.some(existing=>existing.id===row.id))]:rows)
    setError('')
+   if(isAdmin){
+    const [schedule,receipts]=await Promise.all([
+     supabase.from('garage_maintenance_schedule').select('started_at').eq('id',true).maybeSingle(),
+     supabase.from('garage_maintenance_log').select('period,completed_at,needs_followup,resolved_at').order('completed_at',{ascending:false}).limit(500),
+    ])
+    if(requestId!==loadSequence.current)return
+    setMaintenanceItems(!schedule.error&&!receipts.error&&schedule.data
+      ?maintenanceReminders(maintenanceOverview(receipts.data||[],schedule.data.started_at)):[])
+   }else setMaintenanceItems([])
   }catch(loadError){if(requestId===loadSequence.current)setError(loadError?.message||'Varslingane kunne ikkje hentast.')}
   finally{
    if(requestId===loadSequence.current)setLoading(false)
@@ -77,8 +89,10 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
   // Realtime is the primary path; polling keeps inboxes correct after reconnects
   // and on clients where the realtime websocket is temporarily unavailable.
   const refreshTimer=window.setInterval(()=>{if(live)load()},60_000)
-  return()=>{live=false;loadSequence.current+=1;if(channel)supabase.removeChannel(channel);window.clearInterval(refreshTimer)}
- },[context,compact])
+  const onMaintenanceUpdated=()=>{if(live&&isAdmin)load()}
+  window.addEventListener('gg:maintenance-updated',onMaintenanceUpdated)
+  return()=>{live=false;loadSequence.current+=1;if(channel)supabase.removeChannel(channel);window.clearInterval(refreshTimer);window.removeEventListener('gg:maintenance-updated',onMaintenanceUpdated)}
+ },[context,compact,isAdmin])
  async function patch(id,values){
   setBusy(id);setError('')
   try{
@@ -97,6 +111,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
  async function resolve(item){return patch(item.id,{is_read:true,read_at:new Date().toISOString(),status:'resolved',resolved_at:new Date().toISOString()})}
  async function archive(item){return patch(item.id,{archived_at:new Date().toISOString(),status:item.status==='open'?'dismissed':item.status})}
  async function openItem(item){
+  if(item.virtualMaintenance){onNavigate(item);if(!compact)setOpen(false);return}
   if(!item.is_read){
    const marked=await markRead(item)
    if(!marked)return
@@ -117,16 +132,16 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
     <div className="notification-meta-v2"><time>{new Date(item.created_at).toLocaleString('nn-NO',{dateStyle:'short',timeStyle:'short'})}</time>{item.requires_action&&pending&&<b className="notification-kind action">KREV HANDLING</b>}{item.requires_ack&&!item.acknowledged_at&&<b className="notification-kind ack">KVITTER LESING</b>}{item.status==='resolved'&&<b className="notification-kind done">LØYST</b>}</div>
     {!compact&&<div className="notification-actions-v2">
      {(item.href||item.requires_action)&&<button type="button" className="notification-open-action" disabled={busy===item.id} onClick={()=>openItem(item)}>{hrefLabel(item.href)} <ArrowUpRight size={13}/></button>}
-     {item.requires_ack&&!item.acknowledged_at&&<button type="button" className="notification-ack-action" disabled={busy===item.id} onClick={()=>acknowledge(item)}><ClipboardCheck size={13}/> Stadfest lest</button>}
-     {item.requires_action&&pending&&<button type="button" className="notification-done-action" disabled={busy===item.id} onClick={()=>resolve(item)}><Check size={13}/> Marker løyst</button>}
-     {!item.requires_action&&!item.requires_ack&&pending&&<button type="button" className="notification-dismiss-action" disabled={busy===item.id} onClick={()=>archive(item)}><Archive size={13}/> Skjul</button>}
+     {!item.virtualMaintenance&&item.requires_ack&&!item.acknowledged_at&&<button type="button" className="notification-ack-action" disabled={busy===item.id} onClick={()=>acknowledge(item)}><ClipboardCheck size={13}/> Stadfest lest</button>}
+     {!item.virtualMaintenance&&item.requires_action&&pending&&<button type="button" className="notification-done-action" disabled={busy===item.id} onClick={()=>resolve(item)}><Check size={13}/> Marker løyst</button>}
+     {!item.virtualMaintenance&&!item.requires_action&&!item.requires_ack&&pending&&<button type="button" className="notification-dismiss-action" disabled={busy===item.id} onClick={()=>archive(item)}><Archive size={13}/> Skjul</button>}
     </div>}
    </div>
    {!item.is_read&&<i className="notification-unread-dot" aria-label="Ulest"/>}
   </article>
  }
  if(compact){
-  const rows=items.filter(x=>!x.archived_at&&!isExpired(x)&&x.status==='open'&&(!x.requires_ack||!x.acknowledged_at)).filter(x=>context==='pt-studio'?x.category==='pt'||x.href?.startsWith('pt-'):context==='group'?x.category==='booking'||x.category==='group'||x.href?.startsWith('group-class:'):true).slice(0,4)
+  const rows=allItems.filter(x=>!x.archived_at&&!isExpired(x)&&x.status==='open'&&(!x.requires_ack||!x.acknowledged_at)).filter(x=>context==='pt-studio'?x.category==='pt'||x.href?.startsWith('pt-'):context==='group'?x.category==='booking'||x.category==='group'||x.href?.startsWith('group-class:'):true).slice(0,4)
   if(!rows.length&&hideWhenEmpty&&!loading&&!error)return null
   if(!rows.length)return <section className="notification-context"><div className="notification-context-head"><Bell size={16}/><strong>{context==='pt-studio'?'PT-varslingar':context==='group'?'Gruppetime-varslingar':'Varslingar'}</strong><span>0</span></div><p>{loading?'Hentar varsel …':error?'Varslingane er ikkje tilgjengelege akkurat no.':'Ingen oppfølging ventar her.'}</p></section>
   return <section className="notification-context"><div className="notification-context-head"><Bell size={16}/><strong>{context==='pt-studio'?'PT-varslingar':context==='group'?'Gruppetime-varslingar':'Varslingar'}</strong><span>{rows.length}</span></div>{rows.map(renderItem)}</section>
