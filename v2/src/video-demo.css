@@ -5,5 +5,4 @@
 .gg-video-caption.is-hidden{opacity:0}
 .gg-video-caption span{display:block;color:#efad5a;font-size:10px;letter-spacing:1.1px;font-weight:900}
 .gg-video-caption p{color:#fff7eb;font-size:15px;font-weight:750;line-height:1.35;margin:5px 0 0;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-.gg-video-demo .app-mobile-nav{z-index:10000}
 @media(min-width:901px){.gg-video-caption{max-width:680px;margin-inline:auto}.gg-video-demo .main{max-width:100%}}
