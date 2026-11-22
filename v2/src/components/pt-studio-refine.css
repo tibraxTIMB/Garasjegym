@@ -215,3 +215,9 @@
  scroll-margin-block:110px;
 }
 .pt-admin-row.is-focus-target:focus{outline:2px solid #ffd78e;outline-offset:3px}
+.pt2 .pt2-coach-primary-tabs{position:static;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;overflow:visible}
+.pt2 .pt2-coach-primary-tabs button{display:grid;place-items:center;min-width:0;min-height:47px;white-space:normal;text-align:center;line-height:1.25;border:1px solid #42595c;border-radius:10px;background:#1d2d30;color:#e5eae8;font-size:12px}
+.pt2 .pt2-coach-primary-tabs button.selected{border-color:#dea252;background:#44321e;color:#ffcf83}
+.pt2-coach-tools{margin-top:-7px}
+.pt2-coach-tools>summary{min-height:40px;cursor:pointer;color:#c6d5d1;font-size:12px;font-weight:800}
+@media(max-width:480px){.pt2 .pt2-coach-primary-tabs button{font-size:11px;min-height:51px}}

@@ -85,3 +85,28 @@
 .exercise-pr-manual-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .exercise-pr-modal>.primary-button{min-height:46px}
 @media(max-width:500px){.exercise-pr-exercise-list{grid-template-columns:minmax(0,1fr)}.exercise-pr-featured button{flex-direction:column;align-items:flex-start;justify-content:center}.exercise-pr-manual-fields{grid-template-columns:minmax(0,1fr)}.exercise-pr-detail{padding:9px}.exercise-pr-featured button strong{font-size:16px}}
+
+/* Category-first PR navigation; avoid an endless exercise list on first open. */
+.exercise-pr-category-head,.exercise-pr-list-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.exercise-pr-category-head strong,.exercise-pr-list-head strong{color:#f5f3ed;font-size:15px}
+.exercise-pr-category-head span,.exercise-pr-list-head span{color:#b2c4c2;font-size:12px}
+.exercise-pr-category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.exercise-pr-category-grid button{position:relative;display:grid;align-content:start;gap:5px;min-width:0;min-height:103px;padding:13px 35px 12px 12px;border:1px solid #506062;border-radius:13px;background:linear-gradient(135deg,#222f31,#172528);color:#e9efed;text-align:left;font:inherit;cursor:pointer}
+.exercise-pr-category-grid button:first-child{grid-column:1/-1;min-height:85px;border-color:#ad7c3c;background:linear-gradient(115deg,#44311d,#1e2c2a)}
+.exercise-pr-category-grid button.active{border-color:#ecab52;background:linear-gradient(110deg,#47331c,#24362f)}
+.exercise-pr-category-grid button svg{color:#f2ae54}
+.exercise-pr-category-grid button strong{font-size:14px;line-height:1.25}
+.exercise-pr-category-grid button small{font-size:11px;line-height:1.35;color:#b6c6c4}
+.exercise-pr-category-grid button>span{position:absolute;top:12px;right:11px;min-width:22px;padding:4px 5px;border-radius:99px;background:#334345;color:#efc28a;text-align:center;font-size:11px;font-weight:900}
+.exercise-pr-quick-lifts{padding:0;border:1px solid #526264;border-radius:11px;background:#1b292c}
+.exercise-pr-quick-lifts summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;padding:11px 13px;cursor:pointer;color:#e8eeeb;font-size:13px;font-weight:850}
+.exercise-pr-quick-lifts summary span{color:#c2a783;font-size:11px;font-weight:600}
+.exercise-pr-quick-lifts[open]>.exercise-pr-featured{padding:0 10px 10px}
+.exercise-pr-clear{justify-self:start;min-height:38px;padding:7px 10px;border:1px solid #52696a;border-radius:8px;background:#253639;color:#e8d0a6;font-size:12px;font-weight:800}
+.exercise-pr-manual-picker{display:grid;gap:9px;min-width:0}
+.exercise-pr-manual-picker>span{color:#e1e9e7;font-size:12px;font-weight:800}
+.exercise-pr-manual-categories{display:flex;flex-wrap:wrap;gap:6px}
+.exercise-pr-manual-categories button{min-height:36px;padding:7px 10px;border:1px solid #56686b;border-radius:9px;background:#253538;color:#dce6e4;font-size:11px;font-weight:800}
+.exercise-pr-manual-categories button.active{background:#533b21;border-color:#e6a64e;color:#ffdb9e}
+.exercise-pr-manual-picker>.gg-garage-select,.exercise-pr-manual-picker label>.gg-garage-select{width:100%;min-width:0}
+@media(max-width:390px){.exercise-pr-category-grid button{padding-right:31px}.exercise-pr-category-grid button strong{font-size:12px}.exercise-pr-category-grid button small{font-size:10px}}

@@ -104,9 +104,9 @@ export default function PTInquiry({ profile, onGroupSchedule = () => {} }) {
     <section className="pt-enquiry-hero">
       <span className="section-kicker">PERSONLEG TRENING I GARASJEN</span>
       <h3>Mi PT-oversikt</h3>
-      <p>Finn ein personleg trenar, ta kontakt eller følg ein førespurnad. Du treng ikkje ha bestemt deg for noko.</p>
+      <p>Spør om hjelp, bli kjend med trenarane og sjå kvar du er i PT-løpet. Det er heilt greitt å vera usikker.</p>
       <div className="pt-enquiry-promise"><ShieldCheck size={19} /><span>Uforpliktande førespurnad. Ingen time eller betaling blir avtalt før du seier ja.</span></div>
-      <button type="button" className="pt-enquiry-hero-cta" onClick={() => { setTab('start'); requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })) }}>Ta kontakt med PT <ArrowRight size={17} /></button>
+      <button type="button" className="pt-enquiry-hero-cta" onClick={() => { setTab(activeRequest?'mine':'start'); if(!activeRequest) requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })) }}>{activeRequest?'Følg førespurnaden':'Spør om PT-hjelp'} <ArrowRight size={17} /></button>
     </section>
 
     <div className="pt-enquiry-compare" aria-label="Skilnaden på PT og gruppetime">
@@ -123,6 +123,20 @@ export default function PTInquiry({ profile, onGroupSchedule = () => {} }) {
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={18} /> {notice}</div>}
 
     {tab === 'start' && <>
+      <section className="pt-enquiry-form-section" ref={formRef}>
+        <div className="pt-enquiry-form-heading"><MessageSquareText size={23} /><div><span className="section-kicker">FØRSTE STEG</span><h3>Send ein uforpliktande førespurnad</h3><p>Du treng berre svara på eitt spørsmål. Resten er valfritt.</p></div></div>
+        <div className="pt-enquiry-steps"><span><b>1</b> Spør om hjelp</span><span><b>2</b> Me tek kontakt</span><span><b>3</b> Avtal eventuell time</span></div>
+        {activeRequest ? <div className="pt-enquiry-existing"><CheckCircle2 size={21} /><div><strong>Du har alt ein førespurnad inne.</strong><p>Du kan følgja statusen og trekkja han tilbake dersom han ikkje er teken til behandling.</p><button type="button" className="secondary-button" onClick={() => setTab('mine')}>Sjå førespurnaden <ArrowRight size={15} /></button></div></div> : <form onSubmit={submit} className="pt-enquiry-form">
+          <div className="pt-enquiry-choice"><label>Kva ønskjer du hjelp med? <span className="pt-required">*</span></label><GarageSelect label="Kva ønskjer du hjelp med?" value={goal} onChange={setGoal} placeholder="Vel det som passar best …" options={GOALS.map(g=>({value:g,label:g}))}/></div>
+          <div className="pt-enquiry-choice"><label>Ønskjer du ein bestemt PT? <small>Valfritt</small></label><GarageSelect label="Vel personleg trenar" value={coachId} onChange={setCoachId} options={[{value:'',label:'Hjelp meg å finna rett PT'},...coaches.map(c=>({value:c.user_id,label:c.public_name||'PT i GarasjeGym'}))]}/></div>
+          {!!services.length && <div className="pt-enquiry-choice"><label>Er du interessert i eit bestemt tilbod? <small>Valfritt</small></label><GarageSelect label="Vel PT-tilbod" value={serviceId} onChange={setServiceId} options={[{value:'',label:'Usikker – eg vil berre spørja'},...services.map(s=>({value:s.id,label:s.title+(s.price_label?' · '+s.price_label:'')}))]}/></div>}
+          <label>Noko du vil fortelja oss? <small>Valfritt</small><textarea rows="3" value={note} maxLength="1000" onChange={e => setNote(e.target.value)} placeholder="Til dømes erfaring, spørsmål eller kva du er usikker på …" /></label>
+          <button type="submit" className="primary-button" disabled={busy}>{busy ? 'Sender …' : 'Send førespurnad'} <ArrowRight size={17} /></button>
+          <p className="pt-enquiry-fineprint">Me får meldinga og kan svara deg om kva som passar. Ein PT-time er ikkje bestilt enno.</p>
+        </form>}
+      </section>
+
+      <details className="pt-enquiry-discover"><summary>Møt PT-ane våre <span>{coaches.length} trenarar</span></summary>
       <section className="pt-enquiry-section">
         <span className="section-kicker">FOLKA BAK OPPFØLGINGA</span>
         <h3>Møt PT-ane våre</h3>
@@ -134,19 +148,11 @@ export default function PTInquiry({ profile, onGroupSchedule = () => {} }) {
         </article>)}</div> : <div className="pt-enquiry-empty"><HeartHandshake size={24} /><div><strong>PT-presentasjonane kjem her.</strong><p>Garasjen har ikkje publisert PT-profilar enno. Du kan likevel senda ein førespurnad, så tek dei kontakt om tilbodet.</p></div></div>}
       </section>
 
-      {!!services.length && <section className="pt-enquiry-section"><span className="section-kicker">KVA KAN DU FÅ HJELP MED?</span><h3>Dette tilbyr me</h3><div className="pt-enquiry-services">{services.map(service => <button type="button" key={service.id} className={serviceId === service.id ? 'selected' : ''} onClick={() => { setServiceId(service.id); formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}><strong>{service.title}</strong><span>{service.description || service.suitable_for}</span><small>{[service.duration_label,service.price_label].filter(Boolean).join(' · ')}</small></button>)}</div></section>}
+      </details>
 
-      <section className="pt-enquiry-form-section" ref={formRef}>
-        <div className="pt-enquiry-form-heading"><MessageSquareText size={23} /><div><span className="section-kicker">FØRSTE STEG</span><h3>Send ein uforpliktande førespurnad</h3><p>Du treng berre svara på eitt spørsmål. Resten er valfritt.</p></div></div>
-        {activeRequest ? <div className="pt-enquiry-existing"><CheckCircle2 size={21} /><div><strong>Du har alt ein førespurnad inne.</strong><p>Du kan følgja statusen og trekkja han tilbake dersom han ikkje er teken til behandling.</p><button type="button" className="secondary-button" onClick={() => setTab('mine')}>Sjå førespurnaden <ArrowRight size={15} /></button></div></div> : <form onSubmit={submit} className="pt-enquiry-form">
-          <div className="pt-enquiry-choice"><label>Kva ønskjer du hjelp med? <span className="pt-required">*</span></label><GarageSelect label="Kva ønskjer du hjelp med?" value={goal} onChange={setGoal} placeholder="Vel det som passar best …" options={GOALS.map(g=>({value:g,label:g}))}/></div>
-          <div className="pt-enquiry-choice"><label>Ønskjer du ein bestemt PT? <small>Valfritt</small></label><GarageSelect label="Vel personleg trenar" value={coachId} onChange={setCoachId} options={[{value:'',label:'Hjelp meg å finna rett PT'},...coaches.map(c=>({value:c.user_id,label:c.public_name||'PT i GarasjeGym'}))]}/></div>
-          {!!services.length && <div className="pt-enquiry-choice"><label>Er du interessert i eit bestemt tilbod? <small>Valfritt</small></label><GarageSelect label="Vel PT-tilbod" value={serviceId} onChange={setServiceId} options={[{value:'',label:'Usikker – eg vil berre spørja'},...services.map(s=>({value:s.id,label:s.title+(s.price_label?' · '+s.price_label:'')}))]}/></div>}
-          <label>Noko du vil fortelja oss? <small>Valfritt</small><textarea rows="3" value={note} maxLength="1000" onChange={e => setNote(e.target.value)} placeholder="Til dømes erfaring, spørsmål eller kva du er usikker på …" /></label>
-          <button type="submit" className="primary-button" disabled={busy}>{busy ? 'Sender …' : 'Send førespurnad'} <ArrowRight size={17} /></button>
-          <p className="pt-enquiry-fineprint">Me får meldinga og kan svara deg om kva som passar. Ein PT-time er ikkje bestilt enno.</p>
-        </form>}
-      </section>
+      {!!services.length && <details className="pt-enquiry-discover"><summary>Sjå PT-tilboda våre <span>{services.length} tilbod</span></summary>
+      <section className="pt-enquiry-section"><span className="section-kicker">KVA KAN DU FÅ HJELP MED?</span><h3>Dette tilbyr me</h3><div className="pt-enquiry-services">{services.map(service => <button type="button" key={service.id} className={serviceId === service.id ? 'selected' : ''} onClick={() => { setServiceId(service.id); formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}><strong>{service.title}</strong><span>{service.description || service.suitable_for}</span><small>{[service.duration_label,service.price_label].filter(Boolean).join(' · ')}</small></button>)}</div></section>
+      </details>}
     </>}
 
     {tab === 'mine' && <section className="pt-enquiry-section"><h3>Mine PT-førespurnader</h3><p>Her ser du kva som skjer vidare. Ein førespurnad er ikkje ein stadfesta time.</p>
@@ -155,7 +161,8 @@ export default function PTInquiry({ profile, onGroupSchedule = () => {} }) {
         <small>Sendt {new Date(request.created_at).toLocaleDateString('nn-NO', { day:'numeric', month:'long', year:'numeric' })}</small>
         <p>{request.member_note}</p>
         {request.status === 'pending' && <button type="button" className="secondary-button" disabled={busy} onClick={() => withdraw(request)}>Trekk tilbake førespurnad</button>}
-        {request.status === 'assigned' && <p className="pt-enquiry-next">Ein PT er tildelt. De avtalar eventuell trening og vidare oppfølging saman.</p>}
+        {request.status === 'reviewing' && <p className="pt-enquiry-next">Me har teke imot førespurnaden din og ser på kven som kan hjelpa. Du treng ikkje senda ei ny melding.</p>}
+        {request.status === 'assigned' && <p className="pt-enquiry-next">Ein PT er tildelt, men ingen time er bestilt. De avtalar tidspunkt og oppfølging saman.</p>}
       </article>)}</div> : <div className="pt-enquiry-empty"><MessageSquareText size={22} /><div><strong>Ingen førespurnader enno.</strong><p>Du kan ta kontakt utan å bestilla ein time.</p><button type="button" className="secondary-button" onClick={() => setTab('start')}>Bli kjend med PT <ArrowRight size={15} /></button></div></div>}
     </section>}
   </div>

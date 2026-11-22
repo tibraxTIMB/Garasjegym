@@ -3,7 +3,7 @@
 .gg-garage-select svg{flex:none;color:#f5b967}
 .gg-garage-select-placeholder{color:#b3c2bb}
 .gg-garage-select:disabled{opacity:.6;cursor:not-allowed}
-.gg-select-backdrop{position:fixed;z-index:2500;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:12px 10px max(12px,env(safe-area-inset-bottom));background:#000b;backdrop-filter:blur(4px)}
+.gg-select-backdrop{position:fixed;z-index:2147483005;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:12px 10px max(12px,env(safe-area-inset-bottom));background:#000b;backdrop-filter:blur(4px)}
 .gg-select-sheet{width:min(100%,540px);max-height:min(78dvh,690px);display:grid;grid-template-rows:auto minmax(0,1fr);gap:10px;padding:15px;border:1px solid #9d7e51;border-radius:20px;background:#1a2729;box-shadow:0 20px 70px #000b;color:#f4f5ef}
 .gg-select-sheet>header{display:flex;align-items:start;justify-content:space-between;gap:10px}
 .gg-select-sheet h2{margin:5px 0 0;font-size:19px;line-height:1.25}
