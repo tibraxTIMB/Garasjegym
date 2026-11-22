@@ -174,6 +174,35 @@
 .gg-review-notes label { display:grid;gap:6px;margin:12px 0;color:#e6eff2;font-size:13px; }
 .gg-review-notes select,.gg-review-notes textarea { padding:10px;background:#13242b;color:#fff;border:1px solid #62747c;border-radius:9px; }
 .wod-builder-step-2 .wod-reorder-controls { min-width:0!important;flex-wrap:nowrap!important; }
+
+/* Importerte øvingar: alle namna får reell breidd, sorteringsknappane eigen rad. */
+@media(max-width:760px){
+ .wod-builder-step-2:not(.wod-library-open) .wod-composer .wizard-selected-stage .wod-selected-card{
+  display:grid!important;grid-template-columns:28px minmax(0,1fr)!important;
+  grid-template-rows:auto auto!important;align-items:start!important;
+  column-gap:10px!important;row-gap:4px!important;min-width:0!important;
+  width:100%!important;min-height:0!important;padding:10px 12px!important;
+ }
+ .wod-builder-step-2:not(.wod-library-open) .wod-composer .wizard-selected-stage .wod-selected-card>.wod-order{
+  grid-column:1!important;grid-row:1!important;margin-top:2px!important;
+ }
+ .wod-builder-step-2:not(.wod-library-open) .wod-composer .wizard-selected-stage .wod-selected-card>.wod-selected-info{
+  grid-column:2!important;grid-row:1!important;display:block!important;
+  min-width:0!important;width:100%!important;max-width:100%!important;
+  overflow:visible!important;word-break:normal!important;
+ }
+ .wod-builder-step-2:not(.wod-library-open) .wod-composer .wizard-selected-stage .wod-selected-title strong{
+  display:block!important;min-width:0!important;overflow-wrap:break-word!important;
+  word-break:normal!important;white-space:normal!important;line-height:1.35!important;
+  font-size:15px!important;
+ }
+ .wod-builder-step-2:not(.wod-library-open) .wod-composer .wizard-selected-stage .wod-selected-card>.wod-reorder-controls{
+  grid-column:2!important;grid-row:2!important;display:flex!important;
+  flex-direction:row!important;flex-wrap:nowrap!important;justify-self:end!important;
+  justify-content:flex-end!important;width:auto!important;min-width:0!important;
+  max-width:100%!important;margin-top:2px!important;
+ }
+}
 .gg-exercise-actions { display:flex;gap:9px;flex-wrap:wrap; }
 .gg-exercise-actions button { min-height:46px;flex:1 1 160px; }
 .wod-builder-step-2 .wod-composer .wod-selected-list { max-height:none!important;overflow:visible!important; }

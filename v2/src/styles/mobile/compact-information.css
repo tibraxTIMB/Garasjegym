@@ -41,3 +41,61 @@
   font-size: 11px;
   line-height: 1.4;
 }
+
+/* Informational surfaces should read as quiet supporting text, not as large
+   tappable cards. Keep actual buttons and form inputs at their touch sizes. */
+@media (max-width: 900px) {
+  .app-shell .notice {
+    margin-top: 12px;
+    padding: 9px 11px;
+    gap: 3px;
+    border-left-width: 2px;
+    border-radius: 8px;
+    background: rgba(240, 163, 58, .06);
+  }
+  .app-shell .notice strong { font-size: 12px; line-height: 1.35; }
+  .app-shell .notice span { font-size: 11px; line-height: 1.4; }
+
+  .app-shell .pt2-empty {
+    padding: 9px 11px;
+    border-color: rgba(174, 185, 180, .25);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .app-shell .pt2-panel > p {
+    margin-block: 4px 10px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .app-shell .pt-admin { gap: 12px; }
+  .app-shell .pt-admin-head h2 {
+    margin: 3px 0;
+    font-size: clamp(25px, 6vw, 35px);
+    line-height: 1.08;
+    letter-spacing: -.5px;
+  }
+  .app-shell .pt-admin-head p { font-size: 12px; line-height: 1.4; }
+  .app-shell .pt-admin-stats { gap: 8px; }
+  .app-shell .pt-admin-stats article { padding: 10px 12px; gap: 3px; }
+  .app-shell .pt-admin-stats article svg { width: 18px; height: 18px; }
+  .app-shell .pt-admin-stats article strong { font-size: 22px; }
+  .app-shell .pt-admin-stats article span { font-size: 11px; line-height: 1.3; }
+
+  .app-shell .notification-context {
+    gap: 5px;
+    margin: 7px 0;
+    padding: 9px 10px;
+    border-color: rgba(174, 185, 180, .16);
+    background: #171c1e;
+  }
+  .app-shell .notification-context > p { line-height: 1.4; }
+  .app-shell .pt-info-card {
+    gap: 6px;
+    padding: 10px 12px;
+    border-color: rgba(174, 185, 180, .22);
+    background: #171c1e;
+  }
+  .app-shell .pt-info-card p { line-height: 1.4; }
+  .app-shell .class-wizard-hint { font-size: 11px; line-height: 1.4; }
+  .app-shell .auth-message { padding: 9px 11px; font-size: 12px; }
+}

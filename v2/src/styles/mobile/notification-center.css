@@ -1,0 +1,169 @@
+/* The inbox lives in a portal so sticky headers and their backdrop filters
+   cannot offset or crop it on narrow Android screens. */
+.notification-dismiss {
+  z-index: 1190;
+  background: rgba(0, 0, 0, .46);
+  backdrop-filter: blur(2px);
+}
+
+.notification-panel-v2 {
+  position: fixed;
+  z-index: 1191;
+  top: 84px;
+  right: max(16px, env(safe-area-inset-right));
+  left: auto;
+  width: min(450px, calc(100vw - 32px));
+  max-height: min(640px, calc(100dvh - 104px));
+  min-width: 0;
+  min-height: 0;
+  border-radius: 16px;
+}
+
+.notification-panel-v2 > header {
+  flex: 0 0 auto;
+  padding: 12px 14px;
+  gap: 10px;
+}
+.notification-panel-v2 > header > div { min-width: 0; }
+.notification-panel-v2 > header h3 {
+  margin: 2px 0 3px;
+  font-size: 19px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.notification-panel-v2 > header small { line-height: 1.35; }
+.notification-close {
+  flex: 0 0 auto;
+  min-height: 36px;
+  gap: 5px;
+  padding: 6px;
+  color: #e3e6e2;
+}
+.notification-close:focus-visible,
+.notification-tabs button:focus-visible,
+.notification-actions-v2 button:focus-visible,
+.notification-panel-v2 > footer button:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
+.notification-tabs {
+  flex: 0 0 auto;
+  gap: 4px;
+  padding: 6px 10px;
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+.notification-tabs button {
+  min-height: 36px;
+  padding: 7px 9px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.notification-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 10px 8px;
+}
+.notification-item-v2 {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px;
+  padding: 11px 8px;
+  min-width: 0;
+}
+.notification-item-icon-v2 { width: 30px; height: 30px; }
+.notification-item-copy-v2 { min-width: 0; overflow-wrap: anywhere; }
+.notification-item-title { flex-wrap: wrap; align-items: flex-start; }
+.notification-item-title strong { min-width: 0; font-size: 13px; }
+.notification-item-copy-v2 > span { font-size: 12px; line-height: 1.4; }
+.notification-priority { margin-left: auto; }
+.notification-actions-v2 button {
+  min-height: 36px;
+  max-width: 100%;
+  padding: 7px 10px;
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: normal;
+  text-align: left;
+}
+.notification-panel-v2 > footer {
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 8px 12px;
+  font-size: 10px;
+}
+.notification-panel-v2 > footer button { min-height: 32px; font-size: 11px; }
+
+/* On phones the bell must not collide with the brand or the back action. */
+@media (max-width: 600px) {
+  .app-shell > .main > .topbar { gap: 6px; }
+  .app-shell .topbar .mobile-brand {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .app-shell .topbar .mobile-brand span { display: none; }
+  .app-shell .topbar .top-meta { flex: 0 0 auto; gap: 4px; }
+  .app-shell .topbar .icon-button {
+    flex: 0 0 40px;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+  .app-shell .topbar.has-route-back .mobile-brand { display: none; }
+  .app-shell .topbar.has-route-back .route-back-button,
+  .app-shell .topbar.has-route-back .simple-back-button {
+    flex: 0 0 auto;
+    min-height: 40px;
+    margin-right: auto;
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+}
+@media (max-width: 360px) {
+  .app-shell .topbar .mobile-brand { font-size: 11px; letter-spacing: .5px; }
+  .app-shell .topbar .top-meta { gap: 3px; }
+}
+
+@media (max-width: 900px) {
+  .notification-panel-v2 {
+    top: calc(70px + env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+    bottom: calc(var(--gg-shell-nav-height, 68px) + env(safe-area-inset-bottom) + 10px);
+    left: max(12px, env(safe-area-inset-left));
+    width: auto;
+    max-width: 480px;
+    max-height: none;
+    margin-inline: auto;
+  }
+  .notification-close { width: 36px; justify-content: center; }
+  .notification-close span { display: none; }
+  .notification-panel-v2 > header { padding: 11px 12px; }
+  .notification-panel-v2 .section-kicker { letter-spacing: 1.2px; }
+  .notification-list { padding-inline: 7px; }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .notification-panel-v2 {
+    top: max(8px, env(safe-area-inset-top));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    max-height: none;
+    max-width: 600px;
+  }
+  .notification-panel-v2 > header { padding-block: 7px; }
+  .notification-panel-v2 .section-kicker { display: none; }
+  .notification-panel-v2 > header h3 { font-size: 17px; }
+  .notification-panel-v2 > header small { margin-top: 0; }
+  .notification-tabs { padding-block: 3px; }
+  .notification-panel-v2 > footer { padding-block: 4px; }
+}

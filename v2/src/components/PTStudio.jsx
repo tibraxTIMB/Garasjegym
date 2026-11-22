@@ -352,7 +352,7 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
 
  return <div className="pt2">
   <header className="pt2-head pt2-workspace-head"><div><div className="section-kicker">GARASJEGYM · {staff?'PT STUDIO':coachMode?'PT-ARBEIDSFLATE':'PERSONLEG TRENING'}</div><h2>{staff||coachMode?'PT Studio':'PT og oppfølging'}</h2><p>{staff?'Kundeoppfølging, treningsplanar og individuell PT i éi arbeidsflate.':coachMode?'Kundane du er tildelt, treningsplanane deira og PT-oppfølging.':'Bli kjend med trenarane, spør om hjelp eller følg opp ein avtale.'}</p></div>{staff?<nav className="pt2-workspace-switch"><button type="button" className={tab==='administrasjon'?'':'selected'} onClick={()=>setTab('oversikt')}>PT Studio</button><button type="button" onClick={()=>setWorkspace('groups')}>Gruppetimeadministrasjon</button><button type="button" className={tab==='administrasjon'?'selected':''} onClick={()=>setTab('administrasjon')}>PT-administrasjon</button></nav>:null}</header>
-  <Notifications compact context="pt-studio"/>
+  <Notifications compact hideWhenEmpty context="pt-studio"/>
   {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message"><CheckCircle2 size={15}/> {notice}</div>}
   {staff&&tab==='administrasjon'&&<PTManagement profile={profile}/>}
   {!canManageClients&&showIntake&&<form className="pt2-panel pt2-form" onSubmit={submitIntake}>

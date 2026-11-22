@@ -428,7 +428,7 @@ export default function App() {
         <div className="sidebar-foot"><span className="status-dot" /> {isPTCoach?'PT':isStaff(profile)?'ADMIN':'MEDLEM'} · {profile.role.toUpperCase()}</div>
       </aside>}
       <main className={simpleMode?'main simple-app-main':'main'}>
-        <header className="topbar">
+        <header className={'topbar'+(active!=='oversikt'&&navigationStack.length>0?' has-route-back':'')}>
           <div className="mobile-brand">GARASJEGYM <span>{RELEASE_SHORT}</span></div>
           {active!=='oversikt'&&navigationStack.length>0&&<button type="button" className={simpleMode?'simple-back-button':'route-back-button'} onClick={()=>navigateBack('oversikt')}>← Tilbake</button>}
           <div className="top-meta">

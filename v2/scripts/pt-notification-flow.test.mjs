@@ -33,6 +33,25 @@ test('PT alert opens the actionable admin queue and cannot be dismissed as handl
  assert.match(notifications,/missingPtLeadAlerts/)
 })
 
+test('starting review records the handler required by the live PT RLS policy',()=>{
+ const management=read('../src/components/PTManagement.jsx')
+ assert.match(management,/\.update\(\{status:'reviewing',handled_by:profile\.id,handled_at:new Date\(\)\.toISOString\(\)\}\)/)
+ assert.match(management,/\.eq\('id',row\.id\)\.eq\('status','pending'\)/)
+})
+
+test('the mobile inbox is a viewport dialog rather than a clipped header popover',()=>{
+ const notifications=read('../src/components/Notifications.jsx')
+ const app=read('../src/App.jsx')
+ const styles=read('../src/styles/mobile/notification-center.css')
+ assert.match(notifications,/createPortal\(/)
+ assert.match(notifications,/document\.body\)/)
+ assert.match(notifications,/role="dialog" aria-modal="true"/)
+ assert.match(styles,/\.notification-panel-v2\s*\{\s*position:\s*fixed;/)
+ assert.match(styles,/bottom:\s*calc\(var\(--gg-shell-nav-height/)
+ assert.match(app,/has-route-back/)
+ assert.match(styles,/\.topbar\.has-route-back \.mobile-brand/)
+})
+
 test('PT notifications have insert and status triggers, idempotent backfill and locked-down privileges',()=>{
  const migration=read('../supabase/migrations/20261122204937_notify_pt_service_requests_reliably.sql')
  assert.match(migration,/AFTER INSERT ON public\.pt_service_requests/)

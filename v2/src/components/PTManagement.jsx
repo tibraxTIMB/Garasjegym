@@ -104,7 +104,8 @@ export default function PTManagement({ profile }) {
   async function startReview(row) {
     await act(async()=>{
       const {data,error}=await supabase.from('pt_service_requests')
-        .update({status:'reviewing'}).eq('id',row.id).eq('status','pending').select('id')
+        .update({status:'reviewing',handled_by:profile.id,handled_at:new Date().toISOString()})
+        .eq('id',row.id).eq('status','pending').select('id')
       if(error)throw error
       if(!data?.length)throw new Error('Førespurnaden er endra av nokon andre. Oppdater lista og prøv igjen.')
     },'Førespurnaden er teken til behandling. Medlemmen får beskjed, og adminvarselet blir ståande fram til PT er tildelt.')

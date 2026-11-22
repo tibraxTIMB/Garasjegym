@@ -318,14 +318,25 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   setPrescription('rx');setClassicChoice('');setWizardStep(2);setNotice(preset.name+' er lasta inn. Kontroller øvingar, RX-belastning og skalering før publisering.');setError('')
  }
  function applyImportedWod(parsed){
-  const imported=parsed.items.map(row=>{
-   const exercise=row.exercise||{id:null,name:row.name,category:'Styrke',body_area:'Fullkropp',equipment:'',description:'Importert øving – kontroller øvingsvalet.'}
+  const imported=parsed.items.filter(row=>row.exercise).map(row=>{
+   const exercise=row.exercise
    const item=blankItem(exercise)
-   item.reps=String(row.reps||'10')
-   item.levels={...item.levels,rx:{...item.levels.rx,reps:String(row.reps||'10'),instruction:row.loadKg?'Importert belastning ca. '+row.loadKg.toFixed(1)+' kg. Stadfest korrekt RX/Scaled/Foundation-belastning.':''}}
+   const quantity=row.quantity
+   const metric=quickDoseMetricFor(exercise)
+   item.reps=quantity?'':String(row.reps||'10')
+   const dose={...item.levels.rx,reps:item.reps,instruction:row.loadKg?'Importert belastning ca. '+row.loadKg.toFixed(1)+' kg. Stadfest korrekt RX/Scaled/Foundation-belastning.':''}
+   if(quantity){
+    if(metric==='rowing'){item.rowValue=String(quantity.value);item.rowUnit=quantity.unit;Object.assign(dose,rowingDosePatch(quantity.unit,String(quantity.value)))}
+    else if(quantity.unit==='cal')dose.calories=String(quantity.value)
+    else if(quantity.unit==='m')dose.distanceMeters=String(quantity.value)
+    else if(quantity.unit==='s')dose.durationSeconds=String(quantity.value)
+    else if(quantity.unit==='min')dose.durationSeconds=String(quantity.value*60)
+   }
+   item.levels={...item.levels,rx:dose}
    item.coachNote=row.loadKg?'Importert belastning ca. '+row.loadKg.toFixed(1)+' kg – stadfest belastning per nivå.':''
    return item
   })
+  if(!imported.length){setError('Ingen øvingar er kopla til biblioteket. Gå tilbake til importen og vel øvingar.');return}
   setName(parsed.name||'Importert WOD');setFormat(parsed.format||'Eigen økt');setMinutes(String(parsed.minutes||20));setTimeCap(parsed.minutes?String(parsed.minutes):'');setRounds(String(parsed.rounds||1));setSelected(imported);setNotes(parsed.notes||'');setStimulus('Importert WOD – kontroller format, øvingar og dosering før lagring.');setLibraryCategory('standard');setPublishToMembers(false);setWizardStep(2);setError('');setNotice('WOD-teksten er tolka og lagd inn i byggjaren. Kontroller alle øvingar, belastningar og doseringsnivå før lagring.')
  }
  useEffect(()=>{

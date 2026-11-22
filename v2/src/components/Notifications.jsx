@@ -1,5 +1,6 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
-import {Bell,CheckCheck,Coffee,CalendarDays,MessageCircle,UserRound,Info,Check,AlertTriangle,Clock3,Archive,ArrowUpRight,ClipboardCheck,RefreshCw,X} from 'lucide-react'
+import {createPortal} from 'react-dom'
+import {Bell,CheckCheck,Coffee,CalendarDays,MessageCircle,UserRound,Info,Check,AlertTriangle,Archive,ArrowUpRight,ClipboardCheck,RefreshCw,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import {maintenanceOverview,maintenanceReminders} from '../lib/maintenancePlan.js'
 import {missingPtLeadAlerts} from '../lib/ptNotificationSafety.js'
@@ -28,6 +29,8 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
  const [loadingMore,setLoadingMore]=useState(false)
  const loadingMoreRef=useRef(false)
  const loadSequence=useRef(0)
+ const panelRef=useRef(null)
+ const closeRef=useRef(null)
  const allItems=useMemo(()=>[...maintenanceItems,...ptLeadItems,...items],[maintenanceItems,ptLeadItems,items])
  const urgent=allItems.filter(x=>x.priority==='urgent'&&x.status==='open'&&!x.archived_at&&!isExpired(x)).length
  const actionItems=allItems.filter(x=>x.requires_action&&x.status==='open'&&!x.archived_at&&!isExpired(x))
@@ -116,6 +119,28 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
   window.addEventListener('gg:maintenance-updated',onMaintenanceUpdated)
   return()=>{live=false;loadSequence.current+=1;if(channel)supabase.removeChannel(channel);window.clearInterval(refreshTimer);window.removeEventListener('gg:maintenance-updated',onMaintenanceUpdated)}
  },[context,compact,isAdmin,staff])
+ useEffect(()=>{
+  if(!open||compact)return
+  const previousFocus=document.activeElement
+  const previousOverflow=document.body.style.overflow
+  document.body.style.overflow='hidden'
+  closeRef.current?.focus()
+  function onKeyDown(event){
+   if(event.key==='Escape'){event.preventDefault();setOpen(false);return}
+   if(event.key!=='Tab'||!panelRef.current)return
+   const controls=[...panelRef.current.querySelectorAll('button:not(:disabled)')]
+   if(!controls.length)return
+   const first=controls[0],last=controls[controls.length-1]
+   if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+   else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+  }
+  document.addEventListener('keydown',onKeyDown)
+  return()=>{
+   document.removeEventListener('keydown',onKeyDown)
+   document.body.style.overflow=previousOverflow
+   if(previousFocus?.isConnected)previousFocus.focus()
+  }
+ },[open,compact])
  async function patch(id,values){
   setBusy(id);setError('')
   try{
@@ -173,13 +198,12 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
   <button type="button" className="icon-button notification-trigger" aria-label={urgent?urgent+' hastar-varsel':unread?unread+' uleste varsel':'Varslingssenter'} aria-expanded={open} onClick={()=>setOpen(v=>!v)}>
    <Bell size={17}/>{(unread+actionItems.length+ackItems.length)>0&&<span className={'notification-badge '+(urgent?'urgent':'')}>{Math.min(99,Math.max(unread,actionItems.length+ackItems.length))}</span>}
   </button>
-  {open&&<><button className="notification-dismiss" aria-label="Lukk varslingssenter" onClick={()=>setOpen(false)}/><section className="notification-panel notification-panel-v2">
-   <header><div><span className="section-kicker">GARASJEGYM · INNBOKS</span><h3>Varslingssenter</h3><small>{actionItems.length} krev handling · {ackItems.length} ventar på kvittering</small></div><button type="button" className="notification-close" onClick={()=>setOpen(false)}><X size={15}/> Lukk</button></header>
+  {open&&createPortal(<><button type="button" className="notification-dismiss" aria-label="Lukk varslingssenter" onClick={()=>setOpen(false)}/><section ref={panelRef} className="notification-panel notification-panel-v2" role="dialog" aria-modal="true" aria-labelledby="gg-notification-title">
+   <header><div><span className="section-kicker">GARASJEGYM · INNBOKS</span><h3 id="gg-notification-title">Varslingssenter</h3><small>{urgent>0?`${urgent} hastar · `:''}{actionItems.length} krev handling · {ackItems.length} ventar på kvittering</small></div><button type="button" ref={closeRef} className="notification-close" aria-label="Lukk varslingssenter" onClick={()=>setOpen(false)}><X size={17}/><span>Lukk</span></button></header>
    {error&&<div className="auth-error">{error}</div>}
-   <div className="notification-summary">{urgent>0&&<span className="urgent"><AlertTriangle size={13}/>{urgent} hastar</span>}<span><ClipboardCheck size={13}/>{ackItems.length} må stadfestast</span><span><Clock3 size={13}/>{actionItems.length} opne saker</span></div>
-   <nav className="notification-tabs">{[['active','Aktive'],['action','Handling'],['ack','Kvittering'],['info','Info'],['history','Historikk']].map(([id,label])=><button type="button" key={id} className={tab===id?'selected':''} onClick={()=>setTab(id)}>{label}{id==='action'&&actionItems.length>0?' '+actionItems.length:id==='ack'&&ackItems.length>0?' '+ackItems.length:''}</button>)}</nav>
+   <nav className="notification-tabs" aria-label="Filtrer varsel">{[['active','Aktive'],['action','Handling'],['ack','Kvittering'],['info','Info'],['history','Historikk']].map(([id,label])=><button type="button" key={id} className={tab===id?'selected':''} aria-pressed={tab===id} onClick={()=>setTab(id)}>{label}{id==='action'&&actionItems.length>0?' '+actionItems.length:id==='ack'&&ackItems.length>0?' '+ackItems.length:''}</button>)}</nav>
    <div className="notification-list">{loading?<div className="empty-state">Hentar varsel …</div>:visible.length?visible.map(renderItem):<div className="empty-state"><CheckCheck size={22}/><strong>Alt er ryddig</strong><span>Ingen varsel i denne kategorien.</span></div>}</div>
    <footer><span>{visible.length} viste · {unread} uleste</span><button type="button" onClick={()=>{setShowAll(v=>!v);if(!showAll)setTab('active')}}>{showAll?'Vis færre':'Vis fleire'}</button>{showAll&&hasMore&&<button type="button" disabled={loadingMore} onClick={()=>load(true)}>{loadingMore?'Hentar …':'Hent eldre varsel'}</button>}<button type="button" onClick={()=>load(false)}><RefreshCw size={12}/> Oppdater</button></footer>
-  </section></>}
+  </section></>,document.body)}
  </div>
 }

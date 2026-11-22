@@ -361,7 +361,7 @@ export default function Booking({ profile, onLogResult, onOpenWod, initialClassI
   }
   if(loading)return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar timeplan …</div>
   return <div className="booking-module">
-    <Notifications compact context="group"/>
+    <Notifications compact hideWhenEmpty context="group"/>
     <div className="training-heading"><div><div className="section-kicker">GARASJEGYM · TIMEPLAN</div><h3>Gruppetimar</h3></div>{staff&&<button className="secondary-button" onClick={()=>showCreate?cancelCreate():setShowCreate(true)}><Plus size={15}/> {showCreate?'Avbryt oppretting':'Ny time'}</button>}</div>
     {error&&<div className="auth-error" role="alert">{error}</div>}
     {notice&&<div className="auth-message" role="status"><CheckCircle2 size={15}/> {notice}</div>}
