@@ -2,6 +2,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
+import MobileNativeControls from './components/MobileNativeControls.jsx'
 import './styles.css'
 import './app-shell-mobile.css'
 
@@ -13,6 +14,7 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
+    <MobileNativeControls />
     <App />
   </React.StrictMode>,
 )
