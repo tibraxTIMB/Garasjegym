@@ -13,7 +13,7 @@ import tempfile
 import time
 from urllib.parse import quote
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 
 def show_caption(page, text, seconds=2.8):
@@ -114,6 +114,12 @@ def build_video(browser, video, base_url, output, tmp):
     subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(path),
                     '-vf','scale=540:-2,format=yuv420p','-an','-c:v','libx264',
                     '-preset','veryfast','-crf','28','-movflags','+faststart',str(out)],check=True)
+    # Chromium's open-source build cannot decode H.264 on every runner.
+    # Offer WebM alongside the Android/iOS-compatible MP4 so that there is
+    # always a standards-based, genuinely playable fallback.
+    subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(out),
+                    '-an','-c:v','libvpx-vp9','-deadline','realtime','-cpu-used','6',
+                    '-crf','43','-b:v','0',str(output / f'{video["id"]}.webm')],check=True)
     subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-ss','1','-i',str(out),
                     '-frames:v','1',str(output / f'{video["id"]}.png')],check=True)
     print(f'{video["title"]}: ekte GarasjeGym-vising ({out.stat().st_size // 1024} KiB)',flush=True)
@@ -131,10 +137,21 @@ def verify_inline_player(browser, base_url):
         page.get_by_role('tab', name='Videoar').click(timeout=8000)
         click(page, 'Finn fram i GarasjeGym')
         page.get_by_role('button', name='Spel videoen').click(timeout=8000)
-        page.wait_for_function('''() => {
-            const video = document.querySelector('.gg-help-player video');
-            return video && !video.paused && video.currentTime > 0.3 && !video.error;
-        }''', timeout=15000)
+        try:
+            page.wait_for_function('''() => {
+                const video = document.querySelector('.gg-help-player video');
+                return video && !video.paused && video.currentTime > 0.3 && !video.error;
+            }''', timeout=15000)
+        except PlaywrightTimeoutError as exc:
+            details = page.locator('.gg-help-player video').evaluate('''video => ({
+                currentSrc: video.currentSrc, currentTime: video.currentTime,
+                paused: video.paused, readyState: video.readyState,
+                networkState: video.networkState,
+                error: video.error?.message,
+                mp4: video.canPlayType('video/mp4; codecs="avc1.42E01E"'),
+                webm: video.canPlayType('video/webm; codecs="vp8"')
+            })''')
+            raise AssertionError(f'Videoavspeling feila: {details}') from exc
         link = page.get_by_role('link', name='Opna direkte')
         if '/help/videos/kom-i-gang.mp4' not in (link.get_attribute('href') or ''):
             raise AssertionError('Direktelenkja til videoen manglar')

@@ -103,6 +103,7 @@
 .gg-help-player{display:grid;justify-items:center;gap:8px;padding:9px;border-radius:10px;background:#0d1619}
 .gg-help-player video{display:block;aspect-ratio:9/16;width:min(100%,320px);height:auto;max-height:76vh;object-fit:contain;background:#081217;border:1px solid #53615e;border-radius:9px}
 .gg-help-player-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:min(100%,360px)}
+.gg-help-player-actions button{grid-column:1/-1}
 .gg-help-player-actions button,.gg-help-player-actions a{display:flex;align-items:center;justify-content:center;gap:6px;min-height:43px;padding:8px 10px;border-radius:9px;font:inherit;font-size:12px;font-weight:800;text-decoration:none;cursor:pointer}
 .gg-help-player-actions a{border:1px solid #a47e50;color:#ffd194;background:#28281f}
 .gg-help-player-actions button{border:1px solid #efa43f;background:#efa43f;color:#1b1b18}
