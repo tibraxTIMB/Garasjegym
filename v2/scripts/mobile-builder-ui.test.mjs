@@ -41,14 +41,16 @@ test('live timer is one viewport-locked surface with portrait and landscape layo
   assert.doesNotMatch(styles.match(/\.gg-live-timer\s*\{[^}]*\}/s)?.[0] || '', /overflow-y:\s*auto/)
 })
 
-test('AMRAP round splits stay visible without growing the clock page', () => {
+test('AMRAP round splits can scroll back without growing the clock page', () => {
   const timer = source('../src/components/Training.jsx')
   const styles = source('../src/components/timer-viewport.css')
   assert.match(timer, /summarizeLapSplits\(laps\)/)
-  assert.match(timer, /stageLapHistory\.slice\(-3\)/)
+  assert.match(timer, /stageLapHistory\.map\(lap=>/)
+  assert.match(timer, /ref=\{portraitLapsRef\}/)
   assert.match(timer, /stagePanel==='laps'/)
   assert.match(timer, /aria-label=\{`Vis alle \$\{laps\.length\} rundetider`\}/)
   assert.match(styles, /\.gg-live-timer__lap-preview\s*\{[^}]*display:\s*flex/s)
+  assert.match(styles, /\.gg-live-timer__lap-preview\s*\{[^}]*overflow-x:\s*auto/s)
   assert.match(styles, /\.gg-live-timer__body--with-laps/)
   assert.match(styles, /\.gg-live-timer__clock-laps\s*\{[^}]*position:\s*static/s)
 })
@@ -91,7 +93,7 @@ test('fullscreen timer shows a compact WOD name above the running state, not on 
 test('result exercise tabs stay compact while retaining their exercise names', () => {
   const style = source('../src/styles/mobile/experience-system.css')
   const timer = source('../src/components/Training.jsx')
-  assert.match(style, /\.workout-result-tabs button\s*\{[^}]*min-height:35px; max-width:160px; padding:6px 11px/s)
+  assert.match(style, /\.workout-result-tabs button\s*\{[^}]*min-height:34px; max-width:142px; padding:5px 9px/s)
   assert.match(timer, /role="tab" aria-selected=\{activeExerciseIndex===index\}[^]*?title=\{item\.exercise_name/)
   assert.match(timer, /\{index\+1\}\. \{item\.exercise_name\|\|'Øving'\}/)
 })

@@ -5,6 +5,14 @@ const EXTERNAL_LOAD = /manual|dumbbell|kettlebell|barbell|vektstang|stang|vektsk
 const BOX_EQUIPMENT = /plyo.?boks|kasse|box/i;
 const HOLD_MOVEMENT = /dead hang|active hang|flexed.arm hang|wall sit|plank|handstand hold|l.?sit/i;
 
+/** Cardio-erg movements are measured in distance, calories or time, not kilograms. */
+export function isErgExercise(exercise = {}) {
+  const name = String(typeof exercise === 'string' ? exercise : exercise.name || exercise.exercise_name || '').toLowerCase().trim();
+  const equipment = String(typeof exercise === 'string' ? '' : exercise.equipment || '').toLowerCase();
+  return /^(?:row|rowing|rowerg|romaskin|concept\s*2\s*row(?:er|ing)?|ski.?erg|bike.?erg|assault bike|echo bike)(?:\b|$)/.test(name)
+    || /(?:romaskin|rowerg|ski.?erg|bike.?erg|assault bike|echo bike)/.test(equipment);
+}
+
 const hasValue = value => value !== null && value !== undefined && String(value).trim() !== '';
 const hasHeight = item => hasValue(item?.height_cm) || hasValue(item?.heightCm);
 const hasLoad = item => hasValue(item?.load_kg) || hasValue(item?.loadKg)
@@ -38,7 +46,7 @@ export function getExerciseMeasurementFlags(exercise = {}) {
   const ordinaryLoad = LOAD_MOVEMENT.test(name) && !BODYWEIGHT_MOVEMENT.test(name)
     && (!usesHeight || /step.?up/i.test(name)) && !boxOnly;
   const bodyweightOnly = /^trx\b/.test(name) || /^trx\b/.test(equipment) || HOLD_MOVEMENT.test(name) || /ab wheel|rollout/.test(name);
-  const usesLoad = Boolean(exercise.is_complex || hasSavedLoad || externalLoad || (!bodyweightOnly && ordinaryLoad) || (!bodyweightOnly && !usesHeight && !boxOnly));
+  const usesLoad = !isErgExercise(exercise) && Boolean(exercise.is_complex || hasSavedLoad || externalLoad || (!bodyweightOnly && ordinaryLoad) || (!bodyweightOnly && !usesHeight && !boxOnly));
 
   return { usesHeight, usesLoad };
 }

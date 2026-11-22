@@ -10,13 +10,14 @@ import { formatComplexSequence } from '../lib/wodComplexes.js'
 import { formatParticipation, normalizeWodEngine, parseIntervalNotation } from '../lib/wodEngine.js'
 import PerformanceCenter from './PerformanceCenter.jsx'
 import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration, summarizeLapSplits } from '../lib/timerClock.js'
-import { getExerciseMeasurementFlags } from '../lib/exerciseMeasurements.js'
+import { getExerciseMeasurementFlags, isErgExercise } from '../lib/exerciseMeasurements.js'
 import { exerciseRecordType } from '../lib/prMetrics.js'
 import { getWodSideLabel, isSideSelectableExercise, WOD_SIDE_OPTIONS } from '../lib/wodSides.js'
 import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
 import { exerciseBrowseCategory, exerciseBrowseOrder } from '../lib/exerciseCategories.js'
 import { restoreWorkoutDraft, saveWorkoutDraft, clearWorkoutDraft, resumedElapsedSeconds } from '../lib/workoutDraft.js'
 import { canSaveDurationOnlyWorkout } from '../lib/freeSession.js'
+import { countdownSignal, secondsToTimerBoundary, runningTimerSignal } from '../lib/timerCues.js'
 import './timer-viewport.css'
 
 const FORMATS = ['Fri trening', 'E1MOM', 'E1.25MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
@@ -24,6 +25,13 @@ const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exerci
 const pad = (n) => String(n).padStart(2, '0')
 const clock = (seconds) => `${pad(Math.floor(Math.max(0, seconds) / 60))}:${pad(Math.max(0, seconds) % 60)}`
 const doseLabel=(item,level='rx')=>{const d=item?.levels?.[level]||(level==='intermediate'?item?.levels?.rx:null)||{};const parts=[];if(d.sets)parts.push(d.sets+' sett');if(d.reps)parts.push(d.reps+' reps');if(d.heightCm)parts.push(d.heightCm+' cm');if(d.durationSeconds)parts.push(d.durationSeconds+' sek');if(d.distanceMeters)parts.push(d.distanceMeters+' m');if(d.calories)parts.push(d.calories+' cal');if(d.loadMode==='kg'){const loads=[d.loadKgMen!==''&&d.loadKgMen!=null?'M '+d.loadKgMen+' kg':'',d.loadKgWomen!==''&&d.loadKgWomen!=null?'K '+d.loadKgWomen+' kg':''].filter(Boolean);if(loads.length)parts.push(loads.join(' / '))}else if(d.loadMode==='percent'&&d.percent1rm)parts.push(d.percent1rm+' % 1RM');else if(d.loadMode==='rir'&&d.rir!=='')parts.push('RIR '+d.rir);else if(d.loadMode==='bodyweight')parts.push('Kroppsvekt');if(d.tempo)parts.push('Tempo '+d.tempo);if(d.variant)parts.push('Variant: '+d.variant);if(d.instruction)parts.push(d.instruction);return parts.join(' · ')||''};
+const wodRowUnit=(item,level='rx')=>{
+  const prescribed=item?.levels?.[level]||item?.levels?.rx||{}
+  if(prescribed.calories!=null&&prescribed.calories!=='')return 'cal'
+  if(prescribed.distanceMeters!=null&&prescribed.distanceMeters!=='')return 'm'
+  if(prescribed.durationSeconds!=null&&prescribed.durationSeconds!=='')return 's'
+  return item?.row_unit||'m'
+}
 const isEmomFormat = format => /^E\d+(?:\.\d+)?MOM$/.test(format||'') || ['EMOM','EMOM 1','EMOM 2'].includes(format)
 const getEmomIntervalMinutes = (format, timerSettings) => Math.max(0.25,Math.min(60,Number(timerSettings?.workout_schema?.interval?.work_every_minutes)||parseIntervalNotation(format)?.intervalMinutes||(format==='EMOM 2'?2:1)))
 const getDefaultWorkSeconds = (format, timerSettings) => {
@@ -87,6 +95,11 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [phase, setPhase] = useState(() => resumeState?.phase || 'Klar')
   const [laps, setLaps] = useState(() => Array.isArray(resumeState?.laps) ? resumeState.laps : [])
   const [soundOn, setSoundOn] = useState(true)
+  const soundOnRef = useRef(soundOn)
+  soundOnRef.current = soundOn
+  const audioContextRef = useRef(null)
+  const lastCountdownCueRef = useRef({deadline:null,second:null})
+  const lastRunningCueSecondRef = useRef(-1)
   const [showTimerSettings, setShowTimerSettings] = useState(false)
   const [stagePanel, setStagePanel] = useState(null)
   const [confirmReset, setConfirmReset] = useState(false)
@@ -229,24 +242,43 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     : isEMOM ? (timerLimitReached ? 0 : emomPhaseRemaining)
     : elapsed
 
-  function cue(frequency = 880, duration = 0.16) {
-    if (!soundOn) return
+  function ensureAudioContext() {
+    if (!soundOnRef.current) return null
     try {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext
-      if (!AudioContextClass) return
-      const context = new AudioContextClass()
+      if (!AudioContextClass) return null
+      if (!audioContextRef.current || audioContextRef.current.state === 'closed') audioContextRef.current = new AudioContextClass()
+      const context = audioContextRef.current
+      if (context.state === 'suspended') context.resume()?.catch(()=>{})
+      return context
+    } catch { return null }
+  }
+  function cue(frequency = 880, duration = 0.16, delay = 0) {
+    const context = ensureAudioContext()
+    if (!context) return
+    try {
       const oscillator = context.createOscillator()
       const gain = context.createGain()
       oscillator.frequency.value = frequency
       oscillator.type = 'sine'
-      gain.gain.setValueAtTime(0.0001, context.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.18, context.currentTime + 0.015)
-      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration)
+      const beginAt = context.currentTime + delay
+      gain.gain.setValueAtTime(0.0001, beginAt)
+      gain.gain.exponentialRampToValueAtTime(0.18, beginAt + 0.015)
+      gain.gain.exponentialRampToValueAtTime(0.0001, beginAt + duration)
       oscillator.connect(gain); gain.connect(context.destination)
-      oscillator.start(); oscillator.stop(context.currentTime + duration)
-      oscillator.onended = () => context.close()
+      oscillator.start(beginAt); oscillator.stop(beginAt + duration)
+      oscillator.onended = () => { oscillator.disconnect(); gain.disconnect() }
     } catch { /* Lyd er valfri og avhengig av nettlesaren. */ }
   }
+  function playSignal(signal) {
+    if (signal === 'tick-3') cue(740, 0.12)
+    else if (signal === 'tick-2') cue(870, 0.12)
+    else if (signal === 'tick-1') cue(1000, 0.15)
+    else if (signal === 'start') cue(1320, 0.32)
+    else if (signal === 'transition') cue(1180, 0.24)
+    else if (signal === 'finish') { cue(900, 0.2); cue(580, 0.4, 0.22) }
+  }
+  useEffect(() => () => { audioContextRef.current?.close?.().catch?.(()=>{}) }, [])
 
   useEffect(() => {
     // Never erase an in-progress clock on the initial mount/StrictMode replay.
@@ -296,12 +328,24 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       setHasStarted(true)
       setPhase('PÅGÅR')
       setRunning(true)
+      playSignal('start')
     }
     refresh()
     const id = window.setInterval(refresh, 150)
     document.addEventListener('visibilitychange', refresh)
     return () => { window.clearInterval(id); document.removeEventListener('visibilitychange', refresh) }
   }, [countdownDeadline])
+
+  useEffect(() => {
+    if (countdownDeadline === null) { lastCountdownCueRef.current = {deadline:null,second:null}; return }
+    const last = lastCountdownCueRef.current
+    if (last.deadline !== countdownDeadline) lastCountdownCueRef.current = {deadline:countdownDeadline,second:null}
+    const signal = countdownSignal(countdownRemaining)
+    if (signal && signal !== 'start' && lastCountdownCueRef.current.second !== countdownRemaining) {
+      lastCountdownCueRef.current.second = countdownRemaining
+      playSignal(signal)
+    }
+  }, [countdownDeadline, countdownRemaining])
 
   useEffect(() => {
     if (!stop) return
@@ -356,18 +400,23 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
 
   useEffect(() => {
     if (!running) return
+    if (lastRunningCueSecondRef.current === elapsed) return
+    lastRunningCueSecondRef.current = elapsed
     if (timerLimitReached) {
       const finishAt = isStationCircuit ? stationTotal : isTimedInterval ? intervalTotal : target
       setElapsed(clampElapsedToTarget(elapsed, finishAt))
       timerRunStartedAt.current = null
       setRunning(false)
       setPhase(hasTimeCap ? 'TIDSGRENSE' : 'FERDIG')
-      cue(520, 0.5)
+      playSignal('finish')
       return
     }
-    if (((isTimedInterval || isStationCircuit) && (elapsed % cycle === 0 || elapsed % cycle === effectiveWorkSeconds)) ||
+    const phaseChanged = elapsed > 0 && (((isTimedInterval || isStationCircuit) && (elapsed % cycle === 0 || elapsed % cycle === effectiveWorkSeconds)) ||
       (isEMOM && elapsed > 0 && (elapsed % emomCycle === 0 || elapsed % emomCycle === effectiveEmomWorkSeconds || elapsed % emomCycle === effectiveEmomWorkSeconds+effectiveEmomRestSeconds)) ||
-      (isDeathBy && elapsed > 0 && elapsed % 60 === 0)) cue(1040, 0.12)
+      (isDeathBy && elapsed > 0 && elapsed % 60 === 0))
+    const secondsToBoundary = secondsToTimerBoundary({format,elapsed,remainingTotal,phaseRemaining,emomPhaseRemaining,isTimedInterval,isStationCircuit,isEMOM,isCountdown,hasTimeCap,isDeathBy})
+    const signal = runningTimerSignal({secondsToBoundary,phaseChanged})
+    if (signal) playSignal(signal)
   }, [elapsed, running, timerLimitReached, target, capDuration, hasTimeCap, isCountdown, isEMOM, isDeathBy, isTimedInterval, isStationCircuit, intervalTotal, stationTotal, cycle, emomCycle, effectiveWorkSeconds, effectiveEmomWorkSeconds, effectiveEmomRestSeconds])
 
   useEffect(() => {
@@ -408,13 +457,14 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const splitAction = () => { if(!running)return; setLaps(value => [...value, splitDuration(elapsed, value)]); cue(1200, 0.1) }
   const beginWorkout = (withCountdown = false) => {
     if (hasStarted || running || countdownDeadline !== null) return
+    ensureAudioContext() // Mobile browsers permit later 3–2–1 sounds after this user gesture.
     if (withCountdown) {
       setCountdownRemaining(10)
       setCountdownDeadline(Date.now() + 10000)
       setPhase('NEDTELJING')
       return
     }
-    setHasStarted(true); setPhase('PÅGÅR'); setRunning(true)
+    setHasStarted(true); setPhase('PÅGÅR'); setRunning(true); playSignal('start')
   }
   const toggleRunning = () => { if (countdownDeadline !== null) { setCountdownDeadline(null);setCountdownRemaining(0);setPhase('Klar');return } if (!hasStarted) { beginWorkout(false); return } if (running) { setRunning(false); setPhase('PAUSE'); return } if (phase === 'FERDIG' || phase === 'TIDSGRENSE') return; setPhase('PÅGÅR'); setRunning(true) }
   const visibleStationIndex = Math.min(stationCount - 1, fixedSlotState.currentSlotIndex % stationCount)
@@ -425,6 +475,15 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const stageIsComplete = phase === 'FERDIG' || phase === 'TIDSGRENSE'
   const stageLapLabel = isAmrap ? 'RUNDETIDER' : 'MELLOMTIDER'
   const stageLapHistory = useMemo(()=>summarizeLapSplits(laps),[laps])
+  const portraitLapsRef = useRef(null)
+  const landscapeLapsRef = useRef(null)
+  useEffect(()=>{
+    for(const rail of [portraitLapsRef.current,landscapeLapsRef.current]){
+      if(!rail)continue
+      rail.scrollLeft=rail.scrollWidth
+      rail.scrollTop=rail.scrollHeight
+    }
+  },[laps.length])
   // Keep the complete WOD visible, including repeated exercises and pauses.
   // The selected level also carries side instructions such as Høgre/Venstre.
   const stageRows = (isStationCircuit ? stationList : exerciseList).map(item => {
@@ -441,7 +500,14 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       savedLevel?.calories ? `${savedLevel.calories} cal` : '',
       side && side!=='per side' ? side : '',
     ]
-    return {id:item.key||item.exercise_id||item.station_number||item.exercise_name,name:item.is_rest?'Pause':item.exercise_name||item.name||'Øving',dose:details.filter(Boolean).join(' · ')||item.prescription_label||''}
+    return {
+      id:item.key||item.exercise_id||item.station_number||item.exercise_name,
+      name:item.is_rest?'Pause':item.exercise_name||item.name||'Øving',
+      dose:details.filter(Boolean).join(' · ')||item.prescription_label||'',
+      description:item.description||item.instructions||item.notes||'',
+      equipment:item.equipment||'',
+      steps:Array.isArray(item.complex_steps)?item.complex_steps:[],
+    }
   })
   const resetTimer = () => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; scheduledStartedAt.current=null; setCountdownDeadline(null);setCountdownRemaining(0); setRunning(false); setElapsed(0); setRound(1); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
   return <div ref={timerContainerRef} className={stageVisible ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
@@ -464,8 +530,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           <div className="gg-live-timer__time-label">{countdownDeadline!==null?'STARTAR OM':stageTimeLabel}</div>
           {(isCountdown||isEMOM||isTimedInterval||isStationCircuit||hasTimeCap)&&<div className="gg-live-timer__time-secondary"><span>{isCountdown?'Medgått':isEMOM?'Økta att':isTimedInterval||isStationCircuit?'Økta att':'Tid att'}</span><b>{clock(isCountdown?elapsed:remainingTotal)}</b></div>}
           {stageLapHistory.length>0&&<div className="gg-live-timer__clock-laps" aria-label={stageLapLabel}>
-            <ol className="gg-live-timer__lap-preview">{stageLapHistory.slice(-3).map(lap=><li key={lap.round}><span>{isAmrap?'R':'M'}{lap.round}</span><b>{clock(lap.duration)}</b></li>)}</ol>
-            <button type="button" className="gg-live-timer__lap-all" onClick={()=>setStagePanel('laps')} aria-label={`Vis alle ${laps.length} rundetider`}>+{laps.length}</button>
+            <ol ref={landscapeLapsRef} className="gg-live-timer__lap-preview" aria-label="Sveip for å sjå tidlegare rundar">{stageLapHistory.map(lap=><li key={lap.round}><span>{isAmrap?'R':'M'}{lap.round}</span><b>{clock(lap.duration)}</b></li>)}</ol>
+            <button type="button" className="gg-live-timer__lap-all" onClick={()=>setStagePanel('laps')} aria-label={`Vis alle ${laps.length} rundetider`}>Alle</button>
           </div>}
         </div>
         <div className="gg-live-timer__context">
@@ -479,8 +545,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       </div>
       <div className="gg-live-timer__music-dock" aria-label="Musikkstyring"><MusicMiniPlayer liveCompact/></div>
       {stageLapHistory.length>0&&<div className="gg-live-timer__laps-portrait" aria-label={stageLapLabel}>
-        <ol className="gg-live-timer__lap-preview">{stageLapHistory.slice(-3).map(lap=><li key={lap.round}><span>{isAmrap?'R':'M'}{lap.round}</span><b>{clock(lap.duration)}</b></li>)}</ol>
-        <button type="button" className="gg-live-timer__lap-all" onClick={()=>setStagePanel('laps')} aria-label={`Vis alle ${laps.length} rundetider`}>+{laps.length}</button>
+        <ol ref={portraitLapsRef} className="gg-live-timer__lap-preview" aria-label="Sveip sidelengs for å sjå tidlegare rundar">{stageLapHistory.map(lap=><li key={lap.round}><span>{isAmrap?'R':'M'}{lap.round}</span><b>{clock(lap.duration)}</b></li>)}</ol>
+        <button type="button" className="gg-live-timer__lap-all" onClick={()=>setStagePanel('laps')} aria-label={`Vis alle ${laps.length} rundetider`}>Alle</button>
       </div>}
       <footer className="gg-live-timer__footer">
         <button type="button" className="gg-live-timer__pause" onClick={toggleRunning} disabled={stageIsComplete}>{countdownDeadline!==null?<><X size={21}/> Avbryt</>:running?<><Pause size={21}/> Pause</>:phase==='PAUSE'?<><Play size={21}/> Hald fram</>:<><Play size={21}/> Start no</>}</button>
@@ -490,8 +556,14 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         {hasStarted&&<button type="button" className="gg-live-timer__finish" onClick={onFinish}><CheckCircle2 size={20}/> Avslutt</button>}
       </footer>
       {stagePanel&&<div className="gg-live-timer__scrim" onClick={()=>setStagePanel(null)} role="presentation"/>}
-      {stagePanel==='wod'&&<aside className="gg-live-timer__drawer" aria-label="Øvingar i WOD-en"><header><strong>Øvingar · {stageRows.length}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk øvingslista"><X size={20}/></button></header><ol className="gg-live-timer__all-exercises">{stageRows.map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span><small>{item.dose}</small></li>)}</ol>{!stageRows.length&&<p>Ingen øvingar er lagde til.</p>}</aside>}
-      {stagePanel==='laps'&&<aside className="gg-live-timer__drawer" aria-label={stageLapLabel}><header><strong>{stageLapLabel} · {laps.length}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk rundetider"><X size={20}/></button></header><ol className="gg-live-timer__all-laps">{stageLapHistory.map(lap=><li key={lap.round}><span>{isAmrap?'Runde':'Mellomtid'} {lap.round}<small>Ved {clock(lap.at)}</small></span><b>{clock(lap.duration)}</b></li>)}</ol></aside>}
+      {stagePanel==='wod'&&<aside className="gg-live-timer__drawer" aria-label="Øvingar i WOD-en"><header><strong>Øvingar · {stageRows.length}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk øvingslista"><X size={20}/></button></header><ol className="gg-live-timer__all-exercises">{stageRows.map((item,index)=><li key={`${item.id}-${index}`}>
+        {item.steps.length||item.description||item.equipment?<details className="gg-live-timer__exercise-detail"><summary><span>{index+1}. {item.name}</span><small>{item.dose}</small><ChevronDown size={15}/></summary><div className="gg-live-timer__exercise-more">{item.steps.length>0&&<><strong>Rørslesekvens</strong><ol>{item.steps.map((step,stepIndex)=><li key={stepIndex}>{step.reps?`${step.reps} × `:''}{step.name||step.exercise_name||'Rørsle'}</li>)}</ol></>}{item.description&&<p>{item.description}</p>}{item.equipment&&<p><b>Utstyr:</b> {item.equipment}</p>}</div></details>:<div className="gg-live-timer__exercise-simple"><span>{index+1}. {item.name}</span><small>{item.dose}</small></div>}
+      </li>)}</ol>{!stageRows.length&&<p>Ingen øvingar er lagde til.</p>}</aside>}
+      {stagePanel==='laps'&&<aside className="gg-live-timer__drawer" aria-label={stageLapLabel}><header><strong>{stageLapLabel} · {laps.length}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk rundetider"><X size={20}/></button></header><ol className="gg-live-timer__all-laps">{stageLapHistory.map((lap,index)=>{
+        const previous=stageLapHistory[index-1]
+        const delta=previous?lap.duration-previous.duration:null
+        return <li key={lap.round}><span>{isAmrap?'Runde':'Mellomtid'} {lap.round}<small>Ved {clock(lap.at)}{delta!==null?' · '+(delta<0?`${Math.abs(delta)} sek raskare`:delta>0?`${delta} sek seinare`:'same tid som førre'):''}</small></span><b>{clock(lap.duration)}</b></li>
+      })}</ol></aside>}
       {stagePanel==='settings'&&<aside className="gg-live-timer__drawer" aria-label="Tilpass klokka"><header><strong>Tilpass klokka</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk innstillingane"><X size={20}/></button></header>
         <label className="gg-live-timer__setting">Storleik på klokka <input type="range" min="88" max="130" step="7" value={Math.max(88,Math.min(130,appearance.clockSize))} onChange={e=>setAppearance(value=>({...value,clockSize:Number(e.target.value)}))}/></label>
         <label className="gg-live-timer__setting">Klokkefarge <input type="color" value={appearance.accent} onChange={e=>setAppearance(value=>({...value,accent:e.target.value}))}/></label>
@@ -847,7 +919,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         prescription_levels: item.levels || null,
         side_mode: item.side_mode || null,
         prescription_label: doseLabel(item,'rx'),
-        rowValue:'',rowUnit:item.row_unit||'m',workSeconds:'',
+        description: item.description || item.instructions || exercises.find(exercise=>exercise.id===item.exercise_id)?.description || '',
+        rowValue:'',rowUnit:wodRowUnit(item,'rx'),workSeconds:'',
         equipment: item.equipment || exercises.find(exercise => exercise.id === item.exercise_id)?.equipment || '',
         uses_height: getExerciseMeasurementFlags({
           ...item,
@@ -918,7 +991,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
 
   function addExercise(exercise) {
     const measurementFlags=getExerciseMeasurementFlags(exercise)
-    setItems(current => [...current, { ...emptyExercise(), exercise_id: exercise.id, exercise_name: exercise.name, equipment:exercise.equipment||'', uses_height:measurementFlags.usesHeight, uses_load:measurementFlags.usesLoad }])
+    setItems(current => [...current, { ...emptyExercise(), exercise_id: exercise.id, exercise_name: exercise.name, equipment:exercise.equipment||'', description:exercise.description||'', uses_height:measurementFlags.usesHeight, uses_load:measurementFlags.usesLoad }])
     setQuery('')
   }
   function addManualWod(){
@@ -930,14 +1003,21 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       const catalogExercise=exercises.find(exercise=>exercise.id===item.exercise_id)
       const equipment=item.equipment||catalogExercise?.equipment||''
       const measurementFlags=getExerciseMeasurementFlags({...item,name:item.exercise_name||item.name||catalogExercise?.name||'',equipment,levels:item.levels||{},sets:item.sets||[]})
-      return {...emptyExercise(),manual_wod_id:wod.id,exercise_id:item.exercise_id||'',exercise_name:item.exercise_name||item.name||'',equipment,uses_height:measurementFlags.usesHeight,uses_load:measurementFlags.usesLoad,is_rest:!!item.is_rest,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps:[],rest_duration_seconds:item.rest_duration_seconds??null,prescription_levels:item.levels||null,prescription_label:doseLabel(item,wodLevel),rowUnit:item.row_unit||'m'}
+      return {...emptyExercise(),manual_wod_id:wod.id,exercise_id:item.exercise_id||'',exercise_name:item.exercise_name||item.name||'',equipment,uses_height:measurementFlags.usesHeight,uses_load:measurementFlags.usesLoad,is_rest:!!item.is_rest,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps:[],rest_duration_seconds:item.rest_duration_seconds??null,prescription_levels:item.levels||null,prescription_label:doseLabel(item,wodLevel),description:item.description||item.instructions||catalogExercise?.description||'',rowUnit:wodRowUnit(item,wodLevel)}
     }):(wod.movements||'').split(/\n|,/).map(name=>name.trim()).filter(Boolean).map(name=>{const flags=getExerciseMeasurementFlags({name});return {...emptyExercise(),manual_wod_id:wod.id,exercise_name:name,uses_height:flags.usesHeight,uses_load:flags.usesLoad}})
     if(!additions.length){setError('WOD-en har ingen registrerte øvingar å leggje til.');return}
     setItems(rows=>[...rows,...additions]);setManualWodIds(ids=>[...ids,wod.id]);setManualWodSelect('');setManualWodQuery('');setManualWodPickerOpen(false);setNotice('Øvingane frå '+wod.name+' er lagde til. Stoppeklokka held fram som før.')
   }
 
   function updateExercise(key, patch) {
-    setItems(current => current.map(item => item.key === key ? { ...item, ...patch } : item))
+    setItems(current => current.map(item => {
+      if(item.key !== key)return item
+      if(patch.exercise_name !== undefined && !item.exercise_id){
+        const flags=getExerciseMeasurementFlags({...item,...patch,name:patch.exercise_name})
+        return {...item,...patch,uses_height:flags.usesHeight,uses_load:flags.usesLoad}
+      }
+      return {...item,...patch}
+    }))
   }
   function updateSet(key, index, patch) {
     setItems(current => current.map(item => item.key === key ? { ...item, sets: item.sets.map((s, i) => i === index ? { ...s, ...patch } : s) } : item))
@@ -992,7 +1072,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           if(String(set.reps??'').trim()!==''&&!Number.isInteger(Number(set.reps)))throw new Error('Repetisjonar for «'+item.exercise_name+'» må vera eit heiltal.')
         }
       }
-      const hasRecordedScore=[scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||items.some(item=>Number(item.rowValue)>0||item.sets?.some(set=>[set.reps,set.load_kg,set.height_cm,set.time_text,set.time_seconds].some(value=>String(value??'').trim()!=='')))
+      const hasRecordedScore=[scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||(isAmrapScore&&Number(timerSnapshot.roundsCompleted)>0)||items.some(item=>Number(item.rowValue)>0||item.sets?.some(set=>[set.reps,set.load_kg,set.height_cm,set.time_text,set.time_seconds].some(value=>String(value??'').trim()!=='')))
       if(manualEntry&&!hasRecordedScore)throw new Error('Registrer minst eitt faktisk resultat – til dømes reps, kg, høgd, tid, distanse eller kaloriar – før du lagrar etterregistreringa.')
       if(classSessionId&&source?.category!=='warmup'&&!hasRecordedScore)throw new Error('Hovud-WOD må ha minst eitt registrert resultat før du kan lagra.')
       const resultData = {
@@ -1098,7 +1178,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       </div>
       {finishOpen&&<div className="workout-finish-backdrop" role="presentation">
         <section className="workout-finish-dialog" role="dialog" aria-modal="true" aria-labelledby="finish-workout-title">
-          <div className="workout-finish-head"><div><span className="section-kicker">ØKTA ER FERDIG</span><h3 id="finish-workout-title">{title||'Treningsøkt'}</h3></div><button type="button" className="danger-icon" aria-label="Lukk" onClick={()=>setFinishOpen(false)}>×</button></div>
+          <div className="workout-finish-head"><div><span className="section-kicker">ETTER ØKTA · SJEKK RESULTATA</span><h3 id="finish-workout-title">{title||'Treningsøkt'}</h3></div><button type="button" className="danger-icon" aria-label="Lukk" onClick={()=>setFinishOpen(false)}>×</button></div>
+          <p className="workout-finish-help">Siste kontroll før lagring: Tal frå WOD-oppsettet kan vere førehandsfylte. Rett reps eller vekt dersom du gjorde noko anna. Rundar og tid frå klokka blir tekne med automatisk.</p>
           <div className="workout-finish-summary">
             <div><span>FORMAT</span><strong>{format}</strong></div>
             <div><span>{manualEntry?'REGISTRERING':'TID'}</span><strong>{manualEntry?'Manuell':clock(timerSnapshot.elapsed)}</strong></div>
@@ -1110,7 +1191,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
               {items.map((item,index)=><button type="button" key={item.key} role="tab" aria-selected={activeExerciseIndex===index} className={activeExerciseIndex===index?'selected':''} title={item.exercise_name||'Øving '+(index+1)} onClick={()=>setActiveExerciseIndex(index)}>{index+1}. {item.exercise_name||'Øving'}</button>)}
             </div>
             {items[activeExerciseIndex]&&<div className="workout-result-exercise">
-              <header><div><span className="section-kicker">RESULTAT · ØVING {activeExerciseIndex+1} AV {items.length}</span><h4>{items[activeExerciseIndex].exercise_name}</h4>{items[activeExerciseIndex].prescription_label&&<small>{items[activeExerciseIndex].prescription_label}</small>}</div><span className="count-pill">{items[activeExerciseIndex].sets?.length||0} sett</span></header>
+              <header><div><span className="section-kicker">RESULTAT · ØVING {activeExerciseIndex+1} AV {items.length}</span><h4>{items[activeExerciseIndex].exercise_name}</h4>{items[activeExerciseIndex].prescription_label&&<small>Planlagt: {items[activeExerciseIndex].prescription_label}</small>}</div>{!isErgExercise(items[activeExerciseIndex])&&<span className="count-pill">{items[activeExerciseIndex].sets?.length||0} sett</span>}</header>
+              {isErgExercise(items[activeExerciseIndex])?<div className="workout-result-erg"><strong>Registrer ro-/ergresultatet</strong><div className="workout-result-erg-fields"><label>Resultat<input type="number" min="0" step="0.1" value={items[activeExerciseIndex].rowValue??''} onChange={e=>updateExercise(items[activeExerciseIndex].key,{rowValue:e.target.value})} placeholder="Til dømes 12"/></label><label>Eining<select value={items[activeExerciseIndex].rowUnit||'m'} onChange={e=>updateExercise(items[activeExerciseIndex].key,{rowUnit:e.target.value})}><option value="m">Meter</option><option value="km">Kilometer</option><option value="cal">Kaloriar</option><option value="s">Sekund</option><option value="min">Minutt</option></select></label></div><small>Før inn faktisk resultat dersom du vil logge det. Talet ovanfor er WOD-målet, ikkje registrert resultat.</small></div>:<>
               <div className="workout-result-set-head"><span>Sett</span><span>Reps</span><span>Målingar</span><span></span></div>
               {(items[activeExerciseIndex].sets||[]).map((set,setIndex)=><div className="workout-result-set" key={setIndex}>
                 <strong>{setIndex+1}</strong>
@@ -1122,10 +1204,11 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
                 </div>
                 <CheckCircle2 size={22} aria-label="Sett registrert" className={(set.reps!==''||set.load_kg!==''||set.height_cm!==''||set.time_text||set.time_seconds!=='')?'is-recorded':''}/>
               </div>)}
-              <div className="workout-result-actions"><button type="button" className="secondary-button" onClick={()=>addSet(items[activeExerciseIndex].key)}><Plus size={16}/> Legg til sett</button><span>{items[activeExerciseIndex].sets?.filter(set=>set.reps!==''||set.load_kg!==''||set.height_cm!==''||set.time_text||set.time_seconds!=='').length||0} av {items[activeExerciseIndex].sets?.length||0} registrert</span></div>
+              <div className="workout-result-actions"><button type="button" className="secondary-button" onClick={()=>addSet(items[activeExerciseIndex].key)}><Plus size={16}/> Legg til sett</button><span>{items[activeExerciseIndex].sets?.filter(set=>set.reps!==''||set.load_kg!==''||set.height_cm!==''||set.time_text||set.time_seconds!=='').length||0} av {items[activeExerciseIndex].sets?.length||0} utfylt</span></div>
+              </>}
             </div>}
           </section>}
-          <section className="workout-finish-results"><h4>Registrer resultat</h4><p>Fel ta utgangspunkt i øktforma{source?.name?' og WOD-oppsettet':''}. Fyll berre inn det som manglar.</p>
+          <section className="workout-finish-results"><h4>Kontroller resultatet</h4><p>Resultat frå klokka er med. Fyll berre inn eller korriger det du treng før du lagrar.</p>
             <div className="engine-fields three">
               {(format==='AMRAP'||(['Couplet','Triplet'].includes(format)&&source?.timer_settings?.workout_schema?.combination_mode==='AMRAP'))&&<><label>Fullførte rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder={String(timerSnapshot.roundsCompleted||0)}/></label><label>Ekstra reps<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="0"/></label></>}
               {(['For Time','Chipper'].includes(format)||(['Couplet','Triplet'].includes(format)&&source?.timer_settings?.workout_schema?.combination_mode==='For Time'))&&<label>Sluttid<input value={scoreTime} onChange={e=>setScoreTime(e.target.value)} placeholder={timerSnapshot.elapsed?clock(timerSnapshot.elapsed):'mm:ss'}/></label>}

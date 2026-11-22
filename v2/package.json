@@ -28,7 +28,7 @@
     "test:member-customer-journey": "node --test scripts/member-customer-journey.test.mjs scripts/free-session.test.mjs",
     "test:wod-wizard": "node --test scripts/wod-wizard.test.mjs",
     "test:wod-engine": "node --test scripts/wod-engine.test.mjs",
-    "test:timer-clock": "node --test ../scripts/timer-clock.test.mjs",
+    "test:timer-clock": "node --test ../scripts/timer-clock.test.mjs scripts/timer-cues.test.mjs scripts/timer-experience.test.mjs",
     "test:group-class-live-timer": "node --test scripts/group-class-live-timer.test.mjs",
     "test:spotify-devices": "node --test scripts/spotify-devices.test.mjs",
     "test:gestures": "node --test scripts/gesture.test.mjs",

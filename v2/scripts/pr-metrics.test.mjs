@@ -31,6 +31,8 @@ test('bodyweight, holds and cardio expose different relevant measurements',()=>{
  assert.equal(exerciseRecordType('Pull-up',[{reps:10}],{}),'reps')
  assert.equal(exerciseRecordType('Plank hold',[{time_seconds:120}],{}),'hold')
  assert.equal(exerciseRecordType('Romaskin',[],{meters:500}),'endurance')
+ assert.equal(exerciseRecordType('Row',[],{row_value:12,row_unit:'cal'}),'endurance')
+ assert.equal(exerciseRecordType('Bent Over Row',[{reps:8,load_kg:40}],{}),'load')
 })
 
 test('hang olympic lifting stays loaded while dead hang and wall sit measure seconds',()=>{

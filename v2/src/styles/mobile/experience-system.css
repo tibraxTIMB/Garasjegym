@@ -163,17 +163,18 @@ button, [role="button"], summary { touch-action: manipulation; }
 }
 
 /* Workout result entry — exercise tabs and one focused set editor. */
+.workout-finish-help { margin:0; padding:9px 11px; border-left:3px solid var(--gg-shell-accent,#d99a33); border-radius:7px; background:rgba(226,166,74,.06); color:#cbd5d3; font-size:12px; line-height:1.45; }
 .workout-result-entry { display:grid; gap:10px; min-width:0; }
 .workout-result-tabs {
-  display:flex; gap:6px; max-width:100%; overflow-x:auto;
+  display:flex; gap:5px; max-width:100%; overflow-x:auto;
   overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch;
-  padding:2px 1px 6px; scrollbar-width:thin;
+  padding:2px 1px 4px; scrollbar-width:thin;
 }
 .workout-result-tabs button {
-  flex:0 0 auto; min-height:35px; max-width:160px; padding:6px 11px;
+  flex:0 0 auto; min-height:34px; max-width:142px; padding:5px 9px;
   border:1px solid var(--gg-shell-border,rgba(255,255,255,.13));
-  border-radius:10px; background:transparent; color:inherit;
-  font-size:12px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  border-radius:9px; background:transparent; color:inherit;
+  font-size:11px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .workout-result-tabs button.selected {
   background:var(--gg-shell-accent,#d99a33); color:#17191c;
@@ -185,10 +186,16 @@ button, [role="button"], summary { touch-action: manipulation; }
 }
 .workout-result-exercise>header {
   display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
-  margin-bottom:16px;
+  margin-bottom:10px;
 }
 .workout-result-exercise>header h4 { margin:4px 0; font-size:19px; }
 .workout-result-exercise>header small { display:block; opacity:.72; line-height:1.4; }
+.workout-result-erg { display:grid; gap:9px; }
+.workout-result-erg>strong { color:#e5bb7e; font-size:13px; }
+.workout-result-erg-fields { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; }
+.workout-result-erg-fields label { display:grid; gap:5px; min-width:0; color:#ccd8d5; font-size:12px; font-weight:800; }
+.workout-result-erg-fields input,.workout-result-erg-fields select { width:100%; min-width:0; min-height:48px; padding:7px 10px; border:1px solid #506064; border-radius:9px; background:#10191d; color:#f8f7f2; font:inherit; font-size:16px; }
+.workout-result-erg>small { color:#b3c0bd; font-size:12px; line-height:1.4; }
 .workout-result-set-head,.workout-result-set {
   display:grid; grid-template-columns:42px minmax(64px,1fr) minmax(80px,1fr) 28px;
   align-items:center; gap:9px;
@@ -213,7 +220,7 @@ button, [role="button"], summary { touch-action: manipulation; }
   .workout-result-exercise { padding:12px; }
   .workout-result-set-head,.workout-result-set { grid-template-columns:32px minmax(58px,1fr) minmax(72px,1fr) 24px; gap:6px; }
   .workout-result-set>input,.workout-result-measure input { min-height:52px; font-size:17px; }
-  .workout-result-tabs button { min-height:36px; max-width:145px; padding:6px 10px; }
+  .workout-result-tabs button { min-height:34px; max-width:134px; padding:5px 8px; }
   .workout-result-actions { align-items:stretch; }
   .workout-result-actions button { flex:1 1 100%; min-height:48px; }
 }

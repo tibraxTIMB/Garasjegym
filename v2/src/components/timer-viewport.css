@@ -270,8 +270,8 @@
 .gg-live-timer__laps-heading { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; }
 .gg-live-timer__laps-heading > span { color: #a8bac0; font-size: 11px; font-weight: 850; letter-spacing: .09em; }
 .gg-live-timer__laps-heading button { padding: 0; border: 0; background: transparent; color: #f2b45b; font-size: 12px; font-weight: 800; white-space: nowrap; }
-.gg-live-timer__lap-preview { display: flex; flex: 1 1 0; gap: 4px; margin: 0; padding: 0; list-style: none; min-width: 0; }
-.gg-live-timer__lap-preview li { display: flex; flex: 1 1 0; align-items: baseline; justify-content: center; gap: 3px; min-width: 0; padding: 4px 2px; border: 1px solid #465963; border-radius: 7px; background: #1d2a32; font-variant-numeric: tabular-nums; }
+.gg-live-timer__lap-preview { display: flex; flex: 1 1 0; gap: 4px; margin: 0; padding: 0 0 2px; list-style: none; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; touch-action: pan-x; scroll-snap-type: x proximity; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+.gg-live-timer__lap-preview li { display: flex; flex: 0 0 auto; align-items: baseline; justify-content: center; gap: 3px; min-width: 92px; padding: 4px 7px; border: 1px solid #465963; border-radius: 7px; background: #1d2a32; font-variant-numeric: tabular-nums; scroll-snap-align: start; }
 .gg-live-timer__lap-preview span { color: #b9cbd1; font-size: 12px; font-weight: 750; }
 .gg-live-timer__lap-preview b { color: #f3b45b; font-size: clamp(13px, 2dvh, 16px); font-weight: 900; white-space: nowrap; }
 /* Reset the generic footer (40px top-margin and 26px bottom padding).
@@ -308,6 +308,19 @@
 .gg-live-timer__all-exercises { display: grid; gap: 9px; padding: 0; margin: 0; list-style: none; }
 .gg-live-timer__all-exercises li { display: flex; justify-content: space-between; gap: 14px; padding-bottom: 8px; border-bottom: 1px solid #45545b; font-size: 16px; }
 .gg-live-timer__all-exercises li small { color: #f2b45b; white-space: nowrap; }
+.gg-live-timer__all-exercises>li { display: block; }
+.gg-live-timer__exercise-simple,.gg-live-timer__exercise-detail summary { display: flex; align-items: center; justify-content: space-between; gap: 9px; min-width: 0; }
+.gg-live-timer__exercise-simple>span,.gg-live-timer__exercise-detail summary>span { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.gg-live-timer__exercise-simple small,.gg-live-timer__exercise-detail summary small { flex: 0 1 auto; max-width: 40%; white-space: normal!important; text-align: right; font-size: 12px; }
+.gg-live-timer__exercise-detail summary { cursor: pointer; list-style: none; min-height: 38px; }
+.gg-live-timer__exercise-detail summary::-webkit-details-marker { display: none; }
+.gg-live-timer__exercise-detail summary>svg { flex: 0 0 auto; color: #eeb265; transition: transform .15s; }
+.gg-live-timer__exercise-detail[open] summary>svg { transform: rotate(180deg); }
+.gg-live-timer__exercise-more { display: grid; gap: 7px; margin-top: 7px; padding: 10px; border-radius: 9px; background: #0e1b20; color: #d7e1e1; font-size: 13px; line-height: 1.5; }
+.gg-live-timer__exercise-more strong { color: #f0b76f; font-size: 12px; }
+.gg-live-timer__exercise-more p { margin: 0; white-space: pre-line; }
+.gg-live-timer__exercise-more ol { display: grid; gap: 4px; margin: 0; padding-left: 18px; }
+.gg-live-timer__exercise-more ol li { display: list-item; padding: 0; border: 0; font-size: 13px; }
 .gg-live-timer__all-laps { display: grid; gap: 9px; list-style: none; padding: 0; margin: 0; }
 .gg-live-timer__all-laps li { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 6px 0 10px; border-bottom: 1px solid #45545b; font-size: 16px; }
 .gg-live-timer__all-laps li > span { display: grid; gap: 3px; }
@@ -439,15 +452,16 @@
   .gg-live-timer__body--with-laps .gg-live-timer__time-secondary{grid-area:secondary;justify-self:center;align-self:start}
   .gg-live-timer__clock-laps{grid-area:laps;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:5px;width:100%;max-height:100%;min-height:0;overflow:hidden;padding:7px;background:rgba(12,23,29,.9);border-color:#3c535a;border-radius:11px}
   .gg-live-timer__clock-laps .gg-live-timer__lap-preview{display:flex;flex-direction:column;flex:0 1 auto;gap:5px;min-height:0;overflow:hidden}
-  .gg-live-timer__clock-laps .gg-live-timer__lap-preview li{display:flex;flex:0 0 auto;justify-content:space-between;align-items:center;min-height:31px;padding:5px 8px}
+  .gg-live-timer__clock-laps .gg-live-timer__lap-preview{overflow-y:auto;overscroll-behavior-y:contain;touch-action:pan-y;scroll-snap-type:y proximity}
+  .gg-live-timer__clock-laps .gg-live-timer__lap-preview li{display:flex;flex:0 0 auto;justify-content:space-between;align-items:center;min-height:31px;min-width:0;padding:5px 8px}
   .gg-live-timer__clock-laps .gg-live-timer__lap-all{align-self:center;min-height:25px}
 }
 @media(orientation:portrait){
   .gg-live-timer.gg-live-timer--with-laps{grid-template-rows:auto minmax(0,1fr) auto auto auto}
   .gg-live-timer__clock-laps{display:none}
   .gg-live-timer__laps-portrait{display:flex;align-items:center;gap:5px;min-width:0;min-height:43px;padding:4px 3px 6px}
-  .gg-live-timer__laps-portrait .gg-live-timer__lap-preview{display:flex;gap:5px;min-width:0}
-  .gg-live-timer__laps-portrait .gg-live-timer__lap-preview li{min-height:32px;align-items:center;justify-content:center;padding:5px 3px}
+  .gg-live-timer__laps-portrait .gg-live-timer__lap-preview{display:flex;gap:5px;min-width:0;overflow-x:auto}
+  .gg-live-timer__laps-portrait .gg-live-timer__lap-preview li{min-height:32px;align-items:center;justify-content:center;padding:5px 7px}
   .gg-live-timer__laps-portrait .gg-live-timer__lap-all{min-width:36px;padding:2px 4px}
   .gg-live-timer__body--with-laps{grid-template-rows:minmax(0,1.2fr) minmax(0,.9fr)}
 }

@@ -1,6 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getExerciseMeasurementFlags } from '../src/lib/exerciseMeasurements.js';
+import { getExerciseMeasurementFlags, isErgExercise } from '../src/lib/exerciseMeasurements.js';
+
+test('Row and erg machines use distance/calories/time, while strength rows retain kg',()=>{
+  for(const name of ['Row','RowErg','Romaskin','SkiErg','BikeErg','Assault Bike']){
+    assert.equal(isErgExercise({name}),true)
+    assert.deepEqual(getExerciseMeasurementFlags({name}),{usesHeight:false,usesLoad:false})
+  }
+  for(const name of ['Bent Over Row','Pendlay Row','Dumbbell Row']){
+    assert.equal(isErgExercise({name}),false)
+    assert.equal(getExerciseMeasurementFlags({name}).usesLoad,true)
+  }
+});
 
 test('plain plyo box exercises use height rather than load', () => {
   assert.deepEqual(
