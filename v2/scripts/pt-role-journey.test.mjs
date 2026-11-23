@@ -11,7 +11,7 @@ const records = source('../src/components/ExercisePRCenter.jsx')
 
 test('drift opens PT enquiries directly and hides occasional tasks behind a choice', () => {
   assert.match(admin, /onOpenPTAdmin/)
-  assert.match(admin, /PT og førespurnader/)
+  assert.match(admin, /PT-register og førespurnader/)
   assert.match(admin, /Reinhald og vedlikehald/)
   assert.match(admin, /<details className="admin-advanced-tools admin-drift-details"/)
 })
