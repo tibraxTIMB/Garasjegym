@@ -270,3 +270,9 @@
 .gg-composite-block button{min-height:44px}
 @media(max-width:750px){.gg-composite-block{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.gg-composite-block>strong,.gg-composite-block>span{grid-column:1/-1}}
 @media(max-width:410px){.gg-composite-editor{padding:8px}.gg-composite-block{padding:8px;gap:6px}}
+
+
+.gg-composite-final-list{display:grid;gap:7px;margin:10px 0 12px}
+.gg-composite-final-block{display:grid;gap:4px;padding:10px;border:1px solid var(--line,#52575a);border-radius:10px;background:var(--panel2,#292e31)}
+.gg-composite-final-block strong{font-size:13px}
+.gg-composite-final-block small{font-size:12px;opacity:.8;line-height:1.4}
