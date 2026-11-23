@@ -17,12 +17,13 @@ export default function Overview({profile,onNavigate,onOpenWorkout,onOpenWod=()=
     const {data:{user},error:authError}=await supabase.auth.getUser()
     if(authError)throw authError
     if(!user){if(live&&requestId===loadSequence.current)setLoading(false);return}
-    const [l,count,a,b,leaderboard]=await Promise.all([
+    const [l,count,a,b,leaderboard,benchmarkWods]=await Promise.all([
      supabase.from('workout_logs').select('id,title,workout_date,format,source_wod_id,score_rounds,score_reps,score_time_seconds,result_data,note,workout_exercises(id,exercise_id,exercise_name,sort_order,workout_sets(id,reps,load_kg,height_cm,time_seconds))').eq('member_id',user.id).order('workout_date',{ascending:false}).limit(200),
      supabase.from('workout_logs').select('id',{count:'exact',head:true}).eq('member_id',user.id),
      supabase.from('pt_wod_assignments').select('id,status,due_date,wods(name,format,duration_minutes)').eq('member_id',user.id).in('status',['assigned','in_progress']).order('due_date',{ascending:true,nullsFirst:false}).limit(5),
      supabase.from('class_bookings').select('id,status,classes(id,title,starts_at,duration_minutes,cancelled_at)').eq('member_id',user.id).eq('status','confirmed').limit(100),
-     supabase.rpc('get_member_workout_leaderboard')
+     supabase.rpc('get_member_workout_leaderboard'),
+     supabase.from('wods').select('id,category,timer_settings')
     ])
     if(!live||requestId!==loadSequence.current)return
     const failures=[]
@@ -30,9 +31,11 @@ export default function Overview({profile,onNavigate,onOpenWorkout,onOpenWod=()=
      const rows=l.data||[]
      setLogs(rows)
      const exercisePRs=deriveExerciseRecords(rows).flatMap(exercise=>exercise.records.map(item=>({id:exercise.key+'-'+item.key,exercise_name:exercise.label+' · '+item.label,result:item.value,unit:item.unit,record_date:item.date})))
-     const wodPRs=deriveBenchmarkRecords(rows).map(wod=>({id:wod.key,exercise_name:wod.name+' · '+wod.level.toUpperCase(),result:wod.score.rounds!=null?`${wod.score.rounds} + ${wod.score.reps}`:`${Math.floor(wod.score.value/60)}:${String(Math.round(wod.score.value%60)).padStart(2,'0')}`,unit:wod.score.rounds!=null?'rundar/reps':'min:sek',record_date:wod.date}))
+     const eligibleBenchmarkIds=(benchmarkWods.data||[]).filter(wod=>(wod.timer_settings?.workout_schema?.library_category||wod.category)==='benchmark').map(wod=>wod.id)
+     const wodPRs=deriveBenchmarkRecords(rows,eligibleBenchmarkIds).map(wod=>({id:wod.key,exercise_name:wod.name+' · '+wod.level.toUpperCase(),result:wod.score.rounds!=null?`${wod.score.rounds} + ${wod.score.reps}`:`${Math.floor(wod.score.value/60)}:${String(Math.round(wod.score.value%60)).padStart(2,'0')}`,unit:wod.score.rounds!=null?'rundar/reps':'min:sek',record_date:wod.date}))
      setPrs([...exercisePRs,...wodPRs].sort((a,b)=>String(b.record_date||'').localeCompare(String(a.record_date||''))))
     }
+    if(benchmarkWods.error)failures.push('Benchmark-kategoriar: '+benchmarkWods.error.message)
     if(count.error)failures.push('Treningsstatistikk: '+count.error.message);else setTotalCount(count.count||0)
     if(a.error)failures.push('PT-tildelingar: '+a.error.message);else setAssignments((a.data||[]).filter(x=>x.wods))
     if(b.error)failures.push('Gruppetimebooking: '+b.error.message);else setBookings((b.data||[]).filter(x=>x.classes&&!x.classes.cancelled_at&&new Date(x.classes.starts_at)>=new Date()).map(x=>x.classes).sort((x,y)=>new Date(x.starts_at)-new Date(y.starts_at)))
