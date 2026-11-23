@@ -633,7 +633,35 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
      
      {isCustom&&<><label className="wod-custom-sets"><input type="checkbox" checked={customUseSets} onChange={e=>setCustomUseSets(e.target.checked)}/> Bruk sett-programmering på øvingane</label><label>Fri struktur / instruksjon<textarea rows="3" value={customInstructions} onChange={e=>setCustomInstructions(e.target.value)} placeholder="Beskriv struktur, sett, rundar, pausar og gjennomføring …"/></label></>}
      </div>}{wizardStep===2&&!libraryOpen&&<div className="wizard-selected-stage">
-       {isComposite&&<section className="gg-composite-editor" aria-label="Øktdelar"><div className="engine-section-title"><h4>Delar i økta</h4><span>{compositeBlocks.length} delar · {Math.round(compositeTotalSeconds(compositeBlocksWithItems)/60)} min hovuddel</span></div><p className="wod-help">Kvar del har eigen timer. Vel rett del når du legg til øvingar. Oppvarming og PT-instruksar legg du inn i notatfeltet.</p>{compositeBlocks.map((block,index)=><div className="gg-composite-block" key={block.id}><strong>Del {index+1}</strong><label>Namn<input value={block.title} onChange={e=>setCompositeBlocks(rows=>rows.map(x=>x.id===block.id?{...x,title:e.target.value}:x))} maxLength={60}/></label><label>Format<select value={block.format} onChange={e=>setCompositeBlocks(rows=>rows.map(x=>x.id===block.id?{...x,format:e.target.value}:x))}>{COMPOSITE_BLOCK_FORMATS.map(f=><option key={f} value={f}>{f}</option>)}</select></label><label>Minutt<input type="number" min="1" max="180" step="1" value={block.minutes} onChange={e=>setCompositeBlocks(rows=>rows.map(x=>x.id===block.id?{...x,minutes:e.target.value}:x))}/></label><span>{selected.filter(x=>x.blockId===block.id).length} øvingar</span><button type="button" className="secondary-button" disabled={compositeBlocks.length<=2||selected.some(x=>x.blockId===block.id)} onClick={()=>{setCompositeBlocks(rows=>rows.filter(x=>x.id!==block.id));if(activeBlockId===block.id)setActiveBlockId(compositeBlocks[0].id)}}>Fjern del</button></div>)}{compositeBlocks.length<8&&<button type="button" className="secondary-button" onClick={()=>{const id=crypto.randomUUID();setCompositeBlocks(rows=>[...rows,{id,title:'Del '+(rows.length+1),format:'AMRAP',minutes:8}]);setActiveBlockId(id)}}><Plus size={15}/> Legg til øktdel</button>}</section>}
+       {isComposite&&<section className="gg-composite-editor" aria-label="Øktdelar">
+ <div className="engine-section-title"><h4>Delar i økta</h4><span>{compositeBlocks.length} delar · {Math.ceil(compositeTotalSeconds(compositeBlocksWithItems)/60)} min inkl. pausane</span></div>
+ <p className="wod-help">Vel format, øvingar og dosering for kvar del. Pause mellom delane kan vera manuell eller ha eiga nedteljing. Alle øvingane brukar det vanlege biblioteket.</p>
+ {compositeBlocks.map((block,index)=>{
+  const exerciseCount=selected.filter(x=>x.blockId===block.id&&!x.is_rest).length
+  const isIntervalPart=COMPOSITE_INTERVAL_FORMATS.includes(block.format)||block.format==='Stasjonssirkel'
+  const duration=compositeBlockDuration(block,exerciseCount)
+  const updateBlock=patch=>setCompositeBlocks(rows=>rows.map(x=>x.id===block.id?{...x,...patch}:x))
+  return <div className="gg-composite-block" key={block.id}>
+   <div className="gg-composite-block-head"><strong>Del {index+1} · {block.title||block.format}</strong><small>{exerciseCount} øvingar · {Math.floor(duration/60)}:{String(duration%60).padStart(2,'0')} arbeid</small></div>
+   <div className="gg-composite-block-fields">
+    <label>Namn<input value={block.title} onChange={e=>updateBlock({title:e.target.value})} maxLength={60}/></label>
+    <label>Format<select value={block.format} onChange={e=>updateBlock({format:e.target.value,workSeconds:e.target.value==='Tabata'?20:45,restSeconds:e.target.value==='Tabata'?10:15,rounds:e.target.value==='Tabata'?8:3})}>{COMPOSITE_BLOCK_FORMATS.map(f=><option key={f} value={f}>{f}</option>)}</select></label>
+    {isIntervalPart?<><label>Arbeid (sek)<input type="number" min="1" max="600" value={block.workSeconds??(block.format==='Tabata'?20:45)} onChange={e=>updateBlock({workSeconds:e.target.value})}/></label>
+     <label>Byte/kvile (sek)<input type="number" min="0" max="600" value={block.restSeconds??(block.format==='Tabata'?10:15)} onChange={e=>updateBlock({restSeconds:e.target.value})}/></label>
+     <label>Rundar<input type="number" min="1" max="30" value={block.rounds??(block.format==='Tabata'?8:3)} onChange={e=>updateBlock({rounds:e.target.value})}/></label>
+    </>:<label>{COMPOSITE_STRENGTH_FORMATS.includes(block.format)||block.format==='Eigen økt'?'Planlagd tid (min)':'Øktlengd / time cap (min)'}<input type="number" min="1" max="180" value={block.minutes} onChange={e=>updateBlock({minutes:e.target.value})}/></label>}
+   </div>
+   {index<compositeBlocks.length-1&&<div className="gg-composite-transition-fields">
+    <label>Overgang til neste del<select value={block.transitionMode||'manual'} onChange={e=>updateBlock({transitionMode:e.target.value})}><option value="manual">Manuell · trykk Neste del</option><option value="timed">Fast pause · nedteljing</option></select></label>
+    {block.transitionMode==='timed'&&<label>Pause (sek)<input type="number" min="1" max="3600" value={block.transitionSeconds||60} onChange={e=>updateBlock({transitionSeconds:e.target.value})}/></label>}
+   </div>}
+   <div className="gg-composite-block-actions"><button type="button" className="secondary-button" onClick={()=>{setActiveBlockId(block.id);setLibraryOpen(true)}}><Plus size={15}/> Legg til øving i del {index+1}</button>
+    {compositeBlocks.length>2&&<button type="button" className="secondary-button" disabled={selected.some(x=>x.blockId===block.id)} onClick={()=>{setCompositeBlocks(rows=>rows.filter(x=>x.id!==block.id));if(activeBlockId===block.id)setActiveBlockId(compositeBlocks[0].id)}}>Fjern del</button>}
+   </div>
+  </div>
+ })}
+ {compositeBlocks.length<8&&<button type="button" className="secondary-button" onClick={()=>{const id=crypto.randomUUID();setCompositeBlocks(rows=>[...rows,{id,title:'Del '+(rows.length+1),format:'AMRAP',minutes:8,transitionMode:'manual',transitionSeconds:0}]);setActiveBlockId(id)}}><Plus size={15}/> Legg til øktdel</button>}
+ </section>}
        <div className="wizard-stage-intro"><strong>Øvingane i WOD-en</strong><span>Vel øvingar, sorter dei og gå vidare til eitt samla doseringssteg.</span></div>
        <div className="gg-exercise-actions"><button type="button" className="primary-button wod-open-library" onClick={()=>setLibraryOpen(true)}><Plus size={17}/> Legg til øving</button><button type="button" className="secondary-button gg-add-pause" onClick={addPause}><Plus size={16}/> Legg til pause</button></div>
        <div className="wod-selected-list">
