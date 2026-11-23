@@ -114,15 +114,20 @@ export function deriveBenchmarkRecords(logs = [], benchmarkWodIds = []) {
   if(better){group.score=score;group.date=log.workout_date;group.logId=log.id}
  }
  for(const log of logs){
-  if(!log.source_wod_id||!eligible.has(log.source_wod_id))continue
+  if(!log.source_wod_id)continue
+  const rootEligible=eligible.has(log.source_wod_id)
   const level=String(log.result_data?.prescription_level||'rx').toLowerCase()
   const composite=log.result_data?.block_summary
+  if(!rootEligible&&!(Array.isArray(composite)&&composite.length&&String(log.format)==='Samansett økt'))continue
   if(Array.isArray(composite)&&composite.length&&String(log.format)==='Samansett økt'){
    for(const [index,part] of composite.entries()){
     if(part.completed!==true)continue
+    const linkedId=part.benchmark_source_wod_id||null
+    const linkedEligible=linkedId&&eligible.has(linkedId)
+    if(!rootEligible&&!linkedEligible)continue
     const format=String(part.format||'')
-    const key=`${log.source_wod_id}|${part.id||index}|${level}|${format.toLowerCase()}`
-    const name=(log.result_data?.wod_names?.[0]||log.title||'Samansett WOD')+' · '+(part.title||'Del '+(index+1))
+    const key=linkedEligible?`${linkedId}|${level}|${format.toLowerCase()}`:`${log.source_wod_id}|${part.id||index}|${level}|${format.toLowerCase()}`
+    const name=linkedEligible?(part.source_wod_name||part.title||'Benchmark-WOD'):(log.result_data?.wod_names?.[0]||log.title||'Samansett WOD')+' · '+(part.title||'Del '+(index+1))
     let score=null
     if(format==='AMRAP'||(['Couplet','Triplet'].includes(format)&&part.combination_mode==='AMRAP')){
      const rounds=Number(part.roundsCompleted),reps=Number(part.extra_reps||0)
