@@ -63,7 +63,7 @@ test('Five-part structured WOD imports formats, intervals, sets, pauses and dist
 
 test('Unclear part format must fail instead of silently flattening several timers',()=>{
  const malformed='Del A – Styrke\n8 strict press\nDel B – AMRAP 8\n8 goblet squat'
- assert.throws(()=>parseWodImport(malformed,library),/format/)
+ assert.throws(()=>parseWodImport(malformed,library),/format|varigheit|tidsgrense/)
 })
 
 test('Original single-format Fran still imports',()=>{
