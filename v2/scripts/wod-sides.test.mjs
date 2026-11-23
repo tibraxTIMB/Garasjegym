@@ -42,3 +42,10 @@ test('expanded WOD library card reveals every exercise and side',()=>{
  assert.match(builder,/side_mode:x\.sideMode===''\?'none':x\.sideMode\|\|null/)
  assert.match(builder,/isSideSelectableExercise\(exercise\)/)
 })
+
+test('alternating dumbbell push jerk allows side-aware total repetitions',()=>{
+ assert.ok(isSideSelectableExercise({name:'Alternating Dumbbell Push Jerk',equipment:'Manualar'}))
+ const builder=source('../src/components/WodBuilder.jsx')
+ assert.match(builder,/sideMode:\/\\balternating\\b\/i\.test\(ex\.name/)
+ assert.match(builder,/carry\|walk\|run\|crawl/)
+})
