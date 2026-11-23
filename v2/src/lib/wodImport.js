@@ -1,8 +1,16 @@
 // Sikkert bibliotektreff automatisk; liknande øvingar må stadfestast før import.
 const normalize=value=>String(value||'').toLocaleLowerCase('nn-NO').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/æ/g,'ae').replace(/ø/g,'o').replace(/å/g,'a').replace(/[^a-z0-9]+/g,' ').trim()
 const stem=value=>normalize(value).split(' ').map(word=>word.length>3&&!word.endsWith('ss')?word.replace(/ies$/,'y').replace(/(ches|shes|xes|zes)$/,(end)=>end.slice(0,-2)).replace(/s$/,''):word).join(' ')
+import {COMPOSITE_FORMAT} from './compositeWod.js'
+
 const aliases=[
  ['row','rowing','roing','romaskin','row erg','concept2 row'],
+ ['strict press','striktpress','strictpress'],
+ ['push press','pushpress'],
+ ['goblet squat','hantel goblet squat','dumbbell goblet squat'],
+ ['alternating dumbbell push jerk','alternerande hantel push jerk','hantel push jerk'],
+ ['burpee over dumbbell','burpee over hantel','burpees over hantel'],
+ ['bear crawl','bjørnekrabb','bjørnegang'],
  ['pull up','pull ups','pullup','pullups','strict pull up','chins'],
  ['push up','push ups','pushup','pushups','armheving','armhevingar'],
  ['air squat','air squats','kroppsvekt kneboy','kroppsvekt squat'],
@@ -97,9 +105,54 @@ const parseMovementLine=(line,scheme)=>{
  movement=movement.replace(/^[-–*\s]+/,'').replace(/\s+/g,' ').trim()
  return {text:movement,reps:reps??'10',quantity,loadKg}
 }
+
+/**
+ * Distinguish workout instructions from movement lines. Pain Cave is a
+ * multi-format WOD: E3MOM + AMRAP must remain separate on the clock.
+ */
+function parseStructuredComposite(lines, catalog) {
+ const a=lines.findIndex(line=>/\\bdel\\s*a\\b/i.test(line))
+ const b=lines.findIndex((line,i)=>i>a&&/\\bdel\\s*b\\b/i.test(line))
+ if(a<0||b<a+1)return null
+ const blockA=lines.slice(a,b).join(' ')
+ const blockB=lines.slice(b).join(' ')
+ const aFormat=blockA.match(/\\b(E[1-7]MOM)\\s*(\\d{1,3})/i)
+ const bFormat=blockB.match(/\\bAMRAP\\s*(\\d{1,3})/i)
+ if(!aFormat||!bFormat)return null
+ const aPair=blockA.match(/(\\d{1,2})\\s*(striktpress|strict\\s*press)\\s*\\+\\s*(\\d{1,2})\\s*(pushpress|push\\s*press)/i)
+ if(!aPair)return null
+ const blocks=[
+  {id:'a',title:lines[a].replace(/^del\\s*a\\s*[-–:]?\\s*/i,'Del A – '),format:aFormat[1].toUpperCase(),minutes:Number(aFormat[2])},
+  {id:'b',title:'Del B – AMRAP',format:'AMRAP',minutes:Number(bFormat[1])}
+ ]
+ const items=[]
+ const makeItem=(raw,reps,quantity,blockId,sourceLine,rirTarget='')=>{
+  const candidates=suggestWodExercises(raw,catalog)
+  const match=candidates.find(x=>x.score>=.95)?.exercise||null
+  items.push({name:match?.name||raw,rawName:raw,sourceLine,exercise:match,reps:String(reps||''),quantity:quantity||null,loadKg:null,block_id:blockId,rirTarget,matched:!!match,suggestions:match?[]:candidates.map(x=>x.exercise)})
+ }
+ const individualized=lines.join(' ').match(/\\b(?:du|kunden|utøvar)\\s*:\\s*[^.]*?([0-9]+)\\s*[-–]\\s*([0-9]+)\\s*RIR/i)
+ const rirTarget=individualized?individualized[1]+'–'+individualized[2]:''
+ makeItem(aPair[2],aPair[1],null,'a',aPair[0],rirTarget)
+ makeItem(aPair[4],aPair[3],null,'a',aPair[0],rirTarget)
+ const cutoff=lines.findIndex((line,i)=>i>b&&/^(?:frå originalen|fra originalen|originale vek|pt.notat|skalering|etter økta|etter okt)/i.test(line))
+ const end=cutoff>b?cutoff:lines.length
+ for (const line of lines.slice(b+1,end)) {
+  if(!/^\\d{1,3}(?:\\s*(?:m|meter|metres|cal|sek))?\\s+\\S/i.test(line))continue
+  const parsed=parseMovementLine(line,null)
+  if(parsed.text&&parsed.text.length<70)makeItem(parsed.text,parsed.reps,parsed.quantity,'b',line)
+ }
+ if(items.length<3)return null
+ const sourceName=lines[0].replace(/^\\s*(?:ØKT|OKT)\\s*\\d+\\s*[·.\\-–:]\\s*/i,'').trim()
+ const name=sourceName&&sourceName.length<=100?sourceName:'Samansett WOD'
+ return {name,format:COMPOSITE_FORMAT,minutes:blocks.reduce((sum,x)=>sum+x.minutes,0),rounds:1,blocks,items,ignored:[],notes:'Importert kjeldetekst:\\n'+lines.join('\\n'),unmatched:items.filter(x=>!x.matched).map(x=>x.name)}
+}
+
 export function parseWodImport(source,exerciseCatalog=[]){
  const lines=String(source||'').split(/\r?\n/).map(line=>line.replace(/[•·]/g,' ').trim()).filter(Boolean)
  if(!lines.length)throw new Error('Lim inn WOD-tekst eller last opp ei tekstfil først.')
+ const composite=parseStructuredComposite(lines,exerciseCatalog)
+ if(composite)return composite
  const whole=lines.join('\n')
  const schemeLine=lines.find(line=>/^\s*\d{1,3}\s*[-–/]\s*\d{1,3}(?:\s*[-–/]\s*\d{1,3})+\s*$/.test(line))
  const scheme=schemeLine?.match(/\d{1,3}/g)?.map(Number)||null
