@@ -14,6 +14,8 @@ WITH approved(name,args) AS (VALUES
  ('get_class_attendance_counts','p_class_ids uuid[]'),
  ('get_infotainment_schedule','p_from timestamp with time zone, p_to timestamp with time zone'),
  ('get_member_workout_leaderboard',''),
+ ('get_pt_intake_request_state','p_member_id uuid'),
+ ('request_pt_intake','p_member_id uuid'),
  ('is_active_user',''),
  ('is_admin',''),
  ('is_admin_or_manager',''),
