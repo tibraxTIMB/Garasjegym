@@ -35,7 +35,8 @@ test('free training opens the same full-screen timer immediately and can edit mi
   assert.match(timer,/disabled=\{Boolean\(timerSnapshot\.hasStarted\)\}/)
   assert.match(timer,/setFreeEditorOpen\(false\)/)
   assert.match(timer,/manual-wod-picker/)
-  assert.match(app,/if\(id===active\)return/)
+  assert.match(app,/if\(id===active\)\{if\(id==='admin'&&profile\.role==='admin'\)/)
+  assert.match(app,/setAdminFocusToken\(value=>value\+1\)\}return\}/)
 })
 
 test('the atomic save migration only relaxes the guard for a real free stopwatch session',()=>{
