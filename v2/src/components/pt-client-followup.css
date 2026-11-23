@@ -1,0 +1,65 @@
+/* PT-kundar: one calm customer workspace and no private workout-history read. */
+.ptfollow{display:grid;gap:14px;min-width:0;padding:16px;border:1px solid #3b4c4c;border-radius:16px;background:linear-gradient(155deg,rgba(35,51,49,.91),rgba(25,37,37,.92));color:#eef2ef}
+.ptfollow-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ptfollow-heading>div:first-child{min-width:0;flex:1}
+.ptfollow-heading h3{margin:3px 0 0;font-size:20px;line-height:1.3;color:#f8f8f4}
+.ptfollow-heading p{font-size:12px;color:#afc0bb;margin:4px 0 0;line-height:1.5}
+.ptfollow-heading-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.ptfollow-heading-actions button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px}
+.ptfollow-counts{display:flex;flex-wrap:wrap;gap:7px}
+.ptfollow-counts>span{display:inline-flex;align-items:center;gap:5px;border:1px solid #465c56;border-radius:9px;padding:6px 9px;color:#c5d2cd;font-size:11px}
+.ptfollow-counts b{font-size:14px;color:#f9e2b1;font-variant-numeric:tabular-nums}
+.ptfollow-section{display:grid;gap:5px;min-width:0}
+.ptfollow-section h4{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:850;color:#cad8d2;letter-spacing:.02em;margin:5px 0}
+.ptfollow-wod-row{display:flex;align-items:center;gap:9px;min-width:0;padding:10px 8px;border-bottom:1px solid #435653}
+.ptfollow-wod-row:last-child{border-bottom:0}
+.ptfollow-wod-icon{width:30px;height:30px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;background:rgba(255,255,255,.06);color:#d1b47b}
+.ptfollow-wod-main{display:grid;gap:4px;min-width:0;flex:1}
+.ptfollow-wod-main strong{font-size:13px;font-weight:750;line-height:1.25;overflow-wrap:anywhere}
+.ptfollow-wod-main small{font-size:11px;color:#b2c3be;line-height:1.4}
+.ptfollow-status{font-size:10px;font-weight:800;white-space:nowrap;padding:5px 7px;border-radius:7px;border:1px solid #617377;color:#e0e4e2}
+.ptfollow-status.is-done{color:#bcdec4;border-color:#527c60}
+.ptfollow-empty,.ptfollow-info{margin:4px 0;color:#aebdb8;font-size:12px}
+.ptfollow-footnote{color:#a8bab4;font-size:11px;line-height:1.5}
+.ptfollow-assignment{display:grid;gap:12px;margin-top:8px;padding-top:15px;border-top:1px solid #435653;min-width:0}
+.ptfollow-assignment-title{display:grid;gap:3px}
+.ptfollow-assignment-title h4{font-size:16px;margin:0}
+.ptfollow-assignment-title span{font-size:12px;color:#b3c3bd}
+.ptfollow-overview{padding:13px}
+.pt2-client-active .pt2-customer-rank{display:none!important}
+.pt2-client-active .pt2-customer-identity{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pt2-client-active .pt2-customer-identity>.pt2-customer-person{min-width:0;flex:1 1 140px;display:grid;gap:4px}
+.pt2-customer-person>strong{font-size:20px;line-height:1.2;color:#f5f1e9;overflow-wrap:anywhere}
+.pt2-customer-person .section-kicker{font-size:10px;letter-spacing:.08em}
+.pt2-customer-rank-pill{display:inline-flex;align-items:center;gap:5px;align-self:start;max-width:100%;width:max-content;border:1px solid #7d663f;border-radius:7px;padding:3px 7px;font-size:11px;font-weight:800;color:#f6da9b;background:#4d3a22}
+.pt2-customer-rank-pill .pt2-rank-stars{font-size:10px;white-space:nowrap;color:#ffcc6b}
+.pt2-client-active .pt2-customer-identity>button{margin-left:auto;min-height:40px;flex-shrink:0;max-width:100%}
+.pt2-client-active .pt2-customer-bar-secure{gap:8px;padding:11px 12px!important}
+.pt2-client-active .pt2-head{padding-block:7px;min-height:0}
+.pt2-client-active .pt2-head h2{font-size:18px}
+.pt2-client-active .pt2-head p{display:none}
+.pt2-client-active .pt2-head .pt2-workspace-switch{display:none}
+.pt2-client-active .pt2-coach-primary-tabs{display:flex!important;grid-template-columns:none!important;flex-wrap:nowrap!important;align-items:center;gap:3px!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none;-webkit-overflow-scrolling:touch;width:100%;padding:3px 0 8px;position:relative!important;top:auto!important}
+.pt2-client-active .pt2-coach-primary-tabs::-webkit-scrollbar{display:none}
+.pt2-client-active .pt2-coach-primary-tabs button{min-width:auto!important;flex:0 0 auto!important;display:inline-flex!important;min-height:38px!important;white-space:nowrap!important;padding:8px 12px!important;text-align:center!important;font-size:12px!important;font-weight:750!important;border-radius:9px!important;background:transparent!important;border:1px solid transparent!important;color:#c8d4cf!important}
+.pt2-client-active .pt2-coach-primary-tabs button.selected{background:#45351e!important;color:#ffdf9d!important;border-color:#b68b48!important}
+.pt2-client-active .pt2-coach-primary-tabs button:focus-visible{outline:2px solid #e5ac52;outline-offset:2px}
+.pt2-client-overview{display:grid;gap:13px}
+.pt2-client-overview-actions{display:flex;gap:8px;flex-wrap:wrap}
+.pt2-client-overview-actions button{display:inline-flex;align-items:center;gap:6px;min-height:40px}
+.pt2-more-tools{display:grid;gap:12px}
+.pt2-more-tools .pt2-panel{min-width:0}
+@media(max-width:600px){
+ .ptfollow{padding:12px;gap:12px}
+ .ptfollow-heading h3{font-size:17px}
+ .ptfollow-heading-actions{width:100%}
+ .ptfollow-heading-actions button{flex:1}
+ .ptfollow-wod-row{padding-inline:2px}
+ .ptfollow-wod-icon{width:26px;height:26px}
+ .ptfollow-status{font-size:9px;padding:4px 6px}
+ .pt2-client-active .pt2-customer-identity{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:9px;align-items:center}
+ .pt2-client-active .pt2-customer-identity>.pt2-customer-person{grid-column:2;flex:auto}
+ .pt2-client-active .pt2-customer-identity>button{grid-column:3;grid-row:1;max-width:none;width:auto;padding:8px!important;font-size:11px}
+ .pt2-client-active .pt2-customer-identity>button svg{width:14px}
+ .pt2-client-active .pt2-customer-person>strong{font-size:18px}
+}
