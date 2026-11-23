@@ -121,7 +121,7 @@ export function compositeTimerConfig(block) {
  }
  return {
   format:current.format,
-  minutes:String(Math.ceil(current.duration_seconds/60)),
+  minutes:String(Math.floor(current.duration_seconds/60)),
   seconds:String(current.duration_seconds%60),
   timerSettings:{workout_schema:schema,work_seconds:interval||station?work:every?every*60:null,rest_seconds:interval||station?rest:0,rounds:interval||station?rounds:every?Math.round(current.duration_seconds/(every*60)):null,duration_seconds:current.duration_seconds}
  }
