@@ -21,12 +21,12 @@ const requestStatus = status => ({
   declined: 'Avslått',
 }[status] || status)
 
-export default function PTInquiry({ profile, onGroupSchedule = () => {} }) {
+export default function PTInquiry({ profile, onGroupSchedule = () => {}, initialTab = 'start' }) {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-  const [tab, setTab] = useState('start')
+  const [tab, setTab] = useState(initialTab === 'mine' ? 'mine' : 'start')
   const [coaches, setCoaches] = useState([])
   const [services, setServices] = useState([])
   const [requests, setRequests] = useState([])
@@ -53,6 +53,7 @@ export default function PTInquiry({ profile, onGroupSchedule = () => {} }) {
   }
 
   useEffect(() => { load() }, [profile.id])
+  useEffect(() => { if (initialTab === 'mine') setTab('mine') }, [initialTab])
 
   function chooseCoach(id) {
     setCoachId(id)

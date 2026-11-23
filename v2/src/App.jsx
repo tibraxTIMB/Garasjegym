@@ -233,7 +233,7 @@ export default function App() {
     else if(href.startsWith('group-class:')){setFocusGroupClassId(href.slice(12));setPTStudioWorkspace('groups');setPTStudioInitialTab('oversikt');navigateTo('pt-studio')}
     else if(href.startsWith('coffee-review:')){setFocusCoffeeReviewId(href.slice(14));navigateTo('kaffi')}
     else if(href.startsWith('booking:')){if(isStaff(profile)){setPTStudioWorkspace('groups');navigateTo('pt-studio')}else{setScheduleTab('booking');navigateTo('timeplan')}}
-    else if(href==='pt-studio'){setPTStudioWorkspace('studio');setPTStudioInitialTab(isStaff(profile)||isPTCoach?'pt-timar':'meldingar');setFocusPTPanel(null);navigateTo('pt-studio')}
+    else if(href==='pt-studio'){setPTStudioWorkspace('studio');setPTStudioInitialTab(isStaff(profile)||isPTCoach?'pt-timar':item.title==='Svar på PT-førespurnaden'?'forespurnader':'meldingar');setFocusPTPanel(null);navigateTo('pt-studio')}
     else if(href==='pt-info'){setPTStudioWorkspace('studio');setPTStudioInitialTab('meldingar');setFocusPTPanel(null);navigateTo('pt-studio')}
     else if(item.category==='pt'){setFocusPTRequestId(null);setFocusPTPanel(null);setPTStudioWorkspace('studio');setPTStudioInitialTab(isPTCoach?'oversikt':isStaff(profile)?'pt-timar':'meldingar');navigateTo('pt-studio')}
     else if(href)navigateTo(({booking:'timeplan','/timeplan':'timeplan',pt:'timeplan','mi-trening':'mi-trening','wod-studio':'wod','wod-library':'wod'}[href]||href))

@@ -65,3 +65,18 @@ test('deadlift remains available as a standard PR lift', () => {
   const directory = source('../src/lib/prDirectory.js')
   assert.match(directory, /name: 'Deadlift'/)
 })
+
+
+test('PT status notification opens the member request history rather than PT messages', () => {
+  const app = source('../src/App.jsx')
+  assert.match(app, /item\.title==='Svar på PT-førespurnaden'\?'forespurnader':'meldingar'/)
+  assert.match(studio, /initialTab=\{tab==='forespurnader'\?'mine':'start'\}/)
+  assert.match(inquiry, /initialTab === 'mine' \? 'mine' : 'start'/)
+})
+
+test('PT enquiry owner flow distinguishes received from completed and exposes the existing coach register', () => {
+  assert.match(management, /Dette avsluttar ikkje førespurnaden/)
+  assert.match(management, /Saka er motteken, men står framleis open/)
+  assert.match(management, /Ingen aktive PT-ar er registrerte/)
+  assert.match(management, /onClick=\{\(\)=>setTab\('trenarar'\)\}/)
+})
