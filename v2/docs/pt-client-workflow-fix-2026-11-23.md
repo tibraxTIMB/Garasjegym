@@ -22,3 +22,11 @@ Godkjenningsgrunnlag: aktiv utvikling og brukarretting av eigartest i chatten. E
 - Rang blir vist frå eksisterande registrerte treningsøkter via Garasjekadett-rangstigen, ikkje fritekst.
 - Bygg, regresjonskontrollar og isolert migreringstest er beståtte før publisering.
 - Ingen automatisk utsending til PT-kundar eller databaseendringar følgjer denne UI-retten.
+
+## Kompakt Drift – 23. november 2026
+
+- Fjern overflødig PT Studio-snarveg frå Heim; behald inngang via Drift.
+- Gjer teljarane Medlemmar, Aktive, WOD-ar og Øvingar mindre og trykkbare på mobil/nettbrett.
+- Bruk eksisterande visingar: alle medlemmar, aktive medlemmar, WOD-biblioteket og øvingsbiblioteket.
+- Ingen databaseendringar, nye administrasjonsmodular eller endringar i treningsmotor.
+- App-, migrerings- og sikkerheitstestane vart fullførte før publisering.
