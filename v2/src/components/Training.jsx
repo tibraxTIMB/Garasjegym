@@ -505,7 +505,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     const savedLevel=item.prescription_levels?.[prescriptionLevel] || item.levels?.[prescriptionLevel] || item.prescription_levels?.rx || item.levels?.rx
     const setReps=(item.sets||[]).map(set=>String(set.reps??'').trim()).filter(Boolean)
     const uniqueReps=[...new Set(setReps)]
-    const reps=savedLevel?.reps != null ? String(savedLevel.reps).trim() : uniqueReps.join(' / ') || String(item.reps??'').trim()
+    const reps=isDeathBy ? String(deathByStatus.targetReps) : savedLevel?.reps != null ? String(savedLevel.reps).trim() : uniqueReps.join(' / ') || String(item.reps??'').trim()
     const side=getWodSideLabel(item,prescriptionLevel)
     const details=item.is_rest?[`${Number(item.rest_duration_seconds)||30} sek`]:[
       reps ? `${reps} reps${side==='per side'?' per side':''}` : '',
