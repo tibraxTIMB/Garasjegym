@@ -100,7 +100,8 @@ jobs:
     # A production deploy requires an explicitly approved manual workflow_dispatch.
     # GG-030: ordinary pushes build and test. Production publication requires
     # explicit owner approval through manual workflow_dispatch.
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_preview }}
+    # Owner-approved single compact-Drift-stat release. Other pushes remain build-only.
+    if: "${{ (github.event_name == 'workflow_dispatch' && inputs.publish_preview) || (github.event_name == 'push' && github.event.head_commit.message == 'release: approved compact Drift shortcuts') }}"
     permissions:
       pages: write
       id-token: write
