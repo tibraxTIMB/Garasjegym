@@ -110,6 +110,122 @@ const parseMovementLine=(line,scheme)=>{
  * Distinguish workout instructions from movement lines. Pain Cave is a
  * multi-format WOD: E3MOM + AMRAP must remain separate on the clock.
  */
+
+/**
+ * Import clearly structured A–H workouts without guessing or calling paid AI.
+ * Every part keeps its source text; uncertain exercises require admin review.
+ */
+function parseGeneralComposite(lines,catalog){
+ const section=/^(?:del|part|blokk?|block)\s*([A-H])(?:\s*[-–—:.]\s*|\s+|$)(.*)$/i
+ const found=lines.map((line,index)=>{const match=line.match(section);return match?{index,letter:match[1].toLowerCase(),title:match[2]?.trim()||''}:null}).filter(Boolean)
+ if(found.length<2)return null
+ if(found.length>8)throw Error('WOD-importen støttar høgst åtte delar (A–H).')
+ const ids=new Set(found.map(x=>x.letter))
+ if(ids.size!==found.length)throw Error('Same delbokstav finst fleire gonger. Kontroller A–H.')
+ const blocks=[],items=[],warnings=[]
+ const add=(name,reps,quantity,block,sourceLine,sets=null)=>{
+  const candidates=suggestWodExercises(name,catalog)
+  const exact=candidates.find(c=>c.score>=.95)
+  const exercise=exact?.exercise||null
+  items.push({name:exercise?.name||name,rawName:name,sourceLine,exercise,reps:String(reps??''),quantity:quantity||null,loadKg:null,
+   block_id:block.id,matched:!!exercise,suggestions:exercise?[]:candidates.map(c=>c.exercise),sets})
+ }
+ const parseFormat=line=>{
+  const text=line.toLowerCase()
+  const emom=text.match(/\be(1(?:[.,]25)?|[2-7])mom\b(?:\s*[:–-]?\s*(\d{1,3}))?/)
+  if(emom)return {format:'E'+emom[1].replace(',','.')+'MOM',minutes:Number(emom[2])||null}
+  const amrap=text.match(/\bamrap\b(?:\s*(\d{1,3}))?/)
+  if(amrap)return {format:'AMRAP',minutes:Number(amrap[1])||null}
+  if(/\btabata\b/.test(text))return {format:'Tabata',minutes:null}
+  if(/\bstasjonssirkel|station\s*circuit\b/.test(text))return {format:'Stasjonssirkel',minutes:null}
+  if(/\brow\s*intervals\b/.test(text))return {format:'Row Intervals',minutes:null}
+  if(/\bintervall|intervals?\b/.test(text))return {format:'Intervall',minutes:null}
+  if(/\bsuperset|supersett\b/.test(text))return {format:'Superset',minutes:null}
+  if(/\bcomplex|kompleks\b/.test(text))return {format:'Complex',minutes:null}
+  if(/\bstrength|styrke\b/.test(text))return {format:'Strength',minutes:null}
+  if(/\bchipper\b/.test(text))return {format:'Chipper',minutes:null}
+  if(/\bcouplet\b/.test(text))return {format:'Couplet',minutes:null}
+  if(/\btriplet\b/.test(text))return {format:'Triplet',minutes:null}
+  if(/\bladder\b/.test(text))return {format:'Ladder',minutes:null}
+  if(/\bdeath\s*by\b/.test(text))return {format:'Death By',minutes:null}
+  if(/\bfor\s*time\b/.test(text))return {format:'For Time',minutes:null}
+  if(/\bmobilitet|mobility\b/.test(text))return {format:'Eigen økt',minutes:null}
+  return null
+ }
+ const findDuration=line=> {
+  const match=line.match(/\b(?:time\s*cap|tidsgrense|varigheit|duration|tid|cap|inntil)\s*[:–-]?\s*(\d{1,3})\s*(?:min(?:utt)?|minutes?)?\b/i)||
+    line.match(/\b(\d{1,3})\s*(?:minutt|min|minutes?)\b/i)
+  return match?Number(match[1]):null
+ }
+ const parseRest=line=>{
+  const m=line.match(/^(?:pause|kvile|rest|byte)\s*[:–-]?\s*(\d{1,4})\s*(sek(?:und)?|s|min(?:utt)?)\b/i)||
+   line.match(/^(\d{1,4})\s*(sek(?:und)?|s|min(?:utt)?)\s*(?:pause|kvile|rest|byte)\b/i)
+  return m?Number(m[1])*(m[2].toLowerCase().startsWith('min')?60:1):null
+ }
+ for(let j=0;j<found.length;j++){
+  const mark=found[j],stop=found[j+1]?.index??lines.length
+  const segment=lines.slice(mark.index,stop),block={id:mark.letter,title:'Del '+mark.letter.toUpperCase()+(mark.title?' – '+mark.title:''),format:null,minutes:null,transitionMode:'manual',transitionSeconds:0}
+  let parsedInline=false
+  const movementLines=[]
+  for(const [rowIndex,line] of segment.entries()){
+   if(rowIndex===0&&!mark.title)continue
+   const pause=parseRest(line)
+   if(pause!=null&&j<found.length-1){block.transitionMode='timed';block.transitionSeconds=pause;continue}
+   const info=parseFormat(line)
+   if(info){block.format=info.format;block.minutes=info.minutes||block.minutes}
+   if(!block.minutes){const minutes=findDuration(line);if(minutes)block.minutes=minutes}
+   const pairing=line.match(/:\s*(\d{1,3}\s+[\p{L}][^+;,]{2,75})\s*\+\s*(\d{1,3}\s+[\p{L}][^+;,]{2,75})/iu)
+   if(pairing){
+    for(const raw of [pairing[1],pairing[2]]){
+     const clean=raw.replace(/\.\s*(?:originalen|rir|pt-notat).*$/i,'').trim()
+     const result=parseMovementLine(clean,null)
+     add(result.text,result.reps,result.quantity,block,line)
+    }
+    parsedInline=true
+    continue
+   }
+   if(rowIndex===0||info||/^(?:notat|pt[-\s]?notat|original|skalering|variant|score|resultat|tips|oppvarming|warmup|tempo)\b/i.test(line))continue
+   if(/^(\d{1,3}(?:\s*x\s*\d{1,3})?\s+(?:\d+(?:[.,]\d+)?\s*(?:m|km|cal|sek)\s+)?[\p{L}])/iu.test(line)){
+    movementLines.push(line)
+   } else if(!/^(?:\d+\s*(?:min|sek|rundar|rounds|sett)|(?:arbeid|kvile|pause)\b)/i.test(line)&&line.length>8){
+    // No guessing: retain instruction for admin rather than introducing a fake movement.
+    warnings.push('Kontroller tekst i '+block.title+': '+line.slice(0,90))
+   }
+  }
+  if(!block.format)throw Error('Fann del '+mark.letter.toUpperCase()+', men ikkje eintydig WOD-format. Legg formatet inn i teksten.')
+  const timed=/^(?:Intervall|Tabata|Row Intervals|Stasjonssirkel)$/.test(block.format)
+  if(timed){
+   const joint=segment.join(' ')
+   const intervals=joint.match(/\b(\d{1,3})\s*(?:\/|sek\s*arbeid\s*[,+]\s*)\s*(\d{1,3})\s*(?:sek)?\b/i)
+   const rounds=joint.match(/(?:[x×]\s*|rundar?\s*[:=]?\s*|rounds?\s*[:=]?\s*)(\d{1,2})\b/i)
+   if(intervals){block.workSeconds=Number(intervals[1]);block.restSeconds=Number(intervals[2])}
+   else if(block.format==='Tabata'){block.workSeconds=20;block.restSeconds=10}
+   else warnings.push('Arbeid/kvile må kontrollerast i '+block.title)
+   if(rounds)block.rounds=Number(rounds[1])
+   else if(block.format==='Tabata')block.rounds=8
+   else warnings.push('Rundar må kontrollerast i '+block.title)
+  }
+  for(const line of movementLines){
+   const sets=line.match(/^(\d{1,2})\s*[x×]\s*(\d{1,3})\s+(.+)$/i)
+   const parsed=parseMovementLine(sets?sets[2]+' '+sets[3]:line,null)
+   if(parsed.text&&parsed.text.length<100)add(parsed.text,parsed.reps,parsed.quantity,block,line,sets?Number(sets[1]):null)
+  }
+  if(!items.some(x=>x.block_id===block.id))throw Error(block.title+' manglar tydelege øvingslinjer. Kontroller OCR-teksten.')
+  if(timed&&!block.minutes && block.rounds && block.workSeconds){
+   const count=items.filter(x=>x.block_id===block.id).length*block.rounds
+   block.minutes=Math.max(1,Math.ceil((count*block.workSeconds+(count-1)*(block.restSeconds??0))/60))
+  }
+  if(!block.minutes)throw Error(block.title+' manglar varigheit eller tidsgrense. Legg inn minutt før import.')
+  if(parsedInline&&movementLines.length===0)warnings.push('Kontroller repstal og E*MOM-timer i '+block.title)
+  blocks.push(block)
+ }
+ const unrecognized=items.filter(item=>!item.matched)
+ const candidateTitle=lines[0].replace(/^(?:økt|okt)\s*\d+\s*[-–—:.·]?\s*/i,'').trim()
+ const name=found[0].index>0&&candidateTitle.length>2&&candidateTitle.length<100?candidateTitle:'Samansett WOD'
+ return {name,format:COMPOSITE_FORMAT,minutes:blocks.reduce((n,b)=>n+b.minutes,0),rounds:1,blocks,items,ignored:[],warnings,
+  notes:'Importert kjeldetekst:\n'+lines.join('\n'),unmatched:unrecognized.map(item=>item.name)}
+}
+
 function parseStructuredComposite(lines, catalog) {
  const a=lines.findIndex(line=>/\bdel\s*a\b/i.test(line))
  const b=lines.findIndex((line,i)=>i>a&&/\bdel\s*b\b/i.test(line))
@@ -151,6 +267,8 @@ function parseStructuredComposite(lines, catalog) {
 export function parseWodImport(source,exerciseCatalog=[]){
  const lines=String(source||'').split(/\r?\n/).map(line=>line.replace(/[•·]/g,' ').trim()).filter(Boolean)
  if(!lines.length)throw new Error('Lim inn WOD-tekst eller last opp ei tekstfil først.')
+ const structured=parseGeneralComposite(lines,exerciseCatalog)
+ if(structured)return structured
  const composite=parseStructuredComposite(lines,exerciseCatalog)
  if(composite)return composite
  // Do not silently flatten multi-format OCR into one unsafe AMRAP.
