@@ -4,7 +4,7 @@ import path from 'node:path'
 const dist = path.resolve('dist')
 const expectedProject = process.env.EXPECTED_SUPABASE_PROJECT_REF || 'izwzwvlexqxqewzijhhd'
 const knownProjectRefs = ['izwzwvlexqxqewzijhhd', 'kultdmklwmilhoytrrig']
-const releaseName = 'STURMKOPF FEUER 1.1'
+const releaseName = 'STURMKOPF GAZELLE 1.2'
 
 async function walk(directory) {
   const entries = await readdir(directory, { withFileTypes: true })
