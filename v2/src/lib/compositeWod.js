@@ -161,3 +161,19 @@ export function compositeScoredBlocks(blockSummary=[],overrides={}) {
   return next
  })
 }
+
+
+/** Result entry for fixed E3MOM-style parts: scheduled reps are editable, not AMRAP scores. */
+export function plannedFixedEmomSets(item, blocks=[], level='rx', manualEntry=false) {
+ const block=(blocks||[]).find(part=>part.id===item?.block_id)
+ const match=String(block?.format||'').match(/^E([1-7])MOM$/i)
+ const intervalMinutes=match?Number(match[1]):0
+ const durationSeconds=Number(block?.duration_seconds)||Number(block?.minutes||0)*60
+ const scheduledSets=intervalMinutes?Math.floor(durationSeconds/(intervalMinutes*60)):0
+ const levelReps=item?.levels?.[level]?.reps
+ const reps=Number(levelReps!==''&&levelReps!=null?levelReps:item?.reps)
+ const configuredSets=Array.isArray(item?.sets)&&item.sets.length?item.sets:[]
+ const autoFill=!manualEntry&&scheduledSets>0&&Number.isInteger(reps)&&reps>0&&item?.reps_mode!=='amrap'&&!item?.is_rest
+ const sets=autoFill?Array.from({length:Math.max(scheduledSets,configuredSets.length)},(_,i)=>configuredSets[i]||configuredSets[0]||{}):configuredSets
+ return {autoFill,reps,sets}
+}
