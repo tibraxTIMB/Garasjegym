@@ -16,7 +16,7 @@ test('43 catalogued additions exactly match the system catalogue acceptance gate
  assert.equal(new Set(migrationNames.map(name=>name.toLowerCase())).size,43)
  assert.deepEqual([...acceptedNames].sort(),[...migrationNames].sort())
  assert.equal(original.reconciliation.unique_normalized_names+acceptedNames.length,178)
- assert.match(assertion,/expected_count <> 198/)
+ assert.match(assertion,/expected_count <> 194/)
 })
 
 test('20 accessory and burpee variants remain distinct and obsolete duplicates inactive',async()=>{
@@ -31,13 +31,21 @@ test('20 accessory and burpee variants remain distinct and obsolete duplicates i
  assert.deepEqual(names.slice().sort(),expected.slice().sort())
  assert.match(migration,/kettlebell deadlift \/ markløft/)
  assert.match(migration,/biceps curl/)
- assert.match(assertion,/expected_count <> 198/)
+ assert.match(assertion,/expected_count <> 194/)
 })
 
-test('all live clean-start checks preserve 198 system exercises',async()=>{
+test('all live clean-start checks preserve 194 system exercises after GG-026',async()=>{
  for(const file of ['clean_start_readiness_read_only.sql','clean_start_post_reset_acceptance_read_only.sql','clean_start_reset_isolated_rehearsal.sql']){
   const sql=await read('../supabase/preflight/'+file)
-  assert.match(sql, /198/,file)
+  assert.match(sql, /194/,file)
   assert.doesNotMatch(sql,/<>\s*135|=\s*135|\/135/,file)
  }
+})
+
+
+test('GG-026 removes four unreferenced semantic duplicates without removing their canonical variants',async()=>{
+ const sql=await read('../supabase/migrations/20261123135500_gg026_deduplicate_exercise_names.sql')
+ for(const name of ['Kettlebell Deadlift / Markløft','Bent-over row','Dumbbell row','Incline Dumbbell Press'])assert.ok(sql.includes(name))
+ for(const name of ['Kettlebell markløft','Barbell Row','One-arm Dumbbell Row','Incline bench press – manualar'])assert.ok(sql.includes(name))
+ assert.match(sql,/RAISE EXCEPTION 'GG-026: kan ikkje fjerne/)
 })

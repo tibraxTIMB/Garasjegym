@@ -97,8 +97,8 @@ SELECT 'schema_table' AS section,
 FROM table_inventory
 UNION ALL
 SELECT 'exercise_catalogue','reconciled_manifest_count',
-       CASE WHEN system_exercise_count=198 AND custom_count=0 THEN 'PASS' ELSE 'CHECK' END,
-       format('system_catalog=%s/198 expanded_manifest custom_exercises=%s; exact names must also pass exercise_catalogue_manifest_assertions.sql',
+       CASE WHEN system_exercise_count=194 AND custom_count=0 THEN 'PASS' ELSE 'CHECK' END,
+       format('system_catalog=%s/194 expanded_manifest custom_exercises=%s; exact names must also pass exercise_catalogue_manifest_assertions.sql',
               system_exercise_count,custom_count)
 FROM exercise_baseline
 UNION ALL

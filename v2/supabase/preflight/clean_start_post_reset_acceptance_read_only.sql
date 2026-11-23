@@ -1,6 +1,6 @@
 -- Read-only post-reset acceptance checks. This file contains no DML/DDL.
 -- Binding clean-start contract: exactly one newly created owner admin/Auth identity,
--- no legacy profiles/users or operational history, and exactly 198 expanded
+-- no legacy profiles/users or operational history, and exactly 194 expanded
 -- system exercises with no custom exercise rows.
 -- Run only on an isolated Production-derived rehearsal target after reset.
 -- Also run exercise_catalogue_manifest_assertions.sql for exact names/categories.
@@ -114,7 +114,7 @@ BEGIN
      OR v_profile_without_auth <> 0 OR v_identities <> 1 OR v_foreign_identities <> 0
      OR v_auth_sessions <> 0 OR v_auth_refresh_tokens <> 0
      OR v_auth_mfa_factors <> 0 OR v_auth_mfa_challenges <> 0
-     OR v_system_exercises <> 198 OR v_custom_exercises <> 0
+     OR v_system_exercises <> 194 OR v_custom_exercises <> 0
      OR v_nonempty_operational_tables <> 0 OR v_storage_objects THEN
     RAISE EXCEPTION
       'Clean-start acceptance failed: profiles=% admins=% non_admin_profiles=% auth_users=% linked=% auth_without_profile=% profile_without_auth=% identities=% foreign_identities=% sessions=% refresh_tokens=% mfa_factors=% mfa_challenges=% system_exercises=% custom_exercises=% nonempty_operational_tables=% storage_objects=%',
@@ -221,9 +221,9 @@ SELECT 'auth','exactly_one_identity_linked_to_owner',
        format('identities=%s foreign_or_legacy_identities=%s',identity_count,foreign_identities)
 FROM auth_identity_state
 UNION ALL
-SELECT 'exercise_catalogue','exactly_198_system_exercises_and_no_custom_rows',
-       CASE WHEN system_catalog_total=198 AND custom_exercises=0 THEN 'PASS' ELSE 'FAIL' END,
-       format('total_system_catalog=%s/198 expanded_manifest custom=%s; exact names/categories must also pass exercise_catalogue_manifest_assertions.sql',
+SELECT 'exercise_catalogue','exactly_194_system_exercises_and_no_custom_rows',
+       CASE WHEN system_catalog_total=194 AND custom_exercises=0 THEN 'PASS' ELSE 'FAIL' END,
+       format('total_system_catalog=%s/194 expanded_manifest custom=%s; exact names/categories must also pass exercise_catalogue_manifest_assertions.sql',
               system_catalog_total,custom_exercises)
 FROM exercise_state
 UNION ALL

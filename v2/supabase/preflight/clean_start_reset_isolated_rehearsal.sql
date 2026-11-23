@@ -6,7 +6,7 @@
 -- The owner must use the Supabase Auth Admin API / Dashboard for real Auth deletion
 -- in any eventual Production run. Do not copy this file into Production.
 --
--- Preserves: all 198 expanded system exercises (created_by IS NULL), schema,
+-- Preserves: all 194 expanded system exercises (created_by IS NULL), schema,
 -- functions, triggers, constraints, indexes, RLS, grants, policies and integrations.
 -- Clears: all operational tables, custom exercises, and all Auth users/identities
 -- on this disposable local database. Storage object bytes are not deleted by SQL:
@@ -35,8 +35,8 @@ BEGIN
   FROM public.exercises
   WHERE created_by IS NULL;
 
-  IF v_system_exercises <> 198 THEN
-    RAISE EXCEPTION 'Refusing clean-start: expected 198 system exercises before reset, found %',v_system_exercises;
+  IF v_system_exercises <> 194 THEN
+    RAISE EXCEPTION 'Refusing clean-start: expected 194 system exercises before reset, found %',v_system_exercises;
   END IF;
 
   IF to_regclass('storage.objects') IS NOT NULL THEN
@@ -192,7 +192,7 @@ BEGIN
     EXECUTE 'SELECT EXISTS (SELECT 1 FROM storage.objects)' INTO v_storage_objects;
   END IF;
 
-  IF v_system_exercises <> 198
+  IF v_system_exercises <> 194
      OR v_custom_exercises <> 0
      OR v_auth_users <> 0
      OR v_profiles <> 0
@@ -210,6 +210,6 @@ BEGIN
       v_nonempty_operational_tables,v_storage_objects;
   END IF;
 
-  RAISE NOTICE 'Isolated clean-start reset passed: 198 system exercises retained; all legacy Auth/profile and operational rows cleared.';
+  RAISE NOTICE 'Isolated clean-start reset passed: 194 system exercises retained; all legacy Auth/profile and operational rows cleared.';
 END;
 $clean_start_postcondition$;
