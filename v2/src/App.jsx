@@ -482,7 +482,7 @@ export default function App() {
           <p>{current.note}</p>
           <div className="notice">
             <strong>Innlogging og medlemsroller er kopla til.</strong>
-            <span>Dette er GarasjeGym 2.0 – STURMKOPF FEUER 1.1. Eksisterande 1.8.16 og produksjonsdata er ikkje endra.</span>
+            <span>Dette er GarasjeGym 1.2 – STURMKOPF GAZELLE. WOD, PT, gruppetimar og treningslogg.</span>
           </div>
         </section>}
         </Suspense>
