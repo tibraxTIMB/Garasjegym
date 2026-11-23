@@ -7,7 +7,7 @@ import { MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
 import { getWodSchemaItems, sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
-import { formatParticipation, normalizeWodEngine, isEmomFormat, emomIntervalSeconds, emomDisplayLabel } from '../lib/wodEngine.js'
+import { formatParticipation, normalizeWodEngine, isEmomFormat, emomIntervalSeconds, emomDisplayLabel, emomPrescribedSetCount } from '../lib/wodEngine.js'
 import PerformanceCenter from './PerformanceCenter.jsx'
 import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, splitDuration, summarizeLapSplits } from '../lib/timerClock.js'
 import { getExerciseMeasurementFlags, isErgExercise } from '../lib/exerciseMeasurements.js'
@@ -799,6 +799,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const [reviewOpen,setReviewOpen]=useState(false)
   const [finishOpen,setFinishOpen]=useState(false)
   const [manualEntry,setManualEntry]=useState(() => Boolean(savedDraft?.manualEntry))
+  const [confirmedPlannedEmom,setConfirmedPlannedEmom]=useState(false)
   const [sessionPrepared,setSessionPrepared]=useState(() => Boolean(savedDraft?.sessionPrepared))
   const [freeEditorOpen,setFreeEditorOpen]=useState(false)
   const [source, setSource] = useState(() => savedDraft?.source || null)
@@ -1003,6 +1004,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   function startWorkout(wod = null, { autoStart = Boolean(wod), forResult = false } = {}) {
     setRestoredTimerSnapshot(null)
     setManualEntry(forResult)
+    setConfirmedPlannedEmom(false)
     // A free session opens the same ready-to-start timer as a saved WOD.
     // Exercises and WOD blocks can be added without resetting the clock.
     setSessionPrepared(!forResult)
@@ -1030,8 +1032,13 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     const selectedLevel=schema?.prescription||'rx'
     if(schema?.library_category==='warmup')orderedSchemaItems.sort((a,b)=>({specific_prep:0,movement_rehearsal:1}[a.warmup_phase||'specific_prep']??0)-({specific_prep:0,movement_rehearsal:1}[b.warmup_phase||'specific_prep']??0))
     if (orderedSchemaItems.length) {
-      setItems(orderedSchemaItems.map(item => {
+      setItems(orderedSchemaItems.map((item,itemIndex) => {
         const {autoFill:fillFixedEmom,reps:prescribedReps,sets:preparedSets}=plannedFixedEmomSets(item,schema?.composite_blocks,selectedLevel,forResult)
+        const standaloneReps=Number(item.levels?.[selectedLevel]?.reps ?? item.reps)
+        const standaloneSlots=!forResult&&isEmomFormat(wod?.format)&&wod?.format!==COMPOSITE_FORMAT?emomPrescribedSetCount({format:wod.format,interval:schema?.interval,durationSeconds:schema?.duration_seconds,minuteSlot:item.minute_slot,exerciseIndex:itemIndex,exerciseCount:orderedSchemaItems.length}):0
+        const fillStandaloneEmom=standaloneSlots>0&&Number.isInteger(standaloneReps)&&standaloneReps>0&&!item.is_rest&&item.reps_mode!=='amrap'
+        const setsForResult=fillStandaloneEmom?Array.from({length:standaloneSlots},(_,i)=>preparedSets[i]||preparedSets[0]||{}):preparedSets
+        const plannedReps=fillStandaloneEmom?standaloneReps:prescribedReps
         return ({
         ...emptyExercise(),
         exercise_id: item.exercise_id || '',
@@ -1048,6 +1055,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         prescription_levels: item.levels || null,
         side_mode: item.side_mode || null,
         prescription_label: doseLabel(item,selectedLevel),
+        prescribed_sets_prefilled:fillFixedEmom||fillStandaloneEmom,
         description: item.description || item.instructions || exercises.find(exercise=>exercise.id===item.exercise_id)?.description || '',
         rowValue:'',rowUnit:wodRowUnit(item,'rx'),workSeconds:'',
         equipment: item.equipment || exercises.find(exercise => exercise.id === item.exercise_id)?.equipment || '',
@@ -1065,8 +1073,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           levels: item.levels || {},
           sets: item.sets || [],
         }).usesLoad,
-        sets: preparedSets.length ? preparedSets.map(set => ({
-          reps: fillFixedEmom ? String(Number(set.reps)>0?set.reps:prescribedReps) : clearPlannedResults ? '' : set.reps == null ? '' : String(set.reps),
+        sets: setsForResult.length ? setsForResult.map(set => ({
+          reps: (fillFixedEmom||fillStandaloneEmom) ? String(Number(set.reps)>0?set.reps:plannedReps) : clearPlannedResults ? '' : set.reps == null ? '' : String(set.reps),
           load_kg: clearPlannedResults ? '' : set.load_kg == null ? '' : String(set.load_kg),
           time_text: clearPlannedResults ? '' : set.tempo || '',
           time_seconds: '',
