@@ -4,7 +4,7 @@ import {Plus,Search,Trash2,ArrowUp,ArrowDown,Save,LoaderCircle,WandSparkles,Dice
 import {supabase} from '../lib/supabase.js'
 import {addWodSortOrder,getWodSchemaItems,moveWodItemByKey,sortWodItems} from '../lib/wodOrdering.js'
 import {COMPLEX_EXERCISES,formatComplexSequence} from '../lib/wodComplexes.js'
-import { createWodEngineConfig, buildLegacyCompatibleBlock, normalizeWodEngine, scoreForWodFormat, PARTICIPATION_MODES, COLLABORATION_MODES, SCORE_TYPES } from '../lib/wodEngine.js'
+import { createWodEngineConfig, buildLegacyCompatibleBlock, normalizeWodEngine, scoreForWodFormat, PARTICIPATION_MODES, COLLABORATION_MODES, SCORE_TYPES, isEmomFormat, emomIntervalSeconds, emomDisplayLabel } from '../lib/wodEngine.js'
 import { getFixedSlotTimerState } from '../lib/timerClock.js'
 import { wodFormatNeedsTime } from '../lib/wodTimeDial.js'
 import { applySharedReps, hasIndependentReps } from '../lib/wodReps.js'
@@ -18,10 +18,10 @@ import './wod-wizard-refine.css'
 
 const categories=['Alle','CrossFit','Burpees','Olympiske løft','TRX','Kettlebell','Manualar','Vektstong','Styrke','Complex','Kjerne','Kondisjon','Gymnastikk','Pilates','Yoga','Mobilitet','Rehab','Golf']
 const areas=['Alle område','Heile kroppen','Overkropp','Underkropp','Kjerne','Hofte og sete','Rygg','Skuldrer og armar','Bryst','Fullkropp','Bein','Mage']
-const formatIcons={'Samansett økt':'▦','AMRAP':'⏱','For Time':'🏁','Chipper':'☷','Couplet':'2×','Triplet':'3×','Ladder':'↗','Death By':'☠','Stasjonssirkel':'⌘','E1MOM':'◷','E1.25MOM':'◷','E2MOM':'◷','E3MOM':'◷','E4MOM':'◷','E5MOM':'◷','E6MOM':'◷','E7MOM':'◷','Intervall':'▥','Tabata':'▥','Row Intervals':'🚣','Strength':'🏋','Superset':'⇄','Complex':'▤','Eigen økt':'✳'}
+const formatIcons={'Samansett økt':'▦','AMRAP':'⏱','For Time':'🏁','Chipper':'☷','Couplet':'2×','Triplet':'3×','Ladder':'↗','Death By':'☠','EMOM':'◷','Stasjonssirkel':'⌘','E1MOM':'◷','E1.25MOM':'◷','E2MOM':'◷','E3MOM':'◷','E4MOM':'◷','E5MOM':'◷','E6MOM':'◷','E7MOM':'◷','Intervall':'▥','Tabata':'▥','Row Intervals':'🚣','Strength':'🏋','Superset':'⇄','Complex':'▤','Eigen økt':'✳'}
 const formats=[
  {group:'Metcon',items:['AMRAP','For Time','Chipper','Couplet','Triplet','Ladder','Death By']},
- {group:'Gruppetime',items:['Stasjonssirkel','E1MOM','E1.25MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM']},
+ {group:'Gruppetime',items:['Stasjonssirkel','EMOM']},
  {group:'Intervall',items:['Intervall','Tabata','Row Intervals']},
  {group:'Styrke',items:['Strength','Superset','Complex']},
  {group:'Anna',items:['Eigen økt',COMPOSITE_FORMAT]}
@@ -30,7 +30,7 @@ const allFormats=formats.flatMap(x=>x.items)
 const featuredFormats=[
  {name:'AMRAP',description:'Flest mogleg rundar på fast tid'},
  {name:'For Time',description:'Fullfør arbeidet raskast mogleg'},
- {name:'E1MOM',description:'Start ny oppgåve kvart minutt'},
+ {name:'EMOM',description:'Vel intervall i minutt og sekund'},
  {name:'Tabata',description:'Arbeid og pause i intervall'},
  {name:'Stasjonssirkel',description:'Roter mellom stasjonar'},
  {name:'Strength',description:'Sett, repetisjonar og belastning'},
@@ -130,8 +130,6 @@ const strengthFormats=['Strength','Pyramid','Superset','Complex']
 const strengthLike=f=>strengthFormats.includes(f)
 const intervalFormats=['Intervall','Tabata','Row Intervals']
 const timedFormats=['EMOM','E1MOM','E1.25MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM']
-const timedEvery=f=>{const match=String(f||'').match(/^E(\d+(?:\.\d+)?)MOM$/);return match?Number(match[1]):1}
-const timedLabel=f=>{const seconds=Math.round(timedEvery(f)*60);return seconds%60===0?'kvart '+seconds/60+'. minutt':'kvart '+Math.floor(seconds/60)+' minutt og '+seconds%60+' sekund'}
 const isRow=x=>x.equipment==='Romaskin'
 const quickDoseMetricFor=ex=>{const fields=doseFieldsFor(ex),name=(ex.name||'').toLowerCase();return isRow(ex)?'rowing':fields.height?'height':fields.calories&&/bike|sykkel|assault|echo/.test(name)?'calories':fields.distance?'distance':fields.calories?'calories':fields.time?'time':null}
 const rowingDosePatch=(unit,value)=>({reps:'',distanceMeters:unit==='m'?value:'',calories:unit==='cal'?value:'',durationSeconds:unit==='s'?value:unit==='min'&&value!==''?String(Number(value)*60):''})
@@ -225,6 +223,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const [minutes,setMinutes]=useState('20'),[durationSeconds,setDurationSeconds]=useState('0'),[notes,setNotes]=useState(''),[stimulus,setStimulus]=useState('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
  const [rounds,setRounds]=useState('5'),[intervalExerciseCount,setIntervalExerciseCount]=useState('1'),[workSeconds,setWorkSeconds]=useState('60'),[restSeconds,setRestSeconds]=useState('10'),[timeCap,setTimeCap]=useState('20'),[timeCapSeconds,setTimeCapSeconds]=useState('0'),[stationCount,setStationCount]=useState('4'),[stationWork,setStationWork]=useState('45'),[stationTransition,setStationTransition]=useState('15'),[stationRounds,setStationRounds]=useState('3')
  const [ladderStart,setLadderStart]=useState('2'),[ladderStep,setLadderStep]=useState('2'),[ladderDirection,setLadderDirection]=useState('up')
+ const [emomIntervalMin,setEmomIntervalMin]=useState('1'),[emomIntervalSec,setEmomIntervalSec]=useState('0')
  const [deathByIntervalMin,setDeathByIntervalMin]=useState('1'),[deathByIntervalSec,setDeathByIntervalSec]=useState('0')
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[canPublishWod,setCanPublishWod]=useState(false),[publishRoleReady,setPublishRoleReady]=useState(false)
  const [prescription,setPrescription]=useState('rx'),[customInstructions,setCustomInstructions]=useState(''),[customUseSets,setCustomUseSets]=useState(false),[combinationMode,setCombinationMode]=useState('For Time')
@@ -244,8 +243,10 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   if(e){setError('Kunne ikkje opna WOD for redigering: '+e.message);setLoading(false);return}
   const schema=w.timer_settings?.workout_schema||{}
   const items=sortWodItems(getWodSchemaItems(schema))
-  const engine=normalizeWodEngine(schema,{format:w.format});setParticipation(engine.participation);setCollaboration(engine.collaboration);setPartnerCount(String(engine.participant_count||3));setEditingWodId(w.id);setName(w.name);const legacyFormat=w.format||'AMRAP';const emomMatch=/^EMOM(?: ([1-7]))?$/.exec(legacyFormat);const mappedFormat=emomMatch?'E'+Math.max(1,Math.min(7,Number(emomMatch[1]||schema.interval?.work_every_minutes)||1))+'MOM':legacyFormat==='Pyramid'?'Strength':legacyFormat==='Couplet / Triplet'?(schema.items?.filter(item=>!item.is_rest).length>=3?'Triplet':'Couplet'):legacyFormat==='Ladder / Death By'?(schema.ladder?.type==='Death By'?'Death By':'Ladder'):legacyFormat==='Intervall / Tabata'?(schema.interval?.work_seconds===20&&schema.interval?.rest_seconds===10?'Tabata':'Intervall'):legacyFormat;setFormat(mappedFormat);setPublishToMembers(canPublishWod&&!!w.is_published);const storedLibraryCategory=schema.library_category||(w.category==='warmup'?'warmup':'standard');const normalizedLibraryCategory=storedLibraryCategory==='daily'?'standard':storedLibraryCategory;const knownLibraryCategories=['warmup','standard','benchmark','assessment','rehab','recovery','other'];setLibraryCategory(knownLibraryCategories.includes(normalizedLibraryCategory)?normalizedLibraryCategory:'custom');setCustomLibraryCategory(knownLibraryCategories.includes(normalizedLibraryCategory)?'':normalizedLibraryCategory)
+  const engine=normalizeWodEngine(schema,{format:w.format});setParticipation(engine.participation);setCollaboration(engine.collaboration);setPartnerCount(String(engine.participant_count||3));setEditingWodId(w.id);setName(w.name);const legacyFormat=w.format||'AMRAP';const emomMatch=/^EMOM(?: ([1-7]))?$/.exec(legacyFormat);const mappedFormat=isEmomFormat(legacyFormat)?'EMOM':legacyFormat==='Pyramid'?'Strength':legacyFormat==='Couplet / Triplet'?(schema.items?.filter(item=>!item.is_rest).length>=3?'Triplet':'Couplet'):legacyFormat==='Ladder / Death By'?(schema.ladder?.type==='Death By'?'Death By':'Ladder'):legacyFormat==='Intervall / Tabata'?(schema.interval?.work_seconds===20&&schema.interval?.rest_seconds===10?'Tabata':'Intervall'):legacyFormat;setFormat(mappedFormat);setPublishToMembers(canPublishWod&&!!w.is_published);const storedLibraryCategory=schema.library_category||(w.category==='warmup'?'warmup':'standard');const normalizedLibraryCategory=storedLibraryCategory==='daily'?'standard':storedLibraryCategory;const knownLibraryCategories=['warmup','standard','benchmark','assessment','rehab','recovery','other'];setLibraryCategory(knownLibraryCategories.includes(normalizedLibraryCategory)?normalizedLibraryCategory:'custom');setCustomLibraryCategory(knownLibraryCategories.includes(normalizedLibraryCategory)?'':normalizedLibraryCategory)
   setMinutes(String(schema.duration_seconds?Math.floor(schema.duration_seconds/60):w.duration_minutes||20));setDurationSeconds(String(schema.duration_seconds?schema.duration_seconds%60:0))
+  const storedEmomSeconds=emomIntervalSeconds(legacyFormat,schema.interval)
+  setEmomIntervalMin(String(Math.floor(storedEmomSeconds/60)));setEmomIntervalSec(String(storedEmomSeconds%60))
   setNotes(schema.coach_notes||w.notes||'');setStimulus(schema.stimulus||'Jamn intensitet · teknisk kvalitet · kontrollert tempo')
   setIntensity(String(schema.intensity||2));setPrescription(schema.prescription||'rx');setCustomInstructions(schema.custom_instructions||'');setRxNotes(schema.rx_notes||'');setScaledNotes(schema.scaled_notes||'');setWizardStep(0)
   if(schema.time_cap_seconds){setTimeCap(String(Math.floor(schema.time_cap_seconds/60)));setTimeCapSeconds(String(schema.time_cap_seconds%60))}else{setTimeCap('');setTimeCapSeconds('0')}
@@ -293,7 +294,9 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  }),[exercises,category,area,search,equipmentFilter,movementFilter])
   const showSets=(strengthLike(format)&&format!=='Complex')||(format==='Eigen økt'&&customUseSets)
  const isInterval=intervalFormats.includes(format)||format==='Tabata'||format==='Row Intervals'||format==='Intervall / Tabata'
- const isTimed=timedFormats.includes(format)
+ const isTimed=isEmomFormat(format)
+ const emomEverySeconds=Number(emomIntervalMin)*60+Number(emomIntervalSec)
+ const emomTotalSeconds=Number(minutes)*60+Number(durationSeconds)
  const isLadder=format==='Ladder'||format==='Death By'
  const isDeathBy=format==='Death By'
  const isAmrap=format==='AMRAP'
@@ -455,6 +458,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   if(isComposite){const issue=validateCompositeBlocks(compositeBlocks,selected);if(issue){setError(issue);setWizardStep(2);return}}
   if(selected.some(ex=>Object.values(ex.levels||{}).some(d=>d.loadMode==='rir'&&!isValidRirTarget(d.rirRange||d.rir)))){setError('RIR må vera 0–10, -1 ved særskild PT-vurdering eller eit intervall som 2–4.');setWizardStep(3);return}
   if(isAmrap&&(!Number.isInteger(Number(timeCap))||Number(timeCap)<1||Number(timeCap)>600)){setError('AMRAP krev ei tidsramme på mellom 1 og 600 minutt.');setWizardStep(1);return}
+  if(isTimed&&(!Number.isInteger(Number(emomIntervalMin))||!Number.isInteger(Number(emomIntervalSec))||Number(emomIntervalMin)<0||Number(emomIntervalSec)<0||Number(emomIntervalSec)>59||emomEverySeconds<5||emomEverySeconds>3600||!Number.isInteger(Number(minutes))||Number(minutes)<0||!Number.isInteger(Number(durationSeconds))||Number(durationSeconds)<0||Number(durationSeconds)>59||emomTotalSeconds<emomEverySeconds||emomTotalSeconds%emomEverySeconds!==0)){setError('EMOM krev gyldig intervall (minutt/sekund) og ei øktlengd som går opp i heile intervall.');setWizardStep(1);return}
   if(isDeathBy){const period=Number(deathByIntervalMin)*60+Number(deathByIntervalSec);if(!Number.isInteger(Number(ladderStart))||Number(ladderStart)<1||!Number.isInteger(Number(ladderStep))||Number(ladderStep)<1||!Number.isInteger(Number(deathByIntervalMin))||!Number.isInteger(Number(deathByIntervalSec))||Number(deathByIntervalMin)<0||Number(deathByIntervalSec)<0||Number(deathByIntervalSec)>59||period<5||period>3600){setError('Death By krev startreps og auking over null, og eit intervall på 5 sekund til 60 minutt.');setWizardStep(1);return}}
    if((format==='Couplet'&&selected.length!==2)||(format==='Triplet'&&selected.length!==3)){setError(`${format} krev nøyaktig ${format==='Couplet'?2:3} øvingar.`);return}
   
@@ -480,10 +484,10 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   try{
    const {data:{user}}=await supabase.auth.getUser()
    if(!user)throw new Error('Du må vera innlogga for å publisera WOD.')
-    const savedFormat=format
+    const savedFormat=isTimed?'EMOM':format
    const schema={
     version:6,format:savedFormat,composite_blocks:isComposite?compositeBlocksWithItems.map(block=>({...block,duration_seconds:compositeBlockDuration(block,block.itemsCount)})):null,library_category:libraryCategory==='custom'?(customLibraryCategory.trim()||'other'):libraryCategory,intensity:Number(intensity),warmup_plan:libraryCategory==='warmup'?{version:1,sections:[{id:'specific_prep',title:'Felles oppvarming',purpose:'Gradvis førebuing mot hovud-WOD sin stimulus og rørsleform',items:selected.filter(x=>!x.is_rest&&x.warmup_phase!=='movement_rehearsal').map(x=>x.name)},{id:'movement_rehearsal',title:'Fri teknisk innøving',purpose:'Individuell øving på hovudrørsla med lette vekter for å finne rett arbeidsnivå',items:selected.filter(x=>!x.is_rest&&x.warmup_phase==='movement_rehearsal').map(x=>x.name)}],main_stimulus:stimulus,coach_guidance:'Start lett. Auk gradvis belastninga individuelt til planlagt arbeidsvekt for hovud-WOD.'}:null,analysis:analyseWorkout(selected,Number(isAmrap?timeCap:minutes)||0),structure:isStationCircuit?'station_circuit':(showSets||format==='Complex')?'strength':isTimed?'interval_clock':isInterval?'interval':isAmrap||isForTime||isLadder?'metcon':'custom',
-    duration_minutes:isComposite?Math.ceil(compositeTotalSeconds(compositeBlocksWithItems)/60):(isAmrap||isTimed)?(isAmrap?Number(timeCap):Number(minutes))||null:null,time_cap_minutes:isAmrap?(Number(timeCap)||null):((isForTime||isLadder||showSets||(isCoupletTriplet&&combinationMode==='For Time'))&&Number(timeCap)>0?Number(timeCap):null),time_cap_seconds:isAmrap?(Number(timeCap)>0?Number(timeCap)*60:null):((isForTime||isLadder||showSets||(isCoupletTriplet&&combinationMode==='For Time'))&&Number(timeCap)>0?Number(timeCap)*60:null),combination_mode:isCoupletTriplet?combinationMode:null,
+    duration_minutes:isComposite?Math.ceil(compositeTotalSeconds(compositeBlocksWithItems)/60):(isAmrap||isTimed)?(isAmrap?Number(timeCap):Math.ceil(emomTotalSeconds/60))||null:null,time_cap_minutes:isAmrap?(Number(timeCap)||null):((isForTime||isLadder||showSets||(isCoupletTriplet&&combinationMode==='For Time'))&&Number(timeCap)>0?Number(timeCap):null),time_cap_seconds:isAmrap?(Number(timeCap)>0?Number(timeCap)*60:null):((isForTime||isLadder||showSets||(isCoupletTriplet&&combinationMode==='For Time'))&&Number(timeCap)>0?Number(timeCap)*60:null),combination_mode:isCoupletTriplet?combinationMode:null,
     rounds:isStationCircuit?Number(stationRounds):isInterval?Number(rounds):isForTime||format==='Ladder'?Number(rounds)||null:null,
      interval_exercise_count:isInterval?Number(intervalExerciseCount):null,
      interval_exercises:isInterval?selected.map((x,i)=>({order:i+1,exercise_name:x.name,is_rest:!!x.is_rest,rest_duration_seconds:x.is_rest?Number(x.pauseSeconds):null})):null,
@@ -491,8 +495,8 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
        const stationDose=doseForItem(x)
        return {station_number:i+1,exercise_name:x.name,reps_mode:x.repsMode||'fixed',reps:(x.repsMode||'fixed')==='amrap'?null:Number(stationDose.reps)||null,load_mode:stationDose.loadMode,load_kg:stationDose.loadMode==='kg'?(stationDose.loadKgMen?Number(stationDose.loadKgMen):(stationDose.loadKgWomen?Number(stationDose.loadKgWomen):null)):null,load_label:doseLoadLabel(stationDose),height_cm:stationDose.heightCm!==''&&stationDose.heightCm!=null?Number(stationDose.heightCm):null,equipment:x.equipment||null,description:x.description||null,coach_note:x.coachNote||null}
      })}:null,
-    duration_seconds:isComposite?compositeTotalSeconds(compositeBlocksWithItems):isStationCircuit?getFixedSlotTimerState({workSeconds:Number(stationWork),restSeconds:Number(stationTransition),rounds:Number(stationRounds),slotsPerRound:Number(stationCount)}).totalSeconds:isAmrap?(Number(timeCap)||0)*60:isTimed?(Number(minutes)||0)*60:isInterval?getFixedSlotTimerState({workSeconds:Number(workSeconds),restSeconds:Number(restSeconds),rounds:Number(rounds),slotsPerRound:selected.length}).totalSeconds:null,
-     interval:{work_seconds:Number(workSeconds)||null,rest_seconds:Number(restSeconds)||0,work_every_minutes:isTimed?timedEvery(format):null},
+    duration_seconds:isComposite?compositeTotalSeconds(compositeBlocksWithItems):isStationCircuit?getFixedSlotTimerState({workSeconds:Number(stationWork),restSeconds:Number(stationTransition),rounds:Number(stationRounds),slotsPerRound:Number(stationCount)}).totalSeconds:isAmrap?(Number(timeCap)||0)*60:isTimed?emomTotalSeconds:isInterval?getFixedSlotTimerState({workSeconds:Number(workSeconds),restSeconds:Number(restSeconds),rounds:Number(rounds),slotsPerRound:selected.length}).totalSeconds:null,
+     interval:{work_seconds:isTimed?emomEverySeconds:Number(workSeconds)||null,rest_seconds:isTimed?0:Number(restSeconds)||0,work_every_minutes:isTimed?emomEverySeconds/60:null,work_every_seconds:isTimed?emomEverySeconds:null},
      ladder:isLadder?{type:format,start:Number(ladderStart),step:Number(ladderStep),direction:isDeathBy?'up':ladderDirection,...(isDeathBy?{interval_seconds:Number(deathByIntervalMin)*60+Number(deathByIntervalSec)}:{})}:null,
     stimulus,coach_notes:notes,prescription,custom_instructions:customInstructions,rx_notes:rxNotes,scaled_notes:scaledNotes,
     superset_groups:showSets&&format==='Superset'?Array.from(new Set(selected.map(x=>x.group))):[],
