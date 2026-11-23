@@ -443,7 +443,7 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
   </div>
   <button type="button" className="secondary-button" onClick={()=>{setCustomerSearch('');setShowCustomerPicker(true)}}><Search size={15}/>{clientId?'Byt kunde':'Vel kunde'}</button>
  </div>
-</section>
+</section>}
   {coachMode&&!loading&&members.length===0&&<section className="pt2-panel"><span className="section-kicker">PT STUDIO</span><h3>Ingen kundar er tildelte deg enno</h3><p>Du får tilgang til kundar når administrator har registrert deg som PT og tildelt deg eit aktivt kundeforhold. Når tildelinga er på plass, kjem kundane automatisk opp her.</p></section>}
   {canManageClients&&selectedMember&&tab!=='administrasjon'&&<nav className="pt2-tabs pt2-coach-primary-tabs" aria-label={'Oppfølging for '+selectedMember.display_name}>
  {[['oversikt','Oversikt'],['wodar','WOD-ar'],['pt-timar','Timar'],['plan','Plan'],['dialog','Dialog'],['meir','Meir']].map(([id,label])=><button type="button" key={id} className={tab===id||(id==='meir'&&['mål','kartlegging','status','notat'].includes(tab))?'selected':''} aria-current={tab===id?'page':undefined} onClick={()=>followupTab(id)}>{label}</button>)}
