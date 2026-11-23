@@ -693,6 +693,7 @@ function CompositeTimer({schema,exerciseList=[],prescriptionLevel='rx',wodName='
  const [remaining,setRemaining]=useState(()=>Math.max(0,Math.ceil(((Number(resumeState?.composite_transition?.deadline)||0)-Date.now())/1000)))
  const [autoStartIndex,setAutoStartIndex]=useState(null)
  const [breakHistory,setBreakHistory]=useState(()=>resumeState?.composite_breaks||[])
+ const [finishPending,setFinishPending]=useState(false)
  const block=blocks[active]
  const reportBlock=useCallback(snapshot=>setResults(old=>{const prior=old[active];if(prior?.phase==='FULLFØRT'&&!['FULLFØRT','FERDIG','TIDSGRENSE'].includes(snapshot.phase))return old;return {...old,[active]:snapshot}}),[active])
  const advance=useCallback((autostart=false)=>{
@@ -709,7 +710,7 @@ function CompositeTimer({schema,exerciseList=[],prescriptionLevel='rx',wodName='
  },[active,advance,block])
  const finishPart=useCallback(snapshot=>{
   setResults(old=>({...old,[active]:{...old[active],...snapshot}}))
-  if(active===blocks.length-1)onFinish()
+  if(active===blocks.length-1)setFinishPending(true)
   else beginTransition()
  },[active,blocks.length,beginTransition,onFinish])
  // When a countdown finishes naturally, a preset pause begins without another click.
@@ -753,6 +754,8 @@ function CompositeTimer({schema,exerciseList=[],prescriptionLevel='rx',wodName='
   const amrap=details.filter(part=>part.format==='AMRAP'||(['Couplet','Triplet'].includes(part.format)&&part.combination_mode==='AMRAP')).slice(-1)[0]
   onSnapshot({...current,elapsed:details.reduce((a,b)=>a+b.elapsed,0),roundsCompleted:amrap?.roundsCompleted||0,laps:amrap?.laps||[],active_block_index:active,block_results:results,block_summary:details,composite_transition:interlude,composite_breaks:breakHistory,format:COMPOSITE_FORMAT})
  },[results,active,blocks,onSnapshot,interlude,breakHistory])
+ // Make sure the last block result reaches the parent before opening result review.
+ useEffect(()=>{if(!finishPending)return;onFinish();setFinishPending(false)},[finishPending,onFinish])
  if(!block)return <div className="training-state">Denne WOD-en manglar timerdelar. Kontroller WOD Builder.</div>
  const current=compositeBlockForTimer(block,active)
  const timerConfig=compositeTimerConfig(current)
