@@ -685,6 +685,13 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   const updateBlock=patch=>setCompositeBlocks(rows=>rows.map(x=>x.id===block.id?{...x,...patch}:x))
   return <div className="gg-composite-block" key={block.id}>
    <div className="gg-composite-block-head"><strong>Del {index+1} · {block.title||block.format}</strong><small>{exerciseCount} øvingar · {Math.floor(duration/60)}:{String(duration%60).padStart(2,'0')} arbeid</small></div>
+   <label className="gg-composite-library-pick">Bruk ferdig WOD frå biblioteket
+    <select value={block.source_wod_id||''} onChange={e=>{const source=libraryWods.find(w=>w.id===e.target.value);if(source)reuseLibraryWod(block,source)}}>
+     <option value="">Vel ein WOD for denne delen …</option>
+     {libraryWods.filter(w=>w.id!==editingWodId&&w.format!==COMPOSITE_FORMAT&&COMPOSITE_BLOCK_FORMATS.includes(isEmomFormat(w.format)?'EMOM':w.format)).map(w=><option key={w.id} value={w.id}>{w.name} · {w.format}</option>)}
+    </select>
+   </label>
+   {block.source_wod_id&&<small className="wod-help">Kopla til «{block.source_wod_name}». Originalen ligg uendra i biblioteket; denne delen har eige lagra oppsett.</small>}
    <div className="gg-composite-block-fields">
     <label>Namn<input value={block.title} onChange={e=>updateBlock({title:e.target.value})} maxLength={60}/></label>
     <label>Format<select value={block.format} onChange={e=>updateBlock({format:e.target.value,workSeconds:e.target.value==='Tabata'?20:45,restSeconds:e.target.value==='Tabata'?10:15,rounds:e.target.value==='Tabata'?8:3,...(e.target.value==='Death By'?{ladderStart:1,ladderStep:1,ladderDirection:'up',deathByIntervalSeconds:60}:{}),...(e.target.value==='EMOM'?{emomIntervalSeconds:60}:{})})}>{COMPOSITE_BLOCK_FORMATS.filter(f=>!/^E\d+(?:\.\d+)?MOM$/.test(f)).map(f=><option key={f} value={f}>{f}</option>)}</select></label>
