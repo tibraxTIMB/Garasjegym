@@ -69,7 +69,7 @@ export function emomPrescribedSetCount({format='EMOM',interval={},durationSecond
  const total=Math.max(0,Math.floor(Number(durationSeconds)||0))
  const slots=Math.floor(total/every)
  if(!slots)return 0
- const assigned=String(minuteSlot??'').split(/[,;\\s/]+/).map(Number).filter(n=>Number.isInteger(n)&&n>0&&n<=slots)
+ const assigned=String(minuteSlot??'').split(/[,;\s/]+/).map(Number).filter(n=>Number.isInteger(n)&&n>0&&n<=slots)
  if(assigned.length)return new Set(assigned).size
  const count=Math.max(1,Math.floor(Number(exerciseCount)||1))
  const index=Math.max(0,Math.floor(Number(exerciseIndex)||0))%count
