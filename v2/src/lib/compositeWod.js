@@ -64,6 +64,7 @@ export function validateCompositeBlocks(blocks,items=[]) {
   if(block.format==='Triplet'&&exercises.length!==3)return title+': Triplet krev tre øvingar.'
   if(block.format==='Stasjonssirkel'&&(exercises.length<2||exercises.length>8))return title+': stasjonssirkel krev 2–8 stasjonar.'
   if(COMPOSITE_INTERVAL_FORMATS.includes(block.format)&&exercises.length>8)return title+': intervall støttar høgst åtte øvingar.'
+  if((COMPOSITE_INTERVAL_FORMATS.includes(block.format)||block.format==='Stasjonssirkel')&&items.some(item=>(item.blockId||item.block_id)===block.id&&item.is_rest))return title+': bruk feltet for arbeid/kvile, ikkje Pause som ekstra stasjon.'
   if(COMPOSITE_INTERVAL_FORMATS.includes(block.format)||block.format==='Stasjonssirkel'){
    const rounds=Number(block.rounds ?? (block.format==='Tabata'?8:3))
    const work=Number(block.workSeconds ?? (block.format==='Tabata'?20:45))
@@ -108,7 +109,7 @@ export function compositeTimerConfig(block) {
   rotation:'all_rotate_together',
   stations:items.map((item,i)=>({...item,station_number:i+1})),
  }:null
- const timedCap=['AMRAP',...COMPOSITE_FOR_TIME_FORMATS].includes(current.format) || every!==null
+ const timedCap=current.format==='AMRAP'||every!==null||(['Couplet','Triplet'].includes(current.format)?current.combinationMode!=='Open':COMPOSITE_FOR_TIME_FORMATS.includes(current.format))
  const schema={
   format:current.format,
   duration_seconds:current.duration_seconds,
@@ -118,7 +119,8 @@ export function compositeTimerConfig(block) {
   station_circuit:stationPlan,
   rounds:interval||station?rounds:null,
   interval_exercise_count:interval?items.length:null,
-  combination_mode:current.format==='Couplet'||current.format==='Triplet'?'For Time':null,
+  combination_mode:['Couplet','Triplet'].includes(current.format)?(current.combinationMode||'For Time'):null,
+  ladder:['Ladder','Death By'].includes(current.format)?{type:current.format,start:Number(current.ladderStart)||2,step:Number(current.ladderStep)||2,direction:current.ladderDirection==='down'?'down':'up'}:null,
   items,
  }
  return {
