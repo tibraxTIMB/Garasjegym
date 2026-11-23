@@ -276,3 +276,18 @@
 .gg-composite-final-block{display:grid;gap:4px;padding:10px;border:1px solid var(--line,#52575a);border-radius:10px;background:var(--panel2,#292e31)}
 .gg-composite-final-block strong{font-size:13px}
 .gg-composite-final-block small{font-size:12px;opacity:.8;line-height:1.4}
+
+
+/* Composite A–H WOD parts: responsive settings with distinct per-part transition options. */
+.gg-composite-editor .gg-composite-block{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-items:stretch}
+.gg-composite-block-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.gg-composite-block-head strong{font-size:15px}
+.gg-composite-block-head small{font-size:12px;opacity:.82}
+.gg-composite-block-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:9px;min-width:0}
+.gg-composite-block-fields label,.gg-composite-transition-fields label{display:grid;gap:4px;min-width:0;font-size:12px}
+.gg-composite-block-fields input,.gg-composite-block-fields select,.gg-composite-transition-fields input,.gg-composite-transition-fields select{min-height:44px;min-width:0;width:100%;color:inherit;background:var(--panel2,#303439);border:1px solid #5a5d5e;border-radius:9px;padding:9px}
+.gg-composite-transition-fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(100px,1fr);gap:8px;padding:10px;border:1px dashed #866b40;border-radius:9px;background:rgba(150,113,55,.10)}
+.gg-composite-block-actions{display:flex;flex-wrap:wrap;gap:8px}
+.gg-composite-block-actions button{min-height:44px}
+@media(max-width:560px){.gg-composite-block-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.gg-composite-transition-fields{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:380px){.gg-composite-block-fields{grid-template-columns:minmax(0,1fr)}}
