@@ -117,3 +117,14 @@ test('selected PT client has directly accessible existing onboarding and scoped 
  assert.match(sql,/public\.pt_intakes/)
  assert.match(sql,/REVOKE ALL ON FUNCTION public\.request_pt_intake\(uuid\) FROM PUBLIC,anon/)
 })
+
+
+test('PT client follow-up avoids empty template dead ends and refreshes onboarding answers',()=>{
+ const studio=source('../src/components/PTStudio.jsx')
+ assert.match(studio,/if\(activeProgram\|\|!templates\.length\)\{setTab\('plan'\);return\}/)
+ assert.match(studio,/Opprett første programmal/)
+ assert.match(studio,/Oppdater kundestatus/)
+ assert.match(studio,/onClick=\{\(\)=>load\(\)\}/)
+ assert.match(studio,/initialTab==='ny-kartlegging'\?'Send svar til PT'/)
+ assert.match(studio,/Kartlegging gjennomgått/)
+})
