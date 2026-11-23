@@ -671,7 +671,7 @@ function CompositeTimer({schema,exerciseList=[],prescriptionLevel='rx',wodName='
  const [active,setActive]=useState(()=>Math.min(Math.max(0,Number(resumeState?.active_block_index)||0),Math.max(0,blocks.length-1)))
  const [results,setResults]=useState(()=>resumeState?.block_results||{})
  const [interlude,setInterlude]=useState(()=>resumeState?.composite_transition||null)
- const [remaining,setRemaining]=useState(()=>Math.max(0,Math.ceil((Number(resumeState?.composite_transition?.deadline)||0-Date.now())/1000)))
+ const [remaining,setRemaining]=useState(()=>Math.max(0,Math.ceil(((Number(resumeState?.composite_transition?.deadline)||0)-Date.now())/1000)))
  const [autoStartIndex,setAutoStartIndex]=useState(null)
  const [breakHistory,setBreakHistory]=useState(()=>resumeState?.composite_breaks||[])
  const block=blocks[active]
