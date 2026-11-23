@@ -229,7 +229,8 @@ export default function App() {
     }
     else if(href.startsWith('pt-request:')){setFocusPTRequestId(href.slice(11));setFocusPTPanel('forespurnader');setPTStudioWorkspace('studio');setPTStudioInitialTab('pt-timar');navigateTo('pt-studio')}
     else if(href.startsWith('pt-checkin:')){setFocusPTRequestId(null);setFocusPTClientId(href.slice(11));setFocusPTPanel(null);setPTStudioWorkspace('studio');setPTStudioInitialTab('status');navigateTo('pt-studio')}
-    else if(href.startsWith('pt-intake:')){setFocusPTRequestId(null);setFocusPTClientId(href.slice(10));setFocusPTPanel(null);setPTStudioWorkspace('studio');setPTStudioInitialTab('kartlegging');navigateTo('pt-studio')}
+    else if(href==='pt-intake-start'){setFocusPTRequestId(null);setPTStudioWorkspace('studio');setPTStudioInitialTab('ny-kartlegging');navigateTo('pt-studio')}
+     else if(href.startsWith('pt-intake:')){setFocusPTRequestId(null);setFocusPTClientId(href.slice(10));setFocusPTPanel(null);setPTStudioWorkspace('studio');setPTStudioInitialTab('kartlegging');navigateTo('pt-studio')}
     else if(href.startsWith('pt-client:')){const targetTab=item.title==='PT-status mottatt'?'status':item.title==='Ny PT-innmelding'?'kartlegging':'pt-timar';setFocusPTClientId(href.slice(10));setFocusPTPanel(targetTab==='pt-timar'?'dialog':null);setPTStudioWorkspace('studio');setPTStudioInitialTab(targetTab);navigateTo('pt-studio')}
     else if(href.startsWith('group-class:')){setFocusGroupClassId(href.slice(12));if(isStaff(profile)){setPTStudioWorkspace('groups');setPTStudioInitialTab('oversikt');navigateTo('pt-studio')}else{setScheduleTab('booking');navigateTo('timeplan')}}
     else if(href.startsWith('coffee-review:')){setFocusCoffeeReviewId(href.slice(14));navigateTo('kaffi')}
