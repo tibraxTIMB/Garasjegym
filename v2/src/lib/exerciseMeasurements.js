@@ -45,7 +45,7 @@ export function getExerciseMeasurementFlags(exercise = {}) {
   const boxOnly = usesHeight && boxEquipment && !externalLoad;
   const ordinaryLoad = LOAD_MOVEMENT.test(name) && !BODYWEIGHT_MOVEMENT.test(name)
     && (!usesHeight || /step.?up/i.test(name)) && !boxOnly;
-  const bodyweightOnly = /^trx\b/.test(name) || /^trx\b/.test(equipment) || HOLD_MOVEMENT.test(name) || /ab wheel|rollout/.test(name);
+  const bodyweightOnly = /^trx\b/.test(name) || /^trx\b/.test(equipment) || HOLD_MOVEMENT.test(name) || /ab wheel|rollout|\bcrawl\b/.test(name);
   const usesLoad = !isErgExercise(exercise) && Boolean(exercise.is_complex || hasSavedLoad || externalLoad || (!bodyweightOnly && ordinaryLoad) || (!bodyweightOnly && !usesHeight && !boxOnly));
 
   return { usesHeight, usesLoad };
