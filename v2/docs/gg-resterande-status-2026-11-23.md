@@ -1,15 +1,17 @@
 # GG-011, GG-025, GG-026, GG-029, GG-031 og GG-032
 
-Status dokumentert 23. november 2026. Avgrensa til desse seks tidlegare identifiserte GG-funna.
+Status oppdatert 23. november 2026. Avgrensa til desse seks tidlegare identifiserte GG-funna.
+
+GG-026 er utført og verifisert i tilknytt Supabase-database. GG-011 må framleis samordnast med godkjend webpublisering. Dette dokumentet er ikkje ein publiseringsgodkjenning.
 
 | GG | Status | Kontroll / tiltak |
 | --- | --- | --- |
 | GG-011 | Kode ferdig, produksjonsmigrering utsett til samordna publisering | `20261123125000_group_result_notification_deep_link.sql` er kontrollert og lagra på arbeidsgrena. Aktiv DB-funksjon peikar framleis til `mi-trening`. Brukarappen må vera publisert med støtte for `group-class:<id>` før funksjonen blir oppdatert. |
 | GG-025 | Lukka – allereie handtert | Mobilmenyen har rollebaserte inngangar til «Drift» og PT Studio i `AppMobileNavigation.jsx`. Ingen ny meny er innført. |
-| GG-026 | Lukka – ingen trygg dataendring nødvendig | Både «Kettlebell Deadlift / Markløft» og «Kettlebell markløft» er `is_active=false`. «Kettlebell Suitcase Deadlift» er aktiv, med annan rørsleskildring. Ikkje slett, slå saman eller endre historiske øvings-ID-ar eller PR-data. |
+| GG-026 | Ferdig – 4 dublettar fjerna | «Kettlebell Deadlift / Markløft», «Bent-over row», «Dumbbell row» og «Incline Dumbbell Press» vart fjerna etter verifisert null bruk i WOD, treningslogg, PR og favorittar. «Kettlebell markløft» er aktiv med eksisterande WOD-ID intakt; særskilde variantar er bevarte. Biblioteket inneheld 194 registrerte / 193 aktive øvingar. SQL i `20261123135500_gg026_deduplicate_exercise_names.sql`. |
 | GG-029 | Lukka – allereie handtert | `ExercisePRCenter.jsx` har `RECORD_CATEGORIES`, øvingskategoriar og manuell PR-registrering. |
 | GG-031 | Avslutta utan dataendring | Kravet om heilt blank oppstartsdatabase er ikkje grunnlag for nullstilling av ein app i drift. Ingen brukar-, WOD-, PT-, kaffe- eller historikkdata skal slettast utan eige uttrykkeleg oppdrag. |
-| GG-032 | Gjennomgått; drifts-/sikkerheitstiltak avgrensa | Supabase-varsling: 25 `SECURITY DEFINER`-funksjonar køyrbare for innlogga brukarar, vern mot kjende kompromitterte passord er deaktivert; ytingsråd: 31 ubruka indeksar og to grupper med overlappande permissive UPDATE-policyar. Funksjonane blir brukte av eksisterande app og må ikkje få EXECUTE trekt tilbake utan tilgangs-/regresjonstest. Ikkje slett indeksar ut frå berre ubrukt-statistikk. |
+| GG-032 | Vurdert – ingen trygg, gratis generell retting | Supabase-varsling: 25 `SECURITY DEFINER`-funksjonar køyrbare for innlogga brukarar, vern mot kjende kompromitterte passord er deaktivert; ytingsråd: 31 ubruka indeksar og to grupper med overlappande permissive UPDATE-policyar. Dette er ikkje påviste sikkerheitsbrot. Lekkja-passord-vern krev Supabase Pro ifølgje leverandøren, og 0 kr-budsjettet tillet ikkje oppgradering. Funksjonsrettar, RLS og indeksar blir ikkje endra ukritisk. |
 
 ## Gjenståande produksjonstrinn for GG-011
 
