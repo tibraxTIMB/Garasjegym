@@ -57,3 +57,9 @@
 .wod-import-review-item{overflow:hidden}
 .wod-import-dose-editor input:focus-visible,.wod-import-meta-editor input:focus-visible,.wod-import-meta-editor select:focus-visible{outline:2px solid #f9bd68;outline-offset:1px}
 @media(max-width:530px){.wod-import-meta-editor{grid-template-columns:minmax(0,1fr)}.wod-import-dose-editor{grid-template-columns:minmax(0,1fr)}.wod-import-admin-approval{font-size:12px}}
+
+
+.wod-import-composite-preview{display:grid;gap:7px;margin:10px 0;padding:12px;border-radius:10px;border:1px solid #6b856f;background:#22312a;color:#dceee1}
+.wod-import-composite-preview strong{font-size:14px}
+.wod-import-composite-preview p{margin:0;font-size:13px}
+.wod-import-composite-preview small{font-size:12px;opacity:.84;line-height:1.4}
