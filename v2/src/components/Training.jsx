@@ -631,9 +631,9 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         </div>
         <div className="timer-finish-row">
           <button type="button" className="timer-finish-button" onClick={onFinish} disabled={!hasStarted}>
-            <CheckCircle2 size={18}/><span>Avslutt økta</span>
+            <CheckCircle2 size={18}/><span>{finishLabel==='Avslutt'?'Avslutt økta':finishLabel}</span>
           </button>
-          <small>{hasStarted ? 'Kontroller resultat og lagre økta etterpå' : 'Start timeren før du avsluttar økta'}</small>
+          <small>{hasStarted ? finishLabel==='Avslutt'?'Kontroller resultat og lagre økta etterpå':'Neste del blir klar, men startar ikkje automatisk' : 'Start timeren før du avsluttar økta'}</small>
         </div>
       </section></TimerPanel>:id==='info'?<TimerPanel key={id} id="info" title="ØKTINFORMASJON" layout={panelLayout.info} deviceProfile={deviceProfile} locked={Boolean(lockedPanels.info)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock} designMode={designMode}><aside className="timer-side timer-side-left">
         <div className="timer-bottom-heading">ØKTINFORMASJON</div>
