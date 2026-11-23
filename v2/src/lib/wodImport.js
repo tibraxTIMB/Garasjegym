@@ -219,6 +219,15 @@ function parseGeneralComposite(lines,catalog){
   if(parsedInline&&movementLines.length===0)warnings.push('Kontroller repstal og E*MOM-timer i '+block.title)
   blocks.push(block)
  }
+ const personalized=lines.join(' ').match(/\b(?:du|kunden|utøvar|utøvaren|personleg)\s*:\s*[^.]*?(\d{1,2})\s*[-–]\s*(\d{1,2})\s*RIR/i)
+ const genericRir=lines.join(' ').match(/\b(\d{1,2})\s*[-–]\s*(\d{1,2})\s*RIR/i)
+ const rirTarget=personalized?personalized[1]+'–'+personalized[2]:genericRir?genericRir[1]+'–'+genericRir[2]:''
+ if(rirTarget){
+  for(const item of items){
+   const parent=blocks.find(b=>b.id===item.block_id)
+   if(parent&&(/MOM|Strength|Superset|Complex|Eigen økt/.test(parent.format)))item.rirTarget=rirTarget
+  }
+ }
  const unrecognized=items.filter(item=>!item.matched)
  const candidateTitle=lines[0].replace(/^(?:økt|okt)\s*\d+\s*[-–—:.·]?\s*/i,'').trim()
  const name=found[0].index>0&&candidateTitle.length>2&&candidateTitle.length<100?candidateTitle:'Samansett WOD'
