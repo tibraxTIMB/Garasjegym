@@ -191,7 +191,7 @@ export default function WodLibrary({onLaunchWod,onEditWod,staff=true,isAdmin=fal
        if(checks.some(x=>x.error))throw new Error('Kan ikkje stadfesta at WOD-en er ubrukt. Bruk «Fjern frå biblioteket» for trygg arkivering.')
        if(checks.some(x=>(x.count||0)>0))throw new Error('Denne WOD-en er i bruk eller har historikk. Bruk «Fjern frå biblioteket» for å bevara alle koplingar.')
        // Composite references are JSON snapshots. Do not delete a referenced source WOD.
-       const {data:composites,error:compositesError}=await supabase.from('wods').select('id,timer_settings').eq('format','Samansett økt').eq('is_archived',false)
+       const {data:composites,error:compositesError}=await supabase.from('wods').select('id,timer_settings').eq('format','Samansett økt')
        if(compositesError)throw new Error('Kunne ikkje kontrollera samansette økter. Arkiver i staden.')
        const referenced=(composites||[]).some(row=>row.id!==w.id&&(row.timer_settings?.workout_schema?.composite_blocks||[]).some(block=>block.source_wod_id===w.id))
        if(referenced)throw new Error('WOD-en er nytta i ei samansett økt. Arkiver i staden for å slette permanent.')
