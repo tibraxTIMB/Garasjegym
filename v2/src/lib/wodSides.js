@@ -33,5 +33,5 @@ export function isSideSelectableExercise(item) {
   const name=String(item?.name || item?.exercise_name || '').toLowerCase()
   const equipment=String(item?.equipment || '').toLowerCase()
   return /(kettlebell|manual|dumbbell)/.test(equipment) &&
-    /(snatch|clean|press|row|lunge|windmill|step|carry|high pull|turkish|get.up|one.arm|single.arm)/.test(name)
+    /(snatch|clean|press|jerk|row|lunge|windmill|step|carry|high pull|turkish|get.up|one.arm|single.arm)/.test(name)
 }
