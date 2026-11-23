@@ -1005,9 +1005,19 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     const schema = wod?.timer_settings?.workout_schema
     const orderedSchemaItems = sortWodItems(getWodSchemaItems(schema))
     const clearPlannedResults=forResult||wod?.format===COMPOSITE_FORMAT
+    const selectedLevel=schema?.prescription||'rx'
     if(schema?.library_category==='warmup')orderedSchemaItems.sort((a,b)=>({specific_prep:0,movement_rehearsal:1}[a.warmup_phase||'specific_prep']??0)-({specific_prep:0,movement_rehearsal:1}[b.warmup_phase||'specific_prep']??0))
     if (orderedSchemaItems.length) {
-      setItems(orderedSchemaItems.map(item => ({
+      setItems(orderedSchemaItems.map(item => {
+        const block=(schema?.composite_blocks||[]).find(part=>part.id===item.block_id)
+        const emomMatch=String(block?.format||'').match(/^E([1-7])MOM$/i)
+        const emomSeconds=Number(block?.duration_seconds)||Number(block?.minutes||0)*60
+        const emomSets=emomMatch?Math.floor(emomSeconds/(Number(emomMatch[1])*60)):0
+        const prescribedReps=Number(item.levels?.[selectedLevel]?.reps??item.reps)
+        const fillFixedEmom=!forResult&&emomSets>0&&Number.isInteger(prescribedReps)&&prescribedReps>0&&item.reps_mode!=='amrap'
+        const configuredSets=Array.isArray(item.sets)&&item.sets.length?item.sets:[]
+        const preparedSets=fillFixedEmom?Array.from({length:Math.max(emomSets,configuredSets.length)},(_,index)=>configuredSets[index]||configuredSets[0]||{}):configuredSets
+        return ({
         ...emptyExercise(),
         exercise_id: item.exercise_id || '',
         block_id:item.block_id||null,
@@ -1022,7 +1032,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         reps_mode: item.reps_mode || 'fixed',
         prescription_levels: item.levels || null,
         side_mode: item.side_mode || null,
-        prescription_label: doseLabel(item,wodLevel),
+        prescription_label: doseLabel(item,selectedLevel),
         description: item.description || item.instructions || exercises.find(exercise=>exercise.id===item.exercise_id)?.description || '',
         rowValue:'',rowUnit:wodRowUnit(item,'rx'),workSeconds:'',
         equipment: item.equipment || exercises.find(exercise => exercise.id === item.exercise_id)?.equipment || '',
@@ -1040,8 +1050,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           levels: item.levels || {},
           sets: item.sets || [],
         }).usesLoad,
-        sets: Array.isArray(item.sets) && item.sets.length ? item.sets.map(set => ({
-          reps: clearPlannedResults ? '' : set.reps == null ? '' : String(set.reps),
+        sets: preparedSets.length ? preparedSets.map(set => ({
+          reps: fillFixedEmom ? String(Number(set.reps)>0?set.reps:prescribedReps) : clearPlannedResults ? '' : set.reps == null ? '' : String(set.reps),
           load_kg: clearPlannedResults ? '' : set.load_kg == null ? '' : String(set.load_kg),
           time_text: clearPlannedResults ? '' : set.tempo || '',
           time_seconds: '',
@@ -1055,7 +1065,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           rir:'',
           height_cm: clearPlannedResults ? '' : String(item.height_cm ?? item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? Object.values(item.levels||{}).find(level=>level?.heightCm!=null)?.heightCm ?? ''),
         }],
-      })))
+      })}))
     } else if (wod?.movements) {
       const names = wod.movements.split(/\n|,/).map(x => x.trim()).filter(Boolean)
       setItems(names.map(name => ({ ...emptyExercise(), exercise_name: name })))
@@ -1294,7 +1304,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       {finishOpen&&<div className="workout-finish-backdrop" role="presentation">
         <section className="workout-finish-dialog" role="dialog" aria-modal="true" aria-labelledby="finish-workout-title">
           <div className="workout-finish-head"><div><span className="section-kicker">ETTER ØKTA · SJEKK RESULTATA</span><h3 id="finish-workout-title">{title||'Treningsøkt'}</h3></div><button type="button" className="danger-icon" aria-label="Lukk" onClick={()=>setFinishOpen(false)}>×</button></div>
-          <p className="workout-finish-help">Siste kontroll før lagring: Tal frå WOD-oppsettet kan vere førehandsfylte. Rett reps eller vekt dersom du gjorde noko anna. Rundar og tid frå klokka blir tekne med automatisk.</p>
+          <p className="workout-finish-help">Faste E3MOM-sett og repetisjonar blir henta frå WOD-oppsettet. Kontroller at du gjennomførte dei, og rett ved avvik. Registrer faktisk vekt der det er relevant. AMRAP-rundar og tid frå klokka blir tekne med automatisk.</p>
           <div className="workout-finish-summary">
             <div><span>FORMAT</span><strong>{format}</strong></div>
             <div><span>{manualEntry?'REGISTRERING':'TID'}</span><strong>{manualEntry?'Manuell':clock(timerSnapshot.elapsed)}</strong></div>
