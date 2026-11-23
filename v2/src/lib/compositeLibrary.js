@@ -41,3 +41,42 @@ export function prepareLibraryWodPart(wod,oldBlock){
  }
  return {block,items}
 }
+
+/** A linked block only inherits a library WOD's benchmark identity while unchanged. */
+export function equivalentLibraryWodSource(part){
+ const source=part?.source_wod_snapshot
+ if(!source||!part?.source_wod_id||source.id!==part.source_wod_id)return null
+ const normalizedFormat=isEmomFormat(source.format)?'EMOM':source.format
+ if(part.format!==normalizedFormat)return null
+ const sourceSeconds=Number(source.duration_seconds)
+ const partSeconds=Number(part.duration_seconds)||Math.round(Number(part.minutes)*60)
+ if(!Number.isFinite(sourceSeconds)||Math.abs(partSeconds-sourceSeconds)>1)return null
+ const stored=source.items||[],current=part.items||[]
+ if(!stored.length||current.length!==stored.length)return null
+ for(let i=0;i<stored.length;i++){
+  const a=stored[i],b=current[i]
+  if(String(a.exercise_name||'').trim().toLowerCase()!==String(b.exercise_name||'').trim().toLowerCase())return null
+  if(Boolean(a.is_rest)!==Boolean(b.is_rest))return null
+  if(String(a.reps??'')!==String(b.reps??''))return null
+  if(JSON.stringify(a.levels||{})!==JSON.stringify(b.levels||{}))return null
+ }
+ if(isEmomFormat(part.format)){
+  const original=emomIntervalSeconds(source.format,source.interval)
+  if(original!==Number(part.emomIntervalSeconds||original))return null
+ }
+ if(part.format==='Ladder'||part.format==='Death By'){
+  if(Number(source.ladder?.start||0)!==Number(part.ladderStart||0))return null
+  if(Number(source.ladder?.step||0)!==Number(part.ladderStep||0))return null
+  if(part.format==='Ladder'&&Number(source.rounds||0)!==Number(part.rounds||0))return null
+  if(part.format==='Death By'&&Number(source.ladder?.interval_seconds||60)!==Number(part.deathByIntervalSeconds||60))return null
+ }
+ if(['Intervall','Tabata','Row Intervals','Stasjonssirkel'].includes(part.format)){
+  const originalRounds=Number(source.rounds||0)
+  if(originalRounds>0&&originalRounds!==Number(part.rounds||0))return null
+  const originalWork=Number(source.interval?.work_seconds)
+  if(originalWork>0&&originalWork!==Number(part.workSeconds||0))return null
+  const originalRest=Number(source.interval?.rest_seconds)
+  if(Number.isFinite(originalRest)&&originalRest!==Number(part.restSeconds||0))return null
+ }
+ return source.id
+}
