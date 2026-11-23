@@ -473,3 +473,11 @@
 .gg-composite-progress strong{font-size:14px}.gg-composite-progress span{font-size:13px;font-weight:700}.gg-composite-progress small,.gg-composite-progress-foot span{font-size:12px;opacity:.82}
 .gg-composite-progress-foot{justify-content:space-between}
 @media(max-width:550px){.gg-composite-progress,.gg-composite-progress-foot{padding:7px 9px}.gg-composite-progress strong{width:100%}}
+
+
+/* Preset rest is its own full-size stage, never overlapping the active timer. */
+.gg-composite-break{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;min-height:min(70dvh,580px);padding:20px;border-radius:14px;border:1px solid #896838;background:#262d2b}
+.gg-composite-break>strong{font-size:clamp(76px,17vw,160px);line-height:1;letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.gg-composite-break p{max-width:46ch;font-size:15px;line-height:1.45}
+.gg-composite-break button{min-height:50px}
+@media(max-width:750px){.gg-composite-training:has(.gg-live-timer)>.gg-composite-progress,.gg-composite-training:has(.gg-live-timer)>.gg-composite-progress-foot{display:none}.gg-composite-break{min-height:calc(100dvh - 110px)}}
