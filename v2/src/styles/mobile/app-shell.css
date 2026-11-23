@@ -166,7 +166,7 @@
     max-width: 100%;
     overflow: hidden;
     color: inherit;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 750;
     line-height: 1.1;
     text-overflow: ellipsis;
@@ -339,7 +339,7 @@
   .app-shell .welcome h1 { font-size: 29px; }
   .app-mobile-nav { min-height: var(--gg-shell-nav-height); }
   .app-mobile-nav-item { min-height: 42px; flex-direction: row; gap: 6px; }
-  .app-mobile-nav-item span { font-size: 10px; }
+  .app-mobile-nav-item span { font-size: 11px; }
   .app-more-backdrop { padding-bottom: calc(var(--gg-shell-nav-height) + env(safe-area-inset-bottom) + 8px); }
 }
 

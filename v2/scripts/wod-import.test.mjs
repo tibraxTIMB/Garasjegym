@@ -98,3 +98,10 @@ test('smart import enforces admin approval and copies reviewed WOD metadata into
  assert.match(builder,/setPublishToMembers\(false\)/);
  assert.match(builder,/parsed\.items\.filter\(row=>row\.exercise\)/);
 });
+
+
+test('WOD import identifies rule-based matching without claiming AI', () => {
+  const src = readFileSync(new URL('../src/components/WodImportPanel.jsx', import.meta.url), 'utf8')
+  assert.match(src, /Regelbasert WOD-import/)
+  assert.match(src, /Liknande treff – kontroller/)
+})

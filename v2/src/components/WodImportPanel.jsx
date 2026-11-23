@@ -75,7 +75,7 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
   onApply?.({...parsed,name:meta.name.trim(),format:meta.format,minutes:meta.minutes?Number(meta.minutes):null,rounds:Number(meta.rounds),items:rows,unmatched:[],reviewedByAdmin:true})
  }
  return <section className="wod-import-panel">
-  <div className="wod-import-head"><div><span className="wod-classic-kicker">ADMIN · SMART WOD-ASSISTENT</span><strong>KI-liknande import og bibliotekskontroll</strong><small>Lokal, regelbasert teksttolking – utan betalt KI-teneste. Du får forslag, men avgjer sjølv kva som blir brukt.</small></div><ScanSearch size={22}/></div>
+  <div className="wod-import-head"><div><span className="wod-classic-kicker">ADMIN · SMART WOD-ASSISTENT</span><strong>Regelbasert WOD-import og bibliotekskontroll</strong><small>Lokal, regelbasert teksttolking – utan betalt KI-teneste. Du får forslag, men avgjer sjølv kva som blir brukt.</small></div><ScanSearch size={22}/></div>
   <label className="wod-import-file"><Upload size={16}/> Last opp kjelde<input type="file" accept=".txt,.csv,.md,.pdf,image/*" onChange={event=>readFile(event.target.files?.[0])}/></label>
   {fileName&&<div className="wod-import-file-name">{filePreview?<FileImage size={15}/>:<FileText size={15}/>} {fileName}</div>}
   {filePreview&&<div className="wod-import-source-preview">{isPdf?<iframe title="PDF-kjelde" src={filePreview}/>:<img src={filePreview} alt="Opplasta WOD-kjelde"/>}</div>}
@@ -103,8 +103,8 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
     const query=(searchTerms[index]||'').toLocaleLowerCase('nn-NO').trim()
     const results=query?activeCatalog.filter(ex=>[ex.name,ex.equipment,ex.category].some(value=>String(value||'').toLocaleLowerCase('nn-NO').includes(query))).slice(0,8):activeCatalog.slice(0,8)
     return <article className={'wod-import-review-item'+(skipped?' is-skipped':selected?' is-resolved':' needs-choice')} key={index}>
-     <div className="wod-import-review-top"><span className="wod-import-order">{index+1}</span><div className="wod-import-review-text"><strong>{item.rawName||item.name}</strong><small>{item.quantity?item.quantity.value+' '+item.quantity.unit:item.reps?item.reps+' reps':'Dosering uavklart'}{item.loadKg?' · ca. '+item.loadKg.toFixed(1)+' kg':''}</small></div><span className="wod-import-status">{skipped?'Hoppa over':selected?'Funne':'Kontroller'}</span></div>
-     {selected&&!skipped&&<div className="wod-import-matched"><Check size={14}/> {selected.name}{selected.name!==(item.rawName||item.name)?' · frå biblioteket':''}</div>}
+     <div className="wod-import-review-top"><span className="wod-import-order">{index+1}</span><div className="wod-import-review-text"><strong>{item.rawName||item.name}</strong><small>{item.quantity?item.quantity.value+' '+item.quantity.unit:item.reps?item.reps+' reps':'Dosering uavklart'}{item.loadKg?' · ca. '+item.loadKg.toFixed(1)+' kg':''}</small></div><span className="wod-import-status">{skipped?'Hoppa over':selected?(selected.name!==(item.rawName||item.name)?'Liknande treff – kontroller':'Funne'):'Kontroller'}</span></div>
+     {selected&&!skipped&&<div className="wod-import-matched"><Check size={14}/> {selected.name}{selected.name!==(item.rawName||item.name)?' · tilsvarande namn, kontroller at varianten er rett':''}</div>}
      {!skipped&&<div className="wod-import-dose-editor">
       {item.quantity
        ?<label>{({m:'Mengd (meter)',cal:'Kaloriar',s:'Sekund',min:'Minutt'})[item.quantity.unit]||'Mengd'}<input type="number" min="0.01" step="any" inputMode="decimal" value={doseChanges[index]?.quantity??item.quantity.value} onChange={e=>{setDoseChanges(current=>({...current,[index]:{...current[index],quantity:e.target.value}}));setApproved(false)}}/></label>

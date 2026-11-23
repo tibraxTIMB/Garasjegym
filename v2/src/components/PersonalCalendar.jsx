@@ -8,7 +8,7 @@ const eventTypes={class:'Gruppetime',pt:'PT-time',assigned:'Tildelt WOD',complet
 const dateFromKey=key=>new Date(key+'T12:00:00')
 const timeOf=value=>value?new Date(value).toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'}):''
 
-export default function PersonalCalendar({profile,onOpenClass=()=>{},onOpenPT=()=>{},onOpenAssignment=()=>{}}) {
+export default function PersonalCalendar({profile,onOpenClass=()=>{},onOpenPT=()=>{},onOpenAssignment=()=>{},onOpenClasses=()=>{}}) {
  const [cursor,setCursor]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1))
  const [selectedDay,setSelectedDay]=useState(()=>localCalendarDay(new Date()))
  const [view,setView]=useState('month')
@@ -104,7 +104,7 @@ export default function PersonalCalendar({profile,onOpenClass=()=>{},onOpenPT=()
  function openEvent(event) {if(event.type==='class')onOpenClass(event.classId);else if(event.type==='pt')onOpenPT(event.clientId);else if(event.type==='assigned'&&event.wodId)onOpenAssignment(event.wodId)}
 
  return <section className="gg-personal-calendar" aria-label="Min timeplan">
-  <header className="gg-cal-intro"><div><span className="section-kicker">MI TIMEPLAN</span><h3>Kalender</h3><p>PT-timar, påmeldingar og trening samla på éin stad.</p></div><CalendarDays size={25} aria-hidden="true"/></header>
+  <header className="gg-cal-intro"><div><span className="section-kicker">MI TIMEPLAN</span><h3>Kalender</h3><p>PT-timar, påmeldingar og trening samla på éin stad.</p></div><div><CalendarDays size={25} aria-hidden="true"/><button type="button" className="secondary-button" onClick={onOpenClasses}>Sjå og meld deg på gruppetimar</button></div></header>
   <div className="gg-cal-controls">
    <div className="gg-cal-period"><button type="button" aria-label="Førre periode" onClick={()=>changePeriod(-1)}><ChevronLeft size={20}/></button><strong>{periodTitle}</strong><button type="button" aria-label="Neste periode" onClick={()=>changePeriod(1)}><ChevronRight size={20}/></button><button type="button" className="gg-cal-today-jump" onClick={jumpToday}>I dag</button></div>
    <div className="gg-cal-modes" role="group" aria-label="Kalendervisning">{[['month','Månad'],['week','Veke'],['day','Dag']].map(([key,label])=><button key={key} type="button" className={view===key?'selected':''} aria-pressed={view===key} onClick={()=>setView(key)}>{label}</button>)}</div>
