@@ -103,7 +103,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [laps, setLaps] = useState(() => Array.isArray(resumeState?.laps) ? resumeState.laps : [])
   const [soundOn, setSoundOn] = useState(true)
   const [soundVolume,setSoundVolume]=useState(()=>{
-    try{const saved=Number(localStorage.getItem('garasjegym.timer.sound_volume'));return Number.isFinite(saved)&&saved>=0&&saved<=100?saved:75}catch{return 75}
+    try{const raw=localStorage.getItem('garasjegym.timer.sound_volume');const saved=Number(raw);return raw!=null&&Number.isFinite(saved)&&saved>=0&&saved<=100?saved:75}catch{return 75}
   })
   const volumeRef=useRef(soundVolume)
   volumeRef.current=soundVolume
