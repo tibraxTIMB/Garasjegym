@@ -23,10 +23,10 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
  const included=preview.filter((item,index)=>choices[index]!=='skip'&&(item.exercise||choices[index])).length
  const ignored=parsed?.ignored||[]
  const activeCatalog=useMemo(()=>exerciseCatalog.filter(ex=>ex?.name&&ex.is_active!==false),[exerciseCatalog])
- const requiresDuration=/^(AMRAP|E(?:MOM|[1-7](?:\\.25|\\.5|\\.75)?MOM)|Tabata|Intervall|Stasjonssirkel)$/.test(meta.format)
+ const requiresDuration=/^(AMRAP|E(?:MOM|[1-7](?:\.25|\.5|\.75)?MOM)|Tabata|Intervall|Stasjonssirkel)$/.test(meta.format)
  const invalidQuantity=preview.some((item,index)=>choices[index]!=='skip'&&item.quantity&&(!Number.isFinite(Number(doseChanges[index]?.quantity??item.quantity.value))||Number(doseChanges[index]?.quantity??item.quantity.value)<=0))
  const invalidLoad=preview.some((item,index)=>choices[index]!=='skip'&&doseChanges[index]?.loadKg!==undefined&&doseChanges[index].loadKg!==''&&(!Number.isFinite(Number(doseChanges[index].loadKg))||Number(doseChanges[index].loadKg)<0))
- const invalidReps=preview.some((item,index)=>choices[index]!=='skip'&&!item.quantity&&!/^(?:\\d+(?:-\\d+)*|\\d+\\s*[x×]\\s*\\d+)$/.test(String(doseChanges[index]?.reps??item.reps).trim()))
+ const invalidReps=preview.some((item,index)=>choices[index]!=='skip'&&!item.quantity&&!/^(?:\d+(?:-\d+)*|\d+\s*[x×]\s*\d+)$/.test(String(doseChanges[index]?.reps??item.reps).trim()))
  const invalidSetup=!meta.name.trim()||!meta.format||!Number.isInteger(Number(meta.rounds))||Number(meta.rounds)<1||Number(meta.rounds)>99||(meta.minutes!==''&&(!Number.isFinite(Number(meta.minutes))||Number(meta.minutes)<1||Number(meta.minutes)>300))||(requiresDuration&&!(Number(meta.minutes)>0))
  const ready=unresolved===0&&included>0&&!invalidSetup&&!invalidQuantity&&!invalidReps&&!invalidLoad&&approved
 
