@@ -39,6 +39,8 @@ function DemoClock({onClose}){
  const [elapsed,setElapsed]=useState(0)
  const [running,setRunning]=useState(false)
  const [fullscreen,setFullscreen]=useState(Boolean(document.fullscreenElement))
+ const demoStartedAt=useRef(null)
+ const toggleDemo=()=>{if(running){setElapsed(Math.floor((Date.now()-demoStartedAt.current)/1000));setRunning(false);demoStartedAt.current=null}else{demoStartedAt.current=Date.now()-elapsed*1000;setRunning(true)}}
  const isCountdown=format==='countdown'||format==='amrap'
  const isEmom=format==='emom'||format==='e2mom'
  const isIntervals=format==='tabata'||format==='interval'
@@ -47,8 +49,10 @@ function DemoClock({onClose}){
  const formatInfo=DEMO_FORMATS.find(item=>item.id===format)
  useEffect(()=>{
   if(!running)return undefined
-  const timerId=window.setInterval(()=>setElapsed(value=>value+1),1000)
-  return()=>window.clearInterval(timerId)
+  const refresh=()=>setElapsed(Math.max(0,Math.floor((Date.now()-(demoStartedAt.current||Date.now()))/1000)))
+  const timerId=window.setInterval(refresh,250)
+  document.addEventListener('visibilitychange',refresh)
+  return()=>{window.clearInterval(timerId);document.removeEventListener('visibilitychange',refresh)}
  },[running])
  useEffect(()=>{
   if(running&&limited&&elapsed>=totalSeconds)setRunning(false)
@@ -60,7 +64,7 @@ function DemoClock({onClose}){
   window.addEventListener('keydown',keyboard)
   return()=>{document.removeEventListener('fullscreenchange',sync);window.removeEventListener('keydown',keyboard)}
  },[])
- function reset(){setRunning(false);setElapsed(0)}
+ function reset(){setRunning(false);setElapsed(0);demoStartedAt.current=null}
  async function closeDemo(){
   try{if(document.fullscreenElement)await document.exitFullscreen?.()}catch{/* Lukking skal fungera også utan støtte for fullskjerm. */}
   onClose?.()
@@ -100,7 +104,7 @@ function DemoClock({onClose}){
      <div className="infotainment-demo-caption">{roundLabel||formatInfo.description}</div>
      <div className="infotainment-demo-progress" aria-label="Framdrift"><span style={{width:(limited?Math.min(100,elapsed/Math.max(1,totalSeconds)*100):Math.min(100,elapsed%60/60*100))+'%'}}/></div>
      <div className="infotainment-demo-actions">
-      <button type="button" className="primary" onClick={()=>setRunning(value=>!value)} disabled={limited&&elapsed>=totalSeconds}>{running?<><Pause size={18}/> Pause</>:<><Play size={18}/> {elapsed>0?'Hald fram':'Start demo'}</>}</button>
+      <button type="button" className="primary" onClick={toggleDemo} disabled={limited&&elapsed>=totalSeconds}>{running?<><Pause size={18}/> Pause</>:<><Play size={18}/> {elapsed>0?'Hald fram':'Start demo'}</>}</button>
       <button type="button" onClick={reset}><RotateCcw size={17}/> Nullstill</button>
      </div>
      <div className="infotainment-demo-description">{formatInfo.description}</div>
