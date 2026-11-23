@@ -11,5 +11,5 @@ export function clampWodDuration(value, maximum = 600) {
 }
 
 export function wodFormatNeedsTime(format) {
-  return !['Strength', 'Superset', 'Complex', 'Eigen økt'].includes(format)
+  return !['Strength', 'Superset', 'Complex', 'Eigen økt', 'Samansett økt'].includes(format)
 }
