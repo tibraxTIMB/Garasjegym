@@ -32,7 +32,7 @@ export default function Overview({profile,onNavigate,onOpenWorkout,onOpenWod=()=
      setLogs(rows)
      const exercisePRs=deriveExerciseRecords(rows).flatMap(exercise=>exercise.records.map(item=>({id:exercise.key+'-'+item.key,exercise_name:exercise.label+' · '+item.label,result:item.value,unit:item.unit,record_date:item.date})))
      const eligibleBenchmarkIds=(benchmarkWods.data||[]).filter(wod=>(wod.timer_settings?.workout_schema?.library_category||wod.category)==='benchmark').map(wod=>wod.id)
-     const wodPRs=deriveBenchmarkRecords(rows,eligibleBenchmarkIds).map(wod=>({id:wod.key,exercise_name:wod.name+' · '+wod.level.toUpperCase(),result:wod.score.rounds!=null?`${wod.score.rounds} + ${wod.score.reps}`:`${Math.floor(wod.score.value/60)}:${String(Math.round(wod.score.value%60)).padStart(2,'0')}`,unit:wod.score.rounds!=null?'rundar/reps':'min:sek',record_date:wod.date}))
+     const wodPRs=deriveBenchmarkRecords(rows,eligibleBenchmarkIds).map(wod=>({id:wod.key,exercise_name:wod.name+' · '+wod.level.toUpperCase(),result:wod.format==='death by'?String(wod.score.rounds):wod.score.rounds!=null?`${wod.score.rounds} + ${wod.score.reps}`:`${Math.floor(wod.score.value/60)}:${String(Math.round(wod.score.value%60)).padStart(2,'0')}`,unit:wod.format==='death by'?'rundar':wod.score.rounds!=null?'rundar/reps':'min:sek',record_date:wod.date}))
      setPrs([...exercisePRs,...wodPRs].sort((a,b)=>String(b.record_date||'').localeCompare(String(a.record_date||''))))
     }
     if(benchmarkWods.error)failures.push('Benchmark-kategoriar: '+benchmarkWods.error.message)
