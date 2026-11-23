@@ -51,8 +51,7 @@ export function compositeTotalSeconds(blocks) {
 /** RIR is a prescription, not a prescribed load. Allows 0–10, -1 by explicit choice, and ranges like 2–4. */
 export function isValidRirTarget(value) {
  const normalized=String(value??'').trim().replace(/[–—]/g,'-')
- if(!/^(-1|10|[0-9])(?:\s*-\s*(10|[0-9]))?$/.test(normalized))return false
- const parts=normalized.split(/\s*-\s*/)
- if(parts.length===1)return true
- return Number(parts[0])>=0&&Number(parts[0])<=Number(parts[1])
+ const parsed=normalized.match(/^(-1|10|[0-9])(?:\s*-\s*(10|[0-9]))?$/)
+ if(!parsed)return false
+ return !parsed[2]||(Number(parsed[1])>=0&&Number(parsed[1])<=Number(parsed[2]))
 }
