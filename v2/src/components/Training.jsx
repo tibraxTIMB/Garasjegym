@@ -742,9 +742,11 @@ function CompositeTimer({schema,exerciseList=[],prescriptionLevel='rx',wodName='
    death_by_completed_rounds:results[index]?.death_by_completed_rounds??null,
    death_by_failed_round:results[index]?.death_by_failed_round??null,
    death_by_interval_seconds:results[index]?.death_by_interval_seconds??null,
+   ladder_completed_rounds:results[index]?.ladder_completed_rounds??null,
+   ladder_finished:results[index]?.ladder_finished??null,
    laps:results[index]?.laps||[],
    phase:results[index]?.phase||'Klar',
-   completed:['FULLFØRT','FERDIG','TIDSGRENSE'].includes(results[index]?.phase),
+   completed:['FULLFØRT','FERDIG','TIDSGRENSE'].includes(results[index]?.phase)&&!(part.format==='Ladder'&&results[index]?.ladder_finished!==true),
    time_cap_reached:results[index]?.phase==='TIDSGRENSE'
   }))
   const current=results[active]||{}
