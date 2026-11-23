@@ -84,9 +84,9 @@ jobs:
           path: v2/dist
 
   deploy:
-    # Owner approved the existing GitHub Pages address for the production
-    # cutover. Every push to this release branch now deploys after checks.
-    if: ${{ github.event_name == 'push' || inputs.publish_preview }}
+    # GG-030: pushes build and test only. Deployment needs explicit manual
+    # workflow dispatch with publish_preview=true after approval.
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_preview }}
     permissions:
       pages: write
       id-token: write
