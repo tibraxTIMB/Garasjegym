@@ -8,7 +8,7 @@ export function countdownSignal(secondsLeft) {
 export function secondsToTimerBoundary({
   format, elapsed, remainingTotal, phaseRemaining, emomPhaseRemaining,
   isTimedInterval = false, isStationCircuit = false, isEMOM = false,
-  isCountdown = false, hasTimeCap = false, isDeathBy = false,
+  isCountdown = false, hasTimeCap = false, isDeathBy = false, deathByIntervalSeconds = 60,
 }) {
   if (!Number.isFinite(elapsed) || elapsed < 0) return null
   const finiteWorkout = isTimedInterval || isStationCircuit || isEMOM || isCountdown || hasTimeCap
@@ -17,8 +17,9 @@ export function secondsToTimerBoundary({
     remaining = Math.min(remaining, phaseRemaining)
   } else if (isEMOM && Number.isFinite(emomPhaseRemaining)) {
     remaining = Math.min(remaining, emomPhaseRemaining)
-  } else if (isDeathBy || format === 'Ladder') {
-    remaining = Math.min(remaining, 60 - elapsed % 60)
+  } else if (isDeathBy) {
+    const seconds=Number(deathByIntervalSeconds)>0?Number(deathByIntervalSeconds):60
+    remaining = Math.min(remaining, seconds - elapsed % seconds)
   }
   return Number.isFinite(remaining) && remaining >= 0 ? remaining : null
 }
