@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {parseWodImport} from '../src/lib/wodImport.js'
-import {COMPOSITE_FORMAT,COMPOSITE_BLOCK_FORMATS,defaultCompositeBlocks,validateCompositeBlocks,compositeBlockForTimer,compositeTimerConfig,compositeBlockDuration,compositeTotalSeconds,compositeScoredBlocks,parseCompositeScoreTime,isValidRirTarget} from '../src/lib/compositeWod.js'
+import {COMPOSITE_FORMAT,COMPOSITE_BLOCK_FORMATS,defaultCompositeBlocks,validateCompositeBlocks,compositeBlockForTimer,compositeTimerConfig,compositeBlockDuration,compositeTotalSeconds,compositeScoredBlocks,parseCompositeScoreTime,isValidRirTarget,plannedFixedEmomSets} from '../src/lib/compositeWod.js'
 import {deriveBenchmarkRecords} from '../src/lib/prMetrics.js'
 
 const catalog=['Strict press','Push Press','Goblet squat','Alternating Dumbbell Push Jerk','Burpee Over Dumbbell','Bear Crawl'].map((name,index)=>({id:String(index+1),name,is_active:true}))
@@ -50,6 +50,22 @@ test('E3MOM repeats both movements every three minutes, while AMRAP stays separa
  assert.equal(compositeTotalSeconds(defaultCompositeBlocks()),1020)
  const b=compositeBlockForTimer({format:'AMRAP',duration_seconds:480,items:[{exercise_name:'Bear Crawl'}]})
  assert.equal(b.items[0].minute_slot,undefined)
+})
+
+test('completed fixed E3MOM prepopulates three sets of planned reps, never AMRAP',()=>{
+ const blocks=[{id:'a',format:'E3MOM',duration_seconds:540},{id:'b',format:'AMRAP',duration_seconds:480}]
+ const press=plannedFixedEmomSets({block_id:'a',reps:5,levels:{rx:{reps:'5'}}},blocks,'rx',false)
+ assert.equal(press.autoFill,true)
+ assert.equal(press.sets.length,3)
+ assert.equal(press.reps,5)
+ const push=plannedFixedEmomSets({block_id:'a',reps:3,levels:{rx:{reps:'3'}}},blocks,'rx',false)
+ assert.equal(push.sets.length,3)
+ assert.equal(push.reps,3)
+ const amrap=plannedFixedEmomSets({block_id:'b',reps:8,levels:{rx:{reps:'8'}}},blocks,'rx',false)
+ assert.equal(amrap.autoFill,false)
+ assert.equal(amrap.sets.length,0)
+ const manual=plannedFixedEmomSets({block_id:'a',reps:5},blocks,'rx',true)
+ assert.equal(manual.autoFill,false)
 })
 
 test('RIR supports athlete-selected load, range and deliberate -1 marking',()=>{
@@ -132,11 +148,13 @@ test('Benchmark PR compares each part separately and excludes uncompleted time c
    {id:'d',title:'Del D',format:'For Time',completed:true,elapsed:time,time_cap_reached:timeCapReached}
   ]}
  })
- const result=deriveBenchmarkRecords([
+ const logs=[
   mk('1','2026-11-01',5,8,485),
   mk('2','2026-11-23',6,2,440),
   mk('3','2026-11-24',4,0,600,true)
- ])
+ ]
+ assert.equal(deriveBenchmarkRecords(logs).length,0)
+ const result=deriveBenchmarkRecords(logs,['same-wod'])
  assert.equal(result.length,2)
  const amrap=result.find(r=>r.format==='amrap')
  const forTime=result.find(r=>r.format==='for time')
