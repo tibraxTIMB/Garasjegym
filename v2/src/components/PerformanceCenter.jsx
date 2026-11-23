@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useState} from 'react'
 import {Activity,TrendingUp,Trophy} from 'lucide-react'
 import './performance-center.css'
+import {deriveBenchmarkRecords} from '../lib/prMetrics.js'
 
 const dateLabel=value=>value?new Date(value+'T12:00:00').toLocaleDateString('nn-NO',{day:'numeric',month:'short',year:'numeric'}):'Ukjend dato'
 const asNumber=value=>{const n=Number(String(value??'').replace(',','.'));return Number.isFinite(n)&&n>0?n:null}
@@ -52,6 +53,7 @@ function LineChart({points,metric,label,unit}){
 
 export default function PerformanceCenter({history=[],records=[]}){
  const exerciseHistory=useMemo(()=>collectExerciseHistory(history),[history])
+ const benchmarks=useMemo(()=>deriveBenchmarkRecords(history),[history])
  const [selected,setSelected]=useState('')
  const [metric,setMetric]=useState('load')
  const [level,setLevel]=useState('rx')
@@ -77,6 +79,7 @@ export default function PerformanceCenter({history=[],records=[]}){
     <div className="pr-history-list"><strong><Activity size={16}/> Historikk · {active.name}</strong>{[...points].reverse().map((point,index)=><article key={point.date+'-'+index}><span><b>{point.title||active.name}</b><small>{dateLabel(point.date)}</small></span><span>{point.load>0?point.load+' kg ':''}{point.reps>0?point.reps+' reps ':''}{point.height>0?point.height+' cm ':''}{point.distance>0?point.distance+' m ':''}{point.calories>0?point.calories+' cal ':''}{Number.isFinite(point.time)&&point.time>0?point.time+' sek':''}</span></article>)}</div>
    </>}
   </>:<div className="empty-state">Det finst ikkje nok treningsresultat til å teikne progresjonsgraf enno. Lagre ei økt med registrerte sett for å byggje historikk.</div>}
+  {benchmarks.length>0&&<details className="pr-manual-records gg-composite-benchmark-pr"><summary>Benchmark-PR · {benchmarks.length} øktdelar og WOD-ar</summary><div className="history-list">{benchmarks.map(item=><article className="history-card" key={item.key}><div className="history-card-top"><strong>{item.name}</strong><span>{dateLabel(item.date)}</span></div><small>{item.format.toUpperCase()} · {item.level.toUpperCase()} · {item.count} registreringar</small><div className="pr-result">{item.score?.rounds!=null?item.score.rounds+' rundar + '+item.score.reps+' ekstra reps':item.score?.value!=null?Math.floor(item.score.value/60)+':'+String(item.score.value%60).padStart(2,'0')+' min:sek':''}</div></article>)}</div></details>}
   {records.length>0&&<details className="pr-manual-records"><summary>Registrerte PR-noteringar ({records.length})</summary><div className="history-list">{records.map(record=><article className="history-card" key={record.id}><div className="history-card-top"><strong>{record.exercise_name}</strong><span>{record.record_date}</span></div><div className="pr-result">{record.result} {record.unit}</div>{record.note&&<small>{record.note}</small>}</article>)}</div></details>}
  </section>
 }
