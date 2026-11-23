@@ -11,6 +11,7 @@ import { formatParticipation, normalizeWodEngine, parseIntervalNotation } from '
 import PerformanceCenter from './PerformanceCenter.jsx'
 import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration, summarizeLapSplits } from '../lib/timerClock.js'
 import { getExerciseMeasurementFlags, isErgExercise } from '../lib/exerciseMeasurements.js'
+import {COMPOSITE_FORMAT, compositeBlockForTimer, compositeIntervalMinutes} from '../lib/compositeWod.js'
 import { exerciseRecordType } from '../lib/prMetrics.js'
 import { getWodSideLabel, isSideSelectableExercise, WOD_SIDE_OPTIONS } from '../lib/wodSides.js'
 import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
@@ -76,7 +77,7 @@ function TimerPanel({id,title,layout,onMove,onResize,onLock,locked,children,devi
   <div className="timer-panel-content">{children}</div>
  </section>
 }
-function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], prescriptionLevel = 'rx', timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, onBackground = () => {}, onEditWorkout = null, visible = true, originLabel = 'EIGA ØKT', wodName = '', autoStartToken = 0, resumeState = null }) {
+function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], prescriptionLevel = 'rx', timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, finishLabel = 'Avslutt', onBackground = () => {}, onEditWorkout = null, visible = true, originLabel = 'EIGA ØKT', wodName = '', autoStartToken = 0, resumeState = null }) {
   const timerConfigKey = JSON.stringify({format,minutes,seconds,timerSettings})
   const lastTimerConfigKey = useRef(timerConfigKey)
   const [elapsed, setElapsed] = useState(() => resumedElapsedSeconds(resumeState))
@@ -556,7 +557,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         {!hasStarted&&countdownDeadline===null&&<button type="button" className="gg-live-timer__round-button" onClick={()=>beginWorkout(true)}><Play size={21}/> Start · 10 sek</button>}
         {hasStarted&&isAmrap&&<button type="button" className="gg-live-timer__round-button" onClick={lapAction} disabled={!running}><Plus size={21}/> Runde</button>}
         {hasStarted&&(isStopwatch||isForTime)&&<button type="button" className="gg-live-timer__split" onClick={splitAction} disabled={!running}>Mellomtid</button>}
-        {hasStarted&&<button type="button" className="gg-live-timer__finish" onClick={onFinish}><CheckCircle2 size={20}/> Avslutt</button>}
+        {hasStarted&&<button type="button" className="gg-live-timer__finish" onClick={onFinish}><CheckCircle2 size={20}/> {finishLabel}</button>}
       </footer>
       {stagePanel&&<div className="gg-live-timer__scrim" onClick={()=>setStagePanel(null)} role="presentation"/>}
       {stagePanel==='wod'&&<aside className="gg-live-timer__drawer" aria-label="Øvingar i WOD-en"><header><strong>Øvingar · {stageRows.length}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk øvingslista"><X size={20}/></button></header><ol className="gg-live-timer__all-exercises">{stageRows.map((item,index)=><li key={`${item.id}-${index}`}>
@@ -654,6 +655,38 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   </div>
   </>}
   </div>
+}
+
+
+/**
+ * Composite WOD uses the same timer for every block, remounted with a
+ * block-scoped format, time cap and exercise list. Nothing runs unattended
+ * between blocks: the athlete explicitly starts the next timer.
+ */
+function CompositeTimer({schema,exerciseList=[],prescriptionLevel='rx',wodName='',originLabel='',onSnapshot,onFinish,onBackground,visible=true,stop=false,resumeState=null}) {
+ const blocks=Array.isArray(schema?.wod_engine?.blocks)?schema.wod_engine.blocks:[]
+ const [active,setActive]=useState(()=>Math.min(Math.max(0,Number(resumeState?.active_block_index)||0),Math.max(0,blocks.length-1)))
+ const [results,setResults]=useState(()=>resumeState?.block_results||{})
+ const block=blocks[active]
+ const reportBlock=useCallback(snapshot=>setResults(old=>({...old,[active]:snapshot})),[active])
+ useEffect(()=>{
+  const details=blocks.map((part,index)=>({index,id:part.id,title:part.title,format:part.format,duration_seconds:part.duration_seconds,elapsed:Number(results[index]?.elapsed)||0,roundsCompleted:Number(results[index]?.roundsCompleted)||0,laps:results[index]?.laps||[],phase:results[index]?.phase||'Klar'}))
+  const current=results[active]||{}
+  const amrap=details.filter(part=>part.format==='AMRAP').slice(-1)[0]
+  onSnapshot({...current,elapsed:details.reduce((a,b)=>a+b.elapsed,0),roundsCompleted:amrap?.roundsCompleted||0,laps:amrap?.laps||[],active_block_index:active,block_results:results,block_summary:details,format:COMPOSITE_FORMAT})
+ },[results,active,blocks,onSnapshot])
+ if(!block)return <div className="training-state">Denne WOD-en manglar timerdelar. Kontroller WOD Builder.</div>
+ const current=compositeBlockForTimer(block,active)
+ const every=compositeIntervalMinutes(current.format)
+ const blockItems=current.items||[]
+ const duration=Math.max(1,Math.round(Number(current.duration_seconds||60)/60))
+ const timerSettings={workout_schema:{format:current.format,duration_seconds:current.duration_seconds,time_cap_seconds:current.format==='AMRAP'?current.duration_seconds:null,interval:{work_every_minutes:every},items:blockItems},work_seconds:every?every*60:null,rest_seconds:0,rounds:every?duration/every:1}
+ const next=()=>{if(active<blocks.length-1){setActive(index=>index+1)}else onFinish()}
+ return <section className="gg-composite-training" aria-label="Samansett WOD">
+   <div className="gg-composite-progress"><strong>{wodName}</strong><span>Del {active+1} av {blocks.length}: {current.title} · {current.format} · {duration} min</span><small>{active<blocks.length-1?'Etter denne delen: '+blocks[active+1].title+' · '+blocks[active+1].format:'Siste del · avslutt og registrer resultat'}</small></div>
+   <Timer key={current.id||active} visible={visible} onBackground={onBackground} resumeState={resumeState?.block_results?.[active]||null} format={current.format} minutes={String(duration)} seconds="0" exerciseList={blockItems.map(item=>({...item,exercise_name:item.exercise_name||item.name}))} prescriptionLevel={prescriptionLevel} timerSettings={timerSettings} onSnapshot={reportBlock} stop={stop} onFinish={next} finishLabel={active<blocks.length-1?'Neste del':'Avslutt'} wodName={wodName+' · '+current.title} originLabel={originLabel}/>
+   <div className="gg-composite-progress-foot"><strong>{current.title}</strong><span>{active<blocks.length-1?'Vel «Neste del» når du er klar. Klokka i neste del startar ikkje av seg sjølv.':'Trykk «Avslutt» for resultatregistrering.'}</span></div>
+ </section>
 }
 
 export default function Training({ memberId = '', launchWodId = null, launchClassSessionId = null, launchClassResult = false, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, onTimerSnapshot, onBackground, onOpenWodLibrary = () => {}, onOpenTrainingPlan = () => {}, onOpenSchedule = () => {}, visible = true, simpleMode = false, quickStart = false, onQuickStartConsumed, quickManualEntry = false, onQuickManualEntryConsumed, onSaved, onDiscard }) {
