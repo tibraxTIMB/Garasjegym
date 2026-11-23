@@ -31,7 +31,7 @@ begin
   insert into public.notifications(recipient_id,title,body,category,href)
   select b.member_id,
          'Resultat frå gruppetimen er klart',
-         v_session.session_title || ' – registrer resultatet frå WOD-ane i Mi trening.',
+         v_session.session_title || ' – registrer resultat frå gruppetimen.',
          'booking',
          'group-class:' || v_session.class_id::text
   from public.class_bookings b
