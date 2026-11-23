@@ -160,6 +160,11 @@ export function compositeScoredBlocks(blockSummary=[],overrides={}) {
    next.roundsCompleted=changed.rounds===''||changed.rounds==null ? Number(block.roundsCompleted)||0 : Number(changed.rounds)
    next.extra_reps=changed.extraReps===''||changed.extraReps==null ? Number(block.extra_reps)||0 : Number(changed.extraReps)
   }
+  if(format==='Death By'||format==='Ladder'){
+   const current=Number(format==='Death By'?block.death_by_completed_rounds??block.roundsCompleted:block.ladder_completed_rounds??block.roundsCompleted)
+   const value=changed.rounds==null||changed.rounds===''?current:Number(changed.rounds)
+   if(Number.isInteger(value)&&value>=0){next.roundsCompleted=value;if(format==='Death By')next.death_by_completed_rounds=value;else next.ladder_completed_rounds=value}
+  }
   if(['For Time','Chipper','Couplet','Triplet','Ladder'].includes(format)){
    if(String(changed.time||'').trim())next.elapsed=parseCompositeScoreTime(changed.time)
   }
