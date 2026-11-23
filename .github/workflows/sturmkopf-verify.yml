@@ -43,6 +43,12 @@ jobs:
         run: npm run test:exercise-measurements
       - name: Test WOD text import parser
         run: npm run test:wod-import
+      - name: Test multi-part import with A–E and RIR
+        run: npm run test:wod-import-structured
+      - name: Test all composite stages, transitions, logging and PRs
+        run: npm run test:composite-wod
+      - name: Test infotainment, dashboard and Android PWA icon
+        run: npm run test:infotainment-home-pwa
       - name: Test WOD engine normalization and scoring
         run: npm run test:wod-engine
       - name: Test timer clock, split and finish calculations
