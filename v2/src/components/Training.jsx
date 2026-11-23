@@ -670,25 +670,87 @@ function CompositeTimer({schema,exerciseList=[],prescriptionLevel='rx',wodName='
  const blocks=Array.isArray(schema?.wod_engine?.blocks)?schema.wod_engine.blocks:[]
  const [active,setActive]=useState(()=>Math.min(Math.max(0,Number(resumeState?.active_block_index)||0),Math.max(0,blocks.length-1)))
  const [results,setResults]=useState(()=>resumeState?.block_results||{})
+ const [interlude,setInterlude]=useState(()=>resumeState?.composite_transition||null)
+ const [remaining,setRemaining]=useState(()=>Math.max(0,Math.ceil((Number(resumeState?.composite_transition?.deadline)||0-Date.now())/1000)))
+ const [autoStartIndex,setAutoStartIndex]=useState(null)
+ const [breakHistory,setBreakHistory]=useState(()=>resumeState?.composite_breaks||[])
  const block=blocks[active]
  const reportBlock=useCallback(snapshot=>setResults(old=>({...old,[active]:snapshot})),[active])
+ const advance=useCallback((autostart=false)=>{
+  setInterlude(null)
+  setAutoStartIndex(autostart?active+1:null)
+  setActive(index=>Math.min(index+1,blocks.length-1))
+ },[active,blocks.length])
+ const beginTransition=useCallback(()=>{
+  const mode=block?.transitionMode==='timed'?'timed':'manual'
+  const seconds=compositeTransitionSeconds(block)
+  if(mode==='timed'&&seconds>0){
+   setInterlude({from:active,mode:'timed',startedAt:Date.now(),deadline:Date.now()+seconds*1000,seconds})
+  } else advance(false)
+ },[active,advance,block])
+ const finishPart=useCallback(snapshot=>{
+  setResults(old=>({...old,[active]:{...old[active],...snapshot}}))
+  if(active===blocks.length-1)onFinish()
+  else beginTransition()
+ },[active,blocks.length,beginTransition,onFinish])
+ // When a countdown finishes naturally, a preset pause begins without another click.
  useEffect(()=>{
-  const details=blocks.map((part,index)=>({index,id:part.id,title:part.title,format:part.format,duration_seconds:part.duration_seconds,elapsed:Number(results[index]?.elapsed)||0,roundsCompleted:Number(results[index]?.roundsCompleted)||0,laps:results[index]?.laps||[],phase:results[index]?.phase||'Klar'}))
+  if(!block||active===blocks.length-1||interlude||block.transitionMode!=='timed')return
+  const snapshot=results[active]
+  if(snapshot?.hasStarted&&['FERDIG','TIDSGRENSE'].includes(snapshot.phase))beginTransition()
+ },[active,block,interlude,results,beginTransition,blocks.length])
+ useEffect(()=>{
+  if(!interlude)return
+  const refresh=()=>{
+   const seconds=Math.max(0,Math.ceil((interlude.deadline-Date.now())/1000))
+   setRemaining(seconds)
+   if(seconds===0){
+    setBreakHistory(current=>[...current,{from:interlude.from,planned_seconds:interlude.seconds,elapsed_seconds:Math.max(0,Math.round((Date.now()-interlude.startedAt)/1000))}])
+    advance(true)
+   }
+  }
+  refresh()
+  const id=window.setInterval(refresh,250)
+  document.addEventListener('visibilitychange',refresh)
+  return ()=>{window.clearInterval(id);document.removeEventListener('visibilitychange',refresh)}
+ },[interlude,advance])
+ useEffect(()=>{
+  const details=blocks.map((part,index)=>({
+   index,id:part.id,title:part.title,format:part.format,
+   duration_seconds:part.duration_seconds,
+   elapsed:Number(results[index]?.elapsed)||0,
+   roundsCompleted:Number(results[index]?.roundsCompleted)||0,
+   laps:results[index]?.laps||[],
+   phase:results[index]?.phase||'Klar',
+   completed:['FULLFØRT','FERDIG','TIDSGRENSE'].includes(results[index]?.phase),
+   time_cap_reached:results[index]?.phase==='TIDSGRENSE'
+  }))
   const current=results[active]||{}
   const amrap=details.filter(part=>part.format==='AMRAP').slice(-1)[0]
-  onSnapshot({...current,elapsed:details.reduce((a,b)=>a+b.elapsed,0),roundsCompleted:amrap?.roundsCompleted||0,laps:amrap?.laps||[],active_block_index:active,block_results:results,block_summary:details,format:COMPOSITE_FORMAT})
- },[results,active,blocks,onSnapshot])
+  onSnapshot({...current,elapsed:details.reduce((a,b)=>a+b.elapsed,0),roundsCompleted:amrap?.roundsCompleted||0,laps:amrap?.laps||[],active_block_index:active,block_results:results,block_summary:details,composite_transition:interlude,composite_breaks:breakHistory,format:COMPOSITE_FORMAT})
+ },[results,active,blocks,onSnapshot,interlude,breakHistory])
  if(!block)return <div className="training-state">Denne WOD-en manglar timerdelar. Kontroller WOD Builder.</div>
  const current=compositeBlockForTimer(block,active)
- const every=compositeIntervalMinutes(current.format)
- const blockItems=current.items||[]
- const duration=Math.max(1,Math.round(Number(current.duration_seconds||60)/60))
- const timerSettings={workout_schema:{format:current.format,duration_seconds:current.duration_seconds,time_cap_seconds:current.format==='AMRAP'?current.duration_seconds:null,interval:{work_every_minutes:every},items:blockItems},work_seconds:every?every*60:null,rest_seconds:0,rounds:every?duration/every:1}
- const next=()=>{if(active<blocks.length-1){setActive(index=>index+1)}else onFinish()}
+ const timerConfig=compositeTimerConfig(current)
+ const nextTitle=blocks[active+1]?.title||'Neste del'
  return <section className="gg-composite-training" aria-label="Samansett WOD">
-   <div className="gg-composite-progress"><strong>{wodName}</strong><span>Del {active+1} av {blocks.length}: {current.title} · {current.format} · {duration} min</span><small>{active<blocks.length-1?'Etter denne delen: '+blocks[active+1].title+' · '+blocks[active+1].format:'Siste del · avslutt og registrer resultat'}</small></div>
-   <Timer key={current.id||active} visible={visible} onBackground={onBackground} resumeState={resumeState?.block_results?.[active]||null} format={current.format} minutes={String(duration)} seconds="0" exerciseList={blockItems.map(item=>({...item,exercise_name:item.exercise_name||item.name}))} prescriptionLevel={prescriptionLevel} timerSettings={timerSettings} onSnapshot={reportBlock} stop={stop} onFinish={next} finishLabel={active<blocks.length-1?'Neste del':'Avslutt'} wodName={wodName+' · '+current.title} originLabel={originLabel}/>
-   <div className="gg-composite-progress-foot"><strong>{current.title}</strong><span>{active<blocks.length-1?'Vel «Neste del» når du er klar. Klokka i neste del startar ikkje av seg sjølv.':'Trykk «Avslutt» for resultatregistrering.'}</span></div>
+  <div className="gg-composite-progress"><strong>{wodName}</strong><span>Del {active+1} av {blocks.length}: {current.title} · {current.format}</span><small>{active<blocks.length-1?'Neste: '+nextTitle+' · '+blocks[active+1].format:'Siste del · avslutt og før resultata'}</small></div>
+  {interlude?<section className="gg-composite-break" aria-label="Pause mellom øktdelar" role="timer">
+    <span className="wod-classic-kicker">PAUSE MELLOM DELANE</span>
+    <strong>{String(Math.floor(remaining/60)).padStart(2,'0')}:{String(remaining%60).padStart(2,'0')}</strong>
+    <p>Del {active+1} er ferdig. Neste: {nextTitle}. Klokka startar automatisk når pausa er over.</p>
+    <button type="button" className="primary-button" onClick={()=>{setBreakHistory(old=>[...old,{from:active,planned_seconds:interlude.seconds,elapsed_seconds:Math.round((Date.now()-interlude.startedAt)/1000),skipped:true}]);advance(false)}}>Hopp over pausa · klargjer neste del</button>
+   </section>
+   :<Timer key={current.id||active} visible={visible} onBackground={onBackground}
+    resumeState={resumeState?.block_results?.[active]||null}
+    autoStartOnMount={autoStartIndex===active}
+    format={timerConfig.format} minutes={timerConfig.minutes} seconds={timerConfig.seconds}
+    exerciseList={current.items||[]} prescriptionLevel={prescriptionLevel}
+    timerSettings={timerConfig.timerSettings}
+    onSnapshot={reportBlock} stop={stop} onFinish={finishPart}
+    finishLabel={active<blocks.length-1?'Fullfør del · vidare':'Avslutt'}
+    wodName={wodName+' · '+current.title} originLabel={originLabel}/>}
+  <div className="gg-composite-progress-foot"><strong>{current.title}</strong><span>{interlude?'Førehandsinnstilt pause tel ned.':active<blocks.length-1?'Manuell overgang eller planlagt pause til neste del.':'Lagre dei separate delresultata etterpå.'}</span></div>
  </section>
 }
 
