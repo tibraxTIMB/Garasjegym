@@ -101,6 +101,12 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [phase, setPhase] = useState(() => resumeState?.phase || 'Klar')
   const [laps, setLaps] = useState(() => Array.isArray(resumeState?.laps) ? resumeState.laps : [])
   const [soundOn, setSoundOn] = useState(true)
+  const [soundVolume,setSoundVolume]=useState(()=>{
+    try{const saved=Number(localStorage.getItem('garasjegym.timer.sound_volume'));return Number.isFinite(saved)&&saved>=0&&saved<=100?saved:75}catch{return 75}
+  })
+  const volumeRef=useRef(soundVolume)
+  volumeRef.current=soundVolume
+  useEffect(()=>{try{localStorage.setItem('garasjegym.timer.sound_volume',String(soundVolume))}catch{/* Valfritt */}},[soundVolume])
   const soundOnRef = useRef(soundOn)
   soundOnRef.current = soundOn
   const audioContextRef = useRef(null)
@@ -270,10 +276,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       const oscillator = context.createOscillator()
       const gain = context.createGain()
       oscillator.frequency.value = frequency
-      oscillator.type = 'sine'
+      oscillator.type = 'triangle'
       const beginAt = context.currentTime + delay
       gain.gain.setValueAtTime(0.0001, beginAt)
-      gain.gain.exponentialRampToValueAtTime(0.18, beginAt + 0.015)
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.001,0.65*volumeRef.current/100), beginAt + 0.018)
       gain.gain.exponentialRampToValueAtTime(0.0001, beginAt + duration)
       oscillator.connect(gain); gain.connect(context.destination)
       oscillator.start(beginAt); oscillator.stop(beginAt + duration)
@@ -590,6 +596,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         <label className="gg-live-timer__setting">Klokkefarge <input type="color" value={appearance.accent} onChange={e=>setAppearance(value=>({...value,accent:e.target.value}))}/></label>
         {(isCountdown||isEMOM||hasTimeCap)&&<div className="gg-live-timer__setting"><span>Øktlengd</span><div className="gg-live-timer__inline-inputs"><label>Min<input type="number" min="0" max="240" value={Math.floor(target/60)} onChange={e=>setDurationOverride(Math.max(1,Math.max(0,Number(e.target.value)||0)*60+(target%60)))}/></label><label>Sek<input type="number" min="0" max="59" value={target%60} onChange={e=>setDurationOverride(Math.max(1,Math.floor(target/60)*60+Math.max(0,Math.min(59,Number(e.target.value)||0))))}/></label></div></div>}
         {(isTimedInterval||isStationCircuit||isEMOM)&&<div className="gg-live-timer__setting"><span>Intervall</span><div className="gg-live-timer__inline-inputs"><label>Arbeid (sek)<input type="number" min="1" max="600" value={workSeconds} onChange={e=>setWorkSeconds(Math.max(1,Math.min(600,Number(e.target.value)||1)))}/></label><label>Pause (sek)<input type="number" min="0" max="600" value={restSeconds} onChange={e=>setRestSeconds(Math.max(0,Math.min(600,Number(e.target.value)||0)))}/></label>{!isEMOM&&<label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(Math.max(1,Math.min(100,Number(e.target.value)||1)))}/></label>}</div></div>}
+        <label className="gg-live-timer__setting">Timerlyd {soundVolume}% <input type="range" min="0" max="100" step="10" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label>
+        <button type="button" className="gg-live-timer__fullscreen-button" onClick={()=>{setSoundOn(true);cue(1060,0.25);cue(1420,0.3,0.28)}}>Test lydsignal</button>
         <button type="button" className="gg-live-timer__fullscreen-button" onClick={toggleBrowserFullscreen}>{browserFullscreen?'Vis nettlesarfelt':'Skjul nettlesarfelt'}</button>
         {!confirmReset?<button type="button" className="gg-live-timer__reset" onClick={()=>setConfirmReset(true)}><RotateCcw size={17}/> Nullstill økta</button>:<div className="gg-live-timer__reset-confirm"><strong>Nullstille tid og rundar?</strong><button type="button" onClick={resetTimer}>Ja, nullstill</button><button type="button" onClick={()=>setConfirmReset(false)}>Avbryt</button></div>}
       </aside>}
@@ -600,6 +608,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       <button type="button" className="timer-customize-trigger" onClick={() => setShowTimerSettings(value => !value)} aria-expanded={showTimerSettings}>{showTimerSettings ? 'Lukk oppsett' : 'Timeroppsett'}</button>
     </div>
     {showTimerSettings && <section className="timer-customize-panel timer-setup-drawer" aria-label="Timeroppsett">
+        <div className="timer-setup-section"><strong>Lydsignal</strong><div className="timer-settings-inline"><label>Volum {soundVolume}%<input type="range" min="0" max="100" step="10" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label><button type="button" className="secondary-button" onClick={()=>{setSoundOn(true);cue(1060,0.25);cue(1420,0.3,0.28)}}>Test lydsignal</button></div><small>Klårare lyd over musikk. Mobilens medievolum styrer framleis maksimal lyd. Spotify blir ikkje endra.</small></div>
       <div className="timer-customize-title"><strong>Tilpass denne økta</strong><span>Endringane gjeld berre denne gjennomføringa.</span></div>
       {(isTimedInterval || isStationCircuit || isEMOM) && <div className="timer-setup-section">
         <strong>{isStationCircuit ? 'Stasjonssirkel' : isEMOM ? 'EMOM' : format==='Tabata' ? 'Tabata-intervall' : 'Intervall'}</strong>
