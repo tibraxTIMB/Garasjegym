@@ -3,7 +3,7 @@ import {BookOpen,Search,Eye,EyeOff,LoaderCircle,Clock3,Dumbbell,Play,Layers,User
 import {supabase} from '../lib/supabase.js'
 import {formatComplexSequence} from '../lib/wodComplexes.js'
 import {getWodSideLabel} from '../lib/wodSides.js'
-const formatDose=(item,level)=>{const d=item?.levels?.[level]||{};const parts=[];if(d.sets)parts.push(d.sets+' sett');if(d.reps)parts.push(d.reps+' reps');if(d.heightCm)parts.push(d.heightCm+' cm');if(d.durationSeconds)parts.push(d.durationSeconds+' sek');if(d.distanceMeters)parts.push(d.distanceMeters+' m');if(d.calories)parts.push(d.calories+' cal');if(d.loadMode==='kg'){const v=[d.loadKgMen!=null&&d.loadKgMen!==''?'M '+d.loadKgMen+' kg':'',d.loadKgWomen!=null&&d.loadKgWomen!==''?'K '+d.loadKgWomen+' kg':''].filter(Boolean);if(v.length)parts.push(v.join(' / '))}else if(d.loadMode==='percent'&&d.percent1rm)parts.push(d.percent1rm+' % 1RM');else if(d.loadMode==='rir'&&d.rir!=='')parts.push('RIR '+d.rir);else if(d.loadMode==='bodyweight')parts.push('Kroppsvekt');if(d.tempo)parts.push('Tempo '+d.tempo);if(d.variant)parts.push('Variant: '+d.variant);if(d.instruction)parts.push(d.instruction);return parts.join(' · ')};
+const formatDose=(item,level)=>{const d=item?.levels?.[level]||{};const parts=[];if(d.sets)parts.push(d.sets+' sett');if(d.reps)parts.push(d.reps+' reps');if(d.heightCm)parts.push(d.heightCm+' cm');if(d.durationSeconds)parts.push(d.durationSeconds+' sek');if(d.distanceMeters)parts.push(d.distanceMeters+' m');if(d.calories)parts.push(d.calories+' cal');if(d.loadMode==='kg'){const v=[d.loadKgMen!=null&&d.loadKgMen!==''?'M '+d.loadKgMen+' kg':'',d.loadKgWomen!=null&&d.loadKgWomen!==''?'K '+d.loadKgWomen+' kg':''].filter(Boolean);if(v.length)parts.push(v.join(' / '))}else if(d.loadMode==='percent'&&d.percent1rm)parts.push(d.percent1rm+' % 1RM');else if(d.loadMode==='rir'&&(d.rirRange||d.rir!==''))parts.push('RIR '+(d.rirRange||d.rir));else if(d.loadMode==='bodyweight')parts.push('Kroppsvekt');if(d.tempo)parts.push('Tempo '+d.tempo);if(d.variant)parts.push('Variant: '+d.variant);if(d.instruction)parts.push(d.instruction);return parts.join(' · ')};
 const localDateISO=(value=new Date())=>{const y=value.getFullYear(),m=String(value.getMonth()+1).padStart(2,'0'),d=String(value.getDate()).padStart(2,'0');return `${y}-${m}-${d}`}
 const categoryOf=w=>{const stored=w?.timer_settings?.workout_schema?.library_category||w?.category;if(!stored||stored==='main')return 'standard';return stored}
 const categoryLabels={warmup:'Oppvarming',daily:'Dagens WOD',standard:'Standard-WOD',benchmark:'Benchmark-WOD',assessment:'Test og evaluering',rehab:'Rehabilitering',recovery:'Restitusjon og mobilitet',other:'Anna / spesialøkt'}
@@ -24,6 +24,7 @@ const compactDose=(item,level)=>{
   if(men!=null&&women!=null)values.push(`${men}/${women} kg`)
   else if(men!=null||women!=null)values.push(`${men??women} kg`)
  }else if(d.loadMode==='percent'&&d.percent1rm)values.push(`${d.percent1rm} % 1RM`)
+ else if(d.loadMode==='rir'&&(d.rirRange||d.rir!==''))values.push('RIR '+(d.rirRange||d.rir))
  else if(d.loadMode==='bodyweight')values.push('kroppsvekt')
  const side=getWodSideLabel(item,level)
  if(side)values.push(side)
