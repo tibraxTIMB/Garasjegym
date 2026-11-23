@@ -13,6 +13,7 @@ import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerSta
 import { getExerciseMeasurementFlags, isErgExercise } from '../lib/exerciseMeasurements.js'
 import {COMPOSITE_FORMAT, compositeBlockForTimer, compositeTimerConfig, compositeTransitionSeconds, compositeScoredBlocks, plannedFixedEmomSets} from '../lib/compositeWod.js'
 import { exerciseRecordType } from '../lib/prMetrics.js'
+import { deathByTimerState } from '../lib/deathBy.js'
 import { getWodSideLabel, isSideSelectableExercise, WOD_SIDE_OPTIONS } from '../lib/wodSides.js'
 import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
 import { exerciseBrowseCategory, exerciseBrowseOrder } from '../lib/exerciseCategories.js'
@@ -83,6 +84,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [elapsed, setElapsed] = useState(() => resumedElapsedSeconds(resumeState))
   const [running, setRunning] = useState(() => Boolean(resumeState?.running))
   const [round, setRound] = useState(() => Number(resumeState?.currentRound) || 1)
+  const [deathByCompletedRounds,setDeathByCompletedRounds] = useState(() => Math.max(0,Number(resumeState?.death_by_completed_rounds)||0))
   const [workSeconds, setWorkSeconds] = useState(getDefaultWorkSeconds(format,timerSettings))
   const [restSeconds, setRestSeconds] = useState(getDefaultRestSeconds(format,timerSettings))
   const [rounds, setRounds] = useState(timerSettings?.rounds ?? timerSettings?.workout_schema?.station_circuit?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
@@ -195,6 +197,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const isForTime = ['For Time', 'Chipper'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'For Time')
   const isDeathBy = format === 'Death By'
   const isLadder = format === 'Ladder'
+  const deathByStatus=deathByTimerState(elapsed,deathByCompletedRounds,schema?.ladder)
   const hasTimeCap = capDuration > 0 && !isCountdown && !isEMOM && !isTimedInterval && !isStationCircuit
   const fallbackDuration = Math.max(1, (Number(minutes) || 10) * 60 + (Number(seconds) || 0))
   const defaultTarget = Math.max(1, isCountdown && capDuration ? capDuration : hasTimeCap ? capDuration : savedDuration || fallbackDuration)
@@ -227,7 +230,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const stationTotal = fixedSlotState.totalSeconds
   const timerLimitReached = (
     (isCountdown || isEMOM || isStationCircuit || hasTimeCap) && elapsed >= (isStationCircuit ? stationTotal : target)
-  ) || (isTimedInterval && elapsed >= intervalTotal)
+  ) || (isTimedInterval && elapsed >= intervalTotal) || (isDeathBy && deathByStatus.failed)
   const totalTarget = isStationCircuit ? stationTotal : isTimedInterval ? intervalTotal : target
   const remainingTotal = Math.max(0, totalTarget - elapsed)
   const inWorkPhase = !fixedSlotState.isTransition && !fixedSlotState.isComplete
@@ -235,15 +238,18 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const currentRound = (isStationCircuit || isTimedInterval)
     ? fixedSlotState.currentRound
     : isEMOM ? Math.floor(elapsed / emomCycle) + 1
-    : (isDeathBy || isLadder) ? Math.floor(elapsed / 60) + 1
+    : isDeathBy ? deathByStatus.round
+    : isLadder ? Math.floor(elapsed / 60) + 1
     : Math.floor(elapsed / 60) + 1
   const currentPhase = isStationCircuit || isTimedInterval
     ? fixedSlotState.phase
     : isEMOM ? (isEmomWorkPhase ? 'ARBEID' : isEmomRestPhase ? 'KVILE' : 'VENTAR')
-    : (isDeathBy || isLadder) ? 'NY RUNDE' : 'PÅGÅR'
+    : isDeathBy ? (deathByStatus.roundConfirmed?'VENTAR PÅ NESTE RUNDE':'ARBEID')
+    : isLadder ? 'NY RUNDE' : 'PÅGÅR'
   const primaryTime = isCountdown ? remainingTotal
     : (isTimedInterval || isStationCircuit) ? phaseRemaining
     : isEMOM ? (timerLimitReached ? 0 : emomPhaseRemaining)
+    : isDeathBy ? deathByStatus.secondsLeft
     : elapsed
 
   function ensureAudioContext() {
@@ -291,7 +297,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     timerRunStartedAt.current = null
     timerRunBaseElapsed.current = 0
     elapsedRef.current = 0
-    setElapsed(0); setRunning(false); setRound(1); setPhase('Klar'); setLaps([])
+    setElapsed(0); setRunning(false); setRound(1); setDeathByCompletedRounds(0); setPhase('Klar'); setLaps([])
     setHasStarted(false); setCountdownDeadline(null); setCountdownRemaining(0); scheduledStartedAt.current = null
     setWorkSeconds(getDefaultWorkSeconds(format,timerSettings))
     setRestSeconds(getDefaultRestSeconds(format,timerSettings))
@@ -308,6 +314,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     timerRunStartedAt.current = null
     setElapsed(0)
     setRound(1)
+    setDeathByCompletedRounds(0)
     setLaps([])
     setDurationOverride(null); setEmomEveryOverride(null)
     setWorkSeconds(getDefaultWorkSeconds(format,timerSettings))
@@ -400,28 +407,28 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     return undefined
   }, [running])
 
-  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isStationCircuit ? fixedSlotState.roundsCompleted : isAmrap ? laps.length : round, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isTimedInterval||isStationCircuit||hasTimeCap, currentRound, hasStarted, countdownDeadline, savedAt:Date.now() }) }, [elapsed, laps, round, phase, running, isCountdown, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, currentRound, hasStarted, countdownDeadline])
+  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isDeathBy ? deathByCompletedRounds : isStationCircuit ? fixedSlotState.roundsCompleted : isAmrap ? laps.length : round, death_by_completed_rounds:isDeathBy?deathByCompletedRounds:null, death_by_failed_round:isDeathBy?deathByStatus.failedRound:null, death_by_interval_seconds:isDeathBy?deathByStatus.intervalSeconds:null, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isDeathBy||isTimedInterval||isStationCircuit||hasTimeCap, currentRound, hasStarted, countdownDeadline, savedAt:Date.now() }) }, [elapsed, laps, round, deathByCompletedRounds, phase, running, isCountdown, isDeathBy, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, primaryTime, currentRound, hasStarted, countdownDeadline])
 
   useEffect(() => {
     if (!running) return
     if (lastRunningCueSecondRef.current === elapsed) return
     lastRunningCueSecondRef.current = elapsed
     if (timerLimitReached) {
-      const finishAt = isStationCircuit ? stationTotal : isTimedInterval ? intervalTotal : target
+      const finishAt = isDeathBy&&deathByStatus.failed ? deathByStatus.failureAt : isStationCircuit ? stationTotal : isTimedInterval ? intervalTotal : target
       setElapsed(clampElapsedToTarget(elapsed, finishAt))
       timerRunStartedAt.current = null
       setRunning(false)
-      setPhase(hasTimeCap ? 'TIDSGRENSE' : 'FERDIG')
+      setPhase(isDeathBy&&deathByStatus.failed ? 'FERDIG' : hasTimeCap ? 'TIDSGRENSE' : 'FERDIG')
       playSignal('finish')
       return
     }
     const phaseChanged = elapsed > 0 && (((isTimedInterval || isStationCircuit) && (elapsed % cycle === 0 || elapsed % cycle === effectiveWorkSeconds)) ||
       (isEMOM && elapsed > 0 && (elapsed % emomCycle === 0 || elapsed % emomCycle === effectiveEmomWorkSeconds || elapsed % emomCycle === effectiveEmomWorkSeconds+effectiveEmomRestSeconds)) ||
-      (isDeathBy && elapsed > 0 && elapsed % 60 === 0))
-    const secondsToBoundary = secondsToTimerBoundary({format,elapsed,remainingTotal,phaseRemaining,emomPhaseRemaining,isTimedInterval,isStationCircuit,isEMOM,isCountdown,hasTimeCap,isDeathBy})
+      (isDeathBy && elapsed > 0 && elapsed % deathByStatus.intervalSeconds === 0))
+    const secondsToBoundary = secondsToTimerBoundary({format,elapsed,remainingTotal,phaseRemaining,emomPhaseRemaining,isTimedInterval,isStationCircuit,isEMOM,isCountdown,hasTimeCap,isDeathBy,deathByIntervalSeconds:deathByStatus.intervalSeconds})
     const signal = runningTimerSignal({secondsToBoundary,phaseChanged})
     if (signal) playSignal(signal)
-  }, [elapsed, running, timerLimitReached, target, capDuration, hasTimeCap, isCountdown, isEMOM, isDeathBy, isTimedInterval, isStationCircuit, intervalTotal, stationTotal, cycle, emomCycle, effectiveWorkSeconds, effectiveEmomWorkSeconds, effectiveEmomRestSeconds])
+  }, [elapsed, running, timerLimitReached, target, capDuration, hasTimeCap, isCountdown, isEMOM, isDeathBy, deathByStatus.failed, deathByStatus.failureAt, deathByStatus.intervalSeconds, isTimedInterval, isStationCircuit, intervalTotal, stationTotal, cycle, emomCycle, effectiveWorkSeconds, effectiveEmomWorkSeconds, effectiveEmomRestSeconds])
 
   useEffect(() => {
     // Do not let the ordinary phase refresh overwrite FERDIG / TIDSGRENSE.
@@ -472,13 +479,14 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   }
   const autoLaunchRef = useRef(false)
   useEffect(()=>{if(autoStartOnMount&&!autoLaunchRef.current){autoLaunchRef.current=true;beginWorkout(false)}},[autoStartOnMount])
-  const finishCurrent=()=>onFinish({elapsed,laps:[...laps],roundsCompleted:isAmrap?laps.length:isStationCircuit?fixedSlotState.roundsCompleted:round,phase:phase==='TIDSGRENSE'?'TIDSGRENSE':'FULLFØRT',hasStarted,running:false,savedAt:Date.now()})
+  const finishCurrent=()=>onFinish({elapsed,laps:[...laps],roundsCompleted:isDeathBy?deathByCompletedRounds:isAmrap?laps.length:isStationCircuit?fixedSlotState.roundsCompleted:round,death_by_completed_rounds:isDeathBy?deathByCompletedRounds:null,death_by_failed_round:isDeathBy?deathByStatus.failedRound:null,phase:phase==='TIDSGRENSE'?'TIDSGRENSE':isDeathBy&&deathByStatus.failed?'FERDIG':'FULLFØRT',hasStarted,running:false,savedAt:Date.now()})
+  const completeDeathByRound=()=>{if(!isDeathBy||!running||!deathByStatus.canConfirm||timerLimitReached)return;setDeathByCompletedRounds(deathByStatus.round);cue(1200,0.14)}
   const toggleRunning = () => { if (countdownDeadline !== null) { setCountdownDeadline(null);setCountdownRemaining(0);setPhase('Klar');return } if (!hasStarted) { beginWorkout(false); return } if (running) { setRunning(false); setPhase('PAUSE'); return } if (phase === 'FERDIG' || phase === 'TIDSGRENSE') return; setPhase('PÅGÅR'); setRunning(true) }
   const visibleStationIndex = Math.min(stationCount - 1, fixedSlotState.currentSlotIndex % stationCount)
   const currentStationName = stationList[visibleStationIndex]?.exercise_name || stationList[visibleStationIndex]?.name || `Stasjon ${visibleStationIndex + 1}`
   const stageExerciseName = isStationCircuit ? currentStationName : isTimedInterval ? currentIntervalExercise : isEMOM ? currentEmomExercise : activeExercise || exerciseList[0]?.exercise_name || exerciseList[0]?.name || ''
   const stageNextExercise = isStationCircuit ? stationList[(visibleStationIndex + 1) % stationCount]?.exercise_name : isTimedInterval ? exerciseList[(intervalExerciseIndex + 1) % intervalExerciseCount]?.exercise_name : nextExercise
-  const stageTimeLabel = isCountdown ? 'TID ATT' : isStationCircuit ? (inWorkPhase ? 'ARBEID ATT' : 'BYTE ATT') : isTimedInterval ? (inWorkPhase ? 'ARBEID ATT' : 'KVILE ATT') : isEMOM ? (isEmomWorkPhase ? 'ARBEID ATT' : isEmomRestPhase ? 'KVILE ATT' : 'NESTE START') : 'MEDGÅTT TID'
+  const stageTimeLabel = isDeathBy ? 'INTERVALL ATT' : isCountdown ? 'TID ATT' : isStationCircuit ? (inWorkPhase ? 'ARBEID ATT' : 'BYTE ATT') : isTimedInterval ? (inWorkPhase ? 'ARBEID ATT' : 'KVILE ATT') : isEMOM ? (isEmomWorkPhase ? 'ARBEID ATT' : isEmomRestPhase ? 'KVILE ATT' : 'NESTE START') : 'MEDGÅTT TID'
   const stageIsComplete = phase === 'FERDIG' || phase === 'TIDSGRENSE'
   const stageLapLabel = isAmrap ? 'RUNDETIDER' : 'MELLOMTIDER'
   const stageLapHistory = useMemo(()=>summarizeLapSplits(laps),[laps])
