@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useState} from 'react'
 import {FileImage,FileText,Upload,ClipboardPaste,CheckCircle2,AlertTriangle,Search,X,Check,SkipForward,ScanSearch} from 'lucide-react'
 import {parseWodImport} from '../lib/wodImport.js'
+import {COMPOSITE_FORMAT} from '../lib/compositeWod.js'
 import './wod-import.css'
 
 export default function WodImportPanel({exerciseCatalog=[],onApply}){
@@ -85,11 +86,12 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
   <div className="wod-import-actions"><button type="button" className="secondary-button" onClick={parse} disabled={!source.trim()||ocrBusy} >Analyser og samanlikn med øvingsbibliotek</button></div>
   {parsed&&<div className="wod-import-result">
    <div className="wod-import-result-head"><CheckCircle2 size={17}/><div><strong>Admin-kontroll før overføring</strong><small>{preview.length} tolka linjer · {unresolved?unresolved+' må avklarast':'alle bibliotekstreff er avklarte'}</small></div></div>
-   <div className="wod-import-meta-editor">
+   {parsed.blocks?.length>1&&<div className="wod-import-composite-preview"><strong>Samansett treningsøkt · {parsed.blocks.length} delar</strong>{parsed.blocks.map((block,i)=><p key={block.id}>{i+1}. {block.title} · {block.format} · {block.minutes} min · {preview.filter(item=>item.block_id===block.id).length} øvingar</p>)}<small>Delane blir førte til WOD Builder med kvar sin timer. PT-notat og originale belastningsalternativ ligg i kjeldeteksten.</small></div>}
+    <div className="wod-import-meta-editor">
     <label>WOD-namn<input type="text" maxLength="100" value={meta.name} onChange={e=>{setMeta(current=>({...current,name:e.target.value}));setApproved(false)}}/></label>
     <label>GarasjeGym-format<select value={meta.format} onChange={e=>{setMeta(current=>({...current,format:e.target.value}));setApproved(false)}}>
      <option value="">Vel format – uavklart</option>
-     {['AMRAP','For Time','Chipper','EMOM','E1MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM','Tabata','Intervall','Stasjonssirkel','Complex','Eigen økt','Strength'].map(f=><option key={f} value={f}>{f}</option>)}
+     {[COMPOSITE_FORMAT,'AMRAP','For Time','Chipper','EMOM','E1MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM','Tabata','Intervall','Stasjonssirkel','Complex','Eigen økt','Strength'].map(f=><option key={f} value={f}>{f}</option>)}
     </select></label>
     <label>Tidsramme (min){requiresDuration?' *':''}<input type="number" min="1" max="300" step="1" value={meta.minutes} onChange={e=>{setMeta(current=>({...current,minutes:e.target.value}));setApproved(false)}} placeholder="Ingen tidsramme"/></label>
     <label>Rundar<input type="number" min="1" max="99" step="1" value={meta.rounds} onChange={e=>{setMeta(current=>({...current,rounds:e.target.value}));setApproved(false)}}/></label>
@@ -103,7 +105,7 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
     const query=(searchTerms[index]||'').toLocaleLowerCase('nn-NO').trim()
     const results=query?activeCatalog.filter(ex=>[ex.name,ex.equipment,ex.category].some(value=>String(value||'').toLocaleLowerCase('nn-NO').includes(query))).slice(0,8):activeCatalog.slice(0,8)
     return <article className={'wod-import-review-item'+(skipped?' is-skipped':selected?' is-resolved':' needs-choice')} key={index}>
-     <div className="wod-import-review-top"><span className="wod-import-order">{index+1}</span><div className="wod-import-review-text"><strong>{item.rawName||item.name}</strong><small>{item.quantity?item.quantity.value+' '+item.quantity.unit:item.reps?item.reps+' reps':'Dosering uavklart'}{item.loadKg?' · ca. '+item.loadKg.toFixed(1)+' kg':''}</small></div><span className="wod-import-status">{skipped?'Hoppa over':selected?(selected.name!==(item.rawName||item.name)?'Liknande treff – kontroller':'Funne'):'Kontroller'}</span></div>
+     <div className="wod-import-review-top"><span className="wod-import-order">{index+1}</span><div className="wod-import-review-text"><strong>{item.rawName||item.name}</strong><small>{item.quantity?item.quantity.value+' '+item.quantity.unit:item.reps?item.reps+' reps':'Dosering uavklart'}{item.loadKg?' · ca. '+item.loadKg.toFixed(1)+' kg':''}{item.rirTarget?' · RIR '+item.rirTarget:''}{item.block_id?' · '+(parsed.blocks?.find(x=>x.id===item.block_id)?.title||item.block_id):''}</small></div><span className="wod-import-status">{skipped?'Hoppa over':selected?(selected.name!==(item.rawName||item.name)?'Liknande treff – kontroller':'Funne'):'Kontroller'}</span></div>
      {selected&&!skipped&&<div className="wod-import-matched"><Check size={14}/> {selected.name}{selected.name!==(item.rawName||item.name)?' · tilsvarande namn, kontroller at varianten er rett':''}</div>}
      {!skipped&&<div className="wod-import-dose-editor">
       {item.quantity
