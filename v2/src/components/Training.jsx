@@ -85,6 +85,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [running, setRunning] = useState(() => Boolean(resumeState?.running))
   const [round, setRound] = useState(() => Number(resumeState?.currentRound) || 1)
   const [deathByCompletedRounds,setDeathByCompletedRounds] = useState(() => Math.max(0,Number(resumeState?.death_by_completed_rounds)||0))
+  const [ladderCompletedRounds,setLadderCompletedRounds] = useState(() => Math.max(0,Number(resumeState?.ladder_completed_rounds)||0))
   const [workSeconds, setWorkSeconds] = useState(getDefaultWorkSeconds(format,timerSettings))
   const [restSeconds, setRestSeconds] = useState(getDefaultRestSeconds(format,timerSettings))
   const [rounds, setRounds] = useState(timerSettings?.rounds ?? timerSettings?.workout_schema?.station_circuit?.rounds ?? timerSettings?.workout_schema?.rounds ?? (format === 'Tabata' ? 8 : 5))
@@ -197,6 +198,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const isDeathBy = format === 'Death By'
   const isLadder = format === 'Ladder'
   const deathByStatus=deathByTimerState(elapsed,deathByCompletedRounds,schema?.ladder)
+  const ladderProgress=ladderStatus(ladderCompletedRounds,schema?.ladder,schema?.rounds??timerSettings?.rounds)
   const hasTimeCap = capDuration > 0 && !isCountdown && !isEMOM && !isTimedInterval && !isStationCircuit
   const fallbackDuration = Math.max(1, (Number(minutes) || 10) * 60 + (Number(seconds) || 0))
   const defaultTarget = Math.max(1, isCountdown && capDuration ? capDuration : hasTimeCap ? capDuration : savedDuration || fallbackDuration)
@@ -238,13 +240,13 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     ? fixedSlotState.currentRound
     : isEMOM ? Math.floor(elapsed / emomCycle) + 1
     : isDeathBy ? deathByStatus.round
-    : isLadder ? Math.floor(elapsed / 60) + 1
+    : isLadder ? ladderProgress.currentRound
     : Math.floor(elapsed / 60) + 1
   const currentPhase = isStationCircuit || isTimedInterval
     ? fixedSlotState.phase
     : isEMOM ? (isEmomWorkPhase ? 'ARBEID' : isEmomRestPhase ? 'KVILE' : 'VENTAR')
     : isDeathBy ? (deathByStatus.roundConfirmed?'VENTAR PÅ NESTE RUNDE':'ARBEID')
-    : isLadder ? 'NY RUNDE' : 'PÅGÅR'
+    : isLadder ? 'ARBEID' : 'PÅGÅR'
   const primaryTime = isCountdown ? remainingTotal
     : (isTimedInterval || isStationCircuit) ? phaseRemaining
     : isEMOM ? (timerLimitReached ? 0 : emomPhaseRemaining)
@@ -296,7 +298,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     timerRunStartedAt.current = null
     timerRunBaseElapsed.current = 0
     elapsedRef.current = 0
-    setElapsed(0); setRunning(false); setRound(1); setDeathByCompletedRounds(0); setPhase('Klar'); setLaps([])
+    setElapsed(0); setRunning(false); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setPhase('Klar'); setLaps([])
     setHasStarted(false); setCountdownDeadline(null); setCountdownRemaining(0); scheduledStartedAt.current = null
     setWorkSeconds(getDefaultWorkSeconds(format,timerSettings))
     setRestSeconds(getDefaultRestSeconds(format,timerSettings))
@@ -314,6 +316,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     setElapsed(0)
     setRound(1)
     setDeathByCompletedRounds(0)
+    setLadderCompletedRounds(0)
     setLaps([])
     setDurationOverride(null); setEmomEveryOverride(null)
     setWorkSeconds(getDefaultWorkSeconds(format,timerSettings))
@@ -523,7 +526,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       steps:Array.isArray(item.complex_steps)?item.complex_steps:[],
     }
   })
-  const resetTimer = () => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; scheduledStartedAt.current=null; setCountdownDeadline(null);setCountdownRemaining(0); setRunning(false); setElapsed(0); setRound(1); setDeathByCompletedRounds(0); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
+  const resetTimer = () => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; scheduledStartedAt.current=null; setCountdownDeadline(null);setCountdownRemaining(0); setRunning(false); setElapsed(0); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
   return <div ref={timerContainerRef} className={stageVisible ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
     {stageVisible ? <section className={stageLapHistory.length ? 'gg-live-timer gg-live-timer--with-laps' : 'gg-live-timer'} aria-label="Fullskjermsklokke for treningsøkt">
       <header className="gg-live-timer__header">
@@ -638,7 +641,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           <button type="button" className="secondary-button" onClick={toggleRunning} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : phase==='PAUSE' ? <><Play size={14}/> Gjenoppta</> : <><Play size={14}/> Start</>}</button>
           {isAmrap && <button type="button" className="timer-lap-button" onClick={lapAction} disabled={!running}>+ REGISTRER RUNDE</button>}
           {isDeathBy && <button type="button" className="timer-lap-button" onClick={completeDeathByRound} disabled={!running||!deathByStatus.canConfirm||stageIsComplete}>{deathByStatus.roundConfirmed?'Runde fullført':`Fullført ${deathByStatus.targetReps} reps`}</button>}
-          <button type="button" className="secondary-button" onClick={() => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; setRunning(false); setElapsed(0); setRound(1); setDeathByCompletedRounds(0); setLaps([]); setPhase('Klar'); setHasStarted(false) }}><RotateCcw size={14}/> Nullstill</button>
+          <button type="button" className="secondary-button" onClick={() => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; setRunning(false); setElapsed(0); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setLaps([]); setPhase('Klar'); setHasStarted(false) }}><RotateCcw size={14}/> Nullstill</button>
           {(isStopwatch || isForTime) && <button type="button" className="secondary-button" onClick={splitAction} disabled={!running}>Mellomtid</button>}
           <button type="button" className="secondary-button" onClick={() => setSoundOn(value => !value)}>{soundOn ? 'Lyd på' : 'Lyd av'}</button>
           <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
