@@ -1297,7 +1297,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       {finishOpen&&<div className="workout-finish-backdrop" role="presentation">
         <section className="workout-finish-dialog" role="dialog" aria-modal="true" aria-labelledby="finish-workout-title">
           <div className="workout-finish-head"><div><span className="section-kicker">ETTER ØKTA · SJEKK RESULTATA</span><h3 id="finish-workout-title">{title||'Treningsøkt'}</h3></div><button type="button" className="danger-icon" aria-label="Lukk" onClick={()=>setFinishOpen(false)}>×</button></div>
-          <p className="workout-finish-help">Faste E3MOM-sett og repetisjonar blir henta frå WOD-oppsettet. Kontroller at du gjennomførte dei, og rett ved avvik. Registrer faktisk vekt der det er relevant. AMRAP-rundar og tid frå klokka blir tekne med automatisk.</p>
+          <p className="workout-finish-help">{format===COMPOSITE_FORMAT?'Faste E3MOM-sett og repetisjonar blir henta frå WOD-oppsettet. Kontroller at du gjennomførte dei, og rett ved avvik. Registrer faktisk vekt der det er relevant. AMRAP-rundar og tid frå klokka blir tekne med automatisk.':'Siste kontroll før lagring: Tal frå WOD-oppsettet kan vere førehandsfylte. Rett reps eller vekt dersom du gjorde noko anna. Rundar og tid frå klokka blir tekne med automatisk.'}</p>
           <div className="workout-finish-summary">
             <div><span>FORMAT</span><strong>{format}</strong></div>
             <div><span>{manualEntry?'REGISTRERING':'TID'}</span><strong>{manualEntry?'Manuell':clock(timerSnapshot.elapsed)}</strong></div>
