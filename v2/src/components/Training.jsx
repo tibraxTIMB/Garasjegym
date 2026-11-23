@@ -1125,7 +1125,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       const payload = {
         member_id:user.id,save_token:saveToken,title:title.trim(),source_wod_id:source?.id||manualWodIds[0]||null,
         class_live_session_id:classSessionId||null,workout_date:workoutDate||localDateISO(),format,
-        rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):Math.max(1,Number(scoreRounds)||1),
+        rounds:Math.max(1,isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):Number(scoreRounds)||1),
         score_rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):scoreRounds===''?null:Number(scoreRounds),
         score_reps:scoreReps===''?(isAmrapScore?0:null):Number(scoreReps),
         score_time_seconds:parsedTime,score_load_kg:scoreLoad===''?null:Number(scoreLoad),
