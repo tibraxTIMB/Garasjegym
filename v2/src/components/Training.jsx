@@ -1176,6 +1176,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     if (items.some(item => !Array.isArray(item.sets) || item.sets.length === 0)) {
       setError('Legg til minst eitt sett på kvar øving før du lagrar.'); return
     }
+    if(!manualEntry&&items.some(item=>item.prescribed_sets_prefilled)&&!confirmedPlannedEmom){setError('Stadfest at du har kontrollert dei førehandsutfylte EMOM-setta, og rett eventuelle avvik før du lagrar.');return}
     setSaving(true); setError(''); setNotice('')
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -1330,6 +1331,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         <section className="workout-finish-dialog" role="dialog" aria-modal="true" aria-labelledby="finish-workout-title">
           <div className="workout-finish-head"><div><span className="section-kicker">ETTER ØKTA · SJEKK RESULTATA</span><h3 id="finish-workout-title">{title||'Treningsøkt'}</h3></div><button type="button" className="danger-icon" aria-label="Lukk" onClick={()=>setFinishOpen(false)}>×</button></div>
           <p className="workout-finish-help">{format===COMPOSITE_FORMAT?'Faste E3MOM-sett og repetisjonar blir henta frå WOD-oppsettet. Kontroller at du gjennomførte dei, og rett ved avvik. Registrer faktisk vekt der det er relevant. AMRAP-rundar og tid frå klokka blir tekne med automatisk.':'Siste kontroll før lagring: Tal frå WOD-oppsettet kan vere førehandsfylte. Rett reps eller vekt dersom du gjorde noko anna. Rundar og tid frå klokka blir tekne med automatisk.'}</p>
+          {error&&<div className="auth-error" role="alert">{error}</div>}
+          {items.some(item=>item.prescribed_sets_prefilled)&&!manualEntry&&<label className="workout-confirm-prescribed" style={{display:'flex',alignItems:'flex-start',gap:10,padding:'12px 0'}}><input type="checkbox" checked={confirmedPlannedEmom} onChange={e=>{setConfirmedPlannedEmom(e.target.checked);setError('')}}/><span>Eg har kontrollert dei planlagde EMOM-setta og repetisjonane. Eg har retta eventuelle avvik og registrert faktisk vekt.</span></label>}
           <div className="workout-finish-summary">
             <div><span>FORMAT</span><strong>{format}</strong></div>
             <div><span>{manualEntry?'REGISTRERING':'TID'}</span><strong>{manualEntry?'Manuell':clock(timerSnapshot.elapsed)}</strong></div>
