@@ -7,9 +7,9 @@ import { MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
 import { getWodSchemaItems, sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
-import { formatParticipation, normalizeWodEngine, parseIntervalNotation, isEmomFormat, emomIntervalSeconds, emomDisplayLabel } from '../lib/wodEngine.js'
+import { formatParticipation, normalizeWodEngine, isEmomFormat, emomIntervalSeconds, emomDisplayLabel } from '../lib/wodEngine.js'
 import PerformanceCenter from './PerformanceCenter.jsx'
-import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration, summarizeLapSplits } from '../lib/timerClock.js'
+import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, splitDuration, summarizeLapSplits } from '../lib/timerClock.js'
 import { getExerciseMeasurementFlags, isErgExercise } from '../lib/exerciseMeasurements.js'
 import {COMPOSITE_FORMAT, compositeBlockForTimer, compositeTimerConfig, compositeTransitionSeconds, compositeScoredBlocks, plannedFixedEmomSets} from '../lib/compositeWod.js'
 import { exerciseRecordType } from '../lib/prMetrics.js'
@@ -26,7 +26,6 @@ import './timer-viewport.css'
 
 const FORMATS = [COMPOSITE_FORMAT,'Fri trening', 'EMOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const RESULT_UNITS = [{value:'m',label:'Meter (m)'},{value:'km',label:'Kilometer (km)'},{value:'cal',label:'Kaloriar (cal)'},{value:'s',label:'Sekund (s)'},{value:'min',label:'Minutt (min)'}]
-const EMOM_INTERVAL_OPTIONS = [0.25,0.5,0.75,1,1.25,1.5,1.75,2,3,4,5,6,7].map(value=>{const seconds=Math.round(value*60);return {value,label:seconds<60?seconds+' sekund':seconds%60===0?(seconds/60)+' minutt':Math.floor(seconds/60)+' minutt og '+(seconds%60)+' sekund'}})
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', uses_height: false, uses_load: true, equipment:'', rowValue:'', rowUnit:'m', workSeconds:'', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] })
 const pad = (n) => String(n).padStart(2, '0')
 const clock = (seconds) => `${pad(Math.floor(Math.max(0, seconds) / 60))}:${pad(Math.max(0, seconds) % 60)}`
@@ -617,7 +616,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           <label>Sekund<input type="number" min="0" max="59" value={(durationOverride??target)%60} onChange={e=>setDurationOverride(Math.max(1,Math.floor((durationOverride??target)/60)*60+Math.max(0,Math.min(59,Number(e.target.value)||0))))}/></label>
         </div>
       </div>}
-      {isEMOM && <div className="timer-setup-section"><strong>EMOM-intervall</strong><div className="training-choice-field timer-setup-select"><span>Start arbeid kvart</span><GarageSelect label="EMOM-intervall" value={emomEvery} options={EMOM_INTERVAL_OPTIONS} onChange={value=>setEmomEveryOverride(Number(value))}/></div></div>}
+      {isEMOM && <div className="timer-setup-section"><strong>EMOM-intervall</strong><div className="timer-setup-duration"><label>Minutt<input type="number" min="0" max="60" value={Math.floor(emomCycle/60)} onChange={e=>setEmomEveryOverride(Math.max(5,Math.min(3600,Math.max(0,Number(e.target.value)||0)*60+emomCycle%60))/60)}/></label><label>Sekund<input type="number" min="0" max="59" value={emomCycle%60} onChange={e=>setEmomEveryOverride(Math.max(5,Math.min(3600,Math.floor(emomCycle/60)*60+Math.max(0,Math.min(59,Number(e.target.value)||0))))/60)}/></label></div><small>Arbeidet startar på nytt kvart intervall. Kvila er tida som står att når reps er fullførte.</small></div>}
       <div className="timer-setup-section"><strong>Skjermoppsett</strong><div className="timer-layout-presets">
         <button type="button" onClick={()=>applyLayoutPreset('standard')}>Standard</button><button type="button" onClick={()=>applyLayoutPreset('minimal')}>Minimal</button><button type="button" onClick={()=>applyLayoutPreset('group')}>Gruppetime</button><button type="button" onClick={()=>applyLayoutPreset('pt')}>PT</button>
       </div></div>
