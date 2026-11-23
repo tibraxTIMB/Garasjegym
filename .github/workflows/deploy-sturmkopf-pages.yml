@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: sturm­kopf-pages
@@ -29,6 +30,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Report build run to release issue
+        if: ${{ github.event_name == 'push' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/issues/2/comments" \
+            -f "body=Gazelle 1.2 build status and logs: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} (commit ${GITHUB_SHA})" || true
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
