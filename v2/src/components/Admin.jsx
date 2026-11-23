@@ -10,7 +10,7 @@ import GarageMaintenance from './GarageMaintenance.jsx'
 import './admin-advanced.css'
 import GarageOwnerBadge from './GarageOwnerBadge.jsx'
 
-export default function Admin({profile,onOpenWodImport,onOpenPTAdmin=()=>{},onOpenPTClients=()=>{},initialTab='oversikt',focusToken=0}){
+export default function Admin({profile,onOpenWodImport,onOpenPTAdmin=()=>{},onOpenPTClients=()=>{},onOpenWodLibrary=()=>{},initialTab='oversikt',focusToken=0}){
  const [members,setMembers]=useState([]),[wods,setWods]=useState([]),[exercises,setExercises]=useState([]),[rankCounts,setRankCounts]=useState({}),[adminTab,setAdminTab]=useState(initialTab)
  useEffect(()=>setAdminTab(initialTab),[initialTab,focusToken])
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
@@ -151,7 +151,12 @@ export default function Admin({profile,onOpenWodImport,onOpenPTAdmin=()=>{},onOp
  return <div className="admin-module">
   <div className="training-heading"><div><div className="section-kicker">{RELEASE_NAME} · KONTROLLPANEL</div><h3>Administrasjon</h3></div><div className="garage-author-line"><GarageOwnerBadge userId={profile.id}/><span className="count-pill">{profile.role.toUpperCase()}</span></div></div>
   {error&&<div className="auth-error" role="alert">{error}</div>}{notice&&<div className="auth-message" role="status"><CheckCircle2 size={15}/>{notice}</div>}
-  <div className="admin-stats"><div><Users size={17}/><strong>{members.length}</strong><span>Medlemmar</span></div><div><ShieldCheck size={17}/><strong>{members.filter(m=>m.active).length}</strong><span>Aktive</span></div><div><Dumbbell size={17}/><strong>{wods.length}</strong><span>WOD-ar</span></div><div><Plus size={17}/><strong>{exercises.length}</strong><span>Øvingar</span></div></div>
+  <div className="admin-stats admin-stats-compact" aria-label="Snarvegar til driftstal">
+    <button type="button" title="Opna medlemsregister" onClick={()=>{setMemberSearch('');setMemberFilter('all');setAdminTab('medlemmer')}}><Users size={16} aria-hidden="true"/><strong>{members.length}</strong><span>Medlemmar</span></button>
+    <button type="button" title="Vis aktive medlemmar" onClick={()=>{setMemberSearch('');setMemberFilter('active');setAdminTab('medlemmer')}}><ShieldCheck size={16} aria-hidden="true"/><strong>{members.filter(m=>m.active).length}</strong><span>Aktive</span></button>
+    <button type="button" title="Opna WOD-bibliotek" onClick={onOpenWodLibrary}><Dumbbell size={16} aria-hidden="true"/><strong>{wods.length}</strong><span>WOD-ar</span></button>
+    <button type="button" title="Opna øvingsbibliotek" onClick={()=>setAdminTab('ovingar')}><Plus size={16} aria-hidden="true"/><strong>{exercises.length}</strong><span>Øvingar</span></button>
+   </div>
   <nav className="admin-tabs" aria-label="Administrasjonsområde">
    {[['oversikt','Oversikt',ShieldCheck],['medlemmer','Medlemmer og tilgang',Users],['rang','Rang & achievements',Trophy],['kaffi','Kaffebar',Coffee],['ovingar','Øvingsbibliotek',Dumbbell],...(isAdmin?[['drift','Drift',ShieldCheck]]:[])].map(([id,label,Icon])=><button type="button" key={id} className={adminTab===id?'selected':''} onClick={()=>setAdminTab(id)}><Icon size={15}/>{label}</button>)}
   </nav>
