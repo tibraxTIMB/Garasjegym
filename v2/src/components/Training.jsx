@@ -7,13 +7,14 @@ import { MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
 import { getWodSchemaItems, sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
-import { formatParticipation, normalizeWodEngine, parseIntervalNotation } from '../lib/wodEngine.js'
+import { formatParticipation, normalizeWodEngine, parseIntervalNotation, isEmomFormat, emomIntervalSeconds, emomDisplayLabel } from '../lib/wodEngine.js'
 import PerformanceCenter from './PerformanceCenter.jsx'
 import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration, summarizeLapSplits } from '../lib/timerClock.js'
 import { getExerciseMeasurementFlags, isErgExercise } from '../lib/exerciseMeasurements.js'
 import {COMPOSITE_FORMAT, compositeBlockForTimer, compositeTimerConfig, compositeTransitionSeconds, compositeScoredBlocks, plannedFixedEmomSets} from '../lib/compositeWod.js'
 import { exerciseRecordType } from '../lib/prMetrics.js'
 import { deathByTimerState } from '../lib/deathBy.js'
+import { ladderStatus } from '../lib/ladder.js'
 import { getWodSideLabel, isSideSelectableExercise, WOD_SIDE_OPTIONS } from '../lib/wodSides.js'
 import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
 import { exerciseBrowseCategory, exerciseBrowseOrder } from '../lib/exerciseCategories.js'
@@ -23,7 +24,7 @@ import { countdownSignal, secondsToTimerBoundary, runningTimerSignal } from '../
 import GarageSelect from './GarageSelect.jsx'
 import './timer-viewport.css'
 
-const FORMATS = [COMPOSITE_FORMAT,'Fri trening', 'E1MOM', 'E1.25MOM', 'E2MOM', 'E3MOM', 'E4MOM', 'E5MOM', 'E6MOM', 'E7MOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
+const FORMATS = [COMPOSITE_FORMAT,'Fri trening', 'EMOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const RESULT_UNITS = [{value:'m',label:'Meter (m)'},{value:'km',label:'Kilometer (km)'},{value:'cal',label:'Kaloriar (cal)'},{value:'s',label:'Sekund (s)'},{value:'min',label:'Minutt (min)'}]
 const EMOM_INTERVAL_OPTIONS = [0.25,0.5,0.75,1,1.25,1.5,1.75,2,3,4,5,6,7].map(value=>{const seconds=Math.round(value*60);return {value,label:seconds<60?seconds+' sekund':seconds%60===0?(seconds/60)+' minutt':Math.floor(seconds/60)+' minutt og '+(seconds%60)+' sekund'}})
 const emptyExercise = () => ({ key: crypto.randomUUID(), exercise_id: '', exercise_name: '', uses_height: false, uses_load: true, equipment:'', rowValue:'', rowUnit:'m', workSeconds:'', sets: [{ reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] })
@@ -37,8 +38,7 @@ const wodRowUnit=(item,level='rx')=>{
   if(prescribed.durationSeconds!=null&&prescribed.durationSeconds!=='')return 's'
   return item?.row_unit||'m'
 }
-const isEmomFormat = format => /^E\d+(?:\.\d+)?MOM$/.test(format||'') || ['EMOM','EMOM 1','EMOM 2'].includes(format)
-const getEmomIntervalMinutes = (format, timerSettings) => Math.max(0.25,Math.min(60,Number(timerSettings?.workout_schema?.interval?.work_every_minutes)||parseIntervalNotation(format)?.intervalMinutes||(format==='EMOM 2'?2:1)))
+const getEmomIntervalMinutes = (format, timerSettings) => emomIntervalSeconds(format,timerSettings?.workout_schema?.interval)/60
 const getDefaultWorkSeconds = (format, timerSettings) => {
  const saved=timerSettings?.work_seconds ?? timerSettings?.workout_schema?.station_circuit?.work_seconds ?? timerSettings?.workout_schema?.interval?.work_seconds
  if(saved!=null&&Number(saved)>0)return Number(saved)
@@ -178,9 +178,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const schema = timerSettings?.workout_schema
   const savedDuration = Number(schema?.duration_seconds) || 0
   const capDuration = Number(schema?.time_cap_seconds) || (Number(schema?.time_cap_minutes) || 0) * 60
-  const isEMOM = /^E\d+(?:\.\d+)?MOM$/.test(format) || ['EMOM', 'EMOM 1', 'EMOM 2'].includes(format)
-  const emomEvery = normalizeEmomIntervalMinutes(emomEveryOverride, getEmomIntervalMinutes(format,timerSettings))
-  const emomCycle = emomEvery * 60
+  const isEMOM = isEmomFormat(format)
+  const emomCycle = Math.max(5,Math.min(3600,Math.round(Number(emomEveryOverride)>0?Number(emomEveryOverride)*60:emomIntervalSeconds(format,schema?.interval))))
   const effectiveEmomWorkSeconds = Math.max(1,Math.min(emomCycle,Number(workSeconds)||emomCycle))
   const effectiveEmomRestSeconds = Math.max(0,Math.min(emomCycle-effectiveEmomWorkSeconds,Number(restSeconds)||0))
   const emomPhaseElapsed = elapsed % emomCycle
@@ -219,7 +218,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const intervalTotal = fixedSlotState.totalSeconds
   const intervalExerciseIndex = fixedSlotState.currentSlotIndex % intervalExerciseCount
   const currentIntervalExercise = exerciseList[intervalExerciseIndex]?.exercise_name || exerciseList[intervalExerciseIndex]?.name || activeExercise
-  const currentEmomRound = Math.floor(elapsed/emomCycle)+1
+  const currentEmomRound = Math.min(Math.max(1,Math.ceil(target/emomCycle)),Math.floor(elapsed/emomCycle)+1)
   const hasExplicitEmomSlots = exerciseList.some(item=>String(item.minute_slot??item.minuteSlot??'').trim()!=='')
   const currentEmomExercises = exerciseList.filter(item=>String(item.minute_slot??item.minuteSlot??'').split(/[,\s;\/]+/).some(slot=>Number(slot)===currentEmomRound))
   const currentEmomExercise = currentEmomExercises.length
@@ -667,7 +666,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       </aside></TimerPanel>:<TimerPanel key={id} id="music" title="MUSIKK" layout={panelLayout.music} deviceProfile={deviceProfile} locked={Boolean(lockedPanels.music)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock} designMode={designMode}><MusicMiniPlayer /></TimerPanel>)}
       </div>
 
-    <small>{isStationCircuit ? 'Stasjonssirkel · roterande stasjonar · fast tal rundar' : isTimedInterval ? 'Arbeid / kvile · samla økttid og tid att' : isCountdown ? 'AMRAP · registrer kvar fullførte runde' : isEMOM ? `${emomEvery>1?`E${emomEvery}MOM`:'E1MOM'} · ${effectiveEmomWorkSeconds}s arbeid / ${effectiveEmomRestSeconds}s pause` : isDeathBy ? `Death By · ${deathByStatus.targetReps} reps på ${deathByStatus.intervalSeconds} sekund · ${deathByCompletedRounds} rundar fullførte` : isForTime ? 'Stoppeklokke med eventuell tidsgrense' : 'Stoppeklokke – tel medgått tid'}</small>
+    <small>{isStationCircuit ? 'Stasjonssirkel · roterande stasjonar · fast tal rundar' : isTimedInterval ? 'Arbeid / kvile · samla økttid og tid att' : isCountdown ? 'AMRAP · registrer kvar fullførte runde' : isEMOM ? `${emomDisplayLabel(emomCycle)} · ${Math.ceil(target/emomCycle)} intervall` : isDeathBy ? `Death By · ${deathByStatus.targetReps} reps på ${deathByStatus.intervalSeconds} sekund · ${deathByCompletedRounds} rundar fullførte` : isForTime ? 'Stoppeklokke med eventuell tidsgrense' : 'Stoppeklokke – tel medgått tid'}</small>
   </div>
   </>}
   </div>
@@ -1278,7 +1277,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         <label>Namn på økta<input value={title} onChange={e => setTitle(e.target.value)} placeholder="Til dømes Styrke A" required/></label>
         <div className="training-choice-field"><span>Treningsformat</span><GarageSelect label="Treningsformat" value={format} disabled={Boolean(timerSnapshot.hasStarted)||Boolean(source&&format===COMPOSITE_FORMAT)} options={FORMATS.map(name=>({value:name,label:name}))} onChange={setFormat}/>{timerSnapshot.hasStarted&&<small>Formatet er låst medan økta pågår.</small>}</div>
         <label>Treningsdato<input type="date" value={workoutDate} max={localDateISO()} disabled={Boolean(classSessionId)} onChange={e=>setWorkoutDate(e.target.value)}/></label>
-        {['AMRAP','Nedteljing','E1MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM'].includes(format) && <label>Øktlengd (minutt)<input type="number" min="1" max="600" disabled={Boolean(timerSnapshot.hasStarted)} value={duration} onChange={e => setDuration(e.target.value)}/></label>}
+        {(['AMRAP','Nedteljing'].includes(format)||isEmomFormat(format)) && <label>Øktlengd (minutt)<input type="number" min="1" max="600" disabled={Boolean(timerSnapshot.hasStarted)} value={duration} onChange={e => setDuration(e.target.value)}/></label>}
       </div>
       {source?.timer_settings?.workout_schema?.library_category==='warmup'&&<section className="warmup-execution-guide" aria-label="Oppvarming i to delar"><header><span className="section-kicker">OPPVARMING · TO DELAR</span><strong>Førebu kroppen og finn arbeidsnivået</strong></header><div className="warmup-execution-columns"><article><span>1</span><div><strong>Felles oppvarming</strong><p>Gradvis spissing mot hovud-WOD sin stimulus og rørsleform.</p><ul>{items.filter(item=>item.warmup_phase!=='movement_rehearsal'&&!item.is_rest).map(item=><li key={item.key}>{item.exercise_name}</li>)}</ul></div></article><article><span>2</span><div><strong>Fri teknisk innøving</strong><p>Prøv hovudrørsla med lette vekter. Auk gradvis og finn ditt eige arbeidsnivå for WOD-en.</p><ul>{items.filter(item=>item.warmup_phase==='movement_rehearsal'&&!item.is_rest).map(item=><li key={item.key}>{item.exercise_name}</li>)}</ul></div></article></div></section>}
       </>}
