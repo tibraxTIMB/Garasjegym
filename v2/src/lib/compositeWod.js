@@ -55,11 +55,11 @@ export function validateCompositeBlocks(blocks,items=[]) {
   ids.add(block.id)
   if(!COMPOSITE_BLOCK_FORMATS.includes(block.format))return title+': vel eit støtta format.'
   const minute=Number(block.minutes)
-  if(!Number.isInteger(minute)||minute<1||minute>180)return title+': vel 1–180 minutt.'
+  if(!Number.isFinite(minute)||minute<=0||minute>180||Math.abs(Math.round(minute*60)-minute*60)>0.001)return title+': vel inntil 180 minutt (med sekundpresisjon).'
   const exercises=items.filter(item=>(item.blockId||item.block_id)===block.id&&!item.is_rest)
   if(!exercises.length)return title+': legg til minst éi øving.'
   const every=compositeIntervalMinutes(block.format,block)
-  if(every && (minute*60)%Math.round(every*60)!==0)return title+': øktlengda må gå opp i intervalla på '+Math.round(every*60)+' sekund.'
+  if(every && Math.round(minute*60)%Math.round(every*60)!==0)return title+': øktlengda må gå opp i intervalla på '+Math.round(every*60)+' sekund.'
   if(block.format==='Couplet'&&exercises.length!==2)return title+': Couplet krev to øvingar.'
   if(block.format==='Triplet'&&exercises.length!==3)return title+': Triplet krev tre øvingar.'
   if(block.format==='Stasjonssirkel'&&(exercises.length<2||exercises.length>8))return title+': stasjonssirkel krev 2–8 stasjonar.'
@@ -122,7 +122,7 @@ export function compositeTimerConfig(block) {
   interval:{work_every_minutes:every,work_every_seconds:every?Math.round(every*60):null,work_seconds:every?Math.round(every*60):interval?work:null,rest_seconds:interval?rest:0},
   structure:station?'station_circuit':interval?'interval':COMPOSITE_STRENGTH_FORMATS.includes(current.format)?'strength':'metcon',
   station_circuit:stationPlan,
-  rounds:interval||station?rounds:null,
+  rounds:interval||station?rounds:current.format==='Ladder'?Math.max(1,Number(current.rounds)||5):null,
   interval_exercise_count:interval?items.length:null,
   combination_mode:['Couplet','Triplet'].includes(current.format)?(current.combinationMode||'For Time'):null,
   ladder:['Ladder','Death By'].includes(current.format)?{type:current.format,start:Number(current.ladderStart)||(deathBy?1:2),step:Number(current.ladderStep)||(deathBy?1:2),direction:deathBy?'up':current.ladderDirection==='down'?'down':'up',...(deathBy?{interval_seconds:Number(current.deathByIntervalSeconds)||60}:{})}:null,
@@ -132,7 +132,7 @@ export function compositeTimerConfig(block) {
   format:current.format,
   minutes:String(Math.floor(current.duration_seconds/60)),
   seconds:String(current.duration_seconds%60),
-  timerSettings:{workout_schema:schema,work_seconds:interval||station?work:every?every*60:null,rest_seconds:interval||station?rest:0,rounds:interval||station?rounds:every?Math.round(current.duration_seconds/(every*60)):null,duration_seconds:current.duration_seconds}
+  timerSettings:{workout_schema:schema,work_seconds:interval||station?work:every?every*60:null,rest_seconds:interval||station?rest:0,rounds:interval||station?rounds:current.format==='Ladder'?Math.max(1,Number(current.rounds)||5):every?Math.round(current.duration_seconds/(every*60)):null,duration_seconds:current.duration_seconds}
  }
 }
 
