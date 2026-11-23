@@ -560,7 +560,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         {!hasStarted&&countdownDeadline===null&&<button type="button" className="gg-live-timer__round-button" onClick={()=>beginWorkout(true)}><Play size={21}/> Start · 10 sek</button>}
         {hasStarted&&isAmrap&&<button type="button" className="gg-live-timer__round-button" onClick={lapAction} disabled={!running}><Plus size={21}/> Runde</button>}
         {hasStarted&&(isStopwatch||isForTime)&&<button type="button" className="gg-live-timer__split" onClick={splitAction} disabled={!running}>Mellomtid</button>}
-        {hasStarted&&<button type="button" className="gg-live-timer__finish" onClick={finishCurrent}><CheckCircle2 size={20}/> {finishLabel}</button>}
+        {hasStarted&&(finishLabel==='Avslutt'?<button type="button" className="gg-live-timer__finish" onClick={finishCurrent}><CheckCircle2 size={20}/> Avslutt</button>:<button type="button" className="gg-live-timer__finish" onClick={finishCurrent}><CheckCircle2 size={20}/> {finishLabel}</button>)}
       </footer>
       {stagePanel&&<div className="gg-live-timer__scrim" onClick={()=>setStagePanel(null)} role="presentation"/>}
       {stagePanel==='wod'&&<aside className="gg-live-timer__drawer" aria-label="Øvingar i WOD-en"><header><strong>Øvingar · {stageRows.length}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk øvingslista"><X size={20}/></button></header><ol className="gg-live-timer__all-exercises">{stageRows.map((item,index)=><li key={`${item.id}-${index}`}>
