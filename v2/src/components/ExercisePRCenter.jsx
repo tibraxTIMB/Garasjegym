@@ -52,7 +52,7 @@ export default function ExercisePRCenter({ history = [], legacyRecords = [], onO
   const selected = directory.find(item => item.key === selectedKey)
   const query = search.trim().toLocaleLowerCase('nn-NO')
   const hasMeasuredRecord = item => item.saved.length>0||item.derived.some(group=>group.records.length>0)
-  const visibleExercises = directory.filter(item => (query ? item.name.toLocaleLowerCase('nn-NO').includes(query) : recordCategory==='mine' ? hasMeasuredRecord(item) : recordCategory==='logged' ? item.sessions>0||item.saved.length>0 : recordCategory==='all' ? true : recordCategory===item.type))
+  const visibleExercises = directory.filter(item => (query ? item.name.toLocaleLowerCase('nn-NO').includes(query) : recordCategory==='mine' ? hasMeasuredRecord(item) : recordCategory==='logged' ? item.sessions>0||item.saved.length>0 : recordCategory==='all' ? true : recordCategory===item.type)).sort((a,b)=>Number(hasMeasuredRecord(b))-Number(hasMeasuredRecord(a))||b.sessions-a.sessions||a.name.localeCompare(b.name,'nn-NO'))
   const visibleSlice = visibleExercises.slice(0,showAll ? visibleExercises.length : query ? 16 : 10)
   const hasExerciseSelection = Boolean(query||recordCategory)
 
