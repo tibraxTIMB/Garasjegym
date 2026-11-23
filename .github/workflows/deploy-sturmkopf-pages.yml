@@ -37,47 +37,41 @@ jobs:
         working-directory: v2
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Prepare free browser recording tools
-        # Keep the existing committed help videos for this narrowly scoped approved hotfix.
-        # Full video regeneration remains enabled on ordinary manual dispatch releases.
+        # Normal pushes use committed help videos; approved manual releases regenerate them.
         if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Install Chromium for real GarasjeGym walkthroughs
-        # Keep the existing committed help videos for this narrowly scoped approved hotfix.
-        # Full video regeneration remains enabled on ordinary manual dispatch releases.
+        # Normal pushes use committed help videos; approved manual releases regenerate them.
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           python -m pip install 'playwright==1.56.0' 'piper-tts==1.8.0'
           python -m playwright install --with-deps chromium
           sudo apt-get install -y ffmpeg
       - name: Cache free Norwegian narration model
-        # Keep the existing committed help videos for this narrowly scoped approved hotfix.
-        # Full video regeneration remains enabled on ordinary manual dispatch releases.
+        # Normal pushes use committed help videos; approved manual releases regenerate them.
         if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/piper-voices
           key: norwegian-narration-talesyntese-v1-2026-11
       - name: Prepare offline Norwegian narration
-        # Keep the existing committed help videos for this narrowly scoped approved hotfix.
-        # Full video regeneration remains enabled on ordinary manual dispatch releases.
+        # Normal pushes use committed help videos; approved manual releases regenerate them.
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           if [ ! -s "${RUNNER_TEMP}/piper-voices/no_NO-talesyntese-medium.onnx" ]; then
             python -m piper.download_voices --data-dir "${RUNNER_TEMP}/piper-voices" no_NO-talesyntese-medium
           fi
       - name: Auto-record actual app components with local demo data
-        # Keep the existing committed help videos for this narrowly scoped approved hotfix.
-        # Full video regeneration remains enabled on ordinary manual dispatch releases.
+        # Normal pushes use committed help videos; approved manual releases regenerate them.
         if: ${{ github.event_name == 'workflow_dispatch' }}
         working-directory: v2
         env:
           HELP_VIDEO_VOICE_MODEL: ${{ runner.temp }}/piper-voices/no_NO-talesyntese-medium.onnx
         run: npm run help:videos:live
       - name: Verify generated help videos
-        # Keep the existing committed help videos for this narrowly scoped approved hotfix.
-        # Full video regeneration remains enabled on ordinary manual dispatch releases.
+        # Normal pushes use committed help videos; approved manual releases regenerate them.
         if: ${{ github.event_name == 'workflow_dispatch' }}
         working-directory: v2
         run: npm run help:videos:live-check
@@ -102,11 +96,9 @@ jobs:
           path: v2/dist
 
   deploy:
-    # GG-030: ordinary pushes build and test only. Owner approved a single
-    # release commit from the connected workspace; the exact message is the
-    # temporary one-time approval signal. Restore the manual-only condition
-    # immediately after confirmed deployment.
-    if: "${{ (github.event_name == 'workflow_dispatch' && inputs.publish_preview) || (github.event_name == 'push' && github.event.head_commit.message == 'release: user-approved GG fixes to GitHub Pages') }}"
+    # GG-030: ordinary pushes build and test; deploy only on an explicit
+    # workflow_dispatch with publish_preview=true after owner approval.
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_preview }}
     permissions:
       pages: write
       id-token: write

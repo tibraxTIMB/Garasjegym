@@ -2,25 +2,23 @@
 
 Status oppdatert 23. november 2026. Avgrensa til desse seks tidlegare identifiserte GG-funna.
 
-GG-026 er utført og verifisert i tilknytt Supabase-database. GG-011 må framleis samordnast med godkjend webpublisering. Dette dokumentet er ikkje ein publiseringsgodkjenning.
+GG-026 er utført i Supabase (194/193 øvingar). GG-011 er publisert via GitHub Pages og aktivert i tilknytt database etter verifisert utrulling. Full innlogga ende-til-ende-gruppetime med faktisk deltakar er ikkje testa.
 
 | GG | Status | Kontroll / tiltak |
 | --- | --- | --- |
-| GG-011 | Kode ferdig, produksjonsmigrering utsett til samordna publisering | `20261123125000_group_result_notification_deep_link.sql` er kontrollert og lagra på arbeidsgrena. Aktiv DB-funksjon peikar framleis til `mi-trening`. Brukarappen må vera publisert med støtte for `group-class:<id>` før funksjonen blir oppdatert. |
+| GG-011 | Ferdig – kode og database publisert | GitHub Pages-deploy blei stadfesta som vellukka i [Actions-køyring 45183316622](https://github.com/tibraxTIMB/Garasjegym/actions/runs/45183316622). Migreringa `20261123125000_group_result_notification_deep_link.sql` er aktiv og kontrollert: `publish_class_session_results(uuid)` sender `group-class:<id>`. Manuell medlemsbrukartest med reell avslutta gruppetime står att. |
 | GG-025 | Lukka – allereie handtert | Mobilmenyen har rollebaserte inngangar til «Drift» og PT Studio i `AppMobileNavigation.jsx`. Ingen ny meny er innført. |
 | GG-026 | Ferdig – 4 dublettar fjerna | «Kettlebell Deadlift / Markløft», «Bent-over row», «Dumbbell row» og «Incline Dumbbell Press» vart fjerna etter verifisert null bruk i WOD, treningslogg, PR og favorittar. «Kettlebell markløft» er aktiv med eksisterande WOD-ID intakt; særskilde variantar er bevarte. Biblioteket inneheld 194 registrerte / 193 aktive øvingar. SQL i `20261123135500_gg026_deduplicate_exercise_names.sql`. |
 | GG-029 | Lukka – allereie handtert | `ExercisePRCenter.jsx` har `RECORD_CATEGORIES`, øvingskategoriar og manuell PR-registrering. |
 | GG-031 | Avslutta utan dataendring | Kravet om heilt blank oppstartsdatabase er ikkje grunnlag for nullstilling av ein app i drift. Ingen brukar-, WOD-, PT-, kaffe- eller historikkdata skal slettast utan eige uttrykkeleg oppdrag. |
-| GG-032 | Vurdert – ingen trygg, gratis generell retting | Supabase-varsling: 25 `SECURITY DEFINER`-funksjonar køyrbare for innlogga brukarar, vern mot kjende kompromitterte passord er deaktivert; ytingsråd: 31 ubruka indeksar og to grupper med overlappande permissive UPDATE-policyar. Dette er ikkje påviste sikkerheitsbrot. Lekkja-passord-vern krev Supabase Pro ifølgje leverandøren, og 0 kr-budsjettet tillet ikkje oppgradering. Funksjonsrettar, RLS og indeksar blir ikkje endra ukritisk. |
+| GG-032 | Vurdert – ingen trygg, gratis generell retting | Supabase-varsling: 25 `SECURITY DEFINER`-funksjonar køyrbare for innlogga brukarar, vern mot kjende kompromitterte passord er deaktivert; ytingsråd: 31 ubruka indeksar og to grupper med overlappande permissive UPDATE-policyar. I tillegg er alle 51 SECURITY DEFINER-funksjonane kontrollerte mot anonym rolle: 0 er køyrbare som `anon`. Dette er ikkje påviste sikkerheitsbrot. Lekkja-passord-vern krev Supabase Pro ifølgje leverandøren, og 0 kr-budsjettet tillet ikkje oppgradering. Funksjonsrettar, RLS og indeksar blir ikkje endra ukritisk. |
 
-## Gjenståande produksjonstrinn for GG-011
+## GG-011: godkjend utrulling
 
-1. Stadfest at den gjeldande webappen er oppdatert med `group-class:<id>`-navigasjon for vanlege medlem og at timen kan hentast ved direktelenkje.
-2. Publiser godkjend appversjon ved eksplisitt manuell workflow-dispatch (GG-030), ikkje ved automatisk branch-push.
-3. Køyr den **allereie kommitta** gruppetime-migreringa ein gong via godkjend databasemigrering, og kontroller at `public.publish_class_session_results(uuid)` har `group-class:`-lenkje.
-4. Test resultatvarsel frå ei faktisk avslutta gruppetime med ein vanleg medlemsbrukar.
-
-**Viktig:** Utfør aldri punkt 3 før punkt 1 og 2 er stadfesta.
+- Godkjend kode blei bygd og publisert til GitHub Pages i køyring `45183316622`.
+- Migreringa for `group-class:<id>` vart køyrd etter publisering og stadfesta aktiv ved SQL.
+- Den mellombelse engongspubliseringsvegen er fjerna. Vidare deploy krev manuell `workflow_dispatch` med `publish_preview=true`.
+- **Ikkje verifisert manuelt:** Medlem klikkar resultatvarsel frå ei reelt avslutta gruppetime og registrerer resultat. Dette må testast ved neste faktiske gruppetime.
 
 ## Supabase-råd (GG-032)
 
