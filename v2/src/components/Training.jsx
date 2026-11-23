@@ -798,6 +798,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const [query, setQuery] = useState('')
   const [scoreRounds, setScoreRounds] = useState(() => savedDraft?.scoreRounds || '')
   const [scoreReps, setScoreReps] = useState(() => savedDraft?.scoreReps || '')
+  const [blockScores,setBlockScores]=useState(()=>savedDraft?.blockScores||{})
   const [scoreTime, setScoreTime] = useState(() => savedDraft?.scoreTime || '')
   const [scoreLoad, setScoreLoad] = useState(() => savedDraft?.scoreLoad || '')
   const [scoreCalories, setScoreCalories] = useState(() => savedDraft?.scoreCalories || '')
@@ -813,11 +814,11 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     saveWorkoutDraft(memberId, {
       mode, manualEntry, sessionPrepared, source, wodLevel, classSessionId,
       launchLinkContext, title, workoutDate, manualWodIds, format, duration,
-      durationSeconds, note, items, scoreRounds, scoreReps, scoreTime, scoreLoad,
+      durationSeconds, note, items, scoreRounds, scoreReps, blockScores, scoreTime, scoreLoad,
       scoreCalories, scoreDistance, scoreUnit, saveToken,
       activeExerciseIndex, timerSnapshot,
     })
-  }, [memberId,mode,manualEntry,sessionPrepared,source,wodLevel,classSessionId,launchLinkContext,title,workoutDate,manualWodIds,format,duration,durationSeconds,note,items,scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance,scoreUnit,saveToken,activeExerciseIndex,timerSnapshot])
+  }, [memberId,mode,manualEntry,sessionPrepared,source,wodLevel,classSessionId,launchLinkContext,title,workoutDate,manualWodIds,format,duration,durationSeconds,note,items,scoreRounds,scoreReps,blockScores,scoreTime,scoreLoad,scoreCalories,scoreDistance,scoreUnit,saveToken,activeExerciseIndex,timerSnapshot])
   useEffect(()=>{onTimerSnapshot?.({...timerSnapshot,title,format,sessionOpen:mode==='active',sessionPrepared})},[timerSnapshot,title,format,mode,sessionPrepared,onTimerSnapshot])
   useEffect(()=>()=>onTimerSnapshot?.({
     elapsed:0,laps:[],roundsCompleted:0,phase:'Klar',running:false,
@@ -1000,14 +1001,16 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     setItems([])
     setActiveExerciseIndex(0)
     setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
-    setScoreRounds(''); setScoreReps(''); setScoreTime('')
+    setScoreRounds(''); setScoreReps(''); setBlockScores({}); setScoreTime('')
     const schema = wod?.timer_settings?.workout_schema
     const orderedSchemaItems = sortWodItems(getWodSchemaItems(schema))
+    const clearPlannedResults=forResult||wod?.format===COMPOSITE_FORMAT
     if(schema?.library_category==='warmup')orderedSchemaItems.sort((a,b)=>({specific_prep:0,movement_rehearsal:1}[a.warmup_phase||'specific_prep']??0)-({specific_prep:0,movement_rehearsal:1}[b.warmup_phase||'specific_prep']??0))
     if (orderedSchemaItems.length) {
       setItems(orderedSchemaItems.map(item => ({
         ...emptyExercise(),
         exercise_id: item.exercise_id || '',
+        block_id:item.block_id||null,
         exercise_name: item.exercise_name || '',
         minute_slot: item.minute_slot ?? '',
         warmup_phase: item.warmup_phase || 'specific_prep',
@@ -1019,7 +1022,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         reps_mode: item.reps_mode || 'fixed',
         prescription_levels: item.levels || null,
         side_mode: item.side_mode || null,
-        prescription_label: doseLabel(item,'rx'),
+        prescription_label: doseLabel(item,wodLevel),
         description: item.description || item.instructions || exercises.find(exercise=>exercise.id===item.exercise_id)?.description || '',
         rowValue:'',rowUnit:wodRowUnit(item,'rx'),workSeconds:'',
         equipment: item.equipment || exercises.find(exercise => exercise.id === item.exercise_id)?.equipment || '',
@@ -1038,17 +1041,19 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           sets: item.sets || [],
         }).usesLoad,
         sets: Array.isArray(item.sets) && item.sets.length ? item.sets.map(set => ({
-          reps: forResult ? '' : set.reps == null ? '' : String(set.reps),
-          load_kg: forResult ? '' : set.load_kg == null ? '' : String(set.load_kg),
-          time_text: forResult ? '' : set.tempo || '',
+          reps: clearPlannedResults ? '' : set.reps == null ? '' : String(set.reps),
+          load_kg: clearPlannedResults ? '' : set.load_kg == null ? '' : String(set.load_kg),
+          time_text: clearPlannedResults ? '' : set.tempo || '',
           time_seconds: '',
-          height_cm: forResult ? '' : set.height_cm == null ? String(item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? Object.values(item.levels||{}).find(level=>level?.heightCm!=null)?.heightCm ?? item.height_cm ?? '') : String(set.height_cm),
+          rir:'',
+          height_cm: clearPlannedResults ? '' : set.height_cm == null ? String(item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? Object.values(item.levels||{}).find(level=>level?.heightCm!=null)?.heightCm ?? item.height_cm ?? '') : String(set.height_cm),
         })) : [{
-          reps: forResult ? '' : item.reps == null ? '' : String(item.reps),
-          load_kg: forResult ? '' : item.load_kg == null ? '' : String(item.load_kg),
+          reps: clearPlannedResults ? '' : item.reps == null ? '' : String(item.reps),
+          load_kg: clearPlannedResults ? '' : item.load_kg == null ? '' : String(item.load_kg),
           time_text: '',
           time_seconds: '',
-          height_cm: forResult ? '' : String(item.height_cm ?? item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? Object.values(item.levels||{}).find(level=>level?.heightCm!=null)?.heightCm ?? ''),
+          rir:'',
+          height_cm: clearPlannedResults ? '' : String(item.height_cm ?? item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? Object.values(item.levels||{}).find(level=>level?.heightCm!=null)?.heightCm ?? ''),
         }],
       })))
     } else if (wod?.movements) {
