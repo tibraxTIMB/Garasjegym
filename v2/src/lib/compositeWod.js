@@ -23,6 +23,8 @@ export function compositeIntervalMinutes(format) {
 
 export function compositeBlockDuration(block, itemsCount=1) {
  const format=String(block?.format||'')
+ // Older saved block engines only carried duration_seconds, not minutes/round settings.
+ if(block?.minutes==null && Number(block?.duration_seconds)>0)return Math.round(Number(block.duration_seconds))
  if(COMPOSITE_INTERVAL_FORMATS.includes(format) || format==='Stasjonssirkel'){
   const work=Math.max(1,Math.floor(Number(block?.workSeconds) || (format==='Tabata'?20:45)))
   const rest=Math.max(0,Math.floor(Number(block?.restSeconds ?? (format==='Tabata'?10:15))))
