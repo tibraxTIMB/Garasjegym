@@ -128,7 +128,10 @@ export function deriveBenchmarkRecords(logs = [], benchmarkWodIds = []) {
      const rounds=Number(part.roundsCompleted),reps=Number(part.extra_reps||0)
      if(Number.isInteger(rounds)&&rounds>=0&&Number.isInteger(reps)&&reps>=0)
       score={rounds,reps,unit:'rundar + reps'}
-    } else if(['For Time','Chipper','Couplet','Triplet','Ladder','Death By'].includes(format)){
+    } else if(format==='Death By'){
+     const rounds=Number(part.death_by_completed_rounds??part.roundsCompleted)
+     if(Number.isInteger(rounds)&&rounds>=0)score={rounds,reps:0,unit:'fullførte rundar'}
+    } else if(['For Time','Chipper','Couplet','Triplet','Ladder'].includes(format)){
      if(!part.time_cap_reached&&positive(part.elapsed))
       score={value:positive(part.elapsed),unit:'sek',direction:'min'}
     }
@@ -140,7 +143,10 @@ export function deriveBenchmarkRecords(logs = [], benchmarkWodIds = []) {
   const format=String(log.format||'').toLowerCase()
   const key=`${log.source_wod_id}|${level}|${format}`
   let score=null
-  if(format.includes('amrap')){
+  if(format==='death by'){
+   if(log.score_rounds==null)continue
+   score={rounds:Math.max(0,Number(log.score_rounds)||0),reps:0,unit:'fullførte rundar'}
+  } else if(format.includes('amrap')){
    if(log.score_rounds==null)continue
    score={rounds:Number(log.score_rounds)||0,reps:Number(log.score_reps)||0,unit:'rundar + reps'}
   } else if(['for time','chipper'].includes(format)){
