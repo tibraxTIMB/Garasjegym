@@ -243,3 +243,8 @@
  .pt2-customer-quick-actions{grid-template-columns:minmax(0,1fr)}
  .pt2-customer-quick-actions button:first-child{grid-column:auto}
 }
+
+/* Small refresh action – stays below the selected customer's intake status. */
+.pt2-client-refresh{display:inline-flex;align-items:center;gap:6px;justify-self:start;padding:6px 0;border:0;background:transparent;color:var(--gg-shell-accent,#d99a33);font:inherit;font-size:12px;font-weight:750;cursor:pointer}
+.pt2-client-refresh:disabled{opacity:.5;cursor:wait}
+.pt2-client-refresh:focus-visible{outline:2px solid var(--gg-shell-accent,#d99a33);outline-offset:4px;border-radius:4px}
