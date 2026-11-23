@@ -30,10 +30,10 @@ export const SCORE_TYPES = Object.freeze([
 // The selected workout format, not a separate technical dropdown, determines it.
 export function scoreForWodFormat(format, combinationMode = 'For Time') {
   const chosen = String(format || '').trim();
-  if (chosen === 'AMRAP' || (['Couplet', 'Triplet'].includes(chosen) && combinationMode === 'AMRAP')) {
+  if (chosen === 'AMRAP' || chosen === 'Death By' || (['Couplet', 'Triplet'].includes(chosen) && combinationMode === 'AMRAP')) {
     return { type: 'rounds_reps', fields: ['rounds_reps'] };
   }
-  if (['For Time', 'Chipper', 'Ladder', 'Death By'].includes(chosen)
+  if (['For Time', 'Chipper', 'Ladder'].includes(chosen)
     || (['Couplet', 'Triplet'].includes(chosen) && combinationMode === 'For Time')) {
     return { type: 'time', fields: ['time'] };
   }
