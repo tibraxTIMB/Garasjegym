@@ -54,7 +54,7 @@ const sections = [
   { id: 'oversikt', label: 'Oversikt', icon: LayoutDashboard, note: 'Dashboard og treningsstatus' },
   { id: 'trening', label: 'Økt', icon: PlayCircle, note: 'Start ei økt med timer, logging og resultat' },
   { id: 'timeplan', label: 'Timeplan og booking', icon: CalendarDays, note: 'Gruppetimar og påmelding' },
-  { id: 'pt-studio', label: 'PT Studio', icon: UserRound, note: 'PT-kundar, progresjon og gruppetimeadministrasjon' },
+  { id: 'pt-studio', label: 'PT-kundar', icon: UserRound, note: 'Kundeoppfølging, WOD-ar, timar og dialog' },
   { id: 'wod', label: 'WOD', icon: Dumbbell, note: 'WOD-bibliotek og programmering' },
   { id: 'fellesskap', label: 'Fellesskap', icon: Users, note: 'Garasjeprat' },
   { id: 'kaffi', label: 'Kaffebar', icon: Coffee, note: 'Meny og bestillingar' },
