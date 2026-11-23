@@ -130,15 +130,29 @@ test('PT client follow-up avoids empty template dead ends and refreshes onboardi
 })
 
 
-test('PT client work opens in a single tap from home or the owner drift area', () => {
+test('PT clients are directly available from Drift without cluttering Home', () => {
  const app=source('../src/App.jsx')
  const overview=source('../src/components/Overview.jsx')
  const admin=source('../src/components/Admin.jsx')
  assert.match(app,/function openPTClientWorkspace\(\)/)
  assert.match(app,/onOpenPTClients=\{openPTClientWorkspace\}/)
- assert.match(overview,/PT Studio – arbeid med kundar/)
+ assert.doesNotMatch(overview,/overview-pt-entry/)
+ assert.doesNotMatch(overview,/PT Studio – arbeid med kundar/)
+ assert.match(admin,/PT Studio – arbeid med kundar/)
  assert.match(admin,/PT-register og førespurnader/)
  assert.match(admin,/onOpenPTClients/)
+})
+test('four compact Drift statistics open the existing corresponding screens', () => {
+ const app=source('../src/App.jsx')
+ const admin=source('../src/components/Admin.jsx')
+ const css=source('../src/components/admin-advanced.css')
+ assert.match(admin,/admin-stats-compact/)
+ assert.match(admin,/setMemberFilter\('all'\);setAdminTab\('medlemmer'\)/)
+ assert.match(admin,/setMemberFilter\('active'\);setAdminTab\('medlemmer'\)/)
+ assert.match(admin,/onClick=\{onOpenWodLibrary\}/)
+ assert.match(admin,/onClick=\{\(\)=>setAdminTab\('ovingar'\)\}/)
+ assert.match(app,/onOpenWodLibrary=\{\(\)=>\{setFocusWodId\(null\);navigateTo\('wod'\)\}\}/)
+ assert.match(css,/admin-stats-compact/)
 })
 test('PT sees the exact onboarding questions and a named recipient before sending', () => {
  assert.match(studio,/INTAKE_PREVIEW_QUESTIONS/)
