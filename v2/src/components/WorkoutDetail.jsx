@@ -233,6 +233,13 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
         {[['reps','Reps'],['load_kg','Kg'],['height_cm','Cm'],['time_seconds','Sek']].map(([field,label])=><label key={field}>{label}<input aria-label={label+' for sett '+set.set_number+' i '+exercise.exercise_name} type="number" min="0" step="any" value={setDrafts[set.id]?.[field]??''} onChange={e=>setField(set.id,field,e.target.value)}/></label>)}
         <label className="workout-detail-edit-time">Tidsnotat<input aria-label={'Tidsnotat for sett '+set.set_number} value={setDrafts[set.id]?.time_text??''} onChange={e=>setField(set.id,'time_text',e.target.value)}/></label>
        </div>)}
+       {(addedSets[exercise.id]||[]).map(row=><div className="workout-detail-edit-set" key={row.localId}>
+        <span>Sett {row.set_number} · nytt</span>
+        {[['reps','Reps'],['load_kg','Kg'],['height_cm','Cm'],['time_seconds','Sek']].map(([field,label])=><label key={field}>{label}<input aria-label={label+' for nytt sett '+row.set_number+' i '+exercise.exercise_name} type="number" min="0" step="any" value={row[field]??''} onChange={e=>updateAdded(exercise.id,row.localId,field,e.target.value)}/></label>)}
+        <label className="workout-detail-edit-time">Tidsnotat<input value={row.time_text??''} onChange={e=>updateAdded(exercise.id,row.localId,'time_text',e.target.value)}/></label>
+        <button type="button" className="secondary-button" onClick={()=>setAddedSets(prev=>({...prev,[exercise.id]:(prev[exercise.id]||[]).filter(x=>x.localId!==row.localId)}))}>Fjern nytt sett</button>
+       </div>)}
+       <button type="button" className="secondary-button" onClick={()=>addSet(exercise)}><Dumbbell size={15}/> Legg til sett</button>
       </article>)}
      </div></>}
     </form>:<>
