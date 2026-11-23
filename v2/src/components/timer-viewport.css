@@ -481,3 +481,20 @@
 .gg-composite-break p{max-width:46ch;font-size:15px;line-height:1.45}
 .gg-composite-break button{min-height:50px}
 @media(max-width:750px){.gg-composite-training:has(.gg-live-timer)>.gg-composite-progress,.gg-composite-training:has(.gg-live-timer)>.gg-composite-progress-foot{display:none}.gg-composite-break{min-height:calc(100dvh - 110px)}}
+
+
+/* Post-workout review stays compact across phone and tablet widths. */
+.gg-composite-result-review{display:grid;gap:9px;padding:12px;border-radius:11px;background:rgba(68,92,78,.14);border:1px solid #566a5a}
+.gg-composite-result-review>h4{margin:0;font-size:16px}
+.gg-composite-result-review>p{margin:0;font-size:12px;opacity:.85}
+.gg-composite-result-review>article{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);align-items:end;gap:12px;padding:10px;border:1px solid #56645c;border-radius:9px;min-width:0}
+.gg-composite-result-review>article>div:first-child{display:grid;gap:3px}
+.gg-composite-result-review strong{font-size:13px}
+.gg-composite-result-review small{font-size:12px}
+.gg-composite-result-review label{display:grid;gap:4px;font-size:12px;min-width:0}
+.gg-composite-score-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.gg-composite-result-review input{min-width:0;width:100%;min-height:44px;border:1px solid #68716b;border-radius:7px;padding:8px;background:#292f2b;color:inherit}
+.gg-composite-history{display:grid;gap:5px;margin:9px 0;padding:8px 10px;border-radius:9px;background:rgba(70,100,84,.12);border:1px solid #59695c}
+.gg-composite-history>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;font-size:12px}
+.gg-composite-history span{opacity:.85}
+@media(max-width:530px){.gg-composite-result-review>article{grid-template-columns:minmax(0,1fr)}.gg-composite-history>div{grid-template-columns:minmax(0,1fr)}}
