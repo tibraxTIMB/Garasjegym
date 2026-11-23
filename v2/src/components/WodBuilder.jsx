@@ -717,7 +717,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
           
            {isTimed&&<label>Minutt / oppgåve<input value={ex.minuteSlot||''} onChange={e=>updateItem(ex.key,{minuteSlot:e.target.value})} placeholder="T.d. 1, 2 eller 3"/></label>}
           {doseFieldsFor(ex).tempo&&<label>Tempo<input type="text" value={dose.tempo||''} onChange={e=>update({tempo:e.target.value})} placeholder="T.d. 3–1–1–0"/></label>}
-           {format==='Superset'&&<label>Supersett-gruppe<input value={ex.group||'A'} onChange={e=>updateItem(ex.key,{group:e.target.value.toUpperCase().slice(0,2)})}/></label>}{(format==='Intervall'||format==='Row Intervals')&&<label>Pause etter øving · sekund<input type="number" min="0" value={ex.restSeconds||''} onChange={e=>updateItem(ex.key,{restSeconds:e.target.value})}/></label>}
+           {(format==='Superset'||(isComposite&&compositeBlocks.find(block=>block.id===ex.blockId)?.format==='Superset'))&&<label>Supersett-gruppe<input value={ex.group||'A'} onChange={e=>updateItem(ex.key,{group:e.target.value.toUpperCase().slice(0,2)})}/></label>}{(format==='Intervall'||format==='Row Intervals')&&<label>Pause etter øving · sekund<input type="number" min="0" value={ex.restSeconds||''} onChange={e=>updateItem(ex.key,{restSeconds:e.target.value})}/></label>}
           <label>Alternativ øving / variant<input type="text" value={dose.variant||''} onChange={e=>update({variant:e.target.value})} placeholder="Valfri skalering av rørsla"/></label>
           <label className="wizard-dose-instruction">Instruksjon (valfritt)<textarea rows="2" value={dose.instruction||''} onChange={e=>update({instruction:e.target.value})} placeholder="Teknikk, krav og gjennomføring …"/></label>
          </div>
