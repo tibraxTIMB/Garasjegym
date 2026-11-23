@@ -52,7 +52,9 @@ def record_steps(page, video):
     elif name == 'pt-og-gruppetime':
         show_caption(page, steps[0])
         for step in steps[1:3]: show_caption(page, step, 2.1)
-        click(page, 'Ta kontakt med PT')
+        # The PT demo already opens the real enquiry view. Use its current
+        # action to scroll to the form rather than the removed homepage CTA.
+        click(page, 'Spør om PT-hjelp')
         show_caption(page, steps[3])
         click(page, 'Kva ønskjer du hjelp med?')
         page.get_by_role('option', name='Eg er berre nysgjerrig').click()

@@ -82,6 +82,16 @@ test('recorded help videos contain local Norwegian narration timed to screen cap
   assert.match(validator, /MP4 manglar opplesing/)
 })
 
+test('PT walkthrough targets the current action in the real enquiry demo', () => {
+  const recorder = read('./record-real-help-videos.py')
+  const demo = read('../src/videoDemoMain.jsx')
+  const inquiry = read('../src/components/PTInquiry.jsx')
+  assert.match(demo, /screen==='pt'&&<section/)
+  assert.match(inquiry, /Spør om PT-hjelp/)
+  assert.match(recorder, /click\(page, 'Spør om PT-hjelp'\)/)
+  assert.doesNotMatch(recorder, /click\(page, 'Ta kontakt med PT'\)/)
+})
+
 test('glossary categories account for every word exactly once', () => {
   const all = HELP_GLOSSARY.map(([term]) => term)
   const grouped = HELP_GLOSSARY_GROUPS.flatMap(group => group.terms)

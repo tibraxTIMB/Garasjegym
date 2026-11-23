@@ -114,7 +114,8 @@ test('Spotify options open above the live timer dock and profile links to music 
 test('the workout button returns to the live session instead of replacing its draft', () => {
   const app = source('../src/App.jsx')
   const timer = source('../src/components/Training.jsx')
-  assert.match(app, /function handleSectionNavigate\(id\)\{setHelpTopic\(null\);if\(id===active\)return/)
+  assert.match(app, /function handleSectionNavigate\(id\)\{setHelpTopic\(null\);if\(id===active\)\{/)
+  assert.match(app, /if\(id==='admin'&&profile\.role==='admin'\)\{setAdminInitialTab\('drift'\);setAdminFocusToken\(value=>value\+1\)\}return\}/)
   assert.doesNotMatch(app, /workoutReselectToken/)
   assert.match(timer, /function returnToWorkoutTypes\(\)/)
   assert.match(timer, /window\.confirm\('Byta økttype\?/)
@@ -161,7 +162,8 @@ test('member dashboard shows rank progress compactly and promotes the assigned P
   assert.match(overview, /overview-rank-progressbar/)
   assert.match(overview, /1 økt → ★/)
   assert.match(overview, /<details className="engine-section overview-ranking">/)
-  assert.match(overview, /<Notifications compact hideWhenEmpty context="oversikt"[^>]*onNavigate=\{onOpenNotification\}[^>]*\/>/)
+  assert.doesNotMatch(overview, /<Notifications\b/, 'Oversikta skal ikkje ha eit ekstra varslingspanel')
+  assert.match(app, /<Notifications isAdmin=\{profile\.role==='admin'\} staff=\{isStaff\(profile\)\} onNavigate=\{handleNotificationNavigate\} \/>/)
 })
 
 test('the central ØKT button is orange and owner badges are tied to a user ID', () => {
