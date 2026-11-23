@@ -11,7 +11,7 @@ import { formatParticipation, normalizeWodEngine, parseIntervalNotation } from '
 import PerformanceCenter from './PerformanceCenter.jsx'
 import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration, summarizeLapSplits } from '../lib/timerClock.js'
 import { getExerciseMeasurementFlags, isErgExercise } from '../lib/exerciseMeasurements.js'
-import {COMPOSITE_FORMAT, compositeBlockForTimer, compositeTimerConfig, compositeTransitionSeconds} from '../lib/compositeWod.js'
+import {COMPOSITE_FORMAT, compositeBlockForTimer, compositeTimerConfig, compositeTransitionSeconds, compositeScoredBlocks} from '../lib/compositeWod.js'
 import { exerciseRecordType } from '../lib/prMetrics.js'
 import { getWodSideLabel, isSideSelectableExercise, WOD_SIDE_OPTIONS } from '../lib/wodSides.js'
 import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
@@ -1178,26 +1178,34 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           if(String(set.reps??'').trim()!==''&&!Number.isInteger(Number(set.reps)))throw new Error('Repetisjonar for «'+item.exercise_name+'» må vera eit heiltal.')
         }
       }
-      const hasRecordedScore=[scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||(isAmrapScore&&Number(timerSnapshot.roundsCompleted)>0)||items.some(item=>Number(item.rowValue)>0||item.sets?.some(set=>[set.reps,set.load_kg,set.height_cm,set.time_text,set.time_seconds].some(value=>String(value??'').trim()!=='')))
+      const scoredBlocks=compositeScoredBlocks(timerSnapshot.block_summary||[],blockScores)
+      for(const block of scoredBlocks){
+       if(block.format==='AMRAP'&&(!Number.isInteger(block.roundsCompleted)||block.roundsCompleted<0||!Number.isInteger(block.extra_reps)||block.extra_reps<0))throw new Error('Registrer gyldige rundar og ekstra repetisjonar for '+block.title)
+       if(!Number.isFinite(Number(block.elapsed))||Number(block.elapsed)<0)throw new Error('Ugyldig tid i '+block.title)
+      }
+      const finalAmrap=scoredBlocks.filter(part=>part.format==='AMRAP').slice(-1)[0]
+      const effectiveScoreRounds=format===COMPOSITE_FORMAT&&finalAmrap?String(finalAmrap.roundsCompleted):scoreRounds
+      const effectiveScoreReps=format===COMPOSITE_FORMAT&&finalAmrap?String(finalAmrap.extra_reps):scoreReps
+      const hasRecordedScore=[effectiveScoreRounds,effectiveScoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||(isAmrapScore&&Number(timerSnapshot.roundsCompleted)>0)||items.some(item=>Number(item.rowValue)>0||item.sets?.some(set=>[set.reps,set.load_kg,set.height_cm,set.time_text,set.time_seconds].some(value=>String(value??'').trim()!=='')))
       if(manualEntry&&!hasRecordedScore)throw new Error('Registrer minst eitt faktisk resultat – til dømes reps, kg, høgd, tid, distanse eller kaloriar – før du lagrar etterregistreringa.')
       if(classSessionId&&source?.category!=='warmup'&&!hasRecordedScore)throw new Error('Hovud-WOD må ha minst eitt registrert resultat før du kan lagra.')
       const resultData = {
-        version:3,format,manual_entry:manualEntry,prescription_level:wodLevel,block_results:timerSnapshot.block_results||null,block_summary:timerSnapshot.block_summary||null,wod_engine:source?.timer_settings?.workout_schema?.wod_engine||null,wod_ids:source?.id?[source.id]:manualWodIds,wod_names:(source?.id?[source.id]:manualWodIds).map(id=>wods.find(w=>w.id===id)?.name).filter(Boolean),elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':'completed',completed:true,time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
-        completed_rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):null,
-        extra_reps:isAmrapScore?(scoreReps===''?0:Number(scoreReps)):null,
+        version:3,format,manual_entry:manualEntry,prescription_level:wodLevel,block_results:timerSnapshot.block_results||null,block_summary:scoredBlocks.length?scoredBlocks:null,composite_breaks:timerSnapshot.composite_breaks||[],wod_engine:source?.timer_settings?.workout_schema?.wod_engine||null,wod_ids:source?.id?[source.id]:manualWodIds,wod_names:(source?.id?[source.id]:manualWodIds).map(id=>wods.find(w=>w.id===id)?.name).filter(Boolean),elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':'completed',completed:true,time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
+        completed_rounds:isAmrapScore?(effectiveScoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(effectiveScoreRounds)):null,
+        extra_reps:isAmrapScore?(effectiveScoreReps===''?0:Number(effectiveScoreReps)):null,
         split_seconds:Array.isArray(timerSnapshot.laps)?timerSnapshot.laps:[],
         score_time_seconds:parsedTime,
         load_kg:scoreLoad===''?null:Number(scoreLoad),
         calories:scoreCalories===''?null:Number(scoreCalories),
         distance:scoreDistance===''?null:Number(scoreDistance),distance_unit:scoreUnit,
-        exercise_results:items.map(item=>({exercise_name:item.exercise_name,side_mode:item.side_mode||null,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps.map(step=>({name:step.name,reps:Number(step.reps)||1})):[],row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm)}))}))
+        exercise_results:items.map(item=>({block_id:item.block_id||null,exercise_name:item.exercise_name,side_mode:item.side_mode||null,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps.map(step=>({name:step.name,reps:Number(step.reps)||1})):[],row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm),rir:s.rir===''||s.rir==null?null:Number(s.rir)}))}))
       }
       const payload = {
         member_id:user.id,save_token:saveToken,title:title.trim(),source_wod_id:source?.id||manualWodIds[0]||null,
         class_live_session_id:classSessionId||null,workout_date:workoutDate||localDateISO(),format,
-        rounds:Math.max(1,isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):Number(scoreRounds)||1),
-        score_rounds:isAmrapScore?(scoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(scoreRounds)):scoreRounds===''?null:Number(scoreRounds),
-        score_reps:scoreReps===''?(isAmrapScore?0:null):Number(scoreReps),
+        rounds:Math.max(1,isAmrapScore?(effectiveScoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(effectiveScoreRounds)):Number(effectiveScoreRounds)||1),
+        score_rounds:isAmrapScore?(effectiveScoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(effectiveScoreRounds)):effectiveScoreRounds===''?null:Number(effectiveScoreRounds),
+        score_reps:effectiveScoreReps===''?(isAmrapScore?0:null):Number(effectiveScoreReps),
         score_time_seconds:parsedTime,score_load_kg:scoreLoad===''?null:Number(scoreLoad),
         score_calories:scoreCalories===''?null:Number(scoreCalories),
         score_distance:scoreDistance===''?null:Number(scoreDistance),score_unit:scoreDistance===''?null:scoreUnit,
