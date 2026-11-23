@@ -18,6 +18,12 @@ test('Tabata and stations announce the nearest work/rest phase boundary',()=>{
   assert.equal(secondsToTimerBoundary({format:'Tabata',elapsed:119,remainingTotal:1,phaseRemaining:10,isTimedInterval:true}),1)
 })
 
+test('Death By warns before the configured interval deadline, not a Ladder minute',()=>{
+ assert.equal(secondsToTimerBoundary({format:'Death By',elapsed:57,remainingTotal:1000,isDeathBy:true}),3)
+ assert.equal(secondsToTimerBoundary({format:'Death By',elapsed:72,remainingTotal:1000,isDeathBy:true,deathByIntervalSeconds:75}),3)
+ assert.equal(secondsToTimerBoundary({format:'Ladder',elapsed:57,remainingTotal:1000}),null)
+})
+
 test('EMOM warns for work/rest and final end; finish overrides transition',()=>{
   assert.equal(secondsToTimerBoundary({format:'E1MOM',elapsed:42,remainingTotal:318,emomPhaseRemaining:3,isEMOM:true}),3)
   assert.equal(secondsToTimerBoundary({format:'E1MOM',elapsed:358,remainingTotal:2,emomPhaseRemaining:62,isEMOM:true}),2)
