@@ -98,3 +98,17 @@ test('AMRAP and countdown show zero and FERDIG after their time cap', () => {
   assert.equal(state.remainingTotal,0)
   assert.equal(state.isComplete,true)
 })
+
+
+test('group class result action keeps class context and bypasses timer for completed workouts', async () => {
+  const {readFileSync}=await import('node:fs')
+  const training=readFileSync(new URL('../src/components/Training.jsx',import.meta.url),'utf8')
+  const app=readFileSync(new URL('../src/App.jsx',import.meta.url),'utf8')
+  const booking=readFileSync(new URL('../src/components/Booking.jsx',import.meta.url),'utf8')
+  assert.match(training,/forResult:launchClassResult/)
+  assert.match(training,/setManualEntry\(forResult\)/)
+  assert.match(training,/reps: forResult \? ''/)
+  assert.match(app,/setLaunchClassResult\(true\)/)
+  assert.match(app,/else\{setScheduleTab\('booking'\);navigateTo\('timeplan'\)\}/)
+  assert.match(booking,/focusedClassMissing/)
+})

@@ -94,7 +94,7 @@ export default function ExercisePRCenter({ history = [], legacyRecords = [], onO
   }
 
   return <section className="exercise-pr-center">
-    <header className="exercise-pr-intro"><span className="section-kicker">PERSONLEGE REKORDAR</span><div className="exercise-pr-title-row"><h3><Trophy size={23} /> PR-senter</h3><button type="button" className="primary-button exercise-pr-add" onClick={() => startManual(selected)}><Plus size={17} /> Registrer PR</button></div><p>Vel ei øving for rekordar og historikk. Du kan òg leggja inn ein PR manuelt.</p></header>
+    <header className="exercise-pr-intro"><span className="section-kicker">PERSONLEGE REKORDAR</span><div className="exercise-pr-title-row"><h3><Trophy size={23} /> PR-senter</h3><button type="button" className="primary-button exercise-pr-add" onClick={() => startManual(selected)}><Plus size={17} /> Registrer PR</button></div><p>Vel ei øving for rekordar og historikk. «Registrer PR» lagrar éin rekord, ikkje ei heil treningsøkt. Bruk «Etterregistrer» i ØKT for ei gjennomført økt.</p></header>
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16} /> {notice}</div>}
     {saveError && !editing && <div className="auth-error" role="alert">{saveError}</div>}
     <div className="exercise-pr-tabs" role="group" aria-label="Vel rekordtype"><button type="button" className={category === 'exercise' ? 'active' : ''} onClick={() => setCategory('exercise')}><Dumbbell size={17} /> Øvingar</button><button type="button" className={category === 'benchmark' ? 'active' : ''} onClick={() => setCategory('benchmark')}><Trophy size={17} /> Benchmark-WOD <span>{benchmarks.length}</span></button></div>

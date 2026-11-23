@@ -89,3 +89,11 @@ test('PT coach chooses customer explicitly and intake is reachable', () => {
   assert.match(management, /async function declineRequest\(row\)/)
   assert.match(management, /Førespurnaden er avslått og avslutta/)
 })
+
+
+test('first PT enquiries have an explicit decline and program follow-up', () => {
+  assert.match(management,/async function declineRequest\(row\)/)
+  assert.match(management,/Avslå førespurnad/)
+  assert.match(management,/onOpenClient\(r\.member_id,'plan'\)/)
+  assert.match(management,/p_service_request_id:requests\.find/)
+})
