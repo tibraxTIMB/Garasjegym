@@ -168,7 +168,7 @@ export default function Admin({profile,onOpenWodImport,onOpenPTAdmin=()=>{},onOp
   </div>}
   {isAdmin&&adminTab==='drift'&&<section className="engine-section admin-drift-hub"><div className="training-heading"><div><span className="section-kicker">GARASJEGYM · DAGLEG DRIFT</span><h4>Drift</h4><p>Vel oppgåva du skal gjera. Verktøy og vedlikehald ligg eitt nivå under.</p></div></div>
     <div className="admin-drift-actions">
-      <button type="button" onClick={onOpenPTClients}><span>PT Studio – arbeid med kundar</span><small>Vel kunde, send kartlegging, sjå svar og lag treningsplan</small><b>Opna PT Studio →</b></button>
+      <button type="button" onClick={onOpenPTClients}><span>PT-kundar – dagleg oppfølging</span><small>Vel kunde, sjå tildelte WOD-ar, før PT-notat og planlegg vidare</small><b>Opna PT-kundar →</b></button>
       <button type="button" onClick={onOpenPTAdmin}><span>PT-register og førespurnader</span><small>Administrer nye førespurnader, trenarar og tildelingar</small><b>Opna PT-administrasjon →</b></button>
       <button type="button" onClick={()=>setAdminTab('medlemmer')}><span>Medlemmer og tilgang</span><small>Godkjen søknader og administrer brukarar</small><b>Opna medlemsregister →</b></button>
       <button type="button" onClick={()=>setAdminTab('kaffi')}><span>Kaffi og bestillingar</span><small>Handter bestillingar og kaffibaren</small><b>Opna kaffibaren →</b></button>
