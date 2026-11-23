@@ -9,7 +9,7 @@ export const COMPOSITE_BLOCK_FORMATS = [
 ]
 export const COMPOSITE_INTERVAL_FORMATS = ['Intervall','Tabata','Row Intervals']
 export const COMPOSITE_STRENGTH_FORMATS = ['Strength','Superset','Complex']
-export const COMPOSITE_FOR_TIME_FORMATS = ['For Time','Chipper','Couplet','Triplet','Ladder','Death By']
+export const COMPOSITE_FOR_TIME_FORMATS = ['For Time','Chipper','Couplet','Triplet','Ladder']
 
 export const defaultCompositeBlocks = () => [
  {id:'a',title:'Del A',format:'E3MOM',minutes:9,transitionMode:'manual',transitionSeconds:0},
@@ -63,6 +63,10 @@ export function validateCompositeBlocks(blocks,items=[]) {
   if(block.format==='Couplet'&&exercises.length!==2)return title+': Couplet krev to øvingar.'
   if(block.format==='Triplet'&&exercises.length!==3)return title+': Triplet krev tre øvingar.'
   if(block.format==='Stasjonssirkel'&&(exercises.length<2||exercises.length>8))return title+': stasjonssirkel krev 2–8 stasjonar.'
+  if(block.format==='Death By'){
+   const period=Number(block.deathByIntervalSeconds??60),start=Number(block.ladderStart??1),step=Number(block.ladderStep??1)
+   if(!Number.isInteger(period)||period<5||period>3600||!Number.isInteger(start)||start<1||!Number.isInteger(step)||step<1)return title+': Death By krev intervall på 5–3600 sekund, startreps og auking over null.'
+  }
   if(COMPOSITE_INTERVAL_FORMATS.includes(block.format)&&exercises.length>8)return title+': intervall støttar høgst åtte øvingar.'
   if((COMPOSITE_INTERVAL_FORMATS.includes(block.format)||block.format==='Stasjonssirkel')&&items.some(item=>(item.blockId||item.block_id)===block.id&&item.is_rest))return title+': bruk feltet for arbeid/kvile, ikkje Pause som ekstra stasjon.'
   if(COMPOSITE_INTERVAL_FORMATS.includes(block.format)||block.format==='Stasjonssirkel'){
@@ -100,6 +104,7 @@ export function compositeTimerConfig(block) {
  const every=compositeIntervalMinutes(current.format)
  const interval=COMPOSITE_INTERVAL_FORMATS.includes(current.format)
  const station=current.format==='Stasjonssirkel'
+ const deathBy=current.format==='Death By'
  const items=current.items||[]
  const rounds=Number(current.rounds)||(current.format==='Tabata'?8:3)
  const work=Number(current.workSeconds)||(current.format==='Tabata'?20:45)
@@ -109,7 +114,7 @@ export function compositeTimerConfig(block) {
   rotation:'all_rotate_together',
   stations:items.map((item,i)=>({...item,station_number:i+1})),
  }:null
- const timedCap=current.format==='AMRAP'||every!==null||(['Couplet','Triplet'].includes(current.format)?current.combinationMode!=='Open':COMPOSITE_FOR_TIME_FORMATS.includes(current.format))
+ const timedCap=current.format==='AMRAP'||deathBy||every!==null||(['Couplet','Triplet'].includes(current.format)?current.combinationMode!=='Open':COMPOSITE_FOR_TIME_FORMATS.includes(current.format))
  const schema={
   format:current.format,
   duration_seconds:current.duration_seconds,
@@ -120,7 +125,7 @@ export function compositeTimerConfig(block) {
   rounds:interval||station?rounds:null,
   interval_exercise_count:interval?items.length:null,
   combination_mode:['Couplet','Triplet'].includes(current.format)?(current.combinationMode||'For Time'):null,
-  ladder:['Ladder','Death By'].includes(current.format)?{type:current.format,start:Number(current.ladderStart)||2,step:Number(current.ladderStep)||2,direction:current.ladderDirection==='down'?'down':'up'}:null,
+  ladder:['Ladder','Death By'].includes(current.format)?{type:current.format,start:Number(current.ladderStart)||(deathBy?1:2),step:Number(current.ladderStep)||(deathBy?1:2),direction:deathBy?'up':current.ladderDirection==='down'?'down':'up',...(deathBy?{interval_seconds:Number(current.deathByIntervalSeconds)||60}:{})}:null,
   items,
  }
  return {
@@ -155,7 +160,7 @@ export function compositeScoredBlocks(blockSummary=[],overrides={}) {
    next.roundsCompleted=changed.rounds===''||changed.rounds==null ? Number(block.roundsCompleted)||0 : Number(changed.rounds)
    next.extra_reps=changed.extraReps===''||changed.extraReps==null ? Number(block.extra_reps)||0 : Number(changed.extraReps)
   }
-  if(['For Time','Chipper','Couplet','Triplet','Ladder','Death By'].includes(format)){
+  if(['For Time','Chipper','Couplet','Triplet','Ladder'].includes(format)){
    if(String(changed.time||'').trim())next.elapsed=parseCompositeScoreTime(changed.time)
   }
   return next
