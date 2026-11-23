@@ -675,7 +675,7 @@ function CompositeTimer({schema,exerciseList=[],prescriptionLevel='rx',wodName='
  const [autoStartIndex,setAutoStartIndex]=useState(null)
  const [breakHistory,setBreakHistory]=useState(()=>resumeState?.composite_breaks||[])
  const block=blocks[active]
- const reportBlock=useCallback(snapshot=>setResults(old=>({...old,[active]:snapshot})),[active])
+ const reportBlock=useCallback(snapshot=>setResults(old=>{const prior=old[active];if(prior?.phase==='FULLFØRT'&&!['FULLFØRT','FERDIG','TIDSGRENSE'].includes(snapshot.phase))return old;return {...old,[active]:snapshot}}),[active])
  const advance=useCallback((autostart=false)=>{
   setInterlude(null)
   setAutoStartIndex(autostart?active+1:null)
@@ -716,7 +716,7 @@ function CompositeTimer({schema,exerciseList=[],prescriptionLevel='rx',wodName='
  },[interlude,advance])
  useEffect(()=>{
   const details=blocks.map((part,index)=>({
-   index,id:part.id,title:part.title,format:part.format,
+   index,id:part.id,title:part.title,format:part.format,combination_mode:part.combinationMode||null,
    duration_seconds:part.duration_seconds,
    elapsed:Number(results[index]?.elapsed)||0,
    roundsCompleted:Number(results[index]?.roundsCompleted)||0,
