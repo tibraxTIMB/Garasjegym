@@ -20,7 +20,7 @@ export function prepareLibraryWodPart(wod,oldBlock){
   source_wod_snapshot:{
    id:wod.id,name:wod.name,format:wod.format,library_category:schema.library_category||wod.category||'standard',
    version:schema.version??null,duration_seconds:seconds,
-   items:items.map(item=>({...item})),
+   items:items.map(item=>JSON.parse(JSON.stringify(item))),
    interval:schema.interval?{...schema.interval}:null,
    rounds:schema.rounds??null,ladder:schema.ladder?{...schema.ladder}:null
   },
