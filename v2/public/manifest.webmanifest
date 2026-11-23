@@ -2,30 +2,37 @@
   "id": "/Garasjegym/",
   "name": "GarasjeGym",
   "short_name": "GarasjeGym",
-  "description": "GarasjeGym – STURMKOPF FEUER 1.1 · trening, WOD, PT og fellesskap",
+  "description": "GarasjeGym – STURMKOPF FEUER 1.1 · WOD, PT og gruppetrening",
   "start_url": "/Garasjegym/",
   "scope": "/Garasjegym/",
   "display": "standalone",
-  "display_override": ["standalone", "fullscreen"],
+  "display_override": [
+    "standalone",
+    "fullscreen"
+  ],
   "orientation": "any",
   "background_color": "#101416",
   "theme_color": "#101416",
-  "categories": ["fitness", "health", "sports"],
+  "categories": [
+    "fitness",
+    "health",
+    "sports"
+  ],
   "icons": [
     {
-      "src": "/Garasjegym/garasjegym-49-192.png",
+      "src": "/Garasjegym/garasjegym-49-192.png?v=feuer-20261123",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/Garasjegym/garasjegym-49-512.png",
+      "src": "/Garasjegym/garasjegym-49-512.png?v=feuer-20261123",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/Garasjegym/garasjegym-49-maskable-512.png",
+      "src": "/Garasjegym/garasjegym-49-maskable-512.png?v=feuer-20261123",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
