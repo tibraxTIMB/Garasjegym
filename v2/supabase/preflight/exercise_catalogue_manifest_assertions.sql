@@ -3,7 +3,7 @@
 -- Source of truth: the original 135-name reconciled manifest, extended by
 -- migration 20261121223000_expand_trx_olympic_core_library.sql (43 additions)
 -- and 20261122010000_expand_burpees_and_accessory_strength.sql (20 additions).
--- Exact acceptance: 198 distinct normalized system names; two old names are inactive.
+-- Exact acceptance: 194 distinct normalized system names; one old name is inactive after GG-026.
 DO $$
 DECLARE
   expanded_names text[] := ARRAY[
@@ -48,7 +48,6 @@ BEGIN
     ('Barbell Row'),
     ('Bench Press'),
     ('Bench press – manualar, flat'),
-    ('Bent-over row'),
     ('Biceps Curl'),
     ('Bike Erg'),
     ('Bird dog'),
@@ -80,7 +79,6 @@ BEGIN
     ('Dumbbell Rear Delt Fly'),
     ('Dumbbell Reverse Lunge'),
     ('Dumbbell Romanian Deadlift'),
-    ('Dumbbell row'),
     ('Dumbbell Shoulder Press'),
     ('Dumbbell Snatch'),
     ('Dumbbell Step-up'),
@@ -97,13 +95,11 @@ BEGIN
     ('Hollow hold'),
     ('Incline bench press – manualar'),
     ('Incline bench press – stong'),
-    ('Incline Dumbbell Press'),
     ('Jogging'),
     ('Jump rope'),
     ('Kettlebell Clean'),
     ('Kettlebell Clean and Press'),
     ('Kettlebell Dead-stop Swing'),
-    ('Kettlebell Deadlift / Markløft'),
     ('Kettlebell Front Rack Squat'),
     ('Kettlebell High Pull'),
     ('Kettlebell markløft'),
@@ -190,7 +186,6 @@ BEGIN
     ('Barbell Row'),
     ('Bench Press'),
     ('Bench press – manualar, flat'),
-    ('Bent-over row'),
     ('Biceps Curl'),
     ('Bike Erg'),
     ('Bird dog'),
@@ -222,7 +217,6 @@ BEGIN
     ('Dumbbell Rear Delt Fly'),
     ('Dumbbell Reverse Lunge'),
     ('Dumbbell Romanian Deadlift'),
-    ('Dumbbell row'),
     ('Dumbbell Shoulder Press'),
     ('Dumbbell Snatch'),
     ('Dumbbell Step-up'),
@@ -239,13 +233,11 @@ BEGIN
     ('Hollow hold'),
     ('Incline bench press – manualar'),
     ('Incline bench press – stong'),
-    ('Incline Dumbbell Press'),
     ('Jogging'),
     ('Jump rope'),
     ('Kettlebell Clean'),
     ('Kettlebell Clean and Press'),
     ('Kettlebell Dead-stop Swing'),
-    ('Kettlebell Deadlift / Markløft'),
     ('Kettlebell Front Rack Squat'),
     ('Kettlebell High Pull'),
     ('Kettlebell markløft'),
@@ -351,7 +343,6 @@ BEGIN
     ('Barbell Row'),
     ('Bench Press'),
     ('Bench press – manualar, flat'),
-    ('Bent-over row'),
     ('Biceps Curl'),
     ('Bike Erg'),
     ('Bird dog'),
@@ -383,7 +374,6 @@ BEGIN
     ('Dumbbell Rear Delt Fly'),
     ('Dumbbell Reverse Lunge'),
     ('Dumbbell Romanian Deadlift'),
-    ('Dumbbell row'),
     ('Dumbbell Shoulder Press'),
     ('Dumbbell Snatch'),
     ('Dumbbell Step-up'),
@@ -400,13 +390,11 @@ BEGIN
     ('Hollow hold'),
     ('Incline bench press – manualar'),
     ('Incline bench press – stong'),
-    ('Incline Dumbbell Press'),
     ('Jogging'),
     ('Jump rope'),
     ('Kettlebell Clean'),
     ('Kettlebell Clean and Press'),
     ('Kettlebell Dead-stop Swing'),
-    ('Kettlebell Deadlift / Markløft'),
     ('Kettlebell Front Rack Squat'),
     ('Kettlebell High Pull'),
     ('Kettlebell markløft'),
@@ -520,7 +508,7 @@ BEGIN
       AND lower(trim(e.category)) = lower(trim(required.category))
   );
 
-  IF expected_count <> 198 OR actual_count <> expected_count
+  IF expected_count <> 194 OR actual_count <> expected_count
      OR missing_count > 0 OR unexpected_count > 0
      OR duplicate_count > 0 OR missing_body_area > 0
      OR coalesce(array_length(missing_categories, 1), 0) > 0 THEN
