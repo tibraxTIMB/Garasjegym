@@ -465,3 +465,11 @@
   .gg-live-timer__laps-portrait .gg-live-timer__lap-all{min-width:36px;padding:2px 4px}
   .gg-live-timer__body--with-laps{grid-template-rows:minmax(0,1.2fr) minmax(0,.9fr)}
 }
+
+
+/* Grouped timed WODs keep the same live timer and a clear block boundary. */
+.gg-composite-training{display:grid;gap:8px;min-width:0;min-height:0}
+.gg-composite-progress,.gg-composite-progress-foot{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 12px;border:1px solid var(--line,#484848);border-radius:10px;background:var(--panel,#202326)}
+.gg-composite-progress strong{font-size:14px}.gg-composite-progress span{font-size:13px;font-weight:700}.gg-composite-progress small,.gg-composite-progress-foot span{font-size:12px;opacity:.82}
+.gg-composite-progress-foot{justify-content:space-between}
+@media(max-width:550px){.gg-composite-progress,.gg-composite-progress-foot{padding:7px 9px}.gg-composite-progress strong{width:100%}}
