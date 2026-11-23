@@ -86,3 +86,7 @@ test('TRX and static holds do not ask for kilograms unless externally loaded', (
   }
   assert.deepEqual(getExerciseMeasurementFlags({name:'Dead Hang',equipment:'Pull-up-stong',sets:[{load_kg:10}]}),{usesHeight:false,usesLoad:true});
 });
+
+test('Bear Crawl is a bodyweight distance exercise, not a loaded lift', () => {
+  assert.deepEqual(getExerciseMeasurementFlags({name:'Bear Crawl',equipment:'Kroppsvekt'}),{usesHeight:false,usesLoad:false});
+});
