@@ -19,7 +19,8 @@ test('Homepage shows daily WOD once and provides immediately accessible main tas
  assert.match(app,/simpleMode&&active==='oversikt'&&dailyWod/)
  assert.match(overview,/overview-primary-actions/)
  assert.match(overview,/onNavigate\('trening'\)/)
- assert.match(overview,/onNavigate\('mi-trening'\)/)
+ assert.match(overview,/onNavigate\('mi-side'\)/)
+ assert.match(overview,/Min treningsprofil/)
 })
 
 test('Android PWA manifest resolves a real maskable gorilla icon',()=>{
