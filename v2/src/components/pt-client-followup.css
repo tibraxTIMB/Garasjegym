@@ -63,3 +63,17 @@
  .pt2-client-active .pt2-customer-identity>button svg{width:14px}
  .pt2-client-active .pt2-customer-person>strong{font-size:18px}
 }
+
+/* Client follow-up has one navigation row. Existing PT module navigation remains
+   available when used standalone, not nested inside the customer workspace. */
+.pt2-client-active .pt-module .pt-workspace-tabs,
+.pt2-client-active .pt-module .pt-public-slots,
+.pt2-client-active .pt-module .pt-customer-badge,
+.pt2-client-active .pt-module .pt-customer-wod-action{display:none!important}
+.pt2-client-active .pt-module .training-heading{margin-top:8px}
+.pt2-client-active .pt-module .training-heading h3{font-size:16px}
+.pt2-client-active .pt-module .pt-actions button{min-height:38px}
+.pt2-client-active .pt2-customer-bar-secure{background:#202f2d}
+.pt2-plan-template-details{border:1px solid #455651;border-radius:12px;padding:9px 12px}
+.pt2-plan-template-details>summary{cursor:pointer;font-size:12px;font-weight:800;color:#e0d3ba;padding:8px 0;list-style-position:inside}
+.pt2-plan-template-details[open]>section{margin-top:12px}
