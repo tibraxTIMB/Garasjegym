@@ -17,7 +17,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 concurrency:
   group: sturm­kopf-pages
@@ -30,12 +29,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Report exact diagnostic run ID (no secrets)
-        if: ${{ github.event_name == 'push' }}
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh api --method POST "repos/$GITHUB_REPOSITORY/issues/2/comments" -f "body=Automatisk byggdiagnostikk for GAZELLE 1.2: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID (commit $GITHUB_SHA)"
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
