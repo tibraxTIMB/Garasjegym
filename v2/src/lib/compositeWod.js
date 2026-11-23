@@ -25,7 +25,7 @@ export function compositeBlockDuration(block, itemsCount=1) {
  const format=String(block?.format||'')
  if(COMPOSITE_INTERVAL_FORMATS.includes(format) || format==='Stasjonssirkel'){
   const work=Math.max(1,Math.floor(Number(block?.workSeconds) || (format==='Tabata'?20:45)))
-  const rest=Math.max(0,Math.floor(Number(block?.restSeconds) ?? 0))
+  const rest=Math.max(0,Math.floor(Number(block?.restSeconds ?? (format==='Tabata'?10:15))))
   const rounds=Math.max(1,Math.floor(Number(block?.rounds) || (format==='Tabata'?8:3)))
   const slots=Math.max(1,Math.floor(Number(itemsCount)||1))
   const total=rounds*slots
