@@ -335,7 +335,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
     else if(quantity.unit==='s')dose.durationSeconds=String(quantity.value)
     else if(quantity.unit==='min')dose.durationSeconds=String(quantity.value*60)
    }
-   item.levels={...item.levels,rx:dose}
+   item.levels=Object.fromEntries(Object.entries(item.levels).map(([level,existing])=>[level,level==='rx'?dose:{...existing,reps:item.reps,...(quantity?.unit==='m'?{distanceMeters:String(quantity.value)}:{}),...(quantity?.unit==='s'?{durationSeconds:String(quantity.value)}:{}),...(quantity?.unit==='min'?{durationSeconds:String(quantity.value*60)}:{}),...(quantity?.unit==='cal'?{calories:String(quantity.value)}:{})}]))
    item.coachNote=row.loadKg?'Importert belastning ca. '+row.loadKg.toFixed(1)+' kg – stadfest belastning per nivå.':''
    return item
   })
