@@ -12,6 +12,7 @@ import { WOD_SIDE_OPTIONS, getWodSideLabel, getWodSideMode, isSideSelectableExer
 import { exerciseBrowseCategory } from '../lib/exerciseCategories.js'
 import WodTimeDial from './WodTimeDial.jsx'
 import {COMPOSITE_FORMAT, COMPOSITE_BLOCK_FORMATS, defaultCompositeBlocks, compositeBlockDuration, compositeTotalSeconds, validateCompositeBlocks, compositeBlockForTimer, isValidRirTarget, COMPOSITE_INTERVAL_FORMATS, COMPOSITE_STRENGTH_FORMATS} from '../lib/compositeWod.js'
+import {prepareLibraryWodPart} from '../lib/compositeLibrary.js'
 import './wod-ordering.css'
 import './wod-builder-contrast.css'
 import './wod-wizard-refine.css'
@@ -266,7 +267,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  }
  useEffect(()=>{load();loadWods()},[])
  useEffect(()=>{if(editWodId&&exercises.length&&publishRoleReady)loadWodForEdit(editWodId)},[editWodId,exercises.length,publishRoleReady,canPublishWod])
- async function loadWods(){const {data,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,timer_settings,created_at,is_published,is_archived').eq('is_archived',false).order('created_at',{ascending:false});if(e)setError(e.message);else setLibraryWods((data||[]).filter(w=>!w.is_archived))}
+ async function loadWods(){const {data,error:e}=await supabase.from('wods').select('id,name,format,category,duration_minutes,movements,notes,timer_settings,created_at,is_published,is_archived').eq('is_archived',false).order('created_at',{ascending:false});if(e)setError(e.message);else setLibraryWods((data||[]).filter(w=>!w.is_archived))}
  async function load(){
   setLoading(true)
   setPublishRoleReady(false)
@@ -358,7 +359,32 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   if(!loading&&initialImport&&!editWodId){applyImportedWod(initialImport);onImportConsumed?.()}
  },[loading,initialImport,editWodId])
  function add(ex){if(isInterval&&selected.length>=Number(intervalExerciseCount)){setError(`Du har valt ${intervalExerciseCount} øvingar/drag. Endre talet i oppsettet dersom du vil leggja til fleire.`);return}if(isStationCircuit&&selected.length>=Number(stationCount)){setError(`Du har valt ${stationCount} stasjonar. Fjern ei øving eller auk talet på stasjonar før du legg til fleire.`);return}setError('');const item={...blankItem(ex),blockId:activeBlockId};item.prescription=loadPairFor(ex)||{};if(isStationItem(item)||isOptionalTimedReps(item)){item.reps='';item.repsMode='amrap';item.levels=Object.fromEntries(Object.entries(item.levels).map(([level,d])=>[level,{...d,reps:''}]))}const metric=quickDoseMetricFor(ex);if(['distance','calories','time','rowing'].includes(metric)){item.reps='';item.levels=Object.fromEntries(Object.entries(item.levels).map(([level,d])=>[level,{...d,reps:'',...(metric==='rowing'&&level==='rx'?rowingDosePatch(item.rowUnit,item.rowValue):{})}]))}const count=selected.filter(x=>ex.id?x.id===ex.id:x.name===ex.name).length+1;setPickerFeedback({name:ex.name,count});setSelected(rows=>[...rows,{...item,...(isStationCircuit?{reps:'',repsMode:'amrap'}:{})}])}
- function addPause(){setError('');setSelected(rows=>[...rows,{...blankItem({id:null,name:'Pause',category:'Pause',body_area:'Heile kroppen',equipment:'Ingen',description:'Planlagd pause mellom øvingar.',is_rest:true}),is_rest:true,pauseSeconds:'30',reps:'',blockId:activeBlockId}]);setLibraryOpen(false)}
+ function reuseLibraryWod(block,sourceWod){
+   if(!sourceWod)return
+   const existing=selected.filter(item=>item.blockId===block.id)
+   if(existing.length&&!window.confirm('Byta ut dei '+existing.length+' eksisterande øvingane i «'+(block.title||block.format)+'» med WOD-en «'+sourceWod.name+'»? Dei andre delane blir urørte.'))return
+   try{
+    const prepared=prepareLibraryWodPart(sourceWod,block)
+    const sourceItems=prepared.items.map(item=>{
+     const found=item.is_rest?{id:null,name:'Pause',category:'Pause',equipment:'Ingen',is_rest:true,body_area:'Heile kroppen'}:exercises.find(ex=>ex.id===item.exercise_id)||{id:item.exercise_id||null,name:item.exercise_name||'Øving',category:item.category||'Styrke',equipment:item.equipment||'',body_area:item.body_area||'Fullkropp'}
+     const sets=(item.sets||[]).map(s=>({...newSet(),reps:String(s.reps??''),loadMode:s.load_mode||'none',loadKg:String(s.load_kg??''),rir:s.rir==null?'':String(s.rir),tempo:s.tempo||''}))
+     return {...blankItem(found),blockId:block.id,is_rest:!!item.is_rest,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:item.complex_steps||[],pauseSeconds:String(item.rest_duration_seconds??30),sideMode:getWodSideMode(item),
+      reps:String(item.reps??''),repsMode:item.reps_mode||'fixed',
+      levels:item.levels||makeLevels(String(item.reps??''),{}),loadMode:item.load_mode||'none',loadKg:String(item.load_kg??''),
+      rowValue:String(item.row_value??item.meters??item.calories??item.work_seconds??''),rowUnit:item.row_unit||(item.calories?'cal':item.work_seconds?'s':'m'),
+      coachNote:item.coach_note||'',minuteSlot:item.minute_slot||'',group:item.superset_group||'A',
+      sets:sets.length?sets:[newSet()],prescription:item.prescription||null}
+    })
+    if(!COMPOSITE_BLOCK_FORMATS.includes(prepared.block.format))throw new Error('Formatet kan ikkje nyttast som øktdel enno. Vel ein annan WOD.')
+    setCompositeBlocks(rows=>rows.map(row=>row.id===block.id?{...prepared.block,title:/^Del [A-H]$/.test(row.title||'')?sourceWod.name:row.title}:row))
+    setSelected(rows=>[...rows.filter(item=>item.blockId!==block.id),...sourceItems].sort((a,b)=>{
+      const aIndex=compositeBlocks.findIndex(part=>part.id===a.blockId),bIndex=compositeBlocks.findIndex(part=>part.id===b.blockId)
+      return aIndex-bIndex
+    }))
+    setActiveBlockId(block.id);setError('');setNotice('«'+sourceWod.name+'» er kopiert inn i øktdelen. WOD-ID og oppsett er lagra som referanse og snapshot; den opphavlege WOD-en blir ikkje endra.')
+   }catch(e){setError(e.message||'Kunne ikkje henta WOD frå biblioteket.')}
+  }
+  function addPause(){setError('');setSelected(rows=>[...rows,{...blankItem({id:null,name:'Pause',category:'Pause',body_area:'Heile kroppen',equipment:'Ingen',description:'Planlagd pause mellom øvingar.',is_rest:true}),is_rest:true,pauseSeconds:'30',reps:'',blockId:activeBlockId}]);setLibraryOpen(false)}
  function suggestUniqueWodName(){const existing=new Set(libraryWods.map(w=>(w.name||'').trim().toLowerCase()));for(let i=0;i<60;i++){const candidate=randomWodName();if(!existing.has(candidate.toLowerCase())&&candidate.toLowerCase()!==name.trim().toLowerCase())return candidate}return randomWodName()+' '+String(Date.now()).slice(-4)}
  function updateItem(key,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,...patch}:x))}
  function updateLevel(key,level,patch){if(patch.loadMode==='rir')patch={...patch,loadKgMen:'',loadKgWomen:'',loadKg:'',percent1rm:''};setSelected(rows=>rows.map(x=>{
