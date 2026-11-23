@@ -11,7 +11,7 @@ import { formatParticipation, normalizeWodEngine, parseIntervalNotation } from '
 import PerformanceCenter from './PerformanceCenter.jsx'
 import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration, summarizeLapSplits } from '../lib/timerClock.js'
 import { getExerciseMeasurementFlags, isErgExercise } from '../lib/exerciseMeasurements.js'
-import {COMPOSITE_FORMAT, compositeBlockForTimer, compositeTimerConfig, compositeTransitionSeconds, compositeScoredBlocks} from '../lib/compositeWod.js'
+import {COMPOSITE_FORMAT, compositeBlockForTimer, compositeTimerConfig, compositeTransitionSeconds, compositeScoredBlocks, plannedFixedEmomSets} from '../lib/compositeWod.js'
 import { exerciseRecordType } from '../lib/prMetrics.js'
 import { getWodSideLabel, isSideSelectableExercise, WOD_SIDE_OPTIONS } from '../lib/wodSides.js'
 import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
@@ -1009,14 +1009,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     if(schema?.library_category==='warmup')orderedSchemaItems.sort((a,b)=>({specific_prep:0,movement_rehearsal:1}[a.warmup_phase||'specific_prep']??0)-({specific_prep:0,movement_rehearsal:1}[b.warmup_phase||'specific_prep']??0))
     if (orderedSchemaItems.length) {
       setItems(orderedSchemaItems.map(item => {
-        const block=(schema?.composite_blocks||[]).find(part=>part.id===item.block_id)
-        const emomMatch=String(block?.format||'').match(/^E([1-7])MOM$/i)
-        const emomSeconds=Number(block?.duration_seconds)||Number(block?.minutes||0)*60
-        const emomSets=emomMatch?Math.floor(emomSeconds/(Number(emomMatch[1])*60)):0
-        const prescribedReps=Number(item.levels?.[selectedLevel]?.reps??item.reps)
-        const fillFixedEmom=!forResult&&emomSets>0&&Number.isInteger(prescribedReps)&&prescribedReps>0&&item.reps_mode!=='amrap'
-        const configuredSets=Array.isArray(item.sets)&&item.sets.length?item.sets:[]
-        const preparedSets=fillFixedEmom?Array.from({length:Math.max(emomSets,configuredSets.length)},(_,index)=>configuredSets[index]||configuredSets[0]||{}):configuredSets
+        const {autoFill:fillFixedEmom,reps:prescribedReps,sets:preparedSets}=plannedFixedEmomSets(item,schema?.composite_blocks,selectedLevel,forResult)
         return ({
         ...emptyExercise(),
         exercise_id: item.exercise_id || '',
