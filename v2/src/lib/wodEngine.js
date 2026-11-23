@@ -63,6 +63,19 @@ export function emomDisplayLabel(seconds) {
  return whole%60===0?`E${whole/60}MOM`:`EMOM · ${Math.floor(whole/60)}:${String(whole%60).padStart(2,'0')}`
 }
 
+/** Count actual scheduled EMOM repetitions per movement, including rotating slots. */
+export function emomPrescribedSetCount({format='EMOM',interval={},durationSeconds=0,minuteSlot='',exerciseIndex=0,exerciseCount=1}={}) {
+ const every=emomIntervalSeconds(format,interval)
+ const total=Math.max(0,Math.floor(Number(durationSeconds)||0))
+ const slots=Math.floor(total/every)
+ if(!slots)return 0
+ const assigned=String(minuteSlot??'').split(/[,;\\s/]+/).map(Number).filter(n=>Number.isInteger(n)&&n>0&&n<=slots)
+ if(assigned.length)return new Set(assigned).size
+ const count=Math.max(1,Math.floor(Number(exerciseCount)||1))
+ const index=Math.max(0,Math.floor(Number(exerciseIndex)||0))%count
+ return Math.max(0,Math.floor((slots+count-1-index)/count))
+}
+
 export function parseIntervalNotation(value) {
   const text = String(value || '').trim().toUpperCase().replace(/\s+/g, '');
   const match = text.match(/^E(\d+(?:\.\d+)?)MOM$/);
