@@ -27,7 +27,7 @@ export function prepareLibraryWodPart(wod,oldBlock){
   ...(isEmomFormat(format)?{emomIntervalSeconds:interval}:{}),
   ...(['Intervall','Tabata','Row Intervals','Stasjonssirkel'].includes(format)?{
    workSeconds:Number(schema.station_circuit?.work_seconds??schema.interval?.work_seconds??wod.timer_settings?.work_seconds)||(format==='Tabata'?20:45),
-   restSeconds:Number(schema.station_circuit?.transition_seconds??schema.interval?.rest_seconds??wod.timer_settings?.rest_seconds)??(format==='Tabata'?10:15),
+   restSeconds:Number.isFinite(Number(schema.station_circuit?.transition_seconds??schema.interval?.rest_seconds??wod.timer_settings?.rest_seconds))?Number(schema.station_circuit?.transition_seconds??schema.interval?.rest_seconds??wod.timer_settings?.rest_seconds):(format==='Tabata'?10:15),
    rounds:Number(schema.station_circuit?.rounds??schema.rounds??wod.timer_settings?.rounds)||(format==='Tabata'?8:3)
   }:{}),
   ...(['Couplet','Triplet'].includes(format)?{combinationMode:schema.combination_mode||'For Time'}:{}),
