@@ -11,7 +11,7 @@ import { formatParticipation, normalizeWodEngine, parseIntervalNotation } from '
 import PerformanceCenter from './PerformanceCenter.jsx'
 import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, normalizeEmomIntervalMinutes, splitDuration, summarizeLapSplits } from '../lib/timerClock.js'
 import { getExerciseMeasurementFlags, isErgExercise } from '../lib/exerciseMeasurements.js'
-import {COMPOSITE_FORMAT, compositeBlockForTimer, compositeIntervalMinutes} from '../lib/compositeWod.js'
+import {COMPOSITE_FORMAT, compositeBlockForTimer, compositeTimerConfig, compositeTransitionSeconds} from '../lib/compositeWod.js'
 import { exerciseRecordType } from '../lib/prMetrics.js'
 import { getWodSideLabel, isSideSelectableExercise, WOD_SIDE_OPTIONS } from '../lib/wodSides.js'
 import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
@@ -77,7 +77,7 @@ function TimerPanel({id,title,layout,onMove,onResize,onLock,locked,children,devi
   <div className="timer-panel-content">{children}</div>
  </section>
 }
-function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], prescriptionLevel = 'rx', timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, finishLabel = 'Avslutt', onBackground = () => {}, onEditWorkout = null, visible = true, originLabel = 'EIGA ØKT', wodName = '', autoStartToken = 0, resumeState = null }) {
+function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], prescriptionLevel = 'rx', timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, finishLabel = 'Avslutt', onBackground = () => {}, onEditWorkout = null, visible = true, originLabel = 'EIGA ØKT', wodName = '', autoStartToken = 0, autoStartOnMount = false, resumeState = null }) {
   const timerConfigKey = JSON.stringify({format,minutes,seconds,timerSettings})
   const lastTimerConfigKey = useRef(timerConfigKey)
   const [elapsed, setElapsed] = useState(() => resumedElapsedSeconds(resumeState))
@@ -470,6 +470,9 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     }
     setHasStarted(true); setPhase('PÅGÅR'); setRunning(true); playSignal('start')
   }
+  const autoLaunchRef = useRef(false)
+  useEffect(()=>{if(autoStartOnMount&&!autoLaunchRef.current){autoLaunchRef.current=true;beginWorkout(false)}},[autoStartOnMount])
+  const finishCurrent=()=>onFinish({elapsed,laps:[...laps],roundsCompleted:isAmrap?laps.length:isStationCircuit?fixedSlotState.roundsCompleted:round,phase:phase==='TIDSGRENSE'?'TIDSGRENSE':'FULLFØRT',hasStarted,running:false,savedAt:Date.now()})
   const toggleRunning = () => { if (countdownDeadline !== null) { setCountdownDeadline(null);setCountdownRemaining(0);setPhase('Klar');return } if (!hasStarted) { beginWorkout(false); return } if (running) { setRunning(false); setPhase('PAUSE'); return } if (phase === 'FERDIG' || phase === 'TIDSGRENSE') return; setPhase('PÅGÅR'); setRunning(true) }
   const visibleStationIndex = Math.min(stationCount - 1, fixedSlotState.currentSlotIndex % stationCount)
   const currentStationName = stationList[visibleStationIndex]?.exercise_name || stationList[visibleStationIndex]?.name || `Stasjon ${visibleStationIndex + 1}`
@@ -557,7 +560,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         {!hasStarted&&countdownDeadline===null&&<button type="button" className="gg-live-timer__round-button" onClick={()=>beginWorkout(true)}><Play size={21}/> Start · 10 sek</button>}
         {hasStarted&&isAmrap&&<button type="button" className="gg-live-timer__round-button" onClick={lapAction} disabled={!running}><Plus size={21}/> Runde</button>}
         {hasStarted&&(isStopwatch||isForTime)&&<button type="button" className="gg-live-timer__split" onClick={splitAction} disabled={!running}>Mellomtid</button>}
-        {hasStarted&&<button type="button" className="gg-live-timer__finish" onClick={onFinish}><CheckCircle2 size={20}/> {finishLabel}</button>}
+        {hasStarted&&<button type="button" className="gg-live-timer__finish" onClick={finishCurrent}><CheckCircle2 size={20}/> {finishLabel}</button>}
       </footer>
       {stagePanel&&<div className="gg-live-timer__scrim" onClick={()=>setStagePanel(null)} role="presentation"/>}
       {stagePanel==='wod'&&<aside className="gg-live-timer__drawer" aria-label="Øvingar i WOD-en"><header><strong>Øvingar · {stageRows.length}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk øvingslista"><X size={20}/></button></header><ol className="gg-live-timer__all-exercises">{stageRows.map((item,index)=><li key={`${item.id}-${index}`}>
@@ -630,7 +633,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
         </div>
         <div className="timer-finish-row">
-          <button type="button" className="timer-finish-button" onClick={onFinish} disabled={!hasStarted}>
+          <button type="button" className="timer-finish-button" onClick={finishCurrent} disabled={!hasStarted}>
             <CheckCircle2 size={18}/><span>{finishLabel==='Avslutt'?'Avslutt økta':finishLabel}</span>
           </button>
           <small>{hasStarted ? finishLabel==='Avslutt'?'Kontroller resultat og lagre økta etterpå':'Neste del blir klar, men startar ikkje automatisk' : 'Start timeren før du avsluttar økta'}</small>
