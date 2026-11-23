@@ -14,6 +14,7 @@ import { getExerciseMeasurementFlags, isErgExercise } from '../lib/exerciseMeasu
 import {COMPOSITE_FORMAT, compositeBlockForTimer, compositeTimerConfig, compositeTransitionSeconds, compositeScoredBlocks, plannedFixedEmomSets} from '../lib/compositeWod.js'
 import { exerciseRecordType } from '../lib/prMetrics.js'
 import { deathByTimerState } from '../lib/deathBy.js'
+import { equivalentLibraryWodSource } from '../lib/compositeLibrary.js'
 import { ladderStatus } from '../lib/ladder.js'
 import { getWodSideLabel, isSideSelectableExercise, WOD_SIDE_OPTIONS } from '../lib/wodSides.js'
 import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
@@ -748,6 +749,7 @@ function CompositeTimer({schema,exerciseList=[],prescriptionLevel='rx',wodName='
    index,id:part.id,title:part.title,format:part.format,combination_mode:part.combinationMode||null,
    source_wod_id:part.source_wod_id||null,source_wod_name:part.source_wod_name||null,
    source_wod_snapshot:part.source_wod_snapshot||null,
+   benchmark_source_wod_id:equivalentLibraryWodSource(part),
    duration_seconds:part.duration_seconds,
    elapsed:Number(results[index]?.elapsed)||0,
    roundsCompleted:Number(results[index]?.roundsCompleted)||0,
