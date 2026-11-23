@@ -97,25 +97,52 @@ export function deriveExerciseRecords(logs = []) {
 }
 
 export function deriveBenchmarkRecords(logs = []) {
-  const groups = new Map()
-  for(const log of logs) {
-    if(!log.source_wod_id) continue
-    const level = String(log.result_data?.prescription_level || 'rx').toLowerCase()
-    const format = String(log.format||'').toLowerCase()
-    const key = `${log.source_wod_id}|${level}|${format}`
-    let score = null
-    if(format.includes('amrap')) {
-      if(log.score_rounds == null) continue
-      score = {rounds:Number(log.score_rounds)||0,reps:Number(log.score_reps)||0,unit:'rundar + reps'}
-    } else if(['for time','chipper'].includes(format)) {
-      if(!positive(log.score_time_seconds) || log.result_data?.time_cap_reached) continue
-      score = {value:positive(log.score_time_seconds),unit:'sek',direction:'min'}
-    } else continue
-    if(!groups.has(key)) groups.set(key,{key,name:log.result_data?.wod_names?.[0]||log.title||'Benchmark-WOD',level,format,score:null,date:'',logId:null,count:0})
-    const group=groups.get(key)
-    group.count++
-    const better=!group.score || (score.rounds!=null ? score.rounds>group.score.rounds || (score.rounds===group.score.rounds&&score.reps>group.score.reps) : score.value<group.score.value)
-    if(better) {group.score=score;group.date=log.workout_date;group.logId=log.id}
+ const groups=new Map()
+ function addScore({log,level,format,key,name,score}) {
+  if(!score)return
+  if(!groups.has(key))groups.set(key,{key,name,level,format,score:null,date:'',logId:null,count:0})
+  const group=groups.get(key)
+  group.count++
+  const better=!group.score || (score.rounds!=null
+   ? score.rounds>group.score.rounds || (score.rounds===group.score.rounds&&score.reps>group.score.reps)
+   : score.value<group.score.value)
+  if(better){group.score=score;group.date=log.workout_date;group.logId=log.id}
+ }
+ for(const log of logs){
+  if(!log.source_wod_id)continue
+  const level=String(log.result_data?.prescription_level||'rx').toLowerCase()
+  const composite=log.result_data?.block_summary
+  if(Array.isArray(composite)&&composite.length&&String(log.format)==='Samansett økt'){
+   for(const [index,part] of composite.entries()){
+    if(part.completed!==true)continue
+    const format=String(part.format||'')
+    const key=`${log.source_wod_id}|${part.id||index}|${level}|${format.toLowerCase()}`
+    const name=(log.result_data?.wod_names?.[0]||log.title||'Samansett WOD')+' · '+(part.title||'Del '+(index+1))
+    let score=null
+    if(format==='AMRAP'||(['Couplet','Triplet'].includes(format)&&part.combination_mode==='AMRAP')){
+     const rounds=Number(part.roundsCompleted),reps=Number(part.extra_reps||0)
+     if(Number.isInteger(rounds)&&rounds>=0&&Number.isInteger(reps)&&reps>=0)
+      score={rounds,reps,unit:'rundar + reps'}
+    } else if(['For Time','Chipper','Couplet','Triplet','Ladder','Death By'].includes(format)){
+     if(!part.time_cap_reached&&positive(part.elapsed))
+      score={value:positive(part.elapsed),unit:'sek',direction:'min'}
+    }
+    addScore({log,level,format:format.toLowerCase(),key,name,score})
+   }
+   continue
   }
-  return [...groups.values()].sort((a,b)=>a.name.localeCompare(b.name,'nn'))
+  // Existing single-format WODs keep their original benchmark history.
+  const format=String(log.format||'').toLowerCase()
+  const key=`${log.source_wod_id}|${level}|${format}`
+  let score=null
+  if(format.includes('amrap')){
+   if(log.score_rounds==null)continue
+   score={rounds:Number(log.score_rounds)||0,reps:Number(log.score_reps)||0,unit:'rundar + reps'}
+  } else if(['for time','chipper'].includes(format)){
+   if(!positive(log.score_time_seconds)||log.result_data?.time_cap_reached)continue
+   score={value:positive(log.score_time_seconds),unit:'sek',direction:'min'}
+  }
+  addScore({log,level,format,key,name:log.result_data?.wod_names?.[0]||log.title||'Benchmark-WOD',score})
+ }
+ return [...groups.values()].sort((a,b)=>a.name.localeCompare(b.name,'nn'))
 }
