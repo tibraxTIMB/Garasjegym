@@ -159,3 +159,12 @@ test('PT uses Garasjekadett rank from actual workout count, not a manual text fi
  assert.doesNotMatch(studio,/saveRank\(/)
  assert.doesNotMatch(studio,/member_rank/)
 })
+
+
+test('PT chooses a customer before work, and previously sent intake is always inspectable without resending',()=>{
+ assert.match(studio,/setShowCustomerPicker\(true\)/)
+ assert.match(studio,/Sjå utsendt skjema/)
+ assert.match(studio,/readOnly:intakeRequestState==='pending'/)
+ assert.match(studio,/!intakePreview\.readOnly&&<button/)
+ assert.match(studio,/recipient\.readOnly\|\|intakeRequestState==='pending'/)
+})
