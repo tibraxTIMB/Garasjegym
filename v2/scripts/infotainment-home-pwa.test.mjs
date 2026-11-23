@@ -27,7 +27,7 @@ test('Android PWA manifest resolves a real maskable gorilla icon',()=>{
  assert.equal(manifest.id,'/Garasjegym/')
  assert.equal(manifest.display,'standalone')
  assert.ok(manifest.icons.some(icon=>icon.purpose==='maskable'&&icon.sizes==='512x512'))
- assert.ok(manifest.icons.every(icon=>icon.src.includes('v=feuer-20261123')))
+ assert.ok(manifest.icons.every(icon=>icon.src.includes('v=gazelle-1-2')))
  for(const icon of manifest.icons){
   const png=icon.src.split('/').pop().split('?')[0]
   const bytes=readFileSync(new URL('../public/'+png,import.meta.url))
