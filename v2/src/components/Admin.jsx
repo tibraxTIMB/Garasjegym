@@ -10,7 +10,7 @@ import GarageMaintenance from './GarageMaintenance.jsx'
 import './admin-advanced.css'
 import GarageOwnerBadge from './GarageOwnerBadge.jsx'
 
-export default function Admin({profile,onOpenWodImport,onOpenPTAdmin=()=>{},initialTab='oversikt',focusToken=0}){
+export default function Admin({profile,onOpenWodImport,onOpenPTAdmin=()=>{},onOpenPTClients=()=>{},initialTab='oversikt',focusToken=0}){
  const [members,setMembers]=useState([]),[wods,setWods]=useState([]),[exercises,setExercises]=useState([]),[rankCounts,setRankCounts]=useState({}),[adminTab,setAdminTab]=useState(initialTab)
  useEffect(()=>setAdminTab(initialTab),[initialTab,focusToken])
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
@@ -163,7 +163,8 @@ export default function Admin({profile,onOpenWodImport,onOpenPTAdmin=()=>{},init
   </div>}
   {isAdmin&&adminTab==='drift'&&<section className="engine-section admin-drift-hub"><div className="training-heading"><div><span className="section-kicker">GARASJEGYM · DAGLEG DRIFT</span><h4>Drift</h4><p>Vel oppgåva du skal gjera. Verktøy og vedlikehald ligg eitt nivå under.</p></div></div>
     <div className="admin-drift-actions">
-      <button type="button" onClick={onOpenPTAdmin}><span>PT og førespurnader</span><small>Ta imot spørsmål, tildel trenar og følg kunden vidare</small><b>Opna PT-drift →</b></button>
+      <button type="button" onClick={onOpenPTClients}><span>PT Studio – arbeid med kundar</span><small>Vel kunde, send kartlegging, sjå svar og lag treningsplan</small><b>Opna PT Studio →</b></button>
+      <button type="button" onClick={onOpenPTAdmin}><span>PT-register og førespurnader</span><small>Administrer nye førespurnader, trenarar og tildelingar</small><b>Opna PT-administrasjon →</b></button>
       <button type="button" onClick={()=>setAdminTab('medlemmer')}><span>Medlemmer og tilgang</span><small>Godkjen søknader og administrer brukarar</small><b>Opna medlemsregister →</b></button>
       <button type="button" onClick={()=>setAdminTab('kaffi')}><span>Kaffi og bestillingar</span><small>Handter bestillingar og kaffibaren</small><b>Opna kaffibaren →</b></button>
     </div>
