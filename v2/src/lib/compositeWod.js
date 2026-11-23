@@ -13,7 +13,7 @@ export const COMPOSITE_STRENGTH_FORMATS = ['Strength','Superset','Complex']
 export const COMPOSITE_FOR_TIME_FORMATS = ['For Time','Chipper','Couplet','Triplet','Ladder']
 
 export const defaultCompositeBlocks = () => [
- {id:'a',title:'Del A',format:'E3MOM',minutes:9,transitionMode:'manual',transitionSeconds:0},
+ {id:'a',title:'Del A',format:'EMOM',emomIntervalSeconds:180,minutes:9,transitionMode:'manual',transitionSeconds:0},
  {id:'b',title:'Del B',format:'AMRAP',minutes:8,transitionMode:'manual',transitionSeconds:0},
 ]
 
@@ -171,10 +171,9 @@ export function compositeScoredBlocks(blockSummary=[],overrides={}) {
 /** Result entry for fixed E3MOM-style parts: scheduled reps are editable, not AMRAP scores. */
 export function plannedFixedEmomSets(item, blocks=[], level='rx', manualEntry=false) {
  const block=(blocks||[]).find(part=>part.id===item?.block_id)
- const match=String(block?.format||'').match(/^E([1-7])MOM$/i)
- const intervalMinutes=match?Number(match[1]):0
+ const intervalSeconds=block&&isEmomFormat(block.format)?emomIntervalSeconds(block.format,{work_every_seconds:block.emomIntervalSeconds??block.interval?.work_every_seconds,work_every_minutes:block.interval?.work_every_minutes}):0
  const durationSeconds=Number(block?.duration_seconds)||Number(block?.minutes||0)*60
- const scheduledSets=intervalMinutes?Math.floor(durationSeconds/(intervalMinutes*60)):0
+ const scheduledSets=intervalSeconds?Math.floor(durationSeconds/intervalSeconds):0
  const levelReps=item?.levels?.[level]?.reps
  const reps=Number(levelReps!==''&&levelReps!=null?levelReps:item?.reps)
  const configuredSets=Array.isArray(item?.sets)&&item.sets.length?item.sets:[]
