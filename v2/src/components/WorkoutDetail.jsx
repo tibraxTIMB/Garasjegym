@@ -160,10 +160,36 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
      time_text:String(draft.time_text??'').trim()||null
     }}]
    }))
+   const newValues=editMode==='note'?[]:exercises.flatMap(ex=>(addedSets[ex.id]||[]).filter(row=>['reps','load_kg','height_cm','time_seconds','time_text'].some(key=>String(row[key]??'').trim()!=='')).map(row=>({
+     workout_exercise_id:ex.id,set_number:row.set_number,reps:optionalNumber(row.reps),
+     load_kg:optionalNumber(row.load_kg),height_cm:optionalNumber(row.height_cm),
+     time_seconds:optionalNumber(row.time_seconds),time_text:String(row.time_text||'').trim()||null
+   })))
+   for(const row of [...changedSets.map(s=>s.values),...newValues]){
+     if(row.reps!=null&&!Number.isInteger(row.reps))throw new Error('Repetisjonar må vera heile tal.')
+     if(row.height_cm!=null&&row.height_cm<=0)throw new Error('Bokshøgd må vera større enn null.')
+   }
+   if(editMode==='correction'&&workout.result_data&&(changedSets.length||newValues.length)){
+     const snapshots=workout.result_data.exercise_results||[]
+     patch.result_data={...workout.result_data,exercise_results:exercises.map((ex,index)=>{
+       const sets=[...(ex.workout_sets||[]).map(set=>{
+         const row=setDrafts[set.id]||initialSetValues(set)
+         return {reps:optionalNumber(row.reps),load_kg:optionalNumber(row.load_kg),height_cm:optionalNumber(row.height_cm),time_seconds:optionalNumber(row.time_seconds),time_text:String(row.time_text||'').trim()||null}
+       }),...(addedSets[ex.id]||[]).filter(row=>['reps','load_kg','height_cm','time_seconds','time_text'].some(key=>String(row[key]??'').trim()!=='')).map(row=>({
+         reps:optionalNumber(row.reps),load_kg:optionalNumber(row.load_kg),height_cm:optionalNumber(row.height_cm),time_seconds:optionalNumber(row.time_seconds),time_text:String(row.time_text||'').trim()||null
+       }))]
+       return {...(snapshots[index]||{}),exercise_name:ex.exercise_name,sets}
+     })}
+   }
    for(const set of changedSets){
     const {data,error:saveError}=await supabase.from('workout_sets').update(set.values).eq('id',set.id).select('id').maybeSingle()
     if(saveError||!data)throw saveError||new Error('Eitt sett kunne ikkje lagrast.')
     updatedCount++
+   }
+   if(newValues.length){
+     const {data:created,error:insertError}=await supabase.from('workout_sets').insert(newValues).select('id')
+     if(insertError||created?.length!==newValues.length)throw insertError||new Error('Nye sett kunne ikkje stadfestast. Opna økta på nytt før du prøver igjen.')
+     updatedCount+=newValues.length
    }
    const {data,error:saveError}=await supabase.from('workout_logs').update(patch).eq('id',workout.id).eq('member_id',memberId).select('id,title,workout_date,format,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,note,result_data').single()
    if(saveError||!data)throw saveError||new Error('Økta kunne ikkje lagrast.')
@@ -191,11 +217,14 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
     {notice&&<div className="auth-message" role="status">{notice}</div>}
     {editing?<form id="workout-detail-edit-form" onSubmit={save} className="workout-detail-form">
      <div className="workout-detail-edit-card"><h3>{editMode==='note'?'Mine notat':'Om økta'}</h3>{editMode==='correction'&&<><label>Namn<input required maxLength={120} value={form.title} onChange={e=>setForm(v=>({...v,title:e.target.value}))}/></label><label>Dato<input type="date" required value={form.workout_date} onChange={e=>setForm(v=>({...v,workout_date:e.target.value}))}/></label></>}<label>Mine notat<textarea rows={3} value={form.note} onChange={e=>setForm(v=>({...v,note:e.target.value}))} placeholder="Korleis gjekk økta?"/></label></div>
-     {editMode==='correction'&&<><p className="workout-detail-correction-warning">Bruk korrigering berre når noko er feilregistrert. Historikken blir endra, men eksisterande PR-noteringar blir førebels ikkje automatisk oppdaterte.</p><details className="workout-detail-edit-card workout-detail-score-editor"><summary><Trophy size={17}/> Korriger resultat</summary><div className="workout-detail-edit-grid">{[
+     {editMode==='correction'&&<><p className="workout-detail-correction-warning">Rett berre resultat du faktisk gjennomførte. Målbare PR-ar blir rekna om frå den oppdaterte treningsloggen når PR-senteret blir lasta på nytt. Manuellt lagra PR-notat blir ikkje endra.</p><details className="workout-detail-edit-card workout-detail-score-editor"><summary><Trophy size={17}/> Korriger resultat</summary><div className="workout-detail-edit-grid">{[
       ['score_rounds','Rundar'],['score_reps','Ekstra reps'],['score_time_seconds','Sluttid (sek)'],
       ['score_load_kg','Tungaste løft (kg)'],['score_calories','Kaloriar'],['score_distance','Avstand']
-     ].map(([field,label])=><label key={field}>{label}<input type="number" min="0" step={['score_rounds','score_reps'].includes(field)?1:'any'} value={form[field]} onChange={e=>setForm(v=>({...v,[field]:e.target.value}))} placeholder="Ikkje registrert"/></label>)}<label>Eining for avstand<input value={form.score_unit} maxLength={12} onChange={e=>setForm(v=>({...v,score_unit:e.target.value}))}/></label></div><small>PR-senteret blir ikkje automatisk rekna om ved manuell endring av gamle resultat.</small></details>
+     ].map(([field,label])=><label key={field}>{label}<input type="number" min="0" step={['score_rounds','score_reps'].includes(field)?1:'any'} value={form[field]} onChange={e=>setForm(v=>({...v,[field]:e.target.value}))} placeholder="Ikkje registrert"/></label>)}<label>Eining for avstand<input value={form.score_unit} maxLength={12} onChange={e=>setForm(v=>({...v,score_unit:e.target.value}))}/></label></div><small>Rett oppføringar blir viste i Benchmark-PR dersom WOD-en er merkt Benchmark-WOD.</small></details>
      <div className="workout-detail-exercises-head"><h3><Dumbbell size={18}/> Øvingar og sett</h3><span>{exercises.length} øvingar</span></div>
+     {sourceStatus&&<p className="workout-finish-help">{sourceStatus}</p>}
+     {sourceSchema&&<button type="button" className="secondary-button" onClick={fillPlannedEmom}><Dumbbell size={16}/> Hent planlagde EMOM-sett og reps</button>}
+     <p className="workout-finish-help">Kontroller kvar øving. Legg til sett der resultat manglar; inga vekt blir gjetta.</p>
      <div className="workout-detail-exercise-list">
       {exercises.map((exercise,index)=><article className="workout-detail-exercise" key={exercise.id}>
        <div className="workout-detail-exercise-title"><span>{String(index+1).padStart(2,'0')}</span><strong>{exercise.exercise_name}</strong></div>
