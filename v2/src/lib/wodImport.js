@@ -153,6 +153,8 @@ export function parseWodImport(source,exerciseCatalog=[]){
  if(!lines.length)throw new Error('Lim inn WOD-tekst eller last opp ei tekstfil først.')
  const composite=parseStructuredComposite(lines,exerciseCatalog)
  if(composite)return composite
+ // Do not silently flatten multi-format OCR into one unsafe AMRAP.
+ if(lines.some(line=>/\bdel\s*a\b/i.test(line))&&lines.some(line=>/\bdel\s*b\b/i.test(line))&&lines.some(line=>/\bE[1-7]MOM\b/i.test(line))&&lines.some(line=>/\bAMRAP\b/i.test(line)))throw new Error('Fann fleire øktdelar, men teksten var utydeleg. Kontroller OCR-linjene for E3MOM, AMRAP, repetisjonar og øvingsnamn før du importerer.')
  const whole=lines.join('\n')
  const schemeLine=lines.find(line=>/^\s*\d{1,3}\s*[-–/]\s*\d{1,3}(?:\s*[-–/]\s*\d{1,3})+\s*$/.test(line))
  const scheme=schemeLine?.match(/\d{1,3}/g)?.map(Number)||null
