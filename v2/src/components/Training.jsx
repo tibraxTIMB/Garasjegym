@@ -849,7 +849,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
 
       const [e,h,pr,auth] = await Promise.all([
         supabase.from('exercises').select('id,name,category,equipment,description,video_url').eq('is_active', true).order('name'),
-        supabase.from('workout_logs').select('id,title,workout_date,format,rounds,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,result_data,note,created_at,workout_exercises(id,exercise_name,sort_order,workout_sets(id,set_number,reps,load_kg,time_text,time_seconds,height_cm))').order('workout_date', { ascending: false }).limit(500),
+        supabase.from('workout_logs').select('id,source_wod_id,title,workout_date,format,rounds,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,result_data,note,created_at,workout_exercises(id,exercise_id,exercise_name,sort_order,workout_sets(id,set_number,reps,load_kg,time_text,time_seconds,height_cm))').order('workout_date', { ascending: false }).limit(500),
         supabase.from('personal_records').select('id,exercise_name,result,unit,note,record_date').order('record_date', { ascending: false }).limit(500),
         supabase.auth.getUser()
       ])
