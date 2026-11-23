@@ -92,7 +92,13 @@ export default function Booking({ profile, onLogResult, onOpenWod, initialClassI
     const {data:classRows,error:classError}=await classQuery
     if(requestId!==loadSequence.current)return
     // Include dated WOD plans only for classes this member is allowed to see (schedule RLS handles this).
-    const rawClassRows=classRows||[]
+    const focusedClassMissing=initialClassId&&!(classRows||[]).some(row=>row.id===initialClassId)
+    let focusedClass=null
+    if(focusedClassMissing){
+      const {data,error:focusedError}=await supabase.from('classes').select('id,title,type,capacity,starts_at,duration_minutes,description,workout_text,wod_ids,instructor_id,published,cancelled_at,cancellation_note,prep_text,main_text,finish_text,coach_notes').eq('id',initialClassId).maybeSingle()
+      if(!focusedError)focusedClass=data
+    }
+    const rawClassRows=focusedClass?[...(classRows||[]),focusedClass]:(classRows||[])
     const classIds=rawClassRows.map(row=>row.id)
     let visibleClassRows=rawClassRows
     if(!classError&&classIds.length){
@@ -160,6 +166,7 @@ export default function Booking({ profile, onLogResult, onOpenWod, initialClassI
     const refresh=setInterval(()=>load(true),30000)
     return()=>{loadSequence.current+=1;clearInterval(refresh)}
   },[])
+  useEffect(()=>{if(initialClassId)load(true)},[initialClassId])
   const liveSessionIds=liveSessions.map(s=>s.id).sort().join(',')
   useEffect(()=>{
     if(!staff||!liveSessionIds){setSessionResults({});return}
