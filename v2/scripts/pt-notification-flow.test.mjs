@@ -79,7 +79,7 @@ test('PT-tildeling tillèt admin som trenar og førespurnader under behandling',
  assert.match(migration,/status IN \('pending','reviewing'\);/)
 })
 
-test('varsla på Heim er trykkbare og opnar den konkrete PT-førespurnaden',()=>{
+test('Heim viser varslingar berre i toppbjella, men bevarer direkte PT-navigasjon frå panelet',()=>{
  const app=read('../src/App.jsx')
  const overview=read('../src/components/Overview.jsx')
  const studio=read('../src/components/PTStudio.jsx')
@@ -87,7 +87,9 @@ test('varsla på Heim er trykkbare og opnar den konkrete PT-førespurnaden',()=>
  const notifications=read('../src/components/Notifications.jsx')
  assert.match(notifications,/const Root=compact\?'button':'article'/)
  assert.match(notifications,/onClick=\{compact\?\(\)=>openItem\(item\):undefined\}/)
- assert.match(overview,/onNavigate=\{onOpenNotification\}/)
+ assert.doesNotMatch(overview,/<Notifications\b/)
+ assert.match(app,/<Notifications isAdmin=\{profile\.role==='admin'\} staff=\{isStaff\(profile\)\} onNavigate=\{handleNotificationNavigate\}/)
+ assert.doesNotMatch(app,/<Overview[^>]+onOpenNotification=/)
  assert.match(studio,/onNavigate=\{onOpenNotification\}/)
  assert.match(app,/setFocusPTServiceRequest\(\{id:href\.slice\('pt-service-request:'\.length\),openedAt:Date\.now\(\)\}\)/)
  assert.match(app,/onOpenNotification=\{handleNotificationNavigate\}/)
