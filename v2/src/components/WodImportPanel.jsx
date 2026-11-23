@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useState} from 'react'
 import {FileImage,FileText,Upload,ClipboardPaste,CheckCircle2,AlertTriangle,Search,X,Check,SkipForward,ScanSearch} from 'lucide-react'
 import {parseWodImport} from '../lib/wodImport.js'
-import {COMPOSITE_FORMAT} from '../lib/compositeWod.js'
+import {COMPOSITE_FORMAT, validateCompositeBlocks} from '../lib/compositeWod.js'
 import './wod-import.css'
 
 export default function WodImportPanel({exerciseCatalog=[],onApply}){
@@ -23,13 +23,15 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
  const unresolved=preview.filter((item,index)=>!item.exercise&&!choices[index]).length
  const included=preview.filter((item,index)=>choices[index]!=='skip'&&(item.exercise||choices[index])).length
  const ignored=parsed?.ignored||[]
+ const warnings=parsed?.warnings||[]
+ const compositeIssue=parsed?.blocks?.length>1?validateCompositeBlocks(parsed.blocks,preview):''
  const activeCatalog=useMemo(()=>exerciseCatalog.filter(ex=>ex?.name&&ex.is_active!==false),[exerciseCatalog])
  const requiresDuration=/^(AMRAP|E(?:MOM|[1-7](?:\.25|\.5|\.75)?MOM)|Tabata|Intervall|Stasjonssirkel)$/.test(meta.format)
  const invalidQuantity=preview.some((item,index)=>choices[index]!=='skip'&&item.quantity&&(!Number.isFinite(Number(doseChanges[index]?.quantity??item.quantity.value))||Number(doseChanges[index]?.quantity??item.quantity.value)<=0))
  const invalidLoad=preview.some((item,index)=>choices[index]!=='skip'&&doseChanges[index]?.loadKg!==undefined&&doseChanges[index].loadKg!==''&&(!Number.isFinite(Number(doseChanges[index].loadKg))||Number(doseChanges[index].loadKg)<0))
  const invalidReps=preview.some((item,index)=>choices[index]!=='skip'&&!item.quantity&&!/^(?:\d+(?:-\d+)*|\d+\s*[x×]\s*\d+)$/.test(String(doseChanges[index]?.reps??item.reps).trim()))
  const invalidSetup=!!(parsed?.blocks?.length>1&&meta.format!==COMPOSITE_FORMAT)||!meta.name.trim()||!meta.format||!Number.isInteger(Number(meta.rounds))||Number(meta.rounds)<1||Number(meta.rounds)>99||(meta.minutes!==''&&(!Number.isFinite(Number(meta.minutes))||Number(meta.minutes)<1||Number(meta.minutes)>300))||(requiresDuration&&!(Number(meta.minutes)>0))
- const ready=unresolved===0&&included>0&&!invalidSetup&&!invalidQuantity&&!invalidReps&&!invalidLoad&&approved
+ const ready=unresolved===0&&included>0&&!compositeIssue&&!invalidSetup&&!invalidQuantity&&!invalidReps&&!invalidLoad&&approved
 
  useEffect(()=>()=>{if(filePreview)URL.revokeObjectURL(filePreview)},[filePreview])
  async function readFile(file){
@@ -57,7 +59,7 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
  function choose(index,exercise){setChoices(current=>({...current,[index]:exercise}));setApproved(false);setSearchOpen(current=>({...current,[index]:false}))}
  function apply(){
   if(unresolved){setError('Vel ei øving frå biblioteket eller «Hopp over» for kvar ukjend linje.');return}
-  if(invalidSetup){setError('Kontroller WOD-namn, format, rundar og påkravd tidsramme.');return}
+  if(invalidSetup||compositeIssue){setError(compositeIssue||'Kontroller WOD-namn, format, rundar og påkravd tidsramme.');return}
   if(invalidQuantity||invalidLoad||invalidReps){setError('Kontroller doseringa: reps, mengd og belastning må vera gyldige tal.');return}
   if(!approved){setError('Admin må stadfesta at innhaldet er gjennomgått før overføring.');return}
   const rows=preview.flatMap((item,index)=>{
@@ -96,7 +98,8 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
     <label>Tidsramme (min){requiresDuration?' *':''}<input type="number" min="1" max="300" step="1" value={meta.minutes} onChange={e=>{setMeta(current=>({...current,minutes:e.target.value}));setApproved(false)}} placeholder="Ingen tidsramme"/></label>
     <label>Rundar<input type="number" min="1" max="99" step="1" value={meta.rounds} onChange={e=>{setMeta(current=>({...current,rounds:e.target.value}));setApproved(false)}}/></label>
    </div>
-   {(!parsed.format||!parsed.minutes)&&<div className="wod-import-review-hint"><AlertTriangle size={15}/><span>{!parsed.format?'Format vart ikkje funne sikkert. Vel rett WOD-format. ':''}{!parsed.minutes?'Tidsramma må vurderast før import.':''}</span></div>}
+   {warnings.length>0&&<details className="wod-import-warnings"><summary><AlertTriangle size={15}/> {warnings.length} punkt som krev manuell kontroll</summary><ul>{warnings.map((item,i)=><li key={i}>{item}</li>)}</ul></details>}{compositeIssue&&<div className="wod-import-review-hint"><AlertTriangle size={15}/>{compositeIssue}</div>}
+    {(!parsed.format||!parsed.minutes)&&<div className="wod-import-review-hint"><AlertTriangle size={15}/><span>{!parsed.format?'Format vart ikkje funne sikkert. Vel rett WOD-format. ':''}{!parsed.minutes?'Tidsramma må vurderast før import.':''}</span></div>}
    <div className="wod-import-review-list">{preview.map((item,index)=>{
     const choice=choices[index]
     const skipped=choice==='skip'
@@ -105,7 +108,7 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
     const query=(searchTerms[index]||'').toLocaleLowerCase('nn-NO').trim()
     const results=query?activeCatalog.filter(ex=>[ex.name,ex.equipment,ex.category].some(value=>String(value||'').toLocaleLowerCase('nn-NO').includes(query))).slice(0,8):activeCatalog.slice(0,8)
     return <article className={'wod-import-review-item'+(skipped?' is-skipped':selected?' is-resolved':' needs-choice')} key={index}>
-     <div className="wod-import-review-top"><span className="wod-import-order">{index+1}</span><div className="wod-import-review-text"><strong>{item.rawName||item.name}</strong><small>{item.quantity?item.quantity.value+' '+item.quantity.unit:item.reps?item.reps+' reps':'Dosering uavklart'}{item.loadKg?' · ca. '+item.loadKg.toFixed(1)+' kg':''}{item.rirTarget?' · RIR '+item.rirTarget:''}{item.block_id?' · '+(parsed.blocks?.find(x=>x.id===item.block_id)?.title||item.block_id):''}</small></div><span className="wod-import-status">{skipped?'Hoppa over':selected?(selected.name!==(item.rawName||item.name)?'Liknande treff – kontroller':'Funne'):'Kontroller'}</span></div>
+     <div className="wod-import-review-top"><span className="wod-import-order">{index+1}</span><div className="wod-import-review-text"><strong>{item.rawName||item.name}</strong><small>{item.quantity?item.quantity.value+' '+item.quantity.unit:item.reps?item.reps+' reps':'Dosering uavklart'}{item.sets?' · '+item.sets+' sett':''}{item.loadKg?' · ca. '+item.loadKg.toFixed(1)+' kg':''}{item.rirTarget?' · RIR '+item.rirTarget:''}{item.block_id?' · '+(parsed.blocks?.find(x=>x.id===item.block_id)?.title||item.block_id):''}</small></div><span className="wod-import-status">{skipped?'Hoppa over':selected?(selected.name!==(item.rawName||item.name)?'Liknande treff – kontroller':'Funne'):'Kontroller'}</span></div>
      {selected&&!skipped&&<div className="wod-import-matched"><Check size={14}/> {selected.name}{selected.name!==(item.rawName||item.name)?' · tilsvarande namn, kontroller at varianten er rett':''}</div>}
      {!skipped&&<div className="wod-import-dose-editor">
       {item.quantity
@@ -125,7 +128,7 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
    {ignored.length>0&&<details className="wod-import-ignored"><summary>{ignored.length} overskrifter og opplysningar vart ikkje tekne med som øvingar</summary><ul>{ignored.map((line,index)=><li key={index}>{line}</li>)}</ul></details>}
    <p className="wod-import-warning">Berre aktive øvingar frå biblioteket kan overførast. Eit tilsvarande treff er eit forslag, ikkje ei automatisk erstatning. Resultatet blir eit upublisert utkast i WOD-byggjaren.</p>
    <label className="wod-import-admin-approval"><input type="checkbox" checked={approved} onChange={e=>setApproved(e.target.checked)}/><span>Eg har kontrollert namn, format, rundar, øvingar, dosering og eventuelle erstatningar. Overfør som utkast.</span></label>
-   <button type="button" className="primary-button wod-import-confirm" onClick={apply} disabled={!ready}>{unresolved?unresolved+' øvingar må avklarast':invalidSetup?'Kontroller WOD-oppsettet':!approved?'Stadfest admin-kontroll':'Bruk '+included+' '+(included===1?'øving':'øvingar')+' i WOD-byggjaren'}</button>
+   <button type="button" className="primary-button wod-import-confirm" onClick={apply} disabled={!ready}>{unresolved?unresolved+' øvingar må avklarast':compositeIssue?'Kontroller øktdelane':invalidSetup?'Kontroller WOD-oppsettet':!approved?'Stadfest admin-kontroll':'Bruk '+included+' '+(included===1?'øving':'øvingar')+' i WOD-byggjaren'}</button>
   </div>}
  </section>
 }
