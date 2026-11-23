@@ -1,9 +1,10 @@
 // Multi-part workouts reuse the existing WOD engine and Timer for each part.
 // No separate timer is introduced. Blocks, pauses and outcomes live in the WOD schema.
+import { emomIntervalSeconds, isEmomFormat } from './wodEngine.js'
 export const COMPOSITE_FORMAT = 'Samansett økt'
 export const COMPOSITE_BLOCK_FORMATS = [
  'AMRAP','For Time','Chipper','Couplet','Triplet','Ladder','Death By',
- 'E1MOM','E1.25MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM',
+ 'EMOM','E1MOM','E1.25MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM',
  'Intervall','Tabata','Row Intervals','Stasjonssirkel',
  'Strength','Superset','Complex','Eigen økt',
 ]
@@ -16,9 +17,8 @@ export const defaultCompositeBlocks = () => [
  {id:'b',title:'Del B',format:'AMRAP',minutes:8,transitionMode:'manual',transitionSeconds:0},
 ]
 
-export function compositeIntervalMinutes(format) {
- const match = /^E(1(?:\.25)?|[2-7])MOM$/.exec(String(format||''))
- return match ? Number(match[1]) : null
+export function compositeIntervalMinutes(format,block=null) {
+ return isEmomFormat(format)?emomIntervalSeconds(format,{work_every_seconds:block?.emomIntervalSeconds??block?.interval?.work_every_seconds,work_every_minutes:block?.interval?.work_every_minutes})/60:null
 }
 
 export function compositeBlockDuration(block, itemsCount=1) {
@@ -58,8 +58,8 @@ export function validateCompositeBlocks(blocks,items=[]) {
   if(!Number.isInteger(minute)||minute<1||minute>180)return title+': vel 1–180 minutt.'
   const exercises=items.filter(item=>(item.blockId||item.block_id)===block.id&&!item.is_rest)
   if(!exercises.length)return title+': legg til minst éi øving.'
-  const every=compositeIntervalMinutes(block.format)
-  if(every && (minute*60)%(every*60)!==0)return title+': øktlengda må gå opp i '+every+' minutt.'
+  const every=compositeIntervalMinutes(block.format,block)
+  if(every && (minute*60)%Math.round(every*60)!==0)return title+': øktlengda må gå opp i intervalla på '+Math.round(every*60)+' sekund.'
   if(block.format==='Couplet'&&exercises.length!==2)return title+': Couplet krev to øvingar.'
   if(block.format==='Triplet'&&exercises.length!==3)return title+': Triplet krev tre øvingar.'
   if(block.format==='Stasjonssirkel'&&(exercises.length<2||exercises.length>8))return title+': stasjonssirkel krev 2–8 stasjonar.'
@@ -88,9 +88,9 @@ export function validateCompositeBlocks(blocks,items=[]) {
 
 export function compositeBlockForTimer(block,index=0){
  const items=Array.isArray(block?.items)?block.items:[]
- const every=compositeIntervalMinutes(block.format)
+ const every=compositeIntervalMinutes(block.format,block)
  const duration=compositeBlockDuration(block,items.filter(x=>!x.is_rest).length||items.length)
- const slots=every?Math.floor(duration/(every*60)):0
+ const slots=every?Math.floor(duration/Math.round(every*60)):0
  return {
   ...block, title:block.title||'Del '+(index+1),
   duration_seconds:duration,
@@ -101,7 +101,7 @@ export function compositeBlockForTimer(block,index=0){
 /** Build the block settings consumed by the existing Timer, not a new timer. */
 export function compositeTimerConfig(block) {
  const current=compositeBlockForTimer(block)
- const every=compositeIntervalMinutes(current.format)
+ const every=compositeIntervalMinutes(current.format,current)
  const interval=COMPOSITE_INTERVAL_FORMATS.includes(current.format)
  const station=current.format==='Stasjonssirkel'
  const deathBy=current.format==='Death By'
@@ -119,7 +119,7 @@ export function compositeTimerConfig(block) {
   format:current.format,
   duration_seconds:current.duration_seconds,
   time_cap_seconds:timedCap ? current.duration_seconds:null,
-  interval:{work_every_minutes:every,work_seconds:interval?work:null,rest_seconds:interval?rest:0},
+  interval:{work_every_minutes:every,work_every_seconds:every?Math.round(every*60):null,work_seconds:every?Math.round(every*60):interval?work:null,rest_seconds:interval?rest:0},
   structure:station?'station_circuit':interval?'interval':COMPOSITE_STRENGTH_FORMATS.includes(current.format)?'strength':'metcon',
   station_circuit:stationPlan,
   rounds:interval||station?rounds:null,
