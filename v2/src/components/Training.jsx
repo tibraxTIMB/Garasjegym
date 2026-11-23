@@ -746,6 +746,8 @@ function CompositeTimer({schema,exerciseList=[],prescriptionLevel='rx',wodName='
  useEffect(()=>{
   const details=blocks.map((part,index)=>({
    index,id:part.id,title:part.title,format:part.format,combination_mode:part.combinationMode||null,
+   source_wod_id:part.source_wod_id||null,source_wod_name:part.source_wod_name||null,
+   source_wod_snapshot:part.source_wod_snapshot||null,
    duration_seconds:part.duration_seconds,
    elapsed:Number(results[index]?.elapsed)||0,
    roundsCompleted:Number(results[index]?.roundsCompleted)||0,
