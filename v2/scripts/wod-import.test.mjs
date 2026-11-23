@@ -77,9 +77,24 @@ test('ukjende importlinjer må avklarast og mobilkortet har eiga rekkje for knap
  const panel=readFileSync(new URL('../src/components/WodImportPanel.jsx',import.meta.url),'utf8');
  const builder=readFileSync(new URL('../src/components/WodBuilder.jsx',import.meta.url),'utf8');
  const styles=readFileSync(new URL('../src/components/wod-wizard-refine.css',import.meta.url),'utf8');
- assert.match(panel,/disabled=\{unresolved>0\|\|included===0\}/);
+ assert.match(panel,/disabled=\{!ready\}/);
  assert.match(panel,/Hopp over/);
  assert.match(builder,/parsed\.items\.filter\(row=>row\.exercise\)/);
  assert.match(styles,/grid-template-columns:28px minmax\(0,1fr\)!important/);
  assert.match(styles,/\.wod-reorder-controls\{\s*grid-column:2!important;grid-row:2!important/);
+});
+
+test('smart import enforces admin approval and copies reviewed WOD metadata into an unpublished draft',()=>{
+ const panel=readFileSync(new URL('../src/components/WodImportPanel.jsx',import.meta.url),'utf8');
+ const admin=readFileSync(new URL('../src/components/Admin.jsx',import.meta.url),'utf8');
+ const builder=readFileSync(new URL('../src/components/WodBuilder.jsx',import.meta.url),'utf8');
+ assert.match(panel,/checked=\{approved\}/);
+ assert.match(panel,/if\(!approved\)/);
+ assert.match(panel,/reviewedByAdmin:true/);
+ assert.match(panel,/meta\.format/);
+ assert.match(panel,/setDoseChanges/);
+ assert.match(panel,/activeCatalog=useMemo/);
+ assert.match(admin,/exerciseCatalog=\{exercises\.filter\(ex=>ex\.is_active\)\}/);
+ assert.match(builder,/setPublishToMembers\(false\)/);
+ assert.match(builder,/parsed\.items\.filter\(row=>row\.exercise\)/);
 });

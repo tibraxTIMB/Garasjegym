@@ -239,7 +239,7 @@ export default function App() {
     else if(href)navigateTo(({booking:'timeplan','/timeplan':'timeplan',pt:'timeplan','mi-trening':'mi-trening','wod-studio':'wod','wod-library':'wod'}[href]||href))
   }
   function navigateRoot(next){setNavigationStack([]);setActive(next)}
-  function handleSectionNavigate(id){setHelpTopic(null);if(id===active)return;if(id==='pt-studio'){setPTStudioWorkspace('studio');setPTStudioInitialTab(isStaff(profile)||isPTCoach?'oversikt':'tenester')}if(id==='timeplan')setScheduleTab('mine');if(id==='admin'){setAdminInitialTab('oversikt');setAdminFocusToken(value=>value+1)}navigateRoot(id)}
+  function handleSectionNavigate(id){setHelpTopic(null);if(id===active){if(id==='admin'&&profile.role==='admin'){setAdminInitialTab('drift');setAdminFocusToken(value=>value+1)}return}if(id==='pt-studio'){setPTStudioWorkspace('studio');setPTStudioInitialTab(isStaff(profile)||isPTCoach?'oversikt':'tenester')}if(id==='timeplan')setScheduleTab('mine');if(id==='admin'){setAdminInitialTab(profile.role==='admin'?'drift':'oversikt');setAdminFocusToken(value=>value+1)}navigateRoot(id)}
   function navigateBack(fallback='oversikt'){const previous=navigationStack[navigationStack.length-1]||fallback;setNavigationStack(stack=>stack.slice(0,-1));setActive(previous)}
   function openHelp(topic='navigation'){setHelpTopic(topic);navigateTo('mi-side')}
   function openFromHelp(target){
@@ -254,6 +254,7 @@ export default function App() {
     else if(target==='pt-admin'){setPTStudioInitialTab('administrasjon');navigateTo('pt-studio')}
     else if(target==='maintenance'&&profile.role==='admin'){setAdminInitialTab('drift');setAdminFocusToken(value=>value+1);navigateTo('admin')}
     else if(target==='coffee')navigateTo('kaffi')
+    else if(target==='community')navigateTo('fellesskap')
     else if(target==='history')navigateTo('mi-historikk')
     else if(target==='pr')navigateTo('pr-senter')
     else if(target==='music')navigateTo('musikk')
@@ -417,7 +418,7 @@ export default function App() {
   const memberNavigation=[sections[0],sections[1],sections[4],sections[2],{...sections[3],label:'PT-oppfølging',note:'Dine program, mål og kontakt med PT'},sections[8],sections[5],sections[6],sections[7]]
   const coachNavigation=memberNavigation.map(item=>item.id==='pt-studio'?{...item,label:'PT Studio',note:'Dine tildelte kundar, program og PT-oppfølging'}:item)
   const visibleSections = simpleMode ? [] : (isStaff(profile) ? staffNavigation.concat([{id:'admin',label:'Administrasjon',icon:Settings,note:'Medlemmer og drift'}]) : isPTCoach ? coachNavigation : memberNavigation)
-  const mobileNavItems = simpleMode ? [...sections.filter(item=>['oversikt','trening','wod','timeplan','mi-side'].includes(item.id)),...(isPTCoach?[{...sections[3],label:'PT Studio'}]:[]),{id:'mi-trening',label:'Min treningsplan',icon:CalendarDays,note:'Programmet og øktene frå PT'}] : visibleSections
+  const mobileNavItems = simpleMode ? [...sections.filter(item=>['oversikt','trening','wod','timeplan','mi-side'].includes(item.id)),{...sections[3],label:isPTCoach?'PT Studio':'PT'}] : visibleSections
   const current = visibleSections.find((item) => item.id === active) || sections[0]
   const Icon = current.icon
 
@@ -485,7 +486,7 @@ export default function App() {
         {selectedWorkout&&<WorkoutDetail workout={selectedWorkout} memberId={session.user.id} onBack={()=>setSelectedWorkout(null)} onSaved={handleWorkoutSaved} onDeleted={()=>{setSelectedWorkout(null);setWorkoutRevision(value=>value+1)}}/>}
         <footer>GARASJEGYM · {RELEASE_NAME}</footer>
       </main>
-      <AppMobileNavigation items={mobileNavItems} active={active} staff={!simpleMode&&isStaff(profile)} coach={isPTCoach} onNavigate={handleSectionNavigate}/>
+      <AppMobileNavigation items={mobileNavItems} active={active} staff={!simpleMode&&isStaff(profile)} admin={profile.role==='admin'} coach={isPTCoach} onNavigate={handleSectionNavigate}/>
       {infotainmentActive&&isStaff(profile)&&<Suspense fallback={<div className="training-state" role="status">Lastar infotainment …</div>}><Infotainment onExit={()=>{try{sessionStorage.removeItem('garasjegym:infotainment-active');sessionStorage.removeItem('garasjegym:infotainment-tab')}catch{}setInfotainmentActive(false)}} timerSnapshot={timerSnapshot}/></Suspense>}
     </div>
     </MusicProvider>

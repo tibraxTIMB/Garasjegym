@@ -38,7 +38,8 @@ test('customers have one canonical plan and both PT-program and WOD launch paths
   assert.match(plan, /pt_programs/)
   assert.match(plan, /pt_program_sessions/)
   assert.match(plan, /onLaunchProgramSession/)
-  assert.match(nav, /item\.id !== 'mi-trening'/)
+  assert.match(nav, /const PRIMARY_IDS = \['oversikt', 'wod', 'trening', 'timeplan', 'mi-side'\]/)
+  assert.match(src('../src/components/MyPage.jsx'), /onHelpNavigate\('plan'\)/)
 })
 
 test('the home and group timetable lead to a genuine PT enquiry', () => {

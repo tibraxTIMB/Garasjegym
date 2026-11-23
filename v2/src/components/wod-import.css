@@ -42,3 +42,18 @@
  .wod-import-suggestions,.wod-import-matched{margin-left:0}
  .wod-import-review-item{padding:10px}
 }
+
+/* Intelligent import-assistent: kompakt og tydeleg manuell kontroll for administrator. */
+.wod-import-meta-editor{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;min-width:0}
+.wod-import-meta-editor label,.wod-import-dose-editor label{display:grid;gap:5px;min-width:0;color:#dce7e5;font-size:12px;font-weight:800}
+.wod-import-meta-editor input,.wod-import-meta-editor select,.wod-import-dose-editor input{width:100%;min-width:0;min-height:43px;padding:8px 10px;border:1px solid #687b7e;border-radius:9px;background:#112329;color:#f9f9f6;color-scheme:dark;font-size:14px}
+.wod-import-dose-editor{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0}
+.wod-import-review-hint{display:flex;align-items:flex-start;gap:8px;border-left:3px solid #dfa24e;padding:7px 9px;background:#352d20;color:#f8dda9;font-size:12px;line-height:1.45}
+.wod-import-review-hint svg{flex:none}
+.wod-import-admin-approval{display:flex;align-items:flex-start;gap:11px;padding:12px;border:1px solid #a57b42;border-radius:11px;background:#282b25;color:#f5e4c3;font-size:13px;line-height:1.45;cursor:pointer}
+.wod-import-admin-approval input{flex:0 0 auto;appearance:auto;accent-color:#eaaa4f;width:21px;height:21px;min-width:21px;margin:0;cursor:pointer}
+.wod-import-admin-approval span{min-width:0;overflow-wrap:anywhere}
+.wod-import-result-head{align-items:start}
+.wod-import-review-item{overflow:hidden}
+.wod-import-dose-editor input:focus-visible,.wod-import-meta-editor input:focus-visible,.wod-import-meta-editor select:focus-visible{outline:2px solid #f9bd68;outline-offset:1px}
+@media(max-width:530px){.wod-import-meta-editor{grid-template-columns:minmax(0,1fr)}.wod-import-dose-editor{grid-template-columns:minmax(0,1fr)}.wod-import-admin-approval{font-size:12px}}
