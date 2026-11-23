@@ -808,10 +808,10 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   }
 
   useEffect(() => {
-    if (format === 'AMRAP' || (['Couplet','Triplet'].includes(format) && source?.timer_settings?.workout_schema?.combination_mode === 'AMRAP')) {
+    if (!manualEntry && (format === 'AMRAP' || (['Couplet','Triplet'].includes(format) && source?.timer_settings?.workout_schema?.combination_mode === 'AMRAP'))) {
       setScoreRounds(String(timerSnapshot.roundsCompleted || 0))
     }
-  }, [timerSnapshot.roundsCompleted, format, source])
+  }, [timerSnapshot.roundsCompleted, format, source, manualEntry])
 
   useEffect(() => {
     if (!launchWodId || loading) return
@@ -940,17 +940,17 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           sets: item.sets || [],
         }).usesLoad,
         sets: Array.isArray(item.sets) && item.sets.length ? item.sets.map(set => ({
-          reps: set.reps == null ? '' : String(set.reps),
-          load_kg: set.load_kg == null ? '' : String(set.load_kg),
-          time_text: set.tempo || '',
+          reps: forResult ? '' : set.reps == null ? '' : String(set.reps),
+          load_kg: forResult ? '' : set.load_kg == null ? '' : String(set.load_kg),
+          time_text: forResult ? '' : set.tempo || '',
           time_seconds: '',
-          height_cm: set.height_cm == null ? String(item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? Object.values(item.levels||{}).find(level=>level?.heightCm!=null)?.heightCm ?? item.height_cm ?? '') : String(set.height_cm),
+          height_cm: forResult ? '' : set.height_cm == null ? String(item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? Object.values(item.levels||{}).find(level=>level?.heightCm!=null)?.heightCm ?? item.height_cm ?? '') : String(set.height_cm),
         })) : [{
-          reps: item.reps == null ? '' : String(item.reps),
-          load_kg: item.load_kg == null ? '' : String(item.load_kg),
+          reps: forResult ? '' : item.reps == null ? '' : String(item.reps),
+          load_kg: forResult ? '' : item.load_kg == null ? '' : String(item.load_kg),
           time_text: '',
           time_seconds: '',
-          height_cm: String(item.height_cm ?? item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? Object.values(item.levels||{}).find(level=>level?.heightCm!=null)?.heightCm ?? ''),
+          height_cm: forResult ? '' : String(item.height_cm ?? item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? Object.values(item.levels||{}).find(level=>level?.heightCm!=null)?.heightCm ?? ''),
         }],
       })))
     } else if (wod?.movements) {
