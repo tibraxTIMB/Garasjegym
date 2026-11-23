@@ -134,3 +134,26 @@ export function isValidRirTarget(value){
  if(!parsed)return false
  return !parsed[2]||(Number(parsed[1])>=0&&Number(parsed[1])<=Number(parsed[2]))
 }
+
+/** Keep WOD part results separate and never infer a result from prescribed work. */
+export function parseCompositeScoreTime(value) {
+ const raw=String(value??'').trim()
+ const match=raw.match(/^(\\d{1,3}):([0-5]\\d)$/)
+ return match?Number(match[1])*60+Number(match[2]):NaN
+}
+
+export function compositeScoredBlocks(blockSummary=[],overrides={}) {
+ return (Array.isArray(blockSummary)?blockSummary:[]).map(block=>{
+  const changed=overrides?.[block.id]||{}
+  const format=String(block.format||'')
+  const next={...block}
+  if(format==='AMRAP'||(['Couplet','Triplet'].includes(format)&&block.combination_mode==='AMRAP')){
+   next.roundsCompleted=changed.rounds===''||changed.rounds==null ? Number(block.roundsCompleted)||0 : Number(changed.rounds)
+   next.extra_reps=changed.extraReps===''||changed.extraReps==null ? Number(block.extra_reps)||0 : Number(changed.extraReps)
+  }
+  if(['For Time','Chipper','Couplet','Triplet','Ladder','Death By'].includes(format)){
+   if(String(changed.time||'').trim())next.elapsed=parseCompositeScoreTime(changed.time)
+  }
+  return next
+ })
+}
