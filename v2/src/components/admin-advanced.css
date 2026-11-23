@@ -13,3 +13,12 @@
 .admin-drift-details{min-width:0}
 .admin-drift-details>.admin-advanced-content{min-width:0}
 @media(max-width:560px){.admin-drift-actions{grid-template-columns:minmax(0,1fr)}.admin-drift-actions>button{min-height:104px}}
+
+/* Compact, touch-friendly owner dashboard counters. All four are real links to existing workspaces. */
+.admin-module .admin-stats-compact{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.admin-module .admin-stats-compact>button{appearance:none;display:grid;grid-template-columns:17px minmax(0,1fr);grid-template-rows:auto auto;align-content:center;align-items:center;column-gap:6px;row-gap:2px;min-width:0;min-height:62px;padding:7px 11px;border:1px solid var(--line,#434a4a);border-radius:10px;background:#171b1d;color:var(--orange,#e7a33a);text-align:left;cursor:pointer;font:inherit}
+.admin-module .admin-stats-compact>button strong{font-size:20px;line-height:1.1;color:#f2f1ed;font-variant-numeric:tabular-nums}
+.admin-module .admin-stats-compact>button span{grid-column:1/-1;color:var(--muted,#bac3c0);font-size:11px;line-height:1.15;font-weight:650;overflow-wrap:anywhere}
+.admin-module .admin-stats-compact>button:hover{border-color:var(--orange,#e7a33a)}
+.admin-module .admin-stats-compact>button:focus-visible{outline:2px solid var(--orange,#e7a33a);outline-offset:3px}
+@media(max-width:620px){.admin-module .admin-stats-compact{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.admin-module .admin-stats-compact>button{min-height:56px;padding:6px 10px}}
