@@ -257,3 +257,16 @@
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+
+/* Composite WOD: compact, touch-friendly block editor. */
+.gg-composite-editor{display:grid;gap:10px;margin:10px 0 16px;padding:12px;border:1px solid var(--line,#42464b);border-radius:12px;background:var(--panel,#23272a);min-width:0}
+.gg-composite-block{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) minmax(0,1.2fr) 86px auto;gap:8px;align-items:end;padding:10px;border:1px solid var(--line,#45494e);border-radius:10px;min-width:0}
+.gg-composite-block>strong{align-self:center}
+.gg-composite-block label{display:grid;gap:4px;min-width:0;font-size:12px}
+.gg-composite-block input,.gg-composite-block select,.gg-composite-active-picker select{width:100%;min-width:0;min-height:44px;border-radius:8px;padding:8px;color:inherit;background:var(--panel2,#292d32);border:1px solid var(--line,#555)}
+.gg-composite-active-picker{display:grid;gap:6px;margin:8px 12px;font-weight:700;font-size:13px}
+.gg-composite-block>span{font-size:12px;opacity:.83}
+.gg-composite-block button{min-height:44px}
+@media(max-width:750px){.gg-composite-block{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.gg-composite-block>strong,.gg-composite-block>span{grid-column:1/-1}}
+@media(max-width:410px){.gg-composite-editor{padding:8px}.gg-composite-block{padding:8px;gap:6px}}
