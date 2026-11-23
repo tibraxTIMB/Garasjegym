@@ -6092,3 +6092,10 @@ html[data-gg-device="tablet"][data-gg-orientation="portrait"] .timer-panel-tools
  .workout-result-measurements .workout-result-measure input{padding:6px;font-size:12px}
  .workout-result-measurements .workout-result-measure span{font-size:10px}
 }
+
+
+/* Compact, single-entry homepage: direct actions before statistics. */
+.overview-dashboard .overview-primary-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 13px}
+.overview-dashboard .overview-primary-actions button{display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;min-height:48px;padding:9px 10px;white-space:normal;text-align:center}
+.overview-dashboard .overview-primary-actions button:first-child{background:#e6a23a;color:#17191c;border-color:#e6a23a}
+@media(max-width:500px){.overview-dashboard .overview-primary-actions button{font-size:12px;min-height:48px}.overview-dashboard .overview-stats{gap:6px}.overview-dashboard .overview-stats button{padding:9px;gap:3px}.overview-dashboard .overview-stats strong{font-size:22px}}
