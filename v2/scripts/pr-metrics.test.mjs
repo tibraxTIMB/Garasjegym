@@ -47,15 +47,17 @@ test('hang olympic lifting stays loaded while dead hang and wall sit measure sec
  assert.deepEqual(exercise.records.map(r=>[r.key,r.value]),[['hold',64]])
 })
 
-test('invalid load without reps does not become a PR',()=>{
+test('recorded load without reps is visible but does not invent volume or heavy sets',()=>{
  const [exercise]=deriveExerciseRecords([workout(1,'Kettlebell Snatch',[{reps:null,load_kg:36}])])
- assert.equal(exercise.records.length,0)
+ assert.deepEqual(exercise.records.map(r=>[r.key,r.value]),[['load',36]])
+ assert.match(exercise.records[0].detail,/repetisjonstal manglar/)
 })
 
 test('benchmark AMRAP compares rounds then reps and separates scaled',()=>{
  const base={source_wod_id:'per-aspera',format:'AMRAP',title:'Per Aspera',result_data:{prescription_level:'rx',wod_names:['Per Aspera']}}
  const logs=[{...base,id:1,score_rounds:4,score_reps:10},{...base,id:2,score_rounds:5,score_reps:0},{...base,id:3,score_rounds:6,score_reps:2,result_data:{prescription_level:'scaled'}}]
- const result=deriveBenchmarkRecords(logs)
+ assert.equal(deriveBenchmarkRecords(logs).length,0) // Ordinary WODs are never automatic benchmarks
+ const result=deriveBenchmarkRecords(logs,['per-aspera'])
  assert.equal(result.length,2)
  assert.equal(result.find(r=>r.level==='rx').logId,2)
  assert.equal(result.find(r=>r.level==='scaled').logId,3)
@@ -64,5 +66,5 @@ test('benchmark AMRAP compares rounds then reps and separates scaled',()=>{
 test('For Time ignores time-cap results and chooses fastest completed time',()=>{
  const base={source_wod_id:'wod-1',format:'For Time',title:'Baseline'}
  const logs=[{...base,id:1,score_time_seconds:200,result_data:{time_cap_reached:true}},{...base,id:2,score_time_seconds:320,result_data:{}},{...base,id:3,score_time_seconds:260,result_data:{}}]
- assert.equal(deriveBenchmarkRecords(logs)[0].logId,3)
+ assert.equal(deriveBenchmarkRecords(logs,['wod-1'])[0].logId,3)
 })
