@@ -2,9 +2,7 @@ import {useEffect,useState} from 'react'
 import {ArrowLeft,CalendarDays,Check,Clock3,Dumbbell,Edit3,LoaderCircle,MoreHorizontal,Save,Trash2,Trophy,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import {formatWorkoutSeconds,formatWorkoutSet,optionalNumber,splitWorkoutNote} from '../lib/workoutDetail.js'
-import {sortWodItems,getWodSchemaItems} from '../lib/wodOrdering.js'
-import {isEmomFormat,emomPrescribedSetCount} from '../lib/wodEngine.js'
-import {plannedFixedEmomSets} from '../lib/compositeWod.js'
+import {suggestedEmomSets} from '../lib/workoutCorrections.js'
 import './workout-detail.css'
 
 const initialSetValues=set=>({
@@ -24,28 +22,6 @@ const initialForm=workout=>{
 }
 const dateLabel=date=>date?new Date(date+'T12:00:00').toLocaleDateString('nn-NO',{day:'numeric',month:'long',year:'numeric'}):'Dato manglar'
 const blankSet=()=>({reps:'',load_kg:'',height_cm:'',time_seconds:'',time_text:''})
-const sameMovement=(a,b)=>String(a||'').trim().toLocaleLowerCase('nn-NO')===String(b||'').trim().toLocaleLowerCase('nn-NO')
-/** Use only the original WOD prescription and completed blocks, never inferred actual performance. */
-function suggestedEmomSets(workout,schema,exercise,index){
- if(!schema)return null
- const items=sortWodItems(getWodSchemaItems(schema))
- const item=sameMovement(items[index]?.exercise_name,exercise.exercise_name)?items[index]:items.find(x=>sameMovement(x.exercise_name,exercise.exercise_name))
- if(!item)return null
- const level=workout.result_data?.prescription_level||schema.prescription||'rx'
- const prescribed=Number(item.levels?.[level]?.reps??item.reps)
- if(!Number.isInteger(prescribed)||prescribed<=0||item.is_rest||item.reps_mode==='amrap')return null
- if(workout.format==='Samansett økt'){
-   const part=(schema.composite_blocks||[]).find(b=>b.id===item.block_id)
-   if(!part||!(workout.result_data?.block_summary||[]).some(s=>s.id===part.id&&s.completed===true))return null
-   const plan=plannedFixedEmomSets(item,schema.composite_blocks,level,false)
-   return plan.autoFill?{count:plan.sets.length,reps:prescribed}:null
- }
- if(!isEmomFormat(workout.format)||workout.result_data?.completed===false)return null
- const count=emomPrescribedSetCount({format:workout.format,interval:schema.interval,durationSeconds:schema.duration_seconds,minuteSlot:item.minute_slot,exerciseIndex:items.indexOf(item),exerciseCount:items.length})
- return count>0?{count,reps:prescribed}:null
-}
-
-
 export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId}){
  const [editing,setEditing]=useState(false)
  const [editMode,setEditMode]=useState(null)
