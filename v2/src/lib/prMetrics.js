@@ -141,16 +141,20 @@ export function deriveBenchmarkRecords(logs = [], benchmarkWodIds = []) {
   }
   // Existing single-format WODs keep their original benchmark history.
   const format=String(log.format||'').toLowerCase()
+  const combinationMode=String(log.result_data?.combination_mode||'').toLowerCase()
+  const engineFields=log.result_data?.wod_engine?.scoring?.fields||[]
+  const isCombo=['couplet','triplet'].includes(format)
+  const comboAmrap=isCombo&&(combinationMode==='amrap'||(!combinationMode&&engineFields.includes('rounds_reps')))
   const key=`${log.source_wod_id}|${level}|${format}`
   let score=null
   if(format==='death by'){
    if(log.score_rounds==null)continue
    score={rounds:Math.max(0,Number(log.score_rounds)||0),reps:0,unit:'fullførte rundar'}
-  } else if(format.includes('amrap')){
+  } else if(format.includes('amrap')||comboAmrap){
    if(log.score_rounds==null)continue
    score={rounds:Number(log.score_rounds)||0,reps:Number(log.score_reps)||0,unit:'rundar + reps'}
-  } else if(['for time','chipper'].includes(format)){
-   if(!positive(log.score_time_seconds)||log.result_data?.time_cap_reached)continue
+  } else if(['for time','chipper','ladder'].includes(format)||(isCombo&&!comboAmrap&&combinationMode!=='open')){
+   if(!positive(log.score_time_seconds)||log.result_data?.time_cap_reached||log.result_data?.completed===false)continue
    score={value:positive(log.score_time_seconds),unit:'sek',direction:'min'}
   }
   addScore({log,level,format,key,name:log.result_data?.wod_names?.[0]||log.title||'Benchmark-WOD',score})
