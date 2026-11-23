@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { CalendarDays, Clock3, MonitorUp, Play, Pause, RotateCcw, TimerReset, Music2, LoaderCircle, Lock, Unlock, Maximize2, Minimize2, X } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { groupEventsByLocalDay } from '../lib/infotainmentEvents.js'
@@ -137,12 +137,15 @@ export default function Infotainment({onExit,timerSnapshot=null}){
  const [error,setError]=useState('')
  const [elapsed,setElapsed]=useState(0)
  const [running,setRunning]=useState(false)
+ const runStartedAt=useRef(null)
+ const toggleClock=()=>{if(running){setElapsed(Math.floor((Date.now()-runStartedAt.current)/1000));setRunning(false);runStartedAt.current=null}else{runStartedAt.current=Date.now()-elapsed*1000;setRunning(true)}}
+ const clearClock=()=>{setRunning(false);setElapsed(0);runStartedAt.current=null}
  const [showDemoClock,setShowDemoClock]=useState(false)
  const [activeTab,setActiveTab]=useState(()=>{try{const saved=sessionStorage.getItem('garasjegym:infotainment-tab');return ['oversikt','kalender','musikk','timer'].includes(saved)?saved:'oversikt'}catch{return 'oversikt'}})
  useEffect(()=>{try{sessionStorage.setItem('garasjegym:infotainment-tab',activeTab)}catch{}},[activeTab])
 
  useEffect(()=>{const id=window.setInterval(()=>setNow(new Date()),1000);return()=>window.clearInterval(id)},[])
- useEffect(()=>{if(!running)return undefined;const id=window.setInterval(()=>setElapsed(value=>value+1),1000);return()=>window.clearInterval(id)},[running])
+ useEffect(()=>{if(!running)return undefined;const refresh=()=>setElapsed(Math.max(0,Math.floor((Date.now()-(runStartedAt.current||Date.now()))/1000)));const id=window.setInterval(refresh,250);document.addEventListener('visibilitychange',refresh);return()=>{window.clearInterval(id);document.removeEventListener('visibilitychange',refresh)}},[running])
  useEffect(()=>{
   let live=true
   const load=async()=>{
@@ -152,7 +155,7 @@ export default function Infotainment({onExit,timerSnapshot=null}){
    const {data,error:loadError}=await supabase.rpc('get_infotainment_schedule',{p_from:from.toISOString(),p_to:to.toISOString()})
    if(!live)return
    if(loadError){setError('Kalenderen kunne ikkje hentast.');setEvents([])}
-   else setEvents((data||[]).filter(item=>new Date(item.ends_at)>=new Date()).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at)))
+   else setEvents((data||[]).filter(item=>item.category!=='pt'&&new Date(item.ends_at)>=new Date()).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at)))
    setLoading(false)
   }
   load()
@@ -161,7 +164,7 @@ export default function Infotainment({onExit,timerSnapshot=null}){
  },[])
 
  const groups=useMemo(()=>groupEventsByLocalDay(events),[events])
- const trainingActive=Boolean(timerSnapshot?.title)
+ const trainingActive=Boolean(timerSnapshot?.sessionOpen&&timerSnapshot?.title)
  const timerValue=trainingActive?(Number(timerSnapshot?.displayTime)||0):elapsed
  const timerCaption=trainingActive?'AKTIV TRENINGSØKT':'GARASJEKLOKKE'
  const dayLabel=now.toLocaleDateString('nn-NO',{weekday:'long',day:'numeric',month:'long'})
@@ -188,7 +191,7 @@ export default function Infotainment({onExit,timerSnapshot=null}){
     <div className="infotainment-panel-head"><div><span className="infotainment-kicker">KOMANDE AKTIVITET</span><h2><CalendarDays size={19}/> Kalender</h2></div><span className="infotainment-window">Neste 7 dagar</span></div>
     {loading?<div className="infotainment-loading"><LoaderCircle className="infotainment-spin"/> Hentar kalender …</div>:error?<div className="infotainment-empty">{error}</div>:groups.length?groups.map(([day,items])=><div className="infotainment-day" key={day}><h3>{new Date(day+'T12:00:00').toLocaleDateString('nn-NO',{weekday:'long',day:'numeric',month:'long'})}</h3>{items.map(item=><article key={item.event_key} className={'infotainment-event '+(item.category==='pt'?'pt-event':'class-event')}><span className="infotainment-event-time">{new Date(item.starts_at).toLocaleTimeString('nn-NO',{hour:'2-digit',minute:'2-digit'})}</span><span className="infotainment-event-main"><strong>{item.category==='pt'?'PT-time':item.title}</strong><small>{item.category==='pt'?'PT-time · ledig for booking':'Gruppetime'}</small></span><span className="infotainment-event-duration">{Math.max(1,Math.round((new Date(item.ends_at)-new Date(item.starts_at))/60000))} min</span></article>)}</div>):<div className="infotainment-empty">Ingen komande aktivitetar er publiserte.</div>}
    </section>}
-   {(activeTab==='oversikt'||activeTab==='musikk')&&<div className="infotainment-side">
+   {(activeTab==='oversikt'||activeTab==='musikk'||activeTab==='timer')&&<div className="infotainment-side">
     {activeTab==='oversikt'&&<section className="infotainment-panel infotainment-music">
      <div className="infotainment-panel-head"><div><span className="infotainment-kicker">LYD I GARASJEN</span><h2><Music2 size={19}/> Musikk</h2></div></div>
      <MusicMiniPlayer/>
@@ -200,7 +203,7 @@ export default function Infotainment({onExit,timerSnapshot=null}){
      <div className="infotainment-timer-caption">{trainingActive?(timerSnapshot?.title||'Aktiv treningsøkt'):timerCaption}</div>
      <strong className="infotainment-timer-value">{clock(timerValue)}</strong>
      <div className="infotainment-timer-state">{trainingActive?(timerSnapshot?.running?'TRENING PÅGÅR':timerSnapshot?.phase||'PAUSA'):running?'STOPPEKLOKKE GÅR':'STOPPEKLOKKE PAUSA'}</div>
-     {!trainingActive&&<div className="infotainment-timer-actions"><button type="button" onClick={()=>setRunning(value=>!value)}>{running?<Pause size={15}/>:<Play size={15}/>} {running?'Pause':'Start'}</button><button type="button" onClick={()=>{setRunning(false);setElapsed(0)}}><RotateCcw size={15}/> Nullstill</button></div>}
+     {!trainingActive&&<div className="infotainment-timer-actions"><button type="button" onClick={toggleClock}>{running?<Pause size={15}/>:<Play size={15}/>} {running?'Pause':'Start'}</button><button type="button" onClick={clearClock}><RotateCcw size={15}/> Nullstill</button></div>}
      {trainingActive&&<p className="infotainment-note">{timerSnapshot?.running?'Den aktive WOD-timeren held fram i treningsmodus.':'Treningsøkta er pausa eller ferdig i treningsmodus.'}</p>}
     </section>}
    </div>}
