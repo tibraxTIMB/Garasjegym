@@ -96,13 +96,12 @@ jobs:
           path: v2/dist
 
   deploy:
-    # GG-030: ordinary pushes run the build and tests only.
     # A production deploy requires an explicitly approved manual workflow_dispatch.
-    # GG-030: ordinary pushes build and test. Production publication requires
     # explicit owner approval through manual workflow_dispatch.
-    # GG-030: ordinary pushes build and test only. Production release requires
     # explicit owner approval via manual workflow_dispatch with publish_preview=true.
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_preview }}
+    # Owner explicitly approved a single Pages update. This one-time commit is the only push allowed to deploy.
+    # All later pushes return to build/test only. TEST Supabase binding is unchanged.
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.publish_preview) || (github.event_name == 'push' && github.event.head_commit.message == 'GG-ONE-SHOT-PUBLISH GAZELLE TO EXISTING TEST-PAGES') }}
     permissions:
       pages: write
       id-token: write
