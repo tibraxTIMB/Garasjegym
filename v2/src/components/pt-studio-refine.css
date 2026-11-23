@@ -248,3 +248,25 @@
 .pt2-client-refresh{display:inline-flex;align-items:center;gap:6px;justify-self:start;padding:6px 0;border:0;background:transparent;color:var(--gg-shell-accent,#d99a33);font:inherit;font-size:12px;font-weight:750;cursor:pointer}
 .pt2-client-refresh:disabled{opacity:.5;cursor:wait}
 .pt2-client-refresh:focus-visible{outline:2px solid var(--gg-shell-accent,#d99a33);outline-offset:4px;border-radius:4px}
+
+/* PT customer preview – all original intake questions visible before any send. */
+.pt2-intake-preview{width:min(690px,calc(100vw - 24px));max-height:min(84dvh,800px);overflow-y:auto;overscroll-behavior:contain}
+.pt2-intake-preview-recipient{display:grid;gap:4px;padding:12px 14px;border:1px solid #dea252;border-radius:12px;background:rgba(222,162,82,.09)}
+.pt2-intake-preview-recipient strong{font-size:17px}
+.pt2-intake-preview-recipient small{opacity:.8}
+.pt2-intake-preview-questions{display:grid;gap:9px;margin:10px 0;padding-left:24px}
+.pt2-intake-preview-questions li{padding:7px 9px;line-height:1.4}
+.pt2-intake-preview-questions li strong,.pt2-intake-preview-questions li span,.pt2-intake-preview-questions li small{display:block}
+.pt2-intake-preview-questions li span{margin-top:3px;font-size:13px;opacity:.9}
+.pt2-intake-preview-questions li small{font-size:11px;opacity:.68}
+.pt2-intake-preview-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:0;padding:13px 0 4px;background:var(--panel,#202326)}
+.pt2-intake-preview-actions button{min-height:46px}
+.pt2-client-active .pt2-workspace-head .pt2-workspace-switch{background:transparent;padding:0;gap:6px}
+@media(max-width:560px){
+ .pt2-intake-preview-actions{flex-direction:column}
+ .pt2-intake-preview-actions button{width:100%}
+ .pt2-client-active .pt2-workspace-head .pt2-workspace-switch{grid-template-columns:1fr 1fr}
+ .pt2-client-active .pt2-workspace-head .pt2-workspace-switch button{font-size:11px;min-height:44px}
+ .pt2-client-active .pt2-customer-rank{display:flex}
+ .pt2-client-active .pt2-customer-rank small{font-size:11px;opacity:.75}
+}
