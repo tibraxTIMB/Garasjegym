@@ -2,7 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {parseWodImport} from '../src/lib/wodImport.js'
-import {COMPOSITE_FORMAT,defaultCompositeBlocks,validateCompositeBlocks,compositeBlockForTimer,compositeTotalSeconds,isValidRirTarget} from '../src/lib/compositeWod.js'
+import {COMPOSITE_FORMAT,COMPOSITE_BLOCK_FORMATS,defaultCompositeBlocks,validateCompositeBlocks,compositeBlockForTimer,compositeTimerConfig,compositeBlockDuration,compositeTotalSeconds,compositeScoredBlocks,parseCompositeScoreTime,isValidRirTarget} from '../src/lib/compositeWod.js'
+import {deriveBenchmarkRecords} from '../src/lib/prMetrics.js'
 
 const catalog=['Strict press','Push Press','Goblet squat','Alternating Dumbbell Push Jerk','Burpee Over Dumbbell','Bear Crawl'].map((name,index)=>({id:String(index+1),name,is_active:true}))
 const painCave=`ØKT 2 · Frå man cave til pain cave
@@ -70,4 +71,87 @@ test('Composite format is wired to builder, timer, import and persistent log',()
  assert.match(timer,/block_results:timerSnapshot\.block_results/)
  assert.match(timer,/format===COMPOSITE_FORMAT/)
  assert.match(panel,/wod-import-composite-preview/)
+})
+
+test('A–E supports several formats, per-part durations, and an exact preset pause',()=>{
+ const blocks=[
+  {id:'a',title:'Del A',format:'E3MOM',minutes:9,transitionMode:'manual'},
+  {id:'b',title:'Del B',format:'Strength',minutes:12,transitionMode:'timed',transitionSeconds:90},
+  {id:'c',title:'Del C',format:'Intervall',minutes:9,workSeconds:40,restSeconds:20,rounds:3},
+  {id:'d',title:'Del D',format:'For Time',minutes:10},
+  {id:'e',title:'Del E',format:'Stasjonssirkel',minutes:12,workSeconds:45,restSeconds:15,rounds:3},
+ ]
+ const counts={a:2,b:1,c:3,d:2,e:4}
+ const exercises=blocks.flatMap(block=>Array.from({length:counts[block.id]},(_,i)=>({block_id:block.id,exercise_name:block.id+i})))
+ assert.equal(validateCompositeBlocks(blocks,exercises),'')
+ assert.ok(COMPOSITE_BLOCK_FORMATS.includes('Chipper'))
+ assert.ok(COMPOSITE_BLOCK_FORMATS.includes('Tabata'))
+ assert.ok(COMPOSITE_BLOCK_FORMATS.includes('Row Intervals'))
+ const durationBlocks=blocks.map(block=>({...block,itemsCount:counts[block.id]}))
+ assert.equal(compositeBlockDuration(blocks[2],3),520)  // 9×40s + 8×20s
+ assert.equal(compositeBlockDuration(blocks[4],4),705)  // 12×45s + 11×15s
+ assert.equal(compositeTotalSeconds(durationBlocks),3175)
+ const station=compositeTimerConfig({...blocks[4],items:exercises.filter(item=>item.block_id==='e')})
+ assert.equal(station.timerSettings.workout_schema.station_circuit.station_count,4)
+ assert.equal(station.timerSettings.rounds,3)
+ assert.equal(station.timerSettings.work_seconds,45)
+ assert.equal(station.timerSettings.rest_seconds,15)
+})
+
+test('Preset breaks reject invalid settings; interval and station parts cannot hide Pause as an exercise',()=>{
+ const blocks=defaultCompositeBlocks().map(block=>({...block}))
+ const valid=[{block_id:'a',exercise_name:'Strict press'},{block_id:'b',exercise_name:'Goblet squat'}]
+ blocks[0].transitionMode='timed'
+ blocks[0].transitionSeconds=0
+ assert.match(validateCompositeBlocks(blocks,valid),/pause/)
+ blocks[0].transitionSeconds=90
+ assert.equal(validateCompositeBlocks(blocks,valid),'')
+ blocks[1].format='Stasjonssirkel'
+ const withRest=[...valid,{block_id:'b',exercise_name:'Air squat'},{block_id:'b',is_rest:true,exercise_name:'Pause'}]
+ assert.match(validateCompositeBlocks(blocks,withRest),/Pause/)
+})
+
+test('Composite scores preserve each AMRAP result, For Time cap, and explicit RIR',()=>{
+ const raw=[
+  {id:'c',title:'Del C',format:'AMRAP',completed:true,roundsCompleted:5,extra_reps:0,elapsed:480},
+  {id:'d',title:'Del D',format:'For Time',completed:true,elapsed:470,time_cap_reached:false},
+ ]
+ const scored=compositeScoredBlocks(raw,{c:{rounds:'6',extraReps:'2'},d:{time:'07:20'}})
+ assert.equal(scored[0].roundsCompleted,6)
+ assert.equal(scored[0].extra_reps,2)
+ assert.equal(scored[1].elapsed,440)
+ assert.equal(parseCompositeScoreTime('07:20'),440)
+ assert.ok(Number.isNaN(parseCompositeScoreTime('07:70')))
+})
+
+test('Benchmark PR compares each part separately and excludes uncompleted time caps',()=>{
+ const mk=(id,date,rounds,reps,time,timeCapReached=false)=>({
+  id,source_wod_id:'same-wod',title:'5 delars trening',format:COMPOSITE_FORMAT,workout_date:date,
+  result_data:{prescription_level:'rx',block_summary:[
+   {id:'c',title:'Del C',format:'AMRAP',completed:true,roundsCompleted:rounds,extra_reps:reps,elapsed:480},
+   {id:'d',title:'Del D',format:'For Time',completed:true,elapsed:time,time_cap_reached:timeCapReached}
+  ]}
+ })
+ const result=deriveBenchmarkRecords([
+  mk('1','2026-11-01',5,8,485),
+  mk('2','2026-11-23',6,2,440),
+  mk('3','2026-11-24',4,0,600,true)
+ ])
+ assert.equal(result.length,2)
+ const amrap=result.find(r=>r.format==='amrap')
+ const forTime=result.find(r=>r.format==='for time')
+ assert.deepEqual([amrap.score.rounds,amrap.score.reps,amrap.logId],[6,2,'2'])
+ assert.deepEqual([forTime.score.value,forTime.logId],[440,'2'])
+ assert.equal(forTime.count,2)
+})
+
+test('The session persists separate scores and skips planned reps when generating PRs',()=>{
+ const read=path=>readFileSync(new URL(path,import.meta.url),'utf8')
+ const training=read('../src/components/Training.jsx')
+ assert.match(training,/block_summary:scoredBlocks\.length/)
+ assert.match(training,/composite_breaks:timerSnapshot\.composite_breaks/)
+ assert.match(training,/clearPlannedResults=forResult\|\|wod\?\.format===COMPOSITE_FORMAT/)
+ assert.match(training,/rir:s\.rir===''\|\|s\.rir==null/)
+ assert.match(training,/autoStartOnMount=\{autoStartIndex===active\}/)
+ assert.match(training,/source_wod_id,title,workout_date/)
 })
