@@ -13,7 +13,7 @@ test('WOD format automatically selects the matching result type', () => {
   for (const [format, expected] of [
     ['AMRAP', 'rounds_reps'], ['For Time', 'time'], ['Chipper', 'time'],
     ['Strength', 'load'], ['Superset', 'load'], ['Complex', 'load'],
-    ['Ladder', 'time'], ['Row Intervals', 'distance'],
+    ['Ladder', 'time'], ['Death By', 'rounds_reps'], ['Row Intervals', 'distance'],
     ['Tabata', 'reps'], ['E2MOM', 'reps'], ['Eigen økt', 'reps'],
   ]) {
     assert.deepEqual(scoreForWodFormat(format), { type: expected, fields: [expected] }, format);
