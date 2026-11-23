@@ -17,7 +17,7 @@ export const defaultCompositeBlocks = () => [
 ]
 
 export function compositeIntervalMinutes(format) {
- const match = /^E(1(?:\\.25)?|[2-7])MOM$/.exec(String(format||''))
+ const match = /^E(1(?:\.25)?|[2-7])MOM$/.exec(String(format||''))
  return match ? Number(match[1]) : null
 }
 
@@ -134,7 +134,7 @@ export function compositeTimerConfig(block) {
 /** RIR 0 is failure; -1 is only an explicit PT-specific convention. */
 export function isValidRirTarget(value){
  const normalized=String(value??'').trim().replace(/[–—]/g,'-')
- const parsed=normalized.match(/^(-1|10|[0-9])(?:\\s*-\\s*(10|[0-9]))?$/)
+ const parsed=normalized.match(/^(-1|10|[0-9])(?:\s*-\s*(10|[0-9]))?$/)
  if(!parsed)return false
  return !parsed[2]||(Number(parsed[1])>=0&&Number(parsed[1])<=Number(parsed[2]))
 }
@@ -142,7 +142,7 @@ export function isValidRirTarget(value){
 /** Keep WOD part results separate and never infer a result from prescribed work. */
 export function parseCompositeScoreTime(value) {
  const raw=String(value??'').trim()
- const match=raw.match(/^(\\d{1,3}):([0-5]\\d)$/)
+ const match=raw.match(/^(\d{1,3}):([0-5]\d)$/)
  return match?Number(match[1])*60+Number(match[2]):NaN
 }
 
