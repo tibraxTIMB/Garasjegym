@@ -46,7 +46,7 @@ export function scoreForWodFormat(format, combinationMode = 'For Time') {
 
 /** A single EMOM format with second-precision intervals; older E3MOM labels stay readable. */
 export function isEmomFormat(format) {
- return /^(?:E\\d+(?:\\.\\d+)?MOM|EMOM(?: [1-7])?)$/i.test(String(format||'').trim())
+ return /^(?:E\d+(?:\.\d+)?MOM|EMOM(?: [1-7])?)$/i.test(String(format||'').trim())
 }
 export function emomIntervalSeconds(format, interval = {}) {
  const explicitSeconds=Number(interval?.work_every_seconds)
