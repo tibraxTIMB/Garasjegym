@@ -44,6 +44,25 @@ export function scoreForWodFormat(format, combinationMode = 'For Time') {
   return { type: 'reps', fields: ['reps'] };
 }
 
+/** A single EMOM format with second-precision intervals; older E3MOM labels stay readable. */
+export function isEmomFormat(format) {
+ return /^(?:E\\d+(?:\\.\\d+)?MOM|EMOM(?: [1-7])?)$/i.test(String(format||'').trim())
+}
+export function emomIntervalSeconds(format, interval = {}) {
+ const explicitSeconds=Number(interval?.work_every_seconds)
+ if(Number.isInteger(explicitSeconds)&&explicitSeconds>=5&&explicitSeconds<=3600)return explicitSeconds
+ const explicitMinutes=Number(interval?.work_every_minutes)
+ if(Number.isFinite(explicitMinutes)&&explicitMinutes>0&&explicitMinutes<=60)return Math.round(explicitMinutes*60)
+ const legacy=parseIntervalNotation(format)
+ if(legacy)return legacy.intervalSeconds
+ const mapped=/^EMOM ([1-7])$/i.exec(String(format||'').trim())
+ return mapped?Number(mapped[1])*60:60
+}
+export function emomDisplayLabel(seconds) {
+ const whole=Math.max(5,Math.min(3600,Math.round(Number(seconds)||60)))
+ return whole%60===0?`E${whole/60}MOM`:`EMOM · ${Math.floor(whole/60)}:${String(whole%60).padStart(2,'0')}`
+}
+
 export function parseIntervalNotation(value) {
   const text = String(value || '').trim().toUpperCase().replace(/\s+/g, '');
   const match = text.match(/^E(\d+(?:\.\d+)?)MOM$/);
