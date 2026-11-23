@@ -80,3 +80,12 @@ test('PT enquiry owner flow distinguishes received from completed and exposes th
   assert.match(management, /Ingen aktive PT-ar er registrerte/)
   assert.match(management, /onClick=\{\(\)=>setTab\('trenarar'\)\}/)
 })
+
+
+test('PT coach chooses customer explicitly and intake is reachable', () => {
+  assert.doesNotMatch(studio, /results\[0\]\.data\[0\]\.id/)
+  assert.match(studio, /onClick=\{\(\)=>setShowIntake\(true\)\}/)
+  assert.match(studio, /Opprett første programmal/)
+  assert.match(management, /async function declineRequest\(row\)/)
+  assert.match(management, /Førespurnaden er avslått og avslutta/)
+})
