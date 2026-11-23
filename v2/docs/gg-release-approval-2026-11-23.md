@@ -5,3 +5,5 @@ Eigaren gav eksplisitt klarsignal til å ferdigstilla og publisera dei resterand
 Denne godkjenninga gjeld den eksisterande testa SturmKopf-koden og utrulling via GitHub Pages. All ordinær automatisk deploy ved push er elles deaktivert. Etter utrullinga skal workflowen gå tilbake til berre manuell publiseringsgodkjenning.
 
 Godkjend publiseringsmarkering vert gjenteken etter retting av workflow-YAML, med same eksplisitte eigargodkjenning.
+
+For denne avgrensa feilrettingsutgåva blir eksisterande hjelpevideoar bevarte, medan app og databaseretta testar blir køyrde på nytt.
