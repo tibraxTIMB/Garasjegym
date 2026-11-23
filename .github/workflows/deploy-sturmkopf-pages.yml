@@ -88,7 +88,7 @@ jobs:
     # release commit from the connected workspace; the exact message is the
     # temporary one-time approval signal. Restore the manual-only condition
     # immediately after confirmed deployment.
-    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.publish_preview) || (github.event_name == 'push' && github.event.head_commit.message == 'release: user-approved GG fixes to GitHub Pages') }}
+    if: "${{ (github.event_name == 'workflow_dispatch' && inputs.publish_preview) || (github.event_name == 'push' && github.event.head_commit.message == 'release: user-approved GG fixes to GitHub Pages') }}"
     permissions:
       pages: write
       id-token: write
