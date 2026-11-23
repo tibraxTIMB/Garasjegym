@@ -330,8 +330,9 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    const item={...blankItem(exercise),blockId:row.block_id||'a'}
    const quantity=row.quantity
    const metric=quickDoseMetricFor(exercise)
-   item.reps=quantity?'':String(row.reps||'10')
-   const dose={...item.levels.rx,reps:item.reps,...(row.rirTarget?{loadMode:'rir',rirRange:row.rirTarget,loadKgMen:'',loadKgWomen:'',loadKg:'',percent1rm:''}:{}),instruction:row.loadKg?'Importert belastning ca. '+row.loadKg.toFixed(1)+' kg. Stadfest korrekt RX/Scaled/Foundation-belastning.':''}
+   item.reps=quantity?'':String(row.reps??'10')
+   if(Number.isInteger(Number(row.sets))&&Number(row.sets)>1&&Number(row.sets)<=30)item.sets=Array.from({length:Number(row.sets)},()=>({...newSet(),reps:item.reps}))
+   const dose={...item.levels.rx,reps:item.reps,...(row.sets?{sets:String(row.sets)}:{}),...(row.rirTarget?{loadMode:'rir',rirRange:row.rirTarget,loadKgMen:'',loadKgWomen:'',loadKg:'',percent1rm:''}:{}),instruction:row.loadKg?'Importert belastning ca. '+row.loadKg.toFixed(1)+' kg. Stadfest korrekt RX/Scaled/Foundation-belastning.':''}
    if(quantity){
     if(metric==='rowing'){item.rowValue=String(quantity.value);item.rowUnit=quantity.unit;Object.assign(dose,rowingDosePatch(quantity.unit,String(quantity.value)))}
     else if(quantity.unit==='cal')dose.calories=String(quantity.value)
