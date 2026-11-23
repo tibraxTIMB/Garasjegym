@@ -181,3 +181,8 @@
   .wod-library-card-compact .wod-card-primary-actions button { font-size: 13px; }
   .wod-card-head-actions .coffee-status { font-size: 10px; }
 }
+
+
+.wod-composite-card-summary{display:grid;gap:5px;margin:8px 0;padding:9px 11px;border:1px solid #515f5c;border-radius:9px;background:#23302e;color:#e4eee8;min-width:0}
+.wod-composite-card-summary strong{font-size:13px}
+.wod-composite-card-summary span{font-size:12px;line-height:1.35;overflow-wrap:anywhere}
