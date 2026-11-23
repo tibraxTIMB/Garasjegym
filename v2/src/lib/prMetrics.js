@@ -54,19 +54,23 @@ export function deriveExerciseRecords(logs = []) {
   return [...exercises.values()].map(exercise => {
     const {type,performances} = exercise
     const candidates = []
-    const maxLoad = Math.max(0,...performances.flatMap(p=>p.sets.filter(set=>positive(set.reps)).map(set=>positive(set.load_kg))))
+    const maxLoad = Math.max(0,...performances.flatMap(p=>p.sets.map(set=>positive(set.load_kg))))
     const highestBox = Math.max(0,...performances.flatMap(p=>p.sets.filter(set=>positive(set.reps)).map(set=>positive(set.height_cm))))
     const threshold = maxLoad * 0.8
     for (const p of performances) {
       const {date,title,logId,sets} = p
       const withReps = sets.filter(set=>positive(set.reps))
-      const loads = withReps.filter(set=>positive(set.load_kg))
+      const loads = sets.filter(set=>positive(set.load_kg))
+      const countedLoads = loads.filter(set=>positive(set.reps))
       if(type==='load' && loads.length) {
-        candidates.push(record('load','Høgaste vekt','kg',Math.max(...loads.map(set=>positive(set.load_kg))),date,title,logId,'Minst 1 registrert repetisjon'))
-        const heavySets = loads.filter(set=>positive(set.load_kg)>=threshold)
-        if(heavySets.length) candidates.push(record('heavy_sets','Flest tunge sett','sett',heavySets.length,date,title,logId,`Minst 80 % av toppvekta (${Number(threshold.toFixed(1))} kg) · minst 1 rep per sett`))
-        const totalVolume = loads.reduce((sum,set)=>sum+positive(set.load_kg)*positive(set.reps),0)
-        candidates.push(record('volume','Størst øktvolum','kg·reps',Number(totalVolume.toFixed(1)),date,title,logId,'Summen av kg × reps for registrerte sett'))
+        const hasUncounted=loads.some(set=>!positive(set.reps))
+        candidates.push(record('load','Høgaste registrerte vekt','kg',Math.max(...loads.map(set=>positive(set.load_kg))),date,title,logId,hasUncounted?'Vekta er registrert, men repetisjonstal manglar på nokre sett.':'Vekt og repetisjonar frå treningsloggen.'))
+        if(countedLoads.length){
+          const heavySets = countedLoads.filter(set=>positive(set.load_kg)>=threshold)
+          if(heavySets.length) candidates.push(record('heavy_sets','Flest tunge sett','sett',heavySets.length,date,title,logId,`Minst 80 % av toppvekta (${Number(threshold.toFixed(1))} kg) · minst 1 rep per sett`))
+          const totalVolume = countedLoads.reduce((sum,set)=>sum+positive(set.load_kg)*positive(set.reps),0)
+          candidates.push(record('volume','Størst registrerte øktvolum','kg·reps',Number(totalVolume.toFixed(1)),date,title,logId,'Berre sett med både kg og registrerte repetisjonar'))
+        }
       }
       if(type==='height') {
         const valid = withReps.filter(set=>positive(set.height_cm))
@@ -96,7 +100,8 @@ export function deriveExerciseRecords(logs = []) {
   }).sort((a,b)=>a.name.localeCompare(b.name,'nn'))
 }
 
-export function deriveBenchmarkRecords(logs = []) {
+export function deriveBenchmarkRecords(logs = [], benchmarkWodIds = []) {
+ const eligible=new Set(benchmarkWodIds)
  const groups=new Map()
  function addScore({log,level,format,key,name,score}) {
   if(!score)return
@@ -109,7 +114,7 @@ export function deriveBenchmarkRecords(logs = []) {
   if(better){group.score=score;group.date=log.workout_date;group.logId=log.id}
  }
  for(const log of logs){
-  if(!log.source_wod_id)continue
+  if(!log.source_wod_id||!eligible.has(log.source_wod_id))continue
   const level=String(log.result_data?.prescription_level||'rx').toLowerCase()
   const composite=log.result_data?.block_summary
   if(Array.isArray(composite)&&composite.length&&String(log.format)==='Samansett økt'){
