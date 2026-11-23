@@ -221,3 +221,25 @@
 .pt2-coach-tools{margin-top:-7px}
 .pt2-coach-tools>summary{min-height:40px;cursor:pointer;color:#c6d5d1;font-size:12px;font-weight:800}
 @media(max-width:480px){.pt2 .pt2-coach-primary-tabs button{font-size:11px;min-height:51px}}
+
+/* Selected PT customer: short path from client identity to useful actions. */
+.pt2-customer-quickstart{display:grid;gap:12px;padding:15px;border:1px solid var(--gg-shell-accent,#d99a33);border-radius:14px;background:rgba(217,154,51,.075)}
+.pt2-customer-quickstart-head{display:grid;gap:4px;min-width:0}
+.pt2-customer-quickstart-head>strong{font-size:18px;line-height:1.3}
+.pt2-customer-quickstart-head p{margin:2px 0 0;line-height:1.4;opacity:.85;font-size:13px}
+.pt2-customer-quick-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.pt2-customer-quick-actions button{min-width:0;min-height:46px;justify-content:center;white-space:normal;text-align:center;line-height:1.3}
+.pt2-customer-quick-actions button:first-child{grid-column:1/-1}
+.pt2-customer-admin-tools{min-width:0;border-top:1px solid var(--gg-shell-border,rgba(255,255,255,.15));padding-top:7px}
+.pt2-customer-admin-tools>summary{cursor:pointer;font-size:13px;font-weight:700;padding:8px 3px;list-style-position:inside}
+.pt2-customer-admin-tools[open]>.pt2-rank-editor,.pt2-customer-admin-tools[open]>.pt2-customer-actions{margin-top:9px}
+@media(max-width:560px){
+ .pt2-client-active .pt2-workspace-head{gap:7px;padding-block:12px}
+ .pt2-client-active .pt2-workspace-head h2{font-size:23px}
+ .pt2-client-active .pt2-workspace-head p{font-size:12px;line-height:1.35;margin:4px 0}
+ .pt2-client-active .pt2-workspace-switch{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+ .pt2-client-active .pt2-workspace-switch button{padding:8px 4px;font-size:12px;min-height:44px}
+ .pt2-client-active .pt2-customer-rank{display:none}
+ .pt2-customer-quick-actions{grid-template-columns:minmax(0,1fr)}
+ .pt2-customer-quick-actions button:first-child{grid-column:auto}
+}
