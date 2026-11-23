@@ -2,6 +2,9 @@ import {useEffect,useState} from 'react'
 import {ArrowLeft,CalendarDays,Check,Clock3,Dumbbell,Edit3,LoaderCircle,MoreHorizontal,Save,Trash2,Trophy,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import {formatWorkoutSeconds,formatWorkoutSet,optionalNumber,splitWorkoutNote} from '../lib/workoutDetail.js'
+import {sortWodItems,getWodSchemaItems} from '../lib/wodOrdering.js'
+import {isEmomFormat,emomPrescribedSetCount} from '../lib/wodEngine.js'
+import {plannedFixedEmomSets} from '../lib/compositeWod.js'
 import './workout-detail.css'
 
 const initialSetValues=set=>({
@@ -20,6 +23,28 @@ const initialForm=workout=>{
  }
 }
 const dateLabel=date=>date?new Date(date+'T12:00:00').toLocaleDateString('nn-NO',{day:'numeric',month:'long',year:'numeric'}):'Dato manglar'
+const blankSet=()=>({reps:'',load_kg:'',height_cm:'',time_seconds:'',time_text:''})
+const sameMovement=(a,b)=>String(a||'').trim().toLocaleLowerCase('nn-NO')===String(b||'').trim().toLocaleLowerCase('nn-NO')
+/** Use only the original WOD prescription and completed blocks, never inferred actual performance. */
+function suggestedEmomSets(workout,schema,exercise,index){
+ if(!schema)return null
+ const items=sortWodItems(getWodSchemaItems(schema))
+ const item=sameMovement(items[index]?.exercise_name,exercise.exercise_name)?items[index]:items.find(x=>sameMovement(x.exercise_name,exercise.exercise_name))
+ if(!item)return null
+ const level=workout.result_data?.prescription_level||schema.prescription||'rx'
+ const prescribed=Number(item.levels?.[level]?.reps??item.reps)
+ if(!Number.isInteger(prescribed)||prescribed<=0||item.is_rest||item.reps_mode==='amrap')return null
+ if(workout.format==='Samansett økt'){
+   const part=(schema.composite_blocks||[]).find(b=>b.id===item.block_id)
+   if(!part||!(workout.result_data?.block_summary||[]).some(s=>s.id===part.id&&s.completed===true))return null
+   const plan=plannedFixedEmomSets(item,schema.composite_blocks,level,false)
+   return plan.autoFill?{count:plan.sets.length,reps:prescribed}:null
+ }
+ if(!isEmomFormat(workout.format)||workout.result_data?.completed===false)return null
+ const count=emomPrescribedSetCount({format:workout.format,interval:schema.interval,durationSeconds:schema.duration_seconds,minuteSlot:item.minute_slot,exerciseIndex:items.indexOf(item),exerciseCount:items.length})
+ return count>0?{count,reps:prescribed}:null
+}
+
 
 export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId}){
  const [editing,setEditing]=useState(false)
@@ -27,11 +52,14 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
  const [menuOpen,setMenuOpen]=useState(false)
  const [form,setForm]=useState(()=>initialForm(workout))
  const [setDrafts,setSetDrafts]=useState({})
+ const [addedSets,setAddedSets]=useState({})
+ const [sourceSchema,setSourceSchema]=useState(null)
+ const [sourceStatus,setSourceStatus]=useState('')
  const [saving,setSaving]=useState(false)
  const [deleting,setDeleting]=useState(false)
  const [error,setError]=useState('')
  const [notice,setNotice]=useState('')
- useEffect(()=>{setEditing(false);setEditMode(null);setMenuOpen(false);setForm(initialForm(workout));setSetDrafts({});setError('');setNotice('')},[workout.id])
+ useEffect(()=>{setEditing(false);setEditMode(null);setMenuOpen(false);setForm(initialForm(workout));setSetDrafts({});setAddedSets({});setSourceSchema(null);setSourceStatus('');setError('');setNotice('')},[workout.id])
  useEffect(()=>{
   if(!workout.exercises)return
   setSetDrafts(Object.fromEntries(workout.exercises.flatMap(ex=>(ex.workout_sets||[]).map(set=>[set.id,initialSetValues(set)]))))
@@ -50,8 +78,47 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
  const splitSeconds=workout.result_data?.split_seconds||[]
  const setField=(id,field,value)=>setSetDrafts(previous=>({...previous,[id]:{...previous[id],[field]:value}}))
  function requestBack(){if(editing&&!window.confirm('Gå tilbake utan å lagra endringane?'))return;onBack()}
- function cancelEdit(){setEditing(false);setEditMode(null);setForm(initialForm(workout));setSetDrafts(Object.fromEntries(exercises.flatMap(ex=>(ex.workout_sets||[]).map(set=>[set.id,initialSetValues(set)]))));setError('')}
- function beginEdit(nextMode){setForm(initialForm(workout));setError('');setNotice('');setMenuOpen(false);setEditMode(nextMode);setEditing(true)}
+ function cancelEdit(){setEditing(false);setEditMode(null);setForm(initialForm(workout));setSetDrafts(Object.fromEntries(exercises.flatMap(ex=>(ex.workout_sets||[]).map(set=>[set.id,initialSetValues(set)]))));setAddedSets({});setError('')}
+ function beginEdit(nextMode){
+  setForm(initialForm(workout));setError('');setNotice('');setMenuOpen(false);setEditMode(nextMode);setEditing(true)
+  if(nextMode==='correction'&&workout.source_wod_id){
+   setSourceStatus('Hentar oppsett frå WOD-biblioteket …')
+   supabase.from('wods').select('timer_settings').eq('id',workout.source_wod_id).maybeSingle().then(({data,error:loadError})=>{
+    if(loadError||!data?.timer_settings?.workout_schema){setSourceStatus('WOD-oppsettet er ikkje tilgjengeleg. Du kan leggja inn sett manuelt.');return}
+    setSourceSchema(data.timer_settings.workout_schema);setSourceStatus('')
+   })
+  }
+ }
+ const updateAdded=(exerciseId,localId,field,value)=>setAddedSets(prev=>({...prev,[exerciseId]:(prev[exerciseId]||[]).map(row=>row.localId===localId?{...row,[field]:value}:row)}))
+ const addSet=(exercise,values=blankSet())=>setAddedSets(prev=>{
+  const existing=exercise.workout_sets||[],added=prev[exercise.id]||[]
+  const set_number=Math.max(0,...existing.map(x=>Number(x.set_number)||0),...added.map(x=>x.set_number))+1
+  return {...prev,[exercise.id]:[...added,{...blankSet(),...values,localId:crypto.randomUUID(),set_number}]}
+ })
+ function fillPlannedEmom(){
+  if(!sourceSchema||!window.confirm('Leggja inn planlagde sett og repetisjonar frå WOD-en? Stadfest berre dersom du faktisk fullførte desse setta. Eksisterande vekter blir ikkje endra.'))return
+  const drafts={...setDrafts},newRows={...addedSets};let changed=0
+  exercises.forEach((exercise,index)=>{
+   const suggestion=suggestedEmomSets(workout,sourceSchema,exercise,index)
+   if(!suggestion)return
+   const existing=[...(exercise.workout_sets||[])].sort((a,b)=>a.set_number-b.set_number)
+   existing.forEach(set=>{
+    if(Number(set.set_number)>suggestion.count)return
+    const value=drafts[set.id]||initialSetValues(set)
+    if(String(value.reps??'').trim()===''){drafts[set.id]={...value,reps:String(suggestion.reps)};changed++}
+   })
+   const fresh=[...(newRows[exercise.id]||[])];const taken=new Set([...existing.map(s=>Number(s.set_number)),...fresh.map(s=>Number(s.set_number))])
+   for(let n=1;n<=suggestion.count;n++){
+    if(taken.has(n))continue
+    fresh.push({...blankSet(),localId:crypto.randomUUID(),set_number:n,reps:String(suggestion.reps)})
+    taken.add(n);changed++
+   }
+   newRows[exercise.id]=fresh.sort((a,b)=>a.set_number-b.set_number)
+  })
+  setSetDrafts(drafts);setAddedSets(newRows)
+  setNotice(changed?changed+' felt/sett vart lagde inn som forslag. Kontroller alle før lagring.':'Ingen manglande planlagde EMOM-sett vart funne.')
+ }
+
  async function deleteWorkout(){
   setMenuOpen(false)
   if(deleting||!window.confirm('Vil du slette «'+(workout.title||'Treningsøkt')+'» permanent frå treningsloggen? Eldre PR-noteringar kan bli ståande i arkivet.'))return
