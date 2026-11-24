@@ -11,3 +11,14 @@
 @media(orientation:landscape){.gg-victory-stage{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;align-items:stretch;gap:clamp(8px,1.6vw,20px)}.gg-victory-hero{grid-column:1;grid-row:1/3}.gg-victory-hero h2{font-size:clamp(30px,6.5vw,92px)}.gg-rekord-gorilla{max-height:58dvh}.gg-victory-record{grid-column:2;grid-row:1;grid-template-columns:minmax(0,1fr) minmax(0,1fr);padding:clamp(8px,1.5vw,20px);gap:8px}.gg-victory-weight{font-size:clamp(28px,5.6vw,75px)}.gg-victory-result h3{font-size:clamp(15px,2.6vw,36px)}.gg-victory-gain{font-size:clamp(17px,3.1vw,35px)}.gg-lift-figure svg{max-height:58dvh}.gg-victory-footer{grid-column:2;grid-row:2}}
 @media(orientation:landscape) and (max-height:400px){.gg-victory-overlay{padding:6px 8px}.gg-victory-stage{gap:6px}.gg-victory-hero h2{font-size:clamp(27px,10vh,48px)}.gg-victory-hero p{font-size:9px}.gg-victory-hero header{padding-top:7px}.gg-rekord-gorilla{max-height:55dvh}.gg-victory-record{padding:8px}.gg-victory-close{min-height:44px;padding:6px 20px}.gg-victory-previous,.gg-victory-gain span{font-size:10px}.gg-lift-figure svg{max-height:53dvh}}
 @media(prefers-reduced-motion:reduce){.gg-rekord-body,.gg-rekord-arm-left,.gg-rekord-head{animation:none}}
+
+/* Real-time 3D is confined to the PR scene; HUD text remains stable. */
+.gg-game-scene{position:relative;width:100%;height:100%;min-height:0;isolation:isolate;overflow:hidden;border-radius:12px}
+.gg-game-canvas{position:absolute;inset:0;min-height:0}.gg-game-canvas canvas{width:100%;height:100%;display:block}
+.gg-game-fallback{position:absolute;inset:0;display:grid;place-items:center;background:#24221e}
+.gg-game-victory{height:clamp(150px,42dvh,520px)}.gg-game-lift{height:clamp(106px,27dvh,340px);border:1px solid #675735}
+.gg-game-lift-label{position:absolute;bottom:4px;left:5px;right:5px;text-align:center;font-size:11px;color:#f5e6c7;background:#171a18b8;padding:3px;border-radius:4px}
+.gg-victory-scene:before{display:none}.gg-victory-scene{background:#24221e}
+.gg-victory-hero{grid-template-rows:auto minmax(0,1fr)}
+@media(orientation:landscape){.gg-game-victory{height:clamp(130px,58dvh,650px)}.gg-game-lift{height:clamp(112px,50dvh,430px)}}
+@media(orientation:landscape) and (max-height:400px){.gg-game-victory{height:54dvh}.gg-game-lift{height:53dvh}}
