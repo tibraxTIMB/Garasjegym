@@ -68,7 +68,12 @@ export function ptPartCompletion(part) {
  if(part?.time_cap_reached)return {label:'Tidsramma nådd',kind:'timed'}
  if(!part?.completed)return {label:'Ikkje stadfesta fullført',kind:'unknown'}
  if(fixedLength&&Number.isFinite(planned)&&planned>0&&Number.isFinite(elapsed)&&elapsed>=0&&elapsed+3<planned){
-  return {label:'Avslutta før planlagt tid',kind:'early',detail:`Registrert ${formatDuration(elapsed)} av planlagde ${formatDuration(planned)}. Årsaka er ikkje oppgjeven.`}
+  const isEmom=/^(e\d+(?:\.\d+)?mom|emom)$/.test(format)
+  // Timer phase FULLFØRT is emitted when the athlete explicitly presses finish/next.
+  // It confirms the manual transition, not the exact number of reps done.
+  if(isEmom&&part.phase==='FULLFØRT')
+   return {label:'Manuelt vidare',kind:'manual',detail:`Klokka viste ${formatDuration(elapsed)} av ${formatDuration(planned)} då delen vart avslutta manuelt. Dette kan vera etter siste arbeidssett. Ingen avvik i øvingane er oppgjevne.`}
+  return {label:'Avslutta før planlagt tid',kind:'early',detail:`Registrert ${formatDuration(elapsed)} av planlagde ${formatDuration(planned)}. Om siste arbeidssett var ferdig, kan dette vera ein manuell overgang.`}
  }
  return {label:'Registrert gjennomført',kind:'done'}
 }
@@ -105,4 +110,39 @@ export function ptReviewHighlights(result) {
  if(amrap&&ptPartScore(amrap))out.push({label:'AMRAP-resultat',value:ptPartScore(amrap)})
  if(result.result_data?.prescription_level)out.push({label:'Nivå',value:String(result.result_data.prescription_level).toUpperCase()})
  return out.slice(0,3)
+}
+
+/**
+ * A completed AMRAP/EMOM follows its prescribed structure unless the athlete
+ * records an exception. This is an interpretation, never a claim that every
+ * prescribed rep was independently measured. Do not write it back to the log.
+ */
+export function ptPrescribedWorkContext(result,schema,exercise) {
+ if(!result||!exercise)return null
+ const blocks=Array.isArray(result.result_data?.block_summary)?result.result_data.block_summary:[]
+ const part=exercise.block_id?blocks.find(block=>String(block.id)===String(exercise.block_id)):null
+ const format=String(part?.format||result.format||'').toLowerCase()
+ const isEmom=/^(e\d+(?:\.\d+)?mom|emom)$/.test(format)
+ const isAmrap=ptIsAmrapPart(part||{format:result.format,combination_mode:result.result_data?.combination_mode})
+ if(!isEmom&&!isAmrap)return null
+ if(part?.completed===false||(!part&&result.result_data?.completed===false))
+  return {kind:'unconfirmed',text:'Denne øktdelen er ikkje registrert fullført. Ikkje legg til grunn at alle planlagde repetisjonar vart utførte.'}
+ const item=(Array.isArray(schema?.items)?schema.items:[]).find(x=>String(x.block_id||'')===String(exercise.block_id||'')&&String(x.exercise_name||'').trim().toLowerCase()===String(exercise.exercise_name||'').trim().toLowerCase())
+ const hasSource=Boolean(item)
+ if(!hasSource)return {kind:'reported',text:'Øktdelen er registrert gjennomført. Ingen avvik er oppgjevne, men detaljert dosering er ikkje verifisert.'}
+ const explicit=Array.isArray(exercise.sets)?exercise.sets:[]
+ const level=String(result.result_data?.prescription_level||'rx').toLowerCase()
+ const prescribedReps=Number(item.levels?.[level]?.reps??item.reps)
+ const measuredReps=explicit.filter(set=>set?.reps!=null&&set.reps!=='').map(set=>Number(set.reps))
+ const mismatch=Number.isFinite(prescribedReps)&&prescribedReps>0&&measuredReps.some(reps=>Number.isFinite(reps)&&reps!==prescribedReps)
+ if(mismatch)return {kind:'deviation',text:'Registrerte repetisjonar skil seg frå WOD-oppsettet. Bruk dei faktiske registreringane i vurderinga.'}
+ if(isAmrap)return {kind:'assumed',text:'AMRAP: øvinga blir rekna som gjennomført etter WOD-oppsettet innanfor registrert skår, dersom ingen avvik er meldt. Detaljreps er ikkje målt automatisk.'}
+ const origin=(Array.isArray(schema?.composite_blocks)?schema.composite_blocks:[]).find(block=>String(block.id)===String(exercise.block_id))
+ const interval=Number(origin?.emomIntervalSeconds||schema?.interval?.work_every_seconds||0)
+ const parsed=String(part?.format||result.format||'').match(/^e(\d+(?:\.\d+)?)mom$/i)
+ const seconds=interval>0?interval:parsed?Math.round(Number(parsed[1])*60):60
+ const duration=Number(part?.duration_seconds||origin?.duration_seconds||schema?.duration_seconds||0)
+ const count=seconds>0&&duration>0?Math.floor(duration/seconds):0
+ const prescribedSet=count>0&&Number.isInteger(prescribedReps)&&prescribedReps>0?`${count} planlagde intervall × ${prescribedReps} reps`:count>0?`${count} planlagde intervall`:null
+ return {kind:'assumed',text:`EMOM: ${prescribedSet?prescribedSet+'. ':''}Øvinga blir rekna som gjennomført etter WOD-oppsettet når ingen avvik er meldt; det er ikkje ei måling av kvart sett.`}
 }
