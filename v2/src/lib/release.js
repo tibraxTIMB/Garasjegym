@@ -20,3 +20,5 @@ export const RELEASE_SHORT = 'GAZELLE 1.2'
 // Candidate: optional KI lyd extension; standard sound pack remains default. No production deployment authorised by this commit.
 
 // Owner-approved publication: KI lyd optional extension; standard audio restored by default. No schema or data changes.
+
+// Candidate: leave an untouched WOD before start without result review or discard; no audio trigger changes.

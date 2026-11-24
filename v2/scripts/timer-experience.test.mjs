@@ -58,3 +58,20 @@ test('undo keeps a fixed target and is unavailable until a manual score exists',
  const css=source('../src/components/timer-viewport.css')
  assert.match(css,/gg-live-timer__music-dock:empty\{display:block!important;height:0/)
 })
+
+import {canLeavePreparedWod} from '../src/lib/prestartExit.js'
+test('only an unstarted WOD can leave without discarding; countdown can be cancelled before deadline',()=>{
+ const now=1000
+ assert.equal(canLeavePreparedWod({phase:'Klar',elapsed:0,roundsCompleted:1},now),true)
+ assert.equal(canLeavePreparedWod({phase:'NEDTELJING',countdownDeadline:2000},now),true)
+ assert.equal(canLeavePreparedWod({phase:'NEDTELJING',countdownDeadline:1000},now),false)
+ for(const state of [{hasStarted:true},{running:true},{elapsed:1},{laps:[0]},{phase:'PAUSE'},{phase:'FERDIG'},{active_block_index:1},{block_results:{0:{hasStarted:true}}},{block_summary:[{completed:true}]},{composite_transition:{deadline:2000}}]){
+  assert.equal(canLeavePreparedWod(state,now),false,JSON.stringify(state))
+ }
+ const timer=source('../src/components/Training.jsx')
+ assert.match(timer,/onCancelBeforeStart=\{source&&!manualEntry&&canLeavePreparedWod\(timerSnapshot\)\?returnToWorkoutTypes:null\}/)
+ assert.match(timer,/active===0&&canLeavePreparedWod/)
+ assert.match(timer,/!untouchedWod && !window.confirm/)
+ assert.match(timer,/clearWorkoutDraft\(memberId\);setLaunchLinkContext\(emptyTrainingLaunchContext\(\)\)/)
+ assert.match(timer,/Tilbake utan å starta WOD/)
+})
