@@ -308,6 +308,6 @@ test('discard is visible at every result step and never submits the workout',()=
  const style=source('../src/styles/mobile/experience-system.css')
  assert.match(timer,/type="button" className="gg-result-discard" disabled=\{saving\} onClick=\{leaveWorkout\}/)
  assert.match(timer,/Forkast økta · ikkje lagre/)
- assert.match(timer,/if \(saving \|\| !window.confirm\('Forkasta denne økta utan å lagra/)
+ assert.match(timer,/if \(saving \|\| saveLock\.current \|\| !window\.confirm\('Forkasta denne økta utan å lagra/)
  assert.match(style,/\.gg-result-footer \.gg-result-discard\{width:100%;min-height:44px/)
 })
