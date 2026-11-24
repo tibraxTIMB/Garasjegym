@@ -1,4 +1,4 @@
-GARASJEGYM SAFEHOUSE - START HER
+GARASJEGYM DATABUNKER - START HER
 =================================
 GRATIS. Bruk berre ein PC og ei kryptert privat lagring som du har lov til a bruke.
 ZIP-fila er ikkje passordkryptert. Ho inneheld private medlemsdata.
@@ -7,11 +7,11 @@ Dersom arbeidsgivar sperrar program eller privat lagring: bruk privat PC.
 Ingen sperrer skal omgaast.
 
 FORSTE GONG (me kan gjera dette saman)
-1. Pakk ut SAFEHOUSE-Windows.zip.
+1. Pakk ut DATABUNKER-Windows.zip.
 2. Last ned PostgreSQL 17 Windows x64 ZIP (ikkje installasjonsprogram):
    https://www.enterprisedb.com/download-postgresql-binaries
    Pakk ut heile ZIP-fila. Du skal finna ei mappe som heiter bin.
-3. Dobbeltklikk TA-BACKUP.cmd i SAFEHOUSE-mappa.
+3. Dobbeltklikk TA-BACKUP.cmd i DATABUNKER-mappa.
    Vel bin-mappa og ei godkjend kryptert privat backupmappe.
 4. Opne https://supabase.com/dashboard/project/izwzwvlexqxqewzijhhd
    Vel Connect > Session pooler (port 5432). Kopier berre Host.
@@ -24,7 +24,7 @@ KVAR GONG ETTERPAA
 2. Trykk Enter og skriv databasepassordet.
 3. Vent paa FERDIG. Mappa med backup blir opna.
    Du faar EI fil, til doemes GarasjeGym-Backup-2026-11-24_13-00-00.zip.
-4. I appen: Drift > SAFEHOUSE > Kontroller den daterte ZIP-fila.
+4. I appen: Drift > DATABUNKER > Kontroller den daterte ZIP-fila.
    Berre kontrollkvitteringa blir lesen i nettlesaren. Ingenting blir lasta opp.
 5. Kopier ZIP-fila til ei separat godkjend kryptert privat lagring.
    Ta ny kopi dagleg naar mogleg og for endringar. Behald fleire datoar.
@@ -33,7 +33,7 @@ KVA LIGG INNI ZIP-FILA?
 START-HER.txt
 01-DATABASE: database.pgbackup, roles.sql
 02-APP: app-source.zip
-03-KONTROLL: SAFEHOUSE-receipt.json, SHA256SUMS.txt, archive-inventory.txt
+03-KONTROLL: DATABUNKER-receipt.json, SHA256SUMS.txt, archive-inventory.txt
 04-GJENOPPRETTING: START-HER.txt, capture-notes.txt
 
 TEKNISK GJENOPPRETTING (ikkje for dagleg bruk)

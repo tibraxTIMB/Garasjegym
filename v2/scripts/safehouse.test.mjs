@@ -21,14 +21,14 @@ test('admin only, no backup payload upload, local tool checks archive before rec
  assert.match(ps,/PGSSLMODE='verify-full'/)
  assert.match(ps,/--file=NUL/)
  assert.match(ps,/TABLE DATA auth/)
- assert.ok(ps.indexOf('--file=NUL')<ps.indexOf('SAFEHOUSE-receipt.json'))
+ assert.ok(ps.indexOf('--file=NUL')<ps.indexOf('DATABUNKER-receipt.json'))
  assert.doesNotMatch(ps,/Set-ExecutionPolicy|ExecutionPolicy Bypass/)
 })
 
 import {makeZip} from './build-safehouse.mjs'
 test('one dated ZIP receipt can be read locally without opening database payload',async()=>{
  const current={...sample,completed_at:new Date().toISOString()}
- const entries=[['01-DATABASE/database.pgbackup','example'],['02-APP/app-source.zip','example'],['03-KONTROLL/SHA256SUMS.txt','example'],['04-GJENOPPRETTING/START-HER.txt','example'],['03-KONTROLL/SAFEHOUSE-receipt.json',JSON.stringify(current)]]
+ const entries=[['01-DATABASE/database.pgbackup','example'],['02-APP/app-source.zip','example'],['03-KONTROLL/SHA256SUMS.txt','example'],['04-GJENOPPRETTING/START-HER.txt','example'],['03-KONTROLL/DATABUNKER-receipt.json',JSON.stringify(current)]]
  assert.equal((await receiptFromBackupZip(new Blob([makeZip(entries)]))).code_commit,current.code_commit)
  await assert.rejects(receiptFromBackupZip(new Blob([makeZip(entries.slice(1))])))
 })

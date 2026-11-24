@@ -1,4 +1,4 @@
-# GarasjeGym SAFEHOUSE 1.0 - read-only capture. No admin rights or execution-policy changes.
+# GarasjeGym DATABUNKER 1.0 - read-only capture. No admin rights or execution-policy changes.
 # Run only on an approved computer, with an approved encrypted destination.
 $ErrorActionPreference = 'Stop'
 $project = 'izwzwvlexqxqewzijhhd'
@@ -6,7 +6,7 @@ $repo = 'tibraxTIMB/Garasjegym'
 $branch = 'garasjegym-2.0-sturm' + [char]0x00AD + 'kopf'
 $stage = $null
 $partial = $null
-$configFile = Join-Path $PSScriptRoot 'SAFEHOUSE-innstillingar.json'
+$configFile = Join-Path $PSScriptRoot 'DATABUNKER-innstillingar.json'
 function Select-Folder([string]$message){
  Add-Type -AssemblyName System.Windows.Forms
  $dialog=New-Object System.Windows.Forms.FolderBrowserDialog
@@ -21,7 +21,7 @@ function Invoke-Checked([string]$exe, [string[]]$arguments) {
     if ($LASTEXITCODE -ne 0) { throw "A required tool failed (exit $LASTEXITCODE). No success receipt was created." }
 }
 try {
-    Write-Host 'SAFEHOUSE - GarasjeGym' -ForegroundColor Yellow
+    Write-Host 'DATABUNKER - GarasjeGym' -ForegroundColor Yellow
     $config=$null
     if(Test-Path -LiteralPath $configFile){
       try{$config=Get-Content -LiteralPath $configFile -Raw | ConvertFrom-Json}catch{}
@@ -67,7 +67,7 @@ try {
     # Persist only non-secret setup after successful connection. Password is never saved.
     @{bin=$bin;destination=$destination;pooler=$pooler;cert=$cert}|ConvertTo-Json|Set-Content -Encoding UTF8 -LiteralPath $configFile
     $stamp = (Get-Date).ToString('yyyy-MM-dd_HH-mm-ss')
-    $stage = Join-Path $destination ("SAFEHOUSE-$stamp-incomplete-" + [Guid]::NewGuid().ToString('N').Substring(0,8))
+    $stage = Join-Path $destination ("DATABUNKER-$stamp-incomplete-" + [Guid]::NewGuid().ToString('N').Substring(0,8))
     New-Item -ItemType Directory -Path $stage | Out-Null
     $dbDir=Join-Path $stage '01-DATABASE';$appDir=Join-Path $stage '02-APP';$controlDir=Join-Path $stage '03-KONTROLL';$guideDir=Join-Path $stage '04-GJENOPPRETTING'
     foreach($dir in @($dbDir,$appDir,$controlDir,$guideDir)){New-Item -ItemType Directory -Path $dir|Out-Null}
@@ -107,9 +107,9 @@ try {
     $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash.ToLowerInvariant()
     $receipt = [ordered]@{version=1;project=$project;completed_at=[DateTime]::UtcNow.ToString('o');archive_checked=$true;auth_tables_present=$true;public_tables_present=$true;storage_objects=0;code_zip_checked=$true;archive_sha256=$hash;archive_bytes=(Get-Item -LiteralPath $archive).Length;code_commit=$commit}
     @('Logical archive includes public and auth data, not a tested recovery.','Do not restore over production. Use a compatible isolated Supabase instance.','Project configuration, Edge Function secrets and Storage object bytes require separate handling.','Source ZIP is branch head at capture, not a Git history mirror or proof of deployed revision.','Source project: '+$project,'PostgreSQL tools: '+$v,'Public table count at probe: '+$counts[0],'Auth user count at probe: '+$counts[2]) | Set-Content -Encoding UTF8 (Join-Path $guideDir 'capture-notes.txt')
-    $receipt | ConvertTo-Json | Set-Content -Encoding UTF8 (Join-Path $controlDir 'SAFEHOUSE-receipt.json')
+    $receipt | ConvertTo-Json | Set-Content -Encoding UTF8 (Join-Path $controlDir 'DATABUNKER-receipt.json')
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'LES-MEG.txt') -Destination (Join-Path $guideDir 'START-HER.txt')
-    @('GARASJEGYM SAFEHOUSE','This ZIP is NOT password encrypted. Store only on approved encrypted media.','01-DATABASE: data, schema and role definitions.','02-APP: source code ZIP.','03-KONTROLL: receipt and file checksums.','04-GJENOPPRETTING: read START-HER.txt.','Never restore directly into production. No restore has been tested.') | Set-Content -Encoding UTF8 (Join-Path $stage 'START-HER.txt')
+    @('GARASJEGYM DATABUNKER','This ZIP is NOT password encrypted. Store only on approved encrypted media.','01-DATABASE: data, schema and role definitions.','02-APP: source code ZIP.','03-KONTROLL: receipt and file checksums.','04-GJENOPPRETTING: read START-HER.txt.','Never restore directly into production. No restore has been tested.') | Set-Content -Encoding UTF8 (Join-Path $stage 'START-HER.txt')
     $files=@(Get-ChildItem -LiteralPath $stage -Recurse -File)
     $expected=@{}
     foreach($file in $files){
@@ -145,11 +145,11 @@ try {
     Remove-Item -LiteralPath $stage -Recurse -Force
     $stage=$null
     Write-Host "FERDIG: $final" -ForegroundColor Green
-    Write-Host 'Vel denne ZIP-fila i Drift > SAFEHOUSE. Berre kontrollkvitteringa blir lesen lokalt i nettlesaren.'
+    Write-Host 'Vel denne ZIP-fila i Drift > DATABUNKER. Berre kontrollkvitteringa blir lesen lokalt i nettlesaren.'
     Write-Host 'Kopier ZIP-fila til ei separat kryptert privat lagring. Restore er ikkje testa.'
     explorer.exe $destination
 } catch {
-    Write-Host ('SAFEHOUSE stopped: '+$_.Exception.Message) -ForegroundColor Red
+    Write-Host ('DATABUNKER stopped: '+$_.Exception.Message) -ForegroundColor Red
     if($partial -and (Test-Path -LiteralPath $partial)){Remove-Item -LiteralPath $partial -Force -ErrorAction SilentlyContinue}
     if($stage){Write-Host "Incomplete files remain on the encrypted destination: $stage. No valid backup is implied. Remove incomplete files locally when safe."}
     throw

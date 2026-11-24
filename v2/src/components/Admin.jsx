@@ -174,7 +174,7 @@ export default function Admin({profile,onOpenWodImport,onOpenPTAdmin=()=>{},onOp
       <button type="button" onClick={()=>setAdminTab('medlemmer')}><span>Medlemmer og tilgang</span><small>Godkjen søknader og administrer brukarar</small><b>Opna medlemsregister →</b></button>
       <button type="button" onClick={()=>setAdminTab('kaffi')}><span>Kaffi og bestillingar</span><small>Handter bestillingar og kaffibaren</small><b>Opna kaffibaren →</b></button>
     </div>
-    <details className="admin-advanced-tools admin-drift-details"><summary><strong>SAFEHOUSE · Sikkerheitskopi</strong><span>Backup på eigen PC · kontroll og gjenoppretting</span></summary><div className="admin-advanced-content"><Safehouse profile={profile}/></div></details>
+    <details className="admin-advanced-tools admin-drift-details"><summary><strong>DATABUNKER · Sikkerheitskopi</strong><span>Backup på eigen PC · kontroll og gjenoppretting</span></summary><div className="admin-advanced-content"><Safehouse profile={profile}/></div></details>
     <details className="admin-advanced-tools admin-drift-details"><summary><strong>Reinhald og vedlikehald</strong><span>Kvitteringar, plan og påminningar</span></summary><div className="admin-advanced-content"><GarageMaintenance profile={profile}/></div></details>
     <details className="admin-advanced-tools admin-drift-details"><summary><strong>WOD-import</strong><span>Administrer innhald</span></summary><div className="admin-advanced-content"><WodImportPanel exerciseCatalog={exercises.filter(ex=>ex.is_active)} onApply={onOpenWodImport}/></div></details>
   </section>}

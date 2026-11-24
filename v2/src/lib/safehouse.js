@@ -17,9 +17,9 @@ export function safehouseAge(receipt,now=Date.now()){
  return {hours,status:hours<=SAFEHOUSE_MAX_AGE_HOURS?'recent':'old',label:hours<=SAFEHOUSE_MAX_AGE_HOURS?'Kopi kontrollert lokalt':'Tid for ny sikkerheitskopi'}
 }
 
-const RECEIPT_ENTRY='03-KONTROLL/SAFEHOUSE-receipt.json'
+const RECEIPT_ENTRY='03-KONTROLL/DATABUNKER-receipt.json'
 export async function receiptFromBackupZip(file){
- if(file.size<22)throw Error('Dette er ikkje ei SAFEHOUSE ZIP-fil.')
+ if(file.size<22)throw Error('Dette er ikkje ei DATABUNKER ZIP-fil.')
  const tailOffset=Math.max(0,file.size-65557)
  const tail=new DataView(await file.slice(tailOffset).arrayBuffer())
  let e=-1
@@ -37,7 +37,7 @@ export async function receiptFromBackupZip(file){
   if(name===RECEIPT_ENTRY){if(entry)throw Error('Fleire kontrollkvitteringar.');entry={flags:cd.getUint16(at+8,true),method:cd.getUint16(at+10,true),compressed:cd.getUint32(at+20,true),plain:cd.getUint32(at+24,true),local:cd.getUint32(at+42,true)}}
   at=next
  }
- for(const name of ['01-DATABASE/database.pgbackup','02-APP/app-source.zip','03-KONTROLL/SHA256SUMS.txt','04-GJENOPPRETTING/START-HER.txt'])if(!names.has(name))throw Error('SAFEHOUSE ZIP manglar '+name)
+ for(const name of ['01-DATABASE/database.pgbackup','02-APP/app-source.zip','03-KONTROLL/SHA256SUMS.txt','04-GJENOPPRETTING/START-HER.txt'])if(!names.has(name))throw Error('DATABUNKER ZIP manglar '+name)
  if(!entry||entry.flags&1||entry.plain>16384||entry.compressed>32768||entry.local+30>offset)throw Error('Kontrollkvitteringa kan ikkje lesast.')
  const header=new DataView(await file.slice(entry.local,entry.local+30).arrayBuffer())
  if(header.getUint32(0,true)!==0x04034b50)throw Error('Skadd kontrollkvittering.')
@@ -45,12 +45,12 @@ export async function receiptFromBackupZip(file){
  if(begin+entry.compressed>offset)throw Error('Skadd kontrollkvittering.')
  let bytes=await file.slice(begin,begin+entry.compressed).arrayBuffer()
  if(entry.method===8){
-  if(typeof DecompressionStream==='undefined')throw Error('Pakk ut ZIP-fila og vel SAFEHOUSE-receipt.json.')
+  if(typeof DecompressionStream==='undefined')throw Error('Pakk ut ZIP-fila og vel DATABUNKER-receipt.json.')
   const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw')).getReader()
   const chunks=[];let length=0
   try{while(true){const part=await stream.read();if(part.done)break;length+=part.value.length;if(length>16384)throw Error('Kontrollkvitteringa er for stor.');chunks.push(part.value)}}finally{await stream.cancel().catch(()=>{})}
   bytes=await new Blob(chunks).arrayBuffer()
- }else if(entry.method!==0)throw Error('Pakk ut ZIP-fila og vel SAFEHOUSE-receipt.json.')
+ }else if(entry.method!==0)throw Error('Pakk ut ZIP-fila og vel DATABUNKER-receipt.json.')
  if(bytes.byteLength!==entry.plain)throw Error('Skadd kontrollkvittering.')
  return checkSafehouseReceipt(JSON.parse(decoder.decode(bytes).replace(/^\uFEFF/,'')))
 }
