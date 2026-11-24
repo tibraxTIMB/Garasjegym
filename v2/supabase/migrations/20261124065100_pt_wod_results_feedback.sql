@@ -100,6 +100,8 @@ begin
    'exercise_results',v_row.result_data->'exercise_results',
    'prescription_level',v_row.result_data->'prescription_level',
    'combination_mode',v_row.result_data->'combination_mode',
+   'time_cap_reached',v_row.result_data->'time_cap_reached',
+   'completion_status',v_row.result_data->'completion_status',
    'death_by',v_row.result_data->'death_by',
    'ladder',v_row.result_data->'ladder'
   )
