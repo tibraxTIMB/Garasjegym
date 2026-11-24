@@ -6,7 +6,7 @@ const read=p=>readFileSync(new URL(p,import.meta.url),'utf8')
 test('30 distinct local WAV paths and three sample-based profiles',()=>{
  const urls=SOUND_PACK_PROFILES.flatMap(p=>SOUND_PACK_SIGNALS.map(s=>soundPackUrl(p,s,'/Garasjegym/')))
  assert.equal(new Set(urls).size,30)
- assert.ok(urls.every(url=>url.startsWith('/Garasjegym/audio/gazelle-v5/')&&url.endsWith('.wav')))
+ assert.ok(urls.every(url=>url.startsWith('/Garasjegym/audio/gazelle-v6/')&&url.endsWith('.wav')))
  assert.equal(soundPackUrl('group','transition'),soundPackUrl('group','round'))
  const sample=JSON.parse(read('../audio-source/fluid-samples.json'))
  assert.ok(Object.keys(sample).length>=9)
@@ -63,4 +63,14 @@ test('bell tails overlap at reduced gain, while previews, PR and other profiles 
   assert.equal(sources[3].stopped,true)
   stopPackAudio(context);assert.equal(sources[4].stopped,true)
  }finally{globalThis.fetch=originalFetch}
+})
+
+test('studio render includes detuned club leads, separate gong modes and stereo double tracking',()=>{
+ const script=read('./render-training-audio.mjs')
+ assert.match(script,/supersaw/)
+ assert.match(script,/clubBass/)
+ assert.match(script,/const modes=/)
+ assert.match(script,/out.writeUInt16LE\(2,22\)/)
+ assert.match(script,/Countdown exceeds one second/)
+ assert.match(script,/attack<.018/)
 })
