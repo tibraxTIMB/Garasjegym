@@ -142,7 +142,18 @@ export function ptPrescribedWorkContext(result,schema,exercise) {
  const parsed=String(part?.format||result.format||'').match(/^e(\d+(?:\.\d+)?)mom$/i)
  const seconds=interval>0?interval:parsed?Math.round(Number(parsed[1])*60):60
  const duration=Number(part?.duration_seconds||origin?.duration_seconds||schema?.duration_seconds||0)
- const count=seconds>0&&duration>0?Math.floor(duration/seconds):0
+ const totalSlots=seconds>0&&duration>0?Math.floor(duration/seconds):0
+ const slotList=String(item.minute_slot||'').split(/[,;\\s/]+/).map(Number)
+  .filter(n=>Number.isInteger(n)&&n>=1&&n<=totalSlots)
+ const itemSlots=[...new Set(slotList)].length
+ const rootItems=(Array.isArray(schema?.items)?schema.items:[]).filter(x=>!x.is_rest)
+ const exercisePosition=rootItems.findIndex(x=>x===item)
+ const rotating=!part&&itemSlots===0&&rootItems.length>1
+ // Composite EMOM parts default to simultaneous work each slot; standalone EMOM
+ // with several movements rotates them unless explicit minute slots were saved.
+ const count=itemSlots||(
+  rotating?Math.max(0,Math.floor((totalSlots+rootItems.length-1-Math.max(0,exercisePosition))/rootItems.length)):totalSlots
+ )
  const prescribedSet=count>0&&Number.isInteger(prescribedReps)&&prescribedReps>0?`${count} planlagde intervall × ${prescribedReps} reps`:count>0?`${count} planlagde intervall`:null
  return {kind:'assumed',text:`EMOM: ${prescribedSet?prescribedSet+'. ':''}Øvinga blir rekna som gjennomført etter WOD-oppsettet når ingen avvik er meldt; det er ikkje ei måling av kvart sett.`}
 }
