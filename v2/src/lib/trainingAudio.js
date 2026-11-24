@@ -32,7 +32,8 @@ export async function prepareOfflineAudio(){
 }
 async function fetchAudioBytes(url){
  if(globalThis.caches){try{const cache=await caches.open(OFFLINE_AUDIO_CACHE);const local=await cache.match(url);if(local)return local.arrayBuffer()}catch{}}
- const r=await fetch(url);if(!r.ok)throw Error('Lydfil manglar ('+r.status+')');return r.arrayBuffer()
+ const r=await fetch(url);if(!r.ok)throw Error('Lydfil manglar ('+r.status+')');if(globalThis.caches){try{const cache=await caches.open(OFFLINE_AUDIO_CACHE);await cache.put(url,r.clone())}catch{}}
+ return r.arrayBuffer()
 }
 const files=new Map(), decoded=new WeakMap(), active=new WeakMap(), generations=new WeakMap()
 function bytes(url){

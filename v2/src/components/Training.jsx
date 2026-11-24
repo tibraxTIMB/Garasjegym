@@ -24,10 +24,10 @@ import { previousExerciseResult } from '../lib/previousResult.js'
 import MuscleMap from './MuscleMap.jsx'
 import { canLeavePreparedWod } from '../lib/prestartExit.js'
 import { exerciseBrowseCategory } from '../lib/exerciseCategories.js'
-import { restoreWorkoutDraft, saveWorkoutDraft, clearWorkoutDraft, resumedElapsedSeconds } from '../lib/workoutDraft.js'
+import { restoreWorkoutDraft, saveWorkoutDraft, clearWorkoutDraft, resumedElapsedSeconds, workoutSaveFingerprint, isRetryableWorkoutError } from '../lib/workoutDraft.js'
 import { canSaveDurationOnlyWorkout } from '../lib/freeSession.js'
 import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, TRAINING_AUDIO_PROFILES } from '../lib/timerCues.js'
-import { preloadSoundPack, unlockSoundPack, playPackSignal, playDirectPackSignal, stopDirectAudio, stopPackAudio, SOUND_PACK_NAMES, SOUND_PACK_VERSION, isKIAudioEnabled, setKIAudioEnabled, KI_AUDIO_EVENT, KI_AUDIO_SIGNALS, prepareOfflineAudio } from '../lib/trainingAudio.js'
+import { preloadSoundPack, unlockSoundPack, playPackSignal, playDirectPackSignal, stopDirectAudio, stopPackAudio, SOUND_PACK_NAMES, SOUND_PACK_VERSION, isKIAudioEnabled, setKIAudioEnabled, KI_AUDIO_EVENT, KI_AUDIO_SIGNALS } from '../lib/trainingAudio.js'
 import GarageSelect from './GarageSelect.jsx'
 import './timer-viewport.css'
 import PRVictoryOverlay from './PRVictoryOverlay.jsx'
@@ -915,10 +915,13 @@ function CompositeTimer({schema,exerciseList=[],previousLogs=[],prescriptionLeve
 
 export default function Training({ memberId = '', launchWodId = null, launchClassSessionId = null, launchClassResult = false, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, onTimerSnapshot, onBackground, onOpenWodLibrary = () => {}, onOpenTrainingPlan = () => {}, onOpenSchedule = () => {}, onOpenDailyWod = () => {}, onOpenHistory = () => {}, onOpenPR = () => {}, visible = true, simpleMode = false, quickStart = false, onQuickStartConsumed, quickManualEntry = false, onQuickManualEntryConsumed, onSaved, onDiscard }) {
   const savedDraft = useRef(restoreWorkoutDraft(memberId)).current
-  const [offlineLibrary,setOfflineLibrary]=useState(()=>readOfflineLibrary(memberId))
+  const [offlineLibrary]=useState(()=>readOfflineLibrary(memberId))
   const [offline,setOffline]=useState(()=>isOffline())
-  const [offlineNotice,setOfflineNotice]=useState('')
-  const [offlineBusy,setOfflineBusy]=useState(false)
+  const [syncNotice,setSyncNotice]=useState('')
+  const [draftProtected,setDraftProtected]=useState(true)
+  const pendingSave=useRef(null)
+  const saveLock=useRef(false)
+  const retrySave=useRef(null)
   const [previousLogs,setPreviousLogs]=useState([])
   const [wods, setWods] = useState(()=>offlineLibrary?.wods||[])
   const [dailyWodId,setDailyWodId]=useState(null)
@@ -999,16 +1002,26 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const [restoredTimerSnapshot,setRestoredTimerSnapshot] = useState(() => savedDraft?.timerSnapshot ? {...savedDraft.timerSnapshot,restored:true} : null)
   const [timerLaunchId, setTimerLaunchId] = useState(0)
   const loadSequence = useRef(0)
-  useEffect(() => {
-    if (mode !== 'active') { clearWorkoutDraft(memberId); return }
-    saveWorkoutDraft(memberId, {
+  const draftSnapshot = {
       mode, manualEntry, sessionPrepared, source, wodLevel, classSessionId,
       launchLinkContext, title, workoutDate, manualWodIds, format, duration,
       durationSeconds, note, items, scoreRounds, scoreReps, blockScores, scoreTime, scoreLoad,
       scoreCalories, scoreDistance, scoreUnit, saveToken,
       activeExerciseIndex, timerSnapshot, finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom,
-    })
+  }
+  useEffect(() => {
+    if (mode !== 'active') { pendingSave.current=null;setSyncNotice('');clearWorkoutDraft(memberId); return }
+    setDraftProtected(saveWorkoutDraft(memberId,draftSnapshot))
+    if(pendingSave.current&&pendingSave.current!==workoutSaveFingerprint(draftSnapshot)){
+      pendingSave.current=null;setSyncNotice('Resultatet er endra. Trykk Lagre økt på nytt når du er klar.')
+    }
   }, [memberId,mode,manualEntry,sessionPrepared,source,wodLevel,classSessionId,launchLinkContext,title,workoutDate,manualWodIds,format,duration,durationSeconds,note,items,scoreRounds,scoreReps,blockScores,scoreTime,scoreLoad,scoreCalories,scoreDistance,scoreUnit,saveToken,activeExerciseIndex,timerSnapshot,finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom])
+  useEffect(()=>{
+    const retry=()=>{if(!isOffline()&&pendingSave.current&&!saveLock.current)retrySave.current?.()}
+    window.addEventListener('online',retry)
+    const interval=setInterval(retry,15000)
+    return()=>{window.removeEventListener('online',retry);clearInterval(interval)}
+  },[])
   useEffect(()=>{onTimerSnapshot?.({...timerSnapshot,title,format,sessionOpen:mode==='active',sessionPrepared})},[timerSnapshot,title,format,mode,sessionPrepared,onTimerSnapshot])
   useEffect(()=>()=>onTimerSnapshot?.({
     elapsed:0,laps:[],roundsCompleted:0,phase:'Klar',running:false,
@@ -1022,21 +1035,6 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     })
   }
 
-  async function prepareOffline(){
-    if(offline||offlineBusy)return
-    setOfflineBusy(true);setOfflineNotice('')
-    try{
-      const {data,error}=await supabase.auth.getUser()
-      if(error||data?.user?.id!==memberId)throw Error('Innlogging må stadfestast på nett.')
-      const [w,e]=await Promise.all([
-       supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,audience,is_published,is_archived,created_at,timer_settings,category').eq('is_published',true).order('created_at',{ascending:false}),
-       supabase.from('exercises').select('id,name,category,equipment,description,video_url').eq('is_active',true).order('name')])
-      if(w.error||e.error)throw Error('Biblioteket kunne ikkje hentast.')
-      await prepareOfflineAudio()
-      if(!writeOfflineLibrary(memberId,w.data||[],e.data||[]))throw Error('Lokal lagring er ikkje tilgjengeleg.')
-      setOfflineLibrary(readOfflineLibrary(memberId));setOfflineNotice('WOD-ar, øvingar og lydar er klargjorde på denne eininga.')
-    }catch(e){setOfflineNotice('Klargjering feila: '+e.message)}finally{setOfflineBusy(false)}
-  }
   useEffect(()=>{const sync=()=>setOffline(isOffline());window.addEventListener('online',sync);window.addEventListener('offline',sync);return()=>{window.removeEventListener('online',sync);window.removeEventListener('offline',sync)}},[])
   async function loadAll(silent=false) {
     if(isOffline()){
@@ -1073,6 +1071,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
 
       const user=auth.data?.user
       if(user?.id===memberId){
+        if(!w.error&&!e.error)writeOfflineLibrary(memberId,w.data||[],e.data||[])
         supabase.from('workout_logs').select('workout_date,workout_exercises(exercise_id,exercise_name,workout_sets(reps,load_kg,height_cm,time_seconds))').eq('member_id',memberId).order('workout_date',{ascending:false}).order('created_at',{ascending:false}).limit(60).then(({data,error})=>{if(!error&&requestId===loadSequence.current)setPreviousLogs(data||[])}).catch(()=>{})
         const [daily,fav,wodFav]=await Promise.all([
           supabase.from('wod_daily_schedules').select('wod_id').eq('scheduled_date',localDateISO()).is('target_class_id',null).eq('is_published',true).maybeSingle(),
@@ -1156,6 +1155,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const manualWodOptions=wods.filter(wod=>!wod.is_archived)
 
   function returnToWorkoutTypes() {
+    if(saveLock.current)return
     if (mode === 'active') {
       const hasUnsavedWorkout = sessionPrepared || manualEntry || timerSnapshot.elapsed > 0 || items.some(item=>item.exercise_name.trim())
       const untouchedWod=Boolean(source)&&!manualEntry&&canLeavePreparedWod(timerSnapshot)
@@ -1180,7 +1180,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const filteredExercises = useMemo(() => {const q=query.trim().toLowerCase();return exercises.filter(e=>(!favoritesOnly||favoriteNames.includes(e.name))&&[e.name,e.category,e.equipment,exerciseBrowseCategory(e)].some(value=>String(value||'').toLowerCase().includes(q)))}, [exercises,query,favoritesOnly,favoriteNames])
 
   function leaveWorkout() {
-    if (saving || !window.confirm('Forkasta denne økta utan å lagra? Ingen resultat eller PR blir registrerte. WOD-malen blir behalden.')) return
+    if (saving || saveLock.current || !window.confirm('Forkasta denne økta utan å lagra? Ingen resultat eller PR blir registrerte. WOD-malen blir behalden.')) return
     setFinishOpen(false); setMode('home'); setRestoredTimerSnapshot(null); setSource(null); setClassSessionId(null); setItems([])
     setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
     clearTimerSnapshot()
@@ -1354,9 +1354,12 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     setItems(current => current.map(item => item.key === key ? { ...item, sets: [...item.sets, { reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] } : item))
   }
 
-  async function saveWorkout(event) {
-    event.preventDefault()
-    if (saving) return
+  async function saveWorkout(event, automatic=false) {
+    event?.preventDefault()
+    if (saving || saveLock.current || mode!=='active') return
+    const fingerprint=workoutSaveFingerprint(draftSnapshot)
+    if(automatic&&(!pendingSave.current||pendingSave.current!==fingerprint||isOffline()))return
+    if(!automatic){pendingSave.current=null;setSyncNotice('')}
     if(finishOpen&&!resultSummary){nextResult();return}
     if (!title.trim()) { setError('Gi økta eit namn før du lagrar.'); return }
     const durationOnly = canSaveDurationOnlyWorkout({format,manualEntry,sourceWodId:source?.id,classSessionId,manualWodCount:manualWodIds.length,elapsedSeconds:timerSnapshot.elapsed})
@@ -1367,11 +1370,10 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       setError('Legg til minst eitt sett på kvar øving før du lagrar.'); return
     }
     if(!manualEntry&&items.some(item=>item.prescribed_sets_prefilled)&&!confirmedPlannedEmom){setError('Stadfest at du har kontrollert dei førehandsutfylte EMOM-setta, og rett eventuelle avvik før du lagrar.');return}
-    if(finishOpen&&pendingWeightItems.length&&!window.confirm('Nokre sett manglar faktisk vekt. Vil du lagra utan desse vektverdiane? Ingen vekt blir lagt inn automatisk.'))return
-    if(isOffline()){
-      const saved=saveWorkoutDraft(memberId,{mode,manualEntry,sessionPrepared,source,wodLevel,classSessionId,launchLinkContext,title,workoutDate,manualWodIds,format,duration,durationSeconds,note,items,scoreRounds,scoreReps,blockScores,scoreTime,scoreLoad,scoreCalories,scoreDistance,scoreUnit,saveToken,activeExerciseIndex,timerSnapshot,finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom})
-      setError(saved?'Resultatet er lagra lokalt som kladd. Hald økta open og trykk Lagre økt igjen når nettet er tilbake. Ingen PR er stadfesta enno.':'Kunne ikkje lagra lokalt. Hald appen open og prøv igjen på nett.');return
-    }
+    if(!automatic&&finishOpen&&pendingWeightItems.length&&!window.confirm('Nokre sett manglar faktisk vekt. Vil du lagra utan desse vektverdiane? Ingen vekt blir lagt inn automatisk.'))return
+    const protectedDraft=saveWorkoutDraft(memberId,draftSnapshot)
+    setDraftProtected(protectedDraft)
+    saveLock.current=true
     // Unlock during the save gesture, not after the asynchronous database call.
     const victoryPrefs=readPRVictoryAudio()
     let victoryContext=null
@@ -1382,8 +1384,6 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     setVictoryNotice([]);setVictoryOverlay([])
     setSaving(true); setError(''); setNotice('')
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      if (userError || !user || user.id!==memberId) throw new Error('Innlogginga kunne ikkje stadfestast. Kladden er framleis open.')
       const normalizedFormat = format.toLowerCase()
       const combinationMode = source?.timer_settings?.workout_schema?.combination_mode
       const isAmrapScore = normalizedFormat === COMPOSITE_FORMAT.toLowerCase() || normalizedFormat === 'amrap' || (['couplet','triplet'].includes(normalizedFormat) && combinationMode === 'AMRAP')
@@ -1444,7 +1444,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         exercise_results:items.map(item=>({block_id:item.block_id||null,exercise_name:item.exercise_name,side_mode:item.side_mode||null,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps.map(step=>({name:step.name,reps:Number(step.reps)||1})):[],row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm),rir:s.rir===''||s.rir==null?null:Number(s.rir)}))}))
       }
       const payload = {
-        member_id:user.id,save_token:saveToken,title:title.trim(),source_wod_id:source?.id||manualWodIds[0]||null,
+        member_id:memberId,save_token:saveToken,title:title.trim(),source_wod_id:source?.id||manualWodIds[0]||null,
         class_live_session_id:classSessionId||null,workout_date:workoutDate||localDateISO(),format,
         rounds:Math.max(1,(isAmrapScore||isDeathByScore||isLadderScore)?(effectiveScoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(effectiveScoreRounds)):Number(effectiveScoreRounds)||1),
         score_rounds:(isAmrapScore||isDeathByScore||isLadderScore)?(effectiveScoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(effectiveScoreRounds)):effectiveScoreRounds===''?null:Number(effectiveScoreRounds),
@@ -1459,6 +1459,14 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         exercise_id:item.exercise_id||null,exercise_name:item.exercise_name.trim(),sort_order:index+1,row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,
         sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_text:s.time_text.trim()||null,time_seconds:s.time_seconds===''?null:Number(s.time_seconds),height_cm:s.height_cm===''?null:Number(s.height_cm)}))
       }))
+      if(isOffline()){
+        pendingSave.current=fingerprint
+        setSyncNotice(protectedDraft?'Resultatet er sikra på eininga. Ventar på nett for automatisk lagring.':'Lokal lagring feila. Hald appen open; prøver igjen når nettet kjem tilbake.')
+        return
+      }
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if(userError)throw userError
+      if(!user||user.id!==memberId)throw new Error('Innlogginga kunne ikkje stadfestast. Kladden er framleis open.')
       let victories=[]
       // Only explicitly reviewed standard-lift sets; never infer PRs from timer
       // scores, planned weights, estimated 1RM, or combined partner results.
@@ -1471,6 +1479,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       })
       if(saveError)throw saveError
       if(!workoutId)throw new Error('Databasen returnerte ikkje ID for den lagra økta.')
+      pendingSave.current=null;setSyncNotice('')
       const programSyncMessage = ''
       // PRs are derived from saved workout sets on Mi side. Older independent
       // personal_records remain visible in the archive but aren't duplicated.
@@ -1483,15 +1492,24 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       await loadAll()
       onSaved?.({victories})
     } catch (err) {
-      setError(isOffline()?'Nettet fall ut under lagring. Kladden er framleis open; prøv same lagring igjen når nettet kjem tilbake.':err.message || 'Kunne ikkje lagra økta.')
+      if(isRetryableWorkoutError(err,isOffline())){
+        pendingSave.current=fingerprint
+        setSyncNotice(protectedDraft?'Resultatet er sikra på eininga. Prøver lagring igjen når sambandet er tilbake.':'Lokal lagring feila. Hald appen open medan me prøver igjen.')
+      }else{
+        pendingSave.current=null;setSyncNotice('')
+        setError(err.message || 'Kunne ikkje lagra økta. Kladden er framleis open.')
+      }
     } finally {
-      setSaving(false)
+      saveLock.current=false;setSaving(false)
     }
   }
+  retrySave.current=()=>saveWorkout(null,true)
   if (loading && mode!=='active' && !offline) return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar treningsdata …</div>
 
   return <div className={simpleMode && mode === "home" ? "training-module simple-mode" : "training-module"}>
-    {offline&&<div className="auth-message" role="status">Offline · lokalt klargjorde økter. Lagring til treningslogg krev nett.</div>}
+    {offline&&<div className="auth-message" role="status">Nettutfall · {mode==='active'?'Økta held fram.':'Tilkoplinga kjem tilbake automatisk.'}</div>}
+    {mode==='active'&&!draftProtected&&<div className="auth-error" role="alert">Lokal sikring feila. Hald appen open til økta er lagra på nett.</div>}
+    {syncNotice&&!finishOpen&&<div className="auth-message" role="status">{syncNotice}</div>}
     {error && <div className="auth-error" role="alert">{error}</div>}
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16}/> {notice}</div>}
     {victoryOverlay.length>0&&<PRVictoryOverlay victories={victoryOverlay} onClose={()=>setVictoryOverlay([])}/>}
@@ -1600,6 +1618,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           </>}
           </div>
           <div className="gg-result-footer">
+            {(syncNotice||offline||!draftProtected)&&<p role="status" className="workout-finish-help">{syncNotice||(!draftProtected?'Lokal sikring feila. Hald appen open.':'Nettutfall · øktkladden blir sikra lokalt.')}</p>}
             {resultSummary?<button type="submit" className="primary-button gg-result-save" disabled={saving}><Save size={20}/>{saving?'Lagrar …':'Lagre økt'}</button>:<><div className="gg-result-nav"><button type="button" className="secondary-button" disabled={activeExerciseIndex===0} onClick={()=>selectResult(activeExerciseIndex-1)}>← Førre</button><button type="button" className="primary-button" onClick={nextResult} title="Stadfest resultata for denne øvinga">{activeExerciseIndex<items.length-1?'Neste øving':'Kontroller resultat'} <ChevronRight size={19}/></button></div><button type="button" className="text-button gg-result-skip" onClick={()=>setResultSummary(true)}>Gå til samla resultatkontroll</button></>}
             <button type="button" className="gg-result-discard" disabled={saving} onClick={leaveWorkout}><Trash2 size={18}/> Forkast økta · ikkje lagre</button>
           </div>
@@ -1616,7 +1635,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         </div>
       </section> : <>
         <div className="training-heading"><div><span className="section-kicker">ØKT · START TRENING</span><h3>Kva vil du trena?</h3></div>{!simpleMode&&<span className="count-pill">{RELEASE_NAME}</span>}</div>
-        <details className="gg-offline-prep" open={offline||undefined}><summary>Offline mode {offlineLibrary?'· klargjord':''}</summary><p>Last ned publiserte WOD-ar, øvingar og alle lydvariantar før nettet fell ut. Kladdar blir lagra lokalt; send inn når nettet er tilbake. Innlogging må vera aktiv.</p><button type="button" className="secondary-button" disabled={offline||offlineBusy} onClick={prepareOffline}>{offlineBusy?'Klargjer …':'Klargjer offline'}</button>{offlineNotice&&<p role="status">{offlineNotice}</p>}{offline&&<div className="gg-offline-wods">{availableWods.map(w=><button type="button" className="secondary-button" key={w.id} onClick={()=>startWorkout(w,{autoStart:false})}>{w.name} · {w.format}</button>)}</div>}</details>
+        {offline&&<div className="gg-offline-wods">{availableWods.map(w=><button type="button" className="secondary-button" key={w.id} onClick={()=>startWorkout(w,{autoStart:false})}>{w.name} · {w.format}</button>)}</div>}
         <div className="gg-training-home-actions">
           {dailyWodId&&<button type="button" className="gg-training-daily-action" onClick={()=>onOpenDailyWod(dailyWodId)}><Activity size={23}/><span><strong>Dagens WOD</strong><small>{wods.find(w=>w.id===dailyWodId)?.name||'Opne dagens økt'}</small></span><ChevronRight size={18}/></button>}
           <button type="button" onClick={()=>onOpenWodLibrary()}><List size={23}/><span><strong>Vel WOD</strong><small>Bibliotek og favorittar</small></span><ChevronRight size={18}/></button>
