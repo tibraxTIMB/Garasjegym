@@ -1,0 +1,29 @@
+name: Audio Studio - preserve generated PR masters
+on:
+  push:
+    branches: [audio-studio-ki-probe]
+    paths: ['.github/workflows/audio-studio-masters.yml','v2/audio-source/preserve_pr_masters.py']
+permissions:
+  contents: write
+  actions: read
+jobs:
+  preserve:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: audio-studio-cpu-review-only
+          run-id: 45418384694
+          github-token: ${{ github.token }}
+          path: input-masters
+      - name: Verify and master three existing WAVs
+        run: python3 v2/audio-source/preserve_pr_masters.py
+      - name: Preserve exact checked masters on isolated audio branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v2/audio-source/pr-masters/
+          git commit -m "audio: preserve three MusicGen PR masters (noncommercial, technical review)"
+          git push origin HEAD:refs/heads/audio-studio-ki-probe
