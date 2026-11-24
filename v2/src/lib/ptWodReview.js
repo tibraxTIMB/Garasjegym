@@ -28,7 +28,7 @@ export function ptResultSummary(result) {
  if(hasRounds)put('Rundar',result.score_rounds)
  if((f==='amrap'||(f==='couplet'||f==='triplet')&&d.combination_mode==='AMRAP')&&result.score_reps!=null)put('Ekstra reps',result.score_reps)
  if(f==='death by'&&d.death_by?.failed_round!=null)put('Stoppa i runde',d.death_by.failed_round)
- if(result.score_time_seconds!=null)metrics.push({label:'Sluttid',value:formatDuration(result.score_time_seconds)})
+ if(result.score_time_seconds!=null)metrics.push({label:d.time_cap_reached?'Tidsgrense':'Sluttid',value:formatDuration(result.score_time_seconds)})
  else if(d.elapsed_seconds!=null&&number(d.elapsed_seconds)>0)metrics.push({label:'Medgått tid',value:formatDuration(d.elapsed_seconds)})
  if(result.score_load_kg!=null)metrics.push({label:'Tungaste løft',value:`${result.score_load_kg} kg`})
  if(result.score_distance!=null)metrics.push({label:'Distanse',value:`${result.score_distance} ${result.score_unit||'m'}`})
