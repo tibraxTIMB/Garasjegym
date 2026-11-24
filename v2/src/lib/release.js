@@ -18,3 +18,5 @@ export const RELEASE_SHORT = 'GAZELLE 1.2'
 // Owner-approved MusicGen PR release: three original twelve-second stereo cues, technical review passed; noncommercial use. Other timer cues unchanged.
 
 // Candidate: optional KI lyd extension; standard sound pack remains default. No production deployment authorised by this commit.
+
+// Owner-approved publication: KI lyd optional extension; standard audio restored by default. No schema or data changes.
