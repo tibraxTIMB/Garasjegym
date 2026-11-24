@@ -44,3 +44,16 @@ export function isValidComplexExercise(exercise) {
     )
   );
 }
+
+/** A WOD-local complex uses real movement IDs; never insert a synthetic library exercise. */
+export function buildCustomComplex(steps){
+ if(!Array.isArray(steps)||steps.length<2||steps.some(step=>!step.exercise_id||!step.name?.trim()||!Number.isInteger(Number(step.reps))||Number(step.reps)<1))throw Error('Vel minst to bibliotekøvingar med positive heile reps.')
+ const normalized=steps.map(step=>({exercise_id:step.exercise_id,name:step.name.trim(),reps:Number(step.reps)}))
+ return {id:null,name:normalized.map(step=>step.reps+' '+step.name).join(' + '),category:'Complex',body_area:'Heile kroppen',is_complex:true,complex_family:'custom',complex_steps:normalized}
+}
+export function complexResultSummary(item){
+ const sets=(item?.sets||[]).filter(s=>['complete','partial','failed'].includes(s.complex_status))
+ const successful=sets.filter(s=>s.complex_status==='complete'&&Number.isInteger(Number(s.reps))&&Number(s.reps)>0)
+ const weights=successful.filter(s=>s.load_kg!=null&&String(s.load_kg).trim()!==''&&Number.isFinite(Number(s.load_kg))&&Number(s.load_kg)>=0).map(s=>Number(s.load_kg))
+ return {attempts:sets.length,completed:successful.length,partial:sets.filter(s=>s.complex_status==='partial').length,failed:sets.filter(s=>s.complex_status==='failed').length,best_load_kg:weights.length?Math.max(...weights):null}
+}

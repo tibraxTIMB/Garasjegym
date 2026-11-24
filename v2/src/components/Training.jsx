@@ -1,3 +1,4 @@
+import {complexResultSummary} from '../lib/wodComplexes.js'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, CalendarDays, CheckCircle2, ChevronDown, Clock3, Dumbbell, History, House, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2, Settings2, Settings, ChevronRight, Trophy, Monitor, Timer as TimerIcon, Music2, HeartPulse, Undo2, Hand, List, Volume2, VolumeX, Maximize2, Minimize2, X } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
@@ -1225,6 +1226,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         const fillStandaloneEmom=standaloneSlots>0&&Number.isInteger(standaloneReps)&&standaloneReps>0&&!item.is_rest&&item.reps_mode!=='amrap'
         const setsForResult=fillStandaloneEmom?Array.from({length:standaloneSlots},(_,i)=>preparedSets[i]||preparedSets[0]||{}):preparedSets
         const plannedReps=fillStandaloneEmom?standaloneReps:prescribedReps
+        const customComplex=item.is_complex&&item.complex_family==='custom'
         return ({
         ...emptyExercise(),
         exercise_id: item.exercise_id || '',
@@ -1241,7 +1243,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         prescription_levels: item.levels || null,
         side_mode: item.side_mode || null,
         prescription_label: doseLabel(item,selectedLevel),
-        prescribed_sets_prefilled:fillFixedEmom||fillStandaloneEmom,
+        prescribed_sets_prefilled:!customComplex&&(fillFixedEmom||fillStandaloneEmom),
         description: item.description || item.instructions || exercises.find(exercise=>exercise.id===item.exercise_id)?.description || '',
         rowValue:'',rowUnit:wodRowUnit(item,'rx'),workSeconds:'',
         equipment: item.equipment || exercises.find(exercise => exercise.id === item.exercise_id)?.equipment || '',
@@ -1260,15 +1262,15 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           sets: item.sets || [],
         }).usesLoad,
         sets: setsForResult.length ? setsForResult.map(set => ({
-          reps: (fillFixedEmom||fillStandaloneEmom) ? String(Number(set.reps)>0?set.reps:plannedReps) : clearPlannedResults ? '' : set.reps == null ? '' : String(set.reps),
-          load_kg: clearPlannedResults ? '' : set.load_kg == null ? '' : String(set.load_kg),
+          reps: customComplex?'':(fillFixedEmom||fillStandaloneEmom) ? String(Number(set.reps)>0?set.reps:plannedReps) : clearPlannedResults ? '' : set.reps == null ? '' : String(set.reps),
+          load_kg: customComplex||clearPlannedResults ? '' : set.load_kg == null ? '' : String(set.load_kg),
           time_text: clearPlannedResults ? '' : set.tempo || '',
           time_seconds: '',
           rir:'',
           height_cm: clearPlannedResults ? '' : set.height_cm == null ? String(item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? Object.values(item.levels||{}).find(level=>level?.heightCm!=null)?.heightCm ?? item.height_cm ?? '') : String(set.height_cm),
         })) : [{
-          reps: clearPlannedResults ? '' : item.reps == null ? '' : String(item.reps),
-          load_kg: clearPlannedResults ? '' : item.load_kg == null ? '' : String(item.load_kg),
+          reps: customComplex||clearPlannedResults ? '' : item.reps == null ? '' : String(item.reps),
+          load_kg: customComplex||clearPlannedResults ? '' : item.load_kg == null ? '' : String(item.load_kg),
           time_text: '',
           time_seconds: '',
           rir:'',
@@ -1420,6 +1422,13 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           if(String(set.rir??'').trim()!==''&&(!Number.isInteger(Number(set.rir))||Number(set.rir)<-1||Number(set.rir)>10))throw new Error('Opplevd RIR skal vera eit heiltal frå -1 til 10.')
         }
       }
+      for(const item of items.filter(x=>x.is_complex&&x.complex_family==='custom')){
+        for(const set of item.sets){
+          if([set.reps,set.load_kg].some(value=>String(value??'').trim()!=='')&&!['complete','partial','failed'].includes(set.complex_status))throw new Error('Stadfest gjennomføringa av kvart registrerte kompleks: '+item.exercise_name)
+          if(set.complex_status==='complete'&&(!Number.isInteger(Number(set.reps))||Number(set.reps)<1))throw new Error('Oppgi tal fullførte komplekssyklusar for '+item.exercise_name)
+          if(['partial','failed'].includes(set.complex_status)&&Number(set.reps)>0)throw new Error('Delvise eller mislukka forsøk kan ikkje telja som godkjende komplekssyklusar.')
+        }
+      }
       const scoredBlocks=compositeScoredBlocks(timerSnapshot.block_summary||[],blockScores)
       for(const block of scoredBlocks){
        if((block.format==='AMRAP'||(['Couplet','Triplet'].includes(block.format)&&block.combination_mode==='AMRAP'))&&(!Number.isInteger(block.roundsCompleted)||block.roundsCompleted<0||!Number.isInteger(block.extra_reps)||block.extra_reps<0))throw new Error('Registrer gyldige rundar og ekstra repetisjonar for '+block.title)
@@ -1442,7 +1451,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         load_kg:scoreLoad===''?null:Number(scoreLoad),
         calories:scoreCalories===''?null:Number(scoreCalories),
         distance:scoreDistance===''?null:Number(scoreDistance),distance_unit:scoreUnit,
-        exercise_results:items.map(item=>({block_id:item.block_id||null,exercise_name:item.exercise_name,side_mode:item.side_mode||null,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps.map(step=>({exercise_id:step.exercise_id||null,name:step.name,reps:Number(step.reps)||1})):[],row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm),rir:s.rir===''||s.rir==null?null:Number(s.rir)}))}))
+        complex_results:items.filter(item=>item.is_complex&&item.complex_family==='custom').map(item=>({block_id:item.block_id||null,name:item.exercise_name,steps:item.complex_steps,...complexResultSummary(item)})),
+        exercise_results:items.map(item=>({block_id:item.block_id||null,exercise_name:item.exercise_name,side_mode:item.side_mode||null,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps.map(step=>({exercise_id:step.exercise_id||null,name:step.name,reps:Number(step.reps)||1})):[],row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,sets:item.sets.map(s=>({complex_status:item.is_complex&&item.complex_family==='custom'?s.complex_status||null:null,reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm),rir:s.rir===''||s.rir==null?null:Number(s.rir)}))}))
       }
       const payload = {
         member_id:memberId,save_token:saveToken,title:title.trim(),source_wod_id:source?.id||manualWodIds[0]||null,
@@ -1580,13 +1590,15 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
                 <div className="gg-result-instruction"><strong>{resultItem.uses_load?'Kva løfta du faktisk?':'Kva gjorde du faktisk?'}</strong><small>{resultItem.uses_load?'Tast inn vekt i kg for kvart sett. ':''}Rett førehandsutfylte reps dersom du gjorde noko anna. Neste øving stadfestar verdiane du har kontrollert. Tomme felt betyr ikkje registrert.</small></div>
                 <div className="gg-result-set-list">{(resultItem.sets||[]).map((set,setIndex)=><div className="gg-result-set-row" key={setIndex}>
                   <span className="gg-result-set-number">Sett {setIndex+1}</span>
+                  {resultItem.is_complex&&resultItem.complex_family==='custom'&&<label>Gjennomføring<select value={set.complex_status||''} onChange={e=>{const status=e.target.value;updateSet(resultItem.key,setIndex,{complex_status:status,reps:status==='complete'?(Number(set.reps)>0?set.reps:'1'):status?'0':''})}}><option value="">Ikkje registrert</option><option value="complete">Fullført</option><option value="partial">Delvis</option><option value="failed">Mislukka</option></select></label>}
                   <div className="gg-result-set-fields" data-load={resultItem.uses_load?'yes':'no'}>
-                    <label>Reps<input aria-label={'Sett '+(setIndex+1)+' repetisjonar'} type="number" inputMode="numeric" min="0" step="1" value={set.reps} onChange={e=>updateSet(resultItem.key,setIndex,{reps:e.target.value})} placeholder="Tast reps"/></label>
+                    <label>{resultItem.is_complex?'Fullførte syklusar':'Reps'}<input disabled={resultItem.is_complex&&resultItem.complex_family==='custom'&&set.complex_status!=='complete'} aria-label={'Sett '+(setIndex+1)+' repetisjonar'} type="number" inputMode="numeric" min="0" step="1" value={set.reps} onChange={e=>updateSet(resultItem.key,setIndex,{reps:e.target.value})} placeholder="Tast reps"/></label>
                     {resultItem.uses_load&&<label className="gg-result-weight" data-empty={!entered(set.load_kg)}><span>Vekt (kg)</span><input aria-label={'Sett '+(setIndex+1)+' vekt i kilo'} type="number" inputMode="decimal" min="0" step="0.5" value={set.load_kg} onChange={e=>updateSet(resultItem.key,setIndex,{load_kg:e.target.value})} placeholder="Tast kg"/></label>}
                     {resultItem.uses_height&&<label>Høgd (cm)<input aria-label={'Sett '+(setIndex+1)+' høgd i centimeter'} type="number" inputMode="numeric" min="1" step="1" value={set.height_cm} onChange={e=>updateSet(resultItem.key,setIndex,{height_cm:e.target.value})} placeholder="Tast cm"/></label>}
                     {exerciseRecordType(resultItem.exercise_name,resultItem.sets)==='hold'&&<label>Tid (sek)<input aria-label={'Sett '+(setIndex+1)+' haldetid i sekund'} type="number" inputMode="numeric" min="0" step="1" value={set.time_seconds} onChange={e=>updateSet(resultItem.key,setIndex,{time_seconds:e.target.value})} placeholder="Tast sek"/></label>}
                   </div>
                 </div>)}</div>
+                {resultItem.is_complex&&resultItem.complex_family==='custom'&&<div className="gg-result-plan"><span>TYNGSTE GODKJENDE KOMPLEKS</span><strong>{complexResultSummary(resultItem).best_load_kg==null?'Ikkje registrert':complexResultSummary(resultItem).best_load_kg+' kg'}</strong><small>{complexResultSummary(resultItem).completed} fullførte · {complexResultSummary(resultItem).partial} delvise · {complexResultSummary(resultItem).failed} mislukka</small></div>}
                 {resultItem.uses_load&&resultItem.sets?.length>1&&<button type="button" className="secondary-button gg-result-copy" disabled={!entered(resultItem.sets?.[0]?.load_kg)||!resultItem.sets.slice(1).some(set=>!entered(set.load_kg))} onClick={copyFirstWeight}>Bruk vekta frå sett 1 i tomme felt</button>}
                 {resultItem.uses_load&&<details className="gg-result-rir"><summary>RIR (valfritt) · repetisjonar i reserve <ChevronDown size={16}/></summary><div>{(resultItem.sets||[]).map((set,i)=><label key={i}>Sett {i+1}<input type="number" inputMode="numeric" aria-label={'Sett '+(i+1)+' RIR'} min="-1" max="10" step="1" value={set.rir??''} onChange={e=>updateSet(resultItem.key,i,{rir:e.target.value})} placeholder="RIR"/></label>)}</div></details>}
                 <div className="workout-result-actions"><button type="button" className="secondary-button" onClick={()=>addSet(resultItem.key)}><Plus size={16}/> Legg til sett</button>{missingLoad(resultItem)>0&&<span className="gg-result-weight-note">{missingLoad(resultItem)} sett manglar vekt</span>}</div>

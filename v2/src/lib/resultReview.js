@@ -1,8 +1,14 @@
+import {complexResultSummary} from './wodComplexes.js'
 import {isErgExercise} from './exerciseMeasurements.js'
 import {exerciseRecordType} from './prMetrics.js'
 const filled=v=>v!==null&&v!==undefined&&String(v).trim()!==''
 export function exerciseResultReview(item,reviewed=false,confirmedPlanned=false){
  if(item.is_rest)return {status:'rest',label:'Pause',summary:'Ingen registrering nødvendig'}
+ if(item.is_complex&&item.complex_family==='custom'){
+  const result=complexResultSummary(item)
+  if(!result.attempts)return {status:'missing',label:'Ikkje registrert',summary:'Ingen stadfesta kompleks'}
+  return {status:result.attempts<(item.sets||[]).length?'partial':'recorded',label:result.attempts<(item.sets||[]).length?'Delvis registrert':'Registrert',summary:result.completed+' fullførte · '+result.partial+' delvise · '+result.failed+' mislukka'+(result.best_load_kg==null?'':' · Beste '+result.best_load_kg+' kg')}
+ }
  if(isErgExercise(item))return filled(item.rowValue)?{status:'recorded',label:'Registrert',summary:item.rowValue+' '+(item.rowUnit||'m')}:{status:'missing',label:'Ikkje registrert',summary:'Resultat manglar'}
  const sets=item.sets||[],hold=exerciseRecordType(item.exercise_name,sets)==='hold'
  const rows=sets.map(s=>{

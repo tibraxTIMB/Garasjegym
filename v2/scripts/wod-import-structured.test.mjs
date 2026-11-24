@@ -107,3 +107,12 @@ test('Every 90 sec x 8 retains second precision and no artificial movement',()=>
  const result=parseWodImport('Every 90 sec x 8\n2 PC + 1 PJ',[{id:'a',name:'Power Clean'},{id:'b',name:'Push Jerk'}])
  assert.equal(result.minutes,12);assert.equal(result.emomIntervalSeconds,90);assert.equal(result.items.length,2)
 })
+
+import {buildCustomComplex,complexResultSummary} from '../src/lib/wodComplexes.js'
+test('custom complex records successful attempts separately from heavy failed attempts',()=>{
+ const exercise=buildCustomComplex([{exercise_id:'pc',name:'Power Clean',reps:2},{exercise_id:'pj',name:'Push Jerk',reps:1}])
+ assert.equal(exercise.name,'2 Power Clean + 1 Push Jerk')
+ const result=complexResultSummary({sets:[{complex_status:'complete',reps:1,load_kg:60},{complex_status:'partial',reps:0,load_kg:65},{complex_status:'failed',reps:0,load_kg:70},{reps:1,load_kg:100}]})
+ assert.deepEqual(result,{attempts:3,completed:1,partial:1,failed:1,best_load_kg:60})
+ assert.equal(complexResultSummary({sets:[{complex_status:'complete',reps:1,load_kg:''}]}).best_load_kg,null)
+})

@@ -404,6 +404,7 @@ export function importWorkGroupIssue(groups=[],rows=[],modes={}){
   if(!['sequence','complex'].includes(mode))return 'Vel sekvens eller kompleks for kvar arbeidsgruppe.'
   if(members.length!==group.memberCount)return 'Ei arbeidsgruppe kan ikkje importerast delvis. Vel alle deløvingane.'
   if(mode==='complex'){
+   if(['Intervall','Tabata','Row Intervals','Stasjonssirkel','Couplet','Triplet','Ladder','Death By'].includes(group.format))return 'Dette formatet krev separate øvingar. Vel sekvens, eller endra oppsettet før import.'
    if(members.some(row=>row.quantity||!Number.isInteger(Number(row.reps))||Number(row.reps)<1))return 'Kompleks krev positive heile repetisjonar per deløving.'
    const loads=[...new Set(members.map(row=>row.loadKg).filter(x=>x!=null))]
    if(loads.length>1)return 'Kompleks med ulike belastningar må førast som separate øvingar.'

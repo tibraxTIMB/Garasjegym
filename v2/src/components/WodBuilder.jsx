@@ -1,3 +1,4 @@
+import {buildCustomComplex} from '../lib/wodComplexes.js'
 import {useEffect,useMemo,useRef,useState} from 'react'
 import {createPortal} from 'react-dom'
 import {Plus,Search,Trash2,ArrowUp,ArrowDown,Save,LoaderCircle,WandSparkles,Dices,Info,Copy,Dumbbell,X} from 'lucide-react'
@@ -230,6 +231,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[canPublishWod,setCanPublishWod]=useState(false),[publishRoleReady,setPublishRoleReady]=useState(false)
  const [prescription,setPrescription]=useState('rx'),[customInstructions,setCustomInstructions]=useState(''),[customUseSets,setCustomUseSets]=useState(false),[combinationMode,setCombinationMode]=useState('For Time')
  const [wizardStep,setWizardStep]=useState(0),[libraryOpen,setLibraryOpen]=useState(false),[pickerFeedback,setPickerFeedback]=useState(null),[rxNotes,setRxNotes]=useState(''),[scaledNotes,setScaledNotes]=useState(''),[intensity,setIntensity]=useState('2')
+ const [complexSelection,setComplexSelection]=useState({})
  const [editingSelectedKey,setEditingSelectedKey]=useState(null),[doseLevelByKey,setDoseLevelByKey]=useState({})
  const [participation,setParticipation]=useState('individual'),[collaboration,setCollaboration]=useState('solo'),[partnerCount,setPartnerCount]=useState('3')
  useEffect(()=>{
@@ -397,6 +399,22 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   }
   function addPause(){setError('');setSelected(rows=>[...rows,{...blankItem({id:null,name:'Pause',category:'Pause',body_area:'Heile kroppen',equipment:'Ingen',description:'Planlagd pause mellom øvingar.',is_rest:true}),is_rest:true,pauseSeconds:'30',reps:'',blockId:activeBlockId}]);setLibraryOpen(false)}
  function suggestUniqueWodName(){const existing=new Set(libraryWods.map(w=>(w.name||'').trim().toLowerCase()));for(let i=0;i<60;i++){const candidate=randomWodName();if(!existing.has(candidate.toLowerCase())&&candidate.toLowerCase()!==name.trim().toLowerCase())return candidate}return randomWodName()+' '+String(Date.now()).slice(-4)}
+ function combineSelectedComplex(){
+  const picked=selected.filter(item=>Object.hasOwn(complexSelection,item.key))
+  try{
+   if(picked.length<2||picked.some(item=>item.is_rest||item.is_complex||!item.id))throw Error('Vel minst to vanlege bibliotekøvingar.')
+   const part=picked[0].blockId
+   const partFormat=isComposite?compositeBlocks.find(block=>block.id===part)?.format:format
+   if(picked.some(item=>item.blockId!==part))throw Error('Øvingane må høyra til same øktdel.')
+   if(['Intervall','Tabata','Row Intervals','Stasjonssirkel','Couplet','Triplet','Ladder','Death By'].includes(partFormat))throw Error('Bruk eit format som tillèt eitt samla kompleks, til dømes EMOM eller Strength.')
+   if(picked.some((item,index)=>index>0&&selected.indexOf(item)!==selected.indexOf(picked[index-1])+1))throw Error('Sorter deløvingane etter kvarandre før du lagar komplekset.')
+   const exercise=buildCustomComplex(picked.map(item=>({exercise_id:item.id,name:item.name,reps:Number(complexSelection[item.key])})))
+   const item={...blankItem({...exercise,equipment:[...new Set(picked.map(x=>x.equipment).filter(Boolean))].join(' / ')}),blockId:part,reps:'1',levels:makeLevels('1',{})}
+   const keys=new Set(picked.map(x=>x.key))
+   setSelected(rows=>rows.flatMap(row=>row.key===picked[0].key?[item]:keys.has(row.key)?[]:[row]))
+   setComplexSelection({});setError('');setNotice('Komplekset er lagt inn. Kontroller sett, syklusar og belastning i doseringssteget.')
+  }catch(error){setError(error.message)}
+ }
  function updateItem(key,patch){setSelected(rows=>rows.map(x=>x.key===key?{...x,...patch}:x))}
  function updateLevel(key,level,patch){if(patch.loadMode==='rir')patch={...patch,loadKgMen:'',loadKgWomen:'',loadKg:'',percent1rm:''};setSelected(rows=>rows.map(x=>{
   if(x.key!==key)return x
@@ -729,6 +747,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  </section>}
        <div className="wizard-stage-intro"><strong>Øvingane i WOD-en</strong><span>Vel øvingar, sorter dei og gå vidare til eitt samla doseringssteg.</span></div>
        <div className="gg-exercise-actions"><button type="button" className="primary-button wod-open-library" onClick={()=>setLibraryOpen(true)}><Plus size={17}/> Legg til øving</button><button type="button" className="secondary-button gg-add-pause" onClick={addPause}><Plus size={16}/> Legg til pause</button></div>
+       {selected.filter(ex=>!ex.is_rest&&!ex.is_complex&&ex.id).length>=2&&<details className="wod-help"><summary>Lag eige kompleks av valde øvingar</summary><p>Vel deløvingane i rekkjefølgje og skriv reps per syklus. Belastning og sett blir sette etterpå. Tidlegare enkeltdosering blir erstatta.</p>{selected.filter(ex=>!ex.is_rest&&!ex.is_complex&&ex.id).map(ex=><div key={ex.key} className="engine-fields two"><label><input type="checkbox" checked={Object.hasOwn(complexSelection,ex.key)} onChange={e=>setComplexSelection(old=>{const next={...old};if(e.target.checked)next[ex.key]='';else delete next[ex.key];return next})}/> {ex.name}</label>{Object.hasOwn(complexSelection,ex.key)&&<label>Reps i komplekset<input type="number" min="1" step="1" value={complexSelection[ex.key]} onChange={e=>setComplexSelection(old=>({...old,[ex.key]:e.target.value}))}/></label>}</div>)}<button type="button" className="secondary-button" onClick={combineSelectedComplex}>Samle til eitt kompleks</button></details>}
        <div className="wod-selected-list">
         {selected.length?selected.map((ex,i)=><article data-order={i+1} className={"wod-selected-card wod-category-"+categoryTone(ex.category)} key={ex.key}>
          <span className={"wod-order wod-order-"+categoryTone(ex.category)}>{i+1}</span>
