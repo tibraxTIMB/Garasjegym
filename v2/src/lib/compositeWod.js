@@ -1,3 +1,4 @@
+import {complexResultSummary} from './wodComplexes.js'
 // Multi-part workouts reuse the existing WOD engine and Timer for each part.
 // No separate timer is introduced. Blocks, pauses and outcomes live in the WOD schema.
 import { emomIntervalSeconds, isEmomFormat } from './wodEngine.js'
@@ -54,6 +55,7 @@ export function validateCompositeBlocks(blocks,items=[]) {
   if(!block?.id||ids.has(block.id))return 'Kvar del må ha ein unik ID.'
   ids.add(block.id)
   if(!COMPOSITE_BLOCK_FORMATS.includes(block.format))return title+': vel eit støtta format.'
+  if(block.scoreMode&&!BLOCK_SCORE_OPTIONS.some(option=>option.value===block.scoreMode))return title+': ugyldig resultatformat.'
   const minute=Number(block.minutes)
   if(!Number.isFinite(minute)||minute<=0||minute>180||Math.abs(Math.round(minute*60)-minute*60)>0.001)return title+': vel inntil 180 minutt (med sekundpresisjon).'
   const exercises=items.filter(item=>(item.blockId||item.block_id)===block.id&&!item.is_rest)
@@ -185,4 +187,39 @@ export function plannedFixedEmomSets(item, blocks=[], level='rx', manualEntry=fa
  const autoFill=!manualEntry&&scheduledSets>0&&Number.isInteger(reps)&&reps>0&&item?.reps_mode!=='amrap'&&!item?.is_rest
  const sets=autoFill?Array.from({length:Math.max(scheduledSets,configuredSets.length)},(_,i)=>configuredSets[i]||configuredSets[0]||{}):configuredSets
  return {autoFill,reps,sets}
+}
+
+export const BLOCK_SCORE_OPTIONS=Object.freeze([
+ {value:'auto',label:'Standard for formatet'},
+ {value:'none',label:'Ingen score'},
+ {value:'completion',label:'Gjennomføring'},
+ {value:'load',label:'Tyngste godkjende kompleks (kg)'},
+ {value:'reps',label:'Totale repetisjonar',unit:'reps'},
+ {value:'calories',label:'Totale kaloriar',unit:'cal'},
+ {value:'distance',label:'Total distanse',unit:'m'},
+ {value:'time',label:'Registrert tid',unit:'sek'},
+ {value:'slowest',label:'Seinaste rundetid',unit:'sek'},
+ {value:'fastest',label:'Raskaste rundetid',unit:'sek'}
+])
+export function blockScoreDefinition(mode){
+ return BLOCK_SCORE_OPTIONS.find(option=>option.value===mode)||BLOCK_SCORE_OPTIONS[0]
+}
+// A programmed score is independent of elapsed time and prescribed movements.
+// Blank manual results remain null; a timed interval is not proof of completed work.
+export function explicitBlockResults(blocks=[],overrides={},items=[]){
+ return blocks.filter(block=>blockScoreDefinition(block.scoreMode).value!=='auto').map(block=>{
+  const definition=blockScoreDefinition(block.scoreMode),raw=overrides?.[block.id]?.primary
+  let value=null,unit=definition.unit||null
+  if(definition.value==='completion'){
+   if(raw!=null&&raw!==''&&!['complete','partial','failed'].includes(raw))throw Error('Ugyldig gjennomføring i '+block.title)
+   value=raw||null
+  }else if(definition.value==='load'){
+   const loads=items.filter(item=>item.block_id===block.id&&item.is_complex&&item.complex_family==='custom').map(item=>complexResultSummary(item).best_load_kg).filter(v=>v!=null)
+   value=loads.length?Math.max(...loads):null;unit='kg'
+  }else if(definition.value!=='none'&&raw!=null&&String(raw).trim()!==''){
+   value=Number(raw)
+   if(!Number.isFinite(value)||value<0||(['reps','calories','time','slowest','fastest'].includes(definition.value)&&!Number.isInteger(value))||(['time','slowest','fastest'].includes(definition.value)&&value===0))throw Error('Ugyldig resultat i '+block.title)
+  }
+  return {block_id:block.id,title:block.title||'Øktdel',type:definition.value,label:definition.label,value,unit}
+ })
 }

@@ -124,6 +124,7 @@ export function deriveBenchmarkRecords(logs = [], benchmarkWodIds = []) {
   if(Array.isArray(composite)&&composite.length&&String(log.format)==='Samansett økt'){
    for(const [index,part] of composite.entries()){
     if(part.completed!==true)continue
+    if(part.scoreMode&&part.scoreMode!=='auto')continue
     const linkedId=part.benchmark_source_wod_id||null
     const linkedEligible=linkedId&&eligible.has(linkedId)
     if(!rootEligible&&!linkedEligible)continue

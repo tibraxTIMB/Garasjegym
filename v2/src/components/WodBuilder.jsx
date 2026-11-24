@@ -1,3 +1,4 @@
+import {BLOCK_SCORE_OPTIONS} from '../lib/compositeWod.js'
 import {buildCustomComplex} from '../lib/wodComplexes.js'
 import {useEffect,useMemo,useRef,useState} from 'react'
 import {createPortal} from 'react-dom'
@@ -722,6 +723,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    </label>
    {block.source_wod_id&&<small className="wod-help">Kopla til «{block.source_wod_name}». Originalen ligg uendra i biblioteket; denne delen har eige lagra oppsett.</small>}
    <div className="gg-composite-block-fields">
+    <label>Hovudresultat<select value={block.scoreMode||'auto'} onChange={e=>updateBlock({scoreMode:e.target.value})}>{BLOCK_SCORE_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
     <label>Namn<input value={block.title} onChange={e=>updateBlock({title:e.target.value})} maxLength={60}/></label>
     <label>Format<select value={isEmomFormat(block.format)?'EMOM':block.format} onChange={e=>updateBlock({format:e.target.value,workSeconds:e.target.value==='Tabata'?20:45,restSeconds:e.target.value==='Tabata'?10:15,rounds:e.target.value==='Tabata'?8:3,...(e.target.value==='Death By'?{ladderStart:1,ladderStep:1,ladderDirection:'up',deathByIntervalSeconds:60}:{}),...(e.target.value==='EMOM'?{emomIntervalSeconds:60}:{})})}>{COMPOSITE_BLOCK_FORMATS.filter(f=>!/^E\d+(?:\.\d+)?MOM$/.test(f)).map(f=><option key={f} value={f}>{f}</option>)}</select></label>
     {isIntervalPart?<><label>Arbeid (sek)<input type="number" min="1" max="600" value={block.workSeconds??(block.format==='Tabata'?20:45)} onChange={e=>updateBlock({workSeconds:e.target.value})}/></label>

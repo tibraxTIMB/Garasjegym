@@ -55,12 +55,14 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
  ].filter(Boolean)
  const splitSeconds=workout.result_data?.split_seconds||[]
  const complexResults=workout.result_data?.complex_results||[]
+ const primaryResults=workout.result_data?.block_primary_results||[]
  const setField=(id,field,value)=>setSetDrafts(previous=>({...previous,[id]:{...previous[id],[field]:value}}))
  function requestBack(){if(editing&&!window.confirm('Gå tilbake utan å lagra endringane?'))return;onBack()}
  function cancelEdit(){setEditing(false);setEditMode(null);setForm(initialForm(workout));setSetDrafts(Object.fromEntries(exercises.flatMap(ex=>(ex.workout_sets||[]).map(set=>[set.id,initialSetValues(set)]))));setAddedSets({});setError('')}
  function beginEdit(nextMode){
-  setForm(initialForm(workout));setError('');setNotice('');setMenuOpen(false);setEditMode(nextMode);setEditing(true)
-  if(nextMode==='correction'&&complexResults.length){setError('Kompleksresultat krev eiga resultatkorrigering. Notat kan framleis redigerast.');return}
+  setError('');setNotice('');setMenuOpen(false)
+  if(nextMode==='correction'&&(complexResults.length||primaryResults.length)){setError('Programmerte delresultat krev eiga resultatkorrigering. Notat kan framleis redigerast.');return}
+  setForm(initialForm(workout));setEditMode(nextMode);setEditing(true)
   if(nextMode==='correction'&&workout.source_wod_id){
    setSourceStatus('Hentar oppsett frå WOD-biblioteket …')
    supabase.from('wods').select('timer_settings').eq('id',workout.source_wod_id).maybeSingle().then(({data,error:loadError})=>{
@@ -225,6 +227,7 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
     </form>:<>
      {resultStats.length>0&&<div className="workout-detail-stats">{resultStats.map(stat=><div key={stat.label}><span>{stat.label}</span><strong>{stat.value}</strong></div>)}</div>}
      {note.personal&&<section className="workout-detail-note"><h3>Notat frå økta</h3><p>{note.personal}</p></section>}
+     {primaryResults.length>0&&<section className="workout-detail-timing"><h3>Hovudresultat per del</h3>{primaryResults.map((result,index)=><div key={result.block_id||index}><strong>{result.title}</strong><p>{result.label}: {result.type==='none'?'Ingen score':result.value==null?'Ikkje registrert':result.type==='completion'?({complete:'Gjennomført',partial:'Delvis',failed:'Ikkje gjennomført'}[result.value]||'Ikkje registrert'):result.value+' '+(result.unit||'')}</p></div>)}</section>}
      {complexResults.length>0&&<section className="workout-detail-timing"><h3>Kompleksresultat</h3>{complexResults.map((result,i)=><div key={i}><strong>{result.name}</strong><p>Tyngste godkjende: {result.best_load_kg==null?'Ikkje registrert':result.best_load_kg+' kg'} · {result.completed} fullførte · {result.partial} delvise · {result.failed} mislukka</p></div>)}</section>}
      {(splitSeconds.length>0||note.system.length>0)&&<section className="workout-detail-timing"><h3><Clock3 size={17}/> Timer og rundetider</h3>{note.system.filter(line=>!/^Mellomtider:/i.test(line)).map((line,index)=><p key={index}>{line}</p>)}{splitSeconds.length>0?<div className="workout-detail-splits">{splitSeconds.map((seconds,index)=><span key={index}>R{index+1} <b>{formatWorkoutSeconds(seconds)}</b></span>)}</div>:note.system.filter(line=>/^Mellomtider:/i.test(line)).map((line,index)=><p key={index}>{line}</p>)}</section>}
      <div className="workout-detail-exercises-head"><h3><Dumbbell size={18}/> Øvingar og sett</h3><span>{exercises.length} øvingar</span></div>

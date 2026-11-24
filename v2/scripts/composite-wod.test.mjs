@@ -176,3 +176,12 @@ test('The session persists separate scores and skips planned reps when generatin
  assert.match(history,/result_data,note,workout_exercises/)
  assert.match(history,/\.eq\('member_id',user\.id\)/)
 })
+
+import {explicitBlockResults} from '../src/lib/compositeWod.js'
+test('explicit per-part score is independent of format, preserves zero and ignores failed complex attempts',()=>{
+ const blocks=[{id:'a',title:'Oppvarming',format:'AMRAP',scoreMode:'completion'},{id:'b',title:'Complex',format:'E2MOM',scoreMode:'load'},{id:'c',title:'Roing',format:'EMOM',scoreMode:'calories'},{id:'d',title:'Tid',format:'For Time',scoreMode:'none'},{id:'e',format:'AMRAP'}]
+ const results=explicitBlockResults(blocks,{a:{primary:'complete'},c:{primary:'0'}},[{block_id:'b',is_complex:true,complex_family:'custom',sets:[{complex_status:'complete',reps:1,load_kg:60},{complex_status:'partial',reps:0,load_kg:65}]}])
+ assert.deepEqual(results.map(result=>result.value),['complete',60,0,null])
+ assert.equal(explicitBlockResults(blocks)[0].value,null)
+ assert.throws(()=>explicitBlockResults(blocks,{c:{primary:'-1'}}),/Ugyldig/)
+})
