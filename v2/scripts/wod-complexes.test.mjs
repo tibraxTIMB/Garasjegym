@@ -55,3 +55,12 @@ test('invalid composite definitions are rejected', () => {
     complex_steps: [{ name: 'Clean', reps: 0 }, { name: 'Squat', reps: 1 }],
   }), false);
 });
+
+import {plannedComplexCycles,confirmWeightedComplexSets} from '../src/lib/wodComplexes.js'
+test('quick complex confirmation uses programmed cycles but never confirms blank or failed attempts',()=>{
+ const sets=[{load_kg:'40',reps:''},{load_kg:'',reps:''},{load_kg:'65',reps:'0',complex_status:'partial'},{load_kg:'70',reps:'0',complex_status:'failed'},{load_kg:'50',reps:'1',complex_status:'complete'}]
+ const cycles=plannedComplexCycles({prescription_levels:{rx:{reps:'2'}}})
+ assert.equal(cycles,2)
+ assert.deepEqual(confirmWeightedComplexSets(sets,cycles),[{load_kg:'40',reps:'2',complex_status:'complete'},...sets.slice(1)])
+ assert.equal(plannedComplexCycles({levels:{rx:{reps:''}}}),1)
+})

@@ -57,3 +57,14 @@ export function complexResultSummary(item){
  const weights=successful.filter(s=>s.load_kg!=null&&String(s.load_kg).trim()!==''&&Number.isFinite(Number(s.load_kg))&&Number(s.load_kg)>=0).map(s=>Number(s.load_kg))
  return {attempts:sets.length,completed:successful.length,partial:sets.filter(s=>s.complex_status==='partial').length,failed:sets.filter(s=>s.complex_status==='failed').length,best_load_kg:weights.length?Math.max(...weights):null}
 }
+
+export function plannedComplexCycles(item,level='rx'){
+ const raw=item?.prescription_levels?.[level]?.reps??item?.levels?.[level]?.reps??item?.complex_planned_cycles??item?.reps
+ const count=Number(raw)
+ return Number.isInteger(count)&&count>0?count:1
+}
+// The button is an explicit confirmation, never triggered by entering a weight.
+// Preserve already classified attempts and all blank rows.
+export function confirmWeightedComplexSets(sets=[],cycles=1){
+ return sets.map(set=>!set.complex_status&&set.load_kg!=null&&String(set.load_kg).trim()!==''&&Number.isFinite(Number(set.load_kg))&&Number(set.load_kg)>=0?{...set,complex_status:'complete',reps:String(cycles)}:set)
+}
