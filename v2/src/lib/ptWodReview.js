@@ -58,3 +58,51 @@ export function plannedDoseForExercise(schema,exerciseName,level='rx') {
  if(height!=null&&height!=='')parts.push(height+' cm')
  return parts.length?parts.join(' · '):null
 }
+
+/** Distinguish an athlete's manual early transition from a completed time interval. */
+export function ptPartCompletion(part) {
+ const planned=Number(part?.duration_seconds)
+ const elapsed=Number(part?.elapsed)
+ const format=String(part?.format||'').toLowerCase()
+ const fixedLength=/^(e\d+(?:\.\d+)?mom|emom|amrap|tabata|intervall|stasjonssirkel|row intervals)$/.test(format)
+ if(part?.time_cap_reached)return {label:'Tidsramma nådd',kind:'timed'}
+ if(!part?.completed)return {label:'Ikkje stadfesta fullført',kind:'unknown'}
+ if(fixedLength&&Number.isFinite(planned)&&planned>0&&Number.isFinite(elapsed)&&elapsed>=0&&elapsed+3<planned){
+  return {label:'Avslutta før planlagt tid',kind:'early',detail:`Registrert ${formatDuration(elapsed)} av planlagde ${formatDuration(planned)}. Årsaka er ikkje oppgjeven.`}
+ }
+ return {label:'Registrert gjennomført',kind:'done'}
+}
+
+/** AMRAP scores and split times belong to their own part in a composite WOD. */
+export function ptIsAmrapPart(part) {
+ return String(part?.format||'').toLowerCase()==='amrap'
+  || ['couplet','triplet'].includes(String(part?.format||'').toLowerCase())&&String(part?.combination_mode||'').toUpperCase()==='AMRAP'
+}
+export function ptPartScore(part) {
+ if(!part)return null
+ if(ptIsAmrapPart(part)){
+  const rounds=Number(part.roundsCompleted)
+  const extras=Number(part.extra_reps)
+  if(!Number.isFinite(rounds)||rounds<0)return null
+  return `${rounds} rundar${Number.isFinite(extras)&&extras>0?' + '+extras+' reps':''}`
+ }
+ if(part.format==='Death By'&&part.death_by_completed_rounds!=null)return String(part.death_by_completed_rounds)+' rundar'
+ if(part.format==='Ladder'&&part.ladder_completed_rounds!=null)return String(part.ladder_completed_rounds)+' trinn'
+ return null
+}
+export function ptRoundSplits(result,part=null) {
+ const source=part?part.laps:result?.result_data?.split_seconds
+ return Array.isArray(source)?source.filter(x=>x!==''&&x!=null&&Number.isFinite(Number(x))&&Number(x)>0).map(Number).slice(0,50):[]
+}
+export function ptReviewHighlights(result) {
+ if(!result)return []
+ const parts=Array.isArray(result.result_data?.block_summary)?result.result_data.block_summary:[]
+ if(!parts.length)return ptResultSummary(result)
+ const out=[]
+ const elapsed=Number(result.result_data?.elapsed_seconds)
+ if(Number.isFinite(elapsed)&&elapsed>0)out.push({label:'Medgått tid',value:formatDuration(elapsed)})
+ const amrap=parts.filter(ptIsAmrapPart).slice(-1)[0]
+ if(amrap&&ptPartScore(amrap))out.push({label:'AMRAP-resultat',value:ptPartScore(amrap)})
+ if(result.result_data?.prescription_level)out.push({label:'Nivå',value:String(result.result_data.prescription_level).toUpperCase()})
+ return out.slice(0,3)
+}
