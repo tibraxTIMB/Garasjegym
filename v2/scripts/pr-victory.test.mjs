@@ -21,11 +21,15 @@ test('historical marker requires the actual matching weight and positive repetit
 
 test('PR sound is an independent preference and never disables ordinary timer sounds',()=>{const data=new Map([['garasjegym.timer.sound_enabled','on']]);const storage={getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)};assert.equal(isPRVictorySoundEnabled(storage),true);setPRVictorySoundEnabled(false,storage);assert.equal(isPRVictorySoundEnabled(storage),false);assert.equal(data.get('garasjegym.timer.sound_enabled'),'on');setPRVictorySoundEnabled(true,storage);assert.equal(isPRVictorySoundEnabled(storage),true)})
 
-test('celebration shows real record and gain with official mascot logo and accessible motion',()=>{const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');const o=read('../src/components/PRVictoryOverlay.jsx');const m=read('../src/components/RekordGorilla.jsx');const c=read('../src/components/pr-victory-overlay.css');assert.match(o,/DU HAST <em>REKORD!/);assert.match(o,/p\.load_kg-p\.previous_kg/);assert.match(o,/Førre rekord:/);assert.match(m,/garasjegym-49-512\.png/);assert.match(m,/href=\{logo\} x="130" y="149"/);assert.match(c,/prefers-reduced-motion:reduce/);assert.match(c,/orientation:landscape/)})
-
-import {RECORD_LIFT_POSES,sampleRecordPose} from '../src/lib/recordLiftMotion.js'
-import {STANDARD_PR_LIFTS} from '../src/lib/prDirectory.js'
-test('all seven standard lifts have slow looped motion',()=>{assert.deepEqual(Object.keys(RECORD_LIFT_POSES).sort(),STANDARD_PR_LIFTS.map(x=>x.name).sort());for(const [name,s] of Object.entries(RECORD_LIFT_POSES)){assert.ok(s.duration>=6);assert.deepEqual(sampleRecordPose(name,0),sampleRecordPose(name,1));for(let i=0;i<=100;i++)assert.ok(sampleRecordPose(name,i/100).flat().every(Number.isFinite))}assert.notDeepEqual(sampleRecordPose('Bench press',.4),sampleRecordPose('Deadlift',.4))})
-test('independent exercise animation and fixed record data',()=>{const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');assert.match(read('../src/components/PRVictoryOverlay.jsx'),/<RekordLift name=\{p.name\}/);assert.match(read('../src/components/RekordLift.jsx'),/requestAnimationFrame/);assert.match(read('../src/components/pr-victory-overlay.css'),/gg-rekord-confetti\{display:none\}/)})
-
-test('3D celebration is lazy-loaded, has locally rendered garage and motion fallback',()=>{const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');const o=read('../src/components/PRVictoryOverlay.jsx'),g=read('../src/components/GameRekordScene.jsx'),s=read('../src/lib/rekordGame3d.js');assert.match(o,/mode="victory"/);assert.match(o,/mode="lift" name=\{p.name\}/);assert.match(g,/import\('\.\.\/lib\/rekordGame3d\.js'\)/);assert.match(g,/fallback/);assert.match(s,/new T\.WebGLRenderer/);assert.match(s,/woodTexture/);assert.match(s,/sampleRecordPose/);assert.match(s,/prefers-reduced-motion/);assert.match(s,/renderer\.dispose\(\)/);assert.match(s,/TextureLoader/);assert.doesNotMatch(s,/https?:\/\//)})
+import {createHash} from 'node:crypto'
+test('single static PanserGorilla celebration has correct verified local image and both orientations',()=>{
+ const read=p=>readFileSync(new URL(p,import.meta.url),'utf8')
+ const o=read('../src/components/PRVictoryOverlay.jsx'),c=read('../src/components/pr-victory-overlay.css')
+ const poster=readFileSync(new URL('../src/assets/pansergorilla-rekord.webp',import.meta.url))
+ assert.equal(createHash('sha256').update(poster).digest('hex'),'311221d91a78f3b3dfc973ce85ff25aa9d3ec7795ed249143a217ee9bbc010f3')
+ assert.equal(poster.toString('ascii',0,4),'RIFF')
+ assert.equal(poster.toString('ascii',8,12),'WEBP')
+ assert.match(o,/DU HAST <em>REKORD!/);assert.match(o,/pansergorilla-rekord\.webp/);assert.match(o,/if\(!victories.length\)return null/);assert.match(o,/12000/)
+ assert.doesNotMatch(o,/GameRekordScene|RekordLift|RekordGorilla|<video|load_kg|previous_kg/)
+ assert.match(c,/orientation:landscape/);assert.match(c,/object-fit:contain/);assert.doesNotMatch(c,/animation\s*:|@keyframes/)
+})

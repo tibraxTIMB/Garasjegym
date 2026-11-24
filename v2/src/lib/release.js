@@ -12,3 +12,5 @@ export const RELEASE_SHORT = 'GAZELLE 1.2'
 // Approved Gazelle Studio Sound publication: 30 stereo WAV cues, distinct victory motifs and modal gong decay.
 
 // Approved DATABUNKER 1.0 publication: local backup, dated ZIP and receipt. No database changes.
+
+// Approved publication: still PanserGorilla poster, no PR video or 3D; retain current PR audio and data.
