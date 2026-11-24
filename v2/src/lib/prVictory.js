@@ -54,10 +54,18 @@ export function workoutPRVictories(log){
  const actual=topLoads(sets,true)
  return saved.filter(p=>names.has(strictKey(p.name))&&positive(p.previous_kg)>0&&positive(p.load_kg)>positive(p.previous_kg)&&actual.get(strictKey(p.name))===Number(p.load_kg))
 }
+export const PR_VICTORY_AUDIO_KEY='garasjegym.timer.pr_victory'
+export function isPRVictorySoundEnabled(storage=globalThis.localStorage){
+ try{return storage?.getItem(PR_VICTORY_AUDIO_KEY)!=='off'}catch{return true}
+}
+export function setPRVictorySoundEnabled(enabled,storage=globalThis.localStorage){
+ try{storage?.setItem(PR_VICTORY_AUDIO_KEY,enabled?'on':'off')}catch{}
+ if(typeof window!=='undefined')window.dispatchEvent(new Event('gg-pr-victory-audio-change'))
+}
 export function readPRVictoryAudio(){
  try{
   const profile=localStorage.getItem('garasjegym.timer.audio_profile')||'personal'
   const raw=localStorage.getItem('garasjegym.timer.sound_volume'),number=Number(raw)
-  return {enabled:localStorage.getItem('garasjegym.timer.pr_victory')!=='off'&&localStorage.getItem('garasjegym.timer.sound_enabled')!=='off'&&profile!=='silent',profile,volume:raw!==null&&Number.isFinite(number)?Math.max(0,Math.min(100,number)):100}
+  return {enabled:isPRVictorySoundEnabled()&&localStorage.getItem('garasjegym.timer.sound_enabled')!=='off'&&profile!=='silent',profile,volume:raw!==null&&Number.isFinite(number)?Math.max(0,Math.min(100,number)):100}
  }catch{return {enabled:true,profile:'personal',volume:100}}
 }

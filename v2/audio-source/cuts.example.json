@@ -51,7 +51,7 @@
         "source": "",
         "sha256": "",
         "start": 0,
-        "duration": 1
+        "duration": 3
       },
       "registered": {
         "source": "",
@@ -63,7 +63,7 @@
         "source": "",
         "sha256": "",
         "start": 0,
-        "duration": 4
+        "duration": 10
       }
     },
     "personal": {
@@ -113,7 +113,7 @@
         "source": "",
         "sha256": "",
         "start": 0,
-        "duration": 1
+        "duration": 3
       },
       "registered": {
         "source": "",
@@ -125,7 +125,7 @@
         "source": "",
         "sha256": "",
         "start": 0,
-        "duration": 4
+        "duration": 10
       }
     },
     "group": {
@@ -175,7 +175,7 @@
         "source": "",
         "sha256": "",
         "start": 0,
-        "duration": 1
+        "duration": 3
       },
       "registered": {
         "source": "",
@@ -187,7 +187,7 @@
         "source": "",
         "sha256": "",
         "start": 0,
-        "duration": 4
+        "duration": 10
       }
     }
   }

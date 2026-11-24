@@ -18,7 +18,7 @@ Demo: https://huggingface.co/spaces/ACE-Step/Ace-Step-v1.5
 6. Lytt til review-pack i reell timerflyt. Berre etter godkjenning og ny test/publiseringsordre kan dei erstatta eksisterande lydpakke. Ingen automatisk erstatning.
  
 ## Dramaturgi
-Nedteljing: tre tydelege korte signal med stigande energi, maks 0,95s. Start: umiddelbar slagkraft og oppløftande drop. Runde: same musikalske identitet, kort ny impuls. Pause: rolegare kadens, ikkje same som finish. Stasjon: distinkt kort rytmisk markeringssignal. Finish: tydeleg musikalsk avslutning. Registrert: lite kvitteringssignal. PR: uavhengig triumferande fanfare 4–8s, eksisterande PR-reglar uendra.
+Nedteljing: tre tydelege korte signal med stigande energi, maks 0,95s. Start: umiddelbar slagkraft og oppløftande drop. Runde: same musikalske identitet, kort ny impuls. Pause: rolegare kadens, ikkje same som finish. Stasjon: distinkt kort rytmisk markeringssignal. Finish: 3–5 sekund, crescendo mot tydeleg triumferande sluttakkord. Registrert: lite kvitteringssignal. PR: uavhengig triumferande fanfare 10–12s, eksisterande PR-reglar uendra.
 EISEN kan ha naturlege gong-/klokkehalar inntil 6s for lengre signal. Timeren har framleis prioritet. Ikkje kutt inn i nedteljingsslaga, ikkje legg inn kontinuerleg bakgrunnsmusikk, ikkje endra eksisterande Spotify-integrasjon.
 Ingen artistopptak, melodiavskrift, etterlikna vokal eller betalte API-kall. Bruk sjangerkjenneteikn, ikkje kopiar av verk. 
 Status: generator og kandidat-kompilator; ingen faktiske ACE-Step-takes generert eller publisert i dette miljøet.

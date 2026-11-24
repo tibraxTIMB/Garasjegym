@@ -10,7 +10,7 @@ import { formatComplexSequence } from '../lib/wodComplexes.js'
 import { formatParticipation, normalizeWodEngine, isEmomFormat, emomIntervalSeconds, emomDisplayLabel, emomPrescribedSetCount } from '../lib/wodEngine.js'
 import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, splitDuration, summarizeLapSplits, nextManualActionDeadline } from '../lib/timerClock.js'
 import { getExerciseMeasurementFlags, isErgExercise } from '../lib/exerciseMeasurements.js'
-import {checkPRVictories,hasVictoryCandidate,readPRVictoryAudio} from '../lib/prVictory.js'
+import {checkPRVictories,hasVictoryCandidate,readPRVictoryAudio,isPRVictorySoundEnabled,setPRVictorySoundEnabled} from '../lib/prVictory.js'
 import {exerciseResultReview} from '../lib/resultReview.js'
 import {COMPOSITE_FORMAT, compositeBlockForTimer, compositeTimerConfig, compositeTransitionSeconds, compositeScoredBlocks, plannedFixedEmomSets} from '../lib/compositeWod.js'
 import { exerciseRecordType } from '../lib/prMetrics.js'
@@ -26,6 +26,7 @@ import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, TRAINING_A
 import { preloadSoundPack, unlockSoundPack, playPackSignal, playDirectPackSignal, stopDirectAudio, stopPackAudio, SOUND_PACK_NAMES, SOUND_PACK_VERSION } from '../lib/trainingAudio.js'
 import GarageSelect from './GarageSelect.jsx'
 import './timer-viewport.css'
+import PRVictoryOverlay from './PRVictoryOverlay.jsx'
 
 const FORMATS = [COMPOSITE_FORMAT,'Fri trening', 'EMOM', 'AMRAP', 'For Time', 'Chipper', 'Couplet', 'Triplet', 'Ladder', 'Death By', 'Tabata', 'Intervall', 'Row Intervals', 'Strength', 'Pyramid', 'Superset', 'Complex', 'Eigen økt', 'Stoppeklokke', 'Nedteljing', 'Tilpassa']
 const RESULT_UNITS = [{value:'m',label:'Meter (m)'},{value:'km',label:'Kilometer (km)'},{value:'cal',label:'Kaloriar (cal)'},{value:'s',label:'Sekund (s)'},{value:'min',label:'Minutt (min)'}]
@@ -138,8 +139,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [audioProfile,setAudioProfile]=useState(()=>{
     try{const value=localStorage.getItem('garasjegym.timer.audio_profile');return TRAINING_AUDIO_PROFILES.includes(value)&&value!=='silent'?value:'personal'}catch{return 'personal'}
   })
-  const [prVictoryAudio,setPRVictoryAudio]=useState(()=>readPRVictoryAudio().enabled||(()=>{try{return localStorage.getItem('garasjegym.timer.pr_victory')!=='off'}catch{return true}})())
-  useEffect(()=>{try{localStorage.setItem('garasjegym.timer.pr_victory',prVictoryAudio?'on':'off')}catch{}},[prVictoryAudio])
+  const [prVictoryAudio,setPRVictoryAudio]=useState(()=>isPRVictorySoundEnabled())
+  useEffect(()=>{const sync=()=>setPRVictoryAudio(isPRVictorySoundEnabled());window.addEventListener('gg-pr-victory-audio-change',sync);window.addEventListener('storage',sync);return()=>{window.removeEventListener('gg-pr-victory-audio-change',sync);window.removeEventListener('storage',sync)}},[])
   const [countdownAudio,setCountdownAudio]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.countdown_audio')!=='off'}catch{return true}})
   const [vibration,setVibration]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.vibration')==='on'}catch{return false}})
   const [testCue,setTestCue]=useState('start')
@@ -597,7 +598,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     <label className="gg-timer-check"><input type="checkbox" checked={soundOn} onChange={e=>setSoundOn(e.target.checked)}/> Lydsignal på</label>
     <label>Timerlyd · {soundVolume}%<input type="range" min="0" max="100" step="5" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label>
     <label className="gg-timer-check"><input type="checkbox" checked={countdownAudio} onChange={e=>setCountdownAudio(e.target.checked)}/> Nedtelling 3–2–1</label>
-    <label className="gg-timer-check"><input type="checkbox" checked={prVictoryAudio} onChange={e=>setPRVictoryAudio(e.target.checked)}/> PR Victory · dei sju standardløfta</label>
+    <label className="gg-timer-check"><input type="checkbox" checked={prVictoryAudio} onChange={e=>{setPRVictoryAudio(e.target.checked);setPRVictorySoundEnabled(e.target.checked)}}/> PR-lyd · av/på (skjermfeiring alltid på)</label>
     <label className="gg-timer-check"><input type="checkbox" checked={vibration} onChange={e=>setVibration(e.target.checked)}/> Vibrasjon ved skifte (støtta mobil)</label>
     <label>Test signal<select value={testCue} onChange={e=>setTestCue(e.target.value)}><option value="start">Start</option><option value="tick-1">Nedtelling</option><option value="round">Ny runde</option><option value="rest">Pause</option><option value="station">Stasjonsbyte</option><option value="finish">Ferdig</option><option value="registered">Runde registrert</option><option value="pr">PR Victory</option></select></label>
     <button type="button" className="secondary-button" disabled={audioProfile==='silent'||!soundOn||soundVolume===0} onClick={()=>playSignal(testCue,{test:true})}><Volume2 size={17}/> Test lydsignal</button>
@@ -914,6 +915,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const [resultSummary,setResultSummary]=useState(false)
   const [reviewedResults,setReviewedResults]=useState({})
   const [victoryNotice,setVictoryNotice]=useState([])
+  const [victoryOverlay,setVictoryOverlay]=useState([])
   const resultBodyRef=useRef(null)
   const [manualEntry,setManualEntry]=useState(() => Boolean(savedDraft?.manualEntry))
   const [confirmedPlannedEmom,setConfirmedPlannedEmom]=useState(false)
@@ -1322,7 +1324,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     if(victoryPrefs.enabled&&victoryPrefs.volume>0&&hasVictoryCandidate(verifiedRows)){
       try{const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(AudioContextClass){if(!sharedTrainingAudioContext||sharedTrainingAudioContext.state==='closed')sharedTrainingAudioContext=new AudioContextClass();victoryContext=sharedTrainingAudioContext;unlockSoundPack(victoryContext,victoryPrefs.profile).catch(()=>{})}}catch{}
     }
-    setVictoryNotice([])
+    setVictoryNotice([]);setVictoryOverlay([])
     setSaving(true); setError(''); setNotice('')
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -1419,7 +1421,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       // personal_records remain visible in the archive but aren't duplicated.
       const prMessage = programSyncMessage+' Rekordoversikta blir oppdatert frå øvingane og resultata i treningsloggen.'
       setNotice('Økta er lagra i treningsloggen.' + prMessage)
-      if(victories.length){setVictoryNotice(victories);if(victoryContext&&victoryPrefs.enabled){stopDirectAudio();playPackSignal(victoryContext,'pr',victoryPrefs.volume,victoryPrefs.profile).catch(()=>{})}}
+      if(victories.length){setVictoryNotice(victories);setVictoryOverlay(victories);if(victoryContext&&readPRVictoryAudio().enabled){stopDirectAudio();playPackSignal(victoryContext,'pr',victoryPrefs.volume,victoryPrefs.profile).catch(()=>{})}}
       setFinishOpen(false); setMode('home'); setReviewOpen(false)
       clearTimerSnapshot()
       setSaveToken(crypto.randomUUID())
@@ -1436,6 +1438,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   return <div className={simpleMode && mode === "home" ? "training-module simple-mode" : "training-module"}>
     {error && <div className="auth-error" role="alert">{error}</div>}
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16}/> {notice}</div>}
+    {victoryOverlay.length>0&&<PRVictoryOverlay victories={victoryOverlay} onClose={()=>setVictoryOverlay([])}/>}
     {victoryNotice.length>0&&<div className="gg-pr-victory-notice" role="status"><Trophy size={22}/><div><strong>Ny personleg rekord · The Big Seven</strong>{victoryNotice.map(p=><small key={p.name}>{p.label}: {p.previous_kg} → {p.load_kg} kg</small>)}</div><button type="button" aria-label="Lukk rekordmelding" onClick={()=>setVictoryNotice([])}><X size={18}/></button></div>}
     {mode === 'active' ? <form className="engine-form gg-training-session" onSubmit={saveWorkout}>
       <div className="training-heading"><div><div className="section-kicker">{manualEntry?'RESULTAT · ETTERREGISTRERING':'TRENING · AKTIV ØKT'}</div><h3>{source?.name||'Fri trening'}</h3></div><button type="button" className="workout-return-types" onClick={returnToWorkoutTypes}>← Vel økttype</button></div>

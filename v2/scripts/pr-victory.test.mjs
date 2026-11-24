@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {findPRVictories,workoutPRVictories} from '../src/lib/prVictory.js'
+import {findPRVictories,workoutPRVictories,isPRVictorySoundEnabled,setPRVictorySoundEnabled} from '../src/lib/prVictory.js'
 const lift=(name,kg,reps=1)=>({exercise_name:name,sets:[{load_kg:kg,reps}]})
 const previous={workout_exercises:[lift('Deadlift',80),lift('Kettlebell swing',16),lift('Bench press',60)]}
 test('only strictly higher real weight in Big Seven with existing baseline',()=>{
@@ -17,3 +17,5 @@ test('historical marker requires the actual matching weight and positive repetit
  assert.equal(workoutPRVictories({result_data:{pr_victories:victories},workout_exercises:[lift('Deadlift',85)]}).length,0)
  assert.equal(workoutPRVictories({result_data:{pr_victories:victories},workout_exercises:[lift('Deadlift',90,0)]}).length,0)
 })
+
+test('PR sound is an independent preference and never disables ordinary timer sounds',()=>{const data=new Map([['garasjegym.timer.sound_enabled','on']]);const storage={getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)};assert.equal(isPRVictorySoundEnabled(storage),true);setPRVictorySoundEnabled(false,storage);assert.equal(isPRVictorySoundEnabled(storage),false);assert.equal(data.get('garasjegym.timer.sound_enabled'),'on');setPRVictorySoundEnabled(true,storage);assert.equal(isPRVictorySoundEnabled(storage),true)})
