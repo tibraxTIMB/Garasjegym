@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useState} from 'react'
 import {Activity,ArrowLeft,CheckCircle2,Clock3,MessageSquareText,Send,ShieldCheck} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
-import {dosageLabel,formatDuration,pacingReview,ptDosingOptions,ptResultSummary,validRoundSplits} from '../lib/ptWodReview.js'
+import {dosageLabel,formatDuration,pacingReview,plannedDoseForExercise,ptDosingOptions,ptResultSummary,validRoundSplits} from '../lib/ptWodReview.js'
 
 const formattedDate=value=>value?new Date(value+'T12:00:00').toLocaleDateString('nn-NO',{day:'numeric',month:'long',year:'numeric'}):'Dato ikkje registrert'
 const array=value=>Array.isArray(value)?value:[]
@@ -14,7 +14,7 @@ const formatExerciseSet=set=>[
 ].filter(Boolean).join(' · ')
 
 /** Only data returned by the assignment-scoped RPC is shown. Never query workout_logs directly. */
-export default function PTWodReview({assignmentId=null,programSessionId=null,clientName='',wodName='',onClose=()=>{}}){
+export default function PTWodReview({assignmentId=null,programSessionId=null,clientName='',wodName='',prescriptionSchema=null,onClose=()=>{}}){
  const [result,setResult]=useState(null)
  const [feedback,setFeedback]=useState([])
  const [loading,setLoading]=useState(true)
@@ -95,9 +95,10 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
     </div>)}
    </div>}
    {exerciseResults.length>0&&<div className="ptreview-panel">
-    <div className="ptreview-panel-title"><CheckCircle2 size={16}/><h4>Utført dosering</h4></div>
+    <div className="ptreview-panel-title"><CheckCircle2 size={16}/><h4>Planlagt og utført dosering</h4></div>
     {exerciseResults.map((ex,i)=><div className="ptreview-exercise" key={i}>
      <strong>{ex.exercise_name||'Øving'}</strong>
+     {plannedDoseForExercise(prescriptionSchema,ex.exercise_name,result?.result_data?.prescription_level||'rx')&&<small className="ptreview-prescribed">Planlagt: {plannedDoseForExercise(prescriptionSchema,ex.exercise_name,result?.result_data?.prescription_level||'rx')}</small>}
      {array(ex.sets).length?array(ex.sets).map((set,j)=><small key={j}>Sett {j+1}: {formatExerciseSet(set)||'Ikkje registrert'}</small>):<small>Ingen sett registrerte</small>}
      {ex.row_value!=null&&<small>Resultat: {ex.row_value} {ex.row_unit||''}</small>}
     </div>)}
