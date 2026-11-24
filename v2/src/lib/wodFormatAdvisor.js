@@ -16,7 +16,12 @@ export function fixedIntervalLabel(plan){
 }
 // Compact box notation E2MOM35 means 35 total minutes, not 35 repetitions.
 export function readEmomHeader(text){
- const m=String(text||'').match(/\b(E(?:[1-7](?:[.,](?:25|5|75))?)?MOM)[ \t]*[:–-]?[ \t]*(\d{1,3})\b(?![ \t]*\/)/i)
+ const raw=String(text||'')
+ const repeat=raw.match(/\b(E(?:[1-7](?:[.,](?:25|5|75))?)?MOM)[ \t]*[x×][ \t]*(\d{1,3})\b/i)
+ if(repeat){const format=repeat[1].toUpperCase().replace(',','.');return {format,minutes:Number(repeat[2])*emomIntervalSeconds(format)/60}}
+ const every=raw.match(/\bevery[ \t]+(\d{1,4})[ \t]*(sec(?:onds?)?|s|min(?:utes?)?)[ \t]*[x×][ \t]*(\d{1,3})\b/i)
+ if(every){const seconds=Number(every[1])*(/^min/i.test(every[2])?60:1);if(seconds>=5&&seconds<=3600)return {format:'EMOM',minutes:seconds*Number(every[3])/60,emomIntervalSeconds:seconds}}
+ const m=raw.match(/\b(E(?:[1-7](?:[.,](?:25|5|75))?)?MOM)[ \t]*[:–-]?[ \t]*(\d{1,3})\b(?![ \t]*\/)/i)
  return m?{format:m[1].toUpperCase().replace(',','.'),minutes:Number(m[2])}:null
 }
 // Only labelled timing or a complete slash pair in a format/standalone line.

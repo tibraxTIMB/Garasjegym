@@ -342,7 +342,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  function applyImportedWod(parsed){
   const imported=parsed.items.filter(row=>row.exercise).map(row=>{
    const exercise=row.exercise
-   const item={...blankItem(exercise),blockId:row.block_id||'a'}
+   const item={...blankItem(exercise),blockId:row.block_id||'a',minuteSlot:row.minuteSlot||''}
    const quantity=row.quantity
    const metric=quickDoseMetricFor(exercise)
    item.reps=quantity?'':String(row.reps??'10')
@@ -362,7 +362,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   })
   if(!imported.length){setError('Ingen øvingar er kopla til biblioteket. Gå tilbake til importen og vel øvingar.');return}
   if(isFixedInterval(parsed.format)){setIntervalExerciseCount(String(imported.length));setWorkSeconds(String(parsed.fixedTiming?.workSeconds??''));setRestSeconds(String(parsed.fixedTiming?.restSeconds??''))}
-  if(isEmomFormat(parsed.format)){const every=emomIntervalSeconds(parsed.format);setEmomIntervalMin(String(Math.floor(every/60)));setEmomIntervalSec(String(every%60))}
+  if(isEmomFormat(parsed.format)){const every=emomIntervalSeconds(parsed.format,{work_every_seconds:parsed.emomIntervalSeconds});setEmomIntervalMin(String(Math.floor(every/60)));setEmomIntervalSec(String(every%60))}
   setDurationSeconds('0');setTimeCapSeconds('0');
   setCompositeBlocks(Array.isArray(parsed.blocks)&&parsed.blocks.length?parsed.blocks:defaultCompositeBlocks());setActiveBlockId(parsed.blocks?.[0]?.id||'a');setName(parsed.name||'Importert WOD');setFormat(parsed.format||'Eigen økt');setMinutes(String(parsed.minutes||20));setTimeCap(parsed.minutes?String(parsed.minutes):'');setRounds(String(parsed.rounds||1));setSelected(imported);setNotes(parsed.notes||'');setStimulus('Importert WOD – kontroller format, øvingar og dosering før lagring.');setLibraryCategory('standard');setPublishToMembers(false);setWizardStep(2);setError('');setNotice('WOD-teksten er tolka og lagd inn i byggjaren. Kontroller alle øvingar, belastningar og doseringsnivå før lagring.')
  }

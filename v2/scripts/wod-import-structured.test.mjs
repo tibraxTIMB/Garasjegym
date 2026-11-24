@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {parseWodImport} from '../src/lib/wodImport.js'
+import {parseWodImport,materializeImportGroups,importWorkGroupIssue} from '../src/lib/wodImport.js'
 import {validateCompositeBlocks} from '../src/lib/compositeWod.js'
 const library=['Strict press','Push Press','Goblet squat','Alternating Dumbbell Push Jerk','Burpee Over Dumbbell','Bear Crawl','Air squat','Plank','Thruster','Pull-up'].map((name,i)=>({id:String(i+1),name,is_active:true}))
 const painCave=`ØKT 2 · Frå man cave til pain cave
@@ -85,3 +85,25 @@ test('Gazelle keeps fixed timing in composite EMOM, preserves transition and dis
  assert.equal(parsed.items.length,6);
  assert.equal(validateCompositeBlocks(parsed.blocks,parsed.items),'');
 });
+
+test('E2MOM x6 and a 2+1 group preserve both catalog identities and six shared slots',()=>{
+ const catalog=[{id:'pc',name:'Power Clean',equipment:'Vektstong'},{id:'pj',name:'Push Jerk',equipment:'Vektstong'},{id:'hpc',name:'Hang Power Clean'}]
+ const parsed=parseWodImport("E2MOM x 6\n2 PC\n+ 1 PJ\nBuild to a heavy unbroken complex\nScore: heaviest successful set",catalog)
+ assert.equal(parsed.minutes,12)
+ assert.deepEqual(parsed.items.map(x=>x.exercise.id),['pc','pj'])
+ assert.equal(parsed.workGroups.length,1)
+ const group=parsed.workGroups[0]
+ assert.ok(importWorkGroupIssue(parsed.workGroups,parsed.items,{}))
+ const separate=materializeImportGroups(parsed.items,parsed.workGroups,{[group.id]:'sequence'})
+ assert.deepEqual(separate.map(x=>x.minuteSlot),['1,2,3,4,5,6','1,2,3,4,5,6'])
+ const complex=materializeImportGroups(parsed.items,parsed.workGroups,{[group.id]:'complex'})
+ assert.equal(complex.length,1);assert.equal(complex[0].reps,'1')
+ assert.deepEqual(complex[0].exercise.complex_steps,[{exercise_id:'pc',name:'Power Clean',reps:2},{exercise_id:'pj',name:'Push Jerk',reps:1}])
+ assert.equal(complex[0].exercise.id,null)
+ assert.ok(parsed.notes.includes('Score: heaviest successful set'))
+ assert.throws(()=>materializeImportGroups(parsed.items.slice(0,1),parsed.workGroups,{[group.id]:'complex'}),/delvis/)
+})
+test('Every 90 sec x 8 retains second precision and no artificial movement',()=>{
+ const result=parseWodImport('Every 90 sec x 8\n2 PC + 1 PJ',[{id:'a',name:'Power Clean'},{id:'b',name:'Push Jerk'}])
+ assert.equal(result.minutes,12);assert.equal(result.emomIntervalSeconds,90);assert.equal(result.items.length,2)
+})

@@ -8,6 +8,16 @@ const aliases=[
  ['row','rowing','roing','romaskin','row erg','concept2 row'],
  ['strict press','striktpress','strictpress'],
  ['push press','pushpress'],
+ ['power clean','power cleans','pc'],
+ ['hang power clean','hang power cleans','hpc'],
+ ['squat clean','squat cleans'],
+ ['push jerk','push jerks','pj'],
+ ['split jerk','split jerks'],
+ ['front squat','front squats','fs'],
+ ['shoulder to overhead','stoh','s2oh'],
+ ['ground to overhead','gtoh','g2oh'],
+ ['dumbbell bench press','db bench press'],
+ ['kettlebell deadlift','kb deadlift'],
  ['goblet squat','hantel goblet squat','dumbbell goblet squat'],
  ['alternating dumbbell push jerk','alternerande hantel push jerk','hantel push jerk'],
  ['burpee over dumbbell','burpee over hantel','burpees over hantel'],
@@ -20,12 +30,12 @@ const aliases=[
  ['thruster','thrusters'],['burpee','burpees'],
  ['deadlift','deadlifts','markloft','markløft'],
  ['box jump','box jumps','bokshopp','kassehopp'],
- ['double under','double unders','doubleunders','dobbelthopp'],
+ ['double under','double unders','doubleunders','dobbelthopp','du'],
  ['run','running','loping','løping','jogging'],
  ['kettlebell swing','kettlebell swings','kb swing','kb swings'],
  ['clean and jerk','clean jerk','clean & jerk'],
  ['snatch','snatches'],['sit up','sit ups','situp','situps'],
- ['toes to bar','t2b'],['handstand push up','handstand push ups','hspu'],
+ ['toes to bar','t2b','ttb'],['handstand push up','handstand push ups','hspu'],
  ['ski erg','ski ergometer','skierg'],
 ]
 const aliasGroup=new Map(aliases.flatMap((group,index)=>group.map(alias=>[stem(alias),index])))
@@ -60,6 +70,7 @@ export function suggestWodExercises(query,catalog=[],limit=4){
  return catalog.filter(ex=>ex?.name).map(ex=>({exercise:ex,score:matchScore(query,ex)}))
   .filter(x=>x.score>=.4).sort((a,b)=>b.score-a.score||a.exercise.name.localeCompare(b.exercise.name,'nn-NO')).slice(0,limit)
 }
+const uniqueExact=candidates=>{const exact=candidates.filter(x=>x.score>=.95);return exact.length===1?exact[0]:null}
 const formatFrom=text=>{
  const value=text.toLowerCase()
  const compact=readEmomHeader(text)
@@ -77,14 +88,26 @@ const formatFrom=text=>{
  return null
 }
 const isHeading=line=>/^(?:økt|okt|workout|wod|treningsøkt)\s*(?:[#.:–-]?\s*\d+|\s*[:–-])/i.test(line)
+const isInstruction=line=>/^(?:score\b|scoring\b|resultat\b|build\s+to\b|ahap\b|max(?:imum)?\s+(?:unbroken\s+)?reps\b|rest\b|kvile\b|alternate\b)/i.test(line)
 const isMetadata=line=>{
  const s=normalize(line)
- return !!readEmomHeader(line)||!!readFixedTiming(line)||/^\d+\s*(?:arbeidsintervall|work intervals)\b/i.test(line)||!s||/^(?:amrap|emom|e[1-7]mom|tabata|for time|chipper|complex|intervall|interval|rx|scaled|foundation|intermediate|exercise|exercises|ovingar|ovelser|movements|warmup|oppvarming|time cap|tidsgrense|reps|repetisjonar|rest|pause|round|rounds|runde|rundar|runder|workout notes|notes|notat)(?:\b|$)/.test(s)
+ return isInstruction(line)||!!readEmomHeader(line)||!!readFixedTiming(line)||/^\d+\s*(?:arbeidsintervall|work intervals)\b/i.test(line)||!s||/^(?:amrap|emom|e[1-7]mom|tabata|for time|chipper|complex|intervall|interval|rx|scaled|foundation|intermediate|exercise|exercises|ovingar|ovelser|movements|warmup|oppvarming|time cap|tidsgrense|reps|repetisjonar|rest|pause|round|rounds|runde|rundar|runder|workout notes|notes|notat)(?:\b|$)/.test(s)
   ||/^\d+\s*(?:min|minutes|minutt|rounds?|rundar|runder|sets?|sett)(?:\s+(?:amrap|emom|for time))?$/.test(s)
   ||/^(?:time cap|tidsgrense|duration|varigheit|tid|total tid|format)\b/.test(s)
   ||/^(?:m|k|men|women|menn|kvinner)\s*\d+\s*(?:kg|lbs?)\b/.test(s)
   ||/^\d+(?:\s*[-–/]\s*\d+){2,}$/.test(line.trim())
   ||/^(?:https?:\/\/|www\.)/i.test(line)
+}
+// A plus expression with explicit reps is a candidate, never automatically an unbroken complex.
+function splitImportGroup(line){
+ let raw=String(line||'').trim()
+ const colon=raw.indexOf(':')
+ if(colon>=0&&readEmomHeader(raw.slice(0,colon)))raw=raw.slice(colon+1).trim()
+ const outer=raw.match(/^(\d{1,2})\s*[x×]\s*\((.+)\)\s*\.?$/i)
+ if(outer)raw=outer[2]
+ const parts=raw.split(/\s*\+\s*/).map(x=>x.replace(/[.]+$/,'').trim())
+ if(parts.length<2||!parts.every(x=>/^\d{1,3}\s+[\p{L}]/u.test(x)))return null
+ return {parts,sets:outer?Number(outer[1]):null}
 }
 const parseMovementLine=(line,scheme)=>{
  const loadMatch=line.match(/\b(\d+(?:[.,]\d+)?)\s*(kg|kgs|lb|lbs)\b/i)
@@ -128,7 +151,7 @@ function parseGeneralComposite(lines,catalog){
  const blocks=[],items=[],warnings=[]
  const add=(name,reps,quantity,block,sourceLine,sets=null,loadKg=null)=>{
   const candidates=suggestWodExercises(name,catalog)
-  const exact=candidates.find(c=>c.score>=.95)
+  const exact=uniqueExact(candidates)
   const exercise=exact?.exercise||null
   items.push({name:exercise?.name||name,rawName:name,sourceLine,exercise,reps:String(reps??''),quantity:quantity||null,loadKg,
    block_id:block.id,matched:!!exercise,suggestions:exercise?[]:candidates.map(c=>c.exercise),sets})
@@ -176,8 +199,14 @@ function parseGeneralComposite(lines,catalog){
    if(rowIndex===0&&!mark.title)continue
    const pause=parseRest(line)
    if(pause!=null&&j<found.length-1){block.transitionMode='timed';block.transitionSeconds=pause;continue}
-   const info=parseFormat(line)
-   if(info){block.format=info.format;block.minutes=info.minutes||block.minutes}
+   const info=isInstruction(line)?null:parseFormat(line)
+   if(info){block.format=info.format;block.minutes=info.minutes||block.minutes;if(info.emomIntervalSeconds)block.emomIntervalSeconds=info.emomIntervalSeconds}
+   const group=splitImportGroup(line)
+   if(group){
+    for(const part of group.parts){const result=parseMovementLine(part,null);add(result.text,result.reps,result.quantity,block,line,group.sets,result.loadKg)}
+    parsedInline=true;continue
+   }
+   if(isInstruction(line))continue
    if(!block.minutes){const minutes=findDuration(line);if(minutes)block.minutes=minutes}
    const pairing=line.match(/:\s*(\d{1,3}\s+[\p{L}][^+;,]{2,75})\s*\+\s*(\d{1,3}\s+[\p{L}][^+;,]{2,75})/iu)
    if(pairing){
@@ -265,7 +294,7 @@ function parseStructuredComposite(lines, catalog) {
  const items=[]
  const makeItem=(raw,reps,quantity,blockId,sourceLine,rirTarget='')=>{
   const candidates=suggestWodExercises(raw,catalog)
-  const match=candidates.find(x=>x.score>=.95)?.exercise||null
+  const match=uniqueExact(candidates)?.exercise||null
   items.push({name:match?.name||raw,rawName:raw,sourceLine,exercise:match,reps:String(reps||''),quantity:quantity||null,loadKg:null,block_id:blockId,rirTarget,matched:!!match,suggestions:match?[]:candidates.map(x=>x.exercise)})
  }
  const individualized=lines.join(' ').match(/\b(?:du|kunden|utøvar)\s*:\s*[^.]*?([0-9]+)\s*[-–]\s*([0-9]+)\s*RIR/i)
@@ -286,12 +315,16 @@ function parseStructuredComposite(lines, catalog) {
 }
 
 export function parseWodImport(source,exerciseCatalog=[]){
- const lines=String(source||'').split(/\r?\n/).map(line=>line.replace(/[•·]/g,' ').trim()).filter(Boolean)
+ const lines=[]
+ for(const line of String(source||'').split(/\r?\n/).map(line=>line.replace(/[•·]/g,' ').trim()).filter(Boolean)){
+  if(/^\+\s*\d+\s+/.test(line)&&lines.length)lines[lines.length-1]+=' '+line
+  else lines.push(line)
+ }
  if(!lines.length)throw new Error('Lim inn WOD-tekst eller last opp ei tekstfil først.')
  const structured=parseGeneralComposite(lines,exerciseCatalog)
- if(structured)return structured
+ if(structured)return annotateImportGroups(structured,lines,source)
  const composite=parseStructuredComposite(lines,exerciseCatalog)
- if(composite)return composite
+ if(composite)return annotateImportGroups(composite,lines,source)
  // Do not silently flatten multi-format OCR into one unsafe AMRAP.
  if(lines.some(line=>/\bdel\s*a\b/i.test(line))&&lines.some(line=>/\bdel\s*b\b/i.test(line))&&lines.some(line=>/\bE[1-7]MOM\b/i.test(line))&&lines.some(line=>/\bAMRAP\b/i.test(line)))throw new Error('Fann fleire øktdelar, men teksten var utydeleg. Kontroller OCR-linjene for E3MOM, AMRAP, repetisjonar og øvingsnamn før du importerer.')
  const whole=lines.join('\n')
@@ -310,11 +343,20 @@ export function parseWodImport(source,exerciseCatalog=[]){
  const rounds=roundsMatch?Number(roundsMatch[1]):explicitRounds?Number(explicitRounds[1]||explicitRounds[2]):1
  const items=[],ignored=[]
  for(const line of lines){
+  const group=splitImportGroup(line)
+  if(group){
+   for(const part of group.parts){
+    const {text,reps,quantity,loadKg}=parseMovementLine(part,null)
+    const candidates=suggestWodExercises(text,exerciseCatalog),exercise=uniqueExact(candidates)?.exercise||null
+    items.push({name:exercise?.name||text,rawName:text,sourceLine:line,exercise,reps,quantity,loadKg,sets:group.sets,matched:!!exercise,suggestions:exercise?[]:candidates.map(x=>x.exercise)})
+   }
+   continue
+  }
   if(line===name||line===schemeLine||isHeading(line)||isMetadata(line)){if(line!==name&&line!==schemeLine)ignored.push(line);continue}
   const {text,reps,quantity,loadKg}=parseMovementLine(line,scheme)
   if(!text||/^\d+$/.test(text)||text.length>90||/^.{0,12}:\s*\d+$/i.test(text)){ignored.push(line);continue}
   const candidates=suggestWodExercises(text,exerciseCatalog)
-  const exact=candidates.find(x=>x.score>=.95)
+  const exact=uniqueExact(candidates)
   const exercise=exact?.exercise||null
   items.push({name:exercise?.name||text,rawName:text,sourceLine:line,exercise,reps:!quantity&&normalize(text)===normalize(line)&&(fixedTiming||isFixedInterval(formatFrom(whole)))?'':reps,quantity,loadKg,matched:!!exercise,suggestions:exercise?[]:candidates.map(x=>x.exercise)})
  }
@@ -325,5 +367,72 @@ export function parseWodImport(source,exerciseCatalog=[]){
  const timing=fixedTiming||(format==='Tabata'?{workSeconds:20,restSeconds:10}:null)
  const chosenRounds=isFixedInterval(format)?(explicitSlots?intervalRounds:roundsMatch||explicitRounds?rounds:format==='Tabata'?8:null):rounds
  const plan=timing&&isFixedInterval(format)?fixedIntervalSummary({...timing,rounds:chosenRounds,exerciseCount:items.length}):null
- return {name,format,minutes:minutes??(plan?Math.ceil(plan.totalSeconds/60):null),rounds:chosenRounds,fixedTiming:timing,items,ignored,notes:'Importert kjeldetekst:\n'+whole,unmatched:items.filter(item=>!item.matched).map(item=>item.name)}
+ return annotateImportGroups({name,format,minutes:minutes??(plan?Math.ceil(plan.totalSeconds/60):null),rounds:chosenRounds,emomIntervalSeconds:header?.emomIntervalSeconds,fixedTiming:timing,items,ignored,notes:'Importert kjeldetekst:\n'+whole,unmatched:items.filter(item=>!item.matched).map(item=>item.name)},lines,source)
+}
+
+/** Preserve original source and require a deliberate choice for candidate work groups. */
+function annotateImportGroups(draft,lines,original){
+ const groups=[]
+ const scopes=draft.blocks?.length?draft.blocks:[{id:null,format:draft.format,minutes:draft.minutes,emomIntervalSeconds:draft.emomIntervalSeconds}]
+ for(const block of scopes){
+  const rows=draft.items.filter(row=>(row.block_id||null)===block.id)
+  const sectionStart=block.id?lines.findIndex(line=>new RegExp('^(?:del|part|blokk?|block)\\s*'+block.id+'(?:\\b|[.:–-])','i').test(line)):0
+  const next=block.id?lines.findIndex((line,i)=>i>sectionStart&&/^(?:del|part|blokk?|block)\s*[A-H]\b/i.test(line)):-1
+  const section=lines.slice(Math.max(0,sectionStart),next<0?lines.length:next)
+  const instructions=section.filter(isInstruction)
+  if(block.id)block.source_instructions=instructions
+  else draft.source_instructions=instructions
+  const explicit=/\b(?:unbroken\s+complex|heavy\s+complex|barbell\s+complex|ubrote?\s+kompleks)\b/i.test(section.join(' '))
+  const used=new Set()
+  const byLine=new Map()
+  for(const row of rows){if(splitImportGroup(row.sourceLine)){const key=row.sourceLine;byLine.set(key,[...(byLine.get(key)||[]),row])}}
+  const addGroup=(members,explicitComplex)=>{
+   if(members.length<2||members.some(row=>row.quantity||!/^\d+$/.test(row.reps)||Number(row.reps)<1))return
+   const id='workgroup-'+(groups.length+1)
+   members.forEach(row=>{row.work_group_id=id;used.add(row)})
+   groups.push({id,block_id:block.id,explicitComplex,format:block.format,minutes:block.minutes,emomIntervalSeconds:block.emomIntervalSeconds,memberCount:members.length})
+  }
+  for(const members of byLine.values())addGroup(members,explicit)
+  if(explicit&&!groups.some(g=>g.block_id===block.id)&&rows.every(row=>!used.has(row)))addGroup(rows,true)
+ }
+ return {...draft,workGroups:groups,notes:'Importert kjeldetekst:\n'+String(original??lines.join('\n'))}
+}
+export function importWorkGroupIssue(groups=[],rows=[],modes={}){
+ for(const group of groups){
+  const mode=modes[group.id]
+  const members=rows.filter(row=>row.work_group_id===group.id)
+  if(!['sequence','complex'].includes(mode))return 'Vel sekvens eller kompleks for kvar arbeidsgruppe.'
+  if(members.length!==group.memberCount)return 'Ei arbeidsgruppe kan ikkje importerast delvis. Vel alle deløvingane.'
+  if(mode==='complex'){
+   if(members.some(row=>row.quantity||!Number.isInteger(Number(row.reps))||Number(row.reps)<1))return 'Kompleks krev positive heile repetisjonar per deløving.'
+   const loads=[...new Set(members.map(row=>row.loadKg).filter(x=>x!=null))]
+   if(loads.length>1)return 'Kompleks med ulike belastningar må førast som separate øvingar.'
+   if(members.some(row=>!row.exercise?.id))return 'Alle deløvingar i komplekset må vera kopla til biblioteket.'
+   if(members.some(row=>row.sets!==members[0].sets))return 'Kompleks må ha same settal for alle deløvingar.'
+  }
+ }
+ return ''
+}
+export function materializeImportGroups(rows,groups=[],modes={}){
+ const issue=importWorkGroupIssue(groups,rows,modes);if(issue)throw Error(issue)
+ const done=new Set(),out=[]
+ for(const row of rows){
+  const group=groups.find(g=>g.id===row.work_group_id)
+  if(!group){out.push(row);continue}
+  const isEmom=/MOM/i.test(group.format||'')
+  const period=Number(group.emomIntervalSeconds)||((Number(String(group.format).match(/^E([\d.]+)MOM$/i)?.[1])||1)*60)
+  const count=isEmom?Math.floor(Number(group.minutes)*60/period):0
+  const minuteSlot=count>0?Array.from({length:count},(_,i)=>i+1).join(','):''
+  if(modes[group.id]==='sequence'){out.push({...row,minuteSlot});continue}
+  if(done.has(group.id))continue
+  done.add(group.id)
+  const members=rows.filter(r=>r.work_group_id===group.id)
+  const steps=members.map(r=>({exercise_id:r.exercise.id,name:r.exercise.name,reps:Number(r.reps)}))
+  const name=steps.map(x=>x.reps+' '+x.name).join(' + ')
+  const equipment=[...new Set(members.map(r=>r.exercise.equipment).filter(Boolean))].join(' / ')
+  const load=members.find(r=>r.loadKg!=null)?.loadKg??null
+  const exercise={id:null,name,category:'Complex',equipment,body_area:'Heile kroppen',is_complex:true,complex_family:'custom',complex_steps:steps}
+  out.push({...row,name,rawName:name,exercise,reps:'1',quantity:null,loadKg:load,minuteSlot,sets:row.sets||null,matched:true})
+ }
+ return out
 }
