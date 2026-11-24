@@ -1,12 +1,15 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
+import {createHash} from 'node:crypto'
 import {SOUND_PACK_PROFILES,SOUND_PACK_SIGNALS,soundPackUrl,playPackSignal,stopPackAudio} from '../src/lib/trainingAudio.js'
 const read=p=>readFileSync(new URL(p,import.meta.url),'utf8')
 test('30 distinct local WAV paths and three sample-based profiles',()=>{
  const urls=SOUND_PACK_PROFILES.flatMap(p=>SOUND_PACK_SIGNALS.map(s=>soundPackUrl(p,s,'/Garasjegym/')))
  assert.equal(new Set(urls).size,30)
- assert.ok(urls.every(url=>url.startsWith('/Garasjegym/audio/gazelle-v6/')&&url.endsWith('.wav')))
+ assert.equal(urls.filter(url=>url.startsWith('/Garasjegym/audio/gazelle-v6/')).length,27)
+ assert.equal(urls.filter(url=>url.startsWith('/Garasjegym/audio/gazelle-pr-ki-v1/')).length,3)
+ assert.ok(urls.every(url=>url.endsWith('.wav')))
  assert.equal(soundPackUrl('group','transition'),soundPackUrl('group','round'))
  const sample=JSON.parse(read('../audio-source/fluid-samples.json'))
  assert.ok(Object.keys(sample).length>=9)
@@ -73,4 +76,24 @@ test('studio render includes detuned club leads, separate gong modes and stereo 
  assert.match(script,/out.writeUInt16LE\(2,22\)/)
  assert.match(script,/Countdown exceeds one second/)
  assert.match(script,/attack<.018/)
+})
+
+test('three distinct MusicGen PR masters are committed, verified and separate from ordinary cues',()=>{
+ const folder='../public/audio/gazelle-pr-ki-v1/'
+ const meta=JSON.parse(read(folder+'provenance.json'))
+ assert.equal(meta.model_weights_license,'CC BY-NC 4.0')
+ assert.equal(meta.technical_checks_passed,true)
+ assert.equal(meta.cues.length,3)
+ const hashes=new Set()
+ for(const profile of SOUND_PACK_PROFILES){
+  const file=readFileSync(new URL(folder+profile+'-pr.wav',import.meta.url))
+  const item=meta.cues.find(c=>c.profile===profile)
+  assert.equal(createHash('sha256').update(file).digest('hex'),item.sha256)
+  hashes.add(item.sha256)
+  assert.equal(item.seconds,12);assert.equal(item.channels,2)
+  assert.equal(file.toString('ascii',0,4),'RIFF');assert.equal(file.toString('ascii',8,12),'WAVE')
+  assert.equal(soundPackUrl(profile,'pr','/Garasjegym/'),'/Garasjegym/audio/gazelle-pr-ki-v1/'+profile+'-pr.wav')
+  assert.equal(soundPackUrl(profile,'finish','/Garasjegym/'),'/Garasjegym/audio/gazelle-v6/'+profile+'-finish.wav')
+ }
+ assert.equal(hashes.size,3)
 })

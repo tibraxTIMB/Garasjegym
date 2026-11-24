@@ -1,5 +1,6 @@
 // Locally bundled sample-based cues. No runtime network dependency outside the app.
 export const SOUND_PACK_VERSION='gazelle-v6'
+export const PR_SOUND_PACK_VERSION='gazelle-pr-ki-v1'
 export const SOUND_PACK_PROFILES=['pt','personal','group']
 export const SOUND_PACK_SIGNALS=['tick-3','tick-2','tick-1','start','round','rest','station','finish','registered','pr']
 export const SOUND_PACK_NAMES={pt:'EISEN',personal:'DISKOPANZER',group:'BALKAN BERSERK'}
@@ -7,7 +8,7 @@ export function soundPackUrl(profile,signal,base=import.meta.env?.BASE_URL||'/')
  const p=SOUND_PACK_PROFILES.includes(profile)?profile:'personal'
  const s=signal==='transition'?'round':signal
  if(!SOUND_PACK_SIGNALS.includes(s))throw Error('Ukjent lydsignal')
- return base+'audio/'+SOUND_PACK_VERSION+'/'+p+'-'+s+'.wav'
+ return base+'audio/'+(s==='pr'?PR_SOUND_PACK_VERSION:SOUND_PACK_VERSION)+'/'+p+'-'+s+'.wav'
 }
 const files=new Map(), decoded=new WeakMap(), active=new WeakMap(), generations=new WeakMap()
 function bytes(url){

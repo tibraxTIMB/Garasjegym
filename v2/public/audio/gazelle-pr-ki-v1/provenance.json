@@ -1,0 +1,52 @@
+{
+  "source_run": 45418384694,
+  "source_artifact": 14933920827,
+  "model_weights_license": "CC BY-NC 4.0",
+  "use": "noncommercial private gym only",
+  "technical_checks_passed": true,
+  "listening_reviewed": false,
+  "cues": [
+    {
+      "profile": "personal",
+      "model": "facebook/musicgen-stereo-small",
+      "source_sha256": "947278589ef28febf53ad2e52df2844ad30ba1b4eeca47a70b81a3f6b1aa71cf",
+      "sha256": "f4ac933b05a01743a32e7952eacee8123d04f39dc27419d855d46e1cc837278b",
+      "seconds": 12.0,
+      "sample_rate": 32000,
+      "channels": 2,
+      "source_peak": 0.899169921875,
+      "source_rms": 0.17009797146035216,
+      "source_mono_rms": 0.1368788807615324,
+      "gain": 0.8230550828916403,
+      "prompt": "Triumphant euphoric eurodance trance victory anthem, same tempo and tonal center, rising chords, memorable original supersaw fanfare, pounding kick, big resolved final downbeat, celebratory not ominous, no vocals. Epic championship-scale 10\u201312 second crescendo with a distinct final climax and controlled natural tail. Never fade down before the climax."
+    },
+    {
+      "profile": "pt",
+      "model": "facebook/musicgen-stereo-small",
+      "source_sha256": "6cdd60646ffcdc1a5d43e5d15aeb2541dde22ef8bfb897567c6fb76744d5c7f2",
+      "sha256": "1cda8fd9d60c48349f432e54e856b15623a71505309c7309fd65df73082bf8e2",
+      "seconds": 12.0,
+      "sample_rate": 32000,
+      "channels": 2,
+      "source_peak": 0.894683837890625,
+      "source_rms": 0.07836303439206115,
+      "source_mono_rms": 0.05711657243923899,
+      "gain": 0.9612334140601017,
+      "prompt": "Cinematic heavyweight championship victory, authentic boxing bell triplet, grand resonant bronze gong and orchestral low percussion, confident rising dramatic cadence, no voice. Epic championship-scale 10\u201312 second crescendo with a distinct final climax and controlled natural tail. Never fade down before the climax."
+    },
+    {
+      "profile": "group",
+      "model": "facebook/musicgen-stereo-small",
+      "source_sha256": "acdeb3b852738ed8f7b929b1144fe9ddebcf6cff5aaf3a92c610a1c03eff1ed2",
+      "sha256": "05e970dba063defc1d35b46d8af19e147a601df7e081c16de860f379fc6ef907",
+      "seconds": 12.0,
+      "sample_rate": 32000,
+      "channels": 2,
+      "source_peak": 0.949981689453125,
+      "source_rms": 0.16643251354088484,
+      "source_mono_rms": 0.13177117675598773,
+      "gain": 0.8411817920757919,
+      "prompt": "Exuberant Balkan brass and heavy guitar victory fanfare, same ensemble and tonal center, celebratory call-and-response, fast trumpet runs, triumphant major-mode lift, enormous final ensemble hit and cymbal decay, no vocals. Epic championship-scale 10\u201312 second crescendo with a distinct final climax and controlled natural tail. Never fade down before the climax."
+    }
+  ]
+}

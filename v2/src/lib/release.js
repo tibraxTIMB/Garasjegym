@@ -14,3 +14,5 @@ export const RELEASE_SHORT = 'GAZELLE 1.2'
 // Approved DATABUNKER 1.0 publication: local backup, dated ZIP and receipt. No database changes.
 
 // Approved publication: still PanserGorilla poster, no PR video or 3D; retain current PR audio and data.
+
+// Owner-approved MusicGen PR release: three original twelve-second stereo cues, technical review passed; noncommercial use. Other timer cues unchanged.
