@@ -1,0 +1,53 @@
+name: Audio Studio - native ACE-Step CPU trial
+on:
+  push:
+    branches: [audio-studio-ki-probe]
+    paths: ['.github/workflows/audio-native-ace.yml','v2/audio-source/native-ace-request.json']
+permissions:
+  contents: read
+concurrency:
+  group: audio-native-ace
+  cancel-in-progress: true
+jobs:
+  native-trial:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      OMP_NUM_THREADS: '4'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build pinned native CPU engine
+        run: |
+          git clone --no-checkout https://github.com/ServeurpersoCom/acestep.cpp.git "$RUNNER_TEMP/ace"
+          git -C "$RUNNER_TEMP/ace" checkout 973517be024ff8b6bbd50e0adc9e308ab2ed71b3
+          git -C "$RUNNER_TEMP/ace" submodule update --init --recursive
+          cmake -S "$RUNNER_TEMP/ace" -B "$RUNNER_TEMP/ace/build" -DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=OFF -DGGML_VULKAN=OFF
+          cmake --build "$RUNNER_TEMP/ace/build" --parallel 2 --target ace-lm ace-synth
+      - name: Fetch only public compact model files
+        run: |
+          mkdir -p "$RUNNER_TEMP/ace-models" native-ace-review
+          for model in Qwen3-Embedding-0.6B-Q8_0.gguf acestep-5Hz-lm-0.6B-Q8_0.gguf acestep-v15-turbo-Q4_K_M.gguf vae-BF16.gguf; do
+            curl --fail --location --max-time 300 --output "$RUNNER_TEMP/ace-models/$model" "https://huggingface.co/Serveurperso/ACE-Step-1.5-GGUF/resolve/main/$model"
+            sha256sum "$RUNNER_TEMP/ace-models/$model" >> native-ace-review/model-sha256.txt
+          done
+      - name: Generate one planned original instrumental fanfare
+        run: |
+          cp v2/audio-source/native-ace-request.json native-ace-review/request.json
+          "$RUNNER_TEMP/ace/build/ace-lm" --models "$RUNNER_TEMP/ace-models" --request "$PWD/native-ace-review/request.json"
+          test -s native-ace-review/request0.json
+          "$RUNNER_TEMP/ace/build/ace-synth" --models "$RUNNER_TEMP/ace-models" --request "$PWD/native-ace-review/request0.json"
+          find native-ace-review -name '*.wav' -type f | grep .
+          for file in native-ace-review/*.wav; do
+            ffprobe -v error -show_entries format=duration:stream=sample_rate,channels -of json "$file"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-ace-candidate-review-only
+          path: native-ace-review/
+          if-no-files-found: warn
+          retention-days: 7

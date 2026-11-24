@@ -1,0 +1,19 @@
+{
+  "caption": "Original euphoric 148 BPM eurodance video-game achievement victory musical logo, pounding club drums, rolling bass, heroic bright supersaw melody. Immediate rhythmic attack, rising tension, powerful resolved tonic chord and cymbal accent at 9 seconds, all instruments stop together, natural short decay, silence in the final second. A complete fanfare with a definitive finale, not a loop or excerpt. Instrumental.",
+  "lyrics": "[Instrumental]",
+  "bpm": 148,
+  "duration": 12,
+  "keyscale": "F major",
+  "timesignature": "4",
+  "vocal_language": "unknown",
+  "seed": 4917,
+  "lm_batch_size": 1,
+  "synth_batch_size": 1,
+  "inference_steps": 8,
+  "guidance_scale": 1,
+  "shift": 3,
+  "output_format": "wav16",
+  "lm_model": "acestep-5Hz-lm-0.6B-Q8_0.gguf",
+  "synth_model": "acestep-v15-turbo-Q4_K_M.gguf",
+  "task_type": "text2music"
+}
