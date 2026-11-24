@@ -21,7 +21,8 @@ import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib
 import { exerciseBrowseCategory, exerciseBrowseOrder } from '../lib/exerciseCategories.js'
 import { restoreWorkoutDraft, saveWorkoutDraft, clearWorkoutDraft, resumedElapsedSeconds } from '../lib/workoutDraft.js'
 import { canSaveDurationOnlyWorkout } from '../lib/freeSession.js'
-import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, playTrainingSignal, playTrainingTone, TRAINING_AUDIO_PROFILES } from '../lib/timerCues.js'
+import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, TRAINING_AUDIO_PROFILES } from '../lib/timerCues.js'
+import { preloadSoundPack, unlockSoundPack, playPackSignal, playDirectPackSignal, stopDirectAudio, stopPackAudio, SOUND_PACK_NAMES, SOUND_PACK_VERSION } from '../lib/trainingAudio.js'
 import GarageSelect from './GarageSelect.jsx'
 import './timer-viewport.css'
 
@@ -139,6 +140,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [countdownAudio,setCountdownAudio]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.countdown_audio')!=='off'}catch{return true}})
   const [vibration,setVibration]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.vibration')==='on'}catch{return false}})
   const [testCue,setTestCue]=useState('start')
+  const [audioDiagnostic,setAudioDiagnostic]=useState('Lydpakke '+SOUND_PACK_VERSION)
+  useEffect(()=>{let live=true;preloadSoundPack(audioProfile).then(()=>{if(live)setAudioDiagnostic('Lydfiler klare · '+SOUND_PACK_NAMES[audioProfile])}).catch(e=>{if(live)setAudioDiagnostic('Lydfeil: '+e.message)});return()=>{live=false}},[audioProfile])
   const audioPrefs=useRef({audioProfile,countdownAudio,vibration})
   audioPrefs.current={audioProfile,countdownAudio,vibration}
   useEffect(()=>{try{localStorage.setItem('garasjegym.timer.audio_profile',audioProfile);localStorage.setItem('garasjegym.timer.countdown_audio',countdownAudio?'on':'off');localStorage.setItem('garasjegym.timer.vibration',vibration?'on':'off')}catch{/* Valfritt */}},[audioProfile,countdownAudio,vibration])
@@ -310,16 +313,19 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       return context
     } catch { return null }
   }
-  function cue(frequency = 880, duration = 0.16, delay = 0) {
-    const context = ensureAudioContext()
-    if (context) playTrainingTone(context, frequency, duration, delay, volumeRef.current, audioPrefs.current.audioProfile)
-  }
   function playSignal(signal,{test=false}={}) {
     const prefs=audioPrefs.current
     if (!test && signal.startsWith('tick-')&&!prefs.countdownAudio) return
-    if (prefs.vibration && !signal.startsWith('tick-')) {try{navigator.vibrate?.(signal==='finish'?[140,80,140]:100)}catch{/* Device support varies. */}}
-    const context = ensureAudioContext()
-    if (context) playTrainingSignal(context, signal, volumeRef.current, prefs.audioProfile)
+    if (prefs.vibration && !signal.startsWith('tick-')) {try{navigator.vibrate?.(signal==='finish'?[140,80,140]:100)}catch{}}
+    if(!soundOnRef.current||volumeRef.current===0||prefs.audioProfile==='silent')return
+    const context=ensureAudioContext()
+    stopDirectAudio()
+    playPackSignal(context,signal,volumeRef.current,prefs.audioProfile).then(ok=>{if(ok&&test)setAudioDiagnostic('Web Audio spelar · '+SOUND_PACK_NAMES[prefs.audioProfile]+' · '+signal)}).catch(e=>setAudioDiagnostic('Lydfeil: '+e.message))
+  }
+  function directAudioTest(){
+    const prefs=audioPrefs.current
+    stopPackAudio(sharedTrainingAudioContext)
+    playDirectPackSignal(prefs.audioProfile,testCue,volumeRef.current).then(()=>setAudioDiagnostic('Vanleg lydavspeling · '+SOUND_PACK_NAMES[prefs.audioProfile]+' · '+testCue)).catch(e=>setAudioDiagnostic('Lydfeil: '+e.message))
   }
 
   useEffect(() => {
@@ -498,7 +504,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const roundsShown = isTimedInterval ? Math.min(currentRound, Number(rounds)) : currentRound
   const completedRounds = isAmrap ? laps.length : isLadder ? ladderCompletedRounds : isEMOM ? Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)) : (isStationCircuit||isTimedInterval) ? fixedSlotState.roundsCompleted : round
   const lapAction = () => { if(!running||timerLimitReached||!claimManualAction('round'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); setRound(value => value + 1); playSignal('registered') }
-  const splitAction = () => { if(!running||timerLimitReached||!claimManualAction('split'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); cue(1200, 0.14) }
+  const splitAction = () => { if(!running||timerLimitReached||!claimManualAction('split'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); playSignal('registered') }
   const undoManualAction=()=>{
     const kind=lastManualAction.current
     if(!['round','split'].includes(kind)||!laps.length)return
@@ -508,7 +514,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   }
   const beginWorkout = (withCountdown = false) => {
     if (hasStarted || running || countdownDeadline !== null) return
-    ensureAudioContext() // Mobile browsers permit later 3–2–1 sounds after this user gesture.
+    const audioContext=ensureAudioContext() // Unlock and prepare the actual WAV samples from the user gesture.
+    if(audioContext)unlockSoundPack(audioContext,audioPrefs.current.audioProfile).catch(e=>setAudioDiagnostic('Lydfeil: '+e.message))
     if (withCountdown) {
       setCountdownRemaining(10)
       setCountdownDeadline(Date.now() + 10000)
@@ -520,8 +527,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const autoLaunchRef = useRef(false)
   useEffect(()=>{if(autoStartOnMount&&!autoLaunchRef.current){autoLaunchRef.current=true;beginWorkout(false)}},[autoStartOnMount])
   const finishCurrent=()=>onFinish({elapsed,laps:[...laps],roundsCompleted:isDeathBy?deathByCompletedRounds:isLadder?ladderCompletedRounds:isAmrap?laps.length:(isStationCircuit||isTimedInterval)?fixedSlotState.roundsCompleted:isEMOM?Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)):round,death_by_completed_rounds:isDeathBy?deathByCompletedRounds:null,death_by_failed_round:isDeathBy?deathByStatus.failedRound:null,ladder_completed_rounds:isLadder?ladderCompletedRounds:null,ladder_finished:isLadder?ladderProgress.finished:null,phase:phase==='TIDSGRENSE'?'TIDSGRENSE':isDeathBy&&deathByStatus.failed?'FERDIG':'FULLFØRT',hasStarted,running:false,savedAt:Date.now()})
-  const completeDeathByRound=()=>{if(!isDeathBy||!running||!deathByStatus.canConfirm||timerLimitReached||!claimManualAction('death'))return;setDeathByCompletedRounds(deathByStatus.round);cue(1200,0.14)}
-  const completeLadderRound=()=>{if(!isLadder||!running||ladderProgress.finished||timerLimitReached||!claimManualAction('ladder'))return;const count=ladderCompletedRounds+1;const next=ladderStatus(count,schema?.ladder,schema?.rounds??timerSettings?.rounds);setLadderCompletedRounds(count);setLaps(value=>[...value,splitDuration(elapsed,value)]);if(next.finished){setRunning(false);setPhase('FERDIG');playSignal('finish')}else cue(1200,0.14)}
+  const completeDeathByRound=()=>{if(!isDeathBy||!running||!deathByStatus.canConfirm||timerLimitReached||!claimManualAction('death'))return;setDeathByCompletedRounds(deathByStatus.round);playSignal('registered')}
+  const completeLadderRound=()=>{if(!isLadder||!running||ladderProgress.finished||timerLimitReached||!claimManualAction('ladder'))return;const count=ladderCompletedRounds+1;const next=ladderStatus(count,schema?.ladder,schema?.rounds??timerSettings?.rounds);setLadderCompletedRounds(count);setLaps(value=>[...value,splitDuration(elapsed,value)]);if(next.finished){setRunning(false);setPhase('FERDIG');playSignal('finish')}else playSignal('registered')}
   const toggleRunning = () => { if (countdownDeadline !== null) { setCountdownDeadline(null);setCountdownRemaining(0);setPhase('Klar');return } if (!hasStarted) { beginWorkout(false); return } if (running) { setRunning(false); setPhase('PAUSE'); return } if (phase === 'FERDIG' || phase === 'TIDSGRENSE') return; setPhase('PÅGÅR'); setRunning(true) }
   const visibleStationIndex = Math.min(stationCount - 1, fixedSlotState.currentSlotIndex % stationCount)
   const currentStationName = stationList[visibleStationIndex]?.exercise_name || stationList[visibleStationIndex]?.name || `Stasjon ${visibleStationIndex + 1}`
@@ -580,14 +587,22 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     <small>Automatiske rundeskifte blir ikkje påverka. Angre siste AMRAP-runde eller mellomtid utan å stoppa klokka.</small>
   </div>
   const audioControls=<div className="gg-timer-audio-controls">
-    <label>Lydprofil<select value={audioProfile} onChange={e=>{const value=e.target.value;setAudioProfile(value);if(value!=='silent'){soundOnRef.current=true;setSoundOn(true)}}}><option value="pt">EISEN · metallisk klokke</option><option value="personal">STURM · arena og horn</option><option value="group">BALKAN BERSERK · brass og tromme</option></select></label>
+    <div className="gg-sound-pack-list" role="group" aria-label="Vel lydprofil">
+      {[{id:'pt',name:'EISEN',desc:'Classic Fight Club · klokke og metall'},{id:'personal',name:'DISKOPANZER',desc:'Eurodance Kampfparty · synth og klubbslag'},{id:'group',name:'BALKAN BERSERK',desc:'Metal Brass Assault · trompet, gitar og tromme'}].map(p=><button type="button" key={p.id} aria-pressed={audioProfile===p.id} className={audioProfile===p.id?'is-selected':''} onClick={()=>{setAudioProfile(p.id);soundOnRef.current=true;setSoundOn(true)}}><strong>{p.name}</strong><small>{p.desc}</small></button>)}
+    </div>
     <label className="gg-timer-check"><input type="checkbox" checked={soundOn} onChange={e=>setSoundOn(e.target.checked)}/> Lydsignal på</label>
     <label>Timerlyd · {soundVolume}%<input type="range" min="0" max="100" step="5" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label>
     <label className="gg-timer-check"><input type="checkbox" checked={countdownAudio} onChange={e=>setCountdownAudio(e.target.checked)}/> Nedtelling 3–2–1</label>
     <label className="gg-timer-check"><input type="checkbox" checked={vibration} onChange={e=>setVibration(e.target.checked)}/> Vibrasjon ved skifte (støtta mobil)</label>
     <label>Test signal<select value={testCue} onChange={e=>setTestCue(e.target.value)}><option value="start">Start</option><option value="tick-1">Nedtelling</option><option value="round">Ny runde</option><option value="rest">Pause</option><option value="station">Stasjonsbyte</option><option value="finish">Ferdig</option><option value="registered">Runde registrert</option></select></label>
     <button type="button" className="secondary-button" disabled={audioProfile==='silent'||!soundOn||soundVolume===0} onClick={()=>playSignal(testCue,{test:true})}><Volume2 size={17}/> Test lydsignal</button>
-    <small>Timeren brukar medievolumet på eininga. Vel BALKAN BERSERK og sjekk medievolum og eventuell Bluetooth-høgtalar. Spotify-volumet blir ikkje endra.</small>
+    <details className="gg-sound-diagnostics"><summary>Lyddiagnostikk · samanlikn same lydfil</summary>
+      <p role="status">{audioDiagnostic}</p>
+      <button type="button" className="secondary-button" disabled={!soundOn||soundVolume===0} onClick={()=>playSignal(testCue,{test:true})}>A · Web Audio</button>
+      <button type="button" className="secondary-button" disabled={!soundOn||soundVolume===0} onClick={directAudioTest}>B · Vanleg lydavspeling</button>
+      <small>Bruk same signal, profil og volum. Sjekk Android-medievolum og eventuell Bluetooth-utgang. Appen kan ikkje auka systemvolumet eller endra Spotify-volum.</small>
+      <a href={(import.meta.env.BASE_URL||'/')+'audio/'+SOUND_PACK_VERSION+'/credits.txt'} target="_blank" rel="noreferrer">Lydkjelder og lisens</a>
+    </details>
   </div>
   const resetTimer = () => { clearManualAction(); timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; scheduledStartedAt.current=null; setCountdownDeadline(null);setCountdownRemaining(0); setRunning(false); setElapsed(0); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
   return <div ref={timerContainerRef} className={stageVisible ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
@@ -654,7 +669,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         <header><strong>{({settings:'Timerinnstillingar',audio:'Lyd og signal',display:'Klokke og visning',timing:'Øktoppsett',reset:'Nullstill økta',music:'Musikkstudio',pulse:'Puls og intensitet',actions:'Betening under trening'})[stagePanel]}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk innstillingane"><X size={20}/></button></header>
         {stagePanel!=='settings'&&<button type="button" className="gg-timer-menu-back" onClick={()=>setStagePanel('settings')}>‹ Alle innstillingar</button>}
         {stagePanel==='settings'&&<nav className="gg-timer-menu-list" aria-label="Vel innstilling">
-          <button type="button" onClick={()=>setStagePanel('audio')}><Volume2 size={20}/><span><b>Lyd og signal</b><small>{soundVolume}% · {audioProfile==='group'?'BALKAN BERSERK':audioProfile==='pt'?'EISEN':'STURM'}</small></span><ChevronRight size={17}/></button>
+          <button type="button" onClick={()=>setStagePanel('audio')}><Volume2 size={20}/><span><b>Lyd og signal</b><small>{soundVolume}% · {SOUND_PACK_NAMES[audioProfile]||'DISKOPANZER'}</small></span><ChevronRight size={17}/></button>
           <button type="button" onClick={()=>setStagePanel('music')}><Music2 size={20}/><span><b>Musikkstudio</b><small>Stor Spotify-spelar</small></span><ChevronRight size={17}/></button>
           <button type="button" onClick={()=>setStagePanel('pulse')}><HeartPulse size={20}/><span><b>Puls og intensitet</b><small>Sensor og live-visning</small></span><ChevronRight size={17}/></button>
           <button type="button" onClick={()=>setStagePanel('actions')}><Hand size={20}/><span><b>Betening under trening</b><small>Store knappar · {roundGuardSeconds} sek sperre</small></span><ChevronRight size={17}/></button>

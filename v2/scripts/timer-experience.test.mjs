@@ -24,12 +24,13 @@ test('timer exercise details explain complex movement sequences on demand',()=>{
 
 test('the post-workout review clearly separates WOD prescription and actual erg outcome',()=>{
   const timer=source('../src/components/Training.jsx')
-  assert.match(timer,/Siste kontroll før lagring/)
-  assert.match(timer,/Planlagt: \{items\[activeExerciseIndex\]\.prescription_label\}/)
-  assert.match(timer,/isErgExercise\(items\[activeExerciseIndex\]\)\?<div className="workout-result-erg"/)
+  assert.match(timer,/Kontroller og lagre/)
+  assert.match(timer,/PLANLAGT I WOD/)
+  assert.match(timer,/\{resultItem\.prescription_label\}/)
+  assert.match(timer,/isErgExercise\(resultItem\)\?<div className="workout-result-erg"/)
   assert.match(timer,/value:'cal',label:'Kaloriar \(cal\)'/)
   assert.match(timer,/GarageSelect label="Eining for ro-\/ergresultat"/)
-  assert.match(timer,/Talet ovanfor er WOD-målet, ikkje registrert resultat/)
+  assert.match(timer,/Faktisk resultat/)
 })
 
 test('manual round registration blocks rapid repeated taps for five seconds',()=>{

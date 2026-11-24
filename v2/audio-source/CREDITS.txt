@@ -1,0 +1,5 @@
+GarasjeGym Gazelle sound pack – original short cue arrangements.
+Instrument source: FluidR3 GM soundfont (Frank Wen; contributors), pre-rendered General MIDI samples by gleitz/midi-js-soundfonts.
+https://github.com/gleitz/midi-js-soundfonts/tree/044fab8e1456bfafc5776e86dfd6bb8697149aef/FluidR3_GM
+Source license: Creative Commons Attribution 3.0 Unported, https://creativecommons.org/licenses/by/3.0/
+Modifications: selected notes, pitch-shifting, trimming, envelopes, mixing, soft saturation, normalization and rendering to mono PCM WAV. No commercial song excerpts. Original phrases assembled for GarasjeGym.

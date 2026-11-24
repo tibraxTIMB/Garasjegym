@@ -609,3 +609,5 @@
  .gg-live-timer__footer .gg-manual-action{height:58px}
  .gg-live-timer__footer button.gg-manual-action.is-xl{height:68px}
 }
+
+.gg-sound-pack-list{display:grid;gap:7px}.gg-sound-pack-list>button{display:grid;gap:3px;text-align:left;padding:9px 10px;min-height:52px;border:1px solid #53666e;border-radius:9px;background:#20313a;color:#f5f7f7}.gg-sound-pack-list>button.is-selected{border:2px solid #f0a33a;background:#352b1e}.gg-sound-pack-list strong{font-size:15px}.gg-sound-pack-list small{font-size:12px}.gg-sound-diagnostics{border-top:1px solid #45565e;padding-top:8px}.gg-sound-diagnostics summary{cursor:pointer;font-weight:750;padding:6px 0}.gg-sound-diagnostics>button{width:100%;margin:4px 0}.gg-sound-diagnostics p{font-size:12px;overflow-wrap:anywhere}.gg-sound-diagnostics a{display:block;font-size:12px;margin-top:8px;color:#f0b86c}
