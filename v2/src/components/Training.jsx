@@ -894,6 +894,9 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const [mode, setMode] = useState(() => savedDraft?.mode || 'home')
   const [reviewOpen,setReviewOpen]=useState(false)
   const [finishOpen,setFinishOpen]=useState(false)
+  const [resultSummary,setResultSummary]=useState(false)
+  const [reviewedResults,setReviewedResults]=useState({})
+  const resultBodyRef=useRef(null)
   const [manualEntry,setManualEntry]=useState(() => Boolean(savedDraft?.manualEntry))
   const [confirmedPlannedEmom,setConfirmedPlannedEmom]=useState(false)
   const [sessionPrepared,setSessionPrepared]=useState(() => Boolean(savedDraft?.sessionPrepared))
@@ -924,6 +927,25 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const [scoreDistance, setScoreDistance] = useState(() => savedDraft?.scoreDistance || '')
   const [scoreUnit, setScoreUnit] = useState(() => savedDraft?.scoreUnit || 'm')
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(() => savedDraft?.activeExerciseIndex || 0)
+  // Review results independently from the live timer; actual values stay in the existing draft.
+  useEffect(()=>{if(finishOpen){setActiveExerciseIndex(0);setResultSummary(items.length===0);setReviewedResults({});setConfirmedPlannedEmom(false)}},[finishOpen])
+  useEffect(()=>{if(finishOpen&&resultBodyRef.current)resultBodyRef.current.scrollTop=0},[finishOpen,activeExerciseIndex,resultSummary])
+  const resultItem=items[activeExerciseIndex]
+  const entered=value=>value!==null&&value!==undefined&&String(value).trim()!==''
+  const missingLoad=item=>!item?.is_rest&&item?.uses_load?(item.sets||[]).filter(set=>entered(set.reps)&&Number(set.reps)>0&&!entered(set.load_kg)).length:0
+  const pendingWeightItems=items.filter(item=>missingLoad(item)>0)
+  const reviewedCount=items.filter(item=>reviewedResults[item.key]||item.is_rest).length
+  function selectResult(index){setResultSummary(false);setActiveExerciseIndex(index);setError('')}
+  function nextResult(){
+    if(resultItem)setReviewedResults(old=>({...old,[resultItem.key]:true}))
+    if(activeExerciseIndex<items.length-1)selectResult(activeExerciseIndex+1)
+    else {setResultSummary(true);setError('')}
+  }
+  function copyFirstWeight(){
+    if(!resultItem||!entered(resultItem.sets?.[0]?.load_kg))return
+    const value=resultItem.sets[0].load_kg
+    setItems(old=>old.map(item=>item.key===resultItem.key?{...item,sets:item.sets.map(set=>entered(set.load_kg)?set:{...set,load_kg:value})}:item))
+  }
   const [timerSnapshot, setTimerSnapshot] = useState(() => savedDraft?.timerSnapshot || { elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
   const [restoredTimerSnapshot,setRestoredTimerSnapshot] = useState(() => savedDraft?.timerSnapshot ? {...savedDraft.timerSnapshot,restored:true} : null)
   const [timerLaunchId, setTimerLaunchId] = useState(0)
@@ -1264,6 +1286,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   async function saveWorkout(event) {
     event.preventDefault()
     if (saving) return
+    if(finishOpen&&!resultSummary){nextResult();return}
     if (!title.trim()) { setError('Gi økta eit namn før du lagrar.'); return }
     const durationOnly = canSaveDurationOnlyWorkout({format,manualEntry,sourceWodId:source?.id,classSessionId,manualWodCount:manualWodIds.length,elapsedSeconds:timerSnapshot.elapsed})
     if ((!items.length && !durationOnly) || items.some(item => !item.exercise_name.trim())) {
@@ -1273,6 +1296,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       setError('Legg til minst eitt sett på kvar øving før du lagrar.'); return
     }
     if(!manualEntry&&items.some(item=>item.prescribed_sets_prefilled)&&!confirmedPlannedEmom){setError('Stadfest at du har kontrollert dei førehandsutfylte EMOM-setta, og rett eventuelle avvik før du lagrar.');return}
+    if(finishOpen&&pendingWeightItems.length&&!window.confirm('Nokre sett manglar faktisk vekt. Vil du lagra utan desse vektverdiane? Ingen vekt blir lagt inn automatisk.'))return
     setSaving(true); setError(''); setNotice('')
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -1427,11 +1451,37 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       </>}
       </div>
       {finishOpen&&<div className="workout-finish-backdrop" role="presentation">
-        <section className="workout-finish-dialog" role="dialog" aria-modal="true" aria-labelledby="finish-workout-title">
-          <div className="workout-finish-head"><div><span className="section-kicker">ETTER ØKTA · SJEKK RESULTATA</span><h3 id="finish-workout-title">{title||'Treningsøkt'}</h3></div><button type="button" className="danger-icon" aria-label="Lukk" onClick={()=>setFinishOpen(false)}>×</button></div>
-          <p className="workout-finish-help">{format===COMPOSITE_FORMAT?'Faste E3MOM-sett og repetisjonar blir henta frå WOD-oppsettet. Kontroller at du gjennomførte dei, og rett ved avvik. Registrer faktisk vekt der det er relevant. AMRAP-rundar og tid frå klokka blir tekne med automatisk.':'Siste kontroll før lagring: Tal frå WOD-oppsettet kan vere førehandsfylte. Rett reps eller vekt dersom du gjorde noko anna. Rundar og tid frå klokka blir tekne med automatisk.'}</p>
-          {error&&<div className="auth-error" role="alert">{error}</div>}
-          {items.some(item=>item.prescribed_sets_prefilled)&&!manualEntry&&<label className="workout-confirm-prescribed" style={{display:'flex',alignItems:'flex-start',gap:10,padding:'12px 0'}}><input type="checkbox" checked={confirmedPlannedEmom} onChange={e=>{setConfirmedPlannedEmom(e.target.checked);setError('')}}/><span>Eg har kontrollert dei planlagde EMOM-setta og repetisjonane. Eg har retta eventuelle avvik og registrert faktisk vekt.</span></label>}
+        <section className="workout-finish-dialog gg-result-wizard" role="dialog" aria-modal="true" aria-labelledby="finish-workout-title">
+          <div className="workout-finish-head gg-result-header"><div><span className="section-kicker">ETTER ØKTA · REGISTRER RESULTAT</span><h3 id="finish-workout-title">{resultSummary?'Kontroller og lagre':(resultItem?.exercise_name||title||'Treningsøkt')}</h3><small>{resultSummary?title:(items.length?'Øving '+(activeExerciseIndex+1)+' av '+items.length:'Resultat')}</small></div><button type="button" className="danger-icon" aria-label="Lukk" onClick={()=>setFinishOpen(false)}>×</button></div>
+          <div className="gg-result-progress" aria-label="Framdrift">{items.map((item,index)=><button type="button" key={item.key} className={(!resultSummary&&activeExerciseIndex===index?'current ': '')+(reviewedResults[item.key]?'reviewed':'')} aria-label={'Øving '+(index+1)+': '+item.exercise_name} aria-current={!resultSummary&&activeExerciseIndex===index?'step':undefined} onClick={()=>selectResult(index)}/>)}</div>
+          {error&&<div className="auth-error gg-result-error" role="alert">{error}</div>}
+          <div ref={resultBodyRef} className="gg-result-body">
+          {!resultSummary&&resultItem?<section className="workout-result-entry">
+            <details className="gg-result-jump"><summary>Alle øvingar · {reviewedCount} av {items.length} gjennomgått <ChevronDown size={16}/></summary>
+              <div className="workout-result-tabs" role="tablist" aria-label="Vel øving for resultat">{items.map((item,index)=><button type="button" key={item.key} role="tab" aria-selected={activeExerciseIndex===index} className={activeExerciseIndex===index?'selected':''} title={item.exercise_name||'Øving '+(index+1)} onClick={()=>selectResult(index)}>{index+1}. {item.exercise_name||'Øving'} {reviewedResults[item.key]?'✓':''}</button>)}</div>
+            </details>
+            <div className="workout-result-exercise gg-result-current" key={resultItem.key}>
+              {resultItem.prescription_label&&<div className="gg-result-plan"><span>PLANLAGT I WOD</span><strong>{resultItem.prescription_label}</strong></div>}
+              {resultItem.is_rest?<p className="workout-finish-help">Pause · ingen resultat å registrera. Gå vidare.</p>:isErgExercise(resultItem)?<div className="workout-result-erg"><strong>Faktisk resultat</strong><div className="workout-result-erg-fields"><label>Resultat<input type="number" inputMode="decimal" min="0" step="0.1" value={resultItem.rowValue??''} onChange={e=>updateExercise(resultItem.key,{rowValue:e.target.value})} placeholder="Tast tal"/></label><div className="training-choice-field"><span>Eining</span><GarageSelect label="Eining for ro-/ergresultat" value={resultItem.rowUnit||'m'} options={RESULT_UNITS} onChange={value=>updateExercise(resultItem.key,{rowUnit:value})}/></div></div><small>Registrer faktisk resultat dersom du vil logga det.</small></div>:<>
+                <div className="gg-result-instruction"><strong>{resultItem.uses_load?'Kva løfta du faktisk?':'Kva gjorde du faktisk?'}</strong><small>{resultItem.uses_load?'Tast inn vekt i kg for kvart sett. ':''}Rett førehandsutfylte reps dersom du gjorde noko anna. Tomme felt betyr ikkje registrert.</small></div>
+                <div className="gg-result-set-list">{(resultItem.sets||[]).map((set,setIndex)=><div className="gg-result-set-row" key={setIndex}>
+                  <span className="gg-result-set-number">Sett {setIndex+1}</span>
+                  <div className="gg-result-set-fields" data-load={resultItem.uses_load?'yes':'no'}>
+                    <label>Reps<input aria-label={'Sett '+(setIndex+1)+' repetisjonar'} type="number" inputMode="numeric" min="0" step="1" value={set.reps} onChange={e=>updateSet(resultItem.key,setIndex,{reps:e.target.value})} placeholder="Tast reps"/></label>
+                    {resultItem.uses_load&&<label className="gg-result-weight" data-empty={!entered(set.load_kg)}><span>Vekt (kg)</span><input aria-label={'Sett '+(setIndex+1)+' vekt i kilo'} type="number" inputMode="decimal" min="0" step="0.5" value={set.load_kg} onChange={e=>updateSet(resultItem.key,setIndex,{load_kg:e.target.value})} placeholder="Tast kg"/></label>}
+                    {resultItem.uses_height&&<label>Høgd (cm)<input aria-label={'Sett '+(setIndex+1)+' høgd i centimeter'} type="number" inputMode="numeric" min="1" step="1" value={set.height_cm} onChange={e=>updateSet(resultItem.key,setIndex,{height_cm:e.target.value})} placeholder="Tast cm"/></label>}
+                    {exerciseRecordType(resultItem.exercise_name,resultItem.sets)==='hold'&&<label>Tid (sek)<input aria-label={'Sett '+(setIndex+1)+' haldetid i sekund'} type="number" inputMode="numeric" min="0" step="1" value={set.time_seconds} onChange={e=>updateSet(resultItem.key,setIndex,{time_seconds:e.target.value})} placeholder="Tast sek"/></label>}
+                  </div>
+                </div>)}</div>
+                {resultItem.uses_load&&resultItem.sets?.length>1&&<button type="button" className="secondary-button gg-result-copy" disabled={!entered(resultItem.sets?.[0]?.load_kg)||!resultItem.sets.slice(1).some(set=>!entered(set.load_kg))} onClick={copyFirstWeight}>Bruk vekta frå sett 1 i tomme felt</button>}
+                {resultItem.uses_load&&<details className="gg-result-rir"><summary>RIR (valfritt) · repetisjonar i reserve <ChevronDown size={16}/></summary><div>{(resultItem.sets||[]).map((set,i)=><label key={i}>Sett {i+1}<input type="number" inputMode="numeric" aria-label={'Sett '+(i+1)+' RIR'} min="-1" max="10" step="1" value={set.rir??''} onChange={e=>updateSet(resultItem.key,i,{rir:e.target.value})} placeholder="RIR"/></label>)}</div></details>}
+                <div className="workout-result-actions"><button type="button" className="secondary-button" onClick={()=>addSet(resultItem.key)}><Plus size={16}/> Legg til sett</button>{missingLoad(resultItem)>0&&<span className="gg-result-weight-note">{missingLoad(resultItem)} sett manglar vekt</span>}</div>
+              </>}
+            </div>
+          </section>:<>
+          <p className="workout-finish-help">Tid og rundar frå klokka er med automatisk. Kontroller resultata før lagring.</p>
+          {items.length>0&&<section className="gg-result-review-list" aria-label="Kontroller øvingar"><strong>{reviewedCount} av {items.length} øvingar gjennomgått</strong>{items.map((item,index)=><button type="button" key={item.key} onClick={()=>selectResult(index)}><span>{index+1}. {item.exercise_name||'Øving'}</span><small>{missingLoad(item)>0?missingLoad(item)+' sett utan kg':reviewedResults[item.key]||item.is_rest?'Gjennomgått':'Ikkje gjennomgått'}</small><ChevronRight size={16}/></button>)}</section>}
+          {pendingWeightItems.length>0&&<p className="gg-result-weight-warning">Nokre sett manglar vekt. Trykk på øvinga for å fylla inn kg, eller lagra utan vekta dersom ho ikkje skal registrerast.</p>}
           <div className="workout-finish-summary">
             <div><span>FORMAT</span><strong>{format}</strong></div>
             <div><span>{manualEntry?'REGISTRERING':'TID'}</span><strong>{manualEntry?'Manuell':clock(timerSnapshot.elapsed)}</strong></div>
@@ -1439,28 +1489,6 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
             {timerSnapshot.roundsCompleted>0&&<div><span>RUNDER</span><strong>{timerSnapshot.roundsCompleted}</strong></div>}
           </div>
           {format===COMPOSITE_FORMAT&&timerSnapshot.block_summary?.length>0&&<section className="gg-composite-result-review" aria-label="Resultat per øktdel"><h4>Resultat per del</h4><p>Klokka har lagra deltidene. Kontroller AMRAP-rundar og ekstra reps før du lagrar.</p>{timerSnapshot.block_summary.map((block,index)=><article key={block.id||index}><div><strong>{index+1}. {block.title||block.format}</strong><small>{block.format} · {clock(Number(block.elapsed)||0)} · {block.completed?'Fullført':'Ikkje fullført'}</small></div>{(block.format==='AMRAP'||(['Couplet','Triplet'].includes(block.format)&&block.combination_mode==='AMRAP'))&&<div className="gg-composite-score-fields"><label>Rundar<input type="number" min="0" step="1" value={blockScores[block.id]?.rounds??String(block.roundsCompleted||0)} onChange={e=>setBlockScores(v=>({...v,[block.id]:{...v[block.id],rounds:e.target.value}}))}/></label><label>Ekstra reps<input type="number" min="0" step="1" value={blockScores[block.id]?.extraReps??'0'} onChange={e=>setBlockScores(v=>({...v,[block.id]:{...v[block.id],extraReps:e.target.value}}))}/></label></div>}{['Death By','Ladder'].includes(block.format)&&<label>{block.format==='Death By'?'Fullførte intervall':'Fullførte stigetrinn'}<input type="number" min="0" step="1" value={blockScores[block.id]?.rounds??String(block.format==='Death By'?block.death_by_completed_rounds??block.roundsCompleted??0:block.ladder_completed_rounds??block.roundsCompleted??0)} onChange={e=>setBlockScores(v=>({...v,[block.id]:{...v[block.id],rounds:e.target.value}}))}/></label>}{(['For Time','Chipper','Ladder'].includes(block.format)||(['Couplet','Triplet'].includes(block.format)&&block.combination_mode!=='AMRAP'&&block.combination_mode!=='Open'))&&<label>Registrert sluttid (mm:ss)<input value={blockScores[block.id]?.time??clock(Number(block.elapsed)||0)} onChange={e=>setBlockScores(v=>({...v,[block.id]:{...v[block.id],time:e.target.value}}))} placeholder="mm:ss"/></label>}</article>)}</section>}
-          {items.length>0&&<section className="workout-result-entry">
-            <div className="workout-result-tabs" role="tablist" aria-label="Vel øving for resultat">
-              {items.map((item,index)=><button type="button" key={item.key} role="tab" aria-selected={activeExerciseIndex===index} className={activeExerciseIndex===index?'selected':''} title={item.exercise_name||'Øving '+(index+1)} onClick={()=>setActiveExerciseIndex(index)}>{index+1}. {item.exercise_name||'Øving'}</button>)}
-            </div>
-            {items[activeExerciseIndex]&&<div className="workout-result-exercise">
-              <header><div><span className="section-kicker">RESULTAT · ØVING {activeExerciseIndex+1} AV {items.length}</span><h4>{items[activeExerciseIndex].exercise_name}</h4>{items[activeExerciseIndex].prescription_label&&<small>Planlagt: {items[activeExerciseIndex].prescription_label}</small>}</div>{!isErgExercise(items[activeExerciseIndex])&&<span className="count-pill">{items[activeExerciseIndex].sets?.length||0} sett</span>}</header>
-              {isErgExercise(items[activeExerciseIndex])?<div className="workout-result-erg"><strong>Registrer ro-/ergresultatet</strong><div className="workout-result-erg-fields"><label>Resultat<input type="number" min="0" step="0.1" value={items[activeExerciseIndex].rowValue??''} onChange={e=>updateExercise(items[activeExerciseIndex].key,{rowValue:e.target.value})} placeholder="Til dømes 12"/></label><div className="training-choice-field"><span>Eining</span><GarageSelect label="Eining for ro-/ergresultat" value={items[activeExerciseIndex].rowUnit||'m'} options={RESULT_UNITS} onChange={value=>updateExercise(items[activeExerciseIndex].key,{rowUnit:value})}/></div></div><small>Før inn faktisk resultat dersom du vil logge det. Talet ovanfor er WOD-målet, ikkje registrert resultat.</small></div>:<>
-              <div className="workout-result-set-head"><span>Sett</span><span>Reps</span><span>Målingar</span><span></span></div>
-              {(items[activeExerciseIndex].sets||[]).map((set,setIndex)=><div className="workout-result-set" key={setIndex}>
-                <strong>{setIndex+1}</strong>
-                <input aria-label={'Sett '+(setIndex+1)+' repetisjonar'} type="number" min="0" step="1" value={set.reps} onChange={e=>updateSet(items[activeExerciseIndex].key,setIndex,{reps:e.target.value})} placeholder="–"/>
-                <div className="workout-result-measurements">
-                  {items[activeExerciseIndex].uses_height&&<label className="workout-result-measure"><input aria-label={'Sett '+(setIndex+1)+' høgd i centimeter'} type="number" min="1" step="1" value={set.height_cm} onChange={e=>updateSet(items[activeExerciseIndex].key,setIndex,{height_cm:e.target.value})} placeholder="cm"/><span>cm</span></label>}
-                  {items[activeExerciseIndex].uses_load&&<label className="workout-result-measure"><input aria-label={'Sett '+(setIndex+1)+' vekt i kilo'} type="number" min="0" step="0.5" value={set.load_kg} onChange={e=>updateSet(items[activeExerciseIndex].key,setIndex,{load_kg:e.target.value})} placeholder="kg"/><span>kg</span></label>}{items[activeExerciseIndex].uses_load&&<label className="workout-result-measure"><input aria-label={'Sett '+(setIndex+1)+' opplevd RIR'} type="number" min="-1" max="10" step="1" value={set.rir??''} onChange={e=>updateSet(items[activeExerciseIndex].key,setIndex,{rir:e.target.value})} placeholder="RIR"/><span>RIR</span></label>}
-                  {exerciseRecordType(items[activeExerciseIndex].exercise_name,items[activeExerciseIndex].sets)==='hold'&&<label className="workout-result-measure"><input aria-label={'Sett '+(setIndex+1)+' haldetid i sekund'} type="number" min="0" step="1" value={set.time_seconds} onChange={e=>updateSet(items[activeExerciseIndex].key,setIndex,{time_seconds:e.target.value})} placeholder="sek"/><span>sek</span></label>}
-                </div>
-                <CheckCircle2 size={22} aria-label="Sett registrert" className={(set.reps!==''||set.load_kg!==''||set.height_cm!==''||set.time_text||set.time_seconds!=='')?'is-recorded':''}/>
-              </div>)}
-              <div className="workout-result-actions"><button type="button" className="secondary-button" onClick={()=>addSet(items[activeExerciseIndex].key)}><Plus size={16}/> Legg til sett</button><span>{items[activeExerciseIndex].sets?.filter(set=>set.reps!==''||set.load_kg!==''||set.height_cm!==''||set.time_text||set.time_seconds!=='').length||0} av {items[activeExerciseIndex].sets?.length||0} utfylt</span></div>
-              </>}
-            </div>}
-          </section>}
           <section className="workout-finish-results"><h4>Kontroller resultatet</h4><p>Resultat frå klokka er med. Fyll berre inn eller korriger det du treng før du lagrar.</p>
             <div className="engine-fields three">
               {format==='Ladder'&&<div className="workout-result-death-by"><strong>{timerSnapshot.ladder_completed_rounds??0} stigetrinn fullførte</strong><small>{timerSnapshot.ladder_finished?'Heile Ladder-opplegget er fullført. Tida blir lagra automatisk.':'Avslutta før alle stigetrinn var fullførte. Dette blir ikkje rekna som ein For Time-PR.'}</small><label>Korriger fullførte trinn<input type="number" min="0" step="1" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder={String(timerSnapshot.ladder_completed_rounds??0)}/></label></div>}
@@ -1474,9 +1502,11 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
             </div>
             <label className="engine-note">Notat<textarea value={note} onChange={e=>setNote(e.target.value)} rows="2" placeholder="Kommentar eller dagsform …"/></label>
           </section>
-          <div className="workout-finish-actions">
-            <button type="button" className="danger-button" onClick={leaveWorkout}><Trash2 size={17}/> Forkast økta</button>
-            <button type="submit" className="primary-button" disabled={saving}><Save size={17}/>{saving?'Lagrar …':'Lagre økt'}</button>
+          {items.some(item=>item.prescribed_sets_prefilled)&&!manualEntry&&<label className="workout-confirm-prescribed gg-result-confirm"><input type="checkbox" checked={confirmedPlannedEmom} onChange={e=>{setConfirmedPlannedEmom(e.target.checked);setError('')}}/><span>Eg har kontrollert dei planlagde EMOM-setta og repetisjonane, retta avvik og lagt inn faktiske vekter der eg vil registrera dei.</span></label>}
+          </>}
+          </div>
+          <div className="gg-result-footer">
+            {resultSummary?<><div className="gg-result-nav"><button type="button" className="secondary-button" disabled={!items.length} onClick={()=>selectResult(Math.max(0,items.length-1))}>← Øvingar</button><button type="submit" className="primary-button" disabled={saving}><Save size={17}/>{saving?'Lagrar …':'Lagre økt'}</button></div><button type="button" className="text-button gg-result-discard" onClick={leaveWorkout}><Trash2 size={16}/> Forkast økta</button></>:<><div className="gg-result-nav"><button type="button" className="secondary-button" disabled={activeExerciseIndex===0} onClick={()=>selectResult(activeExerciseIndex-1)}>← Førre</button><button type="button" className="primary-button" onClick={nextResult}>{activeExerciseIndex<items.length-1?'Neste øving':'Kontroller resultat'} <ChevronRight size={19}/></button></div><button type="button" className="text-button gg-result-skip" onClick={()=>setResultSummary(true)}>Gå til samla resultatkontroll</button></>}
           </div>
         </section>
       </div>}
