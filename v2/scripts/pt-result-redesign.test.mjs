@@ -63,7 +63,7 @@ test('selecting a PT result shows it alone instead of unrelated next-step blocks
  assert.match(parent,/setFocusedPtReview\(key\);setTab\('wodar'\)/)
  assert.match(parent,/clientRank=\{selectedRank\}/)
  assert.match(list,/ptfollow-fullreview/)
- assert.match(list,/initialReview=\{?/)
+ assert.match(parent,/initialReview=\{focusedPtReview\}/)
  assert.match(list,/onReviewClosed/)
  assert.match(list,/clientRank=\{clientRank\}/)
  assert.match(list,/row.member_id===clientId/)
