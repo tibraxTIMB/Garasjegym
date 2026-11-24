@@ -1,0 +1,19 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {findPRVictories,workoutPRVictories} from '../src/lib/prVictory.js'
+const lift=(name,kg,reps=1)=>({exercise_name:name,sets:[{load_kg:kg,reps}]})
+const previous={workout_exercises:[lift('Deadlift',80),lift('Kettlebell swing',16),lift('Bench press',60)]}
+test('only strictly higher real weight in Big Seven with existing baseline',()=>{
+ const result=findPRVictories([lift('Deadlift',90),lift('Kettlebell swing',20),lift('Bench press',60),lift('Snatch',40),lift('Front squat',70,0)], [previous])
+ assert.deepEqual(result.map(p=>[p.name,p.previous_kg,p.load_kg]),[['Deadlift',80,90]])
+})
+test('existing independent PR and any earlier higher registered weight suppress celebration',()=>{
+ assert.deepEqual(findPRVictories([lift('Deadlift',90)],[previous],[{exercise_name:'Deadlift',unit:'kg',result:100}]),[])
+ assert.deepEqual(findPRVictories([lift('Deadlift',90)],[{workout_exercises:[lift('Deadlift',100,'')]}]),[])
+})
+test('historical marker requires the actual matching weight and positive repetitions',()=>{
+ const victories=findPRVictories([lift('Deadlift',90)],[previous])
+ assert.equal(workoutPRVictories({result_data:{pr_victories:victories},workout_exercises:[lift('Deadlift',90)]}).length,1)
+ assert.equal(workoutPRVictories({result_data:{pr_victories:victories},workout_exercises:[lift('Deadlift',85)]}).length,0)
+ assert.equal(workoutPRVictories({result_data:{pr_victories:victories},workout_exercises:[lift('Deadlift',90,0)]}).length,0)
+})

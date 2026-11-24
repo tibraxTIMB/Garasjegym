@@ -77,6 +77,10 @@ export const score={
   registered:[...riff(0,0,.17),...brassCall(.19,7,.18),drum(.19,.55)],
  }
 }
+// Victory signals are separate from timer-finish cues. Original mini-fanfares.
+score.pt.pr=[bell(0,.68,-4),bell(.82,.68,-4),bell(1.64,.90,0),bell(2.58,1.70,-12),bell(2.61,1.45,0,.42)]
+score.personal.pr=[...danceBars(0,[0,0,8,8,3,7,0,0,8,7,0,0]),...arpeggio(.08,[0,3,7,12,7,12,15,19,8,12,15,20,12,15,20,24,3,7,10,15,7,10,14,19,12,15,19,24,7,12,15,19,8,12,15,20,7,10,14,19,12,15,19,24]),...rave(4.52,12,.78),n('sweep',4.30,.70,0,.45)]
+score.group.pr=[...oddGroove(0,0),...horns(.08,[0,1,4,5,7,5,4]),...riff(.90,0,.14),...riff(1.06,0,.14),...riff(1.22,1,.14),...riff(1.38,0,.14),...oddGroove(1.54,0),...horns(1.62,[7,8,11,12,11,8,7]),...horns(2.40,[12,13,16,17,19,17,16]),...riff(3.16,0,.15),...riff(3.34,0,.15),...riff(3.52,1,.15),...horns(3.72,[7,8,11,12,16,19]),...blast(4.45,0,.88),punch(4.61,.95),punch(4.78,.95),drum(5.03,.8)]
 function mix(events){
  const length=Math.ceil((Math.max(...events.map(([,t,d])=>t+d))+.035)*rate)
  const pcm=new Float32Array(length)
@@ -106,7 +110,7 @@ function mix(events){
  for(let i=0;i<pcm.length;i++){const v=pcm[i]*.96/peak;energy+=v*v;out.writeInt16LE(Math.round(v*32767),44+i*2)}
  return {out,rms:Math.sqrt(energy/pcm.length)}
 }
-const dest=path.join(root,'public','audio','gazelle-v3')
+const dest=path.join(root,'public','audio','gazelle-v4')
 mkdirSync(dest,{recursive:true})
 let total=0
 for(const [profile,signals] of Object.entries(score))for(const [signal,events] of Object.entries(signals)){
@@ -114,6 +118,6 @@ for(const [profile,signals] of Object.entries(score))for(const [signal,events] o
  if(rms<.06)throw Error('Cue is too quiet: '+profile+'/'+signal)
  writeFileSync(path.join(dest,profile+'-'+signal+'.wav'),out);total++
 }
-if(total!==27)throw Error('Expected 27 cue files, got '+total)
+if(total!==30)throw Error('Expected 30 cue files, got '+total)
 writeFileSync(path.join(dest,'credits.txt'),readFileSync(path.join(root,'audio-source','CREDITS.txt'),'utf8'))
 console.log('Rendered '+total+' local instrument-sample WAV cues (EISEN, DISKOPANZER, BALKAN BERSERK).')

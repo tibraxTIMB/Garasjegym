@@ -1,7 +1,7 @@
 // Locally bundled sample-based cues. No runtime network dependency outside the app.
-export const SOUND_PACK_VERSION='gazelle-v3'
+export const SOUND_PACK_VERSION='gazelle-v4'
 export const SOUND_PACK_PROFILES=['pt','personal','group']
-export const SOUND_PACK_SIGNALS=['tick-3','tick-2','tick-1','start','round','rest','station','finish','registered']
+export const SOUND_PACK_SIGNALS=['tick-3','tick-2','tick-1','start','round','rest','station','finish','registered','pr']
 export const SOUND_PACK_NAMES={pt:'EISEN',personal:'DISKOPANZER',group:'BALKAN BERSERK'}
 export function soundPackUrl(profile,signal,base=import.meta.env?.BASE_URL||'/'){
  const p=SOUND_PACK_PROFILES.includes(profile)?profile:'personal'

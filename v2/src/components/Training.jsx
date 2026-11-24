@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Activity, CalendarDays, CheckCircle2, ChevronDown, Clock3, Dumbbell, History, House, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2, Settings2, Settings, ChevronRight, Monitor, Timer as TimerIcon, Music2, HeartPulse, Undo2, Hand, List, Volume2, VolumeX, Maximize2, Minimize2, X } from 'lucide-react'
+import { Activity, CalendarDays, CheckCircle2, ChevronDown, Clock3, Dumbbell, History, House, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2, Settings2, Settings, ChevronRight, Trophy, Monitor, Timer as TimerIcon, Music2, HeartPulse, Undo2, Hand, List, Volume2, VolumeX, Maximize2, Minimize2, X } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { RELEASE_NAME } from '../lib/release.js'
 import HeartRateTrainingPanel from './HeartRateTrainingPanel.jsx'
@@ -11,6 +11,8 @@ import { formatParticipation, normalizeWodEngine, isEmomFormat, emomIntervalSeco
 import PerformanceCenter from './PerformanceCenter.jsx'
 import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, splitDuration, summarizeLapSplits, nextManualActionDeadline } from '../lib/timerClock.js'
 import { getExerciseMeasurementFlags, isErgExercise } from '../lib/exerciseMeasurements.js'
+import {checkPRVictories,hasVictoryCandidate,workoutPRVictories,readPRVictoryAudio} from '../lib/prVictory.js'
+import {exerciseResultReview} from '../lib/resultReview.js'
 import {COMPOSITE_FORMAT, compositeBlockForTimer, compositeTimerConfig, compositeTransitionSeconds, compositeScoredBlocks, plannedFixedEmomSets} from '../lib/compositeWod.js'
 import { exerciseRecordType } from '../lib/prMetrics.js'
 import { deathByTimerState } from '../lib/deathBy.js'
@@ -137,6 +139,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [audioProfile,setAudioProfile]=useState(()=>{
     try{const value=localStorage.getItem('garasjegym.timer.audio_profile');return TRAINING_AUDIO_PROFILES.includes(value)&&value!=='silent'?value:'personal'}catch{return 'personal'}
   })
+  const [prVictoryAudio,setPRVictoryAudio]=useState(()=>readPRVictoryAudio().enabled||(()=>{try{return localStorage.getItem('garasjegym.timer.pr_victory')!=='off'}catch{return true}})())
+  useEffect(()=>{try{localStorage.setItem('garasjegym.timer.pr_victory',prVictoryAudio?'on':'off')}catch{}},[prVictoryAudio])
   const [countdownAudio,setCountdownAudio]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.countdown_audio')!=='off'}catch{return true}})
   const [vibration,setVibration]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.vibration')==='on'}catch{return false}})
   const [testCue,setTestCue]=useState('start')
@@ -593,8 +597,9 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     <label className="gg-timer-check"><input type="checkbox" checked={soundOn} onChange={e=>setSoundOn(e.target.checked)}/> Lydsignal på</label>
     <label>Timerlyd · {soundVolume}%<input type="range" min="0" max="100" step="5" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label>
     <label className="gg-timer-check"><input type="checkbox" checked={countdownAudio} onChange={e=>setCountdownAudio(e.target.checked)}/> Nedtelling 3–2–1</label>
+    <label className="gg-timer-check"><input type="checkbox" checked={prVictoryAudio} onChange={e=>setPRVictoryAudio(e.target.checked)}/> PR Victory · dei sju standardløfta</label>
     <label className="gg-timer-check"><input type="checkbox" checked={vibration} onChange={e=>setVibration(e.target.checked)}/> Vibrasjon ved skifte (støtta mobil)</label>
-    <label>Test signal<select value={testCue} onChange={e=>setTestCue(e.target.value)}><option value="start">Start</option><option value="tick-1">Nedtelling</option><option value="round">Ny runde</option><option value="rest">Pause</option><option value="station">Stasjonsbyte</option><option value="finish">Ferdig</option><option value="registered">Runde registrert</option></select></label>
+    <label>Test signal<select value={testCue} onChange={e=>setTestCue(e.target.value)}><option value="start">Start</option><option value="tick-1">Nedtelling</option><option value="round">Ny runde</option><option value="rest">Pause</option><option value="station">Stasjonsbyte</option><option value="finish">Ferdig</option><option value="registered">Runde registrert</option><option value="pr">PR Victory</option></select></label>
     <button type="button" className="secondary-button" disabled={audioProfile==='silent'||!soundOn||soundVolume===0} onClick={()=>playSignal(testCue,{test:true})}><Volume2 size={17}/> Test lydsignal</button>
     <details className="gg-sound-diagnostics"><summary>Lyddiagnostikk · samanlikn same lydfil</summary>
       <p role="status">{audioDiagnostic}</p>
@@ -911,6 +916,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const [finishOpen,setFinishOpen]=useState(false)
   const [resultSummary,setResultSummary]=useState(false)
   const [reviewedResults,setReviewedResults]=useState({})
+  const [victoryNotice,setVictoryNotice]=useState([])
   const resultBodyRef=useRef(null)
   const [manualEntry,setManualEntry]=useState(() => Boolean(savedDraft?.manualEntry))
   const [confirmedPlannedEmom,setConfirmedPlannedEmom]=useState(false)
@@ -950,6 +956,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const missingLoad=item=>!item?.is_rest&&item?.uses_load?(item.sets||[]).filter(set=>entered(set.reps)&&Number(set.reps)>0&&!entered(set.load_kg)).length:0
   const pendingWeightItems=items.filter(item=>missingLoad(item)>0)
   const reviewedCount=items.filter(item=>reviewedResults[item.key]||item.is_rest).length
+  const resultReviews=items.map(item=>exerciseResultReview(item,Boolean(reviewedResults[item.key]),confirmedPlannedEmom))
+  const unregisteredCount=resultReviews.filter(r=>['missing','partial','unconfirmed'].includes(r.status)).length
   function selectResult(index){setResultSummary(false);setActiveExerciseIndex(index);setError('')}
   function nextResult(){
     if(resultItem)setReviewedResults(old=>({...old,[resultItem.key]:true}))
@@ -959,6 +967,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   function copyFirstWeight(){
     if(!resultItem||!entered(resultItem.sets?.[0]?.load_kg))return
     const value=resultItem.sets[0].load_kg
+    setReviewedResults(old=>({...old,[resultItem.key]:false}));setConfirmedPlannedEmom(false)
     setItems(old=>old.map(item=>item.key===resultItem.key?{...item,sets:item.sets.map(set=>entered(set.load_kg)?set:{...set,load_kg:value})}:item))
   }
   const [timerSnapshot, setTimerSnapshot] = useState(() => savedDraft?.timerSnapshot || { elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
@@ -1282,6 +1291,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   }
 
   function updateExercise(key, patch) {
+    setReviewedResults(old=>({...old,[key]:false}));setConfirmedPlannedEmom(false)
     setItems(current => current.map(item => {
       if(item.key !== key)return item
       if(patch.exercise_name !== undefined && !item.exercise_id){
@@ -1292,9 +1302,11 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     }))
   }
   function updateSet(key, index, patch) {
+    setReviewedResults(old=>({...old,[key]:false}));setConfirmedPlannedEmom(false)
     setItems(current => current.map(item => item.key === key ? { ...item, sets: item.sets.map((s, i) => i === index ? { ...s, ...patch } : s) } : item))
   }
   function addSet(key) {
+    setReviewedResults(old=>({...old,[key]:false}));setConfirmedPlannedEmom(false)
     setItems(current => current.map(item => item.key === key ? { ...item, sets: [...item.sets, { reps: '', load_kg: '', time_text: '', time_seconds: '', height_cm: '' }] } : item))
   }
 
@@ -1312,6 +1324,14 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     }
     if(!manualEntry&&items.some(item=>item.prescribed_sets_prefilled)&&!confirmedPlannedEmom){setError('Stadfest at du har kontrollert dei førehandsutfylte EMOM-setta, og rett eventuelle avvik før du lagrar.');return}
     if(finishOpen&&pendingWeightItems.length&&!window.confirm('Nokre sett manglar faktisk vekt. Vil du lagra utan desse vektverdiane? Ingen vekt blir lagt inn automatisk.'))return
+    // Unlock during the save gesture, not after the asynchronous database call.
+    const victoryPrefs=readPRVictoryAudio()
+    let victoryContext=null
+    const verifiedRows=items.filter(item=>reviewedResults[item.key])
+    if(victoryPrefs.enabled&&victoryPrefs.volume>0&&hasVictoryCandidate(verifiedRows)){
+      try{const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(AudioContextClass){if(!sharedTrainingAudioContext||sharedTrainingAudioContext.state==='closed')sharedTrainingAudioContext=new AudioContextClass();victoryContext=sharedTrainingAudioContext;unlockSoundPack(victoryContext,victoryPrefs.profile).catch(()=>{})}}catch{}
+    }
+    setVictoryNotice([])
     setSaving(true); setError(''); setNotice('')
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -1391,6 +1411,11 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         exercise_id:item.exercise_id||null,exercise_name:item.exercise_name.trim(),sort_order:index+1,row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,
         sets:item.sets.map(s=>({reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_text:s.time_text.trim()||null,time_seconds:s.time_seconds===''?null:Number(s.time_seconds),height_cm:s.height_cm===''?null:Number(s.height_cm)}))
       }))
+      let victories=[]
+      // Only explicitly reviewed standard-lift sets; never infer PRs from timer
+      // scores, planned weights, estimated 1RM, or combined partner results.
+      try{if(!source||activeWodEngine.participation==='individual')victories=await checkPRVictories(supabase,user.id,verifiedRows)}catch{/* The actual workout remains saveable. */}
+      if(victories.length)resultData.pr_victories=victories
       const {data:workoutId,error:saveError}=await supabase.rpc('save_workout_with_pt_links',{
         p_workout:payload,
         p_assignment_id:launchLinkContext.assignmentId,
@@ -1403,6 +1428,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       // personal_records remain visible in the archive but aren't duplicated.
       const prMessage = programSyncMessage+' Rekordoversikta blir oppdatert frå øvingane og resultata i treningsloggen.'
       setNotice('Økta er lagra i treningsloggen.' + prMessage)
+      if(victories.length){setVictoryNotice(victories);if(victoryContext&&victoryPrefs.enabled){stopDirectAudio();playPackSignal(victoryContext,'pr',victoryPrefs.volume,victoryPrefs.profile).catch(()=>{})}}
       setFinishOpen(false); setMode('home'); setReviewOpen(false)
       clearTimerSnapshot()
       setSaveToken(crypto.randomUUID())
@@ -1419,6 +1445,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   return <div className={simpleMode && mode === "home" ? "training-module simple-mode" : "training-module"}>
     {error && <div className="auth-error" role="alert">{error}</div>}
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16}/> {notice}</div>}
+    {victoryNotice.length>0&&<div className="gg-pr-victory-notice" role="status"><Trophy size={22}/><div><strong>Ny personleg rekord · The Big Seven</strong>{victoryNotice.map(p=><small key={p.name}>{p.label}: {p.previous_kg} → {p.load_kg} kg</small>)}</div><button type="button" aria-label="Lukk rekordmelding" onClick={()=>setVictoryNotice([])}><X size={18}/></button></div>}
     {mode === 'active' ? <form className="engine-form gg-training-session" onSubmit={saveWorkout}>
       <div className="training-heading"><div><div className="section-kicker">{manualEntry?'RESULTAT · ETTERREGISTRERING':'TRENING · AKTIV ØKT'}</div><h3>{source?.name||'Fri trening'}</h3></div><button type="button" className="workout-return-types" onClick={returnToWorkoutTypes}>← Vel økttype</button></div>
       {source&&activeWodEngine.participation!=='individual'&&<section className="wod-execution-partner"><div><strong>{formatParticipation(activeWodEngine)}</strong><span>{({free_split:'Del arbeidet fritt',you_go_i_go:'You go – I go',alternate:'Annankvar / vekselvis',synchronized:'Synkroniserte repetisjonar',parallel:'Parallelt arbeid'})[activeWodEngine.collaboration]||'Felles gjennomføring'}</span></div><small>Resultat blir lagra med partner-/teamoppsettet frå WOD-kortet. Scoring: {(activeWodEngine.scoring?.fields||[]).join(' + ')}</small></section>}
@@ -1478,7 +1505,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
             <div className="workout-result-exercise gg-result-current" key={resultItem.key}>
               {resultItem.prescription_label&&<div className="gg-result-plan"><span>PLANLAGT I WOD</span><strong>{resultItem.prescription_label}</strong></div>}
               {resultItem.is_rest?<p className="workout-finish-help">Pause · ingen resultat å registrera. Gå vidare.</p>:isErgExercise(resultItem)?<div className="workout-result-erg"><strong>Faktisk resultat</strong><div className="workout-result-erg-fields"><label>Resultat<input type="number" inputMode="decimal" min="0" step="0.1" value={resultItem.rowValue??''} onChange={e=>updateExercise(resultItem.key,{rowValue:e.target.value})} placeholder="Tast tal"/></label><div className="training-choice-field"><span>Eining</span><GarageSelect label="Eining for ro-/ergresultat" value={resultItem.rowUnit||'m'} options={RESULT_UNITS} onChange={value=>updateExercise(resultItem.key,{rowUnit:value})}/></div></div><small>Registrer faktisk resultat dersom du vil logga det.</small></div>:<>
-                <div className="gg-result-instruction"><strong>{resultItem.uses_load?'Kva løfta du faktisk?':'Kva gjorde du faktisk?'}</strong><small>{resultItem.uses_load?'Tast inn vekt i kg for kvart sett. ':''}Rett førehandsutfylte reps dersom du gjorde noko anna. Tomme felt betyr ikkje registrert.</small></div>
+                <div className="gg-result-instruction"><strong>{resultItem.uses_load?'Kva løfta du faktisk?':'Kva gjorde du faktisk?'}</strong><small>{resultItem.uses_load?'Tast inn vekt i kg for kvart sett. ':''}Rett førehandsutfylte reps dersom du gjorde noko anna. Neste øving stadfestar verdiane du har kontrollert. Tomme felt betyr ikkje registrert.</small></div>
                 <div className="gg-result-set-list">{(resultItem.sets||[]).map((set,setIndex)=><div className="gg-result-set-row" key={setIndex}>
                   <span className="gg-result-set-number">Sett {setIndex+1}</span>
                   <div className="gg-result-set-fields" data-load={resultItem.uses_load?'yes':'no'}>
@@ -1494,8 +1521,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
               </>}
             </div>
           </section>:<>
-          <p className="workout-finish-help">Tid og rundar frå klokka er med automatisk. Kontroller resultata før lagring.</p>
-          {items.length>0&&<section className="gg-result-review-list" aria-label="Kontroller øvingar"><strong>{reviewedCount} av {items.length} øvingar gjennomgått</strong>{items.map((item,index)=><button type="button" key={item.key} onClick={()=>selectResult(index)}><span>{index+1}. {item.exercise_name||'Øving'}</span><small>{missingLoad(item)>0?missingLoad(item)+' sett utan kg':reviewedResults[item.key]||item.is_rest?'Gjennomgått':'Ikkje gjennomgått'}</small><ChevronRight size={16}/></button>)}</section>}
+          <p className="workout-finish-help">Tid og rundar frå klokka er med automatisk. Trykk på ei øving for å kontrollera eller korrigera. PR Victory blir kontrollert ved lagring av stadfesta løft.</p>
+          {items.length>0&&<section className="gg-result-review-list gg-result-review-detailed" aria-label="Kontroller øvingar"><div className="gg-result-review-heading"><strong>Samla øvingsresultat</strong><small>{unregisteredCount?unregisteredCount+' av '+items.length+' manglar eller må kontrollerast':'Alle øvingar gjennomgått'}</small></div>{items.map((item,index)=>{const r=resultReviews[index],block=timerSnapshot.block_summary?.find(b=>b.id===item.block_id);return <button type="button" key={item.key} className={'gg-result-row '+r.status} onClick={()=>selectResult(index)}><span className="gg-result-status-dot" aria-hidden="true">{['recorded','planned'].includes(r.status)?'✓':r.status==='rest'?'–':'!'}</span><span className="gg-result-row-text"><strong>{index+1}. {item.exercise_name||'Øving'}</strong>{block&&<small className="gg-result-block-name">{block.title||block.format}</small>}<small>{r.summary}</small></span><span className="gg-result-row-state">{r.label}</span><ChevronRight size={16}/></button>})}</section>}
           {pendingWeightItems.length>0&&<p className="gg-result-weight-warning">Nokre sett manglar vekt. Trykk på øvinga for å fylla inn kg, eller lagra utan vekta dersom ho ikkje skal registrerast.</p>}
           <div className="workout-finish-summary">
             <div><span>FORMAT</span><strong>{format}</strong></div>
@@ -1521,7 +1548,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           </>}
           </div>
           <div className="gg-result-footer">
-            {resultSummary?<div className="gg-result-nav"><button type="button" className="secondary-button" disabled={!items.length||saving} onClick={()=>selectResult(Math.max(0,items.length-1))}>← Øvingar</button><button type="submit" className="primary-button" disabled={saving}><Save size={17}/>{saving?'Lagrar …':'Lagre økt'}</button></div>:<><div className="gg-result-nav"><button type="button" className="secondary-button" disabled={activeExerciseIndex===0} onClick={()=>selectResult(activeExerciseIndex-1)}>← Førre</button><button type="button" className="primary-button" onClick={nextResult}>{activeExerciseIndex<items.length-1?'Neste øving':'Kontroller resultat'} <ChevronRight size={19}/></button></div><button type="button" className="text-button gg-result-skip" onClick={()=>setResultSummary(true)}>Gå til samla resultatkontroll</button></>}
+            {resultSummary?<button type="submit" className="primary-button gg-result-save" disabled={saving}><Save size={20}/>{saving?'Lagrar …':'Lagre økt'}</button>:<><div className="gg-result-nav"><button type="button" className="secondary-button" disabled={activeExerciseIndex===0} onClick={()=>selectResult(activeExerciseIndex-1)}>← Førre</button><button type="button" className="primary-button" onClick={nextResult} title="Stadfest resultata for denne øvinga">{activeExerciseIndex<items.length-1?'Neste øving':'Kontroller resultat'} <ChevronRight size={19}/></button></div><button type="button" className="text-button gg-result-skip" onClick={()=>setResultSummary(true)}>Gå til samla resultatkontroll</button></>}
             <button type="button" className="gg-result-discard" disabled={saving} onClick={leaveWorkout}><Trash2 size={18}/> Forkast økta · ikkje lagre</button>
           </div>
         </section>
@@ -1546,7 +1573,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       {mode==='home'&&<details className="training-extra-tools"><summary>Meir: øvingsbibliotek, historikk og PR</summary>
       <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
         <div className="training-heading"><div><div className="section-kicker">HISTORIKK</div><h3>Siste økter</h3></div><span className="count-pill">{history.length} økter</span></div>
-        {history.length ? <div className="history-list">{history.map(log => <article className="history-card" key={log.id}><div className="history-card-top"><strong>{log.title}</strong><span>{log.workout_date}</span></div><small>{log.format} · {log.workout_exercises?.length || 0} øvingar</small>{Array.isArray(log.result_data?.block_summary)&&log.result_data.block_summary.length>0&&<div className="gg-composite-history">{log.result_data.block_summary.map((block,index)=><div key={block.id||index}><strong>{index+1}. {block.title||block.format}</strong><span>{block.format} · {clock(block.elapsed||0)}{block.format==='AMRAP'?' · '+(block.roundsCompleted||0)+' rundar + '+(block.extra_reps||0)+' reps':block.format==='Death By'?' · '+(block.death_by_completed_rounds??block.roundsCompleted??0)+' rundar fullførte':''}{block.time_cap_reached?' · Tidsgrense':''}</span></div>)}</div>}{log.workout_exercises?.sort((a,b)=>a.sort_order-b.sort_order).map((ex,index) => {const result=log.result_data?.exercise_results?.[index];return <div className="history-exercise" key={ex.id}><b>{ex.exercise_name}</b><span>{[result?.row_value!=null?[result.row_value,({m:'m',km:'km',cal:'cal',s:'sek',min:'min'})[result.row_unit]||result.row_unit].filter(Boolean).join(' '):'',(ex.workout_sets || []).map((s,setIndex) => [s.reps ? (result?.is_complex?'syklusar ':'')+s.reps+(result?.is_complex?'':' reps') : '', s.height_cm ? s.height_cm+' cm' : '', s.load_kg ? s.load_kg+' kg' : '', s.time_seconds ? s.time_seconds+' sek' : s.time_text || '',result?.sets?.[setIndex]?.rir!=null?'RIR '+result.sets[setIndex].rir:''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ')].filter(Boolean).join(' · ') || 'Ingen resultat registrert'}</span>{result?.is_complex&&Array.isArray(result.complex_steps)&&<small className="training-complex-sequence"><strong>Komplekssekvens</strong><ol>{result.complex_steps.map((step,stepIndex)=><li key={stepIndex}>{step.reps} × {step.name}</li>)}</ol></small>}</div>})}{log.note && <p>{log.note}</p>}</article>)}</div> : <div className="empty-state">Du har ikkje lagra økter enno.</div>}
+        {history.length ? <div className="history-list">{history.map(log => <article className="history-card" key={log.id}><div className="history-card-top"><strong>{log.title} {workoutPRVictories(log).length>0&&<span className="gg-pr-marker" title="Personleg rekord på eit standardløft"><Trophy size={13}/> PR</span>}</strong><span>{log.workout_date}</span></div><small>{log.format} · {log.workout_exercises?.length || 0} øvingar</small>{Array.isArray(log.result_data?.block_summary)&&log.result_data.block_summary.length>0&&<div className="gg-composite-history">{log.result_data.block_summary.map((block,index)=><div key={block.id||index}><strong>{index+1}. {block.title||block.format}</strong><span>{block.format} · {clock(block.elapsed||0)}{block.format==='AMRAP'?' · '+(block.roundsCompleted||0)+' rundar + '+(block.extra_reps||0)+' reps':block.format==='Death By'?' · '+(block.death_by_completed_rounds??block.roundsCompleted??0)+' rundar fullførte':''}{block.time_cap_reached?' · Tidsgrense':''}</span></div>)}</div>}{log.workout_exercises?.sort((a,b)=>a.sort_order-b.sort_order).map((ex,index) => {const result=log.result_data?.exercise_results?.[index];return <div className="history-exercise" key={ex.id}><b>{ex.exercise_name}</b><span>{[result?.row_value!=null?[result.row_value,({m:'m',km:'km',cal:'cal',s:'sek',min:'min'})[result.row_unit]||result.row_unit].filter(Boolean).join(' '):'',(ex.workout_sets || []).map((s,setIndex) => [s.reps ? (result?.is_complex?'syklusar ':'')+s.reps+(result?.is_complex?'':' reps') : '', s.height_cm ? s.height_cm+' cm' : '', s.load_kg ? s.load_kg+' kg' : '', s.time_seconds ? s.time_seconds+' sek' : s.time_text || '',result?.sets?.[setIndex]?.rir!=null?'RIR '+result.sets[setIndex].rir:''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ')].filter(Boolean).join(' · ') || 'Ingen resultat registrert'}</span>{result?.is_complex&&Array.isArray(result.complex_steps)&&<small className="training-complex-sequence"><strong>Komplekssekvens</strong><ol>{result.complex_steps.map((step,stepIndex)=><li key={stepIndex}>{step.reps} × {step.name}</li>)}</ol></small>}</div>})}{log.note && <p>{log.note}</p>}</article>)}</div> : <div className="empty-state">Du har ikkje lagra økter enno.</div>}
       </section>
       <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
         <PerformanceCenter history={history} records={records}/>

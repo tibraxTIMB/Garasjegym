@@ -2,6 +2,7 @@ import {useEffect,useState} from 'react'
 import {ArrowLeft,CalendarDays,Check,Clock3,Dumbbell,Edit3,LoaderCircle,MoreHorizontal,Save,Trash2,Trophy,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import {deleteWorkoutAndLinkedRecords} from '../lib/deleteWorkout.js'
+import {workoutPRVictories} from '../lib/prVictory.js'
 import {formatWorkoutSeconds,formatWorkoutSet,optionalNumber,splitWorkoutNote} from '../lib/workoutDetail.js'
 import {suggestedEmomSets} from '../lib/workoutCorrections.js'
 import './workout-detail.css'
@@ -181,7 +182,7 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
   <section className="workout-detail-dialog" role="dialog" aria-modal="true" aria-label="Detaljar om treningsøkt" onClick={event=>event.stopPropagation()}>
    <header className="workout-detail-header">
     <button type="button" className="workout-detail-back" onClick={requestBack}><ArrowLeft size={19}/> Tilbake</button>
-    <span className="workout-detail-header-tag"><Check size={14}/> Fullført</span>
+    <span className="workout-detail-header-tag"><Check size={14}/> Fullført</span>{workoutPRVictories(workout).length>0&&<span className="gg-pr-marker" title={workoutPRVictories(workout).map(p=>p.label+' '+p.load_kg+' kg').join(' · ')}><Trophy size={14}/> PR</span>}
     {!editing&&<div className="workout-detail-options"><button type="button" className="workout-detail-more" aria-expanded={menuOpen} aria-label="Fleire val for økta" disabled={workout.detailLoading||!!workout.detailError||deleting} onClick={()=>setMenuOpen(value=>!value)}><MoreHorizontal size={22}/></button>{menuOpen&&<div className="workout-detail-menu"><button type="button" onClick={()=>beginEdit('note')}><Edit3 size={15}/> Rediger notat</button><button type="button" onClick={()=>beginEdit('correction')}><Trophy size={15}/> Korriger feil i resultat</button><button type="button" className="workout-detail-menu-delete" onClick={deleteWorkout}><Trash2 size={15}/> Slett økt og tilknytte PR</button></div>}</div>}
    </header>
    <div className="workout-detail-scroll">

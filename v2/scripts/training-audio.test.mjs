@@ -3,10 +3,10 @@ import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {SOUND_PACK_PROFILES,SOUND_PACK_SIGNALS,soundPackUrl} from '../src/lib/trainingAudio.js'
 const read=p=>readFileSync(new URL(p,import.meta.url),'utf8')
-test('27 distinct local WAV paths and three sample-based profiles',()=>{
+test('30 distinct local WAV paths and three sample-based profiles',()=>{
  const urls=SOUND_PACK_PROFILES.flatMap(p=>SOUND_PACK_SIGNALS.map(s=>soundPackUrl(p,s,'/Garasjegym/')))
- assert.equal(new Set(urls).size,27)
- assert.ok(urls.every(url=>url.startsWith('/Garasjegym/audio/gazelle-v3/')&&url.endsWith('.wav')))
+ assert.equal(new Set(urls).size,30)
+ assert.ok(urls.every(url=>url.startsWith('/Garasjegym/audio/gazelle-v4/')&&url.endsWith('.wav')))
  assert.equal(soundPackUrl('group','transition'),soundPackUrl('group','round'))
  const sample=JSON.parse(read('../audio-source/fluid-samples.json'))
  assert.ok(Object.keys(sample).length>=9)
@@ -15,7 +15,7 @@ test('27 distinct local WAV paths and three sample-based profiles',()=>{
  assert.match(script,/distortion|guitar/)
  assert.match(script,/brass/)
  assert.match(script,/synth/)
- assert.match(script,/total!==27/)
+ assert.match(script,/total!==30/)
  assert.match(read('../audio-source/CREDITS.txt'),/Creative Commons Attribution 3.0/)
 })
 test('live timer uses real files and explicit diagnostics rather than synthesized beeps',()=>{
