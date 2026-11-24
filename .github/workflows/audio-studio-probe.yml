@@ -1,0 +1,29 @@
+name: Audio Studio - anonymous generation trial
+on:
+  push:
+    branches: [audio-studio-ki-probe]
+    paths: ['.github/workflows/audio-studio-probe.yml', 'v2/audio-source/anonymous_generation.py']
+permissions:
+  contents: read
+jobs:
+  generate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install public Gradio client
+        run: pip install 'gradio_client>=1.8,<3'
+      - name: Generate original anonymous trial takes
+        run: python v2/audio-source/anonymous_generation.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: audio-studio-review-only
+          path: audio-studio-output/
+          if-no-files-found: warn
+          retention-days: 7
