@@ -2,6 +2,7 @@ import {useEffect,useMemo,useState} from 'react'
 import {FileImage,FileText,Upload,ClipboardPaste,CheckCircle2,AlertTriangle,Search,X,Check,SkipForward,ScanSearch} from 'lucide-react'
 import {parseWodImport} from '../lib/wodImport.js'
 import {isFixedInterval,fixedIntervalSummary,fixedIntervalLabel,importIntervalAdvice,clockLabel} from '../lib/wodFormatAdvisor.js'
+import {isEmomFormat,emomIntervalSeconds} from '../lib/wodEngine.js'
 import {COMPOSITE_FORMAT, validateCompositeBlocks} from '../lib/compositeWod.js'
 import './wod-import.css'
 
@@ -25,15 +26,20 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
  const included=preview.filter((item,index)=>choices[index]!=='skip'&&(item.exercise||choices[index])).length
  const ignored=parsed?.ignored||[]
  const warnings=parsed?.warnings||[]
- const compositeIssue=parsed?.blocks?.length>1?validateCompositeBlocks(parsed.blocks,preview.filter((item,index)=>choices[index]!=='skip')):''
+ const includedRows=preview.filter((item,index)=>choices[index]!=='skip')
+ const blockCount=block=>includedRows.filter(item=>item.block_id===block.id).length
+ const isTimedBlock=block=>isFixedInterval(block.format)||block.format==='Stasjonssirkel'
+ const compositeTimingIssue=parsed?.blocks?.find(block=>isTimedBlock(block)&&!fixedIntervalSummary({...block,exerciseCount:blockCount(block)}))
+ const compositeIssue=parsed?.blocks?.length>1?(compositeTimingIssue?compositeTimingIssue.title+': kontroller arbeid, kvile og rundar.':validateCompositeBlocks(parsed.blocks,includedRows)):''
  const intervalPlan=isFixedInterval(meta.format)?fixedIntervalSummary({workSeconds:meta.workSeconds,restSeconds:meta.restSeconds,rounds:meta.rounds,exerciseCount:included}):null
  const advice=parsed&&!parsed.blocks&&meta.format===parsed.format&&Number(meta.minutes)===Number(parsed.minutes)&&included===preview.length&&unresolved===0?importIntervalAdvice(parsed,included):null
  const activeCatalog=useMemo(()=>exerciseCatalog.filter(ex=>ex?.name&&ex.is_active!==false),[exerciseCatalog])
  const requiresDuration=/^(AMRAP|E(?:MOM|[1-7](?:\.25|\.5|\.75)?MOM)|Tabata|Intervall|Stasjonssirkel)$/.test(meta.format)
  const invalidQuantity=preview.some((item,index)=>choices[index]!=='skip'&&item.quantity&&(!Number.isFinite(Number(doseChanges[index]?.quantity??item.quantity.value))||Number(doseChanges[index]?.quantity??item.quantity.value)<=0))
  const invalidLoad=preview.some((item,index)=>choices[index]!=='skip'&&doseChanges[index]?.loadKg!==undefined&&doseChanges[index].loadKg!==''&&(!Number.isFinite(Number(doseChanges[index].loadKg))||Number(doseChanges[index].loadKg)<0))
- const invalidReps=preview.some((item,index)=>choices[index]!=='skip'&&!item.quantity&&!/^(?:\d+(?:-\d+)*|\d+\s*[x×]\s*\d+)$/.test(String(doseChanges[index]?.reps??item.reps).trim()))
- const invalidSetup=!!(isFixedInterval(meta.format)&&!intervalPlan)||!!(parsed?.blocks?.length>1&&meta.format!==COMPOSITE_FORMAT)||!meta.name.trim()||!meta.format||!Number.isInteger(Number(meta.rounds))||Number(meta.rounds)<1||Number(meta.rounds)>99||(meta.minutes!==''&&(!Number.isFinite(Number(meta.minutes))||Number(meta.minutes)<1||Number(meta.minutes)>300))||(requiresDuration&&!isFixedInterval(meta.format)&&!(Number(meta.minutes)>0))
+ const invalidReps=preview.some((item,index)=>choices[index]!=='skip'&&!item.quantity&&!(String(doseChanges[index]?.reps??item.reps).trim()===''&&(isFixedInterval(meta.format)||isFixedInterval(parsed?.blocks?.find(b=>b.id===item.block_id)?.format)))&&!/^(?:\d+(?:-\d+)*|\d+\s*[x×]\s*\d+)$/.test(String(doseChanges[index]?.reps??item.reps).trim()))
+ const invalidEmom=isEmomFormat(meta.format)&&(!(Number(meta.minutes)>0)||Math.round(Number(meta.minutes)*60)%emomIntervalSeconds(meta.format)!==0)
+ const invalidSetup=invalidEmom||!!(isFixedInterval(meta.format)&&!intervalPlan)||!!(parsed?.blocks?.length>1&&meta.format!==COMPOSITE_FORMAT)||!meta.name.trim()||!meta.format||!Number.isInteger(Number(meta.rounds))||Number(meta.rounds)<1||Number(meta.rounds)>99||(meta.minutes!==''&&(!Number.isFinite(Number(meta.minutes))||Number(meta.minutes)<1||Number(meta.minutes)>300))||(requiresDuration&&!isFixedInterval(meta.format)&&!(Number(meta.minutes)>0))
  const ready=unresolved===0&&included>0&&!compositeIssue&&!invalidSetup&&!invalidQuantity&&!invalidReps&&!invalidLoad&&approved
 
  useEffect(()=>()=>{if(filePreview)URL.revokeObjectURL(filePreview)},[filePreview])
@@ -59,6 +65,7 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
   }else setError('Denne filtypen kan ikkje lesast direkte. Bruk TXT, CSV, Markdown, bilete eller PDF.')
  }
  function parse(){setError('');setChoices({});setDoseChanges({});setApproved(false);setSearchOpen({});setSearchTerms({});try{const draft=parseWodImport(source,activeCatalog);setParsed(draft);setMeta({name:draft.name,format:draft.format||'',minutes:draft.minutes?String(draft.minutes):'',rounds:draft.rounds==null?'':String(draft.rounds),workSeconds:draft.fixedTiming?.workSeconds??'',restSeconds:draft.fixedTiming?.restSeconds??''})}catch(e){setParsed(null);setError(e.message||'Kunne ikkje tolka WOD-teksten.')}}
+ function patchBlock(id,patch){setParsed(current=>({...current,blocks:current.blocks.map(block=>{if(block.id!==id)return block;const next={...block,...patch};const plan=isTimedBlock(next)?fixedIntervalSummary({...next,exerciseCount:blockCount(next)}):null;return plan?{...next,minutes:plan.totalSeconds/60}:next})}));setApproved(false)}
  function choose(index,exercise){setChoices(current=>({...current,[index]:exercise}));setApproved(false);setSearchOpen(current=>({...current,[index]:false}))}
  function apply(){
   if(unresolved){setError('Vel ei øving frå biblioteket eller «Hopp over» for kvar ukjend linje.');return}
@@ -91,16 +98,17 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
   <div className="wod-import-actions"><button type="button" className="secondary-button" onClick={parse} disabled={!source.trim()||ocrBusy} >Analyser og samanlikn med øvingsbibliotek</button></div>
   {parsed&&<div className="wod-import-result">
    <div className="wod-import-result-head"><CheckCircle2 size={17}/><div><strong>Admin-kontroll før overføring</strong><small>{preview.length} tolka linjer · {unresolved?unresolved+' må avklarast':'alle bibliotekstreff er avklarte'}</small></div></div>
-   {parsed.blocks?.length>1&&<div className="wod-import-composite-preview"><strong>Samansett treningsøkt · {parsed.blocks.length} delar</strong>{parsed.blocks.map((block,i)=><p key={block.id}>{i+1}. {block.title} · {block.format} · {block.minutes} min · {preview.filter(item=>item.block_id===block.id).length} øvingar</p>)}<small>Delane blir førte til WOD Builder med kvar sin timer. PT-notat og originale belastningsalternativ ligg i kjeldeteksten.</small></div>}
+   {parsed.blocks?.length>1&&<div className="wod-import-composite-preview"><strong>Samansett treningsøkt · {parsed.blocks.length} delar</strong>{parsed.blocks.map((block,i)=>{const count=blockCount(block);const plan=isTimedBlock(block)?fixedIntervalSummary({...block,exerciseCount:count}):null;const proposal=!unresolved&&count===preview.filter(item=>item.block_id===block.id).length?importIntervalAdvice(block,count):null;return <div key={block.id}><p>{i+1}. {block.title} · {block.format} · {plan?clockLabel(plan.totalSeconds)+' min:sek':block.minutes?clockLabel(Math.round(Number(block.minutes)*60))+' min:sek':'Tid uavklart'} · {count} øvingar</p>{proposal&&<div className="wod-help">{fixedIntervalLabel(proposal)}. Siste kvilepause fell bort. <button type="button" className="secondary-button" onClick={()=>patchBlock(block.id,{format:'Intervall',workSeconds:proposal.workSeconds,restSeconds:proposal.restSeconds,rounds:proposal.rounds})}>Byt til intervall · øvingane går på omgang</button></div>}{isTimedBlock(block)&&<div className="wod-import-meta-editor"><label>Arbeid (sek)<input type="number" min="1" max="600" value={block.workSeconds??''} onChange={e=>patchBlock(block.id,{workSeconds:e.target.value})}/></label><label>Kvile (sek)<input type="number" min="0" max="600" value={block.restSeconds??''} onChange={e=>patchBlock(block.id,{restSeconds:e.target.value})}/></label><label>Rundar<input type="number" min="1" max="30" value={block.rounds??''} onChange={e=>patchBlock(block.id,{rounds:e.target.value})}/></label><p className="wod-help">{fixedIntervalLabel(plan)}</p></div>}{i<parsed.blocks.length-1&&<small>{block.transitionMode==='timed'?'Fast pause '+block.transitionSeconds+' sek':'Manuell overgang til neste del'}</small>}</div>})}<small>Delane blir førte til WOD Builder med kvar sin timer. PT-notat og originale belastningsalternativ ligg i kjeldeteksten.</small></div>}
     <div className="wod-import-meta-editor">
     <label>WOD-namn<input type="text" maxLength="100" value={meta.name} onChange={e=>{setMeta(current=>({...current,name:e.target.value}));setApproved(false)}}/></label>
     <label>GarasjeGym-format<select value={meta.format} onChange={e=>{setMeta(current=>({...current,format:e.target.value}));setApproved(false)}}>
      <option value="">Vel format – uavklart</option>
-     {[COMPOSITE_FORMAT,'AMRAP','For Time','Chipper','EMOM','E1MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM','Tabata','Intervall','Stasjonssirkel','Complex','Eigen økt','Strength'].map(f=><option key={f} value={f}>{f}</option>)}
+     {[COMPOSITE_FORMAT,'AMRAP','For Time','Chipper','EMOM','E1MOM','E1.25MOM','E1.5MOM','E1.75MOM','E2MOM','E3MOM','E4MOM','E5MOM','E6MOM','E7MOM','Tabata','Intervall','Row Intervals','Stasjonssirkel','Complex','Eigen økt','Strength'].map(f=><option key={f} value={f}>{f}</option>)}
     </select></label>
     <label>Tidsramme (min){requiresDuration?' *':''}<input type="number" min="1" max="300" step="1" value={meta.minutes} onChange={e=>{setMeta(current=>({...current,minutes:e.target.value}));setApproved(false)}} placeholder="Ingen tidsramme"/></label>
     <label>Rundar<input type="number" min="1" max="99" step="1" value={meta.rounds} onChange={e=>{setMeta(current=>({...current,rounds:e.target.value}));setApproved(false)}}/></label>
    </div>
+   {invalidEmom&&<p className="wod-help">EMOM: total tid må gå opp i heile intervall. Kontroller kjeldeteksten og tidsramma.</p>}
    {advice&&<div className="wod-import-review-hint"><div><strong>Fast arbeid og kvile?</strong><p>{advice.workSeconds}/{advice.restSeconds} sek · {fixedIntervalLabel(advice)}. EMOM varer {clockLabel(advice.sourceSeconds)}; Intervall sluttar {advice.finalRestSeconds} sek tidlegare. Byt berre dersom øvingane går på omgang, ikkje samtidig.</p><button type="button" className="secondary-button" onClick={()=>{setMeta(current=>({...current,format:'Intervall',rounds:String(advice.rounds),minutes:String(Math.ceil(advice.totalSeconds/60)),workSeconds:advice.workSeconds,restSeconds:advice.restSeconds}));setApproved(false)}}>Bruk intervall · øvingane går på omgang</button></div></div>}
    {isFixedInterval(meta.format)&&<div className="wod-import-meta-editor"><label>Arbeid (sek)<input type="number" min="1" max="600" value={meta.workSeconds??''} onChange={e=>{setMeta(current=>({...current,workSeconds:e.target.value}));setApproved(false)}}/></label><label>Kvile (sek)<input type="number" min="0" max="600" value={meta.restSeconds??''} onChange={e=>{setMeta(current=>({...current,restSeconds:e.target.value}));setApproved(false)}}/></label><p className="wod-help">{fixedIntervalLabel(intervalPlan)}</p></div>}
    {warnings.length>0&&<details className="wod-import-warnings"><summary><AlertTriangle size={15}/> {warnings.length} punkt som krev manuell kontroll</summary><ul>{warnings.map((item,i)=><li key={i}>{item}</li>)}</ul></details>}{compositeIssue&&<div className="wod-import-review-hint"><AlertTriangle size={15}/>{compositeIssue}</div>}
@@ -118,7 +126,7 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
      {!skipped&&<div className="wod-import-dose-editor">
       {item.quantity
        ?<label>{({m:'Mengd (meter)',cal:'Kaloriar',s:'Sekund',min:'Minutt'})[item.quantity.unit]||'Mengd'}<input type="number" min="0.01" step="any" inputMode="decimal" value={doseChanges[index]?.quantity??item.quantity.value} onChange={e=>{setDoseChanges(current=>({...current,[index]:{...current[index],quantity:e.target.value}}));setApproved(false)}}/></label>
-       :<label>Repetisjonar / rekkje<input type="text" inputMode="numeric" value={doseChanges[index]?.reps??item.reps} onChange={e=>{setDoseChanges(current=>({...current,[index]:{...current[index],reps:e.target.value}}));setApproved(false)}}/></label>}
+       :<label>Repetisjonar / rekkje (tomt = utan fast reps i intervall)<input type="text" inputMode="numeric" value={doseChanges[index]?.reps??item.reps} onChange={e=>{setDoseChanges(current=>({...current,[index]:{...current[index],reps:e.target.value}}));setApproved(false)}}/></label>}
       <label>Belastning (kg, valfritt)<input type="number" min="0" step="any" inputMode="decimal" placeholder="Ikkje oppgitt" value={doseChanges[index]?.loadKg??(item.loadKg??'')} onChange={e=>{setDoseChanges(current=>({...current,[index]:{...current[index],loadKg:e.target.value}}));setApproved(false)}}/></label>
      </div>}
      {!selected&&!skipped&&<div className="wod-import-suggestions"><small>{item.suggestions?.length?'Moglege tilsvarande øvingar:':'Ingen sikre treff. Søk i øvingsbiblioteket:'}</small><div className="wod-import-suggestion-buttons">{(item.suggestions||[]).map(ex=><button type="button" key={ex.id||ex.name} onClick={()=>choose(index,ex)}>{ex.name}</button>)}</div></div>}

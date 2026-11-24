@@ -16,7 +16,7 @@ export function fixedIntervalLabel(plan){
 }
 // Compact box notation E2MOM35 means 35 total minutes, not 35 repetitions.
 export function readEmomHeader(text){
- const m=String(text||'').match(/\b(E(?:[1-7](?:[.,](?:25|5|75))?)?MOM)\s*[:–-]?\s*(\d{1,3})\b/i)
+ const m=String(text||'').match(/\b(E(?:[1-7](?:[.,](?:25|5|75))?)?MOM)[ \t]*[:–-]?[ \t]*(\d{1,3})\b(?![ \t]*\/)/i)
  return m?{format:m[1].toUpperCase().replace(',','.'),minutes:Number(m[2])}:null
 }
 // Only labelled timing or a complete slash pair in a format/standalone line.
@@ -43,5 +43,5 @@ export function intervalAdvice({format,periodSeconds,durationSeconds,workSeconds
 export function importIntervalAdvice(parsed,exerciseCount){
  const timing=parsed?.fixedTiming
  if(!timing||!isEmomFormat(parsed?.format))return null
- return intervalAdvice({format:parsed.format,periodSeconds:emomIntervalSeconds(parsed.format),durationSeconds:Number(parsed.minutes)*60,...timing,exerciseCount,rotating:true})
+ return intervalAdvice({format:parsed.format,periodSeconds:emomIntervalSeconds(parsed.format,{work_every_seconds:parsed.emomIntervalSeconds}),durationSeconds:Number(parsed.minutes)*60,...timing,exerciseCount,rotating:true})
 }

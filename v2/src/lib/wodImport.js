@@ -126,11 +126,11 @@ function parseGeneralComposite(lines,catalog){
  const ids=new Set(found.map(x=>x.letter))
  if(ids.size!==found.length)throw Error('Same delbokstav finst fleire gonger. Kontroller A–H.')
  const blocks=[],items=[],warnings=[]
- const add=(name,reps,quantity,block,sourceLine,sets=null)=>{
+ const add=(name,reps,quantity,block,sourceLine,sets=null,loadKg=null)=>{
   const candidates=suggestWodExercises(name,catalog)
   const exact=candidates.find(c=>c.score>=.95)
   const exercise=exact?.exercise||null
-  items.push({name:exercise?.name||name,rawName:name,sourceLine,exercise,reps:String(reps??''),quantity:quantity||null,loadKg:null,
+  items.push({name:exercise?.name||name,rawName:name,sourceLine,exercise,reps:String(reps??''),quantity:quantity||null,loadKg,
    block_id:block.id,matched:!!exercise,suggestions:exercise?[]:candidates.map(c=>c.exercise),sets})
  }
  const parseFormat=line=>{
@@ -184,13 +184,14 @@ function parseGeneralComposite(lines,catalog){
     for(const raw of [pairing[1],pairing[2]]){
      const clean=raw.replace(/\.\s*(?:originalen|rir|pt-notat).*$/i,'').trim()
      const result=parseMovementLine(clean,null)
-     add(result.text,result.reps,result.quantity,block,line)
+     add(result.text,result.reps,result.quantity,block,line,null,result.loadKg)
     }
     parsedInline=true
     continue
    }
-   if(rowIndex===0||info||/^(?:notat|pt[-\s]?notat|original|skalering|variant|score|resultat|tips|oppvarming|warmup|tempo)\b/i.test(line))continue
-   if(/^(\d{1,3}(?:\s*x\s*\d{1,3})?\s+(?:\d+(?:[.,]\d+)?\s*(?:m|km|cal|sek)\s+)?[\p{L}])/iu.test(line)){
+   if(rowIndex===0||info||readFixedTiming(line)||/^\d+\s*(?:arbeidsintervall|work intervals)\b/i.test(line)||/^(?:notat|pt[-\s]?notat|original|skalering|variant|score|resultat|tips|oppvarming|warmup|tempo)\b/i.test(line))continue
+   if(suggestWodExercises(line,catalog,1)[0]?.score>=.95&&(readFixedTiming(segment.join('\n'))||/^(?:Intervall|Tabata|Row Intervals|Stasjonssirkel)$/.test(block.format)))movementLines.push(line)
+   else if(/^(\d{1,3}(?:\s*x\s*\d{1,3})?\s+(?:\d+(?:[.,]\d+)?\s*(?:m|km|cal|sek)\s+)?[\p{L}])/iu.test(line)){
     movementLines.push(line)
    } else if(!/^(?:\d+\s*(?:min|sek|rundar|rounds|sett)|(?:arbeid|kvile|pause)\b)/i.test(line)&&line.length>8){
     // No guessing: retain instruction for admin rather than introducing a fake movement.
@@ -199,28 +200,34 @@ function parseGeneralComposite(lines,catalog){
   }
   if(!block.format)throw Error('Fann del '+mark.letter.toUpperCase()+', men ikkje eintydig WOD-format. Legg formatet inn i teksten.')
   const timed=/^(?:Intervall|Tabata|Row Intervals|Stasjonssirkel)$/.test(block.format)
+  const fixedTiming=readFixedTiming(segment.join('\n'))
+  if(fixedTiming)block.fixedTiming=fixedTiming
   if(timed){
    const joint=segment.join(' ')
    const intervals=joint.match(/\b(\d{1,3})\s*(?:\/|sek\s*arbeid\s*[,+]\s*)\s*(\d{1,3})\s*(?:sek)?\b/i)
    const rounds=joint.match(/(?:[x×]\s*|rundar?\s*[:=]?\s*|rounds?\s*[:=]?\s*)(\d{1,2})\b/i)
-   if(intervals){block.workSeconds=Number(intervals[1]);block.restSeconds=Number(intervals[2])}
+   if(fixedTiming){block.workSeconds=fixedTiming.workSeconds;block.restSeconds=fixedTiming.restSeconds}
    else if(block.format==='Tabata'){block.workSeconds=20;block.restSeconds=10}
-   else warnings.push('Arbeid/kvile må kontrollerast i '+block.title)
+   else {block.workSeconds='';block.restSeconds='';warnings.push('Arbeid/kvile må kontrollerast i '+block.title)}
    if(rounds)block.rounds=Number(rounds[1])
    else if(block.format==='Tabata')block.rounds=8
-   else warnings.push('Rundar må kontrollerast i '+block.title)
+   else {block.rounds='';warnings.push('Rundar må kontrollerast i '+block.title)}
   }
   for(const line of movementLines){
    const sets=line.match(/^(\d{1,2})\s*[x×]\s*(\d{1,3})\s+(.+)$/i)
    const parsed=parseMovementLine(sets?sets[2]+' '+sets[3]:line,null)
-   if(parsed.text&&parsed.text.length<100)add(parsed.text,parsed.reps,parsed.quantity,block,line,sets?Number(sets[1]):null)
+   const bare=!parsed.quantity&&normalize(parsed.text)===normalize(line)
+   if(parsed.text&&parsed.text.length<100)add(parsed.text,bare&&(timed||fixedTiming)?'':parsed.reps,parsed.quantity,block,line,sets?Number(sets[1]):null,parsed.loadKg)
   }
   if(!items.some(x=>x.block_id===block.id))throw Error(block.title+' manglar tydelege øvingslinjer. Kontroller OCR-teksten.')
-  if(timed&&!block.minutes && block.rounds && block.workSeconds){
-   const count=items.filter(x=>x.block_id===block.id).length*block.rounds
-   block.minutes=Math.max(1,Math.ceil((count*block.workSeconds+(count-1)*(block.restSeconds??0))/60))
+  if(timed){
+   const count=items.filter(x=>x.block_id===block.id).length
+   const slots=segment.join(' ').match(/\b(\d{1,3})\s*(?:arbeidsintervall|work intervals)\b/i)
+   if(slots)block.rounds=Number(slots[1])/count
+   const plan=fixedIntervalSummary({...block,exerciseCount:count})
+   if(plan)block.minutes=plan.totalSeconds/60
   }
-  if(!block.minutes)throw Error(block.title+' manglar varigheit eller tidsgrense. Legg inn minutt før import.')
+  if(!block.minutes&&!timed)throw Error(block.title+' manglar varigheit eller tidsgrense. Legg inn minutt før import.')
   if(parsedInline&&movementLines.length===0)warnings.push('Kontroller repstal og E*MOM-timer i '+block.title)
   blocks.push(block)
  }
@@ -236,7 +243,7 @@ function parseGeneralComposite(lines,catalog){
  const unrecognized=items.filter(item=>!item.matched)
  const candidateTitle=lines[0].replace(/^(?:økt|okt)\s*\d+\s*[-–—:.·]?\s*/i,'').trim()
  const name=found[0].index>0&&candidateTitle.length>2&&candidateTitle.length<100?candidateTitle:'Samansett WOD'
- return {name,format:COMPOSITE_FORMAT,minutes:blocks.reduce((n,b)=>n+b.minutes,0),rounds:1,blocks,items,ignored:[],warnings,
+ return {name,format:COMPOSITE_FORMAT,minutes:Math.ceil(blocks.reduce((n,b,i)=>n+(Number(b.minutes)||0)+(i<blocks.length-1&&b.transitionMode==='timed'?Number(b.transitionSeconds)/60:0),0)),rounds:1,blocks,items,ignored:[],warnings,
   notes:'Importert kjeldetekst:\n'+lines.join('\n'),unmatched:unrecognized.map(item=>item.name)}
 }
 
@@ -309,7 +316,7 @@ export function parseWodImport(source,exerciseCatalog=[]){
   const candidates=suggestWodExercises(text,exerciseCatalog)
   const exact=candidates.find(x=>x.score>=.95)
   const exercise=exact?.exercise||null
-  items.push({name:exercise?.name||text,rawName:text,sourceLine:line,exercise,reps,quantity,loadKg,matched:!!exercise,suggestions:exercise?[]:candidates.map(x=>x.exercise)})
+  items.push({name:exercise?.name||text,rawName:text,sourceLine:line,exercise,reps:!quantity&&normalize(text)===normalize(line)&&(fixedTiming||isFixedInterval(formatFrom(whole)))?'':reps,quantity,loadKg,matched:!!exercise,suggestions:exercise?[]:candidates.map(x=>x.exercise)})
  }
  if(!items.length)throw new Error('Fann ingen sikre øvingslinjer. Kontroller teksten og prøv igjen.')
  const format=formatFrom(whole)||(scheme?'For Time':null)

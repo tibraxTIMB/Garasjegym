@@ -72,3 +72,16 @@ test('Original single-format Fran still imports',()=>{
  assert.equal(parsed.blocks,undefined)
  assert.equal(parsed.items.length,2)
 })
+
+
+test('Gazelle keeps fixed timing in composite EMOM, preserves transition and distinguishes slots',()=>{
+ const text='Haldning og styrke\nDel A – E1MOM9\n20/40\n20 sec Plank\n20 sec Air squat\n20 sec Pull-up\nPause 90 sek\nDel B – Intervall 20/40\n9 arbeidsintervall\n5 Air squat\n5 Pull-up\n5 Plank';
+ const parsed=parseWodImport(text,library);
+ assert.equal(parsed.blocks[0].format,'E1MOM');
+ assert.deepEqual(parsed.blocks[0].fixedTiming,{workSeconds:20,restSeconds:40});
+ assert.equal(parsed.blocks[0].transitionSeconds,90);
+ assert.equal(parsed.blocks[1].rounds,3);
+ assert.equal(Math.round(parsed.blocks[1].minutes*60),500);
+ assert.equal(parsed.items.length,6);
+ assert.equal(validateCompositeBlocks(parsed.blocks,parsed.items),'');
+});

@@ -128,3 +128,10 @@ test('fixed interval import distinguishes full cycles from individual work slots
  assert.equal(draft.rounds,3);assert.equal(draft.items.length,3);assert.deepEqual(draft.fixedTiming,{workSeconds:20,restSeconds:40});
  assert.equal(fixedIntervalSummary({workSeconds:20,restSeconds:40,rounds:9,exerciseCount:1}).totalIntervals,9);
 });
+
+
+test('bare timed interval movements do not invent ten reps',()=>{
+ const draft=parseWodImport('Intervall 20/40\n3 rundar\nAir squat\nPull-up',[{name:'Air squat'},{name:'Pull-up'}]);
+ assert.deepEqual(draft.items.map(x=>x.reps),['','']);
+ assert.equal(draft.rounds,3);
+});
