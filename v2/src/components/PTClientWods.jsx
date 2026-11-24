@@ -1,6 +1,7 @@
 import {lazy,Suspense,useEffect,useMemo,useState} from 'react'
 import {ArrowRight,CheckCircle2,ClipboardList,Dumbbell,Plus,RefreshCw} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
+import PTWodReview from './PTWodReview.jsx'
 import './pt-client-followup.css'
 
 const WodBuilder=lazy(()=>import('./WodBuilder.jsx'))
@@ -17,11 +18,13 @@ export default function PTClientWods({clientId,clientName='',mode='full',planSes
  const [error,setError]=useState('')
  const [revision,setRevision]=useState(0)
  const [showAssign,setShowAssign]=useState(false)
+ const [openedReview,setOpenedReview]=useState(null)
  useEffect(()=>{
   let active=true
   setAssignments([])
   setError('')
   setShowAssign(false)
+  setOpenedReview(null)
   if(!clientId){setLoading(false);return()=>{active=false}}
   setLoading(true)
   supabase.from('pt_wod_assignments')
@@ -50,14 +53,20 @@ export default function PTClientWods({clientId,clientName='',mode='full',planSes
     <strong>{row.wods?.name||'WOD frå tidlegare tildeling'}</strong>
     <small>{[row.wods?.format,row.due_date?'Frist '+shortDate(row.due_date):null,row.completed_at?'Fullført '+shortDate(row.completed_at):null].filter(Boolean).join(' · ')}</small>
    </div>
-   <span className={'ptfollow-status '+(completedStatus(row.status)?'is-done':'')}>{statusLabel(row.status)}</span>
+   <div className="ptfollow-wod-actions">
+    <span className={'ptfollow-status '+(completedStatus(row.status)?'is-done':'')}>{statusLabel(row.status)}</span>
+    {completedStatus(row.status)&&row.workout_log_id&&<button type="button" className="secondary-button" aria-expanded={openedReview==='assignment:'+row.id} onClick={()=>setOpenedReview(openedReview==='assignment:'+row.id?null:'assignment:'+row.id)}>{openedReview==='assignment:'+row.id?'Lukk resultat':'Sjå resultat'}</button>}
+   </div>
   </article>
  const renderProgram=session=><article className="ptfollow-wod-row" key={session.id}>
    <div className="ptfollow-wod-icon"><ClipboardList size={17}/></div>
    <div className="ptfollow-wod-main"><strong>{session.wodName}</strong>
     <small>{[session.title&&session.title!==session.wodName?session.title:null,session.scheduled_date?'Planlagt '+shortDate(session.scheduled_date):null].filter(Boolean).join(' · ')||'WOD i PT-treningsplan'}</small>
    </div>
-   <span className={'ptfollow-status '+(completedStatus(session.status)?'is-done':'')}>{completedStatus(session.status)?'Merkt gjennomført':'I treningsplan'}</span>
+   <div className="ptfollow-wod-actions">
+    <span className={'ptfollow-status '+(completedStatus(session.status)?'is-done':'')}>{completedStatus(session.status)?'Gjennomført':'I treningsplan'}</span>
+    {completedStatus(session.status)&&session.workout_log_id&&<button type="button" className="secondary-button" aria-expanded={openedReview==='program:'+session.id} onClick={()=>setOpenedReview(openedReview==='program:'+session.id?null:'program:'+session.id)}>{openedReview==='program:'+session.id?'Lukk resultat':'Sjå resultat'}</button>}
+   </div>
   </article>
  return <section className={'ptfollow ptfollow-'+mode} aria-label={'PT-tildelte WOD-ar for '+clientName}>
    <div className="ptfollow-heading">
@@ -91,6 +100,7 @@ export default function PTClientWods({clientId,clientName='',mode='full',planSes
      {shownProgram.map(renderProgram)}
      <small className="ptfollow-footnote">Programstatus er separat frå direkte WOD-tildeling og privat treningslogg.</small>
     </div>}
+    {openedReview&&(()=>{const [type,id]=openedReview.split(':');const a=type==='assignment'?assignments.find(row=>row.id===id):null;const p=type==='program'?programWods.find(row=>row.id===id):null;return a?<PTWodReview key={openedReview} assignmentId={a.id} clientName={clientName} wodName={a.wods?.name||'Tildelt WOD'} onClose={()=>setOpenedReview(null)}/>:p?<PTWodReview key={openedReview} programSessionId={p.id} clientName={clientName} wodName={p.wodName} onClose={()=>setOpenedReview(null)}/>:null})()}
     {preview&&<p className="ptfollow-footnote">Du ser berre PT-tilknytte WOD-ar, ikkje andre treningsøkter.</p>}
    </>}
    {!preview&&showAssign&&<div className="ptfollow-assignment">
