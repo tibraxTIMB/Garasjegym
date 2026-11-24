@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useState} from 'react'
 import {ArrowLeft,Award,CheckCircle2,ChevronDown,MessageSquareText,Send,ShieldCheck} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
-import {dosageLabel,formatDuration,pacingReview,plannedDoseForExercise,ptDosingOptions,ptIsAmrapPart,ptPartCompletion,ptPartScore,ptReviewHighlights,ptRoundSplits,validRoundSplits} from '../lib/ptWodReview.js'
+import {dosageLabel,formatDuration,pacingReview,plannedDoseForExercise,ptDosingOptions,ptIsAmrapPart,ptPartCompletion,ptPartScore,ptPrescribedWorkContext,ptReviewHighlights,ptRoundSplits,validRoundSplits} from '../lib/ptWodReview.js'
 
 const formattedDate=value=>value?new Date(value+'T12:00:00').toLocaleDateString('nn-NO',{day:'numeric',month:'long',year:'numeric'}):'Dato ikkje registrert'
 const array=value=>Array.isArray(value)?value:[]
@@ -127,7 +127,7 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
       </span><span className="ptreview-disclosure-right"><span className={'ptreview-part-state is-'+completion.kind}>{completion.label}</span><ChevronDown size={18}/></span></summary>
       <div className="ptreview-disclosure-content">
        {score&&<div className="ptreview-part-score"><span>Resultat</span><strong>{score}</strong></div>}
-       {completion.kind==='early'&&<p className="ptreview-insight is-review">{completion.detail} Sjekk om det var manuell overgang, pause eller ufullført del før du vurderer doseringa.</p>}
+       {['early','manual'].includes(completion.kind)&&<p className={'ptreview-insight '+(completion.kind==='early'?'is-review':'is-note')}>{completion.detail}</p>}
        {completion.kind==='unknown'&&<p className="ptfollow-footnote">Det finst ikkje sikker stadfesting på at denne delen er fullført.</p>}
        {isAmrapPart&&renderPacing(splits)}
        {!isAmrapPart&&<p className="ptfollow-footnote">Planlagt tid: {Number(part.duration_seconds)>0?formatDuration(part.duration_seconds):'ikkje oppgjeven'}. Registrert tid: {partTime>0?formatDuration(partTime):'ikkje registrert'}.</p>}
@@ -142,14 +142,16 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
    {exerciseResults.length>0&&<details className="ptreview-disclosure ptreview-dose">
     <summary><span className="ptreview-disclosure-main"><strong><CheckCircle2 size={16}/> Planlagt og utført dosering</strong><small>{exerciseResults.length} øvingar · opna for sett, reps og vekt</small></span><ChevronDown size={18}/></summary>
     <div className="ptreview-disclosure-content">
-     <p className="ptfollow-footnote">Berre verdiar som vart registrerte, er viste som utførte. Manglande reps er ikkje det same som at øvinga ikkje vart gjort.</p>
+     <p className="ptfollow-footnote">Når ein AMRAP- eller EMOM-del er registrert gjennomført, er WOD-oppsettet utgangspunktet dersom ingen avvik er meldt. Separate sett, repetisjonar og vekter blir berre viste som målingar når dei faktisk er registrerte.</p>
      {exerciseResults.map((ex,i)=>{
       const target=plannedDoseForExercise(prescriptionSchema,ex.exercise_name,result?.result_data?.prescription_level||'rx')
       const sets=array(ex.sets)
+      const work=ptPrescribedWorkContext(result,prescriptionSchema,ex)
       return <div className="ptreview-exercise" key={String(ex.block_id||'')+':'+i}>
        <strong>{ex.exercise_name||'Øving'}</strong>
-       {target&&<small className="ptreview-prescribed">Planlagt: {target}</small>}
-       {sets.some(set=>set.reps!=null||set.load_kg!=null||set.height_cm!=null||set.time_seconds!=null||set.time_text)?sets.map((set,j)=><small key={j}>Sett {j+1}: {formatExerciseSet(set)||'Ingen måling registrert'}{set.reps==null&&[set.load_kg,set.height_cm,set.time_seconds].some(x=>x!=null)?' · reps ikkje registrerte':''}</small>):<small className="ptreview-missing">Utført arbeid ikkje detaljregistrert. Det tyder ikkje at øvinga ikkje vart gjennomført.</small>}
+       {target&&<small className="ptreview-prescribed">WOD-oppsett: {target}</small>}
+       {work&&<small className={'ptreview-work-context is-'+work.kind}>{work.text}</small>}
+       {sets.some(set=>set.reps!=null||set.load_kg!=null||set.height_cm!=null||set.time_seconds!=null||set.time_text)?sets.map((set,j)=><small key={j}>Registrert · sett {j+1}: {formatExerciseSet(set)||'Ingen måling registrert'}</small>):<small className="ptreview-missing">Ingen separate settmålingar. {work?.kind==='assumed'?'WOD-oppsettet gjeld når ingen avvik er meldt.':'Dette dokumenterer ikkje at øvinga vart hoppa over.'}</small>}
        {ex.row_value!=null&&<small>Resultat: {ex.row_value} {ex.row_unit||''}</small>}
       </div>
      })}
