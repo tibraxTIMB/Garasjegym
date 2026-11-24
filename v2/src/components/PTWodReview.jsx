@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useState} from 'react'
-import {Activity,ArrowLeft,Award,CheckCircle2,ChevronDown,Clock3,MessageSquareText,Send,ShieldCheck} from 'lucide-react'
+import {ArrowLeft,Award,CheckCircle2,ChevronDown,MessageSquareText,Send,ShieldCheck} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import {dosageLabel,formatDuration,pacingReview,plannedDoseForExercise,ptDosingOptions,ptIsAmrapPart,ptPartCompletion,ptPartScore,ptReviewHighlights,ptRoundSplits,validRoundSplits} from '../lib/ptWodReview.js'
 
@@ -42,9 +42,7 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
   return()=>{active=false}
  },[assignmentId,programSessionId])
  const laps=useMemo(()=>validRoundSplits(result),[result])
- const pace=useMemo(()=>pacingReview(result),[result])
  const metrics=useMemo(()=>ptReviewHighlights(result),[result])
- const maxLap=Math.max(1,...laps)
  const isAmrap=String(result?.format||'').toLowerCase()==='amrap'||['couplet','triplet'].includes(String(result?.format||'').toLowerCase())&&result?.result_data?.combination_mode==='AMRAP'
  const exerciseResults=array(result?.result_data?.exercise_results)
  const blockResults=array(result?.result_data?.block_summary)
