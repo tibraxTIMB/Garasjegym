@@ -78,6 +78,8 @@ function TimerPanel({id,title,layout,onMove,onResize,onLock,locked,children,devi
   <div className="timer-panel-content">{children}</div>
  </section>
 }
+// Keep the unlocked audio context through automatic composite WOD transitions.
+let sharedTrainingAudioContext=null
 function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], prescriptionLevel = 'rx', timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, finishLabel = 'Avslutt', onBackground = () => {}, onEditWorkout = null, visible = true, originLabel = 'EIGA ØKT', wodName = '', autoStartToken = 0, autoStartOnMount = false, resumeState = null }) {
   const timerConfigKey = JSON.stringify({format,minutes,seconds,timerSettings})
   const lastTimerConfigKey = useRef(timerConfigKey)
@@ -148,7 +150,6 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   useEffect(()=>{try{localStorage.setItem('garasjegym.timer.sound_volume',String(soundVolume))}catch{/* Valfritt */}},[soundVolume])
   const soundOnRef = useRef(soundOn)
   soundOnRef.current = soundOn
-  const audioContextRef = useRef(null)
   const lastCountdownCueRef = useRef({deadline:null,second:null})
   const lastRunningCueSecondRef = useRef(-1)
   const [showTimerSettings, setShowTimerSettings] = useState(false)
@@ -303,8 +304,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     try {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext
       if (!AudioContextClass) return null
-      if (!audioContextRef.current || audioContextRef.current.state === 'closed') audioContextRef.current = new AudioContextClass()
-      const context = audioContextRef.current
+      if (!sharedTrainingAudioContext || sharedTrainingAudioContext.state === 'closed') sharedTrainingAudioContext = new AudioContextClass()
+      const context = sharedTrainingAudioContext
       if (context.state === 'suspended') context.resume()?.catch(()=>{})
       return context
     } catch { return null }
@@ -320,7 +321,6 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     const context = ensureAudioContext()
     if (context) playTrainingSignal(context, signal, volumeRef.current, prefs.audioProfile)
   }
-  useEffect(() => () => { audioContextRef.current?.close?.().catch?.(()=>{}) }, [])
 
   useEffect(() => {
     // Never erase an in-progress clock on the initial mount/StrictMode replay.

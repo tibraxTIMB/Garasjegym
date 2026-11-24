@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, trainingSignalPattern, playTrainingTone, synthesizeTrainingCue } from '../src/lib/timerCues.js'
+import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, trainingSignalPattern, playTrainingTone, playTrainingSignal, synthesizeTrainingCue } from '../src/lib/timerCues.js'
 
 test('ten-second start only sounds on three, two, one and start',()=>{
   assert.deepEqual(Array.from({length:11},(_,i)=>countdownSignal(10-i)).filter(Boolean),['tick-3','tick-2','tick-1','start'])
