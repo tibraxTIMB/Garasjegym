@@ -14,7 +14,7 @@ export default function Safehouse({profile}){
   setError('')
   try{
    if(file.size>16384)throw Error('Vel berre den vesle SAFEHOUSE-kvitteringa, aldri databasefila.')
-   const value=checkSafehouseReceipt(JSON.parse(await file.text()))
+   const value=checkSafehouseReceipt(JSON.parse((await file.text()).replace(/^\uFEFF/,'')))
    localStorage.setItem(key,JSON.stringify(value));setReceipt(value)
   }catch(e){setError(e.message||'Kunne ikkje lesa kvitteringa.')}
  }
