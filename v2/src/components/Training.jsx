@@ -1263,14 +1263,14 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         }).usesLoad,
         sets: setsForResult.length ? setsForResult.map(set => ({
           reps: customComplex?'':(fillFixedEmom||fillStandaloneEmom) ? String(Number(set.reps)>0?set.reps:plannedReps) : clearPlannedResults ? '' : set.reps == null ? '' : String(set.reps),
-          load_kg: customComplex||clearPlannedResults ? '' : set.load_kg == null ? '' : String(set.load_kg),
+          load_kg: clearPlannedResults ? '' : customComplex ? '' : set.load_kg == null ? '' : String(set.load_kg),
           time_text: clearPlannedResults ? '' : set.tempo || '',
           time_seconds: '',
           rir:'',
           height_cm: clearPlannedResults ? '' : set.height_cm == null ? String(item.levels?.[wodLevel]?.heightCm ?? item.levels?.rx?.heightCm ?? Object.values(item.levels||{}).find(level=>level?.heightCm!=null)?.heightCm ?? item.height_cm ?? '') : String(set.height_cm),
         })) : [{
-          reps: customComplex||clearPlannedResults ? '' : item.reps == null ? '' : String(item.reps),
-          load_kg: customComplex||clearPlannedResults ? '' : item.load_kg == null ? '' : String(item.load_kg),
+          reps: clearPlannedResults ? '' : customComplex ? '' : item.reps == null ? '' : String(item.reps),
+          load_kg: clearPlannedResults ? '' : customComplex ? '' : item.load_kg == null ? '' : String(item.load_kg),
           time_text: '',
           time_seconds: '',
           rir:'',
