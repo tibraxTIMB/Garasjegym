@@ -1,6 +1,7 @@
 import {useEffect,useRef} from 'react'
 import {createPortal} from 'react-dom'
-import {Trophy,X} from 'lucide-react'
+import {X} from 'lucide-react'
+import RekordGorilla from './RekordGorilla.jsx'
 import './pr-victory-overlay.css'
 export default function PRVictoryOverlay({victories,onClose}){
  const close=useRef(onClose),button=useRef(null)
@@ -16,6 +17,6 @@ export default function PRVictoryOverlay({victories,onClose}){
  if(!victories.length)return null
  return createPortal(<div className="gg-victory-overlay" role="dialog" aria-modal="true" aria-labelledby="gg-victory-title">
   <div className="gg-victory-rays" aria-hidden="true"/>
-  <div className="gg-victory-content"><div className="gg-victory-emblem"><Trophy size={76} strokeWidth={1.5}/></div><p>THE BIG SEVEN · STURMKOPF</p><h2 id="gg-victory-title">PR VICTORY</h2><div className="gg-victory-subtitle">NY PERSONLEG REKORD!</div><div className="gg-victory-results">{victories.map(p=><article key={p.name}><span>{p.label}</span><strong>{p.load_kg} <small>kg</small></strong><div>{p.previous_kg} kg → {p.load_kg} kg · +{Number((p.load_kg-p.previous_kg).toFixed(3))} kg</div></article>)}</div><button ref={button} type="button" className="gg-victory-close" onClick={()=>close.current()}><X size={19}/> Vidare</button></div>
+  <div className="gg-victory-content"><p>49 GARASJEGYM · THE BIG SEVEN</p><h2 id="gg-victory-title">DU HAST <em>REKORD!</em></h2><RekordGorilla/><div className="gg-victory-subtitle">NY PERSONLEG REKORD!</div><div className="gg-victory-results">{victories.map(p=><article key={p.name}><span>{p.label}</span><strong>{Number(p.load_kg).toLocaleString('nn-NO')} <small>kg</small></strong><div className="gg-victory-gain">+{Number((p.load_kg-p.previous_kg).toFixed(3)).toLocaleString('nn-NO')} kg <span>frå førre rekord</span></div><div className="gg-victory-previous">Førre rekord: {Number(p.previous_kg).toLocaleString('nn-NO')} kg</div></article>)}</div><button ref={button} type="button" className="gg-victory-close" onClick={()=>close.current()}><X size={19}/> Vidare</button></div>
  </div>,document.body)
 }

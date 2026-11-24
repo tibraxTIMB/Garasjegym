@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
 import {findPRVictories,workoutPRVictories,isPRVictorySoundEnabled,setPRVictorySoundEnabled} from '../src/lib/prVictory.js'
 const lift=(name,kg,reps=1)=>({exercise_name:name,sets:[{load_kg:kg,reps}]})
 const previous={workout_exercises:[lift('Deadlift',80),lift('Kettlebell swing',16),lift('Bench press',60)]}
@@ -19,3 +20,5 @@ test('historical marker requires the actual matching weight and positive repetit
 })
 
 test('PR sound is an independent preference and never disables ordinary timer sounds',()=>{const data=new Map([['garasjegym.timer.sound_enabled','on']]);const storage={getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)};assert.equal(isPRVictorySoundEnabled(storage),true);setPRVictorySoundEnabled(false,storage);assert.equal(isPRVictorySoundEnabled(storage),false);assert.equal(data.get('garasjegym.timer.sound_enabled'),'on');setPRVictorySoundEnabled(true,storage);assert.equal(isPRVictorySoundEnabled(storage),true)})
+
+test('celebration shows real record and gain with official mascot logo and accessible motion',()=>{const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');const o=read('../src/components/PRVictoryOverlay.jsx');const m=read('../src/components/RekordGorilla.jsx');const c=read('../src/components/pr-victory-overlay.css');assert.match(o,/DU HAST <em>REKORD!/);assert.match(o,/p\.load_kg-p\.previous_kg/);assert.match(o,/Førre rekord:/);assert.match(m,/garasjegym-49-512\.png/);assert.match(m,/href=\{logo\} x="130" y="149"/);assert.match(c,/prefers-reduced-motion:reduce/);assert.match(c,/orientation:landscape/)})
