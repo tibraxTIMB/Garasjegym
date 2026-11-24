@@ -55,8 +55,8 @@
     "test:composite-wod": "node --test scripts/composite-wod.test.mjs",
     "test:wod-import-structured": "node --test scripts/wod-import-structured.test.mjs",
     "test:infotainment-home-pwa": "node --test scripts/infotainment-home-pwa.test.mjs scripts/startup-intro.test.mjs scripts/safehouse.test.mjs",
-    "prebuild": "node scripts/render-training-audio.mjs",
-    "predev": "node scripts/render-training-audio.mjs"
+    "prebuild": "node scripts/render-training-audio.mjs && node scripts/build-safehouse.mjs",
+    "predev": "node scripts/render-training-audio.mjs && node scripts/build-safehouse.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.119.2",

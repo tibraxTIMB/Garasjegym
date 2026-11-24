@@ -1,57 +1,50 @@
-GARASJEGYM SAFEHOUSE 1.0 - Windows 11
-===================================
-0 kr. No installation/admin rights required in principle. Your employer's policies
-may still block portable executables, scripts, network access or private storage.
-DO NOT bypass those policies. Use a personal PC instead if not approved.
+GARASJEGYM SAFEHOUSE - START HER
+=================================
+GRATIS. Bruk berre ein PC og ei kryptert privat lagring som du har lov til a bruke.
+ZIP-fila er ikkje passordkryptert. Ho inneheld private medlemsdata.
+Ikkje bruk jobben sin OneDrive, e-post, GitHub eller ukryptert lagring.
+Dersom arbeidsgivar sperrar program eller privat lagring: bruk privat PC.
+Ingen sperrer skal omgaast.
 
-FIRST TIME
-1. Confirm employer permission before processing private member data. Prepare a
-   private encrypted drive/folder (e.g. already configured encrypted USB).
-   SAFEHOUSE does NOT encrypt files itself. Do not use work OneDrive or an
-   unencrypted Downloads/Desktop folder. Use an approved personal PC if unsure.
-2. Download Windows PostgreSQL 17 ZIP (binaries, not installer):
-   https://www.postgresql.org/download/windows/
+FORSTE GONG (me kan gjera dette saman)
+1. Pakk ut SAFEHOUSE-Windows.zip.
+2. Last ned PostgreSQL 17 Windows x64 ZIP (ikkje installasjonsprogram):
    https://www.enterprisedb.com/download-postgresql-binaries
-   Extract the whole ZIP; note the bin folder. Do not move individual EXEs without DLLs.
-3. Open https://supabase.com/dashboard/project/izwzwvlexqxqewzijhhd
-   This is the live app's database although its name is garasjegym-2-test.
-   Connect > Session pooler > host, port 5432. Use database password.
-   Do not share passwords or connection strings with ChatGPT or GitHub.
-4. Run Safehouse.ps1 in PowerShell if approved (right-click Run with PowerShell
-   or open a normal PowerShell window and run .\Safehouse.ps1 from its directory).
-   If blocked by policy or runtime dependencies, stop. Do not use Bypass,
-   Unblock-File, change execution policy, or request elevation to evade rules.
-   Use trusted system CA or an approved CA bundle; no downgrade from verify-full.
-5. Follow prompts. The script creates a dated folder only on your chosen
-   encrypted storage. A failure leaves an incomplete folder, not a success receipt.
-6. Open GarasjeGym > Drift > SAFEHOUSE and import SAFEHOUSE-receipt.json only.
-   Never upload the .pgbackup, roles.sql, archive inventory or other data files.
-   Copy entire folder to separate encrypted private media. Keep password safely.
+   Pakk ut heile ZIP-fila. Du skal finna ei mappe som heiter bin.
+3. Dobbeltklikk TA-BACKUP.cmd i SAFEHOUSE-mappa.
+   Vel bin-mappa og ei godkjend kryptert privat backupmappe.
+4. Opne https://supabase.com/dashboard/project/izwzwvlexqxqewzijhhd
+   Vel Connect > Session pooler (port 5432). Kopier berre Host.
+   Skriv databasepassordet lokalt. Ikkje del det med nokon.
+   Oppsettet blir hugsa; passord blir aldri lagra.
+   Dersom Windows eller TLS-kontrollen stoppar prosessen, ikkje omgaa sperrer.
 
-WHAT IS INCLUDED
-A transactionally consistent pg_dump custom archive, roles without passwords,
-archive directory, exact GitHub branch-head source ZIP, SHA256 and a local
-receipt. Auth users/identities and each public table data entry are checked.
-The archive is decoded in full; no database restore is performed.
-The receipt is self-reported local evidence, not independent proof.
-The ZIP contains source at capture time, not complete Git history. Save a
-Git mirror separately if permitted, and note the actually deployed revision.
+KVAR GONG ETTERPAA
+1. Dobbeltklikk TA-BACKUP.cmd.
+2. Trykk Enter og skriv databasepassordet.
+3. Vent paa FERDIG. Mappa med backup blir opna.
+   Du faar EI fil, til doemes GarasjeGym-Backup-2026-11-24_13-00-00.zip.
+4. I appen: Drift > SAFEHOUSE > Kontroller den daterte ZIP-fila.
+   Berre kontrollkvitteringa blir lesen i nettlesaren. Ingenting blir lasta opp.
+5. Kopier ZIP-fila til ei separat godkjend kryptert privat lagring.
+   Ta ny kopi dagleg naar mogleg og for endringar. Behald fleire datoar.
 
-LIMITS
-This raw PostgreSQL logical archive is not a turnkey Supabase restore:
-managed schemas/roles need careful selective recovery. The official Supabase
-CLI workflow uses Docker and filters Supabase internals. Do not attempt a raw
-restore over production. A qualified restore on an isolated compatible instance
-is needed to verify counts, UUID relationships, auth login, RLS and app behavior.
-Storage object bytes are not included; script stops if objects exist at probe.
-Separately save Edge Function source and secret names, Auth redirect/provider
-settings, SMTP and project config in encrypted storage. Store secret values in
-a private password manager. New project keys and sessions may change.
-A new project may incur cost; no paid resources are created by SAFEHOUSE.
+KVA LIGG INNI ZIP-FILA?
+START-HER.txt
+01-DATABASE: database.pgbackup, roles.sql
+02-APP: app-source.zip
+03-KONTROLL: SAFEHOUSE-receipt.json, SHA256SUMS.txt, archive-inventory.txt
+04-GJENOPPRETTING: START-HER.txt, capture-notes.txt
+
+TEKNISK GJENOPPRETTING (ikkje for dagleg bruk)
+Arkivet inneheld konsistent PostgreSQL logisk dump, schema, data og Auth-brukarar.
+Tabellinventar, full lesing av dump og SHA256 av ZIP-innhald vert kontrollert.
+Appkoden er branch-head ved backup, ikkje full Git-historikk eller deploybevis.
+Gjenoppretting er IKKJE testa. Raa pg_dump inkluderer Supabase-systemobjekt;
+ikkje importer blindt i produksjon. Bruk isolert kompatibel Supabase/PostgreSQL
+og selektiv restore etter offisiell rettleiing. Verifiser brukar-ID, data, RLS,
+innlogging og funksjonar. Supabase CLI sin offisielle restore nyttar Docker.
+Prosjektinnstillingar, Edge Function-secrets, Auth-provideroppsett og Storage-filer
+maa sikrast separat. Skriptet stoppar dersom Storage-objekt finst ved kontroll.
+Ta vare paa loeyndomar i privat passordhandterar; aldri i GitHub.
 https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore
-
-ROUTINE
-Run daily when possible, before database changes and before major updates.
-Keep 7 daily, 4 weekly and several monthly copies according to your privacy needs.
-Do not delete the only backup. Check the copy on an independent encrypted drive.
-No automatic schedule or production changes are installed by this script.

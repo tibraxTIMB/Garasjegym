@@ -1,0 +1,22 @@
+import {readFileSync,writeFileSync} from 'node:fs'
+import {fileURLToPath} from 'node:url'
+// Small dependency-free stored ZIP (CRC32, local records, central directory).
+export function makeZip(entries){
+ const local=[],central=[];let offset=0
+ for(const [name,raw] of entries){
+  const filename=Buffer.from(name),data=Buffer.from(raw);let crc=0xffffffff
+  for(const byte of data){crc^=byte;for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0)}
+  crc=(crc^0xffffffff)>>>0
+  const h=Buffer.alloc(30);h.writeUInt32LE(0x04034b50);h.writeUInt16LE(20,4);h.writeUInt16LE(0x800,6);h.writeUInt16LE(33,12);h.writeUInt32LE(crc,14);h.writeUInt32LE(data.length,18);h.writeUInt32LE(data.length,22);h.writeUInt16LE(filename.length,26)
+  const c=Buffer.alloc(46);c.writeUInt32LE(0x02014b50);c.writeUInt16LE(20,4);c.writeUInt16LE(20,6);c.writeUInt16LE(0x800,8);c.writeUInt16LE(33,14);c.writeUInt32LE(crc,16);c.writeUInt32LE(data.length,20);c.writeUInt32LE(data.length,24);c.writeUInt16LE(filename.length,28);c.writeUInt32LE(offset,42)
+  local.push(h,filename,data);central.push(c,filename);offset+=h.length+filename.length+data.length
+ }
+ const directory=Buffer.concat(central),end=Buffer.alloc(22);end.writeUInt32LE(0x06054b50);end.writeUInt16LE(entries.length,8);end.writeUInt16LE(entries.length,10);end.writeUInt32LE(directory.length,12);end.writeUInt32LE(offset,16)
+ return Buffer.concat([...local,directory,end])
+}
+if(process.argv[1]===fileURLToPath(import.meta.url)){
+ const folder=new URL('../public/safehouse/',import.meta.url)
+ const names=['TA-BACKUP.cmd','Safehouse.ps1','LES-MEG.txt']
+ writeFileSync(new URL('SAFEHOUSE-Windows.zip',folder),makeZip(names.map(name=>[name,readFileSync(new URL(name,folder))])))
+ console.log('SAFEHOUSE Windows ZIP generated.')
+}

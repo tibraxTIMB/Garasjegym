@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
-import {checkSafehouseReceipt,safehouseAge,SAFEHOUSE_PROJECT} from '../src/lib/safehouse.js'
+import {checkSafehouseReceipt,safehouseAge,SAFEHOUSE_PROJECT,receiptFromBackupZip} from '../src/lib/safehouse.js'
 const sample={version:1,project:SAFEHOUSE_PROJECT,completed_at:'2026-11-24T10:00:00Z',archive_checked:true,auth_tables_present:true,public_tables_present:true,storage_objects:0,code_zip_checked:true,archive_sha256:'a'.repeat(64),archive_bytes:2048,code_commit:'b'.repeat(40)}
 test('receipt must match source project and prove structural checks; strips unrelated fields',()=>{
  const now=Date.parse('2026-11-24T12:00:00Z')
@@ -23,4 +23,12 @@ test('admin only, no backup payload upload, local tool checks archive before rec
  assert.match(ps,/TABLE DATA auth/)
  assert.ok(ps.indexOf('--file=NUL')<ps.indexOf('SAFEHOUSE-receipt.json'))
  assert.doesNotMatch(ps,/Set-ExecutionPolicy|ExecutionPolicy Bypass/)
+})
+
+import {makeZip} from './build-safehouse.mjs'
+test('one dated ZIP receipt can be read locally without opening database payload',async()=>{
+ const current={...sample,completed_at:new Date().toISOString()}
+ const entries=[['01-DATABASE/database.pgbackup','example'],['02-APP/app-source.zip','example'],['03-KONTROLL/SHA256SUMS.txt','example'],['04-GJENOPPRETTING/START-HER.txt','example'],['03-KONTROLL/SAFEHOUSE-receipt.json',JSON.stringify(current)]]
+ assert.equal((await receiptFromBackupZip(new Blob([makeZip(entries)]))).code_commit,current.code_commit)
+ await assert.rejects(receiptFromBackupZip(new Blob([makeZip(entries.slice(1))])))
 })
