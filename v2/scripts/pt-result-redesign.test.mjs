@@ -98,3 +98,15 @@ test('prescribed AMRAP and E3MOM movements count as WOD work unless athlete repo
  assert.equal(press.sets[0].reps,null)
  assert.equal(base.result_data.block_summary[0].elapsed,456)
 })
+
+test('EMOM prescription follows saved minute slots and standalone rotation',()=>{
+ const multi={format:'EMOM',result_data:{completed:true,prescription_level:'rx'}}
+ const schema={duration_seconds:600,interval:{work_every_seconds:60},items:[
+  {exercise_name:'Strict press',reps:5,levels:{rx:{reps:'5'}}},
+  {exercise_name:'Push Press',reps:3,levels:{rx:{reps:'3'}}}
+ ]}
+ assert.match(ptPrescribedWorkContext(multi,schema,{exercise_name:'Strict press',sets:[]}).text,/5 planlagde intervall × 5 reps/)
+ assert.match(ptPrescribedWorkContext(multi,schema,{exercise_name:'Push Press',sets:[]}).text,/5 planlagde intervall × 3 reps/)
+ const specific={...schema,items:[{...schema.items[0],minute_slot:'1, 4, 7'},schema.items[1]]}
+ assert.match(ptPrescribedWorkContext(multi,specific,{exercise_name:'Strict press',sets:[]}).text,/3 planlagde intervall × 5 reps/)
+})
