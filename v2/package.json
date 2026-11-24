@@ -21,7 +21,7 @@
     "test:pr-metrics": "node --test scripts/pr-metrics.test.mjs",
     "test:pr-directory": "node --test scripts/pr-directory.test.mjs",
     "test:invitation-flow": "node --test scripts/invitation-flow.test.mjs",
-    "test:workout-detail": "node --test scripts/workout-detail.test.mjs",
+    "test:workout-detail": "node --test scripts/workout-detail.test.mjs scripts/delete-workout.test.mjs",
     "test:calendar-ux": "node --test scripts/calendar-ux.test.mjs",
     "test:pt-calendar": "node --test scripts/pt-calendar-mobile.test.mjs",
     "test:wod-sides": "node --test scripts/wod-sides.test.mjs",

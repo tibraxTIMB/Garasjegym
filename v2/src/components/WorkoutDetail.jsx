@@ -1,6 +1,7 @@
 import {useEffect,useState} from 'react'
 import {ArrowLeft,CalendarDays,Check,Clock3,Dumbbell,Edit3,LoaderCircle,MoreHorizontal,Save,Trash2,Trophy,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
+import {deleteWorkoutAndLinkedRecords} from '../lib/deleteWorkout.js'
 import {formatWorkoutSeconds,formatWorkoutSet,optionalNumber,splitWorkoutNote} from '../lib/workoutDetail.js'
 import {suggestedEmomSets} from '../lib/workoutCorrections.js'
 import './workout-detail.css'
@@ -97,11 +98,11 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
 
  async function deleteWorkout(){
   setMenuOpen(false)
-  if(deleting||!window.confirm('Vil du slette «'+(workout.title||'Treningsøkt')+'» permanent frå treningsloggen? Eldre PR-noteringar kan bli ståande i arkivet.'))return
+  if(deleting||!window.confirm('Sletta «'+(workout.title||'Treningsøkt')+'» og PR-resultata frå denne økta? Andre økter og sjølvstendige PR-noteringar blir behaldne.'))return
   setError('');setDeleting(true)
   try{
-   const {data,error:deleteError}=await supabase.from('workout_logs').delete().eq('id',workout.id).eq('member_id',memberId).select('id').maybeSingle()
-   if(deleteError||!data)throw deleteError||new Error('Du har ikkje tilgang til å slette denne økta.')
+   const result=await deleteWorkoutAndLinkedRecords(supabase,workout.id,memberId)
+   if(result.cleanupError)window.alert('Økta er sletta, men eldre tilknytte PR-noteringar må kontrollerast i PR-senteret: '+result.cleanupError)
    onDeleted?.()
   }catch(deleteError){setError('Økta blei ikkje sletta: '+(deleteError.message||'Ukjend feil'))}
   finally{setDeleting(false)}
@@ -181,7 +182,7 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
    <header className="workout-detail-header">
     <button type="button" className="workout-detail-back" onClick={requestBack}><ArrowLeft size={19}/> Tilbake</button>
     <span className="workout-detail-header-tag"><Check size={14}/> Fullført</span>
-    {!editing&&<div className="workout-detail-options"><button type="button" className="workout-detail-more" aria-expanded={menuOpen} aria-label="Fleire val for økta" disabled={workout.detailLoading||!!workout.detailError||deleting} onClick={()=>setMenuOpen(value=>!value)}><MoreHorizontal size={22}/></button>{menuOpen&&<div className="workout-detail-menu"><button type="button" onClick={()=>beginEdit('note')}><Edit3 size={15}/> Rediger notat</button><button type="button" onClick={()=>beginEdit('correction')}><Trophy size={15}/> Korriger feil i resultat</button><button type="button" className="workout-detail-menu-delete" onClick={deleteWorkout}><Trash2 size={15}/> Slett økt</button></div>}</div>}
+    {!editing&&<div className="workout-detail-options"><button type="button" className="workout-detail-more" aria-expanded={menuOpen} aria-label="Fleire val for økta" disabled={workout.detailLoading||!!workout.detailError||deleting} onClick={()=>setMenuOpen(value=>!value)}><MoreHorizontal size={22}/></button>{menuOpen&&<div className="workout-detail-menu"><button type="button" onClick={()=>beginEdit('note')}><Edit3 size={15}/> Rediger notat</button><button type="button" onClick={()=>beginEdit('correction')}><Trophy size={15}/> Korriger feil i resultat</button><button type="button" className="workout-detail-menu-delete" onClick={deleteWorkout}><Trash2 size={15}/> Slett økt og tilknytte PR</button></div>}</div>}
    </header>
    <div className="workout-detail-scroll">
     <div className="workout-detail-intro">
@@ -233,6 +234,7 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
      {!workout.detailLoading&&!exercises.length&&<div className="empty-state">Ingen øvingsdetaljar er lagra på denne økta.</div>}
     </>}
    </div>
+   {!editing&&!workout.detailLoading&&!workout.detailError&&<footer className="workout-detail-delete-footer"><button type="button" disabled={deleting} onClick={deleteWorkout}><Trash2 size={17}/> {deleting?'Slettar …':'Slett feilregistrert økt'}</button><small>Fjern økta og PR-resultata frå denne gjennomføringa.</small></footer>}
    {editing&&<footer className="workout-detail-footer"><button type="button" className="workout-detail-cancel" disabled={saving} onClick={cancelEdit}><X size={17}/> Avbryt</button><button type="submit" form="workout-detail-edit-form" className="workout-detail-save" disabled={saving}>{saving?<LoaderCircle className="spin" size={16}/>:<Save size={17}/>} {saving?'Lagrar …':'Lagre endringar'}</button></footer>}
   </section>
  </div>

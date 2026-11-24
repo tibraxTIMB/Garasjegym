@@ -1127,7 +1127,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const filteredExercises = useMemo(() => exercises.filter(e => e.name.toLowerCase().includes(query.toLowerCase()) || (e.category || '').toLowerCase().includes(query.toLowerCase())), [exercises, query])
 
   function leaveWorkout() {
-    if (!window.confirm('Forkasta denne gjennomføringa? Resultatet blir ikkje lagra. Sjølve WOD-en ligg framleis i biblioteket.')) return
+    if (saving || !window.confirm('Forkasta denne økta utan å lagra? Ingen resultat eller PR blir registrerte. WOD-malen blir behalden.')) return
     setFinishOpen(false); setMode('home'); setRestoredTimerSnapshot(null); setSource(null); setClassSessionId(null); setItems([])
     setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
     clearTimerSnapshot()
@@ -1467,7 +1467,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       </div>
       {finishOpen&&<div className="workout-finish-backdrop" role="presentation">
         <section className="workout-finish-dialog gg-result-wizard" role="dialog" aria-modal="true" aria-labelledby="finish-workout-title">
-          <div className="workout-finish-head gg-result-header"><div><span className="section-kicker">ETTER ØKTA · REGISTRER RESULTAT</span><h3 id="finish-workout-title">{resultSummary?'Kontroller og lagre':(resultItem?.exercise_name||title||'Treningsøkt')}</h3><small>{resultSummary?title:(items.length?'Øving '+(activeExerciseIndex+1)+' av '+items.length:'Resultat')}</small></div><button type="button" className="danger-icon" aria-label="Lukk" onClick={()=>setFinishOpen(false)}>×</button></div>
+          <div className="workout-finish-head gg-result-header"><div><span className="section-kicker">ETTER ØKTA · REGISTRER RESULTAT</span><h3 id="finish-workout-title">{resultSummary?'Kontroller og lagre':(resultItem?.exercise_name||title||'Treningsøkt')}</h3><small>{resultSummary?title:(items.length?'Øving '+(activeExerciseIndex+1)+' av '+items.length:'Resultat')}</small></div><button type="button" className="gg-result-close" aria-label="Tilbake til økta utan å lagra" onClick={()=>setFinishOpen(false)} title="Tilbake til økta"><X size={20}/></button></div>
           <div className="gg-result-progress" aria-label="Framdrift">{items.map((item,index)=><button type="button" key={item.key} className={(!resultSummary&&activeExerciseIndex===index?'current ': '')+(reviewedResults[item.key]?'reviewed':'')} aria-label={'Øving '+(index+1)+': '+item.exercise_name} aria-current={!resultSummary&&activeExerciseIndex===index?'step':undefined} onClick={()=>selectResult(index)}/>)}</div>
           {error&&<div className="auth-error gg-result-error" role="alert">{error}</div>}
           <div ref={resultBodyRef} className="gg-result-body">
@@ -1521,7 +1521,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           </>}
           </div>
           <div className="gg-result-footer">
-            {resultSummary?<><div className="gg-result-nav"><button type="button" className="secondary-button" disabled={!items.length} onClick={()=>selectResult(Math.max(0,items.length-1))}>← Øvingar</button><button type="submit" className="primary-button" disabled={saving}><Save size={17}/>{saving?'Lagrar …':'Lagre økt'}</button></div><button type="button" className="text-button gg-result-discard" onClick={leaveWorkout}><Trash2 size={16}/> Forkast økta</button></>:<><div className="gg-result-nav"><button type="button" className="secondary-button" disabled={activeExerciseIndex===0} onClick={()=>selectResult(activeExerciseIndex-1)}>← Førre</button><button type="button" className="primary-button" onClick={nextResult}>{activeExerciseIndex<items.length-1?'Neste øving':'Kontroller resultat'} <ChevronRight size={19}/></button></div><button type="button" className="text-button gg-result-skip" onClick={()=>setResultSummary(true)}>Gå til samla resultatkontroll</button></>}
+            {resultSummary?<div className="gg-result-nav"><button type="button" className="secondary-button" disabled={!items.length||saving} onClick={()=>selectResult(Math.max(0,items.length-1))}>← Øvingar</button><button type="submit" className="primary-button" disabled={saving}><Save size={17}/>{saving?'Lagrar …':'Lagre økt'}</button></div>:<><div className="gg-result-nav"><button type="button" className="secondary-button" disabled={activeExerciseIndex===0} onClick={()=>selectResult(activeExerciseIndex-1)}>← Førre</button><button type="button" className="primary-button" onClick={nextResult}>{activeExerciseIndex<items.length-1?'Neste øving':'Kontroller resultat'} <ChevronRight size={19}/></button></div><button type="button" className="text-button gg-result-skip" onClick={()=>setResultSummary(true)}>Gå til samla resultatkontroll</button></>}
+            <button type="button" className="gg-result-discard" disabled={saving} onClick={leaveWorkout}><Trash2 size={18}/> Forkast økta · ikkje lagre</button>
           </div>
         </section>
       </div>}

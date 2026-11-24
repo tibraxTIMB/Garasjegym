@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
 import {UserRound,Trophy,Activity,LoaderCircle,Mail,ShieldCheck,ArrowRight,TrendingUp,ToggleLeft,ToggleRight,ChevronLeft,ChevronRight,Trash2,List,Calendar,Music2,Pencil,BookOpen,HeartPulse,Star,CalendarCheck2,Users,Coffee} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
+import {deleteWorkoutAndLinkedRecords} from '../lib/deleteWorkout.js'
 import GroupClassResults from './GroupClassResults.jsx'
 import HeartRateSettings from './HeartRateSettings.jsx'
 import HelpCenter from './HelpCenter.jsx'
@@ -78,13 +79,17 @@ export default function MyPage({profile,email,onOpenWorkout,onLaunchWod=()=>{},o
 
  const sourceLog=selectedPR?.workout_log_id?logs.find(x=>x.id===selectedPR.workout_log_id):null
  const deleteWorkout=async log=>{
-  if(deleting||!window.confirm('Vil du slette «'+(log.title||'Treningsøkt')+'» frå historikken? Eventuelle personlege rekordar blir ståande som sjølvstendige rekordar.'))return
+  if(deleting||!window.confirm('Sletta «'+(log.title||'Treningsøkt')+'» og PR-resultata frå denne økta? Andre økter og sjølvstendige PR-noteringar blir behaldne.'))return
   setDeleting(String(log.id));setError('')
   try{
-   const {error:deleteError}=await supabase.from('workout_logs').delete().eq('id',log.id)
-   if(deleteError)throw deleteError
+   const {data:{user},error:authError}=await supabase.auth.getUser()
+   if(authError||!user)throw authError||Error('Logg inn på nytt.')
+   const result=await deleteWorkoutAndLinkedRecords(supabase,log.id,user.id)
    setLogs(current=>current.filter(item=>item.id!==log.id))
-   setPrs(current=>current.map(record=>record.workout_log_id===log.id?{...record,workout_log_id:null}:record))
+   if(result.cleanupError){
+    setPrs(current=>current.map(record=>record.workout_log_id===log.id?{...record,workout_log_id:null}:record))
+    setError('Økta er sletta, men eldre tilknytte PR-noteringar må kontrollerast i PR-senteret: '+result.cleanupError)
+   }else setPrs(current=>current.filter(record=>!result.linkedIds.includes(record.id)))
   }catch(deleteError){setError('Økta blei ikkje sletta: '+(deleteError?.message||'Ukjend feil'))}
   finally{setDeleting('')}
  }

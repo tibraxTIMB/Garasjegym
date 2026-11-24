@@ -297,3 +297,12 @@ test('result entry is a guided exercise-by-exercise review with clearly labelled
  assert.match(style,/grid-template-columns:minmax\(0,1fr\) minmax\(0,1\.65fr\)/)
  assert.match(style,/\.gg-result-footer\{flex:0 0 auto/)
 })
+
+test('discard is visible at every result step and never submits the workout',()=>{
+ const timer=source('../src/components/Training.jsx')
+ const style=source('../src/styles/mobile/experience-system.css')
+ assert.match(timer,/type="button" className="gg-result-discard" disabled=\{saving\} onClick=\{leaveWorkout\}/)
+ assert.match(timer,/Forkast økta · ikkje lagre/)
+ assert.match(timer,/if \(saving \|\| !window.confirm\('Forkasta denne økta utan å lagra/)
+ assert.match(style,/\.gg-result-footer \.gg-result-discard\{width:100%;min-height:44px/)
+})

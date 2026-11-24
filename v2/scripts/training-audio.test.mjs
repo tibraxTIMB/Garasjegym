@@ -6,7 +6,7 @@ const read=p=>readFileSync(new URL(p,import.meta.url),'utf8')
 test('27 distinct local WAV paths and three sample-based profiles',()=>{
  const urls=SOUND_PACK_PROFILES.flatMap(p=>SOUND_PACK_SIGNALS.map(s=>soundPackUrl(p,s,'/Garasjegym/')))
  assert.equal(new Set(urls).size,27)
- assert.ok(urls.every(url=>url.startsWith('/Garasjegym/audio/gazelle-v1/')&&url.endsWith('.wav')))
+ assert.ok(urls.every(url=>url.startsWith('/Garasjegym/audio/gazelle-v2/')&&url.endsWith('.wav')))
  assert.equal(soundPackUrl('group','transition'),soundPackUrl('group','round'))
  const sample=JSON.parse(read('../audio-source/fluid-samples.json'))
  assert.ok(Object.keys(sample).length>=9)

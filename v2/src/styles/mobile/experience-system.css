@@ -354,3 +354,9 @@ button, [role="button"], summary { touch-action: manipulation; }
 .gg-result-confirm input{width:22px;height:22px;flex:none;accent-color:#f0a33a}
 @media(max-width:560px){.gg-training-session .workout-finish-dialog.gg-result-wizard{height:calc(100dvh - 20px);max-height:calc(100dvh - 20px);padding:11px}.gg-result-wizard .gg-result-current{padding:8px}}
 @media(orientation:landscape) and (max-height:480px){.gg-training-session .workout-finish-dialog.gg-result-wizard{height:calc(100dvh - 12px);max-height:calc(100dvh - 12px);padding:8px;gap:5px}.gg-result-nav button{min-height:42px}.gg-result-footer .gg-result-skip,.gg-result-footer .gg-result-discard{min-height:26px}.gg-result-header h3{font-size:17px}}
+
+/* Discard is an explicit, separate destructive action at every result step. */
+.gg-result-footer .gg-result-discard{width:100%;min-height:44px;display:flex;align-items:center;justify-content:center;gap:7px;padding:7px 10px;border:1px solid #e0918b;border-radius:9px;background:#382225;color:#ffd1cd;font-weight:800;font-size:13px}
+.gg-result-footer .gg-result-discard:disabled{opacity:.45}
+.gg-result-close{min-width:44px;min-height:44px;display:grid;place-items:center;border:1px solid #63747a;border-radius:9px;background:#26343a;color:#f4f7f7}
+@media(orientation:landscape) and (max-height:480px){.gg-result-footer .gg-result-discard{min-height:40px}}

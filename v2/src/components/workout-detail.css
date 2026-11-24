@@ -82,3 +82,5 @@
  .workout-detail-edit-set{grid-template-columns:41px repeat(4,minmax(0,1fr));gap:4px}
  .workout-detail-edit-set input{padding:6px 3px;font-size:11px}
 }
+
+.workout-detail-delete-footer{display:grid;gap:5px;padding:10px 16px;border-top:1px solid #ffffff20;flex:0 0 auto}.workout-detail-delete-footer button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;background:#362226;border:1px solid #d9817b;border-radius:9px;color:#ffd0cd;font-weight:800}.workout-detail-delete-footer small{color:#bfcacb;font-size:11px;text-align:center}
