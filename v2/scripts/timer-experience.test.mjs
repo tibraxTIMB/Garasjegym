@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { nextManualActionDeadline } from '../src/lib/timerClock.js'
 
 const source=file=>readFileSync(new URL(file,import.meta.url),'utf8')
 
@@ -29,4 +30,21 @@ test('the post-workout review clearly separates WOD prescription and actual erg 
   assert.match(timer,/value:'cal',label:'Kaloriar \(cal\)'/)
   assert.match(timer,/GarageSelect label="Eining for ro-\/ergresultat"/)
   assert.match(timer,/Talet ovanfor er WOD-målet, ikkje registrert resultat/)
+})
+
+test('manual round registration blocks rapid repeated taps for five seconds',()=>{
+ const first=nextManualActionDeadline(1000,0)
+ assert.equal(first,6000)
+ assert.equal(nextManualActionDeadline(1001,first),null)
+ assert.equal(nextManualActionDeadline(5999,first),null)
+ assert.equal(nextManualActionDeadline(6000,first),11000)
+ assert.equal(nextManualActionDeadline(6000,first,2),8000)
+ const timer=source('../src/components/Training.jsx')
+ assert.match(timer,/!claimManualAction\('round'\)/)
+ assert.match(timer,/manualActionDeadline\.current=next/)
+ assert.match(timer,/setLaps\(value=>value\.slice\(0,-1\)\)/)
+ assert.match(timer,/hasStarted&&\(isAmrap\|\|isLadder\|\|isDeathBy\|\|isStopwatch\|\|isForTime\)/)
+ assert.match(timer,/gg-timer-secondary-actions/)
+ const css=source('../src/components/timer-viewport.css')
+ assert.match(css,/gg-manual-action[^\n]+min-height:84px/)
 })

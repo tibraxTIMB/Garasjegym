@@ -84,3 +84,10 @@ export function getFixedSlotTimerState({
     phaseRemaining,
   };
 }
+
+/** Timestamp gate for manual actions; automatic timer transitions never use it. */
+export function nextManualActionDeadline(now, lockedUntil, seconds=5) {
+ if (!Number.isFinite(now)||now<lockedUntil) return null
+ const delay=Math.max(1,Math.min(10,Number(seconds)||5))
+ return now+delay*1000
+}

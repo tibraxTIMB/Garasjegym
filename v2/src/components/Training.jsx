@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Activity, CalendarDays, CheckCircle2, ChevronDown, Clock3, Dumbbell, History, House, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2, Settings2, Settings, ChevronRight, Monitor, Timer as TimerIcon, List, Volume2, VolumeX, Maximize2, Minimize2, X } from 'lucide-react'
+import { Activity, CalendarDays, CheckCircle2, ChevronDown, Clock3, Dumbbell, History, House, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2, Settings2, Settings, ChevronRight, Monitor, Timer as TimerIcon, Music2, HeartPulse, Undo2, Hand, List, Volume2, VolumeX, Maximize2, Minimize2, X } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { RELEASE_NAME } from '../lib/release.js'
 import HeartRateTrainingPanel from './HeartRateTrainingPanel.jsx'
-import { MusicMiniPlayer } from './Music.jsx'
+import { Music, MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
 import { getWodSchemaItems, sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
 import { formatParticipation, normalizeWodEngine, isEmomFormat, emomIntervalSeconds, emomDisplayLabel, emomPrescribedSetCount } from '../lib/wodEngine.js'
 import PerformanceCenter from './PerformanceCenter.jsx'
-import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, splitDuration, summarizeLapSplits } from '../lib/timerClock.js'
+import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, splitDuration, summarizeLapSplits, nextManualActionDeadline } from '../lib/timerClock.js'
 import { getExerciseMeasurementFlags, isErgExercise } from '../lib/exerciseMeasurements.js'
 import {COMPOSITE_FORMAT, compositeBlockForTimer, compositeTimerConfig, compositeTransitionSeconds, compositeScoredBlocks, plannedFixedEmomSets} from '../lib/compositeWod.js'
 import { exerciseRecordType } from '../lib/prMetrics.js'
@@ -101,9 +101,38 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const scheduledStartedAt = useRef(null)
   const [phase, setPhase] = useState(() => resumeState?.phase || 'Klar')
   const [laps, setLaps] = useState(() => Array.isArray(resumeState?.laps) ? resumeState.laps : [])
-  const [soundOn, setSoundOn] = useState(true)
+  const [soundOn, setSoundOn] = useState(()=>{try{return localStorage.getItem('garasjegym.timer.audio_profile')!=='silent'&&localStorage.getItem('garasjegym.timer.sound_enabled')!=='off'}catch{return true}})
+  useEffect(()=>{try{localStorage.setItem('garasjegym.timer.sound_enabled',soundOn?'on':'off')}catch{}},[soundOn])
+  const [roundGuardSeconds,setRoundGuardSeconds]=useState(()=>{try{const n=Number(localStorage.getItem('garasjegym.timer.round_guard'));return [1,2,3,5,10].includes(n)?n:5}catch{return 5}})
+  const [buttonSize,setButtonSize]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.action_size')==='xl'?'xl':'large'}catch{return 'large'}})
+  const [roundHaptic,setRoundHaptic]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.round_haptic')!=='off'}catch{return true}})
+  const [showPulse,setShowPulse]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.show_pulse')!=='off'}catch{return true}})
+  const [showMusic,setShowMusic]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.show_music')!=='off'}catch{return true}})
+  useEffect(()=>{try{localStorage.setItem('garasjegym.timer.round_guard',String(roundGuardSeconds));localStorage.setItem('garasjegym.timer.action_size',buttonSize);localStorage.setItem('garasjegym.timer.round_haptic',roundHaptic?'on':'off');localStorage.setItem('garasjegym.timer.show_pulse',showPulse?'on':'off');localStorage.setItem('garasjegym.timer.show_music',showMusic?'on':'off')}catch{}},[roundGuardSeconds,buttonSize,roundHaptic,showPulse,showMusic])
+  const manualActionDeadline=useRef(0)
+  const [manualLockUntil,setManualLockUntil]=useState(0)
+  const [manualLockSeconds,setManualLockSeconds]=useState(0)
+  const [canUndoManual,setCanUndoManual]=useState(false)
+  const lastManualAction=useRef(null)
+  const [finishConfirm,setFinishConfirm]=useState(false)
+  useEffect(()=>{
+    if(!manualLockUntil)return
+    const refresh=()=>{const left=Math.max(0,Math.ceil((manualLockUntil-Date.now())/1000));setManualLockSeconds(left);if(!left)setManualLockUntil(0)}
+    refresh()
+    const id=window.setInterval(refresh,100)
+    return()=>window.clearInterval(id)
+  },[manualLockUntil])
+  function clearManualAction(){manualActionDeadline.current=0;setManualLockUntil(0);setManualLockSeconds(0);lastManualAction.current=null;setCanUndoManual(false);setFinishConfirm(false)}
+  function claimManualAction(kind){
+    const next=nextManualActionDeadline(Date.now(),manualActionDeadline.current,roundGuardSeconds)
+    if(next===null)return false
+    manualActionDeadline.current=next;setManualLockUntil(next);setManualLockSeconds(roundGuardSeconds)
+    lastManualAction.current=kind;setCanUndoManual(kind==='round'||kind==='split')
+    if(roundHaptic){try{navigator.vibrate?.(80)}catch{}}
+    return true
+  }
   const [audioProfile,setAudioProfile]=useState(()=>{
-    try{const value=localStorage.getItem('garasjegym.timer.audio_profile');return TRAINING_AUDIO_PROFILES.includes(value)?value:'group'}catch{return 'group'}
+    try{const value=localStorage.getItem('garasjegym.timer.audio_profile');return TRAINING_AUDIO_PROFILES.includes(value)&&value!=='silent'?value:'personal'}catch{return 'personal'}
   })
   const [countdownAudio,setCountdownAudio]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.countdown_audio')!=='off'}catch{return true}})
   const [vibration,setVibration]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.vibration')==='on'}catch{return false}})
@@ -300,7 +329,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     timerRunStartedAt.current = null
     timerRunBaseElapsed.current = 0
     elapsedRef.current = 0
-    setElapsed(0); setRunning(false); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setPhase('Klar'); setLaps([])
+    clearManualAction(); setElapsed(0); setRunning(false); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setPhase('Klar'); setLaps([])
     setHasStarted(false); setCountdownDeadline(null); setCountdownRemaining(0); scheduledStartedAt.current = null
     setWorkSeconds(getDefaultWorkSeconds(format,timerSettings))
     setRestSeconds(getDefaultRestSeconds(format,timerSettings))
@@ -315,7 +344,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     timerRunBaseElapsed.current = 0
     elapsedRef.current = 0
     timerRunStartedAt.current = null
-    setElapsed(0)
+    clearManualAction(); setElapsed(0)
     setRound(1)
     setDeathByCompletedRounds(0)
     setLadderCompletedRounds(0)
@@ -468,8 +497,15 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const showTimeCap = hasTimeCap
   const roundsShown = isTimedInterval ? Math.min(currentRound, Number(rounds)) : currentRound
   const completedRounds = isAmrap ? laps.length : isLadder ? ladderCompletedRounds : isEMOM ? Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)) : (isStationCircuit||isTimedInterval) ? fixedSlotState.roundsCompleted : round
-  const lapAction = () => { if(!running)return; setLaps(value => [...value, splitDuration(elapsed, value)]); setRound(value => value + 1); cue(1200, 0.1) }
-  const splitAction = () => { if(!running)return; setLaps(value => [...value, splitDuration(elapsed, value)]); cue(1200, 0.1) }
+  const lapAction = () => { if(!running||timerLimitReached||!claimManualAction('round'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); setRound(value => value + 1); cue(1200, 0.14) }
+  const splitAction = () => { if(!running||timerLimitReached||!claimManualAction('split'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); cue(1200, 0.14) }
+  const undoManualAction=()=>{
+    const kind=lastManualAction.current
+    if(!['round','split'].includes(kind)||!laps.length)return
+    lastManualAction.current=null;setCanUndoManual(false)
+    setLaps(value=>value.slice(0,-1))
+    if(kind==='round')setRound(value=>Math.max(1,value-1))
+  }
   const beginWorkout = (withCountdown = false) => {
     if (hasStarted || running || countdownDeadline !== null) return
     ensureAudioContext() // Mobile browsers permit later 3–2–1 sounds after this user gesture.
@@ -484,8 +520,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const autoLaunchRef = useRef(false)
   useEffect(()=>{if(autoStartOnMount&&!autoLaunchRef.current){autoLaunchRef.current=true;beginWorkout(false)}},[autoStartOnMount])
   const finishCurrent=()=>onFinish({elapsed,laps:[...laps],roundsCompleted:isDeathBy?deathByCompletedRounds:isLadder?ladderCompletedRounds:isAmrap?laps.length:(isStationCircuit||isTimedInterval)?fixedSlotState.roundsCompleted:isEMOM?Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)):round,death_by_completed_rounds:isDeathBy?deathByCompletedRounds:null,death_by_failed_round:isDeathBy?deathByStatus.failedRound:null,ladder_completed_rounds:isLadder?ladderCompletedRounds:null,ladder_finished:isLadder?ladderProgress.finished:null,phase:phase==='TIDSGRENSE'?'TIDSGRENSE':isDeathBy&&deathByStatus.failed?'FERDIG':'FULLFØRT',hasStarted,running:false,savedAt:Date.now()})
-  const completeDeathByRound=()=>{if(!isDeathBy||!running||!deathByStatus.canConfirm||timerLimitReached)return;setDeathByCompletedRounds(deathByStatus.round);cue(1200,0.14)}
-  const completeLadderRound=()=>{if(!isLadder||!running||ladderProgress.finished||timerLimitReached)return;const count=ladderCompletedRounds+1;const next=ladderStatus(count,schema?.ladder,schema?.rounds??timerSettings?.rounds);setLadderCompletedRounds(count);setLaps(value=>[...value,splitDuration(elapsed,value)]);if(next.finished){setRunning(false);setPhase('FERDIG');playSignal('finish')}else cue(1200,0.14)}
+  const completeDeathByRound=()=>{if(!isDeathBy||!running||!deathByStatus.canConfirm||timerLimitReached||!claimManualAction('death'))return;setDeathByCompletedRounds(deathByStatus.round);cue(1200,0.14)}
+  const completeLadderRound=()=>{if(!isLadder||!running||ladderProgress.finished||timerLimitReached||!claimManualAction('ladder'))return;const count=ladderCompletedRounds+1;const next=ladderStatus(count,schema?.ladder,schema?.rounds??timerSettings?.rounds);setLadderCompletedRounds(count);setLaps(value=>[...value,splitDuration(elapsed,value)]);if(next.finished){setRunning(false);setPhase('FERDIG');playSignal('finish')}else cue(1200,0.14)}
   const toggleRunning = () => { if (countdownDeadline !== null) { setCountdownDeadline(null);setCountdownRemaining(0);setPhase('Klar');return } if (!hasStarted) { beginWorkout(false); return } if (running) { setRunning(false); setPhase('PAUSE'); return } if (phase === 'FERDIG' || phase === 'TIDSGRENSE') return; setPhase('PÅGÅR'); setRunning(true) }
   const visibleStationIndex = Math.min(stationCount - 1, fixedSlotState.currentSlotIndex % stationCount)
   const currentStationName = stationList[visibleStationIndex]?.exercise_name || stationList[visibleStationIndex]?.name || `Stasjon ${visibleStationIndex + 1}`
@@ -529,19 +565,33 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       steps:Array.isArray(item.complex_steps)?item.complex_steps:[],
     }
   })
+  const requestFinish=()=>{if(!hasStarted)return;if(running&&!stageIsComplete){setFinishConfirm(true);setStagePanel('finish')}else finishCurrent()}
+  const manualButtonVisible=hasStarted&&(isAmrap||isLadder||isDeathBy||isStopwatch||isForTime)
+  const manualButtonDisabled=!running||timerLimitReached||manualLockSeconds>0||(isLadder&&ladderProgress.finished)||(isDeathBy&&!deathByStatus.canConfirm)
+  const manualButtonText=isAmrap?'RUNDE FULLFØRT':isLadder?`TRINN FULLFØRT · ${ladderProgress.targetReps} REPS`:isDeathBy?`FULLFØRT ${deathByStatus.targetReps} REPS`:'MELLOMTID'
+  const manualButton=<button type="button" className={'gg-manual-action'+(manualLockSeconds>0?' is-registered':'')+(buttonSize==='xl'?' is-xl':'')} onClick={isAmrap?lapAction:isLadder?completeLadderRound:isDeathBy?completeDeathByRound:splitAction} disabled={manualButtonDisabled} aria-label={manualLockSeconds>0?'Registrert – sperra mot dobbelttrykk':manualButtonText}>
+    {manualLockSeconds>0?<CheckCircle2 size={27}/>:<Plus size={27}/>}<span><b>{manualLockSeconds>0?(canUndoManual?'REGISTRERT':'STADFESTA'):manualButtonText}</b>{manualLockSeconds>0&&<small>Vent {manualLockSeconds} sek</small>}</span>
+  </button>
+  const undoButton=canUndoManual&&<button type="button" className="gg-manual-undo" onClick={undoManualAction} aria-label="Angre siste registrering"><Undo2 size={17}/> Angre</button>
+  const actionControls=<div className="gg-timer-audio-controls">
+    <label>Trefflate<select value={buttonSize} onChange={e=>setButtonSize(e.target.value)}><option value="large">Stor (standard)</option><option value="xl">Ekstra stor</option></select></label>
+    <label>Sperre mot dobbelttrykk<select value={roundGuardSeconds} onChange={e=>setRoundGuardSeconds(Number(e.target.value))}>{[1,2,3,5,10].map(s=><option key={s} value={s}>{s} sekund</option>)}</select></label>
+    <label className="gg-timer-check"><input type="checkbox" checked={roundHaptic} onChange={e=>setRoundHaptic(e.target.checked)}/> Vibrasjon ved registrering</label>
+    <small>Automatiske rundeskifte blir ikkje påverka. Angre siste AMRAP-runde eller mellomtid utan å stoppa klokka.</small>
+  </div>
   const audioControls=<div className="gg-timer-audio-controls">
-    <label>Lydprofil<select value={audioProfile} onChange={e=>{const value=e.target.value;setAudioProfile(value);if(value!=='silent'){soundOnRef.current=true;setSoundOn(true)}}}><option value="personal">Eigentrening · tydeleg</option><option value="pt">PT · konsentrert</option><option value="group">Gruppetime · kraftig horn</option><option value="silent">Stille</option></select></label>
+    <label>Lydprofil<select value={audioProfile} onChange={e=>{const value=e.target.value;setAudioProfile(value);if(value!=='silent'){soundOnRef.current=true;setSoundOn(true)}}}><option value="pt">Precision · presis</option><option value="personal">SturmKopf · energisk</option><option value="group">Gorilla Mode · kraftig horn</option></select></label>
     <label className="gg-timer-check"><input type="checkbox" checked={soundOn} onChange={e=>setSoundOn(e.target.checked)}/> Lydsignal på</label>
     <label>Timerlyd · {soundVolume}%<input type="range" min="0" max="100" step="5" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label>
     <label className="gg-timer-check"><input type="checkbox" checked={countdownAudio} onChange={e=>setCountdownAudio(e.target.checked)}/> Nedtelling 3–2–1</label>
     <label className="gg-timer-check"><input type="checkbox" checked={vibration} onChange={e=>setVibration(e.target.checked)}/> Vibrasjon ved skifte (støtta mobil)</label>
     <label>Test signal<select value={testCue} onChange={e=>setTestCue(e.target.value)}><option value="start">Start</option><option value="tick-1">Nedtelling</option><option value="round">Ny runde</option><option value="rest">Pause</option><option value="station">Stasjonsbyte</option><option value="finish">Ferdig</option></select></label>
     <button type="button" className="secondary-button" disabled={audioProfile==='silent'||!soundOn||soundVolume===0} onClick={()=>playSignal(testCue,{test:true})}><Volume2 size={17}/> Test lydsignal</button>
-    <small>Timeren brukar medievolumet på eininga. Vel kraftig gruppetimeprofil og sjekk medievolum og eventuell Bluetooth-høgtalar. Spotify-volumet blir ikkje endra.</small>
+    <small>Timeren brukar medievolumet på eininga. Vel Gorilla Mode og sjekk medievolum og eventuell Bluetooth-høgtalar. Spotify-volumet blir ikkje endra.</small>
   </div>
-  const resetTimer = () => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; scheduledStartedAt.current=null; setCountdownDeadline(null);setCountdownRemaining(0); setRunning(false); setElapsed(0); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
+  const resetTimer = () => { clearManualAction(); timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; scheduledStartedAt.current=null; setCountdownDeadline(null);setCountdownRemaining(0); setRunning(false); setElapsed(0); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
   return <div ref={timerContainerRef} className={stageVisible ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
-    {stageVisible ? <section className={stageLapHistory.length ? 'gg-live-timer gg-live-timer--with-laps' : 'gg-live-timer'} aria-label="Fullskjermsklokke for treningsøkt">
+    {stageVisible ? <section className={'gg-live-timer'+(stageLapHistory.length?' gg-live-timer--with-laps':'')+(manualButtonVisible?' gg-live-timer--manual':'')+(buttonSize==='xl'?' gg-live-timer--xl':'')} aria-label="Fullskjermsklokke for treningsøkt">
       <header className="gg-live-timer__header">
         <div className="gg-live-timer__identity"><span className="gg-live-timer__brand">GARASJEGYM</span><strong>{format}</strong><span className="gg-live-timer__origin">{originLabel}</span></div>
         <div className="gg-live-timer__tools">
@@ -549,7 +599,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           <button type="button" className={stagePanel==='wod'?'is-selected':''} onClick={()=>setStagePanel(value=>value==='wod'?null:'wod')} aria-label="Vis WOD og øvingar" title="Vis WOD og øvingar" aria-expanded={stagePanel==='wod'}><List size={21}/></button>
           <button type="button" onClick={()=>setSoundOn(value=>!value)} aria-label={soundOn?'Slå av lydsignal frå timeren':'Slå på lydsignal frå timeren'} title={soundOn?'Timerlyd på':'Timerlyd av'}>{soundOn?<Volume2 size={21}/>:<VolumeX size={21}/>}</button>
           <button type="button" onClick={toggleBrowserFullscreen} aria-label={browserFullscreen?'Vis nettlesarfelt':'Skjul nettlesarfelt – ekte fullskjerm'} title="Fullskjerm">{browserFullscreen?<Minimize2 size={21}/>:<Maximize2 size={21}/>}</button>
-          <button type="button" className={['settings','audio','display','timing','reset'].includes(stagePanel)?'is-selected':''} onClick={()=>setStagePanel(value=>['settings','audio','display','timing','reset'].includes(value)?null:'settings')} aria-label="Timerinnstillingar" title="Timerinnstillingar" aria-expanded={['settings','audio','display','timing','reset'].includes(stagePanel)}><Settings size={19}/></button>
+          <button type="button" className={['settings','audio','display','timing','reset','music','pulse','actions'].includes(stagePanel)?'is-selected':''} onClick={()=>setStagePanel(value=>['settings','audio','display','timing','reset','music','pulse','actions'].includes(value)?null:'settings')} aria-label="Timerinnstillingar" title="Timerinnstillingar" aria-expanded={['settings','audio','display','timing','reset','music','pulse','actions'].includes(stagePanel)}><Settings size={19}/></button>
           <button type="button" onClick={returnToApp} aria-label="Til oversikt – økta held fram" title="Til oversikt – økta held fram"><House size={20}/></button>
         </div>
       </header>
@@ -569,27 +619,29 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           {isLadder&&<div className="gg-live-timer__rounds"><span>{ladderProgress.finished?'LADDER FULLFØRT':`TRINN ${ladderProgress.currentRound} AV ${ladderProgress.maxRounds}`}</span><strong>{ladderProgress.finished?`${ladderCompletedRounds} trinn`: `${ladderProgress.targetReps} reps`}</strong><small>{ladderCompletedRounds} trinn fullførte</small></div>}
           {isDeathBy&&<div className="gg-live-timer__rounds"><span>{deathByStatus.failed?`STOPPA I RUNDE ${deathByStatus.failedRound}`:`RUNDE ${deathByStatus.round} · ${deathByStatus.intervalSeconds} SEKUND`}</span><strong>{deathByStatus.targetReps} reps</strong><small>{deathByCompletedRounds} rundar (førebels){deathByStatus.roundConfirmed?' · Klar for neste intervall':' · Neste runde startar automatisk'}</small></div>}
           {(isTimedInterval||isStationCircuit||isEMOM)&&<div className="gg-live-timer__rounds"><span>{isStationCircuit?'STASJON · RUNDE':isEMOM?'INTERVALL':'RUNDE'}</span><strong>{isStationCircuit?`${visibleStationIndex+1}/${stationCount} · ${Math.min(currentRound,Number(rounds)||1)}/${rounds}`:isEMOM?currentEmomRound:`${roundsShown}/${rounds}`}</strong></div>}
+          {showPulse&&<HeartRateTrainingPanel compact/>}
           <div className="gg-live-timer__exercise"><div className="gg-live-timer__exercise-title"><span>{!stageRows.length&&onEditWorkout?'FRI TRENING':isAmrap?'WOD-ØVINGAR':isStationCircuit?'STASJONAR':isEMOM||isDeathBy?'DENNE RUNDA':'AKTUELL ØVING'}</span><button type="button" onClick={()=>setStagePanel('wod')}>Alle øvingar ({stageRows.length})</button></div>
             {!stageRows.length&&onEditWorkout?<button type="button" className="gg-live-timer__empty-add" onClick={onEditWorkout}><Plus size={17}/> Legg til øvingar eller WOD</button>:isAmrap?<ol>{stageRows.map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span>{item.dose&&<small>{item.dose}</small>}</li>)}</ol>:<strong>{stageExerciseName||'Sjå øvingslista'}</strong>}
             {!isAmrap&&stageNextExercise&&stageNextExercise!==stageExerciseName&&<small className="gg-live-timer__next">Neste: {stageNextExercise}</small>}
           </div>
         </div>
       </div>
-      <div className="gg-live-timer__music-dock" aria-label="Musikkstyring"><MusicMiniPlayer liveCompact/></div>
+      <div className="gg-live-timer__music-dock" aria-label="Musikkstyring">{showMusic&&<><MusicMiniPlayer liveCompact/><button type="button" className="gg-music-expand" aria-label="Opna stor musikkspelar" onClick={()=>setStagePanel('music')}><Maximize2 size={16}/></button></>}</div>
       {stageLapHistory.length>0&&<div className="gg-live-timer__laps-portrait" aria-label={stageLapLabel}>
         <ol ref={portraitLapsRef} className="gg-live-timer__lap-preview" aria-label="Sveip sidelengs for å sjå tidlegare rundar">{stageLapHistory.map(lap=><li key={lap.round}><span>{isAmrap?'R':'M'}{lap.round}</span><b>{clock(lap.duration)}</b></li>)}</ol>
         <button type="button" className="gg-live-timer__lap-all" onClick={()=>setStagePanel('laps')} aria-label={`Vis alle ${laps.length} rundetider`}>Alle</button>
       </div>}
       <footer className="gg-live-timer__footer">
+        {manualButtonVisible&&manualButton}
+        <div className="gg-timer-secondary-actions">
         <button type="button" className="gg-live-timer__pause" onClick={toggleRunning} disabled={stageIsComplete}>{countdownDeadline!==null?<><X size={21}/> Avbryt</>:running?<><Pause size={21}/> Pause</>:phase==='PAUSE'?<><Play size={21}/> Hald fram</>:<><Play size={21}/> Start no</>}</button>
         {!hasStarted&&countdownDeadline===null&&<button type="button" className="gg-live-timer__round-button" onClick={()=>beginWorkout(true)}><Play size={21}/> Start · 10 sek</button>}
-        {hasStarted&&isAmrap&&<button type="button" className="gg-live-timer__round-button" onClick={lapAction} disabled={!running}><Plus size={21}/> Runde</button>}
-        {hasStarted&&isLadder&&<button type="button" className="gg-live-timer__round-button" onClick={completeLadderRound} disabled={!running||ladderProgress.finished||stageIsComplete}><CheckCircle2 size={21}/>{ladderProgress.finished?'Ladder fullført':`Fullført ${ladderProgress.targetReps} reps`}</button>}
-        {hasStarted&&isDeathBy&&<button type="button" className="gg-live-timer__round-button" onClick={completeDeathByRound} disabled={!running||!deathByStatus.canConfirm||stageIsComplete}><CheckCircle2 size={21}/>{deathByStatus.roundConfirmed?'Runde fullført':`Fullført ${deathByStatus.targetReps} reps`}</button>}
-        {hasStarted&&(isStopwatch||isForTime)&&<button type="button" className="gg-live-timer__split" onClick={splitAction} disabled={!running}>Mellomtid</button>}
-        {hasStarted&&(finishLabel==='Avslutt'?<button type="button" className="gg-live-timer__finish" onClick={finishCurrent}><CheckCircle2 size={20}/> Avslutt</button>:<button type="button" className="gg-live-timer__finish" onClick={finishCurrent}><CheckCircle2 size={20}/> {finishLabel}</button>)}
+        {hasStarted&&(finishLabel==='Avslutt'?<button type="button" className="gg-live-timer__finish" onClick={requestFinish}><CheckCircle2 size={20}/> Avslutt</button>:<button type="button" className="gg-live-timer__finish" onClick={requestFinish}><CheckCircle2 size={20}/> {finishLabel}</button>)}
+        {undoButton}
+        </div>
       </footer>
       {stagePanel&&<div className="gg-live-timer__scrim" onClick={()=>setStagePanel(null)} role="presentation"/>}
+      {stagePanel==='finish'&&finishConfirm&&<aside className="gg-live-timer__drawer gg-timer-settings-menu" aria-label="Stadfest avslutning"><header><strong>Avslutta økta?</strong><button type="button" onClick={()=>{setFinishConfirm(false);setStagePanel(null)}} aria-label="Avbryt"><X size={20}/></button></header><p>Klokka held fram til du stadfestar.</p><button type="button" className="primary-button" onClick={()=>{setFinishConfirm(false);setStagePanel(null);finishCurrent()}}>Ja, avslutt</button><button type="button" className="secondary-button" onClick={()=>{setFinishConfirm(false);setStagePanel(null)}}>Hald fram med treninga</button></aside>}
       {stagePanel==='wod'&&<aside className="gg-live-timer__drawer" aria-label="Øvingar i WOD-en"><header><strong>Øvingar · {stageRows.length}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk øvingslista"><X size={20}/></button></header><ol className="gg-live-timer__all-exercises">{stageRows.map((item,index)=><li key={`${item.id}-${index}`}>
         {item.steps.length||item.description||item.equipment?<details className="gg-live-timer__exercise-detail"><summary><span>{index+1}. {item.name}</span><small>{item.dose}</small><ChevronDown size={15}/></summary><div className="gg-live-timer__exercise-more">{item.steps.length>0&&<><strong>Rørslesekvens</strong><ol>{item.steps.map((step,stepIndex)=><li key={stepIndex}>{step.reps?`${step.reps} × `:''}{step.name||step.exercise_name||'Rørsle'}</li>)}</ol></>}{item.description&&<p>{item.description}</p>}{item.equipment&&<p><b>Utstyr:</b> {item.equipment}</p>}</div></details>:<div className="gg-live-timer__exercise-simple"><span>{index+1}. {item.name}</span><small>{item.dose}</small></div>}
       </li>)}</ol>{!stageRows.length&&<p>Ingen øvingar er lagde til.</p>}</aside>}
@@ -598,16 +650,22 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         const delta=previous?lap.duration-previous.duration:null
         return <li key={lap.round}><span>{isAmrap?'Runde':'Mellomtid'} {lap.round}<small>Ved {clock(lap.at)}{delta!==null?' · '+(delta<0?`${Math.abs(delta)} sek raskare`:delta>0?`${delta} sek seinare`:'same tid som førre'):''}</small></span><b>{clock(lap.duration)}</b></li>
       })}</ol></aside>}
-      {['settings','audio','display','timing','reset'].includes(stagePanel)&&<aside className="gg-live-timer__drawer gg-timer-settings-menu" aria-label="Timerinnstillingar">
-        <header><strong>{({settings:'Timerinnstillingar',audio:'Lyd og signal',display:'Klokke og visning',timing:'Øktoppsett',reset:'Nullstill økta'})[stagePanel]}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk innstillingane"><X size={20}/></button></header>
+      {['settings','audio','display','timing','reset','music','pulse','actions'].includes(stagePanel)&&<aside className={'gg-live-timer__drawer gg-timer-settings-menu'+(stagePanel==='music'?' gg-timer-music-drawer':'')} aria-label="Timerinnstillingar">
+        <header><strong>{({settings:'Timerinnstillingar',audio:'Lyd og signal',display:'Klokke og visning',timing:'Øktoppsett',reset:'Nullstill økta',music:'Musikkstudio',pulse:'Puls og intensitet',actions:'Betening under trening'})[stagePanel]}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk innstillingane"><X size={20}/></button></header>
         {stagePanel!=='settings'&&<button type="button" className="gg-timer-menu-back" onClick={()=>setStagePanel('settings')}>‹ Alle innstillingar</button>}
         {stagePanel==='settings'&&<nav className="gg-timer-menu-list" aria-label="Vel innstilling">
-          <button type="button" onClick={()=>setStagePanel('audio')}><Volume2 size={20}/><span><b>Lyd og signal</b><small>{soundVolume}% · {audioProfile==='group'?'Gruppetime':audioProfile==='pt'?'PT':audioProfile==='silent'?'Stille':'Eigentrening'}</small></span><ChevronRight size={17}/></button>
+          <button type="button" onClick={()=>setStagePanel('audio')}><Volume2 size={20}/><span><b>Lyd og signal</b><small>{soundVolume}% · {audioProfile==='group'?'Gorilla Mode':audioProfile==='pt'?'Precision':'SturmKopf'}</small></span><ChevronRight size={17}/></button>
+          <button type="button" onClick={()=>setStagePanel('music')}><Music2 size={20}/><span><b>Musikkstudio</b><small>Stor Spotify-spelar</small></span><ChevronRight size={17}/></button>
+          <button type="button" onClick={()=>setStagePanel('pulse')}><HeartPulse size={20}/><span><b>Puls og intensitet</b><small>Sensor og live-visning</small></span><ChevronRight size={17}/></button>
+          <button type="button" onClick={()=>setStagePanel('actions')}><Hand size={20}/><span><b>Betening under trening</b><small>Store knappar · {roundGuardSeconds} sek sperre</small></span><ChevronRight size={17}/></button>
           <button type="button" onClick={()=>setStagePanel('display')}><Monitor size={20}/><span><b>Klokke og visning</b><small>Storleik, farge, fullskjerm</small></span><ChevronRight size={17}/></button>
           <button type="button" onClick={()=>setStagePanel('timing')}><TimerIcon size={20}/><span><b>Øktoppsett</b><small>Varigheit, arbeid og pause</small></span><ChevronRight size={17}/></button>
           <button type="button" onClick={()=>setStagePanel('reset')}><RotateCcw size={20}/><span><b>Nullstill økta</b><small>Med stadfesting</small></span><ChevronRight size={17}/></button>
         </nav>}
         {stagePanel==='audio'&&audioControls}
+        {stagePanel==='actions'&&actionControls}
+        {stagePanel==='music'&&<><label className="gg-timer-check"><input type="checkbox" checked={showMusic} onChange={e=>setShowMusic(e.target.checked)}/> Vis minispelar</label><Music/></>}
+        {stagePanel==='pulse'&&<><label className="gg-timer-check"><input type="checkbox" checked={showPulse} onChange={e=>setShowPulse(e.target.checked)}/> Vis eigen puls på klokka</label><HeartRateTrainingPanel settings/></>}
         {stagePanel==='display'&&<>
         <label className="gg-live-timer__setting">Storleik på klokka <input type="range" min="88" max="130" step="7" value={Math.max(88,Math.min(130,appearance.clockSize))} onChange={e=>setAppearance(value=>({...value,clockSize:Number(e.target.value)}))}/></label>
         <label className="gg-live-timer__setting">Klokkefarge <input type="color" value={appearance.accent} onChange={e=>setAppearance(value=>({...value,accent:e.target.value}))}/></label>
@@ -630,6 +688,9 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     </div>
     {showTimerSettings && <section className="timer-customize-panel timer-setup-drawer" aria-label="Timeroppsett">
         <details className="timer-setup-section"><summary>Lyd og signal</summary>{audioControls}</details>
+        <details className="timer-setup-section"><summary>Betening under trening</summary>{actionControls}</details>
+        <details className="timer-setup-section"><summary>Puls og intensitet</summary><HeartRateTrainingPanel settings/></details>
+        <details className="timer-setup-section"><summary>Musikkstudio</summary><Music/></details>
       <div className="timer-customize-title"><strong>Tilpass denne økta</strong><span>Endringane gjeld berre denne gjennomføringa.</span></div>
       {(isTimedInterval || isStationCircuit || isEMOM) && <div className="timer-setup-section">
         <strong>{isStationCircuit ? 'Stasjonssirkel' : isEMOM ? 'EMOM' : format==='Tabata' ? 'Tabata-intervall' : 'Intervall'}</strong>
@@ -670,18 +731,15 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         {isLadder && <div className="timer-round-total"><span>{ladderProgress.finished?'LADDER FERDIG':`TRINN ${ladderProgress.currentRound} AV ${ladderProgress.maxRounds}`}</span><b>{ladderProgress.finished?`${ladderCompletedRounds} trinn`:`${ladderProgress.targetReps} reps`}</b></div>}
         {isDeathBy && <div className="timer-round-total"><span>{deathByStatus.failed?`STOPPA I RUNDE ${deathByStatus.failedRound}`:`RUNDE ${deathByStatus.round} · MÅL`}</span><b>{deathByStatus.targetReps} reps</b><small>Førebels: {deathByCompletedRounds} rundar</small></div>}
         {!isStationCircuit && !isAmrap && (isTimedInterval ? (exerciseList[intervalExerciseIndex + 1]?.exercise_name || exerciseList[0]?.exercise_name) : nextExercise) && <div className="timer-next-exercise"><span>NESTE ØVING</span><b>{isTimedInterval ? (exerciseList[intervalExerciseIndex + 1]?.exercise_name || exerciseList[0]?.exercise_name) : nextExercise}</b></div>}
+        {manualButtonVisible&&<div className="gg-manual-desktop">{manualButton}{undoButton}</div>}
         <div className="timer-actions">
           <button type="button" className="secondary-button" onClick={toggleRunning} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : phase==='PAUSE' ? <><Play size={14}/> Gjenoppta</> : <><Play size={14}/> Start</>}</button>
-          {isAmrap && <button type="button" className="timer-lap-button" onClick={lapAction} disabled={!running}>+ REGISTRER RUNDE</button>}
-          {isLadder && <button type="button" className="timer-lap-button" onClick={completeLadderRound} disabled={!running||ladderProgress.finished||stageIsComplete}>{ladderProgress.finished?'Ladder fullført':`Fullført ${ladderProgress.targetReps} reps`}</button>}
-          {isDeathBy && <button type="button" className="timer-lap-button" onClick={completeDeathByRound} disabled={!running||!deathByStatus.canConfirm||stageIsComplete}>{deathByStatus.roundConfirmed?'Runde fullført':`Fullført ${deathByStatus.targetReps} reps`}</button>}
-          <button type="button" className="secondary-button" onClick={() => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; setRunning(false); setElapsed(0); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setLaps([]); setPhase('Klar'); setHasStarted(false) }}><RotateCcw size={14}/> Nullstill</button>
-          {(isStopwatch || isForTime) && <button type="button" className="secondary-button" onClick={splitAction} disabled={!running}>Mellomtid</button>}
+          <button type="button" className="secondary-button" onClick={()=>{if(window.confirm('Nullstille tid og rundar?'))resetTimer()}}><RotateCcw size={14}/> Nullstill</button>
           <button type="button" className="secondary-button" onClick={() => setSoundOn(value => !value)}>{soundOn ? 'Lyd på' : 'Lyd av'}</button>
           <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
         </div>
         <div className="timer-finish-row">
-          <button type="button" className="timer-finish-button" onClick={finishCurrent} disabled={!hasStarted}>
+          <button type="button" className="timer-finish-button" onClick={()=>{if(!running||stageIsComplete||window.confirm('Avslutta økta?'))finishCurrent()}} disabled={!hasStarted}>
             <CheckCircle2 size={18}/><span>{finishLabel==='Avslutt'?'Avslutt økta':finishLabel}</span>
           </button>
           <small>{hasStarted ? finishLabel==='Avslutt'?'Kontroller resultat og lagre økta etterpå':'Neste del blir klar, men startar ikkje automatisk' : 'Start timeren før du avsluttar økta'}</small>

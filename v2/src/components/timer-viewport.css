@@ -514,3 +514,40 @@
 .gg-timer-audio-controls .gg-timer-check input{width:20px;height:20px;flex:none;accent-color:#f0a33a}
 .gg-timer-audio-controls input[type=range]{width:100%;min-height:32px;accent-color:#f0a33a}
 .gg-timer-audio-controls>button{min-height:44px}
+
+/* Active Training Mode: the main manual action has a fixed, isolated target. */
+.gg-live-timer__footer{display:flex;flex-direction:column;gap:6px}
+.gg-timer-secondary-actions{display:flex;gap:7px;min-width:0}
+.gg-live-timer__footer .gg-timer-secondary-actions button{min-height:44px;font-size:clamp(12px,2.5vw,16px)}
+.gg-manual-action,.gg-live-timer__footer button.gg-manual-action{display:flex;flex:0 0 auto;align-items:center;justify-content:center;gap:12px;width:100%;min-height:84px;padding:9px 12px;border:2px solid #ffbf61;border-radius:12px;background:#f0a33a;color:#10181d;font-weight:900;font-size:clamp(16px,4.5vw,24px);touch-action:manipulation;user-select:none;white-space:normal}
+.gg-manual-action span{display:grid;gap:3px;text-align:center;line-height:1.15}
+.gg-manual-action small{font-size:12px;font-weight:800}
+.gg-manual-action.is-xl,.gg-live-timer__footer button.gg-manual-action.is-xl{min-height:104px}
+.gg-manual-action.is-registered,.gg-live-timer__footer button.gg-manual-action.is-registered{background:#237c4e;color:#fff;border-color:#75d49c;opacity:1}
+.gg-manual-action:disabled:not(.is-registered){opacity:.45}
+.gg-manual-undo{border:1px solid #5c747e;background:#25343b;color:#e5f1f4;border-radius:9px;padding:8px;min-height:44px}
+.gg-manual-desktop{display:grid;gap:6px;margin:8px 0}
+.gg-live-timer__context{overflow-y:auto;overscroll-behavior:contain}
+.gg-live-timer__music-dock{display:flex;align-items:center;gap:5px}
+.gg-live-timer__music-dock>.timer-music-stack{flex:1;min-width:0}
+.gg-live-timer__music-dock:empty{display:none}
+.gg-music-expand{display:grid;place-items:center;width:36px;min-height:36px;border:1px solid #40535a;border-radius:8px;color:#e5f1f4;background:#17272b}
+.gg-live-timer__drawer.gg-timer-music-drawer{width:min(680px,calc(100% - 20px))}
+.gg-timer-hr-compact{display:flex;align-items:center;gap:6px;min-height:28px;color:#ff9c9c;font-weight:800}
+.gg-timer-hr-compact strong{font-variant-numeric:tabular-nums;font-size:18px}
+@media (orientation:landscape){
+ .gg-live-timer--manual .gg-live-timer__footer{flex-direction:row;align-items:stretch}
+ .gg-live-timer--manual .gg-live-timer__footer .gg-manual-action{flex:1 1 60%;width:auto;min-height:74px}
+ .gg-live-timer--manual .gg-live-timer__footer .gg-timer-secondary-actions{flex:1 1 40%;align-items:stretch}
+ .gg-live-timer--xl .gg-live-timer__footer .gg-manual-action{min-height:92px}
+}
+@media (orientation:landscape) and (max-height:480px){
+ .gg-live-timer--manual .gg-live-timer__footer .gg-manual-action{min-height:64px;font-size:16px}
+ .gg-live-timer--xl .gg-live-timer__footer .gg-manual-action{min-height:80px}
+ .gg-live-timer--manual .gg-live-timer__footer .gg-timer-secondary-actions{gap:4px}
+ .gg-live-timer--manual .gg-live-timer__footer .gg-timer-secondary-actions button{font-size:12px;padding:4px}
+}
+@media (orientation:portrait) and (max-height:600px){
+ .gg-live-timer--manual .gg-live-timer__footer .gg-manual-action{min-height:76px}
+ .gg-live-timer--xl .gg-live-timer__footer .gg-manual-action{min-height:88px}
+}

@@ -79,7 +79,7 @@ test('WOD removal never needs cross-table checks to archive',()=>{
  assert.match(action,/if\(permanent\)\{/)
  assert.match(action,/update\(\{is_archived:true,is_published:false\}\)/)
  assert.match(action,/select\('id'\)\.maybeSingle\(\)/)
- assert.match(src,/Slett permanent \(ubrukt\)/)
+ assert.match(src,/Slett WOD permanent/)
  assert.match(src,/Fjern frå biblioteket/)
 })
 
