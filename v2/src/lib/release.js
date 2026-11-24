@@ -24,3 +24,5 @@ export const RELEASE_SHORT = 'GAZELLE 1.2'
 // Candidate: leave an untouched WOD before start without result review or discard; no audio trigger changes.
 
 // Candidate: manual Finish and Next part are silent; timed completion and completed Ladder retain their signals.
+
+// Candidate: opt-in local training library/audio, explicit offline draft retry, approximate muscle overview and last saved personal exercise results.

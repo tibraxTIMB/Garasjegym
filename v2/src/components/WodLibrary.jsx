@@ -1,5 +1,6 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
 import {BookOpen,Search,Eye,EyeOff,LoaderCircle,Clock3,Dumbbell,Play,Layers,UserPlus,Trash2,Archive,Edit3,Star,CalendarDays,Info,MoreHorizontal,ChevronDown,ChevronUp} from 'lucide-react'
+import MuscleMap from './MuscleMap.jsx'
 import {supabase} from '../lib/supabase.js'
 import {formatComplexSequence} from '../lib/wodComplexes.js'
 import {getWodSideLabel} from '../lib/wodSides.js'
@@ -272,7 +273,7 @@ export default function WodLibrary({onLaunchWod,onEditWod,staff=true,isAdmin=fal
      <button type="button" onClick={()=>{setOpenCardMenu(null);setClassWod(w);setClassId('')}}><CalendarDays size={17}/> Gruppetime</button>
      <button type="button" disabled={busy==='daily'} onClick={()=>{setOpenCardMenu(null);setDailyScheduleWod(w);setDailyScheduleDate(localDateISO());setDailyScheduleClassId('');setDailySchedulePublished(true)}}><CalendarDays size={17}/> Dagens WOD</button>
     </div>}
-    {expanded===w.id&&<div className="wod-card-detail">
+    {expanded===w.id&&<div className="wod-card-detail"><MuscleMap items={items.length?items:(w.movements||'').split('\n').filter(Boolean)}/>
      <strong>WOD-kort</strong>
      {staff?<><p>{w.notes||'Ingen coach-notat.'}</p>{w.timer_settings?.workout_schema?.coach_notes&&<p>{w.timer_settings.workout_schema.coach_notes}</p>}</>:<p>{w.timer_settings?.workout_schema?.stimulus||'Følg instruksjonane og tilpass belastninga etter nivået ditt.'}</p>}
      <div className="wod-card-detail-list">{items.length?items.map((item,i)=><span key={i}>{i+1}. {item.exercise_name||item.name} · {item.levels?['rx','intermediate','scaled','foundation'].map(level=>{const dose=formatDose(item,level);return dose?level.toUpperCase()+': '+dose:''}).filter(Boolean).join(' | '):[item.reps?item.reps+' reps':'',item.load_kg?item.load_kg+' kg':'',item.row_value!=null?item.row_value+' '+(item.row_unit||''):'',item.work_seconds!=null?item.work_seconds+' sek':''].filter(Boolean).join(' · ')}{item.is_complex&&<small className="wod-library-complex-sequence">{formatComplexSequence(item.complex_steps)}</small>}</span>):<p>{w.movements||'Øvingsliste manglar.'}</p>}</div>

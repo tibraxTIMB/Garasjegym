@@ -10,9 +10,9 @@ export function restoreWorkoutDraft(memberId, storage = globalThis.localStorage)
 }
 
 export function saveWorkoutDraft(memberId, draft, storage = globalThis.localStorage) {
-  if (!memberId || !storage || !draft) return
-  try { storage.setItem(keyFor(memberId), JSON.stringify({ ...draft, version: 1, memberId, savedAt: Date.now() })) }
-  catch { /* Browsers may disable local persistence; live React state still works. */ }
+  if (!memberId || !storage || !draft) return false
+  try { storage.setItem(keyFor(memberId), JSON.stringify({ ...draft, version: 1, memberId, savedAt: Date.now() }));return true }
+  catch { return false }
 }
 
 export function clearWorkoutDraft(memberId, storage = globalThis.localStorage) {

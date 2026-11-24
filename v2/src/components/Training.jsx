@@ -19,12 +19,15 @@ import { equivalentLibraryWodSource } from '../lib/compositeLibrary.js'
 import { ladderStatus } from '../lib/ladder.js'
 import { getWodSideLabel, isSideSelectableExercise, WOD_SIDE_OPTIONS } from '../lib/wodSides.js'
 import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
+import { readOfflineLibrary, writeOfflineLibrary, isOffline } from '../lib/offlineTraining.js'
+import { previousExerciseResult } from '../lib/previousResult.js'
+import MuscleMap from './MuscleMap.jsx'
 import { canLeavePreparedWod } from '../lib/prestartExit.js'
 import { exerciseBrowseCategory } from '../lib/exerciseCategories.js'
 import { restoreWorkoutDraft, saveWorkoutDraft, clearWorkoutDraft, resumedElapsedSeconds } from '../lib/workoutDraft.js'
 import { canSaveDurationOnlyWorkout } from '../lib/freeSession.js'
 import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, TRAINING_AUDIO_PROFILES } from '../lib/timerCues.js'
-import { preloadSoundPack, unlockSoundPack, playPackSignal, playDirectPackSignal, stopDirectAudio, stopPackAudio, SOUND_PACK_NAMES, SOUND_PACK_VERSION, isKIAudioEnabled, setKIAudioEnabled, KI_AUDIO_EVENT, KI_AUDIO_SIGNALS } from '../lib/trainingAudio.js'
+import { preloadSoundPack, unlockSoundPack, playPackSignal, playDirectPackSignal, stopDirectAudio, stopPackAudio, SOUND_PACK_NAMES, SOUND_PACK_VERSION, isKIAudioEnabled, setKIAudioEnabled, KI_AUDIO_EVENT, KI_AUDIO_SIGNALS, prepareOfflineAudio } from '../lib/trainingAudio.js'
 import GarageSelect from './GarageSelect.jsx'
 import './timer-viewport.css'
 import PRVictoryOverlay from './PRVictoryOverlay.jsx'
@@ -84,7 +87,7 @@ function TimerPanel({id,title,layout,onMove,onResize,onLock,locked,children,devi
 }
 // Keep the unlocked audio context through automatic composite WOD transitions.
 let sharedTrainingAudioContext=null
-function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], prescriptionLevel = 'rx', timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, finishLabel = 'Avslutt', onBackground = () => {}, onCancelBeforeStart = null, onEditWorkout = null, visible = true, originLabel = 'EIGA ØKT', wodName = '', autoStartToken = 0, autoStartOnMount = false, resumeState = null }) {
+function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], previousLogs = [], prescriptionLevel = 'rx', timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, finishLabel = 'Avslutt', onBackground = () => {}, onCancelBeforeStart = null, onEditWorkout = null, visible = true, originLabel = 'EIGA ØKT', wodName = '', autoStartToken = 0, autoStartOnMount = false, resumeState = null }) {
   const timerConfigKey = JSON.stringify({format,minutes,seconds,timerSettings})
   const lastTimerConfigKey = useRef(timerConfigKey)
   const [elapsed, setElapsed] = useState(() => resumedElapsedSeconds(resumeState))
@@ -577,6 +580,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       dose:details.filter(Boolean).join(' · ')||item.prescription_label||'',
       description:item.description||item.instructions||item.notes||'',
       equipment:item.equipment||'',
+      previous:previousExerciseResult(previousLogs,item),
+      muscleItem:item,
       steps:Array.isArray(item.complex_steps)?item.complex_steps:[],
     }
   })
@@ -678,7 +683,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       {stagePanel&&<div className="gg-live-timer__scrim" onClick={()=>setStagePanel(null)} role="presentation"/>}
       {stagePanel==='finish'&&finishConfirm&&<aside className="gg-live-timer__drawer gg-timer-finish-confirm" role="dialog" aria-modal="true" aria-label="Stadfest avslutning"><header><strong>{finishLabel==='Avslutt'?'Avslutta økta?':'Fullføra denne delen?'}</strong><button type="button" onClick={()=>{setFinishConfirm(false);setStagePanel(null)}} aria-label="Avbryt"><X size={20}/></button></header><small>{wodName||format}</small><p>{finishLabel==='Avslutt'?'Gå til resultatregistrering no?':'Avslutt denne delen tidleg og gå vidare etter WOD-planen?'}</p><small>Klokka held fram dersom du avbryt.</small><button type="button" className="primary-button" onClick={()=>{setFinishConfirm(false);setStagePanel(null);finishCurrent()}}>{finishLabel==='Avslutt'?'Avslutt · resultat':'Fullfør del · vidare'}</button><button type="button" className="secondary-button" onClick={()=>{setFinishConfirm(false);setStagePanel(null)}}>Avbryt · tilbake til klokka</button></aside>}
       {stagePanel==='wod'&&<aside className="gg-live-timer__drawer" aria-label="Øvingar i WOD-en"><header><strong>Øvingar · {stageRows.length}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk øvingslista"><X size={20}/></button></header><ol className="gg-live-timer__all-exercises">{stageRows.map((item,index)=><li key={`${item.id}-${index}`}>
-        {item.steps.length||item.description||item.equipment?<details className="gg-live-timer__exercise-detail"><summary><span>{index+1}. {item.name}</span><small>{item.dose}</small><ChevronDown size={15}/></summary><div className="gg-live-timer__exercise-more">{item.steps.length>0&&<><strong>Rørslesekvens</strong><ol>{item.steps.map((step,stepIndex)=><li key={stepIndex}>{step.reps?`${step.reps} × `:''}{step.name||step.exercise_name||'Rørsle'}</li>)}</ol></>}{item.description&&<p>{item.description}</p>}{item.equipment&&<p><b>Utstyr:</b> {item.equipment}</p>}</div></details>:<div className="gg-live-timer__exercise-simple"><span>{index+1}. {item.name}</span><small>{item.dose}</small></div>}
+        {item.steps.length||item.description||item.equipment||item.previous?<details className="gg-live-timer__exercise-detail"><summary><span>{index+1}. {item.name}</span><small>{item.dose}</small><ChevronDown size={15}/></summary><div className="gg-live-timer__exercise-more">{item.steps.length>0&&<><strong>Rørslesekvens</strong><ol>{item.steps.map((step,stepIndex)=><li key={stepIndex}>{step.reps?`${step.reps} × `:''}{step.name||step.exercise_name||'Rørsle'}</li>)}</ol></>}{item.description&&<p>{item.description}</p>}{item.equipment&&<p><b>Utstyr:</b> {item.equipment}</p>}{item.previous&&<small className="gg-previous-result">Ditt sist lagra · {item.previous.date}: {item.previous.summary}</small>}<MuscleMap items={[item.muscleItem]}/></div></details>:<div className="gg-live-timer__exercise-simple"><span>{index+1}. {item.name}</span><small>{item.dose}</small></div>}
       </li>)}</ol>{!stageRows.length&&<p>Ingen øvingar er lagde til.</p>}</aside>}
       {stagePanel==='laps'&&<aside className="gg-live-timer__drawer" aria-label={stageLapLabel}><header><strong>{stageLapLabel} · {laps.length}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk rundetider"><X size={20}/></button></header><ol className="gg-live-timer__all-laps">{stageLapHistory.map((lap,index)=>{
         const previous=stageLapHistory[index-1]
@@ -808,7 +813,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
  * block-scoped format, time cap and exercise list. Nothing runs unattended
  * between blocks: the athlete explicitly starts the next timer.
  */
-function CompositeTimer({schema,exerciseList=[],prescriptionLevel='rx',wodName='',originLabel='',onSnapshot,onFinish,onBackground,onCancelBeforeStart=null,visible=true,stop=false,resumeState=null}) {
+function CompositeTimer({schema,exerciseList=[],previousLogs=[],prescriptionLevel='rx',wodName='',originLabel='',onSnapshot,onFinish,onBackground,onCancelBeforeStart=null,visible=true,stop=false,resumeState=null}) {
  const blocks=Array.isArray(schema?.wod_engine?.blocks)?schema.wod_engine.blocks:[]
  const [active,setActive]=useState(()=>Math.min(Math.max(0,Number(resumeState?.active_block_index)||0),Math.max(0,blocks.length-1)))
  const [results,setResults]=useState(()=>resumeState?.block_results||{})
@@ -899,7 +904,7 @@ function CompositeTimer({schema,exerciseList=[],prescriptionLevel='rx',wodName='
     resumeState={resumeState?.block_results?.[active]||null}
     autoStartOnMount={autoStartIndex===active}
     format={timerConfig.format} minutes={timerConfig.minutes} seconds={timerConfig.seconds}
-    exerciseList={current.items||[]} prescriptionLevel={prescriptionLevel}
+    exerciseList={current.items||[]} previousLogs={previousLogs} prescriptionLevel={prescriptionLevel}
     timerSettings={timerConfig.timerSettings}
     onSnapshot={reportBlock} stop={stop} onFinish={finishPart}
     finishLabel={active<blocks.length-1?'Fullfør del · vidare':'Avslutt'}
@@ -910,9 +915,14 @@ function CompositeTimer({schema,exerciseList=[],prescriptionLevel='rx',wodName='
 
 export default function Training({ memberId = '', launchWodId = null, launchClassSessionId = null, launchClassResult = false, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, onTimerSnapshot, onBackground, onOpenWodLibrary = () => {}, onOpenTrainingPlan = () => {}, onOpenSchedule = () => {}, onOpenDailyWod = () => {}, onOpenHistory = () => {}, onOpenPR = () => {}, visible = true, simpleMode = false, quickStart = false, onQuickStartConsumed, quickManualEntry = false, onQuickManualEntryConsumed, onSaved, onDiscard }) {
   const savedDraft = useRef(restoreWorkoutDraft(memberId)).current
-  const [wods, setWods] = useState([])
+  const [offlineLibrary,setOfflineLibrary]=useState(()=>readOfflineLibrary(memberId))
+  const [offline,setOffline]=useState(()=>isOffline())
+  const [offlineNotice,setOfflineNotice]=useState('')
+  const [offlineBusy,setOfflineBusy]=useState(false)
+  const [previousLogs,setPreviousLogs]=useState([])
+  const [wods, setWods] = useState(()=>offlineLibrary?.wods||[])
   const [dailyWodId,setDailyWodId]=useState(null)
-  const [exercises, setExercises] = useState([])
+  const [exercises, setExercises] = useState(()=>offlineLibrary?.exercises||[])
   const [favoriteNames, setFavoriteNames] = useState([])
   const [favoriteWodIds, setFavoriteWodIds] = useState([])
   const [wodFavoritesOnly, setWodFavoritesOnly] = useState(false)
@@ -926,14 +936,14 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const [saveToken, setSaveToken] = useState(() => savedDraft?.saveToken || crypto.randomUUID())
   const [mode, setMode] = useState(() => savedDraft?.mode || 'home')
   const [reviewOpen,setReviewOpen]=useState(false)
-  const [finishOpen,setFinishOpen]=useState(false)
-  const [resultSummary,setResultSummary]=useState(false)
-  const [reviewedResults,setReviewedResults]=useState({})
+  const [finishOpen,setFinishOpen]=useState(()=>Boolean(savedDraft?.finishOpen))
+  const [resultSummary,setResultSummary]=useState(()=>Boolean(savedDraft?.resultSummary))
+  const [reviewedResults,setReviewedResults]=useState(()=>savedDraft?.reviewedResults||{})
   const [victoryNotice,setVictoryNotice]=useState([])
   const [victoryOverlay,setVictoryOverlay]=useState([])
   const resultBodyRef=useRef(null)
   const [manualEntry,setManualEntry]=useState(() => Boolean(savedDraft?.manualEntry))
-  const [confirmedPlannedEmom,setConfirmedPlannedEmom]=useState(false)
+  const [confirmedPlannedEmom,setConfirmedPlannedEmom]=useState(()=>Boolean(savedDraft?.confirmedPlannedEmom))
   const [sessionPrepared,setSessionPrepared]=useState(() => Boolean(savedDraft?.sessionPrepared))
   const [freeEditorOpen,setFreeEditorOpen]=useState(false)
   const [source, setSource] = useState(() => savedDraft?.source || null)
@@ -963,7 +973,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const [scoreUnit, setScoreUnit] = useState(() => savedDraft?.scoreUnit || 'm')
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(() => savedDraft?.activeExerciseIndex || 0)
   // Review results independently from the live timer; actual values stay in the existing draft.
-  useEffect(()=>{if(finishOpen){setActiveExerciseIndex(0);setResultSummary(items.length===0);setReviewedResults({});setConfirmedPlannedEmom(false)}},[finishOpen])
+  const restoringReview=useRef(Boolean(savedDraft?.finishOpen))
+  useEffect(()=>{if(restoringReview.current){restoringReview.current=false;return}if(finishOpen){setActiveExerciseIndex(0);setResultSummary(items.length===0);setReviewedResults({});setConfirmedPlannedEmom(false)}},[finishOpen])
   useEffect(()=>{if(finishOpen&&resultBodyRef.current)resultBodyRef.current.scrollTop=0},[finishOpen,activeExerciseIndex,resultSummary])
   const resultItem=items[activeExerciseIndex]
   const entered=value=>value!==null&&value!==undefined&&String(value).trim()!==''
@@ -995,9 +1006,9 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       launchLinkContext, title, workoutDate, manualWodIds, format, duration,
       durationSeconds, note, items, scoreRounds, scoreReps, blockScores, scoreTime, scoreLoad,
       scoreCalories, scoreDistance, scoreUnit, saveToken,
-      activeExerciseIndex, timerSnapshot,
+      activeExerciseIndex, timerSnapshot, finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom,
     })
-  }, [memberId,mode,manualEntry,sessionPrepared,source,wodLevel,classSessionId,launchLinkContext,title,workoutDate,manualWodIds,format,duration,durationSeconds,note,items,scoreRounds,scoreReps,blockScores,scoreTime,scoreLoad,scoreCalories,scoreDistance,scoreUnit,saveToken,activeExerciseIndex,timerSnapshot])
+  }, [memberId,mode,manualEntry,sessionPrepared,source,wodLevel,classSessionId,launchLinkContext,title,workoutDate,manualWodIds,format,duration,durationSeconds,note,items,scoreRounds,scoreReps,blockScores,scoreTime,scoreLoad,scoreCalories,scoreDistance,scoreUnit,saveToken,activeExerciseIndex,timerSnapshot,finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom])
   useEffect(()=>{onTimerSnapshot?.({...timerSnapshot,title,format,sessionOpen:mode==='active',sessionPrepared})},[timerSnapshot,title,format,mode,sessionPrepared,onTimerSnapshot])
   useEffect(()=>()=>onTimerSnapshot?.({
     elapsed:0,laps:[],roundsCompleted:0,phase:'Klar',running:false,
@@ -1011,7 +1022,28 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     })
   }
 
+  async function prepareOffline(){
+    if(offline||offlineBusy)return
+    setOfflineBusy(true);setOfflineNotice('')
+    try{
+      const {data,error}=await supabase.auth.getUser()
+      if(error||data?.user?.id!==memberId)throw Error('Innlogging må stadfestast på nett.')
+      const [w,e]=await Promise.all([
+       supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,audience,is_published,is_archived,created_at,timer_settings,category').eq('is_published',true).order('created_at',{ascending:false}),
+       supabase.from('exercises').select('id,name,category,equipment,description,video_url').eq('is_active',true).order('name')])
+      if(w.error||e.error)throw Error('Biblioteket kunne ikkje hentast.')
+      await prepareOfflineAudio()
+      if(!writeOfflineLibrary(memberId,w.data||[],e.data||[]))throw Error('Lokal lagring er ikkje tilgjengeleg.')
+      setOfflineLibrary(readOfflineLibrary(memberId));setOfflineNotice('WOD-ar, øvingar og lydar er klargjorde på denne eininga.')
+    }catch(e){setOfflineNotice('Klargjering feila: '+e.message)}finally{setOfflineBusy(false)}
+  }
+  useEffect(()=>{const sync=()=>setOffline(isOffline());window.addEventListener('online',sync);window.addEventListener('offline',sync);return()=>{window.removeEventListener('online',sync);window.removeEventListener('offline',sync)}},[])
   async function loadAll(silent=false) {
+    if(isOffline()){
+      const cached=readOfflineLibrary(memberId)
+      if(cached){setWods(cached.wods);setExercises(cached.exercises)}
+      setLoading(false);return
+    }
     const requestId=++loadSequence.current
     if (!silent) setLoading(true)
     setError('')
@@ -1040,7 +1072,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       if(auth.error)failures.push('Innlogging: '+auth.error.message)
 
       const user=auth.data?.user
-      if(user){
+      if(user?.id===memberId){
+        supabase.from('workout_logs').select('workout_date,workout_exercises(exercise_id,exercise_name,workout_sets(reps,load_kg,height_cm,time_seconds))').eq('member_id',memberId).order('workout_date',{ascending:false}).order('created_at',{ascending:false}).limit(60).then(({data,error})=>{if(!error&&requestId===loadSequence.current)setPreviousLogs(data||[])}).catch(()=>{})
         const [daily,fav,wodFav]=await Promise.all([
           supabase.from('wod_daily_schedules').select('wod_id').eq('scheduled_date',localDateISO()).is('target_class_id',null).eq('is_published',true).maybeSingle(),
           supabase.from('exercise_favorites').select('exercise_name').eq('user_id',user.id),
@@ -1068,7 +1101,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   useEffect(() => {
     loadAll()
     const refresh=setInterval(()=>loadAll(true),60000)
-    return()=>{clearInterval(refresh);loadSequence.current++}
+    const reconnect=()=>loadAll(true);window.addEventListener('online',reconnect)
+    return()=>{clearInterval(refresh);window.removeEventListener('online',reconnect);loadSequence.current++}
   }, [])
   async function toggleWodFavorite(wod){
     const {data:{user}}=await supabase.auth.getUser()
@@ -1334,6 +1368,10 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     }
     if(!manualEntry&&items.some(item=>item.prescribed_sets_prefilled)&&!confirmedPlannedEmom){setError('Stadfest at du har kontrollert dei førehandsutfylte EMOM-setta, og rett eventuelle avvik før du lagrar.');return}
     if(finishOpen&&pendingWeightItems.length&&!window.confirm('Nokre sett manglar faktisk vekt. Vil du lagra utan desse vektverdiane? Ingen vekt blir lagt inn automatisk.'))return
+    if(isOffline()){
+      const saved=saveWorkoutDraft(memberId,{mode,manualEntry,sessionPrepared,source,wodLevel,classSessionId,launchLinkContext,title,workoutDate,manualWodIds,format,duration,durationSeconds,note,items,scoreRounds,scoreReps,blockScores,scoreTime,scoreLoad,scoreCalories,scoreDistance,scoreUnit,saveToken,activeExerciseIndex,timerSnapshot,finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom})
+      setError(saved?'Resultatet er lagra lokalt som kladd. Hald økta open og trykk Lagre økt igjen når nettet er tilbake. Ingen PR er stadfesta enno.':'Kunne ikkje lagra lokalt. Hald appen open og prøv igjen på nett.');return
+    }
     // Unlock during the save gesture, not after the asynchronous database call.
     const victoryPrefs=readPRVictoryAudio()
     let victoryContext=null
@@ -1450,9 +1488,10 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       setSaving(false)
     }
   }
-  if (loading) return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar treningsdata …</div>
+  if (loading && mode!=='active') return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar treningsdata …</div>
 
   return <div className={simpleMode && mode === "home" ? "training-module simple-mode" : "training-module"}>
+    {offline&&<div className="auth-message" role="status">Offline · lokalt klargjorde økter. Lagring til treningslogg krev nett.</div>}
     {error && <div className="auth-error" role="alert">{error}</div>}
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16}/> {notice}</div>}
     {victoryOverlay.length>0&&<PRVictoryOverlay victories={victoryOverlay} onClose={()=>setVictoryOverlay([])}/>}
@@ -1473,7 +1512,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       </div>
       {source?.timer_settings?.workout_schema?.library_category==='warmup'&&<section className="warmup-execution-guide" aria-label="Oppvarming i to delar"><header><span className="section-kicker">OPPVARMING · TO DELAR</span><strong>Førebu kroppen og finn arbeidsnivået</strong></header><div className="warmup-execution-columns"><article><span>1</span><div><strong>Felles oppvarming</strong><p>Gradvis spissing mot hovud-WOD sin stimulus og rørsleform.</p><ul>{items.filter(item=>item.warmup_phase!=='movement_rehearsal'&&!item.is_rest).map(item=><li key={item.key}>{item.exercise_name}</li>)}</ul></div></article><article><span>2</span><div><strong>Fri teknisk innøving</strong><p>Prøv hovudrørsla med lette vekter. Auk gradvis og finn ditt eige arbeidsnivå for WOD-en.</p><ul>{items.filter(item=>item.warmup_phase==='movement_rehearsal'&&!item.is_rest).map(item=><li key={item.key}>{item.exercise_name}</li>)}</ul></div></article></div></section>}
       </>}
-       {manualEntry ? <section className="manual-entry-intro" aria-label="Manuell treningsregistrering"><div><span className="section-kicker">ETTERREGISTRERING</span><strong>Registrer ei økt du allereie har gjennomført</strong><p>Legg inn faktisk resultat frå økta. Kontroller eventuelle planlagde WOD-verdiar før du lagrar. Ingen timer blir starta.</p></div><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Kontroller og lagre</button></section> : sessionPrepared ? <><div style={{display:!source&&freeEditorOpen?'none':undefined}}>{format===COMPOSITE_FORMAT&&source?.timer_settings?.workout_schema?.wod_engine?.blocks?.length>1?<CompositeTimer schema={source.timer_settings.workout_schema} exerciseList={items} prescriptionLevel={wodLevel} wodName={source?.name||''} originLabel={classSessionId?'GRUPPETIME':launchAssignmentId?'TILDELT FRÅ PT':'EIGEN WOD'} visible={visible&&!freeEditorOpen} onBackground={onBackground} onCancelBeforeStart={source&&!manualEntry&&canLeavePreparedWod(timerSnapshot)?returnToWorkoutTypes:null} resumeState={restoredTimerSnapshot} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={()=>setFinishOpen(true)}/>:<Timer visible={visible&&!freeEditorOpen} onBackground={onBackground} onCancelBeforeStart={source&&!manualEntry&&canLeavePreparedWod(timerSnapshot)?returnToWorkoutTypes:null} onEditWorkout={!source?()=>{if(document.fullscreenElement)document.exitFullscreen?.().catch(()=>{});setFreeEditorOpen(true)}:null} autoStartToken={timerLaunchId} resumeState={restoredTimerSnapshot} format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} nextExercise={items[activeExerciseIndex + 1]?.exercise_name || ''} exerciseList={items} prescriptionLevel={wodLevel} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={() => setFinishOpen(true)} wodName={source?.name||''} originLabel={classSessionId ? 'GRUPPETIME' : launchAssignmentId ? 'TILDELT FRÅ PT' : source ? 'EIGEN WOD' : 'EIGA ØKT'}/>}</div>{!freeEditorOpen&&<HeartRateTrainingPanel />}{!freeEditorOpen&&<div className="workout-finish-actions"><button type="button" className="primary-button" onClick={source&&canLeavePreparedWod(timerSnapshot)?returnToWorkoutTypes:()=>setFinishOpen(true)}>{source&&canLeavePreparedWod(timerSnapshot)?'Tilbake utan å starta':'Avslutt økta · gå til resultat'}</button></div>}</> : <section className="free-session-setup" aria-label="Førebu fri økt"><div><span className="section-kicker">STEG 1 AV 2 · FRI ØKT</span><strong>Vel øvingar før du startar klokka</strong><p>Søk i øvingsbiblioteket nedanfor, legg til øvingane du vil trene, og juster sett eller belastning. Timeren opnar først når du vel «Start økta».</p></div><button type="button" className="primary-button" onClick={()=>{setSessionPrepared(true);setTimerLaunchId(value=>value+1)}}><Play size={18}/> Start økta{items.filter(item=>item.exercise_name.trim()).length ? ` · ${items.filter(item=>item.exercise_name.trim()).length} øvingar` : ' utan øvingar'}</button></section>}
+       {manualEntry ? <section className="manual-entry-intro" aria-label="Manuell treningsregistrering"><div><span className="section-kicker">ETTERREGISTRERING</span><strong>Registrer ei økt du allereie har gjennomført</strong><p>Legg inn faktisk resultat frå økta. Kontroller eventuelle planlagde WOD-verdiar før du lagrar. Ingen timer blir starta.</p></div><button type="button" className="primary-button" onClick={()=>setFinishOpen(true)}>Kontroller og lagre</button></section> : sessionPrepared ? <><div style={{display:!source&&freeEditorOpen?'none':undefined}}>{format===COMPOSITE_FORMAT&&source?.timer_settings?.workout_schema?.wod_engine?.blocks?.length>1?<CompositeTimer schema={source.timer_settings.workout_schema} exerciseList={items} previousLogs={previousLogs} prescriptionLevel={wodLevel} wodName={source?.name||''} originLabel={classSessionId?'GRUPPETIME':launchAssignmentId?'TILDELT FRÅ PT':'EIGEN WOD'} visible={visible&&!freeEditorOpen} onBackground={onBackground} onCancelBeforeStart={source&&!manualEntry&&canLeavePreparedWod(timerSnapshot)?returnToWorkoutTypes:null} resumeState={restoredTimerSnapshot} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={()=>setFinishOpen(true)}/>:<Timer visible={visible&&!freeEditorOpen} onBackground={onBackground} onCancelBeforeStart={source&&!manualEntry&&canLeavePreparedWod(timerSnapshot)?returnToWorkoutTypes:null} onEditWorkout={!source?()=>{if(document.fullscreenElement)document.exitFullscreen?.().catch(()=>{});setFreeEditorOpen(true)}:null} autoStartToken={timerLaunchId} resumeState={restoredTimerSnapshot} format={format} minutes={duration} seconds={durationSeconds} activeExercise={items[activeExerciseIndex]?.exercise_name || ''} nextExercise={items[activeExerciseIndex + 1]?.exercise_name || ''} exerciseList={items} previousLogs={previousLogs} prescriptionLevel={wodLevel} timerSettings={source?.timer_settings || null} onSnapshot={setTimerSnapshot} stop={finishOpen} onFinish={() => setFinishOpen(true)} wodName={source?.name||''} originLabel={classSessionId ? 'GRUPPETIME' : launchAssignmentId ? 'TILDELT FRÅ PT' : source ? 'EIGEN WOD' : 'EIGA ØKT'}/>}</div>{!freeEditorOpen&&<HeartRateTrainingPanel />}{!freeEditorOpen&&<div className="workout-finish-actions"><button type="button" className="primary-button" onClick={source&&canLeavePreparedWod(timerSnapshot)?returnToWorkoutTypes:()=>setFinishOpen(true)}>{source&&canLeavePreparedWod(timerSnapshot)?'Tilbake utan å starta':'Avslutt økta · gå til resultat'}</button></div>}</> : <section className="free-session-setup" aria-label="Førebu fri økt"><div><span className="section-kicker">STEG 1 AV 2 · FRI ØKT</span><strong>Vel øvingar før du startar klokka</strong><p>Søk i øvingsbiblioteket nedanfor, legg til øvingane du vil trene, og juster sett eller belastning. Timeren opnar først når du vel «Start økta».</p></div><button type="button" className="primary-button" onClick={()=>{setSessionPrepared(true);setTimerLaunchId(value=>value+1)}}><Play size={18}/> Start økta{items.filter(item=>item.exercise_name.trim()).length ? ` · ${items.filter(item=>item.exercise_name.trim()).length} øvingar` : ' utan øvingar'}</button></section>}
       {(!sessionPrepared||source||manualEntry||freeEditorOpen)&&<>
       {items.length > 0 && format!=='Stasjonssirkel' && <section className="engine-section">
         <div className="engine-section-title"><h4>{format==='Stasjonssirkel'?'Stasjonane i økta':'WOD / øvingsrekkjefølgje'}</h4><span>{format==='Stasjonssirkel'?'Alle stasjonar – roter etter eiga startplassering':'Vel øvinga du arbeider med'}</span></div>
@@ -1515,6 +1554,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
               <div className="workout-result-tabs" role="tablist" aria-label="Vel øving for resultat">{items.map((item,index)=><button type="button" key={item.key} role="tab" aria-selected={activeExerciseIndex===index} className={activeExerciseIndex===index?'selected':''} title={item.exercise_name||'Øving '+(index+1)} onClick={()=>selectResult(index)}>{index+1}. {item.exercise_name||'Øving'} {reviewedResults[item.key]?'✓':''}</button>)}</div>
             </details>
             <div className="workout-result-exercise gg-result-current" key={resultItem.key}>
+              {previousExerciseResult(previousLogs,resultItem)&&<small className="gg-previous-result">Ditt sist lagra · {previousExerciseResult(previousLogs,resultItem).date}: {previousExerciseResult(previousLogs,resultItem).summary}</small>}
               {resultItem.prescription_label&&<div className="gg-result-plan"><span>PLANLAGT I WOD</span><strong>{resultItem.prescription_label}</strong></div>}
               {resultItem.is_rest?<p className="workout-finish-help">Pause · ingen resultat å registrera. Gå vidare.</p>:isErgExercise(resultItem)?<div className="workout-result-erg"><strong>Faktisk resultat</strong><div className="workout-result-erg-fields"><label>Resultat<input type="number" inputMode="decimal" min="0" step="0.1" value={resultItem.rowValue??''} onChange={e=>updateExercise(resultItem.key,{rowValue:e.target.value})} placeholder="Tast tal"/></label><div className="training-choice-field"><span>Eining</span><GarageSelect label="Eining for ro-/ergresultat" value={resultItem.rowUnit||'m'} options={RESULT_UNITS} onChange={value=>updateExercise(resultItem.key,{rowUnit:value})}/></div></div><small>Registrer faktisk resultat dersom du vil logga det.</small></div>:<>
                 <div className="gg-result-instruction"><strong>{resultItem.uses_load?'Kva løfta du faktisk?':'Kva gjorde du faktisk?'}</strong><small>{resultItem.uses_load?'Tast inn vekt i kg for kvart sett. ':''}Rett førehandsutfylte reps dersom du gjorde noko anna. Neste øving stadfestar verdiane du har kontrollert. Tomme felt betyr ikkje registrert.</small></div>
@@ -1576,6 +1616,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         </div>
       </section> : <>
         <div className="training-heading"><div><span className="section-kicker">ØKT · START TRENING</span><h3>Kva vil du trena?</h3></div>{!simpleMode&&<span className="count-pill">{RELEASE_NAME}</span>}</div>
+        <details className="gg-offline-prep" open={offline||undefined}><summary>Offline mode {offlineLibrary?'· klargjord':''}</summary><p>Last ned publiserte WOD-ar, øvingar og alle lydvariantar før nettet fell ut. Kladdar blir lagra lokalt; send inn når nettet er tilbake. Innlogging må vera aktiv.</p><button type="button" className="secondary-button" disabled={offline||offlineBusy} onClick={prepareOffline}>{offlineBusy?'Klargjer …':'Klargjer offline'}</button>{offlineNotice&&<p role="status">{offlineNotice}</p>}{offline&&<div className="gg-offline-wods">{availableWods.map(w=><button type="button" className="secondary-button" key={w.id} onClick={()=>startWorkout(w,{autoStart:false})}>{w.name} · {w.format}</button>)}</div>}</details>
         <div className="gg-training-home-actions">
           {dailyWodId&&<button type="button" className="gg-training-daily-action" onClick={()=>onOpenDailyWod(dailyWodId)}><Activity size={23}/><span><strong>Dagens WOD</strong><small>{wods.find(w=>w.id===dailyWodId)?.name||'Opne dagens økt'}</small></span><ChevronRight size={18}/></button>}
           <button type="button" onClick={()=>onOpenWodLibrary()}><List size={23}/><span><strong>Vel WOD</strong><small>Bibliotek og favorittar</small></span><ChevronRight size={18}/></button>

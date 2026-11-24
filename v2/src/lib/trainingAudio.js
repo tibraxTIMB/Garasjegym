@@ -22,9 +22,21 @@ export function soundPackUrl(profile,signal,base=import.meta.env?.BASE_URL||'/',
  if(!SOUND_PACK_SIGNALS.includes(s))throw Error('Ukjent lydsignal')
  return base+'audio/'+(kiEnabled&&KI_AUDIO_SIGNALS[p]?.includes(s)?PR_SOUND_PACK_VERSION:SOUND_PACK_VERSION)+'/'+p+'-'+s+'.wav'
 }
+const OFFLINE_AUDIO_CACHE='garasjegym-training-audio-v1'
+export async function prepareOfflineAudio(){
+ if(!globalThis.caches)throw Error('Lydlagring er ikkje tilgjengeleg')
+ const cache=await caches.open(OFFLINE_AUDIO_CACHE)
+ const urls=[...new Set(SOUND_PACK_PROFILES.flatMap(p=>SOUND_PACK_SIGNALS.flatMap(s=>[soundPackUrl(p,s,undefined,false),soundPackUrl(p,s,undefined,true)])))]
+ for(const url of urls){if(!await cache.match(url)){const response=await fetch(url);if(!response.ok)throw Error('Lydfil manglar: '+url);await cache.put(url,response)}}
+ return urls.length
+}
+async function fetchAudioBytes(url){
+ if(globalThis.caches){try{const cache=await caches.open(OFFLINE_AUDIO_CACHE);const local=await cache.match(url);if(local)return local.arrayBuffer()}catch{}}
+ const r=await fetch(url);if(!r.ok)throw Error('Lydfil manglar ('+r.status+')');return r.arrayBuffer()
+}
 const files=new Map(), decoded=new WeakMap(), active=new WeakMap(), generations=new WeakMap()
 function bytes(url){
- if(!files.has(url))files.set(url,fetch(url).then(r=>{if(!r.ok)throw Error('Lydfil manglar ('+r.status+')');return r.arrayBuffer()}).catch(e=>{files.delete(url);throw e}))
+ if(!files.has(url))files.set(url,fetchAudioBytes(url).catch(e=>{files.delete(url);throw e}))
  return files.get(url)
 }
 export async function preloadSoundPack(profile){
