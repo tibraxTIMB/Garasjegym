@@ -28,7 +28,7 @@ export default function PTClientWods({clientId,clientName='',mode='full',planSes
   if(!clientId){setLoading(false);return()=>{active=false}}
   setLoading(true)
   supabase.from('pt_wod_assignments')
-   .select('id,member_id,wod_id,assigned_by,status,created_at,due_date,completed_at,workout_log_id,wods(id,name,format,duration_minutes)')
+   .select('id,member_id,wod_id,assigned_by,status,created_at,due_date,completed_at,workout_log_id,wods(id,name,format,duration_minutes,timer_settings)')
    .eq('member_id',clientId).order('created_at',{ascending:false}).limit(150)
    .then(({data,error:readError})=>{
     if(!active)return
@@ -100,7 +100,7 @@ export default function PTClientWods({clientId,clientName='',mode='full',planSes
      {shownProgram.map(renderProgram)}
      <small className="ptfollow-footnote">Programstatus er separat frå direkte WOD-tildeling og privat treningslogg.</small>
     </div>}
-    {openedReview&&(()=>{const [type,id]=openedReview.split(':');const a=type==='assignment'?assignments.find(row=>row.id===id):null;const p=type==='program'?programWods.find(row=>row.id===id):null;return a?<PTWodReview key={openedReview} assignmentId={a.id} clientName={clientName} wodName={a.wods?.name||'Tildelt WOD'} onClose={()=>setOpenedReview(null)}/>:p?<PTWodReview key={openedReview} programSessionId={p.id} clientName={clientName} wodName={p.wodName} onClose={()=>setOpenedReview(null)}/>:null})()}
+    {openedReview&&(()=>{const [type,id]=openedReview.split(':');const a=type==='assignment'?assignments.find(row=>row.id===id):null;const p=type==='program'?programWods.find(row=>row.id===id):null;return a?<PTWodReview key={openedReview} assignmentId={a.id} clientName={clientName} wodName={a.wods?.name||'Tildelt WOD'} prescriptionSchema={a.wods?.timer_settings?.workout_schema} onClose={()=>setOpenedReview(null)}/>:p?<PTWodReview key={openedReview} programSessionId={p.id} clientName={clientName} wodName={p.wodName} prescriptionSchema={wods.find(w=>w.id===p.wod_id)?.timer_settings?.workout_schema} onClose={()=>setOpenedReview(null)}/>:null})()}
     {preview&&<p className="ptfollow-footnote">Du ser berre PT-tilknytte WOD-ar, ikkje andre treningsøkter.</p>}
    </>}
    {!preview&&showAssign&&<div className="ptfollow-assignment">
