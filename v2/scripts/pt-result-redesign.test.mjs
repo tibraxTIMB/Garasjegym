@@ -38,7 +38,7 @@ test('missing round times and exercise measurements are never inferred',()=>{
  assert.deepEqual(ptRoundSplits({result_data:{}},{laps:[null,-1,'',100]}),[100])
  const screen=read('../src/components/PTWodReview.jsx')
  assert.match(screen,/Rundetider er ikkje registrerte/)
- assert.match(screen,/WOD-oppsettet er utgangspunktet/)
+ assert.match(screen,/er WOD-oppsettet utgangspunktet/)
  assert.match(screen,/Ingen separate settmålingar/)
  assert.match(screen,/Registrert · sett/)
  assert.doesNotMatch(screen,/reps ikkje registrerte/)
