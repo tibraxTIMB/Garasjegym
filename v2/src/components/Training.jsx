@@ -21,7 +21,7 @@ import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib
 import { exerciseBrowseCategory, exerciseBrowseOrder } from '../lib/exerciseCategories.js'
 import { restoreWorkoutDraft, saveWorkoutDraft, clearWorkoutDraft, resumedElapsedSeconds } from '../lib/workoutDraft.js'
 import { canSaveDurationOnlyWorkout } from '../lib/freeSession.js'
-import { countdownSignal, secondsToTimerBoundary, runningTimerSignal } from '../lib/timerCues.js'
+import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, playTrainingSignal, playTrainingTone } from '../lib/timerCues.js'
 import GarageSelect from './GarageSelect.jsx'
 import './timer-viewport.css'
 
@@ -84,7 +84,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [elapsed, setElapsed] = useState(() => resumedElapsedSeconds(resumeState))
   const [running, setRunning] = useState(() => Boolean(resumeState?.running))
   const [round, setRound] = useState(() => Number(resumeState?.currentRound) || 1)
-  const [deathByCompletedRounds,setDeathByCompletedRounds] = useState(() => Math.max(0,Number(resumeState?.death_by_completed_rounds)||0))
+  const [deathByConfirmedRounds,setDeathByCompletedRounds] = useState(() => Math.max(0,Number(resumeState?.death_by_completed_rounds)||0))
   const [ladderCompletedRounds,setLadderCompletedRounds] = useState(() => Math.max(0,Number(resumeState?.ladder_completed_rounds)||0))
   const [workSeconds, setWorkSeconds] = useState(getDefaultWorkSeconds(format,timerSettings))
   const [restSeconds, setRestSeconds] = useState(getDefaultRestSeconds(format,timerSettings))
@@ -103,7 +103,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [laps, setLaps] = useState(() => Array.isArray(resumeState?.laps) ? resumeState.laps : [])
   const [soundOn, setSoundOn] = useState(true)
   const [soundVolume,setSoundVolume]=useState(()=>{
-    try{const raw=localStorage.getItem('garasjegym.timer.sound_volume');const saved=Number(raw);return raw!=null&&Number.isFinite(saved)&&saved>=0&&saved<=100?saved:75}catch{return 75}
+    try{const raw=localStorage.getItem('garasjegym.timer.sound_volume');const saved=Number(raw);return raw!=null&&Number.isFinite(saved)&&saved>=0&&saved<=100?saved:100}catch{return 100}
   })
   const volumeRef=useRef(soundVolume)
   volumeRef.current=soundVolume
@@ -203,12 +203,13 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const isForTime = ['For Time', 'Chipper'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'For Time')
   const isDeathBy = format === 'Death By'
   const isLadder = format === 'Ladder'
-  const deathByStatus=deathByTimerState(elapsed,deathByCompletedRounds,schema?.ladder)
-  const ladderProgress=ladderStatus(ladderCompletedRounds,schema?.ladder,schema?.rounds??timerSettings?.rounds)
+    const ladderProgress=ladderStatus(ladderCompletedRounds,schema?.ladder,schema?.rounds??timerSettings?.rounds)
   const hasTimeCap = capDuration > 0 && !isCountdown && !isEMOM && !isTimedInterval && !isStationCircuit
   const fallbackDuration = Math.max(1, (Number(minutes) || 10) * 60 + (Number(seconds) || 0))
   const defaultTarget = Math.max(1, isCountdown && capDuration ? capDuration : hasTimeCap ? capDuration : savedDuration || fallbackDuration)
   const target = Math.max(1, Number(durationOverride) || defaultTarget)
+   const deathByStatus=deathByTimerState(hasTimeCap?Math.min(elapsed,target):elapsed,deathByConfirmedRounds,schema?.ladder,{autoAdvance:true})
+   const deathByCompletedRounds=deathByStatus.completedRounds
   const effectiveWorkSeconds = Math.max(1, Number(workSeconds) || 1)
   const effectiveRestSeconds = Math.max(0, Number(restSeconds) || 0)
   const cycle = effectiveWorkSeconds + effectiveRestSeconds
@@ -256,7 +257,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const primaryTime = isCountdown ? remainingTotal
     : (isTimedInterval || isStationCircuit) ? phaseRemaining
     : isEMOM ? (timerLimitReached ? 0 : emomPhaseRemaining)
-    : isDeathBy ? deathByStatus.secondsLeft
+    : isDeathBy ? (timerLimitReached ? 0 : deathByStatus.secondsLeft)
     : elapsed
 
   function ensureAudioContext() {
@@ -272,28 +273,11 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   }
   function cue(frequency = 880, duration = 0.16, delay = 0) {
     const context = ensureAudioContext()
-    if (!context) return
-    try {
-      const oscillator = context.createOscillator()
-      const gain = context.createGain()
-      oscillator.frequency.value = frequency
-      oscillator.type = 'triangle'
-      const beginAt = context.currentTime + delay
-      gain.gain.setValueAtTime(0.0001, beginAt)
-      gain.gain.exponentialRampToValueAtTime(Math.max(0.001,0.65*volumeRef.current/100), beginAt + 0.018)
-      gain.gain.exponentialRampToValueAtTime(0.0001, beginAt + duration)
-      oscillator.connect(gain); gain.connect(context.destination)
-      oscillator.start(beginAt); oscillator.stop(beginAt + duration)
-      oscillator.onended = () => { oscillator.disconnect(); gain.disconnect() }
-    } catch { /* Lyd er valfri og avhengig av nettlesaren. */ }
+    if (context) playTrainingTone(context, frequency, duration, delay, volumeRef.current)
   }
   function playSignal(signal) {
-    if (signal === 'tick-3') cue(740, 0.12)
-    else if (signal === 'tick-2') cue(870, 0.12)
-    else if (signal === 'tick-1') cue(1000, 0.15)
-    else if (signal === 'start') cue(1320, 0.32)
-    else if (signal === 'transition') cue(1180, 0.24)
-    else if (signal === 'finish') { cue(900, 0.2); cue(580, 0.4, 0.22) }
+    const context = ensureAudioContext()
+    if (context) playTrainingSignal(context, signal, volumeRef.current)
   }
   useEffect(() => () => { audioContextRef.current?.close?.().catch?.(()=>{}) }, [])
 
@@ -435,7 +419,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       (isDeathBy && elapsed > 0 && elapsed % deathByStatus.intervalSeconds === 0))
     const secondsToBoundary = secondsToTimerBoundary({format,elapsed,remainingTotal,phaseRemaining,emomPhaseRemaining,isTimedInterval,isStationCircuit,isEMOM,isCountdown,hasTimeCap,isDeathBy,deathByIntervalSeconds:deathByStatus.intervalSeconds})
     const signal = runningTimerSignal({secondsToBoundary,phaseChanged})
-    if (signal) playSignal(signal)
+    if (signal) playSignal(signal === 'transition' ? (isDeathBy || (isEMOM && elapsed % emomCycle === 0) || ((isTimedInterval || isStationCircuit) && inWorkPhase) ? 'round' : isStationCircuit ? 'station' : 'rest') : signal)
   }, [elapsed, running, timerLimitReached, target, capDuration, hasTimeCap, isCountdown, isEMOM, isDeathBy, deathByStatus.failed, deathByStatus.failureAt, deathByStatus.intervalSeconds, isTimedInterval, isStationCircuit, intervalTotal, stationTotal, cycle, emomCycle, effectiveWorkSeconds, effectiveEmomWorkSeconds, effectiveEmomRestSeconds])
 
   useEffect(() => {
@@ -561,7 +545,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         <div className="gg-live-timer__context">
           {isAmrap&&<div className="gg-live-timer__rounds"><span>FULLFØRTE RUNDER</span><strong>{laps.length}</strong></div>}
           {isLadder&&<div className="gg-live-timer__rounds"><span>{ladderProgress.finished?'LADDER FULLFØRT':`TRINN ${ladderProgress.currentRound} AV ${ladderProgress.maxRounds}`}</span><strong>{ladderProgress.finished?`${ladderCompletedRounds} trinn`: `${ladderProgress.targetReps} reps`}</strong><small>{ladderCompletedRounds} trinn fullførte</small></div>}
-          {isDeathBy&&<div className="gg-live-timer__rounds"><span>{deathByStatus.failed?`STOPPA I RUNDE ${deathByStatus.failedRound}`:`RUNDE ${deathByStatus.round} · ${deathByStatus.intervalSeconds} SEKUND`}</span><strong>{deathByStatus.targetReps} reps</strong><small>{deathByCompletedRounds} rundar fullførte{deathByStatus.roundConfirmed?' · Klar for neste intervall':''}</small></div>}
+          {isDeathBy&&<div className="gg-live-timer__rounds"><span>{deathByStatus.failed?`STOPPA I RUNDE ${deathByStatus.failedRound}`:`RUNDE ${deathByStatus.round} · ${deathByStatus.intervalSeconds} SEKUND`}</span><strong>{deathByStatus.targetReps} reps</strong><small>{deathByCompletedRounds} rundar (førebels){deathByStatus.roundConfirmed?' · Klar for neste intervall':' · Neste runde startar automatisk'}</small></div>}
           {(isTimedInterval||isStationCircuit||isEMOM)&&<div className="gg-live-timer__rounds"><span>{isStationCircuit?'STASJON · RUNDE':isEMOM?'INTERVALL':'RUNDE'}</span><strong>{isStationCircuit?`${visibleStationIndex+1}/${stationCount} · ${Math.min(currentRound,Number(rounds)||1)}/${rounds}`:isEMOM?currentEmomRound:`${roundsShown}/${rounds}`}</strong></div>}
           <div className="gg-live-timer__exercise"><div className="gg-live-timer__exercise-title"><span>{!stageRows.length&&onEditWorkout?'FRI TRENING':isAmrap?'WOD-ØVINGAR':isStationCircuit?'STASJONAR':isEMOM||isDeathBy?'DENNE RUNDA':'AKTUELL ØVING'}</span><button type="button" onClick={()=>setStagePanel('wod')}>Alle øvingar ({stageRows.length})</button></div>
             {!stageRows.length&&onEditWorkout?<button type="button" className="gg-live-timer__empty-add" onClick={onEditWorkout}><Plus size={17}/> Legg til øvingar eller WOD</button>:isAmrap?<ol>{stageRows.map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span>{item.dose&&<small>{item.dose}</small>}</li>)}</ol>:<strong>{stageExerciseName||'Sjå øvingslista'}</strong>}
@@ -598,7 +582,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         {(isCountdown||isEMOM||hasTimeCap)&&<div className="gg-live-timer__setting"><span>Øktlengd</span><div className="gg-live-timer__inline-inputs"><label>Min<input type="number" min="0" max="240" value={Math.floor(target/60)} onChange={e=>setDurationOverride(Math.max(1,Math.max(0,Number(e.target.value)||0)*60+(target%60)))}/></label><label>Sek<input type="number" min="0" max="59" value={target%60} onChange={e=>setDurationOverride(Math.max(1,Math.floor(target/60)*60+Math.max(0,Math.min(59,Number(e.target.value)||0))))}/></label></div></div>}
         {(isTimedInterval||isStationCircuit||isEMOM)&&<div className="gg-live-timer__setting"><span>Intervall</span><div className="gg-live-timer__inline-inputs"><label>Arbeid (sek)<input type="number" min="1" max="600" value={workSeconds} onChange={e=>setWorkSeconds(Math.max(1,Math.min(600,Number(e.target.value)||1)))}/></label><label>Pause (sek)<input type="number" min="0" max="600" value={restSeconds} onChange={e=>setRestSeconds(Math.max(0,Math.min(600,Number(e.target.value)||0)))}/></label>{!isEMOM&&<label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(Math.max(1,Math.min(100,Number(e.target.value)||1)))}/></label>}</div></div>}
         <label className="gg-live-timer__setting">Timerlyd {soundVolume}% <input type="range" min="0" max="100" step="10" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label>
-        <button type="button" className="gg-live-timer__fullscreen-button" onClick={()=>{soundOnRef.current=true;setSoundOn(true);cue(1060,0.25);cue(1420,0.3,0.28)}}>Test lydsignal</button>
+        <button type="button" className="gg-live-timer__fullscreen-button" onClick={()=>{soundOnRef.current=true;setSoundOn(true);playSignal('start')}}>Test lydsignal</button>
         <button type="button" className="gg-live-timer__fullscreen-button" onClick={toggleBrowserFullscreen}>{browserFullscreen?'Vis nettlesarfelt':'Skjul nettlesarfelt'}</button>
         {!confirmReset?<button type="button" className="gg-live-timer__reset" onClick={()=>setConfirmReset(true)}><RotateCcw size={17}/> Nullstill økta</button>:<div className="gg-live-timer__reset-confirm"><strong>Nullstille tid og rundar?</strong><button type="button" onClick={resetTimer}>Ja, nullstill</button><button type="button" onClick={()=>setConfirmReset(false)}>Avbryt</button></div>}
       </aside>}
@@ -609,7 +593,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       <button type="button" className="timer-customize-trigger" onClick={() => setShowTimerSettings(value => !value)} aria-expanded={showTimerSettings}>{showTimerSettings ? 'Lukk oppsett' : 'Timeroppsett'}</button>
     </div>
     {showTimerSettings && <section className="timer-customize-panel timer-setup-drawer" aria-label="Timeroppsett">
-        <div className="timer-setup-section"><strong>Lydsignal</strong><div className="timer-settings-inline"><label>Volum {soundVolume}%<input type="range" min="0" max="100" step="10" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label><button type="button" className="secondary-button" onClick={()=>{soundOnRef.current=true;setSoundOn(true);cue(1060,0.25);cue(1420,0.3,0.28)}}>Test lydsignal</button></div><small>Klårare lyd over musikk. Mobilens medievolum styrer framleis maksimal lyd. Spotify blir ikkje endra.</small></div>
+        <div className="timer-setup-section"><strong>Lydsignal</strong><div className="timer-settings-inline"><label>Volum {soundVolume}%<input type="range" min="0" max="100" step="10" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label><button type="button" className="secondary-button" onClick={()=>{soundOnRef.current=true;setSoundOn(true);playSignal('start')}}>Test lydsignal</button></div><small>SturmKopf Training Audio · kraftige og ulike signal for start, pause, byte og slutt. Mobilens medievolum styrer maksimal lyd.</small></div>
       <div className="timer-customize-title"><strong>Tilpass denne økta</strong><span>Endringane gjeld berre denne gjennomføringa.</span></div>
       {(isTimedInterval || isStationCircuit || isEMOM) && <div className="timer-setup-section">
         <strong>{isStationCircuit ? 'Stasjonssirkel' : isEMOM ? 'EMOM' : format==='Tabata' ? 'Tabata-intervall' : 'Intervall'}</strong>
@@ -648,7 +632,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         {isStationCircuit ? <div className="timer-station-plan"><div className="timer-station-plan-heading"><span>STASJONANE I SIRKELEN</span><b>{rounds} rundar</b></div><div className="timer-station-grid">{stationList.map((station,index)=><article className="timer-station-card" key={station.station_number||index}><span>STASJON {station.station_number||index+1}</span><strong>{station.exercise_name||station.name||'Øving'}</strong><small>{station.reps_mode==='amrap'?'AMRAP · så mange som mogleg':station.reps!=null&&station.reps!==''?`${station.reps} reps`:'Vel sjølv tal reps'}{station.height_cm?' · '+station.height_cm+' cm':''}{station.load_label?' · '+station.load_label:''}</small>{station.description&&<p>{station.description}</p>}{station.coach_note&&<p>{station.coach_note}</p>}</article>)}</div></div> : isAmrap ? <div className="timer-amrap-exercise-list"><span>ØVINGAR I WOD-EN</span>{exerciseList.length ? <ol>{exerciseList.map((exercise,index)=>{const setReps=(exercise.sets||[]).map(set=>String(set.reps??'').trim()).filter(Boolean);const uniqueReps=[...new Set(setReps)];const repsLabel=uniqueReps.length===1?(setReps.length>1?`${setReps.length} × ${uniqueReps[0]}`:uniqueReps[0]):uniqueReps.length>1?uniqueReps.join(' / '):String(exercise.reps??'').trim();return <li key={exercise.key||index} className={exercise.is_rest?'timer-rest-item':''}><b>{index+1}.</b><span>{exercise.is_rest?<><strong>PAUSE</strong><small> {clock(Number(exercise.rest_duration_seconds)||30)}</small></>:<>{repsLabel&&<strong className="timer-amrap-reps">{repsLabel} × </strong>}{exercise.exercise_name||'Øving utan namn'}</>}</span></li>})}</ol> : <p>Ingen øvingar er lagde til.</p>}</div> : <><div className="timer-active-under-clock"><span>{isTimedInterval ? `DRAG ${intervalExerciseIndex+1} / ${intervalExerciseCount}` : isEMOM ? (isEmomWorkPhase?`ARBEIDSOPPGÅVE · RUNDE ${currentEmomRound}`:'NESTE ARBEIDSOPPGÅVE') : activeExercise ? 'GJELDANDE ØVING' : 'WOD-OVERSIKT'}</span><b>{isTimedInterval ? currentIntervalExercise : isEMOM ? currentEmomExercise || 'Sjå øvingsrekkjefølgja' : activeExercise || 'Sjå øvingsrekkjefølgja'}</b></div><div className="timer-amrap-exercise-list"><span>ØVINGAR I WOD-EN · {exerciseList.length}</span>{exerciseList.length ? <ol>{exerciseList.map((exercise,index)=>{const dose=(exercise.sets||[]).map(set=>[set.reps?set.reps+' reps':'',set.load_kg?set.load_kg+' kg':'',set.time_text||''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ');return <li key={exercise.key||index} className={exercise.is_rest?'timer-rest-item':''}><b>{index+1}.</b><span><strong>{exercise.is_rest?'PAUSE':exercise.exercise_name||'Øving utan namn'}</strong>{dose&&<small>{dose}</small>}{exercise.prescription_label&&<small>{exercise.prescription_label}</small>}</span></li>})}</ol> : <p>Ingen øvingar er lagde til.</p>}</div></>}
         {isAmrap && <div className="timer-round-total"><span>RUNDER FULLFØRT</span><b>{completedRounds}</b></div>}
         {isLadder && <div className="timer-round-total"><span>{ladderProgress.finished?'LADDER FERDIG':`TRINN ${ladderProgress.currentRound} AV ${ladderProgress.maxRounds}`}</span><b>{ladderProgress.finished?`${ladderCompletedRounds} trinn`:`${ladderProgress.targetReps} reps`}</b></div>}
-        {isDeathBy && <div className="timer-round-total"><span>{deathByStatus.failed?`STOPPA I RUNDE ${deathByStatus.failedRound}`:`RUNDE ${deathByStatus.round} · MÅL`}</span><b>{deathByStatus.targetReps} reps</b><small>Fullført: {deathByCompletedRounds} rundar</small></div>}
+        {isDeathBy && <div className="timer-round-total"><span>{deathByStatus.failed?`STOPPA I RUNDE ${deathByStatus.failedRound}`:`RUNDE ${deathByStatus.round} · MÅL`}</span><b>{deathByStatus.targetReps} reps</b><small>Førebels: {deathByCompletedRounds} rundar</small></div>}
         {!isStationCircuit && !isAmrap && (isTimedInterval ? (exerciseList[intervalExerciseIndex + 1]?.exercise_name || exerciseList[0]?.exercise_name) : nextExercise) && <div className="timer-next-exercise"><span>NESTE ØVING</span><b>{isTimedInterval ? (exerciseList[intervalExerciseIndex + 1]?.exercise_name || exerciseList[0]?.exercise_name) : nextExercise}</b></div>}
         <div className="timer-actions">
           <button type="button" className="secondary-button" onClick={toggleRunning} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : phase==='PAUSE' ? <><Play size={14}/> Gjenoppta</> : <><Play size={14}/> Start</>}</button>
@@ -1250,7 +1234,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         completed_rounds:(isAmrapScore||isDeathByScore||isLadderScore)?(effectiveScoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(effectiveScoreRounds)):null,
         death_by:isDeathByScore?{completed_rounds:Number(effectiveScoreRounds)||0,failed_round:timerSnapshot.death_by_failed_round??null,interval_seconds:timerSnapshot.death_by_interval_seconds??source?.timer_settings?.workout_schema?.ladder?.interval_seconds??60}:null,
         ladder:isLadderScore?{completed_rounds:Number(effectiveScoreRounds)||0,planned_rounds:Number(source?.timer_settings?.workout_schema?.rounds)||5,finished:ladderWasCompleted}:null,
-        extra_reps:isAmrapScore?(effectiveScoreReps===''?0:Number(effectiveScoreReps)):null,
+        extra_reps:(isAmrapScore||isDeathByScore)?(effectiveScoreReps===''?0:Number(effectiveScoreReps)):null,
         split_seconds:Array.isArray(timerSnapshot.laps)?timerSnapshot.laps:[],
         score_time_seconds:parsedTime,
         load_kg:scoreLoad===''?null:Number(scoreLoad),
@@ -1263,7 +1247,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         class_live_session_id:classSessionId||null,workout_date:workoutDate||localDateISO(),format,
         rounds:Math.max(1,(isAmrapScore||isDeathByScore||isLadderScore)?(effectiveScoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(effectiveScoreRounds)):Number(effectiveScoreRounds)||1),
         score_rounds:(isAmrapScore||isDeathByScore||isLadderScore)?(effectiveScoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(effectiveScoreRounds)):effectiveScoreRounds===''?null:Number(effectiveScoreRounds),
-        score_reps:effectiveScoreReps===''?(isAmrapScore?0:null):Number(effectiveScoreReps),
+        score_reps:effectiveScoreReps===''?((isAmrapScore||isDeathByScore)?0:null):Number(effectiveScoreReps),
         score_time_seconds:parsedTime,score_load_kg:scoreLoad===''?null:Number(scoreLoad),
         score_calories:scoreCalories===''?null:Number(scoreCalories),
         score_distance:scoreDistance===''?null:Number(scoreDistance),score_unit:scoreDistance===''?null:scoreUnit,
@@ -1386,7 +1370,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           <section className="workout-finish-results"><h4>Kontroller resultatet</h4><p>Resultat frå klokka er med. Fyll berre inn eller korriger det du treng før du lagrar.</p>
             <div className="engine-fields three">
               {format==='Ladder'&&<div className="workout-result-death-by"><strong>{timerSnapshot.ladder_completed_rounds??0} stigetrinn fullførte</strong><small>{timerSnapshot.ladder_finished?'Heile Ladder-opplegget er fullført. Tida blir lagra automatisk.':'Avslutta før alle stigetrinn var fullførte. Dette blir ikkje rekna som ein For Time-PR.'}</small><label>Korriger fullførte trinn<input type="number" min="0" step="1" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder={String(timerSnapshot.ladder_completed_rounds??0)}/></label></div>}
-              {format==='Death By'&&<div className="workout-result-death-by"><strong>{timerSnapshot.death_by_completed_rounds??0} rundar fullførte</strong><small>{timerSnapshot.death_by_failed_round?`Stoppa i runde ${timerSnapshot.death_by_failed_round}`:'Kontroller talet på fullførte rundar før lagring'}</small><label>Korriger fullførte rundar<input type="number" min="0" step="1" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder={String(timerSnapshot.death_by_completed_rounds??0)}/></label></div>}
+              {format==='Death By'&&<div className="workout-result-death-by"><strong>{timerSnapshot.death_by_completed_rounds??0} førebelse rundar</strong><small>{timerSnapshot.death_by_failed_round?`Stoppa i runde ${timerSnapshot.death_by_failed_round}`:'Klokka går automatisk vidare. Kontroller faktisk fullførte rundar før lagring'}</small><label>Korriger fullførte rundar<input type="number" min="0" step="1" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder={String(timerSnapshot.death_by_completed_rounds??0)}/></label><label>Ekstra reps<input type="number" min="0" step="1" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="0"/></label></div>}
               {(format==='AMRAP'||(['Couplet','Triplet'].includes(format)&&source?.timer_settings?.workout_schema?.combination_mode==='AMRAP'))&&<><label>Fullførte rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder={String(timerSnapshot.roundsCompleted||0)}/></label><label>Ekstra reps<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="0"/></label></>}
               {(['For Time','Chipper'].includes(format)||(['Couplet','Triplet'].includes(format)&&source?.timer_settings?.workout_schema?.combination_mode==='For Time'))&&<label>Sluttid<input value={scoreTime} onChange={e=>setScoreTime(e.target.value)} placeholder={timerSnapshot.elapsed?clock(timerSnapshot.elapsed):'mm:ss'}/></label>}
               {['Strength','Pyramid','Superset','Complex'].includes(format)&&<label>Tungaste løft (kg)<input type="number" min="0" step="0.5" value={scoreLoad} onChange={e=>setScoreLoad(e.target.value)} placeholder="Valfritt"/></label>}

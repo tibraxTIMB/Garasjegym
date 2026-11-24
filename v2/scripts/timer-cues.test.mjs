@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { countdownSignal, secondsToTimerBoundary, runningTimerSignal } from '../src/lib/timerCues.js'
+import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, trainingSignalPattern, playTrainingTone } from '../src/lib/timerCues.js'
 
 test('ten-second start only sounds on three, two, one and start',()=>{
   assert.deepEqual(Array.from({length:11},(_,i)=>countdownSignal(10-i)).filter(Boolean),['tick-3','tick-2','tick-1','start'])
@@ -30,4 +30,26 @@ test('EMOM warns for work/rest and final end; finish overrides transition',()=>{
   assert.equal(runningTimerSignal({secondsToBoundary:3}), 'tick-3')
   assert.equal(runningTimerSignal({secondsToBoundary:0,phaseChanged:true}), 'transition')
   assert.equal(runningTimerSignal({secondsToBoundary:0,phaseChanged:true,finished:true}), 'finish')
+})
+
+test('gym signals are distinct, sustained and have no overlapping notes',()=>{
+ const signals=['start','round','rest','station','finish']
+ assert.equal(new Set(signals.map(s=>JSON.stringify(trainingSignalPattern(s)))).size,signals.length)
+ for(const signal of [...signals,'tick-3','tick-2','tick-1']){
+  let end=0
+  for(const [frequency,duration,delay] of trainingSignalPattern(signal)){
+   assert.ok(frequency>=700&&frequency<=1500)
+   assert.ok(duration>=.18&&delay+1e-8>=end)
+   end=delay+duration
+  }
+ }
+})
+test('full-volume audio peaks are bounded and mute creates no oscillators',()=>{
+ const peaks=[];let count=0
+ const context={currentTime:0,destination:{},createOscillator(){count++;return {frequency:{setValueAtTime(){}},connect(){},disconnect(){},start(){},stop(){}}},createGain(){return {gain:{setValueAtTime(){},linearRampToValueAtTime(v){if(v>0)peaks.push(v)}},connect(){},disconnect(){}}}}
+ playTrainingTone(context,1000,.3,0,0)
+ assert.equal(count,0)
+ playTrainingTone(context,1000,.3,0,100)
+ assert.equal(count,2)
+ assert.ok(peaks.reduce((a,b)=>a+b,0)<=1)
 })

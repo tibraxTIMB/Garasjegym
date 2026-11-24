@@ -89,3 +89,15 @@ test('timer and builder use one explicit per-round confirmation path',()=>{
  assert.match(builder,/deathByIntervalSec/)
  assert.match(builder,/interval_seconds:Number\(deathByIntervalMin\)\*60/)
 })
+
+test('live Death By advances automatically even without confirmation',()=>{
+ const config={interval_seconds:20,start:2,step:3}
+ const auto={autoAdvance:true}
+ for(const [elapsed,round,reps,left,completed] of [[0,1,2,20,0],[19,1,2,1,0],[20,2,5,20,1],[40,3,8,20,2],[85,5,14,15,4]]){
+  const s=deathByTimerState(elapsed,0,config,auto)
+  assert.deepEqual([s.round,s.targetReps,s.secondsLeft,s.completedRounds,s.failed],[round,reps,left,completed,false])
+ }
+ assert.equal(deathByTimerState(19,1,config,auto).roundConfirmed,true)
+ const training=readFileSync(new URL('../src/components/Training.jsx',import.meta.url),'utf8')
+ assert.match(training,/deathByTimerState\([^\n]+autoAdvance:true/)
+})
