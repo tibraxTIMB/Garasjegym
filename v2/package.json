@@ -54,7 +54,7 @@
     "test:membership-candidate": "node --test scripts/membership-candidate.test.mjs",
     "test:composite-wod": "node --test scripts/composite-wod.test.mjs",
     "test:wod-import-structured": "node --test scripts/wod-import-structured.test.mjs",
-    "test:infotainment-home-pwa": "node --test scripts/infotainment-home-pwa.test.mjs",
+    "test:infotainment-home-pwa": "node --test scripts/infotainment-home-pwa.test.mjs scripts/startup-intro.test.mjs",
     "prebuild": "node scripts/render-training-audio.mjs",
     "predev": "node scripts/render-training-audio.mjs"
   },

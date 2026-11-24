@@ -167,7 +167,7 @@ function AuthScreen({ recovery = false, invitation = false, onRecoveryComplete, 
 }
 
 function LoadingScreen({ text }) {
-  return <main className="loading-shell"><div className="brand-mark"><Wrench size={22} /></div><strong>{text}</strong></main>
+  return <main className="loading-shell" role="status"><img className="gg-loading-emblem" src={`${import.meta.env.BASE_URL}garasjegym-49-192.png`} alt="" width="104" height="104"/><strong>{text}</strong></main>
 }
 
 export default function App() {

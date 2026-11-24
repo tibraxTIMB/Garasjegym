@@ -1,6 +1,6 @@
 const CACHE_PREFIX = 'garasjegym-app-shell-'
 // A fresh cache also discards older shell assets and cached partial media responses.
-const CACHE_NAME = CACHE_PREFIX + 'v10-gazelle-musical-flow'
+const CACHE_NAME = CACHE_PREFIX + 'v11-gazelle-animated-intro'
 const APP_SCOPE = '/Garasjegym/'
 const SHELL_FILES = [
   APP_SCOPE,
