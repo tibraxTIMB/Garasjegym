@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "id": "pt",
+      "name": "EISEN",
+      "bpm": 100,
+      "key": "D Minor",
+      "caption": "Instrumental cinematic industrial boxing arena sound design. Realistic close-miked steel boxing bell, massive dark bronze tam-tam gong, low orchestral drums, natural metallic decay, restrained industrial percussion. Powerful physical transients, spacious real room, no electronic bleeps, no vocals. Sparse distinct hits, purposeful silence, final huge triumphant gong.",
+      "victory": "Cinematic heavyweight championship victory, authentic boxing bell triplet, grand resonant bronze gong and orchestral low percussion, confident rising dramatic cadence, no voice."
+    },
+    {
+      "id": "personal",
+      "name": "DISKOPANZER",
+      "bpm": 148,
+      "key": "F Minor",
+      "caption": "Original high-energy late 1990s European rave, uplifting eurodance and melodic trance instrumental. Huge tight four-on-floor kick, rolling sidechained offbeat bass, bright layered supersaw hook, crisp clap, open hats, energetic snare build, memorable new melodic motif. Driving stadium club mix, punchy clean stereo, uplifting release, no vocals, no familiar melodies.",
+      "victory": "Triumphant euphoric eurodance trance victory anthem, same tempo and tonal center, rising chords, memorable original supersaw fanfare, pounding kick, big resolved final downbeat, celebratory not ominous, no vocals."
+    },
+    {
+      "id": "group",
+      "name": "BALKAN BERSERK",
+      "bpm": 154,
+      "key": "D Minor",
+      "caption": "Original energetic Balkan brass wedding band meets angular alternative metal and gypsy punk instrumental. Live trumpets, trombones, tuba, gritty distorted double-tracked electric guitar, acoustic drums, rapid asymmetric rhythmic accents, chromatic brass call-and-response and stomping dance groove. Wild human ensemble, joyful intensity, tight punchy mix, no vocals or borrowed melodies.",
+      "victory": "Exuberant Balkan brass and heavy guitar victory fanfare, same ensemble and tonal center, celebratory call-and-response, fast trumpet runs, triumphant major-mode lift, enormous final ensemble hit and cymbal decay, no vocals."
+    }
+  ],
+  "signals": {
+    "tick-3": [
+      0.25,
+      0.95
+    ],
+    "tick-2": [
+      0.25,
+      0.95
+    ],
+    "tick-1": [
+      0.25,
+      0.95
+    ],
+    "start": [
+      0.8,
+      3.2
+    ],
+    "round": [
+      0.5,
+      1.5
+    ],
+    "rest": [
+      0.5,
+      1.8
+    ],
+    "station": [
+      0.35,
+      1.2
+    ],
+    "finish": [
+      1,
+      4.5
+    ],
+    "registered": [
+      0.2,
+      0.7
+    ],
+    "pr": [
+      4,
+      8
+    ]
+  },
+  "notes": "Choose exact cue cuts by ear. For EISEN allow natural gong/bell tails up to 6 seconds for start, round, rest, station and finish; ticks always <1s. No generated master is automatically approved."
+}
