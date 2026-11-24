@@ -1,14 +1,22 @@
-name: Audio Studio - anonymous generation trial
+name: Audio Studio - CPU MusicGen trial
 on:
   push:
     branches: [audio-studio-ki-probe]
-    paths: ['.github/workflows/audio-studio-probe.yml', 'v2/audio-source/anonymous_generation.py']
+    paths: ['.github/workflows/audio-studio-probe.yml', 'v2/audio-source/musicgen_cpu.py']
 permissions:
   contents: read
+concurrency:
+  group: audio-studio-ki-probe
+  cancel-in-progress: true
 jobs:
   generate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 30
+    env:
+      HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -16,14 +24,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install public Gradio client
-        run: pip install 'gradio_client>=1.8,<3'
-      - name: Generate original anonymous trial takes
-        run: python v2/audio-source/anonymous_generation.py
+      - name: Install CPU inference runtime
+        run: |
+          python -m pip install --no-cache-dir torch==2.7.1 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --no-cache-dir 'transformers==4.53.3' 'numpy<3' 'scipy' 'sentencepiece'
+      - name: Render three original stereo music trials
+        run: python -u v2/audio-source/musicgen_cpu.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: audio-studio-review-only
+          name: audio-studio-cpu-review-only
           path: audio-studio-output/
           if-no-files-found: warn
           retention-days: 7
