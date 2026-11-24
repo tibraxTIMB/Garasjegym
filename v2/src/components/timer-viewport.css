@@ -551,3 +551,9 @@
  .gg-live-timer--manual .gg-live-timer__footer .gg-manual-action{min-height:76px}
  .gg-live-timer--xl .gg-live-timer__footer .gg-manual-action{min-height:88px}
 }
+
+/* Keep the primary and secondary targets fixed when undo becomes available.
+   The empty music dock keeps its auto grid row rather than shifting the footer. */
+.gg-live-timer__music-dock:empty{display:block!important;height:0;min-height:0;padding:0;border:0;margin:0;overflow:hidden}
+.gg-manual-undo:disabled{opacity:.38}
+.gg-live-timer__footer .gg-timer-secondary-actions>button{flex:1 1 0}

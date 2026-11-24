@@ -48,3 +48,12 @@ test('manual round registration blocks rapid repeated taps for five seconds',()=
  const css=source('../src/components/timer-viewport.css')
  assert.match(css,/gg-manual-action[^\n]+min-height:84px/)
 })
+
+test('undo keeps a fixed target and is unavailable until a manual score exists',()=>{
+ const timer=source('../src/components/Training.jsx')
+ assert.match(timer,/const undoButton=manualButtonVisible/)
+ assert.match(timer,/className="gg-manual-undo" disabled=\{!canUndoManual\}/)
+ assert.match(timer,/lastRunningCueSecondRef\.current=-1;manualActionDeadline\.current=0/)
+ const css=source('../src/components/timer-viewport.css')
+ assert.match(css,/gg-live-timer__music-dock:empty\{display:block!important;height:0/)
+})

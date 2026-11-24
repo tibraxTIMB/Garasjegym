@@ -122,7 +122,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     const id=window.setInterval(refresh,100)
     return()=>window.clearInterval(id)
   },[manualLockUntil])
-  function clearManualAction(){manualActionDeadline.current=0;setManualLockUntil(0);setManualLockSeconds(0);lastManualAction.current=null;setCanUndoManual(false);setFinishConfirm(false)}
+  function clearManualAction(){lastRunningCueSecondRef.current=-1;manualActionDeadline.current=0;setManualLockUntil(0);setManualLockSeconds(0);lastManualAction.current=null;setCanUndoManual(false);setFinishConfirm(false)}
   function claimManualAction(kind){
     const next=nextManualActionDeadline(Date.now(),manualActionDeadline.current,roundGuardSeconds)
     if(next===null)return false
@@ -572,7 +572,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const manualButton=<button type="button" className={'gg-manual-action'+(manualLockSeconds>0?' is-registered':'')+(buttonSize==='xl'?' is-xl':'')} onClick={isAmrap?lapAction:isLadder?completeLadderRound:isDeathBy?completeDeathByRound:splitAction} disabled={manualButtonDisabled} aria-label={manualLockSeconds>0?'Registrert – sperra mot dobbelttrykk':manualButtonText}>
     {manualLockSeconds>0?<CheckCircle2 size={27}/>:<Plus size={27}/>}<span><b>{manualLockSeconds>0?(canUndoManual?'REGISTRERT':'STADFESTA'):manualButtonText}</b>{manualLockSeconds>0&&<small>Vent {manualLockSeconds} sek</small>}</span>
   </button>
-  const undoButton=canUndoManual&&<button type="button" className="gg-manual-undo" onClick={undoManualAction} aria-label="Angre siste registrering"><Undo2 size={17}/> Angre</button>
+  const undoButton=manualButtonVisible&&(isAmrap||isStopwatch||isForTime)&&<button type="button" className="gg-manual-undo" disabled={!canUndoManual} onClick={undoManualAction} aria-label="Angre siste registrering"><Undo2 size={17}/> Angre</button>
   const actionControls=<div className="gg-timer-audio-controls">
     <label>Trefflate<select value={buttonSize} onChange={e=>setButtonSize(e.target.value)}><option value="large">Stor (standard)</option><option value="xl">Ekstra stor</option></select></label>
     <label>Sperre mot dobbelttrykk<select value={roundGuardSeconds} onChange={e=>setRoundGuardSeconds(Number(e.target.value))}>{[1,2,3,5,10].map(s=><option key={s} value={s}>{s} sekund</option>)}</select></label>
@@ -591,7 +591,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   </div>
   const resetTimer = () => { clearManualAction(); timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; scheduledStartedAt.current=null; setCountdownDeadline(null);setCountdownRemaining(0); setRunning(false); setElapsed(0); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
   return <div ref={timerContainerRef} className={stageVisible ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
-    {stageVisible ? <section className={'gg-live-timer'+(stageLapHistory.length?' gg-live-timer--with-laps':'')+(manualButtonVisible?' gg-live-timer--manual':'')+(buttonSize==='xl'?' gg-live-timer--xl':'')} aria-label="Fullskjermsklokke for treningsøkt">
+    {stageVisible ? <section className={'gg-live-timer'+(stageLapHistory.length?' gg-live-timer--with-laps':'')+(manualButtonVisible?' gg-live-timer--manual':'')+(buttonSize==='xl'?' gg-live-timer--xl':'')+(!showMusic?' gg-live-timer--no-music':'')} aria-label="Fullskjermsklokke for treningsøkt">
       <header className="gg-live-timer__header">
         <div className="gg-live-timer__identity"><span className="gg-live-timer__brand">GARASJEGYM</span><strong>{format}</strong><span className="gg-live-timer__origin">{originLabel}</span></div>
         <div className="gg-live-timer__tools">
