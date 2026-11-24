@@ -8,10 +8,9 @@ import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
 import { getWodSchemaItems, sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
 import { formatParticipation, normalizeWodEngine, isEmomFormat, emomIntervalSeconds, emomDisplayLabel, emomPrescribedSetCount } from '../lib/wodEngine.js'
-import PerformanceCenter from './PerformanceCenter.jsx'
 import { clampElapsedToTarget, elapsedSecondsFromTimestamp, getFixedSlotTimerState, splitDuration, summarizeLapSplits, nextManualActionDeadline } from '../lib/timerClock.js'
 import { getExerciseMeasurementFlags, isErgExercise } from '../lib/exerciseMeasurements.js'
-import {checkPRVictories,hasVictoryCandidate,workoutPRVictories,readPRVictoryAudio} from '../lib/prVictory.js'
+import {checkPRVictories,hasVictoryCandidate,readPRVictoryAudio} from '../lib/prVictory.js'
 import {exerciseResultReview} from '../lib/resultReview.js'
 import {COMPOSITE_FORMAT, compositeBlockForTimer, compositeTimerConfig, compositeTransitionSeconds, compositeScoredBlocks, plannedFixedEmomSets} from '../lib/compositeWod.js'
 import { exerciseRecordType } from '../lib/prMetrics.js'
@@ -20,7 +19,7 @@ import { equivalentLibraryWodSource } from '../lib/compositeLibrary.js'
 import { ladderStatus } from '../lib/ladder.js'
 import { getWodSideLabel, isSideSelectableExercise, WOD_SIDE_OPTIONS } from '../lib/wodSides.js'
 import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib/trainingLaunchContext.js'
-import { exerciseBrowseCategory, exerciseBrowseOrder } from '../lib/exerciseCategories.js'
+import { exerciseBrowseCategory } from '../lib/exerciseCategories.js'
 import { restoreWorkoutDraft, saveWorkoutDraft, clearWorkoutDraft, resumedElapsedSeconds } from '../lib/workoutDraft.js'
 import { canSaveDurationOnlyWorkout } from '../lib/freeSession.js'
 import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, TRAINING_AUDIO_PROFILES } from '../lib/timerCues.js'
@@ -892,7 +891,7 @@ function CompositeTimer({schema,exerciseList=[],prescriptionLevel='rx',wodName='
  </section>
 }
 
-export default function Training({ memberId = '', launchWodId = null, launchClassSessionId = null, launchClassResult = false, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, onTimerSnapshot, onBackground, onOpenWodLibrary = () => {}, onOpenTrainingPlan = () => {}, onOpenSchedule = () => {}, visible = true, simpleMode = false, quickStart = false, onQuickStartConsumed, quickManualEntry = false, onQuickManualEntryConsumed, onSaved, onDiscard }) {
+export default function Training({ memberId = '', launchWodId = null, launchClassSessionId = null, launchClassResult = false, launchAssignmentId = null, launchProgramSessionId = null, launchProgramSessionTitle = '', onLaunchConsumed, onTimerSnapshot, onBackground, onOpenWodLibrary = () => {}, onOpenTrainingPlan = () => {}, onOpenSchedule = () => {}, onOpenDailyWod = () => {}, onOpenHistory = () => {}, onOpenPR = () => {}, visible = true, simpleMode = false, quickStart = false, onQuickStartConsumed, quickManualEntry = false, onQuickManualEntryConsumed, onSaved, onDiscard }) {
   const savedDraft = useRef(restoreWorkoutDraft(memberId)).current
   const [wods, setWods] = useState([])
   const [dailyWodId,setDailyWodId]=useState(null)
@@ -903,9 +902,6 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const [wodSearch, setWodSearch] = useState('')
   const [expandedWodId, setExpandedWodId] = useState(null)
   const [favoritesOnly, setFavoritesOnly] = useState(false)
-  const [libraryQuery,setLibraryQuery]=useState('')
-  const [history, setHistory] = useState([])
-  const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -1012,10 +1008,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       }
       if(requestId!==loadSequence.current)return
 
-      const [e,h,pr,auth] = await Promise.all([
+      const [e,auth] = await Promise.all([
         supabase.from('exercises').select('id,name,category,equipment,description,video_url').eq('is_active', true).order('name'),
-        supabase.from('workout_logs').select('id,source_wod_id,title,workout_date,format,rounds,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,result_data,note,created_at,workout_exercises(id,exercise_id,exercise_name,sort_order,workout_sets(id,set_number,reps,load_kg,time_text,time_seconds,height_cm))').order('workout_date', { ascending: false }).limit(500),
-        supabase.from('personal_records').select('id,exercise_name,result,unit,note,record_date').order('record_date', { ascending: false }).limit(500),
         supabase.auth.getUser()
       ])
       if(requestId!==loadSequence.current)return
@@ -1025,10 +1019,6 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       else setWods(w.data||[])
       if(e.error)failures.push('Øvingsbibliotek: '+e.error.message)
       else setExercises(e.data||[])
-      if(h.error)failures.push('Treningslogg: '+h.error.message)
-      else setHistory(h.data||[])
-      if(pr.error)failures.push('Personlege rekordar: '+pr.error.message)
-      else setRecords(pr.data||[])
       if(auth.error)failures.push('Innlogging: '+auth.error.message)
 
       const user=auth.data?.user
@@ -1133,7 +1123,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   }
 
 
-  const filteredExercises = useMemo(() => exercises.filter(e => e.name.toLowerCase().includes(query.toLowerCase()) || (e.category || '').toLowerCase().includes(query.toLowerCase())), [exercises, query])
+  const filteredExercises = useMemo(() => {const q=query.trim().toLowerCase();return exercises.filter(e=>(!favoritesOnly||favoriteNames.includes(e.name))&&[e.name,e.category,e.equipment,exerciseBrowseCategory(e)].some(value=>String(value||'').toLowerCase().includes(q)))}, [exercises,query,favoritesOnly,favoriteNames])
 
   function leaveWorkout() {
     if (saving || !window.confirm('Forkasta denne økta utan å lagra? Ingen resultat eller PR blir registrerte. WOD-malen blir behalden.')) return
@@ -1433,7 +1423,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       clearTimerSnapshot()
       setSaveToken(crypto.randomUUID())
       await loadAll()
-      onSaved?.()
+      onSaved?.({victories})
     } catch (err) {
       setError(err.message || 'Kunne ikkje lagra økta.')
     } finally {
@@ -1472,7 +1462,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       <section className="engine-section">
         <div className="engine-section-title"><h4>Øvingar og sett</h4><span>Legg inn resultat per sett</span></div>
         <div className="exercise-search"><Search size={16}/><input ref={exerciseSearchRef} value={query} onChange={e => setQuery(e.target.value)} placeholder="Søk i øvingsbiblioteket …"/></div>
-        {query && <div className="exercise-pick-list">{filteredExercises.slice(0,8).map(ex => <button type="button" key={ex.id} onClick={() => addExercise(ex)}><Plus size={14}/><span>{ex.name}</span><small>{ex.category}</small></button>)}</div>}
+        <button type="button" className={'secondary-button gg-exercise-favorite-filter'+(favoritesOnly?' active':'')} aria-pressed={favoritesOnly} onClick={()=>setFavoritesOnly(value=>!value)}><Star size={16}/> {favoritesOnly?'Vis alle øvingar':'Favorittøvingar'}</button>
+        {(query||favoritesOnly)&&<div className="exercise-pick-list gg-exercise-pick-with-favorites">{filteredExercises.length?filteredExercises.slice(0,favoritesOnly?filteredExercises.length:24).map(ex=><div className="gg-exercise-pick-row" key={ex.id}><button type="button" onClick={()=>addExercise(ex)}><Plus size={14}/><span>{ex.name}</span><small>{ex.category}</small></button><button type="button" className={'gg-exercise-pick-star'+(favoriteNames.includes(ex.name)?' selected':'')} aria-label={favoriteNames.includes(ex.name)?'Fjern favoritt: '+ex.name:'Legg til favoritt: '+ex.name} aria-pressed={favoriteNames.includes(ex.name)} onClick={()=>toggleFavorite(ex)}><Star size={17} fill={favoriteNames.includes(ex.name)?'currentColor':'none'}/></button></div>):<small>{favoritesOnly?'Ingen favorittøvingar passar søket.':'Ingen øvingar passar søket.'}</small>}</div>}
         {items.map((item, index) => <article className="engine-exercise" key={item.key}>
           <div className="engine-exercise-head"><strong>{index + 1}. {item.exercise_name || 'Ny øving'}</strong>{item.is_complex&&<span className="training-complex-tag">COMPLEX</span>}<button type="button" className="danger-icon" aria-label="Fjern øving" onClick={() => setItems(current => current.filter(x => x.key !== item.key))}><Trash2 size={16}/></button></div>
           {item.is_complex&&Array.isArray(item.complex_steps)&&<div className="training-complex-sequence"><strong>Rørslesekvens</strong><ol>{item.complex_steps.map((step,stepIndex)=><li key={stepIndex}><span>{step.name}</span><b>{step.reps} ×</b></li>)}</ol></div>}
@@ -1563,26 +1554,20 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           <button type="button" onClick={()=>{setMode('home');onOpenSchedule()}}><Clock3 size={22}/><span><strong>Timeplan</strong><small>PT og gruppetimar</small></span><ChevronDown size={17}/></button>
         </div>
       </section> : <>
-        <div className="training-heading"><div><span className="section-kicker">ØKT · START TRENING</span><h3>Kva vil du trena?</h3><p>Start fritt eller vel ei ferdig økt. Resultatet blir lagra på profilen din.</p></div>{!simpleMode&&<span className="count-pill">{RELEASE_NAME}</span>}</div>
-        <div className="engine-entry-grid training-entry-compact">
-          <button type="button" onClick={()=>startWorkout(null,{autoStart:false})}><Dumbbell size={21}/><strong>Fri trening</strong><small>Start klokka. Legg til øvingar eller WOD-ar undervegs.</small></button>
-          <button type="button" onClick={()=>setMode('choose')}><List size={21}/><strong>Vel WOD eller opplegg</strong><small>PT-plan, favorittar og WOD-bibliotek.</small></button>
+        <div className="training-heading"><div><span className="section-kicker">ØKT · START TRENING</span><h3>Kva vil du trena?</h3></div>{!simpleMode&&<span className="count-pill">{RELEASE_NAME}</span>}</div>
+        <div className="gg-training-home-actions">
+          {dailyWodId&&<button type="button" className="gg-training-daily-action" onClick={()=>onOpenDailyWod(dailyWodId)}><Activity size={23}/><span><strong>Dagens WOD</strong><small>{wods.find(w=>w.id===dailyWodId)?.name||'Opne dagens økt'}</small></span><ChevronRight size={18}/></button>}
+          <button type="button" onClick={()=>onOpenWodLibrary()}><List size={23}/><span><strong>Vel WOD</strong><small>Bibliotek og favorittar</small></span><ChevronRight size={18}/></button>
+          <button type="button" onClick={()=>startWorkout(null,{autoStart:false})}><Dumbbell size={23}/><span><strong>Fri trening</strong><small>Start eiga økt</small></span><ChevronRight size={18}/></button>
+          <button type="button" onClick={()=>onOpenTrainingPlan()}><CalendarDays size={23}/><span><strong>Tildelte økter</strong><small>Treningsplan og PT</small></span><ChevronRight size={18}/></button>
+          <button type="button" onClick={()=>onOpenSchedule()}><Clock3 size={23}/><span><strong>Timeplan</strong><small>PT og gruppetimar</small></span><ChevronRight size={18}/></button>
+          <button type="button" className="training-afterregister-link" onClick={startManualWorkout}><History size={23}/><span><strong>Etterregistrering</strong><small>Registrer ei gjennomført økt</small></span><ChevronRight size={18}/></button>
         </div>
-        <button type="button" className="training-afterregister-link" onClick={startManualWorkout}><History size={16}/> Etterregistrer ei gjennomført økt <ChevronDown size={15}/></button>
+        <div className="gg-training-home-shortcuts" aria-label="Snarvegar til Mi side">
+          <button type="button" onClick={()=>onOpenHistory()}><History size={19}/><strong>Treningslogg</strong><ChevronRight size={16}/></button>
+          <button type="button" onClick={()=>onOpenPR()}><Trophy size={19}/><strong>PR-senter</strong><ChevronRight size={16}/></button>
+        </div>
       </>}
-      {mode==='home'&&<details className="training-extra-tools"><summary>Meir: øvingsbibliotek, historikk og PR</summary>
-      <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
-        <div className="training-heading"><div><div className="section-kicker">HISTORIKK</div><h3>Siste økter</h3></div><span className="count-pill">{history.length} økter</span></div>
-        {history.length ? <div className="history-list">{history.map(log => <article className="history-card" key={log.id}><div className="history-card-top"><strong>{log.title} {workoutPRVictories(log).length>0&&<span className="gg-pr-marker" title="Personleg rekord på eit standardløft"><Trophy size={13}/> PR</span>}</strong><span>{log.workout_date}</span></div><small>{log.format} · {log.workout_exercises?.length || 0} øvingar</small>{Array.isArray(log.result_data?.block_summary)&&log.result_data.block_summary.length>0&&<div className="gg-composite-history">{log.result_data.block_summary.map((block,index)=><div key={block.id||index}><strong>{index+1}. {block.title||block.format}</strong><span>{block.format} · {clock(block.elapsed||0)}{block.format==='AMRAP'?' · '+(block.roundsCompleted||0)+' rundar + '+(block.extra_reps||0)+' reps':block.format==='Death By'?' · '+(block.death_by_completed_rounds??block.roundsCompleted??0)+' rundar fullførte':''}{block.time_cap_reached?' · Tidsgrense':''}</span></div>)}</div>}{log.workout_exercises?.sort((a,b)=>a.sort_order-b.sort_order).map((ex,index) => {const result=log.result_data?.exercise_results?.[index];return <div className="history-exercise" key={ex.id}><b>{ex.exercise_name}</b><span>{[result?.row_value!=null?[result.row_value,({m:'m',km:'km',cal:'cal',s:'sek',min:'min'})[result.row_unit]||result.row_unit].filter(Boolean).join(' '):'',(ex.workout_sets || []).map((s,setIndex) => [s.reps ? (result?.is_complex?'syklusar ':'')+s.reps+(result?.is_complex?'':' reps') : '', s.height_cm ? s.height_cm+' cm' : '', s.load_kg ? s.load_kg+' kg' : '', s.time_seconds ? s.time_seconds+' sek' : s.time_text || '',result?.sets?.[setIndex]?.rir!=null?'RIR '+result.sets[setIndex].rir:''].filter(Boolean).join(' · ')).filter(Boolean).join(' / ')].filter(Boolean).join(' · ') || 'Ingen resultat registrert'}</span>{result?.is_complex&&Array.isArray(result.complex_steps)&&<small className="training-complex-sequence"><strong>Komplekssekvens</strong><ol>{result.complex_steps.map((step,stepIndex)=><li key={stepIndex}>{step.reps} × {step.name}</li>)}</ol></small>}</div>})}{log.note && <p>{log.note}</p>}</article>)}</div> : <div className="empty-state">Du har ikkje lagra økter enno.</div>}
-      </section>
-      <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
-        <PerformanceCenter history={history} records={records}/>
-      </section>
-      <section className={simpleMode ? "engine-section simple-hidden-section" : "engine-section"}>
-        <div className="training-heading"><div><div className="section-kicker">BIBLIOTEK</div><h3>Øvingsbibliotek</h3></div><span className="count-pill">{exercises.length} øvingar</span></div>
-        {exercises.length ? <><div className="exercise-library-toolbar"><label className="exercise-library-search"><Search size={15}/><input value={libraryQuery} onChange={e => setLibraryQuery(e.target.value)} placeholder="Søk etter øving eller kategori …"/></label><button type="button" className={favoritesOnly ? 'secondary-button favorite-filter active' : 'secondary-button favorite-filter'} onClick={() => setFavoritesOnly(v => !v)}><Star size={14}/>{favoritesOnly ? 'Vis alle øvingar' : 'Favorittar'}</button></div>{(()=>{const q=libraryQuery.trim().toLowerCase();const filtered=exercises.filter(ex=>(!favoritesOnly||favoriteNames.includes(ex.name))&&(!q||[ex.name,ex.category,ex.equipment,exerciseBrowseCategory(ex)].some(v=>(v||'').toLowerCase().includes(q))));const categories=[...new Set(filtered.map(exerciseBrowseCategory))].sort(exerciseBrowseOrder);return <div className="exercise-library-groups">{categories.length?categories.map(category=>{const group=filtered.filter(ex=>exerciseBrowseCategory(ex)===category);return <details className="exercise-library-group" key={`${category}-${Boolean(q)}`} open={Boolean(q)}><summary><strong>{category}</strong><span>{group.length}</span></summary><div className="exercise-list">{group.map(ex=><div className="exercise-row" key={ex.id}><Dumbbell size={16}/><div><strong>{ex.name}</strong><span>{[ex.category,ex.equipment].filter(Boolean).join(' · ')}</span></div><button type="button" className={favoriteNames.includes(ex.name)?'favorite-star selected':'favorite-star'} onClick={()=>toggleFavorite(ex)} aria-label={favoriteNames.includes(ex.name)?'Fjern favoritt':'Legg til favoritt'}><Star size={17} fill={favoriteNames.includes(ex.name)?'currentColor':'none'}/></button></div>)}</div></details>}) : <div className="empty-state">{favoritesOnly?'Du har ikkje merkt nokon øvingar som favoritt.':'Ingen øvingar passar søket.'}</div>}</div>})()}</> : <div className="empty-state">Øvingsbiblioteket er tomt. Øvingar kan leggjast inn av admin/manager.</div>}
-      </section>
-      </details>}
     </>}
   </div>
 }

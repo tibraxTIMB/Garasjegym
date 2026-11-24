@@ -647,3 +647,24 @@
 .gg-training-session .exercise-library-group > summary strong { font-size: clamp(10px, 2.4vw, 12px); line-height: 1.18; overflow-wrap: anywhere; }
 .gg-training-session .exercise-library-group > summary span { color: #efb257; font-size: 12px; font-weight: 800; }
 .gg-training-session .exercise-library-group .exercise-list { border: 0; background: transparent; }
+
+/* One training entry, no parallel history/PR screen. */
+.gg-training-home-actions{display:grid;gap:8px}
+.gg-training-home-actions>button{display:grid;grid-template-columns:27px minmax(0,1fr) 18px;align-items:center;text-align:left;gap:11px;padding:11px 12px;min-height:62px;background:#243137;color:#f3f6f5;border:1px solid #455960;border-radius:11px}
+.gg-training-home-actions>button>svg:first-child{color:#efa63e}
+.gg-training-home-actions>button>svg:last-child{color:#aebfc1}
+.gg-training-home-actions>button>span{display:grid;gap:3px;min-width:0}
+.gg-training-home-actions>button strong{font-size:15px}
+.gg-training-home-actions>button small{font-size:12px;color:#bdcccd;line-height:1.35}
+.gg-training-home-actions>button.gg-training-daily-action{border-color:#d29845;background:#302b24}
+.gg-training-home-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding-top:11px;border-top:1px solid #45595e}
+.gg-training-home-shortcuts>button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:48px;border:1px solid #53666c;border-radius:10px;background:transparent;color:#dce6e5;font-size:13px}
+.gg-training-home-shortcuts>button>svg:first-child{color:#d6ad67}
+.gg-training-home-shortcuts>button>svg:last-child{margin-left:auto;color:#9aadaf}
+.gg-exercise-favorite-filter{min-height:44px}
+.gg-exercise-favorite-filter.active,.gg-exercise-pick-star.selected{color:#f0ae4e}
+.gg-exercise-pick-with-favorites{display:grid;gap:5px;max-height:420px;overflow:auto}
+.gg-exercise-pick-row{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:5px;align-items:stretch}
+.gg-exercise-pick-row>button{min-height:44px;min-width:0}
+.gg-exercise-pick-row>button.gg-exercise-pick-star{display:grid;place-items:center;padding:0}
+@media(min-width:760px){.gg-training-home-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.gg-training-home-actions>.gg-training-daily-action{grid-column:1/-1}}
