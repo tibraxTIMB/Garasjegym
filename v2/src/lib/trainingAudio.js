@@ -52,7 +52,7 @@ export async function playPackSignal(context,signal,volume,profile,{preview=fals
    continue
   }
   try{voice.source.stop()}catch{}
-  voices.splice(voices.indexOf(voice),1)
+  const index=voices.indexOf(voice);if(index>=0)voices.splice(index,1)
  }
  const source=context.createBufferSource(),gain=context.createGain()
  source.buffer=buffer;gain.gain.value=level(volume)*(keepTail&&voices.length?.77:1)

@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
-import {SOUND_PACK_PROFILES,SOUND_PACK_SIGNALS,soundPackUrl} from '../src/lib/trainingAudio.js'
+import {SOUND_PACK_PROFILES,SOUND_PACK_SIGNALS,soundPackUrl,playPackSignal,stopPackAudio} from '../src/lib/trainingAudio.js'
 const read=p=>readFileSync(new URL(p,import.meta.url),'utf8')
 test('30 distinct local WAV paths and three sample-based profiles',()=>{
  const urls=SOUND_PACK_PROFILES.flatMap(p=>SOUND_PACK_SIGNALS.map(s=>soundPackUrl(p,s,'/Garasjegym/')))
@@ -44,4 +44,23 @@ test('victory and finish are independent arrangements and bell tails are retaine
  assert.match(script,/score.group.pr=\[\.\.\.brassCall\(0,12/)
  assert.match(engine,/keepTail=!preview&&profile==='pt'/)
  assert.match(engine,/generations.get\(context\)!==generation/)
+})
+
+test('bell tails overlap at reduced gain, while previews, PR and other profiles replace old sounds',async()=>{
+ const originalFetch=globalThis.fetch
+ globalThis.fetch=async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(2)})
+ const sources=[],gains=[]
+ const context={state:'running',currentTime:1,destination:{},decodeAudioData:async()=>({}),createBufferSource(){const s={stopped:false,connect(){},disconnect(){},start(){},stop(){this.stopped=true}};sources.push(s);return s},createGain(){const gain={value:0,cancelScheduledValues(){},setValueAtTime(v){this.value=v}};gains.push(gain);return {gain,connect(){},disconnect(){}}}}
+ try{
+  await playPackSignal(context,'rest',100,'pt')
+  await playPackSignal(context,'tick-3',100,'pt')
+  assert.equal(sources[0].stopped,false);assert.equal(gains[0].value,.22)
+  await playPackSignal(context,'tick-2',100,'pt')
+  assert.equal(sources[0].stopped,true);assert.equal(sources[1].stopped,false)
+  await playPackSignal(context,'pr',100,'pt')
+  assert.equal(sources[1].stopped,true);assert.equal(sources[2].stopped,true)
+  await playPackSignal(context,'finish',100,'personal',{preview:true})
+  assert.equal(sources[3].stopped,true)
+  stopPackAudio(context);assert.equal(sources[4].stopped,true)
+ }finally{globalThis.fetch=originalFetch}
 })
