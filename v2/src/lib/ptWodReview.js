@@ -143,7 +143,7 @@ export function ptPrescribedWorkContext(result,schema,exercise) {
  const seconds=interval>0?interval:parsed?Math.round(Number(parsed[1])*60):60
  const duration=Number(part?.duration_seconds||origin?.duration_seconds||schema?.duration_seconds||0)
  const totalSlots=seconds>0&&duration>0?Math.floor(duration/seconds):0
- const slotList=String(item.minute_slot||'').split(/[,;\\s/]+/).map(Number)
+ const slotList=String(item.minute_slot||'').split(/[,;\s/]+/).map(Number)
   .filter(n=>Number.isInteger(n)&&n>=1&&n<=totalSlots)
  const itemSlots=[...new Set(slotList)].length
  const rootItems=(Array.isArray(schema?.items)?schema.items:[]).filter(x=>!x.is_rest)
