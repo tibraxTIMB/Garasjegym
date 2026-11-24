@@ -1,23 +1,23 @@
 const keyFor = memberId => `garasjegym.workout-draft.v1.${memberId}`
 
-export function restoreWorkoutDraft(memberId, storage = globalThis.localStorage) {
-  if (!memberId || !storage) return null
+export function restoreWorkoutDraft(memberId, storage) {
+  if (!memberId) return null
   try {
-    const draft = JSON.parse(storage.getItem(keyFor(memberId)) || 'null')
+    const draft = JSON.parse((storage??globalThis.localStorage).getItem(keyFor(memberId)) || 'null')
     if (draft?.version !== 1 || draft?.memberId !== memberId || draft?.mode !== 'active') return null
     return draft
   } catch { return null }
 }
 
-export function saveWorkoutDraft(memberId, draft, storage = globalThis.localStorage) {
-  if (!memberId || !storage || !draft) return false
-  try { storage.setItem(keyFor(memberId), JSON.stringify({ ...draft, version: 1, memberId, savedAt: Date.now() }));return true }
+export function saveWorkoutDraft(memberId, draft, storage) {
+  if (!memberId || !draft) return false
+  try { (storage??globalThis.localStorage).setItem(keyFor(memberId), JSON.stringify({ ...draft, version: 1, memberId, savedAt: Date.now() }));return true }
   catch { return false }
 }
 
-export function clearWorkoutDraft(memberId, storage = globalThis.localStorage) {
-  if (!memberId || !storage) return
-  try { storage.removeItem(keyFor(memberId)) } catch { /* Optional local cache. */ }
+export function clearWorkoutDraft(memberId, storage) {
+  if (!memberId) return
+  try { (storage??globalThis.localStorage).removeItem(keyFor(memberId)) } catch { /* Optional local cache. */ }
 }
 
 export function resumedElapsedSeconds(snapshot, now = Date.now()) {

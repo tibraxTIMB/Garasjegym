@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
 import {restoreWorkoutDraft,saveWorkoutDraft,clearWorkoutDraft,resumedElapsedSeconds,workoutSaveFingerprint,isRetryableWorkoutError} from '../src/lib/workoutDraft.js'
 import {exerciseBrowseCategory,exerciseBrowseOrder} from '../src/lib/exerciseCategories.js'
 
@@ -45,4 +46,15 @@ test('reconnect retry is restricted to the same submitted result and ignores tim
 })
 test('unavailable local storage reports failure instead of claiming protection',()=>{
  assert.equal(saveWorkoutDraft('member-a',{mode:'active'},{setItem(){throw Error('quota')}}),false)
+})
+
+test('training autosaves drafts without opt-in and retries only after explicit validated save',()=>{
+ const source=readFileSync(new URL('../src/components/Training.jsx',import.meta.url),'utf8')
+ assert.doesNotMatch(source,/Klargjer offline|Offline mode/)
+ assert.match(source,/setDraftProtected\(saveWorkoutDraft\(memberId,draftSnapshot\)\)/)
+ assert.match(source,/if\(automatic&&\(!pendingSave\.current\|\|pendingSave\.current!==fingerprint\|\|isOffline\(\)\)\)return/)
+ assert.match(source,/validated=true\s+if\(isOffline\(\)\)/)
+ assert.match(source,/if\(validated&&isRetryableWorkoutError\(err,isOffline\(\)\)\)/)
+ assert.match(source,/save_token:saveToken/)
+ assert.match(source,/window.addEventListener\('online',retry\)/)
 })
