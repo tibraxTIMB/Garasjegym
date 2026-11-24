@@ -156,6 +156,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   useEffect(()=>{try{localStorage.setItem('garasjegym.timer.sound_volume',String(soundVolume))}catch{/* Valfritt */}},[soundVolume])
   const soundOnRef = useRef(soundOn)
   soundOnRef.current = soundOn
+  useEffect(()=>{if(!soundOn){stopPackAudio(sharedTrainingAudioContext);stopDirectAudio()}},[soundOn])
   const lastCountdownCueRef = useRef({deadline:null,second:null})
   const lastRunningCueSecondRef = useRef(-1)
   const [showTimerSettings, setShowTimerSettings] = useState(false)
@@ -323,7 +324,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     if(!soundOnRef.current||volumeRef.current===0||prefs.audioProfile==='silent')return
     const context=ensureAudioContext()
     stopDirectAudio()
-    playPackSignal(context,signal,volumeRef.current,prefs.audioProfile).then(ok=>{if(ok&&test)setAudioDiagnostic('Web Audio spelar · '+SOUND_PACK_NAMES[prefs.audioProfile]+' · '+signal)}).catch(e=>setAudioDiagnostic('Lydfeil: '+e.message))
+    playPackSignal(context,signal,volumeRef.current,prefs.audioProfile,{preview:test}).then(ok=>{if(ok&&test)setAudioDiagnostic('Web Audio spelar · '+SOUND_PACK_NAMES[prefs.audioProfile]+' · '+signal)}).catch(e=>setAudioDiagnostic('Lydfeil: '+e.message))
   }
   function directAudioTest(){
     const prefs=audioPrefs.current
@@ -469,7 +470,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       (isDeathBy && elapsed > 0 && elapsed % deathByStatus.intervalSeconds === 0))
     const secondsToBoundary = secondsToTimerBoundary({format,elapsed,remainingTotal,phaseRemaining,emomPhaseRemaining,isTimedInterval,isStationCircuit,isEMOM,isCountdown,hasTimeCap,isDeathBy,deathByIntervalSeconds:deathByStatus.intervalSeconds})
     const signal = runningTimerSignal({secondsToBoundary,phaseChanged})
-    if (signal) playSignal(signal === 'transition' ? (isDeathBy || (isEMOM && elapsed % emomCycle === 0) || ((isTimedInterval || isStationCircuit) && inWorkPhase) ? 'round' : isStationCircuit ? 'station' : 'rest') : signal)
+    if (signal) playSignal(signal === 'transition' ? (isDeathBy || (isEMOM && isEmomWorkPhase) || ((isTimedInterval || isStationCircuit) && inWorkPhase) ? 'round' : isStationCircuit || (isEMOM&&!isEmomRestPhase) ? 'station' : 'rest') : signal)
   }, [elapsed, running, timerLimitReached, target, capDuration, hasTimeCap, isCountdown, isEMOM, isDeathBy, deathByStatus.failed, deathByStatus.failureAt, deathByStatus.intervalSeconds, isTimedInterval, isStationCircuit, intervalTotal, stationTotal, cycle, emomCycle, effectiveWorkSeconds, effectiveEmomWorkSeconds, effectiveEmomRestSeconds])
 
   useEffect(() => {
@@ -529,10 +530,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   }
   const autoLaunchRef = useRef(false)
   useEffect(()=>{if(autoStartOnMount&&!autoLaunchRef.current){autoLaunchRef.current=true;beginWorkout(false)}},[autoStartOnMount])
-  const finishCurrent=()=>onFinish({elapsed,laps:[...laps],roundsCompleted:isDeathBy?deathByCompletedRounds:isLadder?ladderCompletedRounds:isAmrap?laps.length:(isStationCircuit||isTimedInterval)?fixedSlotState.roundsCompleted:isEMOM?Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)):round,death_by_completed_rounds:isDeathBy?deathByCompletedRounds:null,death_by_failed_round:isDeathBy?deathByStatus.failedRound:null,ladder_completed_rounds:isLadder?ladderCompletedRounds:null,ladder_finished:isLadder?ladderProgress.finished:null,phase:phase==='TIDSGRENSE'?'TIDSGRENSE':isDeathBy&&deathByStatus.failed?'FERDIG':'FULLFØRT',hasStarted,running:false,savedAt:Date.now()})
+  const finishCurrent=()=>{if(phase!=='FERDIG'&&phase!=='TIDSGRENSE'&&!timerLimitReached)playSignal('finish');onFinish({elapsed,laps:[...laps],roundsCompleted:isDeathBy?deathByCompletedRounds:isLadder?ladderCompletedRounds:isAmrap?laps.length:(isStationCircuit||isTimedInterval)?fixedSlotState.roundsCompleted:isEMOM?Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)):round,death_by_completed_rounds:isDeathBy?deathByCompletedRounds:null,death_by_failed_round:isDeathBy?deathByStatus.failedRound:null,ladder_completed_rounds:isLadder?ladderCompletedRounds:null,ladder_finished:isLadder?ladderProgress.finished:null,phase:phase==='TIDSGRENSE'?'TIDSGRENSE':isDeathBy&&deathByStatus.failed?'FERDIG':'FULLFØRT',hasStarted,running:false,savedAt:Date.now()})}
   const completeDeathByRound=()=>{if(!isDeathBy||!running||!deathByStatus.canConfirm||timerLimitReached||!claimManualAction('death'))return;setDeathByCompletedRounds(deathByStatus.round);playSignal('registered')}
   const completeLadderRound=()=>{if(!isLadder||!running||ladderProgress.finished||timerLimitReached||!claimManualAction('ladder'))return;const count=ladderCompletedRounds+1;const next=ladderStatus(count,schema?.ladder,schema?.rounds??timerSettings?.rounds);setLadderCompletedRounds(count);setLaps(value=>[...value,splitDuration(elapsed,value)]);if(next.finished){setRunning(false);setPhase('FERDIG');playSignal('finish')}else playSignal('registered')}
-  const toggleRunning = () => { if (countdownDeadline !== null) { setCountdownDeadline(null);setCountdownRemaining(0);setPhase('Klar');return } if (!hasStarted) { beginWorkout(false); return } if (running) { setRunning(false); setPhase('PAUSE'); return } if (phase === 'FERDIG' || phase === 'TIDSGRENSE') return; setPhase('PÅGÅR'); setRunning(true) }
+  const toggleRunning = () => { if (countdownDeadline !== null) { stopPackAudio(sharedTrainingAudioContext);setCountdownDeadline(null);setCountdownRemaining(0);setPhase('Klar');return } if (!hasStarted) { beginWorkout(false); return } if (running) { stopPackAudio(sharedTrainingAudioContext);setRunning(false); setPhase('PAUSE'); return } if (phase === 'FERDIG' || phase === 'TIDSGRENSE') return; setPhase('PÅGÅR'); setRunning(true) }
   const visibleStationIndex = Math.min(stationCount - 1, fixedSlotState.currentSlotIndex % stationCount)
   const currentStationName = stationList[visibleStationIndex]?.exercise_name || stationList[visibleStationIndex]?.name || `Stasjon ${visibleStationIndex + 1}`
   const stageExerciseName = isStationCircuit ? currentStationName : isTimedInterval ? currentIntervalExercise : isEMOM ? currentEmomExercise : activeExercise || exerciseList[0]?.exercise_name || exerciseList[0]?.name || ''
@@ -608,7 +609,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       <a href={(import.meta.env.BASE_URL||'/')+'audio/'+SOUND_PACK_VERSION+'/credits.txt'} target="_blank" rel="noreferrer">Lydkjelder og lisens</a>
     </details>
   </div>
-  const resetTimer = () => { clearManualAction(); timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; scheduledStartedAt.current=null; setCountdownDeadline(null);setCountdownRemaining(0); setRunning(false); setElapsed(0); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
+  const resetTimer = () => { stopPackAudio(sharedTrainingAudioContext);stopDirectAudio();clearManualAction(); timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; scheduledStartedAt.current=null; setCountdownDeadline(null);setCountdownRemaining(0); setRunning(false); setElapsed(0); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
   return <div ref={timerContainerRef} className={stageVisible ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
     {stageVisible ? <section className={'gg-live-timer'+(stageLapHistory.length?' gg-live-timer--with-laps':'')+(manualButtonVisible?' gg-live-timer--manual':'')+(buttonSize==='xl'?' gg-live-timer--xl':'')+(!showMusic?' gg-live-timer--no-music':'')} aria-label="Fullskjermsklokke for treningsøkt">
       <header className="gg-live-timer__header">
