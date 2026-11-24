@@ -498,3 +498,19 @@
 .gg-composite-history>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;font-size:12px}
 .gg-composite-history span{opacity:.85}
 @media(max-width:530px){.gg-composite-result-review>article{grid-template-columns:minmax(0,1fr)}.gg-composite-history>div{grid-template-columns:minmax(0,1fr)}}
+
+/* Compact timer settings: one vertical navigation list, separate pages for settings. */
+.gg-live-timer__drawer.gg-timer-settings-menu{width:min(330px,calc(100% - 20px));gap:10px;padding:12px}
+.gg-timer-menu-list{display:grid;gap:6px}
+.gg-timer-menu-list>button{display:grid;grid-template-columns:22px minmax(0,1fr) 17px;align-items:center;gap:9px;text-align:left;min-height:54px;padding:9px;border:1px solid #45565e;border-radius:9px;background:#20313a;color:#f3f7f8}
+.gg-timer-menu-list>button span{display:grid;gap:3px;min-width:0}
+.gg-timer-menu-list b{font-size:14px}
+.gg-timer-menu-list small,.gg-timer-audio-controls small{font-size:12px;line-height:1.35;color:#bfd0d8}
+.gg-timer-menu-back{align-self:flex-start;min-height:40px;padding:6px 9px;background:transparent;border:1px solid #45565e;border-radius:8px;color:inherit}
+.gg-timer-audio-controls{display:grid;gap:10px;color:inherit}
+.gg-timer-audio-controls label{display:grid;gap:5px;font-size:14px}
+.gg-timer-audio-controls select{width:100%;min-height:44px;padding:8px;border:1px solid #61747c;border-radius:8px;background:#142027;color:#f3f7f8;font:inherit}
+.gg-timer-audio-controls label.gg-timer-check{display:flex;align-items:center;gap:9px;min-height:38px}
+.gg-timer-audio-controls .gg-timer-check input{width:20px;height:20px;flex:none;accent-color:#f0a33a}
+.gg-timer-audio-controls input[type=range]{width:100%;min-height:32px;accent-color:#f0a33a}
+.gg-timer-audio-controls>button{min-height:44px}

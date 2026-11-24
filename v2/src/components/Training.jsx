@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Activity, CalendarDays, CheckCircle2, ChevronDown, Clock3, Dumbbell, History, House, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2, Settings2, List, Volume2, VolumeX, Maximize2, Minimize2, X } from 'lucide-react'
+import { Activity, CalendarDays, CheckCircle2, ChevronDown, Clock3, Dumbbell, History, House, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2, Settings2, Settings, ChevronRight, Monitor, Timer as TimerIcon, List, Volume2, VolumeX, Maximize2, Minimize2, X } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { RELEASE_NAME } from '../lib/release.js'
 import HeartRateTrainingPanel from './HeartRateTrainingPanel.jsx'
@@ -21,7 +21,7 @@ import { captureTrainingLaunchContext, emptyTrainingLaunchContext } from '../lib
 import { exerciseBrowseCategory, exerciseBrowseOrder } from '../lib/exerciseCategories.js'
 import { restoreWorkoutDraft, saveWorkoutDraft, clearWorkoutDraft, resumedElapsedSeconds } from '../lib/workoutDraft.js'
 import { canSaveDurationOnlyWorkout } from '../lib/freeSession.js'
-import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, playTrainingSignal, playTrainingTone } from '../lib/timerCues.js'
+import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, playTrainingSignal, playTrainingTone, TRAINING_AUDIO_PROFILES } from '../lib/timerCues.js'
 import GarageSelect from './GarageSelect.jsx'
 import './timer-viewport.css'
 
@@ -102,6 +102,15 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [phase, setPhase] = useState(() => resumeState?.phase || 'Klar')
   const [laps, setLaps] = useState(() => Array.isArray(resumeState?.laps) ? resumeState.laps : [])
   const [soundOn, setSoundOn] = useState(true)
+  const [audioProfile,setAudioProfile]=useState(()=>{
+    try{const value=localStorage.getItem('garasjegym.timer.audio_profile');return TRAINING_AUDIO_PROFILES.includes(value)?value:'group'}catch{return 'group'}
+  })
+  const [countdownAudio,setCountdownAudio]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.countdown_audio')!=='off'}catch{return true}})
+  const [vibration,setVibration]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.vibration')==='on'}catch{return false}})
+  const [testCue,setTestCue]=useState('start')
+  const audioPrefs=useRef({audioProfile,countdownAudio,vibration})
+  audioPrefs.current={audioProfile,countdownAudio,vibration}
+  useEffect(()=>{try{localStorage.setItem('garasjegym.timer.audio_profile',audioProfile);localStorage.setItem('garasjegym.timer.countdown_audio',countdownAudio?'on':'off');localStorage.setItem('garasjegym.timer.vibration',vibration?'on':'off')}catch{/* Valfritt */}},[audioProfile,countdownAudio,vibration])
   const [soundVolume,setSoundVolume]=useState(()=>{
     try{const raw=localStorage.getItem('garasjegym.timer.sound_volume');const saved=Number(raw);return raw!=null&&Number.isFinite(saved)&&saved>=0&&saved<=100?saved:100}catch{return 100}
   })
@@ -261,7 +270,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     : elapsed
 
   function ensureAudioContext() {
-    if (!soundOnRef.current) return null
+    if (!soundOnRef.current || audioPrefs.current.audioProfile==='silent') return null
     try {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext
       if (!AudioContextClass) return null
@@ -273,11 +282,14 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   }
   function cue(frequency = 880, duration = 0.16, delay = 0) {
     const context = ensureAudioContext()
-    if (context) playTrainingTone(context, frequency, duration, delay, volumeRef.current)
+    if (context) playTrainingTone(context, frequency, duration, delay, volumeRef.current, audioPrefs.current.audioProfile)
   }
-  function playSignal(signal) {
+  function playSignal(signal,{test=false}={}) {
+    const prefs=audioPrefs.current
+    if (!test && signal.startsWith('tick-')&&!prefs.countdownAudio) return
+    if (prefs.vibration && !signal.startsWith('tick-')) {try{navigator.vibrate?.(signal==='finish'?[140,80,140]:100)}catch{/* Device support varies. */}}
     const context = ensureAudioContext()
-    if (context) playTrainingSignal(context, signal, volumeRef.current)
+    if (context) playTrainingSignal(context, signal, volumeRef.current, prefs.audioProfile)
   }
   useEffect(() => () => { audioContextRef.current?.close?.().catch?.(()=>{}) }, [])
 
@@ -517,6 +529,16 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       steps:Array.isArray(item.complex_steps)?item.complex_steps:[],
     }
   })
+  const audioControls=<div className="gg-timer-audio-controls">
+    <label>Lydprofil<select value={audioProfile} onChange={e=>{const value=e.target.value;setAudioProfile(value);if(value!=='silent'){soundOnRef.current=true;setSoundOn(true)}}}><option value="personal">Eigentrening · tydeleg</option><option value="pt">PT · konsentrert</option><option value="group">Gruppetime · kraftig horn</option><option value="silent">Stille</option></select></label>
+    <label className="gg-timer-check"><input type="checkbox" checked={soundOn} onChange={e=>setSoundOn(e.target.checked)}/> Lydsignal på</label>
+    <label>Timerlyd · {soundVolume}%<input type="range" min="0" max="100" step="5" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label>
+    <label className="gg-timer-check"><input type="checkbox" checked={countdownAudio} onChange={e=>setCountdownAudio(e.target.checked)}/> Nedtelling 3–2–1</label>
+    <label className="gg-timer-check"><input type="checkbox" checked={vibration} onChange={e=>setVibration(e.target.checked)}/> Vibrasjon ved skifte (støtta mobil)</label>
+    <label>Test signal<select value={testCue} onChange={e=>setTestCue(e.target.value)}><option value="start">Start</option><option value="tick-1">Nedtelling</option><option value="round">Ny runde</option><option value="rest">Pause</option><option value="station">Stasjonsbyte</option><option value="finish">Ferdig</option></select></label>
+    <button type="button" className="secondary-button" disabled={audioProfile==='silent'||!soundOn||soundVolume===0} onClick={()=>playSignal(testCue,{test:true})}><Volume2 size={17}/> Test lydsignal</button>
+    <small>Timeren brukar medievolumet på eininga. Vel kraftig gruppetimeprofil og sjekk medievolum og eventuell Bluetooth-høgtalar. Spotify-volumet blir ikkje endra.</small>
+  </div>
   const resetTimer = () => { timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; scheduledStartedAt.current=null; setCountdownDeadline(null);setCountdownRemaining(0); setRunning(false); setElapsed(0); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
   return <div ref={timerContainerRef} className={stageVisible ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
     {stageVisible ? <section className={stageLapHistory.length ? 'gg-live-timer gg-live-timer--with-laps' : 'gg-live-timer'} aria-label="Fullskjermsklokke for treningsøkt">
@@ -527,7 +549,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           <button type="button" className={stagePanel==='wod'?'is-selected':''} onClick={()=>setStagePanel(value=>value==='wod'?null:'wod')} aria-label="Vis WOD og øvingar" title="Vis WOD og øvingar" aria-expanded={stagePanel==='wod'}><List size={21}/></button>
           <button type="button" onClick={()=>setSoundOn(value=>!value)} aria-label={soundOn?'Slå av lydsignal frå timeren':'Slå på lydsignal frå timeren'} title={soundOn?'Timerlyd på':'Timerlyd av'}>{soundOn?<Volume2 size={21}/>:<VolumeX size={21}/>}</button>
           <button type="button" onClick={toggleBrowserFullscreen} aria-label={browserFullscreen?'Vis nettlesarfelt':'Skjul nettlesarfelt – ekte fullskjerm'} title="Fullskjerm">{browserFullscreen?<Minimize2 size={21}/>:<Maximize2 size={21}/>}</button>
-          <button type="button" className={stagePanel==='settings'?'is-selected':''} onClick={()=>setStagePanel(value=>value==='settings'?null:'settings')} aria-label="Tilpass klokka" title="Tilpass klokka" aria-expanded={stagePanel==='settings'}><Settings2 size={21}/></button>
+          <button type="button" className={['settings','audio','display','timing','reset'].includes(stagePanel)?'is-selected':''} onClick={()=>setStagePanel(value=>['settings','audio','display','timing','reset'].includes(value)?null:'settings')} aria-label="Timerinnstillingar" title="Timerinnstillingar" aria-expanded={['settings','audio','display','timing','reset'].includes(stagePanel)}><Settings size={19}/></button>
           <button type="button" onClick={returnToApp} aria-label="Til oversikt – økta held fram" title="Til oversikt – økta held fram"><House size={20}/></button>
         </div>
       </header>
@@ -576,15 +598,29 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         const delta=previous?lap.duration-previous.duration:null
         return <li key={lap.round}><span>{isAmrap?'Runde':'Mellomtid'} {lap.round}<small>Ved {clock(lap.at)}{delta!==null?' · '+(delta<0?`${Math.abs(delta)} sek raskare`:delta>0?`${delta} sek seinare`:'same tid som førre'):''}</small></span><b>{clock(lap.duration)}</b></li>
       })}</ol></aside>}
-      {stagePanel==='settings'&&<aside className="gg-live-timer__drawer" aria-label="Tilpass klokka"><header><strong>Tilpass klokka</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk innstillingane"><X size={20}/></button></header>
+      {['settings','audio','display','timing','reset'].includes(stagePanel)&&<aside className="gg-live-timer__drawer gg-timer-settings-menu" aria-label="Timerinnstillingar">
+        <header><strong>{({settings:'Timerinnstillingar',audio:'Lyd og signal',display:'Klokke og visning',timing:'Øktoppsett',reset:'Nullstill økta'})[stagePanel]}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk innstillingane"><X size={20}/></button></header>
+        {stagePanel!=='settings'&&<button type="button" className="gg-timer-menu-back" onClick={()=>setStagePanel('settings')}>‹ Alle innstillingar</button>}
+        {stagePanel==='settings'&&<nav className="gg-timer-menu-list" aria-label="Vel innstilling">
+          <button type="button" onClick={()=>setStagePanel('audio')}><Volume2 size={20}/><span><b>Lyd og signal</b><small>{soundVolume}% · {audioProfile==='group'?'Gruppetime':audioProfile==='pt'?'PT':audioProfile==='silent'?'Stille':'Eigentrening'}</small></span><ChevronRight size={17}/></button>
+          <button type="button" onClick={()=>setStagePanel('display')}><Monitor size={20}/><span><b>Klokke og visning</b><small>Storleik, farge, fullskjerm</small></span><ChevronRight size={17}/></button>
+          <button type="button" onClick={()=>setStagePanel('timing')}><TimerIcon size={20}/><span><b>Øktoppsett</b><small>Varigheit, arbeid og pause</small></span><ChevronRight size={17}/></button>
+          <button type="button" onClick={()=>setStagePanel('reset')}><RotateCcw size={20}/><span><b>Nullstill økta</b><small>Med stadfesting</small></span><ChevronRight size={17}/></button>
+        </nav>}
+        {stagePanel==='audio'&&audioControls}
+        {stagePanel==='display'&&<>
         <label className="gg-live-timer__setting">Storleik på klokka <input type="range" min="88" max="130" step="7" value={Math.max(88,Math.min(130,appearance.clockSize))} onChange={e=>setAppearance(value=>({...value,clockSize:Number(e.target.value)}))}/></label>
         <label className="gg-live-timer__setting">Klokkefarge <input type="color" value={appearance.accent} onChange={e=>setAppearance(value=>({...value,accent:e.target.value}))}/></label>
+        <button type="button" className="gg-live-timer__fullscreen-button" onClick={toggleBrowserFullscreen}>{browserFullscreen?'Vis nettlesarfelt':'Skjul nettlesarfelt'}</button>
+        </>}
+        {stagePanel==='timing'&&(hasStarted||countdownDeadline!==null?<small>Øktoppsettet er låst etter start. Klokka held fram.</small>:<>
         {(isCountdown||isEMOM||hasTimeCap)&&<div className="gg-live-timer__setting"><span>Øktlengd</span><div className="gg-live-timer__inline-inputs"><label>Min<input type="number" min="0" max="240" value={Math.floor(target/60)} onChange={e=>setDurationOverride(Math.max(1,Math.max(0,Number(e.target.value)||0)*60+(target%60)))}/></label><label>Sek<input type="number" min="0" max="59" value={target%60} onChange={e=>setDurationOverride(Math.max(1,Math.floor(target/60)*60+Math.max(0,Math.min(59,Number(e.target.value)||0))))}/></label></div></div>}
         {(isTimedInterval||isStationCircuit||isEMOM)&&<div className="gg-live-timer__setting"><span>Intervall</span><div className="gg-live-timer__inline-inputs"><label>Arbeid (sek)<input type="number" min="1" max="600" value={workSeconds} onChange={e=>setWorkSeconds(Math.max(1,Math.min(600,Number(e.target.value)||1)))}/></label><label>Pause (sek)<input type="number" min="0" max="600" value={restSeconds} onChange={e=>setRestSeconds(Math.max(0,Math.min(600,Number(e.target.value)||0)))}/></label>{!isEMOM&&<label>Rundar<input type="number" min="1" max="100" value={rounds} onChange={e=>setRounds(Math.max(1,Math.min(100,Number(e.target.value)||1)))}/></label>}</div></div>}
-        <label className="gg-live-timer__setting">Timerlyd {soundVolume}% <input type="range" min="0" max="100" step="10" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label>
-        <button type="button" className="gg-live-timer__fullscreen-button" onClick={()=>{soundOnRef.current=true;setSoundOn(true);playSignal('start')}}>Test lydsignal</button>
-        <button type="button" className="gg-live-timer__fullscreen-button" onClick={toggleBrowserFullscreen}>{browserFullscreen?'Vis nettlesarfelt':'Skjul nettlesarfelt'}</button>
+          {!(isCountdown||isEMOM||hasTimeCap||isTimedInterval||isStationCircuit)&&<small>Dette formatet har ikkje tidsinnstillingar.</small>}
+        </>)}
+        {stagePanel==='reset'&&<>
         {!confirmReset?<button type="button" className="gg-live-timer__reset" onClick={()=>setConfirmReset(true)}><RotateCcw size={17}/> Nullstill økta</button>:<div className="gg-live-timer__reset-confirm"><strong>Nullstille tid og rundar?</strong><button type="button" onClick={resetTimer}>Ja, nullstill</button><button type="button" onClick={()=>setConfirmReset(false)}>Avbryt</button></div>}
+        </>}
       </aside>}
     </section> : <>
     <div className="timer-topline">
@@ -593,7 +629,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       <button type="button" className="timer-customize-trigger" onClick={() => setShowTimerSettings(value => !value)} aria-expanded={showTimerSettings}>{showTimerSettings ? 'Lukk oppsett' : 'Timeroppsett'}</button>
     </div>
     {showTimerSettings && <section className="timer-customize-panel timer-setup-drawer" aria-label="Timeroppsett">
-        <div className="timer-setup-section"><strong>Lydsignal</strong><div className="timer-settings-inline"><label>Volum {soundVolume}%<input type="range" min="0" max="100" step="10" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label><button type="button" className="secondary-button" onClick={()=>{soundOnRef.current=true;setSoundOn(true);playSignal('start')}}>Test lydsignal</button></div><small>SturmKopf Training Audio · kraftige og ulike signal for start, pause, byte og slutt. Mobilens medievolum styrer maksimal lyd.</small></div>
+        <details className="timer-setup-section"><summary>Lyd og signal</summary>{audioControls}</details>
       <div className="timer-customize-title"><strong>Tilpass denne økta</strong><span>Endringane gjeld berre denne gjennomføringa.</span></div>
       {(isTimedInterval || isStationCircuit || isEMOM) && <div className="timer-setup-section">
         <strong>{isStationCircuit ? 'Stasjonssirkel' : isEMOM ? 'EMOM' : format==='Tabata' ? 'Tabata-intervall' : 'Intervall'}</strong>
@@ -996,7 +1032,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const filteredExercises = useMemo(() => exercises.filter(e => e.name.toLowerCase().includes(query.toLowerCase()) || (e.category || '').toLowerCase().includes(query.toLowerCase())), [exercises, query])
 
   function leaveWorkout() {
-    if (!window.confirm('Forkasta økta? Ho blir sletta utan å bli lagra i treningsloggen.')) return
+    if (!window.confirm('Forkasta denne gjennomføringa? Resultatet blir ikkje lagra. Sjølve WOD-en ligg framleis i biblioteket.')) return
     setFinishOpen(false); setMode('home'); setRestoredTimerSnapshot(null); setSource(null); setClassSessionId(null); setItems([])
     setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
     clearTimerSnapshot()

@@ -53,3 +53,16 @@ test('full-volume audio peaks are bounded and mute creates no oscillators',()=>{
  assert.equal(count,2)
  assert.ok(peaks.reduce((a,b)=>a+b,0)<=1)
 })
+
+test('group audio is longer and stronger while silent profile emits nothing',()=>{
+ assert.deepEqual(trainingSignalPattern('start','silent'),[])
+ assert.ok(trainingSignalPattern('start','group').at(-1)[1]>trainingSignalPattern('start','personal').at(-1)[1])
+ assert.ok(trainingSignalPattern('station','group').length>trainingSignalPattern('station','personal').length)
+ const peaks=[];let count=0
+ const context={currentTime:0,destination:{},createOscillator(){count++;return {frequency:{setValueAtTime(){}},connect(){},disconnect(){},start(){},stop(){}}},createGain(){return {gain:{setValueAtTime(){},linearRampToValueAtTime(v){if(v>0)peaks.push(v)}},connect(){},disconnect(){}}}}
+ playTrainingTone(context,1200,.5,0,100,'group')
+ assert.equal(count,1)
+ assert.equal(peaks[0],.96)
+ playTrainingTone(context,1200,.5,0,100,'silent')
+ assert.equal(count,1)
+})

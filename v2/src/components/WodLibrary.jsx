@@ -166,7 +166,7 @@ export default function WodLibrary({onLaunchWod,onEditWod,staff=true,isAdmin=fal
  async function removeWod(w,{permanent=false}={}){
    if(!isAdmin)return
    const ask=permanent
-    ? 'Slette «'+w.name+'» PERMANENT? Dette er berre tillate dersom WOD-en aldri er brukt eller tildelt. Vel «Fjern frå biblioteket» for å ta vare på historikk.'
+    ? 'Slette «'+w.name+'» PERMANENT? Dette er berre tillate dersom WOD-en ikkje har lagra resultat, tildelingar eller andre koplingar. Ei forkasta økt utan slike koplingar hindrar ikkje sletting. Vel «Fjern frå biblioteket» for å ta vare på historikk.'
     : 'Fjerne «'+w.name+'» frå WOD-biblioteket? Økta blir arkivert, og treningsloggar, PT-tildelingar og PR-ar blir bevarte.'
    if(!window.confirm(ask))return
    setBusy(w.id);setError('');setNotice('')
@@ -175,25 +175,26 @@ export default function WodLibrary({onLaunchWod,onEditWod,staff=true,isAdmin=fal
        // Fail closed: a complete dependency check is required for destructive removal,
        // but never required for safe archiving.
        const checks=await Promise.all([
-        supabase.from('pt_wod_assignments').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
-        supabase.from('workout_logs').select('id',{count:'exact',head:true}).eq('source_wod_id',w.id),
-        supabase.from('wod_favorites').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
-        supabase.from('class_live_sessions').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
-        supabase.from('class_live_sessions').select('id',{count:'exact',head:true}).contains('wod_ids',[w.id]),
-        supabase.from('classes').select('id',{count:'exact',head:true}).contains('wod_ids',[w.id]),
-        supabase.from('pt_sessions').select('id',{count:'exact',head:true}).contains('wod_ids',[w.id]),
-        supabase.from('pt_program_sessions').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
-        supabase.from('training_session_wods').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
-        supabase.from('class_session_wod_completions').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
-        supabase.from('daily_wod').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
-        supabase.from('wod_daily_schedules').select('id',{count:'exact',head:true}).eq('wod_id',w.id),
+        supabase.from('pt_wod_assignments').select('*',{count:'exact',head:true}).eq('wod_id',w.id),
+        supabase.from('workout_logs').select('*',{count:'exact',head:true}).eq('source_wod_id',w.id),
+        supabase.from('wod_favorites').select('*',{count:'exact',head:true}).eq('wod_id',w.id),
+        supabase.from('class_live_sessions').select('*',{count:'exact',head:true}).eq('wod_id',w.id),
+        supabase.from('class_live_sessions').select('*',{count:'exact',head:true}).contains('wod_ids',JSON.stringify([w.id])),
+        supabase.from('classes').select('*',{count:'exact',head:true}).contains('wod_ids',JSON.stringify([w.id])),
+        supabase.from('pt_sessions').select('*',{count:'exact',head:true}).contains('wod_ids',[w.id]),
+        supabase.from('pt_program_sessions').select('*',{count:'exact',head:true}).eq('wod_id',w.id),
+        supabase.from('training_session_wods').select('*',{count:'exact',head:true}).eq('wod_id',w.id),
+        supabase.from('class_session_wod_completions').select('*',{count:'exact',head:true}).eq('wod_id',w.id),
+        supabase.from('daily_wod').select('*',{count:'exact',head:true}).eq('wod_id',w.id),
+        supabase.from('wod_daily_schedules').select('*',{count:'exact',head:true}).eq('wod_id',w.id),
        ])
-       if(checks.some(x=>x.error))throw new Error('Kan ikkje stadfesta at WOD-en er ubrukt. Bruk «Fjern frå biblioteket» for trygg arkivering.')
+       const failedCheck=checks.find(x=>x.error)
+       if(failedCheck)throw new Error('Kan ikkje stadfesta at WOD-en er ubrukt: '+(failedCheck.error.message||'Kontrollfeil')+'. Ingen WOD er sletta.')
        if(checks.some(x=>(x.count||0)>0))throw new Error('Denne WOD-en er i bruk eller har historikk. Bruk «Fjern frå biblioteket» for å bevara alle koplingar.')
        // Composite references are JSON snapshots. Do not delete a referenced source WOD.
        const {data:composites,error:compositesError}=await supabase.from('wods').select('id,timer_settings').eq('format','Samansett økt')
        if(compositesError)throw new Error('Kunne ikkje kontrollera samansette økter. Arkiver i staden.')
-       const referenced=(composites||[]).some(row=>row.id!==w.id&&(row.timer_settings?.workout_schema?.composite_blocks||[]).some(block=>block.source_wod_id===w.id))
+       const referenced=(composites||[]).some(row=>row.id!==w.id&&[...(row.timer_settings?.workout_schema?.composite_blocks||[]),...(row.timer_settings?.workout_schema?.wod_engine?.blocks||[])].some(block=>block.source_wod_id===w.id||block.sourceWodId===w.id))
        if(referenced)throw new Error('WOD-en er nytta i ei samansett økt. Arkiver i staden for å slette permanent.')
        const {data,error:e}=await supabase.from('wods').delete().eq('id',w.id).select('id').maybeSingle()
        if(e||!data)throw e||new Error('Databasen stadfesta ikkje slettinga. Prøv arkivering.')
@@ -245,7 +246,7 @@ export default function WodLibrary({onLaunchWod,onEditWod,staff=true,isAdmin=fal
       {isAdmin&&<button type="button" onClick={()=>{setOpenCardMenu(null);onEditWod?.(w.id)}}><Edit3 size={17}/> Rediger</button>}
       <button type="button" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);publish(w)}}>{w.is_published?<EyeOff size={17}/>:<Eye size={17}/>} {w.is_published?'Trekk tilbake':'Publiser'}</button>
       {isAdmin&&<button type="button" className="wod-card-danger-action" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);removeWod(w)}}><Archive size={17}/> Fjern frå biblioteket</button>}
-      {isAdmin&&<button type="button" className="wod-card-danger-action" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);removeWod(w,{permanent:true})}}><Trash2 size={17}/> Slett permanent (ubrukt)</button>}
+      {isAdmin&&<button type="button" className="wod-card-danger-action" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);removeWod(w,{permanent:true})}}><Trash2 size={17}/> Slett WOD permanent</button>}
      </div>}
     <h4>{w.name}</h4>
     <div className="wod-card-mini-category"><span>{categoryLabel(categoryOf(w))}</span>{dailyWodId===w.id&&<strong>Dagens WOD</strong>}</div>
