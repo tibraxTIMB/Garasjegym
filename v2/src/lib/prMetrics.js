@@ -35,6 +35,8 @@ export function deriveExerciseRecords(logs = []) {
     const rows = [...(log.workout_exercises || [])].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))
     for (const [index, exercise] of rows.entries()) {
       const result = log.result_data?.exercise_results?.[index] || {}
+      // Custom complexes have their own success-scoped result. Do not derive an ordinary lift PR.
+      if(result.is_complex&&result.complex_family==='custom')continue
       const name = String(exercise.exercise_name || result.exercise_name || '').trim()
       if (!name) continue
       const side = result.side_mode || ''
