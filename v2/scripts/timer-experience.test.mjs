@@ -75,3 +75,13 @@ test('only an unstarted WOD can leave without discarding; countdown can be cance
  assert.match(timer,/clearWorkoutDraft\(memberId\);setLaunchLinkContext\(emptyTrainingLaunchContext\(\)\)/)
  assert.match(timer,/Tilbake utan å starta WOD/)
 })
+
+test('manual Finish and Next part are silent while automatic completion retains the finish cue',()=>{
+ const timer=source('../src/components/Training.jsx')
+ const finish=timer.match(/const finishCurrent=\(\)=>\{[^\n]+/)[0]
+ assert.match(finish,/onFinish\(/)
+ assert.doesNotMatch(finish,/playSignal|playPackSignal/)
+ const automatic=timer.slice(timer.indexOf('if (timerLimitReached) {'),timer.indexOf('const phaseChanged = elapsed > 0'))
+ assert.match(automatic,/playSignal\('finish'\)/)
+ assert.match(timer,/if\(next.finished\)\{setRunning\(false\);setPhase\('FERDIG'\);playSignal\('finish'\)\}/)
+})

@@ -22,3 +22,5 @@ export const RELEASE_SHORT = 'GAZELLE 1.2'
 // Owner-approved publication: KI lyd optional extension; standard audio restored by default. No schema or data changes.
 
 // Candidate: leave an untouched WOD before start without result review or discard; no audio trigger changes.
+
+// Candidate: manual Finish and Next part are silent; timed completion and completed Ladder retain their signals.
