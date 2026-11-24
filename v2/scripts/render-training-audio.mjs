@@ -29,42 +29,52 @@ const bass=(t,p=0,d=.18,g=.65)=>n('bass',t,d,p,g)
 const brass=(t,p,d=.25,g=1)=>n('brass',t,d,p,g)
 const guitar=(t,p,d=.24,g=.8)=>n('guitar',t,d,p,g)
 const tuba=(t,p,d=.2,g=.6)=>n('tuba',t,d,p,g)
-const danceBeat=(t,p=0)=>[kick(t,1),bass(t+.12,p,.18,.9)]
-const danceLead=(t,p,d=.18)=>[synth(t,p,d,1),synth(t,p+12,d,.32)]
-const riff=(t,p,d=.19,g=.9)=>[guitar(t,p,d,g),guitar(t,p+7,d,g*.65),tuba(t,p+4,d,.46)]
-const brassCall=(t,p,d=.24)=>[brass(t,p,d,1),brass(t,p+3,d,.45),tuba(t,p,d,.45)]
-const blast=(t,p,d=.3)=>[...brassCall(t,p,d),...riff(t,p-4,d),kick(t,1),drum(t+.07,.7)]
+// Original genre-specific mini-arrangements. No borrowed melodies or recordings.
+const beat=60/148
+const hat=(t,g=.36)=>n('hat',t,.09,0,g)
+const punch=(t,g=1)=>n('punch',t,.22,0,g)
+const clap=(t,g=.65)=>n('clap',t,.15,0,g)
+const danceBeat=(t,p=0,backbeat=false)=>[punch(t,1),kick(t,.35),hat(t+beat/2,.48),bass(t+beat/2,p,.18,.9),...(backbeat?[clap(t)]:[])]
+const rave=(t,p,d=.19,g=.85)=>[synth(t,p,d,g),synth(t,p+12,d,.22*g),synth(t,p+7,d,.32*g)]
+const arpeggio=(t,notes,step=beat/4)=>notes.flatMap((p,i)=>rave(t+i*step,p,step*.90,.78))
+const danceBars=(t,roots)=>roots.flatMap((p,i)=>danceBeat(t+i*beat,p,i%2===1))
+const riff=(t,p,d=.16,g=.95)=>[guitar(t,p-4,d,g),guitar(t,p+3,d,g*.64),tuba(t,p,d,.32),punch(t,.65)]
+const brassCall=(t,p,d=.16,g=.92)=>[brass(t,p,d,g),brass(t,p+7,d,g*.28),tuba(t,p,d,.35)]
+const horns=(t,notes,step=.105)=>notes.flatMap((p,i)=>brassCall(t+i*step,p,step*.94))
+const oompa=(t,p=0)=>[tuba(t,p,.15,.92),drum(t,.6),brass(t+.12,p+7,.10,.66)]
+const blast=(t,p,d=.38)=>[...riff(t,p,d),...brassCall(t,p+12,d),drum(t,.88),clap(t,.4)]
+const oddGroove=(t,p=0)=>[...oompa(t,p),...riff(t+.20,p,.10),...oompa(t+.40,p+7),...riff(t+.60,p,.11),...riff(t+.75,p,.12)]
 export const score={
  pt:{
-  'tick-3':[bell(0,.30,-4)],'tick-2':[bell(0,.30,-4)],'tick-1':[bell(0,.40,0)],
-  start:[bell(0,1.05,-5,1),bell(.035,.90,7,.35)],
-  round:[bell(0,.38,-3),bell(.43,.69,-3)],
-  rest:[bell(0,1.06,-12)],
-  station:[bell(0,.26),bell(.31,.26),bell(.62,.65)],
-  finish:[bell(0,.4,-4),bell(.45,.4,-4),bell(.90,1.05,-7)],
-  registered:[bell(0,.33,3)],
+  'tick-3':[bell(0,.2,-5)],'tick-2':[bell(0,.2,-2)],'tick-1':[bell(0,.28,2)],
+  start:[bell(0,.75,0),bell(.08,.67,-12,.55)],
+  round:[bell(0,.22),bell(.26,.42)],
+  rest:[bell(0,.75,-7)],
+  station:[bell(0,.19),bell(.23,.19),bell(.46,.44)],
+  finish:[bell(0,.28),bell(.34,.28),bell(.68,.85,-5)],
+  registered:[bell(0,.18,7)],
  },
  personal:{
-  'tick-3':[kick(0,1),bass(.13,0,.20,.85)],
-  'tick-2':[kick(0,1),bass(.13,0,.20,.85)],
-  'tick-1':[kick(0,1),...danceLead(.13,7,.25)],
-  start:[n('sweep',0,.35,0,.65),...danceBeat(.18),...danceLead(.36,0),...danceBeat(.60),...danceLead(.78,7),...danceBeat(1.02),...danceLead(1.20,12,.36),...danceBeat(1.44),...danceLead(1.62,7,.24)],
-  round:[...danceBeat(0),...danceLead(.20,7),...danceBeat(.42),...danceLead(.62,12,.28)],
-  rest:[kick(0),...danceLead(.18,12),...danceLead(.39,7),...danceLead(.60,0,.42),bass(.60,0,.42)],
-  station:[...danceBeat(0),...danceLead(.18,0,.14),...danceLead(.38,0,.14),...danceBeat(.56),...danceLead(.73,7,.28)],
-  finish:[n('sweep',0,.3,0,.55),...danceBeat(0),...danceLead(.18,0),...danceBeat(.42),...danceLead(.60,7),...danceBeat(.84),...danceLead(1.02,12),...danceBeat(1.26),...danceLead(1.44,10,.16),...danceBeat(1.68),...danceLead(1.86,12,.55)],
-  registered:[kick(0,.75),...danceLead(.12,12,.25)],
+  'tick-3':[punch(0),hat(.18),bass(.18,0,.14,.75)],
+  'tick-2':[punch(0),hat(.18),bass(.18,0,.14,.75)],
+  'tick-1':[punch(0),clap(0),...rave(.14,12,.27)],
+  start:[n('sweep',0,.30,0,.45),...danceBars(0,[0,0,8,7,0,0]),...arpeggio(.10,[0,7,12,7,3,10,15,10,8,15,20,15,7,14,19,14,12,15,19,24]),...rave(2.10,12,.39)],
+  round:[...danceBars(0,[0,0,7]),...arpeggio(.10,[7,12,15,12,10,14,19,14]),...rave(.91,12,.26)],
+  rest:[clap(0),punch(0,.8),...rave(.10,15,.18),...rave(.32,10,.18),...rave(.55,3,.42),bass(.55,0,.42,.8)],
+  station:[...danceBars(0,[0,0,0]),...rave(.08,7,.15),...rave(.28,7,.15),...rave(.50,7,.15),...rave(.78,12,.34)],
+  finish:[...danceBars(0,[0,0,8,8,3,7,0,0]),...arpeggio(.08,[0,3,7,12,7,12,15,19,8,12,15,20,12,15,20,24,3,7,10,15,7,10,14,19,12,15,19,24]),...rave(2.84,12,.56),n('sweep',2.65,.55,0,.40)],
+  registered:[punch(0,.7),...rave(.10,12,.13),...rave(.25,19,.14)],
  },
  group:{
-  'tick-3':[drum(0,1),...riff(.11,-4,.22)],
-  'tick-2':[drum(0,1),...brassCall(.11,-5,.22)],
-  'tick-1':[drum(0,1),...blast(.11,0,.32)],
-  start:[...riff(0,-4,.20),kick(0),...riff(.22,-4,.20),kick(.22),...brassCall(.45,0,.18),...brassCall(.66,3,.18),...brassCall(.87,1,.19),drum(.87),...blast(1.10,7,.65),kick(1.30),kick(1.46)],
-  round:[...brassCall(0,0,.25),drum(0),...brassCall(.28,3,.22),...blast(.55,7,.43)],
-  rest:[...riff(0,-4,.26),drum(0),...brassCall(.31,7,.21),...brassCall(.56,3,.21),...blast(.80,-2,.42)],
-  station:[...brassCall(0,0,.18),drum(0),...brassCall(.23,3,.18),drum(.23),...riff(.46,-4,.18),kick(.46),...blast(.69,7,.40)],
-  finish:[...riff(0,-4,.20),kick(0),...riff(.23,-4,.20),kick(.23),...brassCall(.47,0,.19),...brassCall(.69,3,.19),...brassCall(.91,1,.19),drum(.91),...riff(1.13,0,.20),kick(1.13),...riff(1.36,-4,.20),kick(1.36),...brassCall(1.59,7,.22),...blast(1.86,12,.95),kick(2.05),kick(2.23),drum(2.48)],
-  registered:[...riff(0,-4,.24),drum(0,.8),...brassCall(.25,7,.20)],
+  'tick-3':[drum(0,1),...riff(.12,0,.18)],
+  'tick-2':[drum(0,1),...brassCall(.12,3,.19)],
+  'tick-1':[drum(0,1),...blast(.12,0,.31)],
+  start:[...oddGroove(0,0),...horns(.08,[0,1,4,5,4,1,0]),...riff(.89,0,.13),...riff(1.04,0,.13),...riff(1.19,1,.15),...horns(1.38,[7,8,11,12,11,8,7]),...blast(2.16,0,.53),punch(2.28,.85),punch(2.43,.85)],
+  round:[...oompa(0),...horns(.10,[0,1,4,5,4,1]),...riff(.76,0,.13),...blast(.92,7,.34)],
+  rest:[...riff(0,0,.20),drum(0),...horns(.24,[12,11,8,7,5,4,1],.10),...riff(1.02,0,.29)],
+  station:[...oompa(0),...brassCall(.08,0,.12),...oompa(.26),...brassCall(.34,0,.12),...riff(.52,1,.15),...horns(.70,[4,5,7]),...blast(1.05,0,.29)],
+  finish:[...oddGroove(0,0),...horns(.08,[0,1,4,5,7,5,4]),...riff(.90,0,.14),...riff(1.06,0,.14),...riff(1.22,1,.14),...riff(1.38,0,.14),...oddGroove(1.54,0),...horns(1.62,[7,8,11,12,11,8,7]),...horns(2.40,[12,13,16,17,19,17,16]),...blast(3.16,0,.62),punch(3.31,.95),punch(3.48,.95),drum(3.63,.70)],
+  registered:[...riff(0,0,.17),...brassCall(.19,7,.18),drum(.19,.55)],
  }
 }
 function mix(events){
@@ -72,8 +82,16 @@ function mix(events){
  const pcm=new Float32Array(length)
  for(const [inst,t,d,p,g] of events){
   const src=decoded[inst],ratio=2**(p/12),offset=Math.round(t*rate),count=Math.round(d*rate)
+  if(!src&&!['punch','hat','clap'].includes(inst))throw Error('Unknown instrument: '+inst)
   for(let i=0;i<count&&offset+i<length;i++){
    const pos=i*ratio,k=Math.floor(pos)
+   if(!src){
+    const t0=i/rate, noise=Math.sin((i+1)*12.9898)*43758.5453
+    const white=2*(noise-Math.floor(noise))-1
+    const wave=inst==='punch'?(Math.sin(2*Math.PI*(52*t0+2.6*(1-Math.exp(-t0*42))))*Math.exp(-t0*18)+white*.22*Math.exp(-t0*110)):inst==='hat'?white*Math.exp(-t0*48):white*(Math.exp(-t0*34)+.45*Math.exp(-Math.abs(t0-.022)*90))
+    pcm[offset+i]+=wave*g*Math.min(1,i/(rate*.002),Math.max(0,(count-i)/(rate*.018)))
+    continue
+   }
    if(k+1>=src.length)break
    const edge=Math.min(1,i/(rate*.004),Math.max(0,(count-i)/(rate*.035)))
    pcm[offset+i]+=(src[k]+(src[k+1]-src[k])*(pos-k))*edge*g
@@ -88,7 +106,7 @@ function mix(events){
  for(let i=0;i<pcm.length;i++){const v=pcm[i]*.96/peak;energy+=v*v;out.writeInt16LE(Math.round(v*32767),44+i*2)}
  return {out,rms:Math.sqrt(energy/pcm.length)}
 }
-const dest=path.join(root,'public','audio','gazelle-v2')
+const dest=path.join(root,'public','audio','gazelle-v3')
 mkdirSync(dest,{recursive:true})
 let total=0
 for(const [profile,signals] of Object.entries(score))for(const [signal,events] of Object.entries(signals)){
