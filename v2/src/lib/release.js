@@ -16,3 +16,5 @@ export const RELEASE_SHORT = 'GAZELLE 1.2'
 // Approved publication: still PanserGorilla poster, no PR video or 3D; retain current PR audio and data.
 
 // Owner-approved MusicGen PR release: three original twelve-second stereo cues, technical review passed; noncommercial use. Other timer cues unchanged.
+
+// Candidate: optional KI lyd extension; standard sound pack remains default. No production deployment authorised by this commit.

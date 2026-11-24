@@ -4,11 +4,23 @@ export const PR_SOUND_PACK_VERSION='gazelle-pr-ki-v1'
 export const SOUND_PACK_PROFILES=['pt','personal','group']
 export const SOUND_PACK_SIGNALS=['tick-3','tick-2','tick-1','start','round','rest','station','finish','registered','pr']
 export const SOUND_PACK_NAMES={pt:'EISEN',personal:'DISKOPANZER',group:'BALKAN BERSERK'}
-export function soundPackUrl(profile,signal,base=import.meta.env?.BASE_URL||'/'){
+// Device-local, opt-in experimental extension. Existing profiles remain authoritative.
+export const KI_AUDIO_KEY='garasjegym.timer.ki_audio'
+export const KI_AUDIO_EVENT='gg-ki-audio-change'
+export const KI_AUDIO_SIGNALS=Object.freeze({pt:['pr'],personal:['pr'],group:['pr']})
+export function isKIAudioEnabled(storage){
+ try{return (storage??globalThis.localStorage)?.getItem(KI_AUDIO_KEY)==='on'}catch{return false}
+}
+export function setKIAudioEnabled(enabled,storage){
+ try{(storage??globalThis.localStorage)?.setItem(KI_AUDIO_KEY,enabled?'on':'off')}catch{}
+ if(typeof window!=='undefined')window.dispatchEvent(new Event(KI_AUDIO_EVENT))
+}
+export function soundPackUrl(profile,signal,base=import.meta.env?.BASE_URL||'/',kiEnabled=isKIAudioEnabled()){
+
  const p=SOUND_PACK_PROFILES.includes(profile)?profile:'personal'
  const s=signal==='transition'?'round':signal
  if(!SOUND_PACK_SIGNALS.includes(s))throw Error('Ukjent lydsignal')
- return base+'audio/'+(s==='pr'?PR_SOUND_PACK_VERSION:SOUND_PACK_VERSION)+'/'+p+'-'+s+'.wav'
+ return base+'audio/'+(kiEnabled&&KI_AUDIO_SIGNALS[p]?.includes(s)?PR_SOUND_PACK_VERSION:SOUND_PACK_VERSION)+'/'+p+'-'+s+'.wav'
 }
 const files=new Map(), decoded=new WeakMap(), active=new WeakMap(), generations=new WeakMap()
 function bytes(url){
