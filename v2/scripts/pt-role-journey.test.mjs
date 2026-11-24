@@ -193,7 +193,7 @@ test('new PT follow-up scopes WOD status to the selected client without private 
  assert.doesNotMatch(followup,/\.from\('workout_logs'\)/)
  assert.match(followup,/workout_log_id/)
  assert.match(followup,/statusLabel\(row\.status\)/)
- assert.match(followup,/Merkt gjennomført/)
+ assert.match(followup,/completedStatus\(session\.status\)\?'Gjennomført'/)
  assert.match(followup,/assignedClientId=\{clientId\}/)
  assert.match(studio,/PTClientWods clientId=\{clientId\}/)
  assert.match(studio,/\['wodar','WOD-ar'\]/)
