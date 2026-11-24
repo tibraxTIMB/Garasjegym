@@ -100,7 +100,7 @@ const isMetadata=line=>{
 }
 // A plus expression with explicit reps is a candidate, never automatically an unbroken complex.
 function splitImportGroup(line){
- let raw=String(line||'').trim()
+ let raw=String(line||'').trim().replace(/\.\s*(?:originalen|rir|pt-notat|score|resultat).*$/i,'')
  const colon=raw.indexOf(':')
  if(colon>=0&&readEmomHeader(raw.slice(0,colon)))raw=raw.slice(colon+1).trim()
  const outer=raw.match(/^(\d{1,2})\s*[x×]\s*\((.+)\)\s*\.?$/i)
