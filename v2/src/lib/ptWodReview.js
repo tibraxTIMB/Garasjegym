@@ -42,3 +42,19 @@ export const ptDosingOptions=[
  {value:'discuss',label:'Ta opp neste gong'}
 ]
 export function dosageLabel(value){return ptDosingOptions.find(o=>o.value===value)?.label||'Oppfølging'}
+
+/** The target is advisory; do not infer actual reps/loads from a prescription. */
+export function plannedDoseForExercise(schema,exerciseName,level='rx') {
+ const items=Array.isArray(schema?.items)?schema.items:[]
+ const item=items.find(x=>String(x.exercise_name||'').trim().toLowerCase()===String(exerciseName||'').trim().toLowerCase())
+ if(!item)return null
+ const dose=item.levels?.[level]||item.levels?.rx||{}
+ const reps=dose.reps??item.reps
+ const count=Array.isArray(item.sets)?item.sets.length:0
+ const parts=[]
+ if(count>0)parts.push(count+' planlagde sett')
+ if(reps!=null&&String(reps).trim()!=='')parts.push(String(reps)+' reps')
+ const height=dose.heightCm??item.height_cm
+ if(height!=null&&height!=='')parts.push(height+' cm')
+ return parts.length?parts.join(' · '):null
+}
