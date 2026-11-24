@@ -23,7 +23,6 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
  const [note,setNote]=useState('')
  const [dosing,setDosing]=useState('discuss')
  const [sent,setSent]=useState(false)
- const [refresh,setRefresh]=useState(0)
  useEffect(()=>{
   let active=true
   setResult(null);setFeedback([]);setError('');setSent(false);setLoading(true);setNote('');setDosing('discuss')
@@ -40,7 +39,7 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
    setLoading(false)
   }).catch(e=>{if(active){setError(e.message||'Kunne ikkje henta PT-resultatet.');setLoading(false)}})
   return()=>{active=false}
- },[assignmentId,programSessionId,refresh])
+ },[assignmentId,programSessionId])
  const laps=useMemo(()=>validRoundSplits(result),[result])
  const pace=useMemo(()=>pacingReview(result),[result])
  const metrics=useMemo(()=>ptResultSummary(result),[result])
@@ -59,7 +58,12 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
    p_feedback_text:message,p_dosing:dosing,p_assignment_id:assignmentId||null,p_program_session_id:programSessionId||null
   })
   if(saveError){setError('Kunne ikkje senda tilbakemeldinga: '+saveError.message);setSaving(false);return}
-  setSaving(false);setRefresh(n=>n+1);setSent(true)
+  const column=assignmentId?'assignment_id':'program_session_id'
+  const {data:latest,error:refreshError}=await supabase.from('pt_wod_feedback')
+   .select('id,body,dosing,created_at').eq(column,assignmentId||programSessionId)
+   .order('created_at',{ascending:false}).limit(30)
+  if(!refreshError)setFeedback(latest||[])
+  setNote('');setSaving(false);setSent(true)
  }
  return <section className="ptreview" aria-label={'PT-resultat for '+clientName}>
   <div className="ptreview-header"><div><span className="section-kicker">PT-TILDELT WOD · RESULTAT</span><h3>{wodName||'Gjennomført WOD'}</h3><p>{clientName} · {result?formattedDate(result.workout_date):'Opnar resultat'}</p></div>
