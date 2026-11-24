@@ -6,3 +6,5 @@ export const RELEASE_SHORT = 'GAZELLE 1.2'
 // Release workflow diagnostic reference: version GAZELLE 1.2, safely report run URL.
 // Gazelle 1.2 release gate: group-class assertions updated for per-part logging.
 // Release gate #1908 passed; approved Pages publication of Gazelle 1.2.
+
+// Approved Gazelle publication: animated gorilla intro, independent PR Victory motifs and natural EISEN bell tails.
