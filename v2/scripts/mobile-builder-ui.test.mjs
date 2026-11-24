@@ -271,3 +271,13 @@ test('class builder and PT Studio use dark, readable field and selected-item sur
   }
   assert.match(styles, /color:\s*#f6fafb\s*!important/)
 })
+
+test('clock fits a dedicated size container without overlapping labels and confirmation is compact',()=>{
+ const timer=source('../src/components/Training.jsx')
+ const styles=source('../src/components/timer-viewport.css')
+ assert.match(timer,/className="gg-clock-digit-slot"/)
+ assert.match(styles,/\.gg-clock-digit-slot\{container-type:size/)
+ assert.match(styles,/94cqh,33cqw/)
+ assert.match(timer,/Fullføra denne delen\?/)
+ assert.match(styles,/\.gg-live-timer__drawer\.gg-timer-finish-confirm\{top:50%/)
+})

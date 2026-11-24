@@ -557,3 +557,55 @@
 .gg-live-timer__music-dock:empty{display:block!important;height:0;min-height:0;padding:0;border:0;margin:0;overflow:hidden}
 .gg-manual-undo:disabled{opacity:.38}
 .gg-live-timer__footer .gg-timer-secondary-actions>button{flex:1 1 0}
+
+/* Gazelle viewport fit: clock digits scale to their allocated box, not the
+   entire viewport. Status, elapsed time and exercises keep independent rows. */
+.gg-live-timer__clock-area{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;align-items:center;justify-items:center;gap:2px}
+.gg-clock-digit-slot{container-type:size;width:100%;height:100%;min-height:0;min-width:0;display:grid;place-items:center;overflow:hidden}
+.gg-clock-digit-slot .gg-live-timer__time{font-size:min(calc(90cqh * var(--gg-time-scale,1)),94cqh,33cqw,214px);line-height:1;min-width:0;max-width:100%;align-self:center}
+.gg-live-timer__status{gap:2px}
+.gg-live-timer__time-secondary{line-height:1.2;white-space:nowrap;flex-shrink:0}
+.gg-live-timer__context{justify-content:flex-start;gap:5px;padding:7px 10px;overflow-y:auto}
+.gg-live-timer__rounds{flex-shrink:0;gap:4px}
+.gg-live-timer__exercise{flex:0 0 auto;gap:3px}
+.gg-live-timer__exercise ol{gap:3px;margin:0;padding:0}
+.gg-live-timer__exercise li{line-height:1.2}
+.gg-live-timer__footer .gg-manual-action{min-height:0;height:clamp(56px,10dvh,84px);padding:5px 9px}
+.gg-live-timer__footer button.gg-manual-action.is-xl{min-height:0;height:clamp(68px,12dvh,98px)}
+.gg-live-timer__footer .gg-timer-secondary-actions button{min-height:42px}
+.gg-live-timer__drawer.gg-timer-finish-confirm{top:50%;left:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:min(350px,calc(100% - 24px));max-height:calc(100% - 20px);padding:14px;gap:10px}
+.gg-timer-finish-confirm p{margin:0;font-size:14px;line-height:1.35}
+.gg-timer-finish-confirm small{color:#bfd0d8;line-height:1.3}
+.gg-timer-finish-confirm>button{min-height:44px}
+@media(orientation:landscape){
+ .gg-live-timer__body--with-laps .gg-clock-digit-slot{grid-area:time}
+ .gg-live-timer__body--with-laps .gg-clock-digit-slot .gg-live-timer__time{font-size:min(calc(90cqh * var(--gg-time-scale,1)),94cqh,33cqw,214px)}
+ .gg-live-timer--manual .gg-live-timer__footer .gg-manual-action{min-height:0;height:clamp(54px,13dvh,82px)}
+ .gg-live-timer--manual .gg-live-timer__footer .gg-manual-action.is-xl{min-height:0;height:clamp(60px,15dvh,92px)}
+ .gg-live-timer--manual .gg-live-timer__footer .gg-timer-secondary-actions button{min-height:0}
+}
+@media(orientation:landscape) and (max-height:480px){
+ .gg-live-timer__header{min-height:34px;padding-bottom:3px}
+ .gg-live-timer__body{padding:3px 0}
+ .gg-live-timer__phase,.gg-live-timer__time-label{font-size:10px;line-height:1.15}
+ .gg-live-timer__wod-name{font-size:10px}
+ .gg-live-timer__time-secondary{font-size:10px}
+ .gg-live-timer__time-secondary b{font-size:13px}
+ .gg-live-timer__context{padding:5px 8px;gap:3px}
+ .gg-live-timer--manual .gg-live-timer__footer .gg-manual-action{height:54px}
+ .gg-live-timer--manual .gg-live-timer__footer .gg-manual-action.is-xl{height:62px}
+ .gg-live-timer__footer{padding-top:4px}
+}
+@media(orientation:portrait){
+ .gg-live-timer__body,.gg-live-timer__body--with-laps{grid-template-rows:minmax(0,1.02fr) minmax(0,1fr);gap:4px;padding:4px 0}
+ .gg-live-timer__phase,.gg-live-timer__time-label{font-size:clamp(10px,1.7dvh,14px)}
+ .gg-live-timer__time-secondary{font-size:12px}
+ .gg-live-timer__time-secondary b{font-size:17px}
+ .gg-live-timer__rounds strong{font-size:clamp(20px,3.6dvh,32px)}
+ .gg-live-timer__laps-portrait{min-height:32px;padding:2px 0 3px}
+ .gg-live-timer__laps-portrait .gg-live-timer__lap-preview li{min-height:28px;padding:3px 5px}
+}
+@media(orientation:portrait) and (max-height:600px){
+ .gg-live-timer__footer .gg-manual-action{height:58px}
+ .gg-live-timer__footer button.gg-manual-action.is-xl{height:68px}
+}

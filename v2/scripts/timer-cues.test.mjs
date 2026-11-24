@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, trainingSignalPattern, playTrainingTone } from '../src/lib/timerCues.js'
+import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, trainingSignalPattern, playTrainingTone, synthesizeTrainingCue } from '../src/lib/timerCues.js'
 
 test('ten-second start only sounds on three, two, one and start',()=>{
   assert.deepEqual(Array.from({length:11},(_,i)=>countdownSignal(10-i)).filter(Boolean),['tick-3','tick-2','tick-1','start'])
@@ -44,25 +44,31 @@ test('gym signals are distinct, sustained and have no overlapping notes',()=>{
   }
  }
 })
-test('full-volume audio peaks are bounded and mute creates no oscillators',()=>{
- const peaks=[];let count=0
- const context={currentTime:0,destination:{},createOscillator(){count++;return {frequency:{setValueAtTime(){}},connect(){},disconnect(){},start(){},stop(){}}},createGain(){return {gain:{setValueAtTime(){},linearRampToValueAtTime(v){if(v>0)peaks.push(v)}},connect(){},disconnect(){}}}}
- playTrainingTone(context,1000,.3,0,0)
- assert.equal(count,0)
- playTrainingTone(context,1000,.3,0,100)
- assert.equal(count,2)
- assert.ok(peaks.reduce((a,b)=>a+b,0)<=1)
+test('three original audio profiles have distinct patterns and waveforms, normalized safe digital peaks',()=>{
+ for(const signal of ['start','round','rest','station','finish','registered']){
+  const profiles=['pt','personal','group']
+  const fingerprints=profiles.map(profile=>{
+   const samples=synthesizeTrainingCue(signal,profile)
+   let peak=0,sum=0
+   for(const s of samples){peak=Math.max(peak,Math.abs(s));sum+=s*s}
+   assert.ok(peak>.97&&peak<=1)
+   assert.ok(Math.sqrt(sum/samples.length)>.3)
+   return Array.from(samples.slice(200,220)).join(',')
+  })
+  assert.equal(new Set(fingerprints).size,3)
+ }
+ assert.equal(synthesizeTrainingCue('start','silent').length,0)
+ assert.ok(trainingSignalPattern('finish','group').length>trainingSignalPattern('finish','personal').length)
 })
-
-test('group audio is longer and stronger while silent profile emits nothing',()=>{
- assert.deepEqual(trainingSignalPattern('start','silent'),[])
- assert.ok(trainingSignalPattern('start','group').at(-1)[1]>trainingSignalPattern('start','personal').at(-1)[1])
- assert.ok(trainingSignalPattern('station','group').length>trainingSignalPattern('station','personal').length)
- const peaks=[];let count=0
- const context={currentTime:0,destination:{},createOscillator(){count++;return {frequency:{setValueAtTime(){}},connect(){},disconnect(){},start(){},stop(){}}},createGain(){return {gain:{setValueAtTime(){},linearRampToValueAtTime(v){if(v>0)peaks.push(v)}},connect(){},disconnect(){}}}}
- playTrainingTone(context,1200,.5,0,100,'group')
- assert.equal(count,1)
- assert.equal(peaks[0],.96)
- playTrainingTone(context,1200,.5,0,100,'silent')
- assert.equal(count,1)
+test('audio buffers respect volume, are cached, and never play in silent mode',()=>{
+ let created=0,started=0;const gains=[]
+ const context={sampleRate:24000,currentTime:0,destination:{},createBuffer(c,n){created++;const data=new Float32Array(n);return {getChannelData:()=>data}},createBufferSource(){return {connect(){},disconnect(){},start(){started++}}},createGain(){const gain={value:0};gains.push(gain);return {gain,connect(){},disconnect(){}}}}
+ playTrainingSignal(context,'start',0,'group')
+ playTrainingSignal(context,'start',100,'silent')
+ assert.equal(created,0)
+ playTrainingSignal(context,'start',100,'group')
+ playTrainingSignal(context,'start',50,'group')
+ assert.equal(created,1)
+ assert.equal(started,2)
+ assert.deepEqual(gains.map(g=>g.value),[1,.5])
 })

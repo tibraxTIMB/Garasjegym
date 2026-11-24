@@ -497,7 +497,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const showTimeCap = hasTimeCap
   const roundsShown = isTimedInterval ? Math.min(currentRound, Number(rounds)) : currentRound
   const completedRounds = isAmrap ? laps.length : isLadder ? ladderCompletedRounds : isEMOM ? Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)) : (isStationCircuit||isTimedInterval) ? fixedSlotState.roundsCompleted : round
-  const lapAction = () => { if(!running||timerLimitReached||!claimManualAction('round'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); setRound(value => value + 1); cue(1200, 0.14) }
+  const lapAction = () => { if(!running||timerLimitReached||!claimManualAction('round'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); setRound(value => value + 1); playSignal('registered') }
   const splitAction = () => { if(!running||timerLimitReached||!claimManualAction('split'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); cue(1200, 0.14) }
   const undoManualAction=()=>{
     const kind=lastManualAction.current
@@ -580,14 +580,14 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     <small>Automatiske rundeskifte blir ikkje påverka. Angre siste AMRAP-runde eller mellomtid utan å stoppa klokka.</small>
   </div>
   const audioControls=<div className="gg-timer-audio-controls">
-    <label>Lydprofil<select value={audioProfile} onChange={e=>{const value=e.target.value;setAudioProfile(value);if(value!=='silent'){soundOnRef.current=true;setSoundOn(true)}}}><option value="pt">Precision · presis</option><option value="personal">SturmKopf · energisk</option><option value="group">Gorilla Mode · kraftig horn</option></select></label>
+    <label>Lydprofil<select value={audioProfile} onChange={e=>{const value=e.target.value;setAudioProfile(value);if(value!=='silent'){soundOnRef.current=true;setSoundOn(true)}}}><option value="pt">EISEN · metallisk klokke</option><option value="personal">STURM · arena og horn</option><option value="group">BALKAN BERSERK · brass og tromme</option></select></label>
     <label className="gg-timer-check"><input type="checkbox" checked={soundOn} onChange={e=>setSoundOn(e.target.checked)}/> Lydsignal på</label>
     <label>Timerlyd · {soundVolume}%<input type="range" min="0" max="100" step="5" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label>
     <label className="gg-timer-check"><input type="checkbox" checked={countdownAudio} onChange={e=>setCountdownAudio(e.target.checked)}/> Nedtelling 3–2–1</label>
     <label className="gg-timer-check"><input type="checkbox" checked={vibration} onChange={e=>setVibration(e.target.checked)}/> Vibrasjon ved skifte (støtta mobil)</label>
-    <label>Test signal<select value={testCue} onChange={e=>setTestCue(e.target.value)}><option value="start">Start</option><option value="tick-1">Nedtelling</option><option value="round">Ny runde</option><option value="rest">Pause</option><option value="station">Stasjonsbyte</option><option value="finish">Ferdig</option></select></label>
+    <label>Test signal<select value={testCue} onChange={e=>setTestCue(e.target.value)}><option value="start">Start</option><option value="tick-1">Nedtelling</option><option value="round">Ny runde</option><option value="rest">Pause</option><option value="station">Stasjonsbyte</option><option value="finish">Ferdig</option><option value="registered">Runde registrert</option></select></label>
     <button type="button" className="secondary-button" disabled={audioProfile==='silent'||!soundOn||soundVolume===0} onClick={()=>playSignal(testCue,{test:true})}><Volume2 size={17}/> Test lydsignal</button>
-    <small>Timeren brukar medievolumet på eininga. Vel Gorilla Mode og sjekk medievolum og eventuell Bluetooth-høgtalar. Spotify-volumet blir ikkje endra.</small>
+    <small>Timeren brukar medievolumet på eininga. Vel BALKAN BERSERK og sjekk medievolum og eventuell Bluetooth-høgtalar. Spotify-volumet blir ikkje endra.</small>
   </div>
   const resetTimer = () => { clearManualAction(); timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; scheduledStartedAt.current=null; setCountdownDeadline(null);setCountdownRemaining(0); setRunning(false); setElapsed(0); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
   return <div ref={timerContainerRef} className={stageVisible ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
@@ -606,7 +606,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       <div className={laps.length?'gg-live-timer__body gg-live-timer__body--with-laps':'gg-live-timer__body'}>
         <div className="gg-live-timer__clock-area">
           <div className="gg-live-timer__status">{wodName&&<span className="gg-live-timer__wod-name" title={wodName}>{wodName}</span>}<div className="gg-live-timer__phase"><span className={running?'gg-live-timer__dot is-running':'gg-live-timer__dot'}/>{countdownDeadline!==null?'GJER DEG KLAR':stageIsComplete?(isDeathBy&&deathByStatus.failed?'STOPPA':'FERDIG'):!hasStarted?'KLAR':!running?'PAUSE':(isEMOM||isDeathBy||isTimedInterval||isStationCircuit)?currentPhase:'PÅGÅR'}</div></div>
-          <div className="gg-live-timer__time" style={{'--gg-time-scale': Math.max(.78,Math.min(1.16,appearance.clockSize/112))}} role="timer" aria-label={countdownDeadline!==null?`Startar om ${countdownRemaining} sekund`:`${stageTimeLabel}: ${clock(primaryTime)}`}>{countdownDeadline!==null?countdownRemaining:clock(primaryTime)}</div>
+          <div className="gg-clock-digit-slot"><div className="gg-live-timer__time" style={{'--gg-time-scale': Math.max(.78,Math.min(1.16,appearance.clockSize/112))}} role="timer" aria-label={countdownDeadline!==null?`Startar om ${countdownRemaining} sekund`:`${stageTimeLabel}: ${clock(primaryTime)}`}>{countdownDeadline!==null?countdownRemaining:clock(primaryTime)}</div></div>
           <div className="gg-live-timer__time-label">{countdownDeadline!==null?'STARTAR OM':stageTimeLabel}</div>
           {(isCountdown||isEMOM||isTimedInterval||isStationCircuit||hasTimeCap)&&!isDeathBy&&<div className="gg-live-timer__time-secondary"><span>{isCountdown?'Medgått':isEMOM?'Økta att':isTimedInterval||isStationCircuit?'Økta att':'Tid att'}</span><b>{clock(isCountdown?elapsed:remainingTotal)}</b></div>}
           {stageLapHistory.length>0&&<div className="gg-live-timer__clock-laps" aria-label={stageLapLabel}>
@@ -636,12 +636,12 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         <div className="gg-timer-secondary-actions">
         <button type="button" className="gg-live-timer__pause" onClick={toggleRunning} disabled={stageIsComplete}>{countdownDeadline!==null?<><X size={21}/> Avbryt</>:running?<><Pause size={21}/> Pause</>:phase==='PAUSE'?<><Play size={21}/> Hald fram</>:<><Play size={21}/> Start no</>}</button>
         {!hasStarted&&countdownDeadline===null&&<button type="button" className="gg-live-timer__round-button" onClick={()=>beginWorkout(true)}><Play size={21}/> Start · 10 sek</button>}
-        {hasStarted&&(finishLabel==='Avslutt'?<button type="button" className="gg-live-timer__finish" onClick={requestFinish}><CheckCircle2 size={20}/> Avslutt</button>:<button type="button" className="gg-live-timer__finish" onClick={requestFinish}><CheckCircle2 size={20}/> {finishLabel}</button>)}
+        {hasStarted&&(finishLabel==='Avslutt'?<button type="button" className="gg-live-timer__finish" onClick={requestFinish}><CheckCircle2 size={20}/> Avslutt</button>:<button type="button" className="gg-live-timer__finish" onClick={requestFinish}><CheckCircle2 size={20}/> Neste del</button>)}
         {undoButton}
         </div>
       </footer>
       {stagePanel&&<div className="gg-live-timer__scrim" onClick={()=>setStagePanel(null)} role="presentation"/>}
-      {stagePanel==='finish'&&finishConfirm&&<aside className="gg-live-timer__drawer gg-timer-settings-menu" aria-label="Stadfest avslutning"><header><strong>Avslutta økta?</strong><button type="button" onClick={()=>{setFinishConfirm(false);setStagePanel(null)}} aria-label="Avbryt"><X size={20}/></button></header><p>Klokka held fram til du stadfestar.</p><button type="button" className="primary-button" onClick={()=>{setFinishConfirm(false);setStagePanel(null);finishCurrent()}}>Ja, avslutt</button><button type="button" className="secondary-button" onClick={()=>{setFinishConfirm(false);setStagePanel(null)}}>Hald fram med treninga</button></aside>}
+      {stagePanel==='finish'&&finishConfirm&&<aside className="gg-live-timer__drawer gg-timer-finish-confirm" role="dialog" aria-modal="true" aria-label="Stadfest avslutning"><header><strong>{finishLabel==='Avslutt'?'Avslutta økta?':'Fullføra denne delen?'}</strong><button type="button" onClick={()=>{setFinishConfirm(false);setStagePanel(null)}} aria-label="Avbryt"><X size={20}/></button></header><small>{wodName||format}</small><p>{finishLabel==='Avslutt'?'Gå til resultatregistrering no?':'Avslutt denne delen tidleg og gå vidare etter WOD-planen?'}</p><small>Klokka held fram dersom du avbryt.</small><button type="button" className="primary-button" onClick={()=>{setFinishConfirm(false);setStagePanel(null);finishCurrent()}}>{finishLabel==='Avslutt'?'Avslutt · resultat':'Fullfør del · vidare'}</button><button type="button" className="secondary-button" onClick={()=>{setFinishConfirm(false);setStagePanel(null)}}>Avbryt · tilbake til klokka</button></aside>
       {stagePanel==='wod'&&<aside className="gg-live-timer__drawer" aria-label="Øvingar i WOD-en"><header><strong>Øvingar · {stageRows.length}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk øvingslista"><X size={20}/></button></header><ol className="gg-live-timer__all-exercises">{stageRows.map((item,index)=><li key={`${item.id}-${index}`}>
         {item.steps.length||item.description||item.equipment?<details className="gg-live-timer__exercise-detail"><summary><span>{index+1}. {item.name}</span><small>{item.dose}</small><ChevronDown size={15}/></summary><div className="gg-live-timer__exercise-more">{item.steps.length>0&&<><strong>Rørslesekvens</strong><ol>{item.steps.map((step,stepIndex)=><li key={stepIndex}>{step.reps?`${step.reps} × `:''}{step.name||step.exercise_name||'Rørsle'}</li>)}</ol></>}{item.description&&<p>{item.description}</p>}{item.equipment&&<p><b>Utstyr:</b> {item.equipment}</p>}</div></details>:<div className="gg-live-timer__exercise-simple"><span>{index+1}. {item.name}</span><small>{item.dose}</small></div>}
       </li>)}</ol>{!stageRows.length&&<p>Ingen øvingar er lagde til.</p>}</aside>}
@@ -654,7 +654,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         <header><strong>{({settings:'Timerinnstillingar',audio:'Lyd og signal',display:'Klokke og visning',timing:'Øktoppsett',reset:'Nullstill økta',music:'Musikkstudio',pulse:'Puls og intensitet',actions:'Betening under trening'})[stagePanel]}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk innstillingane"><X size={20}/></button></header>
         {stagePanel!=='settings'&&<button type="button" className="gg-timer-menu-back" onClick={()=>setStagePanel('settings')}>‹ Alle innstillingar</button>}
         {stagePanel==='settings'&&<nav className="gg-timer-menu-list" aria-label="Vel innstilling">
-          <button type="button" onClick={()=>setStagePanel('audio')}><Volume2 size={20}/><span><b>Lyd og signal</b><small>{soundVolume}% · {audioProfile==='group'?'Gorilla Mode':audioProfile==='pt'?'Precision':'SturmKopf'}</small></span><ChevronRight size={17}/></button>
+          <button type="button" onClick={()=>setStagePanel('audio')}><Volume2 size={20}/><span><b>Lyd og signal</b><small>{soundVolume}% · {audioProfile==='group'?'BALKAN BERSERK':audioProfile==='pt'?'EISEN':'STURM'}</small></span><ChevronRight size={17}/></button>
           <button type="button" onClick={()=>setStagePanel('music')}><Music2 size={20}/><span><b>Musikkstudio</b><small>Stor Spotify-spelar</small></span><ChevronRight size={17}/></button>
           <button type="button" onClick={()=>setStagePanel('pulse')}><HeartPulse size={20}/><span><b>Puls og intensitet</b><small>Sensor og live-visning</small></span><ChevronRight size={17}/></button>
           <button type="button" onClick={()=>setStagePanel('actions')}><Hand size={20}/><span><b>Betening under trening</b><small>Store knappar · {roundGuardSeconds} sek sperre</small></span><ChevronRight size={17}/></button>
@@ -739,10 +739,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
         </div>
         <div className="timer-finish-row">
-          <button type="button" className="timer-finish-button" onClick={()=>{if(!running||stageIsComplete||window.confirm('Avslutta økta?'))finishCurrent()}} disabled={!hasStarted}>
+          <button type="button" className="timer-finish-button" onClick={()=>{if(!running||stageIsComplete||window.confirm(finishLabel==='Avslutt'?'Avslutta økta og gå til resultat?':'Fullføra denne delen og gå vidare?'))finishCurrent()}} disabled={!hasStarted}>
             <CheckCircle2 size={18}/><span>{finishLabel==='Avslutt'?'Avslutt økta':finishLabel}</span>
           </button>
-          <small>{hasStarted ? finishLabel==='Avslutt'?'Kontroller resultat og lagre økta etterpå':'Neste del blir klar, men startar ikkje automatisk' : 'Start timeren før du avsluttar økta'}</small>
+          <small>{hasStarted ? finishLabel==='Avslutt'?'Kontroller resultat og lagre økta etterpå':'Neste del følgjer overgangsplanen' : 'Start timeren før du avsluttar økta'}</small>
         </div>
       </section></TimerPanel>:id==='info'?<TimerPanel key={id} id="info" title="ØKTINFORMASJON" layout={panelLayout.info} deviceProfile={deviceProfile} locked={Boolean(lockedPanels.info)} onMove={movePanel} onResize={resizePanel} onLock={togglePanelLock} designMode={designMode}><aside className="timer-side timer-side-left">
         <div className="timer-bottom-heading">ØKTINFORMASJON</div>
