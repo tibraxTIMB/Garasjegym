@@ -74,6 +74,7 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
   {!loading&&!result&&!error&&<p className="ptfollow-empty">Det finst ikkje ein lagra treningslogg knytt til denne PT-tildelinga. Ingen resultat er gjetta.</p>}
   {result&&!loading&&<>
    <div className="ptreview-metrics">{metrics.map(m=><div key={m.label} className="ptreview-metric"><strong>{m.value}</strong><small>{m.label}</small></div>)}</div>
+   {result.result_data?.time_cap_reached&&<p className="ptreview-insight is-review">Økta nådde tidsgrensa. Dette er ikkje i seg sjølv ei fullført For Time-økt. Vurder faktisk arbeid og disponering før du gir tilbakemelding.</p>}
    {isAmrap&&<div className="ptreview-panel">
     <div className="ptreview-panel-title"><Activity size={17}/><h4>Rundetider og disponering</h4></div>
     {laps.length?<><div className="ptreview-laps">
