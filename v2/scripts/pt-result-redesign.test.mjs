@@ -1,16 +1,18 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
-import {ptPartCompletion,ptIsAmrapPart,ptPartScore,ptRoundSplits,ptReviewHighlights} from '../src/lib/ptWodReview.js'
+import {ptPartCompletion,ptIsAmrapPart,ptPartScore,ptRoundSplits,ptReviewHighlights,ptPrescribedWorkContext} from '../src/lib/ptWodReview.js'
 
 const read=path=>readFileSync(new URL(path,import.meta.url),'utf8')
 
-test('nine-minute E3MOM stopped at 7:36 is not presented as fully completed',()=>{
+test('nine-minute E3MOM manually stopped at 7:36 can mean work done, not a failed WOD',()=>{
  const partial={format:'E3MOM',duration_seconds:540,elapsed:456,completed:true,phase:'FULLFØRT'}
- assert.equal(ptPartCompletion(partial).kind,'early')
- assert.equal(ptPartCompletion(partial).label,'Avslutta før planlagt tid')
+ assert.equal(ptPartCompletion(partial).kind,'manual')
+ assert.equal(ptPartCompletion(partial).label,'Manuelt vidare')
  assert.match(ptPartCompletion(partial).detail,/7:36/)
  assert.match(ptPartCompletion(partial).detail,/9:00/)
+ assert.match(ptPartCompletion(partial).detail,/siste arbeidssett/)
+ assert.equal(ptPartCompletion({...partial,phase:'PÅGÅR'}).kind,'early')
  assert.equal(ptPartCompletion({...partial,elapsed:540}).kind,'done')
  assert.equal(ptPartCompletion({...partial,completed:false}).kind,'unknown')
  assert.equal(ptPartCompletion({...partial,time_cap_reached:true}).kind,'timed')
@@ -36,9 +38,10 @@ test('missing round times and exercise measurements are never inferred',()=>{
  assert.deepEqual(ptRoundSplits({result_data:{}},{laps:[null,-1,'',100]}),[100])
  const screen=read('../src/components/PTWodReview.jsx')
  assert.match(screen,/Rundetider er ikkje registrerte/)
- assert.match(screen,/Utført arbeid ikkje detaljregistrert/)
- assert.match(screen,/Det tyder ikkje at øvinga ikkje vart gjennomført/)
- assert.match(screen,/reps ikkje registrerte/)
+ assert.match(screen,/WOD-oppsettet er utgangspunktet/)
+ assert.match(screen,/Ingen separate settmålingar/)
+ assert.match(screen,/Registrert · sett/)
+ assert.doesNotMatch(screen,/reps ikkje registrerte/)
  assert.doesNotMatch(screen,/\.from\('workout_logs'\)/)
 })
 
@@ -68,4 +71,30 @@ test('selecting a PT result shows it alone instead of unrelated next-step blocks
  assert.match(list,/clientRank=\{clientRank\}/)
  assert.match(list,/row.member_id===clientId/)
  assert.doesNotMatch(list,/\.from\('workout_logs'\)/)
+})
+
+test('prescribed AMRAP and E3MOM movements count as WOD work unless athlete reported a deviation',()=>{
+ const schema={composite_blocks:[{id:'a',format:'E3MOM',emomIntervalSeconds:180,minutes:9}],
+  items:[
+   {block_id:'a',exercise_name:'Strict press',reps:5,levels:{rx:{reps:'5'}}},
+   {block_id:'b',exercise_name:'Burpee Over Dumbbell',reps:4,levels:{rx:{reps:'4'}}}
+  ]}
+ const base={format:'Samansett økt',result_data:{prescription_level:'rx',completed:true,block_summary:[
+  {id:'a',format:'E3MOM',duration_seconds:540,elapsed:456,completed:true,phase:'FULLFØRT'},
+  {id:'b',format:'AMRAP',duration_seconds:480,elapsed:480,completed:true}
+ ]}}
+ const press={block_id:'a',exercise_name:'Strict press',sets:[{load_kg:7.5,reps:null}]}
+ const pressContext=ptPrescribedWorkContext(base,schema,press)
+ assert.equal(pressContext.kind,'assumed')
+ assert.match(pressContext.text,/3 planlagde intervall × 5 reps/)
+ assert.match(pressContext.text,/ikkje ei måling/)
+ const burpee={block_id:'b',exercise_name:'Burpee Over Dumbbell',sets:[{reps:null,load_kg:null}]}
+ assert.equal(ptPrescribedWorkContext(base,schema,burpee).kind,'assumed')
+ assert.match(ptPrescribedWorkContext(base,schema,burpee).text,/AMRAP/)
+ assert.equal(ptPrescribedWorkContext(base,schema,{...press,sets:[{reps:4}]}).kind,'deviation')
+ const incomplete={...base,result_data:{...base.result_data,block_summary:[{...base.result_data.block_summary[0],completed:false},base.result_data.block_summary[1]]}}
+ assert.equal(ptPrescribedWorkContext(incomplete,schema,press).kind,'unconfirmed')
+ // Derivation is read-only: neither the original result nor its sparse set receives invented reps.
+ assert.equal(press.sets[0].reps,null)
+ assert.equal(base.result_data.block_summary[0].elapsed,456)
 })
