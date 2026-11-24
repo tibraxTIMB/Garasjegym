@@ -2,7 +2,7 @@ const normalized=s=>String(s||'').trim().toLowerCase().replace(/\s+/g,' ')
 const present=v=>v!==null&&v!==undefined&&String(v).trim()!==''&&Number.isFinite(Number(v))
 export function previousExerciseResult(logs,item){
  if(!item||item.is_rest)return null
- const id=item.exercise_id||item.id
+ const id=item.exercise_id
  const name=normalized(item.exercise_name||item.name)
  if(!name)return null
  for(const log of logs||[]){

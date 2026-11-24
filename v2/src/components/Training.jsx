@@ -973,8 +973,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const [scoreUnit, setScoreUnit] = useState(() => savedDraft?.scoreUnit || 'm')
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(() => savedDraft?.activeExerciseIndex || 0)
   // Review results independently from the live timer; actual values stay in the existing draft.
-  const restoringReview=useRef(Boolean(savedDraft?.finishOpen))
-  useEffect(()=>{if(restoringReview.current){restoringReview.current=false;return}if(finishOpen){setActiveExerciseIndex(0);setResultSummary(items.length===0);setReviewedResults({});setConfirmedPlannedEmom(false)}},[finishOpen])
+  const previousFinishOpen=useRef(Boolean(savedDraft?.finishOpen))
+  useEffect(()=>{const wasOpen=previousFinishOpen.current;previousFinishOpen.current=finishOpen;if(finishOpen&&!wasOpen){setActiveExerciseIndex(0);setResultSummary(items.length===0);setReviewedResults({});setConfirmedPlannedEmom(false)}},[finishOpen])
   useEffect(()=>{if(finishOpen&&resultBodyRef.current)resultBodyRef.current.scrollTop=0},[finishOpen,activeExerciseIndex,resultSummary])
   const resultItem=items[activeExerciseIndex]
   const entered=value=>value!==null&&value!==undefined&&String(value).trim()!==''
@@ -1383,7 +1383,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     setSaving(true); setError(''); setNotice('')
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
-      if (userError || !user) throw new Error('Innlogginga er utgått. Logg inn på nytt.')
+      if (userError || !user || user.id!==memberId) throw new Error('Innlogginga kunne ikkje stadfestast. Kladden er framleis open.')
       const normalizedFormat = format.toLowerCase()
       const combinationMode = source?.timer_settings?.workout_schema?.combination_mode
       const isAmrapScore = normalizedFormat === COMPOSITE_FORMAT.toLowerCase() || normalizedFormat === 'amrap' || (['couplet','triplet'].includes(normalizedFormat) && combinationMode === 'AMRAP')
@@ -1483,12 +1483,12 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       await loadAll()
       onSaved?.({victories})
     } catch (err) {
-      setError(err.message || 'Kunne ikkje lagra økta.')
+      setError(isOffline()?'Nettet fall ut under lagring. Kladden er framleis open; prøv same lagring igjen når nettet kjem tilbake.':err.message || 'Kunne ikkje lagra økta.')
     } finally {
       setSaving(false)
     }
   }
-  if (loading && mode!=='active') return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar treningsdata …</div>
+  if (loading && mode!=='active' && !offline) return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar treningsdata …</div>
 
   return <div className={simpleMode && mode === "home" ? "training-module simple-mode" : "training-module"}>
     {offline&&<div className="auth-message" role="status">Offline · lokalt klargjorde økter. Lagring til treningslogg krev nett.</div>}
