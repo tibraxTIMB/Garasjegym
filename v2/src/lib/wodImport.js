@@ -2,6 +2,7 @@
 const normalize=value=>String(value||'').toLocaleLowerCase('nn-NO').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/æ/g,'ae').replace(/ø/g,'o').replace(/å/g,'a').replace(/[^a-z0-9]+/g,' ').trim()
 const stem=value=>normalize(value).split(' ').map(word=>word.length>3&&!word.endsWith('ss')?word.replace(/ies$/,'y').replace(/(ches|shes|xes|zes)$/,(end)=>end.slice(0,-2)).replace(/s$/,''):word).join(' ')
 import {COMPOSITE_FORMAT} from './compositeWod.js'
+import {readEmomHeader,readFixedTiming,isFixedInterval,fixedIntervalSummary} from './wodFormatAdvisor.js'
 
 const aliases=[
  ['row','rowing','roing','romaskin','row erg','concept2 row'],
@@ -61,6 +62,8 @@ export function suggestWodExercises(query,catalog=[],limit=4){
 }
 const formatFrom=text=>{
  const value=text.toLowerCase()
+ const compact=readEmomHeader(text)
+ if(compact)return compact.format
  if(/\bamrap\b/.test(value))return 'AMRAP'
  if(/\btabata\b/.test(value))return 'Tabata'
  if(/\be(?:[1-7](?:\.25|\.5|\.75)?)?mom\b/.test(value)){
@@ -76,7 +79,7 @@ const formatFrom=text=>{
 const isHeading=line=>/^(?:økt|okt|workout|wod|treningsøkt)\s*(?:[#.:–-]?\s*\d+|\s*[:–-])/i.test(line)
 const isMetadata=line=>{
  const s=normalize(line)
- return !s||/^(?:amrap|emom|e[1-7]mom|tabata|for time|chipper|complex|intervall|interval|rx|scaled|foundation|intermediate|exercise|exercises|ovingar|ovelser|movements|warmup|oppvarming|time cap|tidsgrense|reps|repetisjonar|rest|pause|round|rounds|runde|rundar|runder|workout notes|notes|notat)(?:\b|$)/.test(s)
+ return !!readEmomHeader(line)||!!readFixedTiming(line)||/^\d+\s*(?:arbeidsintervall|work intervals)\b/i.test(line)||!s||/^(?:amrap|emom|e[1-7]mom|tabata|for time|chipper|complex|intervall|interval|rx|scaled|foundation|intermediate|exercise|exercises|ovingar|ovelser|movements|warmup|oppvarming|time cap|tidsgrense|reps|repetisjonar|rest|pause|round|rounds|runde|rundar|runder|workout notes|notes|notat)(?:\b|$)/.test(s)
   ||/^\d+\s*(?:min|minutes|minutt|rounds?|rundar|runder|sets?|sett)(?:\s+(?:amrap|emom|for time))?$/.test(s)
   ||/^(?:time cap|tidsgrense|duration|varigheit|tid|total tid|format)\b/.test(s)
   ||/^(?:m|k|men|women|menn|kvinner)\s*\d+\s*(?:kg|lbs?)\b/.test(s)
@@ -132,6 +135,8 @@ function parseGeneralComposite(lines,catalog){
  }
  const parseFormat=line=>{
   const text=line.toLowerCase()
+  const compact=readEmomHeader(line)
+  if(compact)return compact
   const emom=text.match(/\be(1(?:[.,]25)?|[2-7])mom\b(?:\s*[:–-]?\s*(\d{1,3}))?/)
   if(emom)return {format:'E'+emom[1].replace(',','.')+'MOM',minutes:Number(emom[2])||null}
   const amrap=text.match(/\bamrap\b(?:\s*(\d{1,3}))?/)
@@ -290,9 +295,12 @@ export function parseWodImport(source,exerciseCatalog=[]){
  const firstIsMetadata=isMetadata(first)||/^\d/.test(first)&&!isHeading(first)
  const name=!firstIsMetadata&&!firstLooksLikeExercise&&first.length<=80?first:'Importert WOD'
  const minutesMatch=whole.match(/\b(?:amrap|emom|time cap[:\s]*|tidsgrense[:\s]*)\s*(\d{1,3})\s*(?:min(?:utt)?|minutes?)?\b|\b(\d{1,3})\s*(?:min(?:utt)?|minutes?)\b/i)
- const minutes=minutesMatch?Number(minutesMatch[1]||minutesMatch[2]):null
+ const header=readEmomHeader(whole)
+ const fixedTiming=readFixedTiming(whole)
+ const minutes=header?.minutes??(minutesMatch?Number(minutesMatch[1]||minutesMatch[2]):null)
  const roundsMatch=whole.match(/\b(\d{1,2})\s*(?:rounds?|rundar|runder)\b/i)
- const rounds=roundsMatch?Number(roundsMatch[1]):1
+ const explicitRounds=whole.match(/(?:\b(\d{1,2})\s*(?:rounds?|rundar|runder)\b|[x×]\s*(\d{1,2})\s*(?:rounds?|rundar|runder)\b)/i)
+ const rounds=roundsMatch?Number(roundsMatch[1]):explicitRounds?Number(explicitRounds[1]||explicitRounds[2]):1
  const items=[],ignored=[]
  for(const line of lines){
   if(line===name||line===schemeLine||isHeading(line)||isMetadata(line)){if(line!==name&&line!==schemeLine)ignored.push(line);continue}
@@ -305,5 +313,10 @@ export function parseWodImport(source,exerciseCatalog=[]){
  }
  if(!items.length)throw new Error('Fann ingen sikre øvingslinjer. Kontroller teksten og prøv igjen.')
  const format=formatFrom(whole)||(scheme?'For Time':null)
- return {name,format,minutes,rounds,items,ignored,notes:'Importert kjeldetekst:\n'+whole,unmatched:items.filter(item=>!item.matched).map(item=>item.name)}
+ const explicitSlots=whole.match(/\b(\d{1,3})\s*(?:arbeidsintervall|work intervals)\b/i)
+ const intervalRounds=explicitSlots?Number(explicitSlots[1])/items.length:rounds
+ const timing=fixedTiming||(format==='Tabata'?{workSeconds:20,restSeconds:10}:null)
+ const chosenRounds=isFixedInterval(format)?(explicitSlots?intervalRounds:roundsMatch||explicitRounds?rounds:format==='Tabata'?8:null):rounds
+ const plan=timing&&isFixedInterval(format)?fixedIntervalSummary({...timing,rounds:chosenRounds,exerciseCount:items.length}):null
+ return {name,format,minutes:minutes??(plan?Math.ceil(plan.totalSeconds/60):null),rounds:chosenRounds,fixedTiming:timing,items,ignored,notes:'Importert kjeldetekst:\n'+whole,unmatched:items.filter(item=>!item.matched).map(item=>item.name)}
 }

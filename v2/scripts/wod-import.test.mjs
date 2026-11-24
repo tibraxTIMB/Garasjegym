@@ -105,3 +105,26 @@ test('WOD import identifies rule-based matching without claiming AI', () => {
   assert.match(src, /Regelbasert WOD-import/)
   assert.match(src, /Liknande treff – kontroller/)
 })
+
+
+// Gazelle regression: shared planning uses the same finite-slot timer as training.
+import {fixedIntervalSummary,intervalAdvice,readFixedTiming,importIntervalAdvice} from '../src/lib/wodFormatAdvisor.js';
+test('20/40 with three movements has nine work slots and eight rests',()=>{
+ const plan=fixedIntervalSummary({workSeconds:20,restSeconds:40,rounds:3,exerciseCount:3});
+ assert.equal(plan.totalIntervals,9);assert.equal(plan.totalSeconds,500);assert.equal(plan.workTotal,180);assert.equal(plan.restTotal,320);
+ assert.equal(intervalAdvice({format:'E1MOM',periodSeconds:60,durationSeconds:540,workSeconds:20,restSeconds:40,exerciseCount:3,rotating:true}).rounds,3);
+ assert.equal(intervalAdvice({format:'E1MOM',periodSeconds:60,durationSeconds:540,workSeconds:20,restSeconds:40,exerciseCount:3,rotating:false}),null);
+ assert.equal(intervalAdvice({format:'E1MOM',periodSeconds:60,durationSeconds:480,workSeconds:20,restSeconds:40,exerciseCount:3,rotating:true}),null);
+});
+test('compact EMOM notation and explicit fixed timing are preserved for admin',()=>{
+ const draft=parseWodImport('Haldning\nE1MOM9\n20/40\n20 sec Plank\n20 sec Dead Hang\n20 sec Wall Sit',[{name:'Plank'},{name:'Dead Hang'},{name:'Wall Sit'}]);
+ assert.equal(draft.format,'E1MOM');assert.equal(draft.minutes,9);assert.equal(draft.items.length,3);
+ assert.deepEqual(draft.fixedTiming,{workSeconds:20,restSeconds:40});assert.equal(importIntervalAdvice(draft,3).totalIntervals,9);
+ assert.equal(readFixedTiming('21-15-9\n10 squats'),null);
+ const odd=parseWodImport('E2MOM35\n5 Push-ups');assert.equal(odd.minutes,35);assert.equal(odd.format,'E2MOM');
+});
+test('fixed interval import distinguishes full cycles from individual work slots',()=>{
+ const draft=parseWodImport('Intervall 20/40\n9 arbeidsintervall\n5 Push-ups\n5 Air squats\n5 Sit-ups');
+ assert.equal(draft.rounds,3);assert.equal(draft.items.length,3);assert.deepEqual(draft.fixedTiming,{workSeconds:20,restSeconds:40});
+ assert.equal(fixedIntervalSummary({workSeconds:20,restSeconds:40,rounds:9,exerciseCount:1}).totalIntervals,9);
+});

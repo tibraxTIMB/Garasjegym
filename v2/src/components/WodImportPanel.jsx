@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useState} from 'react'
 import {FileImage,FileText,Upload,ClipboardPaste,CheckCircle2,AlertTriangle,Search,X,Check,SkipForward,ScanSearch} from 'lucide-react'
 import {parseWodImport} from '../lib/wodImport.js'
+import {isFixedInterval,fixedIntervalSummary,fixedIntervalLabel,importIntervalAdvice,clockLabel} from '../lib/wodFormatAdvisor.js'
 import {COMPOSITE_FORMAT, validateCompositeBlocks} from '../lib/compositeWod.js'
 import './wod-import.css'
 
@@ -24,13 +25,15 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
  const included=preview.filter((item,index)=>choices[index]!=='skip'&&(item.exercise||choices[index])).length
  const ignored=parsed?.ignored||[]
  const warnings=parsed?.warnings||[]
- const compositeIssue=parsed?.blocks?.length>1?validateCompositeBlocks(parsed.blocks,preview):''
+ const compositeIssue=parsed?.blocks?.length>1?validateCompositeBlocks(parsed.blocks,preview.filter((item,index)=>choices[index]!=='skip')):''
+ const intervalPlan=isFixedInterval(meta.format)?fixedIntervalSummary({workSeconds:meta.workSeconds,restSeconds:meta.restSeconds,rounds:meta.rounds,exerciseCount:included}):null
+ const advice=parsed&&!parsed.blocks&&meta.format===parsed.format&&Number(meta.minutes)===Number(parsed.minutes)&&included===preview.length&&unresolved===0?importIntervalAdvice(parsed,included):null
  const activeCatalog=useMemo(()=>exerciseCatalog.filter(ex=>ex?.name&&ex.is_active!==false),[exerciseCatalog])
  const requiresDuration=/^(AMRAP|E(?:MOM|[1-7](?:\.25|\.5|\.75)?MOM)|Tabata|Intervall|Stasjonssirkel)$/.test(meta.format)
  const invalidQuantity=preview.some((item,index)=>choices[index]!=='skip'&&item.quantity&&(!Number.isFinite(Number(doseChanges[index]?.quantity??item.quantity.value))||Number(doseChanges[index]?.quantity??item.quantity.value)<=0))
  const invalidLoad=preview.some((item,index)=>choices[index]!=='skip'&&doseChanges[index]?.loadKg!==undefined&&doseChanges[index].loadKg!==''&&(!Number.isFinite(Number(doseChanges[index].loadKg))||Number(doseChanges[index].loadKg)<0))
  const invalidReps=preview.some((item,index)=>choices[index]!=='skip'&&!item.quantity&&!/^(?:\d+(?:-\d+)*|\d+\s*[x×]\s*\d+)$/.test(String(doseChanges[index]?.reps??item.reps).trim()))
- const invalidSetup=!!(parsed?.blocks?.length>1&&meta.format!==COMPOSITE_FORMAT)||!meta.name.trim()||!meta.format||!Number.isInteger(Number(meta.rounds))||Number(meta.rounds)<1||Number(meta.rounds)>99||(meta.minutes!==''&&(!Number.isFinite(Number(meta.minutes))||Number(meta.minutes)<1||Number(meta.minutes)>300))||(requiresDuration&&!(Number(meta.minutes)>0))
+ const invalidSetup=!!(isFixedInterval(meta.format)&&!intervalPlan)||!!(parsed?.blocks?.length>1&&meta.format!==COMPOSITE_FORMAT)||!meta.name.trim()||!meta.format||!Number.isInteger(Number(meta.rounds))||Number(meta.rounds)<1||Number(meta.rounds)>99||(meta.minutes!==''&&(!Number.isFinite(Number(meta.minutes))||Number(meta.minutes)<1||Number(meta.minutes)>300))||(requiresDuration&&!isFixedInterval(meta.format)&&!(Number(meta.minutes)>0))
  const ready=unresolved===0&&included>0&&!compositeIssue&&!invalidSetup&&!invalidQuantity&&!invalidReps&&!invalidLoad&&approved
 
  useEffect(()=>()=>{if(filePreview)URL.revokeObjectURL(filePreview)},[filePreview])
@@ -55,7 +58,7 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
    setError('PDF-en er lasta inn som kjeldereferanse. Kopier teksten frå PDF-en og lim han inn i feltet under; automatisk PDF-tekstuttrekk er ikkje aktivert.')
   }else setError('Denne filtypen kan ikkje lesast direkte. Bruk TXT, CSV, Markdown, bilete eller PDF.')
  }
- function parse(){setError('');setChoices({});setDoseChanges({});setApproved(false);setSearchOpen({});setSearchTerms({});try{const draft=parseWodImport(source,activeCatalog);setParsed(draft);setMeta({name:draft.name,format:draft.format||'',minutes:draft.minutes?String(draft.minutes):'',rounds:String(draft.rounds||1)})}catch(e){setParsed(null);setError(e.message||'Kunne ikkje tolka WOD-teksten.')}}
+ function parse(){setError('');setChoices({});setDoseChanges({});setApproved(false);setSearchOpen({});setSearchTerms({});try{const draft=parseWodImport(source,activeCatalog);setParsed(draft);setMeta({name:draft.name,format:draft.format||'',minutes:draft.minutes?String(draft.minutes):'',rounds:draft.rounds==null?'':String(draft.rounds),workSeconds:draft.fixedTiming?.workSeconds??'',restSeconds:draft.fixedTiming?.restSeconds??''})}catch(e){setParsed(null);setError(e.message||'Kunne ikkje tolka WOD-teksten.')}}
  function choose(index,exercise){setChoices(current=>({...current,[index]:exercise}));setApproved(false);setSearchOpen(current=>({...current,[index]:false}))}
  function apply(){
   if(unresolved){setError('Vel ei øving frå biblioteket eller «Hopp over» for kvar ukjend linje.');return}
@@ -75,7 +78,7 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
   })
   if(!rows.length){setError('Vel minst éi øving før du går vidare.');return}
   setError('')
-  onApply?.({...parsed,name:meta.name.trim(),format:meta.format,minutes:meta.minutes?Number(meta.minutes):null,rounds:Number(meta.rounds),items:rows,unmatched:[],reviewedByAdmin:true})
+  onApply?.({...parsed,name:meta.name.trim(),format:meta.format,minutes:meta.minutes?Number(meta.minutes):null,rounds:Number(meta.rounds),...(intervalPlan?{fixedTiming:{workSeconds:intervalPlan.workSeconds,restSeconds:intervalPlan.restSeconds}}:{}),items:rows,unmatched:[],reviewedByAdmin:true})
  }
  return <section className="wod-import-panel">
   <div className="wod-import-head"><div><span className="wod-classic-kicker">ADMIN · SMART WOD-ASSISTENT</span><strong>Regelbasert WOD-import og bibliotekskontroll</strong><small>Lokal, regelbasert teksttolking – utan betalt KI-teneste. Du får forslag, men avgjer sjølv kva som blir brukt.</small></div><ScanSearch size={22}/></div>
@@ -98,6 +101,8 @@ export default function WodImportPanel({exerciseCatalog=[],onApply}){
     <label>Tidsramme (min){requiresDuration?' *':''}<input type="number" min="1" max="300" step="1" value={meta.minutes} onChange={e=>{setMeta(current=>({...current,minutes:e.target.value}));setApproved(false)}} placeholder="Ingen tidsramme"/></label>
     <label>Rundar<input type="number" min="1" max="99" step="1" value={meta.rounds} onChange={e=>{setMeta(current=>({...current,rounds:e.target.value}));setApproved(false)}}/></label>
    </div>
+   {advice&&<div className="wod-import-review-hint"><div><strong>Fast arbeid og kvile?</strong><p>{advice.workSeconds}/{advice.restSeconds} sek · {fixedIntervalLabel(advice)}. EMOM varer {clockLabel(advice.sourceSeconds)}; Intervall sluttar {advice.finalRestSeconds} sek tidlegare. Byt berre dersom øvingane går på omgang, ikkje samtidig.</p><button type="button" className="secondary-button" onClick={()=>{setMeta(current=>({...current,format:'Intervall',rounds:String(advice.rounds),minutes:String(Math.ceil(advice.totalSeconds/60)),workSeconds:advice.workSeconds,restSeconds:advice.restSeconds}));setApproved(false)}}>Bruk intervall · øvingane går på omgang</button></div></div>}
+   {isFixedInterval(meta.format)&&<div className="wod-import-meta-editor"><label>Arbeid (sek)<input type="number" min="1" max="600" value={meta.workSeconds??''} onChange={e=>{setMeta(current=>({...current,workSeconds:e.target.value}));setApproved(false)}}/></label><label>Kvile (sek)<input type="number" min="0" max="600" value={meta.restSeconds??''} onChange={e=>{setMeta(current=>({...current,restSeconds:e.target.value}));setApproved(false)}}/></label><p className="wod-help">{fixedIntervalLabel(intervalPlan)}</p></div>}
    {warnings.length>0&&<details className="wod-import-warnings"><summary><AlertTriangle size={15}/> {warnings.length} punkt som krev manuell kontroll</summary><ul>{warnings.map((item,i)=><li key={i}>{item}</li>)}</ul></details>}{compositeIssue&&<div className="wod-import-review-hint"><AlertTriangle size={15}/>{compositeIssue}</div>}
     {(!parsed.format||!parsed.minutes)&&<div className="wod-import-review-hint"><AlertTriangle size={15}/><span>{!parsed.format?'Format vart ikkje funne sikkert. Vel rett WOD-format. ':''}{!parsed.minutes?'Tidsramma må vurderast før import.':''}</span></div>}
    <div className="wod-import-review-list">{preview.map((item,index)=>{
