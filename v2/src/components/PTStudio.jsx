@@ -55,6 +55,7 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
  const [showCustomerPicker,setShowCustomerPicker] = useState(false)
  const followupTab=id=>{setTab(id);setShowCustomerPicker(false)}
  const [customerSearch,setCustomerSearch] = useState('')
+ const [focusedPtReview,setFocusedPtReview] = useState(null)
  const [intakePreview,setIntakePreview] = useState(null)
  const [rankCounts,setRankCounts] = useState(null)
  useEffect(()=>{if(initialClientId)setClientId(initialClientId)},[initialClientId])
@@ -100,7 +101,7 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
   const matchesSearch=!query||[template.title,template.description,...(template.focus_areas||[])].some(value=>String(value||'').toLowerCase().includes(query))
   return matchesType&&matchesSearch
  }),[templates,templateTypeFilter,templateSearch])
- useEffect(()=>{setIntakePreview(null)},[clientId])
+ useEffect(()=>{setIntakePreview(null);setFocusedPtReview(null)},[clientId])
  const selectedRank=rankCounts!==null&&selectedMember?rankForCount(rankCounts[selectedMember.id]||0):null
  const currentIntake = intakes.filter(x=>x.member_id===clientId).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0]
   useEffect(()=>{let cancelled=false;if(!canManageClients||!clientId){setIntakeRequestState('not_requested');return}
@@ -465,7 +466,7 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
   {!canManageClients&&(tab==='tenester'||tab==='forespurnader')&&<PTInquiry profile={profile} onGroupSchedule={onGroupSchedule} initialTab={tab==='forespurnader'?'mine':'start'}/>}
   {canManageClients&&selectedMember&&['pt-timar','dialog','notat'].includes(tab)&&<PT key={clientId+'-'+tab} profile={profile} coachMode={coachMode} controlledClientId={clientId} onClientChange={setClientId} hideCustomerPicker focusRequestId={focusRequestId} focusPanel={tab==='dialog'?'dialog':tab==='notat'?'notat':focusPanel||'plan'} onFocusPanelConsumed={onFocusPanelConsumed} onFocusConsumed={onFocusRequestConsumed} onLaunchWorkout={onLaunchWorkout} onClientFollowup={()=>setTab('oversikt')}/>}{!canManageClients&&tab==='meldingar'&&<PTInfo/>}
   {canManageClients&&selectedMember&&tab==='oversikt'&&<div className="pt2-client-overview">
-  <PTClientWods clientId={clientId} clientName={selectedMember.display_name} mode="overview" planSessions={clientProgramWods} wods={wods} onOpenFull={()=>setTab('wodar')}/>
+  <PTClientWods clientId={clientId} clientName={selectedMember.display_name} clientRank={selectedRank} mode="overview" planSessions={clientProgramWods} wods={wods} onOpenFull={()=>setTab('wodar')} onOpenReview={key=>{setFocusedPtReview(key);setTab('wodar')}}/>
   <section className="pt2-panel">
    <div className="pt2-panel-head"><div><span className="section-kicker">NESTE STEG</span><h3>{activeProgram?activeProgram.title:'Følg opp etter PT-timen'}</h3></div></div>
    <p>{activeProgram?'Kunden har ein aktiv plan. Du finn øktene i Plan.':'Tildel ein WOD eller skriv eit kort trenarnotat. Du treng ikkje oppretta eit heilt program.'}</p>
@@ -476,7 +477,7 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
    </div>
   </section>
  </div>}
- {canManageClients&&selectedMember&&tab==='wodar'&&<PTClientWods clientId={clientId} clientName={selectedMember.display_name} mode="full" planSessions={clientProgramWods} wods={wods}/>}
+ {canManageClients&&selectedMember&&tab==='wodar'&&<PTClientWods clientId={clientId} clientName={selectedMember.display_name} clientRank={selectedRank} mode="full" planSessions={clientProgramWods} wods={wods} initialReview={focusedPtReview} onReviewClosed={()=>setFocusedPtReview(null)}/>}
  {!canManageClients&&tab==='oversikt'&&<div className="pt2-grid">
    <section className="pt2-panel"><span className="section-kicker">MIN AKTIVE PLAN</span><h3>{myPrograms.find(p=>p.status==='active')?.title||'Ingen aktiv treningsplan enno'}</h3><p>{myPrograms.find(p=>p.status==='active')?.description||'Når PT-en har tildelt deg ein plan, finn du øktene her.'}</p><div className="pt2-stat-row"><div><strong>{myGoals.length}</strong><span>Synlege mål</span></div><div><strong>{myPrograms.filter(p=>p.status==='active').length}</strong><span>Aktive planar</span></div><div><strong>{myCheckins.filter(c=>c.status==='submitted'||c.status==='reviewed').length}</strong><span>Statussvar</span></div></div></section>
    <section className="pt2-panel"><span className="section-kicker">NESTE STEG</span><h3>{pendingCheckin?'Du har ein statussjekk':'Hald fram med planen'}</h3><p>{pendingCheckin?'PT-en ønskjer ei oppdatering frå deg.':'Opne treningsplanen for å sjå kva som kjem vidare.'}</p><button className="secondary-button" onClick={()=>setTab(pendingCheckin?'status':'plan')}>{pendingCheckin?'Svar på statussjekk':'Sjå treningsplan'} <ArrowRight size={14}/></button></section>
