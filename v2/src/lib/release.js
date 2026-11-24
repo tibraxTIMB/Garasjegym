@@ -8,3 +8,5 @@ export const RELEASE_SHORT = 'GAZELLE 1.2'
 // Release gate #1908 passed; approved Pages publication of Gazelle 1.2.
 
 // Approved Gazelle publication: animated gorilla intro, independent PR Victory motifs and natural EISEN bell tails.
+
+// Approved Gazelle Studio Sound publication: 30 stereo WAV cues, distinct victory motifs and modal gong decay.
