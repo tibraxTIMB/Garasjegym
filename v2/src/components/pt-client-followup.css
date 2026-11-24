@@ -188,3 +188,11 @@
  .ptreview-metric strong{font-size:18px}
 }
 @media(prefers-reduced-motion:reduce){.ptreview-disclosure-right>svg{transition:none}}
+
+/* Prescribed AMRAP/EMOM work is assumed when no deviation is reported.
+   Keep recorded measurements visually separate from that assumption. */
+.ptreview-part-state.is-manual{border-color:#70866e;background:#334639;color:#e3ecd8}
+.ptreview-work-context{display:block;padding:7px 9px;border-radius:8px;background:#30443b;border-left:2px solid #92b69b;color:#d6e4d9!important;font-size:11px!important;line-height:1.5}
+.ptreview-work-context.is-deviation{background:#4a3a2d;border-left-color:#d5a15c;color:#f2dfc4!important}
+.ptreview-work-context.is-unconfirmed{background:#3d4140;border-left-color:#9da5a0;color:#d1d5d3!important}
+.ptreview-insight.is-note{border-left-color:#86b69b;background:#2c4337;color:#dae9df}
