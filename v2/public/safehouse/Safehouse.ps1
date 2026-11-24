@@ -31,7 +31,7 @@ try {
       Write-Host 'FORSTE GONG: vel to mapper og kopier adressa fra Supabase Connect.'
       if ((Read-Host 'Har du lov til a bruke denne PC-en og ei kryptert privat lagring? Skriv JA') -cne 'JA') { throw 'Avbrote. Bruk godkjend privat PC og kryptert lagring.' }
       $bin=Select-Folder 'Vel bin-mappa i den utpakka PostgreSQL 17 ZIP-fila'
-      $destination=Select-Folder 'Vel godkjend KRYPT ERT privat lagringsmappe'.Replace('KRYPT ERT','KRYPTERT')
+      $destination=Select-Folder 'Vel godkjend KRYPTERT privat lagringsmappe'
       $pooler=(Read-Host 'Lim inn Host fra Supabase Connect > Session pooler').Trim()
       $cert=(Read-Host 'Trykk Enter for vanleg sertifikatkontroll. Alternativt godkjend CA-fil').Trim('"')
     }else{
