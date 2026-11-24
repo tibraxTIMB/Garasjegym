@@ -12,7 +12,7 @@ const shortDate=value=>value?new Date(value).toLocaleDateString('nn-NO',{day:'nu
 /** PTs can see only explicit PT WOD assignments and their own PT program sessions.
  * No workout_logs query: a customer's unrelated private training remains private.
  */
-export default function PTClientWods({clientId,clientName='',mode='full',planSessions=[],wods=[],onOpenFull=()=>{}}){
+export default function PTClientWods({clientId,clientName='',clientRank=null,mode='full',planSessions=[],wods=[],initialReview=null,onOpenFull=()=>{},onOpenReview=()=>{},onReviewClosed=()=>{}}){
  const [assignments,setAssignments]=useState([])
  const [loading,setLoading]=useState(false)
  const [error,setError]=useState('')
@@ -38,6 +38,7 @@ export default function PTClientWods({clientId,clientName='',mode='full',planSes
    })
   return()=>{active=false}
  },[clientId,revision])
+ useEffect(()=>{if(initialReview&&clientId)setOpenedReview(initialReview)},[initialReview,clientId])
  const activeAssignments=useMemo(()=>assignments.filter(row=>!completedStatus(row.status)&&row.status!=='cancelled'),[assignments])
  const doneAssignments=useMemo(()=>assignments.filter(row=>completedStatus(row.status)),[assignments])
  const programWods=useMemo(()=>planSessions.filter(row=>row.wod_id&&!row.archived_at).map(session=>({
@@ -55,7 +56,7 @@ export default function PTClientWods({clientId,clientName='',mode='full',planSes
    </div>
    <div className="ptfollow-wod-actions">
     <span className={'ptfollow-status '+(completedStatus(row.status)?'is-done':'')}>{statusLabel(row.status)}</span>
-    {completedStatus(row.status)&&row.workout_log_id&&<button type="button" className="secondary-button" aria-expanded={openedReview==='assignment:'+row.id} onClick={()=>setOpenedReview(openedReview==='assignment:'+row.id?null:'assignment:'+row.id)}>{openedReview==='assignment:'+row.id?'Lukk resultat':'Sjå resultat'}</button>}
+    {completedStatus(row.status)&&row.workout_log_id&&<button type="button" className="secondary-button" aria-expanded={openedReview==='assignment:'+row.id} onClick={()=>{const key='assignment:'+row.id;if(preview)onOpenReview(key);else setOpenedReview(openedReview===key?null:key)}}>{openedReview==='assignment:'+row.id?'Lukk resultat':'Sjå resultat'}</button>}
    </div>
   </article>
  const renderProgram=session=><article className="ptfollow-wod-row" key={session.id}>
@@ -65,9 +66,22 @@ export default function PTClientWods({clientId,clientName='',mode='full',planSes
    </div>
    <div className="ptfollow-wod-actions">
     <span className={'ptfollow-status '+(completedStatus(session.status)?'is-done':'')}>{completedStatus(session.status)?'Gjennomført':'I treningsplan'}</span>
-    {completedStatus(session.status)&&session.workout_log_id&&<button type="button" className="secondary-button" aria-expanded={openedReview==='program:'+session.id} onClick={()=>setOpenedReview(openedReview==='program:'+session.id?null:'program:'+session.id)}>{openedReview==='program:'+session.id?'Lukk resultat':'Sjå resultat'}</button>}
+    {completedStatus(session.status)&&session.workout_log_id&&<button type="button" className="secondary-button" aria-expanded={openedReview==='program:'+session.id} onClick={()=>{const key='program:'+session.id;if(preview)onOpenReview(key);else setOpenedReview(openedReview===key?null:key)}}>{openedReview==='program:'+session.id?'Lukk resultat':'Sjå resultat'}</button>}
    </div>
   </article>
+ const [reviewKind,reviewId]=openedReview?openedReview.split(':'):[null,null]
+ const selectedAssignment=reviewKind==='assignment'?assignments.find(row=>row.id===reviewId&&row.member_id===clientId&&completedStatus(row.status)&&row.workout_log_id):null
+ const selectedProgram=reviewKind==='program'?programWods.find(row=>row.id===reviewId&&completedStatus(row.status)&&row.workout_log_id):null
+ if(mode==='full'&&openedReview&&!loading&&(selectedAssignment||selectedProgram)){
+  const a=selectedAssignment,p=selectedProgram
+  return <section className="ptfollow ptfollow-fullreview" aria-label={'PT-resultat for '+clientName}>
+   <PTWodReview key={openedReview} assignmentId={a?.id||null} programSessionId={p?.id||null}
+    clientName={clientName} clientRank={clientRank}
+    wodName={a?.wods?.name||p?.wodName||'Tildelt WOD'}
+    prescriptionSchema={a?.wods?.timer_settings?.workout_schema||wods.find(w=>w.id===p?.wod_id)?.timer_settings?.workout_schema||null}
+    onClose={()=>{setOpenedReview(null);onReviewClosed()}}/>
+  </section>
+ }
  return <section className={'ptfollow ptfollow-'+mode} aria-label={'PT-tildelte WOD-ar for '+clientName}>
    <div className="ptfollow-heading">
     <div><span className="section-kicker">WOD-OPPFØLGING</span><h3>{preview?'Tildelte WOD-ar':'WOD-ar · '+clientName}</h3>
@@ -100,7 +114,6 @@ export default function PTClientWods({clientId,clientName='',mode='full',planSes
      {shownProgram.map(renderProgram)}
      <small className="ptfollow-footnote">Programstatus er separat frå direkte WOD-tildeling og privat treningslogg.</small>
     </div>}
-    {openedReview&&(()=>{const [type,id]=openedReview.split(':');const a=type==='assignment'?assignments.find(row=>row.id===id):null;const p=type==='program'?programWods.find(row=>row.id===id):null;return a?<PTWodReview key={openedReview} assignmentId={a.id} clientName={clientName} wodName={a.wods?.name||'Tildelt WOD'} prescriptionSchema={a.wods?.timer_settings?.workout_schema} onClose={()=>setOpenedReview(null)}/>:p?<PTWodReview key={openedReview} programSessionId={p.id} clientName={clientName} wodName={p.wodName} prescriptionSchema={wods.find(w=>w.id===p.wod_id)?.timer_settings?.workout_schema} onClose={()=>setOpenedReview(null)}/>:null})()}
     {preview&&<p className="ptfollow-footnote">Du ser berre PT-tilknytte WOD-ar, ikkje andre treningsøkter.</p>}
    </>}
    {!preview&&showAssign&&<div className="ptfollow-assignment">
