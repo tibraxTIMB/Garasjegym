@@ -56,7 +56,7 @@ const sections = [
   { id: 'oversikt', label: 'Oversikt', icon: LayoutDashboard, note: 'Dashboard og treningsstatus' },
   { id: 'trening', label: 'Økt', icon: PlayCircle, note: 'Start ei økt med timer, logging og resultat' },
   { id: 'timeplan', label: 'Timeplan og booking', icon: CalendarDays, note: 'Gruppetimar og påmelding' },
-  { id: 'pt-studio', label: 'PT-kundar', icon: UserRound, note: 'Kundeoppfølging, WOD-ar, timar og dialog' },
+  { id: 'pt-studio', label: 'PT Studio', icon: UserRound, note: 'Kundeoppfølging, WOD-ar, timar og dialog' },
   { id: 'wod', label: 'WOD', icon: Dumbbell, note: 'WOD-bibliotek og programmering' },
   { id: 'fellesskap', label: 'Fellesskap', icon: Users, note: 'Garasjeprat' },
   { id: 'kaffi', label: 'Kaffebar', icon: Coffee, note: 'Meny og bestillingar' },
@@ -525,8 +525,8 @@ export default function App() {
       {quickMenu&&<div className="modal-backdrop gg-quick-backdrop" onClick={()=>setQuickMenu(false)}><section className="gg-quick-menu" role="dialog" aria-modal="true" aria-label="Hurtigmeny" onClick={e=>e.stopPropagation()}><header><strong>Hurtigmeny</strong><button type="button" aria-label="Lukk" onClick={()=>setQuickMenu(false)}><X size={20}/></button></header><div className="gg-quick-items">{[
         ...(timerSnapshot.sessionOpen?[['trening','Tilbake til økta',PlayCircle]]:[]),
         ['oversikt','Heim',LayoutDashboard],['wod','WOD-bibliotek',BookOpen],['mi-trening','Min treningsplan',CalendarDays],['mi-historikk','Treningslogg',History],['pr-senter','PR-senter',Trophy],['timeplan','Timeplan',CalendarDays],
-        ...(!simpleMode&&isStaff(profile)?[['admin','Drift',Settings],['pt-studio','PT Studio',Users]]:[])
-      ].map(([id,label,ItemIcon])=><button type="button" key={id} onClick={()=>{setQuickMenu(false);if(id==='trening')navigateRoot(id);else if(id==='mi-trening')openMyTraining();else handleSectionNavigate(id)}}><ItemIcon size={18}/><span>{label}</span></button>)}</div>{active==='oversikt'&&!timerSnapshot.sessionOpen&&<button type="button" className="gg-quick-exit" onClick={exitFromRoot}>Gå ut av appen</button>}<small>Tips: hald inne Heim for å opna denne menyen.</small></section></div>}
+        ...(!simpleMode&&isStaff(profile)?[['pt-studio','PT-kundar',Users],['pt-admin','PT-drift',Settings],['admin','Drift',Settings]]:[])
+      ].map(([id,label,ItemIcon])=><button type="button" key={id} onClick={()=>{setQuickMenu(false);if(id==='trening')navigateRoot(id);else if(id==='mi-trening')openMyTraining();else if(id==='pt-admin'){setPTStudioWorkspace('studio');setPTStudioInitialTab('administrasjon');navigateTo('pt-studio')}else if(id==='pt-studio'){setPTStudioWorkspace('studio');setPTStudioInitialTab('oversikt');navigateTo('pt-studio')}else handleSectionNavigate(id)}}><ItemIcon size={18}/><span>{label}</span></button>)}</div>{active==='oversikt'&&!timerSnapshot.sessionOpen&&<button type="button" className="gg-quick-exit" onClick={exitFromRoot}>Gå ut av appen</button>}<small>Tips: hald inne Heim for å opna denne menyen.</small></section></div>}
       {infotainmentActive&&isStaff(profile)&&<Suspense fallback={<div className="training-state" role="status">Lastar infotainment …</div>}><Infotainment onExit={()=>{try{sessionStorage.removeItem('garasjegym:infotainment-active');sessionStorage.removeItem('garasjegym:infotainment-tab')}catch{}setInfotainmentActive(false)}} timerSnapshot={timerSnapshot}/></Suspense>}
     </div>
     </MusicProvider>
