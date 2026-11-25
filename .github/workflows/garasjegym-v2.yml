@@ -267,19 +267,8 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
         run: psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/auth_signup_gate_full_supabase_postgres17.sql
-      - name: Rehearse complete clean-start reset and new owner admin in rollback transaction
-        env:
-          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
-        run: psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/owner_admin_bootstrap_smoke_test.sql
-      - name: Execute read-only clean-start preflight SQL on isolated replay
-        env:
-          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
-        run: |
-          psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/clean_start_readiness_read_only.sql > /tmp/clean-start-readiness.out
-          test -s /tmp/clean-start-readiness.out
-          printf 'Read-only pre-reset inventory rows: '
-          wc -l < /tmp/clean-start-readiness.out
-          printf 'Post-reset acceptance is executed inside the full rollback clean-start rehearsal above.'
+      # Production is already in use. Do not rehearse application data wipes or clean-start inventory as a release gate.
+      # The ephemeral migration replay and functional Auth/RLS/privilege tests above remain mandatory.
       - name: Rehearse owner-only first registration trigger in rollback transaction
         env:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
