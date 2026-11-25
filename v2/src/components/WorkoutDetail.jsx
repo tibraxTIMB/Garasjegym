@@ -34,7 +34,7 @@ function ActaReport({report,historical}){return <section className="acta-report"
  <header><span>DEL {String.fromCharCode(65+i)} · {p.formatLabel||p.format||'Øktdel'}</span>{duration>0&&<small>{formatCardTime(duration)}</small>}</header>
  <h3>{p.title?.replace(/^Del\s+[A-H]\s*[–—:-]\s*/i,'')||'Øktdel'}</h3>
  {p.items.length>0&&(!p.warm||!status)&&<div className="acta-prescription"><small>{historical?'PLANLAGD':'WOD-OPPSETT · NO'}</small>{p.items.filter(x=>!x.is_rest).map((item,j)=><div key={j}><span>{item.exercise_name||item.name}</span><b>{report.level?cardDose(item,report.level,true):'Nivå ikkje lagra'}</b></div>)}</div>}
- {status&&<div className="acta-status"><Check size={15}/>{status}</div>}
+ {status&&<div className={'acta-status'+(f?.status==='done'?'':' acta-status-neutral')}>{f?.status==='done'&&<Check size={15}/>} {status}</div>}
  {scored&&<div className="acta-score"><small>DITT RESULTAT</small><strong>{s.roundsCompleted} + {s.extra_reps}</strong><span>Rundar + ekstra reps</span>{totals&&<div className="acta-totals">{totals.map((t,j)=><div key={j}><b>{t.reps}</b><span>{t.name}</span></div>)}<small>Utrekna frå lagra dosering og score, føreset øvingsrekkjefølgja.</small></div>}</div>}
  {!scored&&s&&hasNumber(s.elapsed)&&Number(s.elapsed)>0&&<div className="acta-score"><small>{s.completed?'REGISTRERT TID':'REGISTRERT TID · IKKJE STADFESTA FULLFØRT'}</small><strong>{formatWorkoutSeconds(s.elapsed)}</strong>{s.time_cap_reached&&<span>Tidsgrense nådd</span>}</div>}
  {!scored&&s&&/death by|ladder/i.test(p.format||'')&&hasNumber(s.roundsCompleted)&&<div className="acta-score"><small>FULLFØRTE RUNDAR</small><strong>{s.roundsCompleted}</strong></div>}
@@ -85,7 +85,7 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
  const complexResults=workout.result_data?.complex_results||[]
  const primaryResults=workout.result_data?.block_primary_results||[]
  const setField=(id,field,value)=>setSetDrafts(previous=>({...previous,[id]:{...previous[id],[field]:value}}))
- useEffect(()=>{const handle=e=>{e.preventDefault();if(menuOpen){setMenuOpen(false);return}requestBack()};window.addEventListener('gg:workout-back',handle);return()=>window.removeEventListener('gg:workout-back',handle)},[editing,menuOpen,onBack])
+ useEffect(()=>{const handle=e=>{e.preventDefault();if(menuOpen){setMenuOpen(false);return}requestBack()};window.addEventListener('gg:workout-back',handle);return()=>window.removeEventListener('gg:workout-back',handle)},[editing,menuOpen,onBack,saving,deleting])
  function requestBack(){if(saving||deleting)return;if(editing&&!window.confirm('Gå tilbake utan å lagra endringane?'))return;onBack()}
  function cancelEdit(){setEditing(false);setEditMode(null);setForm(initialForm(workout));setSetDrafts(Object.fromEntries(exercises.flatMap(ex=>(ex.workout_sets||[]).map(set=>[set.id,initialSetValues(set)]))));setAddedSets({});setError('')}
  function beginEdit(nextMode){
