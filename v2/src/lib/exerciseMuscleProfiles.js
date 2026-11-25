@@ -1795,11 +1795,11 @@ export const EXERCISE_MUSCLE_PROFILES={
   "primary": [
    "quads",
    "glutes",
-   "calves",
+   "frontDelts",
    "triceps"
   ],
   "secondary": [
-   "frontDelts",
+   "calves",
    "sideDelts",
    "upperBack"
   ],
@@ -1815,11 +1815,11 @@ export const EXERCISE_MUSCLE_PROFILES={
   "primary": [
    "quads",
    "glutes",
-   "calves",
+   "frontDelts",
    "triceps"
   ],
   "secondary": [
-   "frontDelts",
+   "calves",
    "sideDelts",
    "upperBack"
   ],
@@ -1835,11 +1835,11 @@ export const EXERCISE_MUSCLE_PROFILES={
   "primary": [
    "quads",
    "glutes",
-   "calves",
+   "frontDelts",
    "triceps"
   ],
   "secondary": [
-   "frontDelts",
+   "calves",
    "sideDelts",
    "upperBack"
   ],
@@ -1930,15 +1930,14 @@ export const EXERCISE_MUSCLE_PROFILES={
   ]
  },
  "tall clean": {
-  "mode": "power",
+  "mode": "technique",
   "primary": [
-   "upperBack",
-   "frontDelts"
-  ],
-  "secondary": [
-   "biceps",
    "quads",
    "glutes"
+  ],
+  "secondary": [
+   "upperBack",
+   "biceps"
   ],
   "stabilizers": [
    "forearms",
@@ -1965,16 +1964,15 @@ export const EXERCISE_MUSCLE_PROFILES={
   ]
  },
  "tall snatch": {
-  "mode": "power",
+  "mode": "technique",
   "primary": [
-   "upperBack",
-   "frontDelts",
-   "sideDelts",
-   "triceps"
-  ],
-  "secondary": [
    "quads",
    "glutes"
+  ],
+  "secondary": [
+   "upperBack",
+   "frontDelts",
+   "triceps"
   ],
   "stabilizers": [
    "rotatorCuff",
@@ -2183,13 +2181,12 @@ export const EXERCISE_MUSCLE_PROFILES={
   "mode": "mixed",
   "primary": [
    "quads",
-   "glutes",
-   "frontDelts",
-   "triceps"
+   "glutes"
   ],
   "secondary": [
-   "calves",
-   "upperBack"
+   "frontDelts",
+   "triceps",
+   "calves"
   ],
   "stabilizers": [
    "abs",
@@ -2201,13 +2198,12 @@ export const EXERCISE_MUSCLE_PROFILES={
   "mode": "mixed",
   "primary": [
    "quads",
-   "glutes",
-   "frontDelts",
-   "triceps"
+   "glutes"
   ],
   "secondary": [
-   "calves",
-   "upperBack"
+   "frontDelts",
+   "triceps",
+   "calves"
   ],
   "stabilizers": [
    "abs",
@@ -2462,10 +2458,16 @@ export const EXERCISE_MUSCLE_PROFILES={
   ],
   "secondary": [
    "hamstrings",
-   "calves"
+   "calves",
+   "chest",
+   "lats",
+   "triceps",
+   "biceps",
+   "frontDelts"
   ],
   "stabilizers": [
-   "abs"
+   "abs",
+   "forearms"
   ]
  },
  "assault bike": {
@@ -2476,10 +2478,16 @@ export const EXERCISE_MUSCLE_PROFILES={
   ],
   "secondary": [
    "hamstrings",
-   "calves"
+   "calves",
+   "chest",
+   "lats",
+   "triceps",
+   "biceps",
+   "frontDelts"
   ],
   "stabilizers": [
-   "abs"
+   "abs",
+   "forearms"
   ]
  },
  "cycling": {
@@ -3054,15 +3062,20 @@ export const EXERCISE_MUSCLE_PROFILES={
   "stabilizers": []
  },
  "toes to bar": {
-  "mode": "strength",
+  "mode": "mixed",
   "primary": [
    "abs",
    "hipFlexors"
   ],
   "secondary": [
-   "obliques"
+   "lats"
   ],
-  "stabilizers": []
+  "stabilizers": [
+   "forearms",
+   "upperBack",
+   "rotatorCuff",
+   "obliques"
+  ]
  },
  "russian twist": {
   "mode": "strength",
