@@ -8,7 +8,7 @@ test('fullscreen WOD exercise picker exposes a visible step-three action and a w
   const wod = source('../src/components/WodBuilder.jsx')
   const libraryHead = wod.match(/className="wod-library-fullscreen-head"[^]*?className="engine-section-title"/)?.[0] || ''
   assert.match(libraryHead, /className="wod-library-ok-top"[^>]*disabled=\{!selected\.length\}/)
-  assert.match(libraryHead, /setLibraryOpen\(false\);goToStep\(3\)/)
+  assert.match(libraryHead, /setLibraryOpen\(false\);setWizardStep\(3\)/)
   assert.match(libraryHead, /aria-label="Tilbake til WOD-byggjaren"/)
 })
 
