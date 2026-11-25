@@ -14,3 +14,10 @@
 .gg-select-options button svg{flex:none}
 .gg-garage-select:focus-visible,.gg-select-options button:focus-visible,.gg-select-close:focus-visible{outline:2px solid #ffc76e;outline-offset:2px}
 @media(min-width:700px){.gg-select-backdrop{align-items:center}.gg-select-sheet{border-radius:16px}}
+
+/* Choice sheets: long names must not displace close/check controls. */
+.gg-select-sheet{min-width:0;box-sizing:border-box}
+.gg-select-sheet>header>div,.gg-select-options button>span{min-width:0;overflow-wrap:anywhere}
+.gg-select-options button{white-space:normal;line-height:1.3}
+.gg-select-sheet h2{overflow-wrap:anywhere}
+.gg-garage-select:focus-visible>span{white-space:normal;overflow-wrap:anywhere}

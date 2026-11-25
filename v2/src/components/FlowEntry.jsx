@@ -16,6 +16,7 @@ export function FlowEntryProvider({children}){
   if(!sameField&&delta>0)close()
  }
  useEffect(()=>{if(active&&(!active.isConnected||active.disabled))setActive(null)})
+ useEffect(()=>{if(!active)return;const frame=requestAnimationFrame(()=>{if(active.isConnected)active.scrollIntoView({block:'nearest',inline:'nearest'})});return()=>cancelAnimationFrame(frame)},[active])
  return <FlowContext.Provider value={{active,registry,fresh,open,close,move}}><div className="gg-flow-entry-host" ref={panel}>{children}</div></FlowContext.Provider>
 }
 export function FlowNumberInput({type,inputMode,min,max,step,value,onChange,kind,field,...props}){
@@ -59,5 +60,5 @@ export function FlowConfirmDialog({dialog,onClose}){
  const cancel=useRef(null),yes=useRef(null),id=useId()
  useEffect(()=>{if(dialog)cancel.current?.focus()},[dialog])
  if(!dialog)return null
- return <div className="gg-flow-confirm-backdrop" onKeyDown={e=>{if(e.key==='Escape'){e.preventDefault();onClose(false)}else if(e.key==='Tab'){e.preventDefault();(document.activeElement===cancel.current?yes:cancel).current?.focus()}}}><section className="gg-flow-confirm" role="alertdialog" aria-modal="true" aria-labelledby={id} aria-describedby={id+'-desc'}><h3 id={id}>{dialog.title}</h3><p id={id+'-desc'}>{dialog.message}</p><div><button ref={cancel} type="button" className="secondary-button" onClick={()=>onClose(false)}>{dialog.cancelLabel}</button><button ref={yes} type="button" className={'primary-button'+(dialog.danger?' gg-flow-confirm-danger':'')} onClick={()=>onClose(true)}>{dialog.confirmLabel}</button></div></section></div>
+ return <div className="gg-flow-confirm-backdrop" onKeyDown={e=>{if(e.key==='Escape'){e.preventDefault();onClose(false)}else if(e.key==='Tab'){e.preventDefault();(document.activeElement===cancel.current?yes:cancel).current?.focus()}}}><section className="gg-flow-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby={id} aria-describedby={id+'-desc'}><h3 id={id}>{dialog.title}</h3><p id={id+'-desc'}>{dialog.message}</p><div><button ref={cancel} type="button" className="secondary-button" onClick={()=>onClose(false)}>{dialog.cancelLabel}</button><button ref={yes} type="button" className={'primary-button'+(dialog.danger?' gg-flow-confirm-danger':'')} onClick={()=>onClose(true)}>{dialog.confirmLabel}</button></div></section></div>
 }

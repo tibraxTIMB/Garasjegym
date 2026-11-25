@@ -273,3 +273,10 @@
 
 /* Compact FLOW control inside the existing plan. */
 .pt2-flow-control{padding:10px;margin:8px 0}.pt2-flow-control .pt2-panel-head{gap:8px;flex-wrap:wrap}.pt2-flow-control select{max-width:100%}.pt2-flow-details{margin:5px 0;font-size:.85rem}.pt2-flow-details summary{cursor:pointer;opacity:.85}.pt2-flow-details .pt2-inline-actions{flex-wrap:wrap;gap:8px;padding-top:6px}.pt2-flow-details label{display:flex;align-items:center;gap:5px}
+
+/* PT cards and forms: shrink text columns, not the action controls. */
+.pt2-flow-control,.pt2-flow-details,.pt2-flow-details label,.pt2-flow-details .pt2-inline-actions>*{min-width:0;max-width:100%}
+.pt2-flow-control .pt2-panel-head>*,.pt2-flow-details summary,.pt2-session strong,.pt2-session small,.pt2-customer-identity strong{min-width:0;overflow-wrap:anywhere}
+.pt2-flow-details label{flex-wrap:wrap}
+.pt2-flow-control select,.pt2-flow-details select{min-width:0;width:100%;max-width:100%}
+.pt2-flow-details button,.pt2-session .pt2-inline-actions button{white-space:normal;overflow-wrap:anywhere;line-height:1.25}

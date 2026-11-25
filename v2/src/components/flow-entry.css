@@ -15,12 +15,12 @@
 .gg-flow-entry-host input[data-flow-number]:focus{outline:2px solid #60a5fa;outline-offset:1px}
 .gg-flow-entry-host .gg-flow-grid-row input[data-flow-number]{min-height:42px;text-align:center}
 .gg-flow-confirm-backdrop{position:fixed;inset:0;background:#000a;display:grid;place-items:center;padding:16px;z-index:2147483000;overscroll-behavior:contain}
-.gg-flow-confirm{width:min(100%,420px);max-height:85dvh;overflow:auto;padding:18px;background:#1b202b;color:#f1f5f9;border:1px solid #64748b;border-radius:15px;box-shadow:0 18px 60px #0008}
-.gg-flow-confirm h3{margin:0 0 9px;font-size:1.1rem}
-.gg-flow-confirm p{white-space:pre-line;line-height:1.45;margin:0 0 16px}
-.gg-flow-confirm>div{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.gg-flow-confirm button{min-height:46px;white-space:normal}
-.gg-flow-confirm .gg-flow-confirm-danger{background:#a52532;border-color:#a52532;color:white}
+.gg-flow-confirm-dialog{width:min(100%,420px);max-height:85dvh;overflow:auto;padding:18px;background:#1b202b;color:#f1f5f9;border:1px solid #64748b;border-radius:15px;box-shadow:0 18px 60px #0008}
+.gg-flow-confirm-dialog h3{margin:0 0 9px;font-size:1.1rem}
+.gg-flow-confirm-dialog p{white-space:pre-line;line-height:1.45;margin:0 0 16px}
+.gg-flow-confirm-dialog>div{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gg-flow-confirm-dialog button{min-height:46px;white-space:normal}
+.gg-flow-confirm-dialog .gg-flow-confirm-danger{background:#a52532;border-color:#a52532;color:white}
 @media(max-height:550px){.gg-flow-keypad button{min-height:29px;font-size:1rem}.gg-flow-keypad header button,.gg-flow-weight-steps button{min-height:24px}.gg-flow-keypad{padding:3px 6px}.gg-flow-keys{gap:3px}.gg-flow-entry-host:has(.gg-flow-keypad)>.gg-result-footer{display:none}}
 @media(min-width:700px){.gg-flow-keypad{align-self:center;width:min(100%,420px);border-radius:12px}.gg-flow-keypad button{min-height:40px}}
 
@@ -80,4 +80,28 @@
 .gg-result-wizard .gg-flow-entry-host:has(.gg-flow-keypad)>.gg-result-body{grid-column:1;grid-row:1;min-height:0}
 .gg-result-wizard .gg-flow-entry-host:has(.gg-flow-keypad)>.gg-flow-keypad{grid-column:2;grid-row:1;width:100%;align-self:start}
 .gg-result-wizard .gg-flow-entry-host:has(.gg-flow-keypad)>.gg-result-footer{display:none}
+}
+
+/* Responsive audit: compact FLOW, safely shrink and wrap content. */
+.gg-flow-confirm-dialog{display:grid;min-width:0;box-sizing:border-box;overflow-wrap:anywhere}
+.gg-flow-confirm-dialog>div{grid-template-columns:repeat(2,minmax(0,1fr))}
+.gg-flow-confirm-dialog button{min-width:0;overflow-wrap:anywhere;line-height:1.25}
+.gg-result-wizard label.gg-flow-confirm{width:auto;max-width:100%;min-width:0;overflow-wrap:anywhere}
+.gg-result-wizard .gg-result-header h3,.gg-result-wizard .gg-flow-grid-name strong,.gg-result-wizard .gg-flow-score-load-row>span,.gg-result-wizard .gg-flow-part p,.gg-result-wizard .gg-result-nav button{min-width:0;overflow-wrap:anywhere}
+.gg-result-wizard .gg-flow-grid-tools{flex-wrap:wrap}
+.gg-result-wizard .gg-flow-grid-tools button,.gg-result-wizard .gg-result-nav button{white-space:normal;line-height:1.25}
+.gg-result-wizard .gg-flow-score-load-row label{flex:0 0 76px;min-width:0}
+.gg-result-wizard .gg-flow-score-load-row input{flex:1 1 0;min-width:0;max-width:100%;font-size:18px}
+.gg-result-wizard .gg-flow-level-buttons button{white-space:normal;overflow-wrap:anywhere;line-height:1.15;max-height:none;min-height:34px}
+.gg-result-wizard .gg-flow-grid-row>*,.gg-result-wizard .gg-composite-score-fields>*,.gg-flow-entry-host{min-width:0;max-width:100%}
+.gg-result-wizard .gg-composite-score-fields input{width:100%;min-width:0}
+.gg-flow-keypad header strong{min-width:0;flex:1}
+.gg-flow-keypad header button{flex:none}
+@media(max-width:380px){
+ .gg-result-wizard .gg-flow-complex-table .gg-flow-grid-row{grid-template-columns:20px repeat(var(--result-columns),minmax(0,1fr)) minmax(108px,1.35fr);gap:3px}
+ .gg-result-wizard .gg-flow-grid-row input[data-flow-number]{font-size:16px}
+ .gg-result-wizard .gg-flow-level-buttons button{font-size:11px;padding:3px 2px}
+}
+@media(orientation:landscape) and (max-height:400px){
+ .gg-result-wizard .gg-flow-entry-host:has(.gg-flow-keypad)>.gg-flow-keypad{max-height:100%;overflow-y:auto;overscroll-behavior:contain}
 }
