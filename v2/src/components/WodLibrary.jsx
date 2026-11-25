@@ -2,7 +2,7 @@ import './librarium.css'
 import {cardParts} from '../lib/wodCard.js'
 import DailyWodStrip from './DailyWodStrip.jsx'
 import {useEffect,useMemo,useRef,useState} from 'react'
-import {BookOpen,Search,Eye,EyeOff,LoaderCircle,Clock3,Dumbbell,Play,Layers,UserPlus,Trash2,Archive,Edit3,Star,CalendarDays,Info,MoreHorizontal,ChevronDown,ChevronUp,ChevronRight} from 'lucide-react'
+import {BookOpen,Folder,Search,Eye,EyeOff,LoaderCircle,Clock3,Dumbbell,Play,Layers,UserPlus,Trash2,Archive,Edit3,Star,CalendarDays,Info,MoreHorizontal,ChevronDown,ChevronUp,ChevronRight} from 'lucide-react'
 import WodCard from './WodCard.jsx'
 import {supabase} from '../lib/supabase.js'
 import {formatComplexSequence} from '../lib/wodComplexes.js'
@@ -58,6 +58,9 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
  const planIdsByWod=useMemo(()=>{const allowed=new Set(plans.map(p=>p.id)),m=new Map();for(const l of planLinks){if(!allowed.has(l.program_id))continue;if(!m.has(l.wod_id))m.set(l.wod_id,new Set());m.get(l.wod_id).add(l.program_id)}return m},[plans,planLinks])
  const planOrder=useMemo(()=>{const m=new Map(),allowed=new Set(plans.map(p=>p.id));for(const l of planLinks){if(!allowed.has(l.program_id))continue;const n=l.sequence_no!=null&&Number.isFinite(Number(l.sequence_no))?Number(l.sequence_no):Infinity;const k=l.program_id+':'+l.wod_id;m.set(k,Math.min(m.get(k)??Infinity,n))}return m},[plans,planLinks])
  const selectedPlan=plans.find(p=>p.id===planFilter)
+ const folderMode=quickFilter==='plans'&&!selectedPlan
+ const visibleFolders=plans.filter(p=>String(p.title||'').toLocaleLowerCase('nn').includes(query.trim().toLocaleLowerCase('nn')))
+ const openPlan=id=>{setPlanFilter(id);setQuery('');setCatalogCat('all');setCategoryFilter('all');setFormatFilter('all');setDurationFilter('all');setIntensityFilter('all');setEquipmentFilter('all');setFilter('all');setShowAdvancedFilters(false)}
  const loadSequence=useRef(0)
  async function load(){
   const requestId=++loadSequence.current
@@ -239,20 +242,20 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
    finally{setBusy('')}
  }
  function toggleSession(id){setSessionWods(v=>v.includes(id)?v.filter(x=>x!==id):[...v,id])}
- return <div className={simpleMode?"wod-library-page simple-wod-library":"wod-library-page"}>{simpleMode?<div className="training-heading"><div><div className="section-kicker">EIGENTRENING</div><h3>Vel ei økt</h3><p>Trykk på økta for å sjå WOD-kortet.</p></div><span className="count-pill">{filtered.length} økter</span></div>:<div className="wod-library-compact-heading"><strong>WOD-bibliotek</strong><span>{filtered.length} WOD-ar</span></div>}
+ return <div className={simpleMode?"wod-library-page simple-wod-library":"wod-library-page"}>{simpleMode?<div className="training-heading"><div><div className="section-kicker">EIGENTRENING</div><h3>Vel ei økt</h3><p>Trykk på økta for å sjå WOD-kortet.</p></div><span className="count-pill">{filtered.length} økter</span></div>:<div className="wod-library-compact-heading"><strong>WOD-bibliotek</strong><span>{folderMode?visibleFolders.length+' planar':filtered.length+' WOD-ar'}</span></div>}
  {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message">{notice}</div>}
  {featuredDaily&&!loading&&<DailyWodStrip wod={featuredDaily} date={dailyDate} onOpen={id=>{setExpanded(id);setOpenCardMenu(null)}}/>}
  <div className={simpleMode?"wod-library-toolbar simple-wod-toolbar":"wod-library-toolbar wod-library-compact-toolbar"}>
-  <div className="wod-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder={simpleMode?"Søk etter økt …":"Søk namn, øving eller format …"}/></div>
+  <div className="wod-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder={folderMode?"Søk etter treningsplan …":simpleMode?"Søk etter økt …":"Søk namn, øving eller format …"}/></div>
   <div className="librarium-tools">
-    <select aria-label="Samling" value={quickFilter} onChange={e=>changeCollection(e.target.value)}><option value="all">Bibliotek</option><option value="everything">Alle WOD-ar</option><option value="recent">Nyaste</option><option value="favorites">Favorittar</option><option value="benchmark">Benchmark</option>{staff&&<option value="mine">Mine WOD-ar</option>}{planStatus==='ready'&&<><option value="plans">Treningsplanar</option><option value="standalone">Utan treningsplan</option></>}</select>
-    <select aria-label="Kategori" value={catalogCat} onChange={e=>setCatalogCat(e.target.value)}><option value="all">Kategori</option>{Object.entries(catalogCategories).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select>
+    <select aria-label="Samling" value={quickFilter} onChange={e=>changeCollection(e.target.value)}><option value="all">Frie WOD-ar</option><option value="everything">Alle WOD-ar</option><option value="favorites">Favorittar</option><option value="benchmark">Benchmark</option>{staff&&<option value="mine">Mine WOD-ar</option>}{planStatus==='ready'&&<option value="plans">Treningsplanar</option>}</select>
+    {!folderMode&&<><select aria-label="Kategori" value={catalogCat} onChange={e=>setCatalogCat(e.target.value)}><option value="all">Kategori</option>{Object.entries(catalogCategories).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select>
     <select aria-label="Sorter WOD" value={planFilter!=='all'?'sequence':sortBy} disabled={planFilter!=='all'} onChange={e=>changeSort(e.target.value)}>{[...(quickFilter==='plans'?[['sequence','Øktrekkje']]:[]),['newest','Nyaste'],['oldest','Eldste'],['name','A–Å'],['name-desc','Å–A'],['format','Format'],['category','Kategori'],['short','Kortaste'],['long','Lengste']].map(([id,label])=><option key={id} value={id}>{label}</option>)}</select>
     <button type="button" className="secondary-button" aria-label="Vis fleire filter" aria-expanded={showAdvancedFilters} onClick={()=>setShowAdvancedFilters(v=>!v)}>Filter{activeAdvancedCount?' ('+activeAdvancedCount+')':''}</button>
-    <button type="button" className="secondary-button" aria-label="Byt listevisning" onClick={()=>setViewMode(v=>v==='grid'?'list':'grid')}>{viewMode==='grid'?'Liste':'Kort'}</button>
+    <button type="button" className="secondary-button" aria-label="Byt listevisning" onClick={()=>setViewMode(v=>v==='grid'?'list':'grid')}>{viewMode==='grid'?'Liste':'Kort'}</button></>}
    </div>
-   {quickFilter==='plans'&&planStatus==='ready'&&<div className="librarium-plan-picker"><BookOpen size={16}/><select aria-label="Treningsplan" value={planFilter} onChange={e=>setPlanFilter(e.target.value)}><option value="all">Vel treningsplan</option>{plans.map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select></div>}
-   {showAdvancedFilters&&<div className="librarium-tools librarium-extra">
+   {staff&&planStatus==='ready'&&quickFilter!=='plans'&&<button type="button" className="librarium-folder-entry" onClick={()=>{changeCollection('plans');setQuery('');setShowAdvancedFilters(false)}}><Folder size={19}/><strong>Treningsplanar</strong><small>{plans.length} planar</small><ChevronRight size={17}/></button>}
+   {!folderMode&&showAdvancedFilters&&<div className="librarium-tools librarium-extra">
     <select aria-label="Format" value={formatFilter} onChange={e=>setFormatFilter(e.target.value)}><option value="all">Alle format</option>{formatOptions.map(v=><option key={v}>{v}</option>)}</select>
     <select aria-label="Varigheit" value={durationFilter} onChange={e=>setDurationFilter(e.target.value)}><option value="all">All varigheit</option><option value="short">Under 15 min</option><option value="medium">15–30 min</option><option value="long">Over 30 min</option></select>
     <select aria-label="Utstyr" value={equipmentFilter} onChange={e=>setEquipmentFilter(e.target.value)}><option value="all">Alt utstyr</option>{equipmentOptions.map(v=><option key={v}>{v}</option>)}</select>
@@ -265,8 +268,8 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
    </div>}
   </div>
   {showSession&&<form className="booking-create" onSubmit={e=>{e.preventDefault();createSession()}}><h4>Ny treningsøkt · {sessionWods.length} WOD-ar valde</h4><label>Namn på økta<input value={sessionName} onChange={e=>setSessionName(e.target.value)} placeholder="t.d. Styrke + kondisjon"/></label><label>Dato<input type="date" value={sessionDate} onChange={e=>setSessionDate(e.target.value)}/></label><p>Vel WOD-ar med «Legg til i økt» på korta under. Du kan endra rekkjefølgja seinare.</p><button className="primary-button" disabled={!sessionWods.length||busy==='session'}>Opprett økt med {sessionWods.length} WOD-ar</button><button type="button" className="secondary-button" onClick={()=>setShowSession(false)}>Avbryt</button></form>}
- {selectedPlan&&<div className="librarium-plan-heading"><BookOpen size={16}/><strong>{selectedPlan.title}</strong><small>{ordinaryWods.length} WOD-ar</small></div>}
- {loading?<div className="training-state"><LoaderCircle className="spin"/> Hentar WOD-bibliotek …</div>:ordinaryWods.length?<><div className={'librarium-grid '+(viewMode==='list'?'librarium-list':'')}>
+ {selectedPlan&&<div className="librarium-plan-heading"><button type="button" className="librarium-folder-back" onClick={()=>{setPlanFilter('all');setQuery('');setShowAdvancedFilters(false)}} aria-label="Tilbake til treningsplanar">‹</button><Folder size={17}/><strong>{selectedPlan.title}</strong><small>{ordinaryWods.length} WOD-ar</small></div>}
+ {loading?<div className="training-state"><LoaderCircle className="spin"/> Hentar WOD-bibliotek …</div>:folderMode?<section className="librarium-folders" aria-label="Treningsplanmapper"><div className="librarium-folder-caption">Treningsplanar</div>{visibleFolders.length?visibleFolders.map(p=>{const count=wods.filter(w=>!w.is_archived&&planIdsByWod.get(w.id)?.has(p.id)).length;return <button type="button" key={p.id} className="librarium-folder-entry" onClick={()=>openPlan(p.id)}><Folder size={22}/><strong>{p.title}</strong><small>{count} WOD-ar</small><ChevronRight size={17}/></button>}):<div className="empty-state">{query?'Ingen planar samsvarar med søket.':'Ingen treningsplanar enno.'}</div>}</section>:ordinaryWods.length?<><div className={'librarium-grid '+(viewMode==='list'?'librarium-list':'')}>
    {ordinaryWods.slice(0,visibleCount).map(w=>{const parts=cardParts(w),items=catalogItems(w),equipment=equipmentOf(w),mins=Number(w.duration_minutes)||0;const f=family(w.format)||'WOD';const color=/AMRAP/i.test(f)?'amrap':f==='EMOM'?'emom':/for time/i.test(f)?'fortime':parts.length>1?'multi':/intervall|tabata/i.test(f)?'interval':'other';return <article key={w.id} className={'librarium-tile tone-'+color}>
     <button type="button" className="librarium-open" onClick={()=>{setExpanded(w.id);setOpenCardMenu(null)}} aria-label={'Opna WOD-kort: '+w.name} title={w.name}>
     <span className="librarium-format"><span>{parts.length>1?<Layers size={13}/>:<Clock3 size={13}/>} {parts.length>1?'Fleirdelt':f}</span><span className="librarium-flags">{favorites.includes(w.id)&&<Star size={13} fill="currentColor"/>}{dailyWodId===w.id&&<CalendarDays size={13}/>}</span></span>
