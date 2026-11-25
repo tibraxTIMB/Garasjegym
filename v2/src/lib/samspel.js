@@ -6,9 +6,10 @@ export function samspelConfig(schema={}){
  if(s?.version!==1||s.mode!=='parallel_round_swap')return null
  return s
 }
-export function samspelIssue(s,{format,participation,items=[]}={}){
+export function samspelIssue(s,{format,participation,collaboration,items=[]}={}){
  if(!s)return null
  if(format!=='AMRAP'||participation!=='partner')return 'Parallelt rundebyte krev førebels AMRAP med to partnarar.'
+ if(collaboration&&collaboration!=='parallel')return 'Vel parallelt arbeid under Gjennomføring, eller slå av rundebyte.'
  if(!SAMSPEL_TASKS.some(([id])=>id===s.task)||!SAMSPEL_METRICS.some(([id])=>id===s.metric))return 'Vel kondisjonsoppgåve og resultatmål.'
  if(!items.some(x=>!x.is_rest))return 'Legg til minst ei øving i AMRAP-runda.'
  return null
