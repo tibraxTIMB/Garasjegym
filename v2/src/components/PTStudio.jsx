@@ -36,7 +36,7 @@ const INTAKE_PREVIEW_QUESTIONS = [
 const TEMPLATE_TYPE_LABELS = {intro:'Introduksjon',course:'Kurs',training_plan:'Treningsplan',progression:'Progresjonsløp'}
 
 function Field({label,children,wide=false}) { return <div className={wide?'pt2-field pt2-wide':'pt2-field'}><span>{label}</span>{children}</div> }
-function Pill({children,tone=''}) { return <span className={'pt2-pill '+tone}>{children}</span> }
+function Pill({children,tone=''}) { return <span className={'pt2-pill gg-info-status '+tone}>{children}</span> }
 function Empty({children}) { return <div className="pt2-empty">{children}</div> }
 function dateLabel(value) { return value ? new Date(value).toLocaleDateString('nn-NO',{day:'numeric',month:'short',year:'numeric'}) : 'Ikkje sett' }
 

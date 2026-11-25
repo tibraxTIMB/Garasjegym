@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
-import {BookOpen,Search,Eye,EyeOff,LoaderCircle,Clock3,Dumbbell,Play,Layers,UserPlus,Trash2,Archive,Edit3,Star,CalendarDays,Info,MoreHorizontal,ChevronDown,ChevronUp} from 'lucide-react'
+import {BookOpen,Search,Eye,EyeOff,LoaderCircle,Clock3,Dumbbell,Play,Layers,UserPlus,Trash2,Archive,Edit3,Star,CalendarDays,Info,MoreHorizontal,ChevronDown,ChevronUp,ChevronRight} from 'lucide-react'
 import WodCard from './WodCard.jsx'
 import {supabase} from '../lib/supabase.js'
 import {formatComplexSequence} from '../lib/wodComplexes.js'
@@ -215,15 +215,15 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
  {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message">{notice}</div>}
  <div className={simpleMode?"wod-library-toolbar simple-wod-toolbar":"wod-library-toolbar wod-library-compact-toolbar"}>
   <div className="wod-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder={simpleMode?"Søk etter økt …":"Søk namn, øving eller format …"}/></div>
-  {simpleMode?<div className="calendar-view-switch">{[['all','Alle'],...['warmup','standard','benchmark','rehab'].map(v=>[v,categoryLabel(v)])].map(([v,label])=><button type="button" key={v} className={categoryFilter===v?'selected':''} onClick={()=>setCategoryFilter(v)}>{label}</button>)}</div>:<>
+  {simpleMode?<div className="calendar-view-switch">{[['all','Alle'],...['warmup','standard','benchmark','rehab'].map(v=>[v,categoryLabel(v)])].map(([v,label])=><button type="button" key={v} className={categoryFilter===v?'selected':''} aria-pressed={categoryFilter===v} onClick={()=>setCategoryFilter(v)}>{label}</button>)}</div>:<>
    <div className="wod-library-mobile-filters">
     <label className="wod-library-type-pick"><span>Type</span><select value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)} aria-label="WOD-type"><option value="all">Alle typar</option>{categoryOptions.map(v=><option key={v} value={v}>{categoryLabel(v)}</option>)}</select></label>
     <button type="button" className={showAdvancedFilters||activeAdvancedCount?'wod-library-filter-toggle is-active':'wod-library-filter-toggle'} onClick={()=>setShowAdvancedFilters(value=>!value)} aria-expanded={showAdvancedFilters} aria-controls="wod-library-more-filters">Filter{activeAdvancedCount?` (${activeAdvancedCount})`:''} <span aria-hidden="true">{showAdvancedFilters?'−':'+'}</span></button>
    </div>
    <div id="wod-library-more-filters" className={showAdvancedFilters?'wod-library-expanded-filters is-open':'wod-library-expanded-filters'}>
-    <div className="calendar-view-switch wod-library-category-chips">{[['all','Alle'],...categoryOptions.map(v=>[v,categoryLabel(v)])].map(([v,label])=><button type="button" key={v} className={categoryFilter===v?'selected':''} onClick={()=>setCategoryFilter(v)}>{label}</button>)}</div>
+    <div className="calendar-view-switch wod-library-category-chips" role="group" aria-label="Filtrer etter WOD-type">{[['all','Alle'],...categoryOptions.map(v=>[v,categoryLabel(v)])].map(([v,label])=><button type="button" key={v} className={categoryFilter===v?'selected':''} aria-pressed={categoryFilter===v} onClick={()=>setCategoryFilter(v)}>{label}</button>)}</div>
     <div className="wod-library-advanced-filters"><select value={quickFilter} onChange={e=>setQuickFilter(e.target.value)} aria-label="Vis WOD"><option value="all">Alle WOD-ar</option><option value="favorites">Favorittar</option>{staff&&<option value="mine">Mine WOD-ar</option>}</select><select value={formatFilter} onChange={e=>setFormatFilter(e.target.value)} aria-label="Format"><option value="all">Alle format</option>{formatOptions.map(v=><option value={v} key={v}>{v}</option>)}</select><select value={durationFilter} onChange={e=>setDurationFilter(e.target.value)} aria-label="Varigheit"><option value="all">All varigheit</option><option value="short">Under 15 min</option><option value="medium">15–30 min</option><option value="long">Over 30 min</option></select><select value={intensityFilter} onChange={e=>setIntensityFilter(e.target.value)} aria-label="Intensitet"><option value="all">Alle intensitetar</option><option value="1">Kontrollert</option><option value="2">Utfordrande</option><option value="3">Høg intensitet</option></select></div>
-    {staff&&<div className="calendar-view-switch wod-library-visibility-chips">{[['all','Alle'],['private','Berre PT/admin'],['published','Publisert']].map(([v,l])=><button type="button" key={v} className={filter===v?'selected':''} onClick={()=>setFilter(v)}>{l}</button>)}</div>}
+    {staff&&<div className="calendar-view-switch wod-library-visibility-chips" role="group" aria-label="Filtrer etter publiseringsstatus">{[['all','Alle'],['private','Berre PT/admin'],['published','Publisert']].map(([v,l])=><button type="button" key={v} className={filter===v?'selected':''} aria-pressed={filter===v} onClick={()=>setFilter(v)}>{l}</button>)}</div>}
    </div>
   </>}
  </div>
@@ -238,7 +238,7 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
     <div className="wod-library-card-head">
      <span className="wod-library-icon"><BookOpen size={18}/></span>
      <div className="wod-card-head-actions">
-      <span className={w.is_published?'coffee-status status-ready':'coffee-status status-new'}>{staff?(w.is_published?'Publisert':'Privat PT-WOD'):'Tilgjengeleg'}</span>
+      <span className={'gg-info-status '+(w.is_published?'is-public':'is-private')}>{staff?(w.is_published?'Publisert':'Privat PT-WOD'):'Tilgjengeleg'}</span>
       {!simpleMode&&<button type="button" className={favorites.includes(w.id)?'wod-card-icon-action is-favorite':'wod-card-icon-action'} aria-label={favorites.includes(w.id)?'Fjern frå favorittar':'Legg til favorittar'} aria-pressed={favorites.includes(w.id)} title="Favoritt" disabled={busy===w.id} onClick={()=>toggleFavorite(w)}><Star size={19} fill={favorites.includes(w.id)?'currentColor':'none'}/></button>}
       {staff&&!simpleMode&&<button type="button" className="wod-card-icon-action" aria-label={'Administrer '+w.name} aria-expanded={adminMenuOpen} title="Administrer WOD" onClick={()=>setOpenCardMenu(value=>value==='admin:'+w.id?null:'admin:'+w.id)}><MoreHorizontal size={21}/></button>}
      </div>
@@ -249,9 +249,9 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
       {isAdmin&&<button type="button" className="wod-card-danger-action" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);removeWod(w)}}><Archive size={17}/> Fjern frå biblioteket</button>}
       {isAdmin&&<button type="button" className="wod-card-danger-action" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);removeWod(w,{permanent:true})}}><Trash2 size={17}/> Slett WOD permanent</button>}
      </div>}
-    <h4><button className="wod-light-title" type="button" onClick={()=>{setExpanded(w.id);setOpenCardMenu(null)}}>{w.name}</button></h4>
-    <div className="wod-card-mini-category"><span>{categoryLabel(categoryOf(w))}</span>{dailyWodId===w.id&&<strong>Dagens WOD</strong>}</div>
-    <div className="wod-library-meta"><span>{w.format}</span><span><Clock3 size={14}/>{w.duration_minutes||'–'} min</span><span><Dumbbell size={14}/>{items.length||w.movements?.split('\n').filter(Boolean).length||0} øvingar</span></div>
+    <h4><button className="wod-light-title" type="button" aria-label={'Opna WOD-kort: '+w.name} onClick={()=>{setExpanded(w.id);setOpenCardMenu(null)}}>{w.name}<ChevronRight size={16} aria-hidden="true"/></button></h4>
+    <div className="wod-card-mini-category gg-info-meta"><span>{categoryLabel(categoryOf(w))}</span>{dailyWodId===w.id&&<strong>Dagens WOD</strong>}</div>
+    <div className="wod-library-meta gg-info-meta"><span>{w.format}</span><span><Clock3 size={14}/>{w.duration_minutes||'–'} min</span><span><Dumbbell size={14}/>{items.length||w.movements?.split('\n').filter(Boolean).length||0} øvingar</span></div>
     {compositeBlocks.length>1&&<small className="wod-light-parts">{compositeBlocks.length} delar · {[...new Set(compositeBlocks.map(b=>b.format))].join(" / ")}</small>}
     {!simpleMode&&(w.timer_settings?.workout_schema?.stimulus||(staff?w.notes:''))&&<p className="wod-card-short-stimulus">{w.timer_settings?.workout_schema?.stimulus||(staff?w.notes:'')}</p>}
     {!simpleMode&&<div className="wod-card-exercise-preview wod-card-exercise-compact">
