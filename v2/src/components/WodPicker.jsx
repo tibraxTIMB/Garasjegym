@@ -8,6 +8,7 @@ export default function WodPicker({wods=[],selectedIds=[],onChange,onCancel,mult
  const [format,setFormat]=useState('all')
  const [visibility,setVisibility]=useState('all')
  const [category,setCategory]=useState('all')
+ const [filtersOpen,setFiltersOpen]=useState(false)
  const [draftIds,setDraftIds]=useState(selectedIds)
  const selectedKey=selectedIds.join('|')
  useEffect(()=>setDraftIds(selectedIds),[selectedKey])
@@ -27,11 +28,11 @@ export default function WodPicker({wods=[],selectedIds=[],onChange,onCancel,mult
  return <section className={compact?'wod-picker compact':'wod-picker'}>
   <div className="wod-picker-heading"><div><strong>{title}</strong><small>{hint}</small></div><span className="count-pill">{draftIds.length} valde</span></div>
   <div className="wod-picker-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Søk på namn, øving, format eller innhald …"/></div>
-  <div className="wod-picker-filters">
+  <button type="button" className="gg-picker-filter-toggle" aria-expanded={filtersOpen} onClick={()=>setFiltersOpen(v=>!v)}>Filter{format!=='all'||visibility!=='all'||category!=='all'?' · aktivt':''} {filtersOpen?'−':'+'}</button>{filtersOpen&&<div className="wod-picker-filters">
    <select value={format} onChange={e=>setFormat(e.target.value)} aria-label="Filtrer på WOD-format"><option value="all">Alle format</option>{formats.map(x=><option key={x} value={x}>{x}</option>)}</select>
    <select value={category} onChange={e=>setCategory(e.target.value)} aria-label="Filtrer på WOD-type"><option value="all">Alle kategoriar</option>{categories.map(value=><option key={value} value={value}>{categoryLabel(value)}</option>)}</select>
    <select value={visibility} onChange={e=>setVisibility(e.target.value)} aria-label="Filtrer publisering"><option value="all">Publiserte og private</option><option value="published">Publiserte</option><option value="private">Private PT-WOD-ar</option></select>
-  </div>
+  </div>}
   <div className="wod-picker-results">
    {rows.length?rows.map(w=>{
     const active=draftIds.includes(w.id)
@@ -39,7 +40,7 @@ export default function WodPicker({wods=[],selectedIds=[],onChange,onCancel,mult
     const count=(w.timer_settings?.workout_schema?.items||[]).length||w.movements?.split('\\n').filter(Boolean).length||0
     return <button type="button" key={w.id} className={active?'wod-picker-option selected':'wod-picker-option'} onClick={()=>toggle(w.id)} aria-pressed={active}>
      <span className="wod-picker-check">{active?<Check size={15}/>:null}</span>
-     <span className="wod-picker-option-main"><b>{w.name}</b><small>{w.format||'Eigen økt'} · {w.duration_minutes||'–'} min · {count} øvingar</small><small>{w.timer_settings?.workout_schema?.stimulus||'Ingen kort beskriving'}</small><small>{categoryLabel(kind)}</small></span>
+     <span className="wod-picker-option-main"><b>{w.name}</b><small>{w.format||'Eigen økt'} · {w.duration_minutes||'–'} min · {count} øvingar</small>{!compact&&w.timer_settings?.workout_schema?.stimulus&&<small>{w.timer_settings.workout_schema.stimulus}</small>}</span>
      <span className={w.is_published?'wod-picker-status published':'wod-picker-status'}>{w.is_published?'Publisert':'Privat'}</span>
     </button>
    }):<div className="wod-picker-empty">Ingen WOD-ar treff søket. Prøv eit anna søk eller opprett ein ny WOD i WOD-biblioteket.</div>}
