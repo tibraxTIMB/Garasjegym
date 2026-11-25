@@ -48,7 +48,7 @@ export function deriveExerciseRecords(logs = []) {
       const calories = result.row_unit === 'cal' ? positive(result.row_value) : positive(result.calories)
       const seconds = result.row_unit === 'min' ? positive(result.row_value)*60 : result.row_unit === 's' ? positive(result.row_value) : positive(result.work_seconds)
       exercises.get(key).performances.push({
-        sets, distance, calories, seconds, date:log.workout_date || String(log.created_at || '').slice(0,10),
+        sets, distance, calories, seconds, individual:!log.result_data?.wod_engine?.participation||log.result_data.wod_engine.participation==='individual', date:log.workout_date || String(log.created_at || '').slice(0,10),
         title:log.title || 'Treningsøkt', logId:log.id,
       })
     }
@@ -68,6 +68,7 @@ export function deriveExerciseRecords(logs = []) {
         const hasUncounted=loads.some(set=>!positive(set.reps))
         candidates.push(record('load','Høgaste registrerte vekt','kg',Math.max(...loads.map(set=>positive(set.load_kg))),date,title,logId,hasUncounted?'Vekta er registrert, men repetisjonstal manglar på nokre sett.':'Vekt og repetisjonar frå treningsloggen.'))
         if(countedLoads.length){
+          if(p.individual)for(const reps of [1,2,3,5]){const eligible=countedLoads.filter(set=>Number(set.reps)===reps&&!['partial','failed'].includes(set.complex_status));if(eligible.length)candidates.push(record('best_'+reps+'rep','Beste registrerte '+reps+'-repssett','kg',Math.max(...eligible.map(set=>positive(set.load_kg))),date,title,logId,'Faktisk lagra sett, ikkje eit estimert RM.'))}
           const heavySets = countedLoads.filter(set=>positive(set.load_kg)>=threshold)
           if(heavySets.length) candidates.push(record('heavy_sets','Flest tunge sett','sett',heavySets.length,date,title,logId,`Minst 80 % av toppvekta (${Number(threshold.toFixed(1))} kg) · minst 1 rep per sett`))
           const totalVolume = countedLoads.reduce((sum,set)=>sum+positive(set.load_kg)*positive(set.reps),0)
@@ -97,7 +98,7 @@ export function deriveExerciseRecords(logs = []) {
         if(p.calories) candidates.push(record('calories','Flest kaloriar','cal',p.calories,date,title,logId))
       }
     }
-    const keys={load:['load','heavy_sets','volume'],height:['height','height_reps'],reps:['reps','total_reps'],hold:['hold'],endurance:['distance','calories']}[type] || []
+    const keys={load:['load','heavy_sets','volume','best_1rep','best_2rep','best_3rep','best_5rep'],height:['height','height_reps'],reps:['reps','total_reps'],hold:['hold'],endurance:['distance','calories']}[type] || []
     return {...exercise,label:exercise.name+(SIDE_LABELS[exercise.side]?` · ${SIDE_LABELS[exercise.side]}`:''),records:keys.map(key=>bestBy(candidates,key)).filter(Boolean),sessions:performances.length}
   }).sort((a,b)=>a.name.localeCompare(b.name,'nn'))
 }

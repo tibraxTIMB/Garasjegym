@@ -16,7 +16,7 @@ test('kettlebell snatch keeps load, heavy sets and training volume separate',()=
  ]
  const [exercise]=deriveExerciseRecords(logs)
  assert.equal(exercise.label,'Kettlebell Snatch · Høgre')
- assert.deepEqual(exercise.records.map(r=>[r.key,r.value]),[['load',24],['heavy_sets',2],['volume',280]])
+ assert.deepEqual(exercise.records.map(r=>[r.key,r.value]),[['load',24],['heavy_sets',2],['volume',280],['best_2rep',24],['best_3rep',24]])
  assert.equal(exercise.records[0].logId,2)
 })
 
@@ -68,3 +68,5 @@ test('For Time ignores time-cap results and chooses fastest completed time',()=>
  const logs=[{...base,id:1,score_time_seconds:200,result_data:{time_cap_reached:true}},{...base,id:2,score_time_seconds:320,result_data:{}},{...base,id:3,score_time_seconds:260,result_data:{}}]
  assert.equal(deriveBenchmarkRecords(logs,['wod-1'])[0].logId,3)
 })
+
+test('exact repetition bests exclude partner data and do not estimate missing single',()=>{const logs=[workout(1,'Back Squat',[{reps:3,load_kg:90},{reps:5,load_kg:80}]),workout(2,'Back Squat',[{reps:1,load_kg:120}],{result_data:{wod_engine:{participation:'partner'}}})];const records=deriveExerciseRecords(logs)[0].records;assert.equal(records.find(r=>r.key==='best_3rep').value,90);assert.equal(records.find(r=>r.key==='best_5rep').value,80);assert.equal(records.some(r=>r.key==='best_1rep'),false)})
