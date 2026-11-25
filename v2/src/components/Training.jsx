@@ -12,6 +12,7 @@ import { Music, MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
 import { getWodSchemaItems, sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
+import {samspelConfig,samspelRoles,samspelResultIssue} from '../lib/samspel.js'
 import {cardParts,cardTone,cardDose} from '../lib/wodCard.js'
 import './wod-architect.css'
 import { formatParticipation, normalizeWodEngine, isEmomFormat, emomIntervalSeconds, emomDisplayLabel, emomPrescribedSetCount } from '../lib/wodEngine.js'
@@ -244,6 +245,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   })
   useEffect(() => { try { localStorage.setItem('garasjegym.timer.appearance', JSON.stringify(appearance)) } catch { /* Optional local preference. */ } }, [appearance])
   const schema = timerSettings?.workout_schema
+  const samspel=samspelConfig(schema)
   const savedDuration = Number(schema?.duration_seconds) || 0
   const capDuration = Number(schema?.time_cap_seconds) || (Number(schema?.time_cap_minutes) || 0) * 60
   const isEMOM = isEmomFormat(format)
@@ -610,7 +612,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const requestFinish=()=>{if(!hasStarted)return;if(running&&!stageIsComplete){setFinishConfirm(true);setStagePanel('finish')}else finishCurrent()}
   const manualButtonVisible=hasStarted&&(isAmrap||isLadder||isDeathBy||isStopwatch||isForTime)
   const manualButtonDisabled=!running||timerLimitReached||manualLockSeconds>0||(isLadder&&ladderProgress.finished)||(isDeathBy&&!deathByStatus.canConfirm)
-  const manualButtonText=(isAmrap||plannedForTimeRounds)?'RUNDE FULLFØRT':isLadder?`TRINN FULLFØRT · ${ladderProgress.targetReps} REPS`:isDeathBy?`FULLFØRT ${deathByStatus.targetReps} REPS`:'MELLOMTID'
+  const manualButtonText=(isAmrap||plannedForTimeRounds)?(samspel?'RUNDE FULLFØRT · BYT':'RUNDE FULLFØRT'):isLadder?`TRINN FULLFØRT · ${ladderProgress.targetReps} REPS`:isDeathBy?`FULLFØRT ${deathByStatus.targetReps} REPS`:'MELLOMTID'
   const manualButton=<button type="button" className={'gg-manual-action'+(manualLockSeconds>0?' is-registered':'')+(buttonSize==='xl'?' is-xl':'')} onClick={(isAmrap||plannedForTimeRounds)?lapAction:isLadder?completeLadderRound:isDeathBy?completeDeathByRound:splitAction} disabled={manualButtonDisabled} aria-label={manualLockSeconds>0?'Registrert – sperra mot dobbelttrykk':manualButtonText}>
     {manualLockSeconds>0?<CheckCircle2 size={27}/>:<Plus size={27}/>}<span><b>{manualLockSeconds>0?(canUndoManual?'REGISTRERT':'STADFESTA'):manualButtonText}</b>{manualLockSeconds>0&&<small>Vent {manualLockSeconds} sek</small>}</span>
   </button>
@@ -672,7 +674,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           {isDeathBy&&<div className="gg-live-timer__rounds"><span>{deathByStatus.failed?`STOPPA I RUNDE ${deathByStatus.failedRound}`:`RUNDE ${deathByStatus.round} · ${deathByStatus.intervalSeconds} SEKUND`}</span><strong>{deathByStatus.targetReps} reps</strong><small>{deathByCompletedRounds} rundar (førebels){deathByStatus.roundConfirmed?' · Klar for neste intervall':' · Neste runde startar automatisk'}</small></div>}
           {(isTimedInterval||isStationCircuit||isEMOM)&&<div className="gg-live-timer__rounds"><span>{isStationCircuit?'STASJON · RUNDE':isEMOM?'INTERVALL':'RUNDE'}</span><strong>{isStationCircuit?`${visibleStationIndex+1}/${stationCount} · ${Math.min(currentRound,Number(rounds)||1)}/${rounds}`:isEMOM?currentEmomRound:`${roundsShown}/${rounds}`}</strong></div>}
           {showPulse&&<HeartRateTrainingPanel compact/>}
-          <div className="gg-live-timer__exercise"><div className="gg-live-timer__exercise-title"><span>{!stageRows.length&&onEditWorkout?'FRI TRENING':isAmrap?'WOD-ØVINGAR':isStationCircuit?'STASJONAR':isEMOM||isDeathBy?'DENNE RUNDA':'AKTUELL ØVING'}</span><button type="button" onClick={()=>setStagePanel('wod')}>Alle øvingar ({stageRows.length})</button></div>
+          <div className="gg-live-timer__exercise">{samspel&&<div className="gg-samspel-roles" aria-label="Aktuelle partnarroller">{samspelRoles(samspel,completedRounds).map((role,i)=><span key={i} className={role==="AMRAP"?"gg-samspel-amrap":"gg-samspel-erg"}><small>P{i+1}</small> {role}</span>)}</div>}<div className="gg-live-timer__exercise-title"><span>{!stageRows.length&&onEditWorkout?'FRI TRENING':isAmrap?'WOD-ØVINGAR':isStationCircuit?'STASJONAR':isEMOM||isDeathBy?'DENNE RUNDA':'AKTUELL ØVING'}</span><button type="button" onClick={()=>setStagePanel('wod')}>Alle øvingar ({stageRows.length})</button></div>
             {!stageRows.length&&onEditWorkout?<button type="button" className="gg-live-timer__empty-add" onClick={onEditWorkout}><Plus size={17}/> Legg til øvingar eller WOD</button>:isAmrap?<ol>{stageRows.map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span>{item.dose&&<small>{item.dose}</small>}</li>)}</ol>:<strong>{stageExerciseName||'Sjå øvingslista'}</strong>}
             {!isAmrap&&stageNextExercise&&stageNextExercise!==stageExerciseName&&<small className="gg-live-timer__next">Neste: {stageNextExercise}</small>}
           </div>
@@ -1218,6 +1220,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     onQuickManualEntryConsumed?.()
   }, [quickManualEntry, loading, mode])
 
+  const sessionSamspel=samspelConfig(source?.timer_settings?.workout_schema)
   const activeWodEngine=normalizeWodEngine(source?.timer_settings?.workout_schema||{},{format:source?.format||format})
   const manualBlocks=manualLibraryEntry&&format===COMPOSITE_FORMAT?retrospectiveBlocks(source?.timer_settings?.workout_schema,activeWodEngine):[]
   const resultIssues=collectResultIssues({items,schema:flowSchema,format,blocks:format===COMPOSITE_FORMAT?activeWodEngine.blocks:[],blockScores,manualLibraryEntry,scoreRounds,scoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance})
@@ -1476,6 +1479,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     if(automatic&&(!pendingSave.current||pendingSave.current!==fingerprint||isOffline()))return
     if(!automatic){pendingSave.current=null;setSyncNotice('')}
     if(finishOpen&&!resultSummary){nextResult();return}
+    if(sessionSamspel){const issue=samspelResultIssue(sessionSamspel,sessionSamspel.metric==='distance'?scoreDistance:scoreCalories);if(issue){setError(issue);setResultSummary(true);return}}
     if(resultIssues.length){setShowResultIssues(true);setResultSummary(true);if(resultBodyRef.current)resultBodyRef.current.scrollTop=0;setError('Rett '+resultIssues.length+' felt før du lagrar. Trykk på feilen for å gå direkte dit.');return}
     if (!title.trim()) { setError('Gi økta eit namn før du lagrar.'); return }
     if(manualEntry&&(!workoutDate||workoutDate>localDateISO())){setError('Vel ein gyldig treningsdato.');return}
@@ -1568,7 +1572,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         score_time_seconds:parsedTime,
         load_kg:scoreLoad===''?null:Number(scoreLoad),
         calories:scoreCalories===''?null:Number(scoreCalories),
-        distance:scoreDistance===''?null:Number(scoreDistance),distance_unit:scoreUnit,
+        distance:scoreDistance===''?null:Number(scoreDistance),distance_unit:sessionSamspel?.metric==='distance'?'m':scoreUnit,samspel:sessionSamspel?{...sessionSamspel,team_score:true}:null,
         block_primary_results:explicitResults,
         complex_results:items.filter(item=>item.is_complex&&item.complex_family==='custom').map(item=>({block_id:item.block_id||null,name:item.exercise_name,steps:item.complex_steps,...complexResultSummary(item)})),
         exercise_results:items.map(item=>({block_id:item.block_id||null,exercise_name:item.exercise_name,side_mode:item.side_mode||null,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps.map(step=>({exercise_id:step.exercise_id||null,name:step.name,reps:Number(step.reps)||1})):[],row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,sets:item.sets.map(s=>({flow_status:s.flow_status||null,complex_status:item.is_complex&&item.complex_family==='custom'?s.complex_status||null:null,reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm),rir:s.rir===''||s.rir==null?null:Number(s.rir)}))}))
@@ -1581,7 +1585,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         score_reps:effectiveScoreReps===''?((isAmrapScore||isDeathByScore)&&!manualLibraryEntry?0:null):Number(effectiveScoreReps),
         score_time_seconds:parsedTime,score_load_kg:scoreLoad===''?null:Number(scoreLoad),
         score_calories:scoreCalories===''?null:Number(scoreCalories),
-        score_distance:scoreDistance===''?null:Number(scoreDistance),score_unit:scoreDistance===''?null:scoreUnit,
+        score_distance:scoreDistance===''?null:Number(scoreDistance),score_unit:scoreDistance===''?null:sessionSamspel?.metric==='distance'?'m':scoreUnit,
         result_data:resultData,
         note:[note.trim(),scoreTime?'Tid: '+scoreTime:'',manualEntry?'Manuelt etterregistrert':'',manualEntry&&manualLocation.trim()?'Treningsstad: '+manualLocation.trim():'',!manualEntry?`Timer: ${format} · ${clock(elapsedSeconds)} · ${timerSnapshot.phase}`:'',!manualEntry&&timerSnapshot.laps.length?'Mellomtider: '+timerSnapshot.laps.map((lap,i)=>`${i+1}: ${clock(lap)}`).join(', '):''].filter(Boolean).join('\\n')
       }
@@ -1701,6 +1705,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           <FlowEntryProvider key={String(resultSummary)+':'+activeExerciseIndex+':'+resultSetIndex+':'+flowDetailed}>
            <div ref={resultBodyRef} className="gg-result-body" onTouchStart={e=>{if(e.target.closest('input,select,textarea,button'))return;const t=e.touches[0];resultTouch.current={x:t.clientX,y:t.clientY}}} onTouchEnd={e=>{const start=resultTouch.current,t=e.changedTouches[0];resultTouch.current=null;if(!start||!t)return;const dx=t.clientX-start.x,dy=t.clientY-start.y;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.7)moveResult(dx<0?1:-1)}}>
           {resultSummary&&showResultIssues&&resultIssues.length>0&&<section className="gg-result-issues" aria-label="Felt som må rettast">{resultIssues.map((issue,index)=><button type="button" key={index} className="secondary-button" onClick={()=>correctResultIssue(issue)}><span><strong>{resultIssueLabel(issue)}</strong><small>{issue.message}</small></span><span>Rett <ChevronRight size={16}/></span></button>)}</section>}
+          {sessionSamspel&&<section className="gg-samspel-result" aria-label="Felles Samspel-resultat"><strong>Felles resultat · kondisjonsoppgåve</strong><label>{sessionSamspel.metric==='distance'?'Samla distanse (m)':'Samla kaloriar'}<FlowNumberInput type="number" min="0" step="1" inputMode="numeric" data-result-field={sessionSamspel.metric==='distance'?'scoreDistance':'scoreCalories'} value={sessionSamspel.metric==='distance'?scoreDistance:scoreCalories} onChange={e=>{if(sessionSamspel.metric==='distance'){setScoreDistance(e.target.value);setScoreUnit('m')}else setScoreCalories(e.target.value)}} placeholder="Les av maskina"/></label><small>Samla for begge partnarane. Rundar og ekstra reps blir registrerte separat.</small></section>}
           {source&&<div className="gg-flow-level"><div className="gg-flow-level-buttons" role="group" aria-label="Faktisk doseringsnivå">{[{id:'rx',label:'RX'},...(items.some(item=>item.prescription_levels?.intermediate)?[{id:'intermediate',label:'Intermediate'}]:[]),{id:'scaled',label:'Scaled'},{id:'foundation',label:'Foundation'}].map(level=><button type="button" key={level.id} className={wodLevel===level.id?'selected':''} aria-pressed={wodLevel===level.id} onClick={()=>{setWodLevel(level.id);setItems(rows=>rows.map(item=>item.prescription_levels?{...item,prescription_label:doseLabel({levels:item.prescription_levels},level.id)}:item))}}>{level.label}</button>)}</div></div>}
           {!resultSummary&&resultItem?<section className="workout-result-entry">
             <details className="gg-result-jump" hidden={flowGrid||flowCompact}><summary>Alle øvingar · {reviewedCount} av {items.length} gjennomgått <ChevronDown size={16}/></summary>
