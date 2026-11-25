@@ -12,6 +12,7 @@ on:
       - "gazelle-librarium"
       - "gazelle-librarium-polish"
       - "gazelle-plan-folders"
+      - "gazelle-acta"
     paths:
       - "v2/**"
       - ".github/workflows/sturmkopf-production-candidate.yml"
