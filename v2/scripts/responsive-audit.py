@@ -40,10 +40,10 @@ with sync_playwright() as pw:
     for w,h in sizes:
         context=browser.new_context(viewport={"width":w,"height":h},has_touch=True,is_mobile=w<600,device_scale_factor=1,locale="nn-NO",color_scheme="dark",reduced_motion="reduce")
         context.route("**/*",lambda route:route.continue_() if route.request.url.startswith(BASE) else route.abort())
-        for screen in ["flow","card","builder","pt","plan","select","acta"]:
+        for screen in ["flow","card","builder","pt","plan","select","acta","picker","assign"]:
             page=None
             try:
-                page,errors=open_page(context,f"/ui-audit.html?scenario={'audit-pt-plan' if screen=='pt' else 'audit-admin' if screen=='builder' else 'audit-member'}&screen={screen}")
+                page,errors=open_page(context,f"/ui-audit.html?scenario={'audit-pt-plan' if screen=='pt' else 'audit-admin' if screen in ('builder','assign') else 'audit-member'}&screen={screen}")
                 check(page,screen,w,h)
                 if screen=="flow":
                     field=page.get_by_role("textbox",name="Arbeidsvekt kg")
@@ -80,6 +80,33 @@ with sync_playwright() as pw:
                     panel.get_by_role("checkbox",name="Parallelt arbeid med rundebyte").check()
                     assert panel.get_by_text("Oppgåve 2:",exact=False).is_visible()
                     check(page,"architect-samspel",w,h)
+                if screen=="picker":
+                    picker=page.locator(".wod-picker")
+                    rows=picker.locator(".wod-picker-option")
+                    assert rows.count()==3
+                    assert not rows.evaluate_all("""rows=>rows.flatMap((row,i)=>{
+                      const box=row.getBoundingClientRect(), main=row.querySelector('.wod-picker-option-main').getBoundingClientRect(), next=rows[i+1]?.getBoundingClientRect();
+                      return main.bottom>box.bottom+1||main.top<box.top-1||next&&box.bottom>next.top+1?[row.textContent]:[]
+                    })""")
+                    rows.nth(1).tap()
+                    assert rows.nth(1).get_attribute("aria-pressed")=="true"
+                    picker.get_by_role("button",name="Filter",exact=False).tap()
+                    assert picker.get_by_role("combobox",name="Filtrer på WOD-format").is_visible()
+                    check(page,"picker-expanded",w,h)
+                if screen=="assign":
+                    page.get_by_role("button",name="Tildel WOD",exact=True).tap()
+                    sheet=page.get_by_role("dialog",name="Tildel WOD til",exact=False)
+                    sheet.wait_for()
+                    row=sheet.locator(".pt-wod-library-list > button").first
+                    row.wait_for(timeout=15000)
+                    assert sheet.locator(".wod-builder-heading").count()==0
+                    assign=sheet.get_by_role("button",name="Tildel vald WOD til kunden")
+                    assert assign.is_disabled()
+                    row.tap()
+                    assert assign.is_enabled()
+                    check(page,"pt-assign-selected",w,h)
+                    sheet.get_by_role("button",name="Lukk tildeling").tap()
+                    assert sheet.count()==0
                 if screen=="pt":
                     card=page.locator(".pt-compact-session").first
                     card.wait_for()
