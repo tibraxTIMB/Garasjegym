@@ -43,7 +43,7 @@ with sync_playwright() as pw:
         for screen in ["flow","card","builder","pt","plan","select","acta"]:
             page=None
             try:
-                page,errors=open_page(context,f"/ui-audit.html?scenario={'audit-admin' if screen in ['builder','pt'] else 'audit-member'}&screen={screen}")
+                page,errors=open_page(context,f"/ui-audit.html?scenario={'audit-pt-plan' if screen=='pt' else 'audit-admin' if screen=='builder' else 'audit-member'}&screen={screen}")
                 check(page,screen,w,h)
                 if screen=="flow":
                     field=page.get_by_role("textbox",name="Arbeidsvekt kg")
@@ -67,6 +67,26 @@ with sync_playwright() as pw:
                 if screen=="card":
                     page.get_by_role("button",name="Dosering",exact=True).tap()
                     check(page,"card-dose",w,h)
+                if screen=="pt":
+                    edit=page.get_by_role("button",name="Rediger plan",exact=True)
+                    edit.wait_for()
+                    assert page.get_by_role("button",name="Byt WOD",exact=True).count()==0
+                    card=page.locator(".pt-plan-card").first
+                    card.get_by_role("button",name="Kopla til utført PT-økt").tap()
+                    evidence=page.get_by_role("dialog",name="Kopla til utført PT-økt")
+                    evidence.get_by_role("button",name="Mancave Paincave",exact=False).wait_for()
+                    check(page,"pt-equivalent-picker",w,h)
+                    evidence.get_by_role("button",name="Lukk",exact=True).tap()
+                    edit.tap()
+                    card.get_by_role("button",name="Byt WOD",exact=True).tap()
+                    picker=page.get_by_role("dialog",name="WOD til økta")
+                    picker.wait_for()
+                    box=picker.bounding_box()
+                    assert box["x"]>=-1 and box["x"]+box["width"]<=w+1
+                    check(page,"pt-wod-picker",w,h)
+                    picker.get_by_role("button",name="Avbryt",exact=True).tap()
+                    page.get_by_role("button",name="Ferdig med redigering").tap()
+                    assert page.get_by_role("button",name="Byt WOD",exact=True).count()==0
                 if screen=="acta":
                     panel=page.get_by_role("region",name="Treningsrapport per del")
                     assert panel.get_by_text("4 + 3",exact=True).is_visible()
