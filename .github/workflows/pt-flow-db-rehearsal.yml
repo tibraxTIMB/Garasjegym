@@ -1,0 +1,32 @@
+name: PT FLOW · isolated PostgreSQL rehearsal
+on:
+  push:
+    branches: [gazelle-pt-flow-integration]
+    paths:
+      - 'v2/supabase/preflight/pt_flow*'
+      - '.github/workflows/pt-flow-db-rehearsal.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rehearsal:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: local_test_only
+          POSTGRES_DB: pt_flow_rehearsal
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run isolated migration and role tests
+        env:
+          PGPASSWORD: local_test_only
+        run: psql -h 127.0.0.1 -p 5432 -U postgres -d pt_flow_rehearsal -v ON_ERROR_STOP=1 -f v2/supabase/preflight/pt_flow_rehearsal.sql
