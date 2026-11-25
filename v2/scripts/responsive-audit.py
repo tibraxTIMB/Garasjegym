@@ -109,6 +109,23 @@ with sync_playwright() as pw:
                     check(page,"librarium-full-dose",w,h)
                     card.get_by_role("button",name="Tilbake",exact=True).tap()
                     tile.wait_for()
+                    page.close()
+                    page,errors=open_page(context,"/video-demo.html?scenario=audit-folders")
+                    page.wait_for_function("Boolean(window.__ggVideo)")
+                    page.evaluate("window.__ggVideo.setScreen('wod')")
+                    page.get_by_role("button",name="Treningsplanar",exact=False).first.tap()
+                    folders=page.get_by_role("region",name="Treningsplanmapper")
+                    folders.wait_for()
+                    assert folders.get_by_role("button",name="Ny treningsplan",exact=False).is_visible()
+                    assert page.locator(".librarium-tile").count()==0
+                    check(page,"plan-folders",w,h)
+                    folders.get_by_role("button",name="Introkurs",exact=False).tap()
+                    page.locator(".librarium-tile").first.wait_for()
+                    assert page.locator(".librarium-name").all_text_contents()==["Z – Første økt","A – Andre økt"]
+                    check(page,"plan-folder-open",w,h)
+                    page.get_by_role("button",name="Tilbake til treningsplanar").tap()
+                    folders.get_by_role("button",name="Ny treningsplan",exact=False).tap()
+                    assert page.locator(".librarium-tile").count()==0
                 if errors: failures.append(f"demo {screen} {w}x{h}: JS {errors[:2]}")
             except Exception as e: failures.append(f"demo {screen} {w}x{h}: {e}")
             finally:
