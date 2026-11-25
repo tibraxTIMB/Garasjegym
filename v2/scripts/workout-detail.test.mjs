@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
-import {normalizeWorkoutNote,splitWorkoutNote,formatWorkoutSeconds,formatWorkoutSet,optionalNumber} from '../src/lib/workoutDetail.js'
+import {normalizeWorkoutNote,splitWorkoutNote,formatWorkoutSeconds,formatWorkoutSet,optionalNumber,buildWorkoutReport,reportRepTotals} from '../src/lib/workoutDetail.js'
 
 const read=path=>readFileSync(new URL(path,import.meta.url),'utf8')
 
@@ -44,4 +44,32 @@ test('workout dialog keeps history read-only, with notes and corrections behind 
  assert.match(app,/<WorkoutDetail workout=\{selectedWorkout\}/)
  assert.match(app,/navigateTo\('mi-historikk'\)/)
  assert.match(styles, /@media\(max-width:660px\)/)
+})
+
+test('ACTA assigns AMRAP to its saved part and calculates only fixed ordered repetitions',()=>{
+ const parts=[{id:'a',title:'Oppvarming',warm:true,items:[]},{id:'e',title:'AMRAP',format:'AMRAP',items:[{exercise_name:'Double DB Hang Squat Clean',levels:{rx:{reps:4}}},{exercise_name:'Broad Jump',levels:{rx:{reps:2}}}]}]
+ const workout={score_rounds:4,score_reps:3,exercises:[{id:'x',exercise_name:'Double DB Hang Squat Clean',workout_sets:[]}],result_data:{prescription_level:'rx',flow_completion:[{id:'a',status:'done'}],block_summary:[{id:'e',format:'AMRAP',roundsCompleted:4,extra_reps:3}],exercise_results:[{block_id:'e',exercise_name:'Double DB Hang Squat Clean'}]}}
+ const report=buildWorkoutReport(workout,parts)
+ assert.equal(report.showOverall,false)
+ assert.equal(report.sections[0].status.status,'done')
+ assert.equal(report.sections[1].rows[0].id,'x')
+ assert.deepEqual(reportRepTotals(report.sections[1],report.sections[1].score,'rx').map(x=>x.reps),[19,8])
+ assert.equal(reportRepTotals(report.sections[1],{roundsCompleted:4,extra_reps:6},'rx'),null)
+ assert.equal(reportRepTotals(report.sections[1],report.sections[1].score,null),null)
+ assert.equal(reportRepTotals({items:[{reps:4,is_complex:true}]},report.sections[1].score,'rx'),null)
+ const ambiguous=buildWorkoutReport({...workout,result_data:{...workout.result_data,block_summary:[]}},[...parts,{id:'f',format:'AMRAP',items:[]}])
+ assert.equal(ambiguous.showOverall,true)
+ assert.equal(ambiguous.sections[1].score,null)
+})
+test('Android Back stays within the app; quick menu has a visible and long-press entry',()=>{
+ const app=read('../src/App.jsx'), nav=read('../src/components/AppMobileNavigation.jsx'),detail=read('../src/components/WorkoutDetail.jsx')
+ assert.match(app,/ggBackGuard/)
+ assert.match(app,/addEventListener\('popstate',onPop\)/)
+ assert.match(app,/gg:workout-back/)
+ assert.match(app,/Opna hurtigmeny/)
+ assert.match(app,/timerSnapshot.sessionOpen/)
+ assert.match(nav,/onPointerDown=/)
+ assert.match(nav,/550/)
+ assert.match(nav,/long.current=false;return/)
+ assert.match(detail,/gg:workout-back/)
 })
