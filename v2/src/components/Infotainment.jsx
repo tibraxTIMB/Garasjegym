@@ -1,3 +1,4 @@
+import {arenaBlockContext} from '../lib/trainingActivity.js'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CalendarDays, Clock3, MonitorUp, Play, Pause, RotateCcw, TimerReset, Music2, LoaderCircle, Lock, Unlock, Maximize2, Minimize2, X } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
@@ -168,7 +169,8 @@ export default function Infotainment({onExit,timerSnapshot=null}){
  },[])
 
  const groups=useMemo(()=>groupEventsByLocalDay(events),[events])
- const trainingActive=Boolean(timerSnapshot?.sessionOpen&&timerSnapshot?.title)
+ const arenaContext=arenaBlockContext(timerSnapshot)
+ const trainingActive=Boolean(arenaContext&&timerSnapshot?.title)
  const timerValue=trainingActive?(Number(timerSnapshot?.displayTime)||0):elapsed
  const timerCaption=trainingActive?'AKTIV TRENINGSØKT':'GARASJEKLOKKE'
  const dayLabel=now.toLocaleDateString('nn-NO',{weekday:'long',day:'numeric',month:'long'})
@@ -188,7 +190,7 @@ export default function Infotainment({onExit,timerSnapshot=null}){
    <button type="button" aria-pressed={activeTab==='oversikt'} className={activeTab==='oversikt'?'selected':''} onClick={()=>setActiveTab('oversikt')}><MonitorUp size={17}/> Oversikt</button>
    <button type="button" aria-pressed={activeTab==='kalender'} className={activeTab==='kalender'?'selected':''} onClick={()=>setActiveTab('kalender')}><CalendarDays size={17}/> Kalender</button>
    <button type="button" aria-pressed={activeTab==='musikk'} className={activeTab==='musikk'?'selected':''} onClick={()=>setActiveTab('musikk')}><Music2 size={17}/> Spotify</button>
-   <button type="button" aria-pressed={activeTab==='timer'} className={activeTab==='timer'?'selected':''} onClick={()=>setActiveTab('timer')}><TimerReset size={17}/> Timer</button>
+   <button type="button" aria-pressed={activeTab==='timer'} className={activeTab==='timer'?'selected':''} onClick={()=>setActiveTab('timer')}><TimerReset size={17}/> {trainingActive?'Arena':'Timer'}</button>
   </nav>
   <div className={'infotainment-grid'+(activeTab!=='oversikt'?' is-focused-tab':'')}>
    {(activeTab==='oversikt'||activeTab==='kalender')&&<section className="infotainment-panel infotainment-calendar">
@@ -202,13 +204,13 @@ export default function Infotainment({onExit,timerSnapshot=null}){
      <p className="infotainment-note">Styr musikken via den personlege Spotify-tilkoplinga di.</p>
     </section>}
     {activeTab==='musikk'&&<section className="infotainment-panel infotainment-music infotainment-music-expanded"><Music/></section>}
-    {(activeTab==='oversikt'||activeTab==='timer')&&<section className="infotainment-panel infotainment-timer">
+    {(activeTab==='oversikt'||activeTab==='timer')&&<section className={"infotainment-panel infotainment-timer"+(trainingActive&&activeTab==='timer'?' gg-arena-focused':'')}>
      <div className="infotainment-panel-head"><div><span className="infotainment-kicker">TID OG INTERVALL</span><h2><TimerReset size={19}/> Timer</h2></div><div className="infotainment-timer-head-actions"><span className={'infotainment-live '+(trainingActive?'active':'')}>{trainingActive?'TRENING PÅGÅR':'KLAR'}</span><button type="button" className="infotainment-demo-open" onClick={()=>setShowDemoClock(true)}><TimerReset size={15}/> Demoklokke</button></div></div>
-     <div className="infotainment-timer-caption">{trainingActive?(timerSnapshot?.title||'Aktiv treningsøkt'):timerCaption}</div>
+     <div className="infotainment-timer-caption">{trainingActive?(timerSnapshot?.title||'Aktiv treningsøkt'):timerCaption}</div>{trainingActive&&arenaContext&&<div className="gg-arena-context"><strong>{arenaContext.part?`Del ${arenaContext.part} av ${arenaContext.total} · ${arenaContext.title||arenaContext.format}`:arenaContext.format}</strong><small>{arenaContext.transition?'Pause / overgang':arenaContext.format+(arenaContext.round?' · Runde / intervall '+arenaContext.round:'')}</small></div>}
      <strong className="infotainment-timer-value">{clock(timerValue)}</strong>
      <div className="infotainment-timer-state">{trainingActive?(timerSnapshot?.running?'TRENING PÅGÅR':timerSnapshot?.phase||'PAUSA'):running?'STOPPEKLOKKE GÅR':'STOPPEKLOKKE PAUSA'}</div>
      {!trainingActive&&<div className="infotainment-timer-actions"><button type="button" onClick={toggleClock}>{running?<Pause size={15}/>:<Play size={15}/>} {running?'Pause':'Start'}</button><button type="button" onClick={clearClock}><RotateCcw size={15}/> Nullstill</button></div>}
-     {trainingActive&&<p className="infotainment-note">{timerSnapshot?.running?'Den aktive WOD-timeren held fram i treningsmodus.':'Treningsøkta er pausa eller ferdig i treningsmodus.'}</p>}
+     {trainingActive&&arenaContext?.next&&activeTab==='timer'&&<div className="gg-arena-next"><small>NESTE DEL</small><strong>{arenaContext.next}</strong></div>}{trainingActive&&<p className="infotainment-note">{timerSnapshot?.running?'Den aktive WOD-timeren held fram i treningsmodus.':'Treningsøkta er pausa eller ferdig i treningsmodus.'}</p>}
     </section>}
    </div>}
   </div>

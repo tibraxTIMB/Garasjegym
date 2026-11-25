@@ -147,3 +147,5 @@
 .infotainment-grid.is-focused-tab>.infotainment-side .infotainment-timer-actions button{min-height:48px}
 .infotainment-screen{padding-bottom:max(16px,env(safe-area-inset-bottom))}
 @media(max-width:680px){.infotainment-screen{gap:10px;padding:12px max(10px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}.infotainment-welcome h1{font-size:clamp(20px,6vw,30px)}.infotainment-panel{padding:12px}.infotainment-grid.is-focused-tab>.infotainment-side>.infotainment-timer{min-height:48dvh}.infotainment-tabs{top:0}.infotainment-calendar{max-height:none}}
+
+.gg-arena-context,.gg-arena-next{display:grid;gap:4px;text-align:center;color:#e4e9ed;margin:8px 0}.gg-arena-context small,.gg-arena-next small{color:#bdc7cf;font-size:13px}.gg-arena-focused .infotainment-timer-value{font-size:clamp(72px,14vw,180px)!important;line-height:1.05;font-variant-numeric:tabular-nums}.gg-arena-focused .infotainment-demo-open{display:none}.gg-arena-next{padding:10px;border-top:1px solid #ffffff23}.gg-arena-next strong{font-size:clamp(16px,3vw,26px)}
