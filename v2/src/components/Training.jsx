@@ -1,4 +1,5 @@
 import {blockScoreDefinition,explicitBlockResults} from '../lib/compositeWod.js'
+import {retrospectiveBlocks,retrospectiveScoreKind,retrospectiveBlockResults} from '../lib/retrospectiveWod.js'
 import {complexResultSummary,plannedComplexCycles,confirmWeightedComplexSets} from '../lib/wodComplexes.js'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, CalendarDays, CheckCircle2, ChevronDown, Clock3, Dumbbell, History, House, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2, Settings2, Settings, ChevronRight, Trophy, Monitor, Timer as TimerIcon, Music2, HeartPulse, Undo2, Hand, List, Volume2, VolumeX, Maximize2, Minimize2, X } from 'lucide-react'
@@ -949,6 +950,9 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const [victoryOverlay,setVictoryOverlay]=useState([])
   const resultBodyRef=useRef(null)
   const [manualEntry,setManualEntry]=useState(() => Boolean(savedDraft?.manualEntry))
+  const [manualLibraryEntry,setManualLibraryEntry]=useState(()=>Boolean(savedDraft?.manualLibraryEntry))
+  const [manualLocation,setManualLocation]=useState(()=>savedDraft?.manualLocation||'')
+  const [retroQuery,setRetroQuery]=useState('')
   const [confirmedPlannedEmom,setConfirmedPlannedEmom]=useState(()=>Boolean(savedDraft?.confirmedPlannedEmom))
   const [sessionPrepared,setSessionPrepared]=useState(() => Boolean(savedDraft?.sessionPrepared))
   const [freeEditorOpen,setFreeEditorOpen]=useState(false)
@@ -1012,7 +1016,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const [timerLaunchId, setTimerLaunchId] = useState(0)
   const loadSequence = useRef(0)
   const draftSnapshot = {
-      mode, manualEntry, sessionPrepared, source, wodLevel, classSessionId,
+      mode, manualEntry, manualLibraryEntry, manualLocation, sessionPrepared, source, wodLevel, classSessionId,
       launchLinkContext, title, workoutDate, manualWodIds, format, duration,
       durationSeconds, note, items, scoreRounds, scoreReps, blockScores, scoreTime, scoreLoad,
       scoreCalories, scoreDistance, scoreUnit, saveToken,
@@ -1024,7 +1028,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     if(pendingSave.current&&pendingSave.current!==workoutSaveFingerprint(draftSnapshot)){
       pendingSave.current=null;setSyncNotice('Resultatet er endra. Trykk Lagre økt på nytt når du er klar.')
     }
-  }, [memberId,mode,manualEntry,sessionPrepared,source,wodLevel,classSessionId,launchLinkContext,title,workoutDate,manualWodIds,format,duration,durationSeconds,note,items,scoreRounds,scoreReps,blockScores,scoreTime,scoreLoad,scoreCalories,scoreDistance,scoreUnit,saveToken,activeExerciseIndex,timerSnapshot,finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom])
+  }, [memberId,mode,manualEntry,manualLibraryEntry,manualLocation,sessionPrepared,source,wodLevel,classSessionId,launchLinkContext,title,workoutDate,manualWodIds,format,duration,durationSeconds,note,items,scoreRounds,scoreReps,blockScores,scoreTime,scoreLoad,scoreCalories,scoreDistance,scoreUnit,saveToken,activeExerciseIndex,timerSnapshot,finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom])
   useEffect(()=>{
     const retry=()=>{if(!isOffline()&&pendingSave.current&&!saveLock.current)retrySave.current?.()}
     window.addEventListener('online',retry)
@@ -1154,13 +1158,14 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
 
   useEffect(() => {
     if (!quickManualEntry || loading) return
-    if (mode === 'home') startManualWorkout()
+    if (mode === 'home') {setRetroQuery('');setMode('retro-choose')}
     else setNotice('Du har allereie ei økt open. Fullfør eller forkast henne før du etterregistrerer.')
     onQuickManualEntryConsumed?.()
   }, [quickManualEntry, loading, mode])
 
   const activeWodEngine=normalizeWodEngine(source?.timer_settings?.workout_schema||{},{format:source?.format||format})
-  const explicitScoreBlocks=activeWodEngine.blocks.filter(block=>blockScoreDefinition(block.scoreMode).value!=='auto')
+  const manualBlocks=manualLibraryEntry&&format===COMPOSITE_FORMAT?retrospectiveBlocks(source?.timer_settings?.workout_schema,activeWodEngine):[]
+  const explicitScoreBlocks=(manualLibraryEntry&&manualBlocks.length?manualBlocks:activeWodEngine.blocks).filter(block=>blockScoreDefinition(block.scoreMode).value!=='auto')
   const explicitScoreIds=new Set(explicitScoreBlocks.map(block=>block.id))
   const availableWods=wods.filter(wod=>wod.is_published&&!wod.is_archived)
   const manualWodOptions=wods.filter(wod=>!wod.is_archived)
@@ -1198,9 +1203,15 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     onDiscard?.()
   }
 
-  function startWorkout(wod = null, { autoStart = Boolean(wod), forResult = false } = {}) {
+  function startWorkout(wod = null, { autoStart = Boolean(wod), forResult = false, retrospective = false } = {}) {
     setRestoredTimerSnapshot(null)
     setManualEntry(forResult)
+    setManualLibraryEntry(retrospective)
+    setManualLocation('')
+    setFinishOpen(false)
+    setResultSummary(false)
+    setReviewedResults({})
+    setScoreLoad('');setScoreCalories('');setScoreDistance('');setScoreUnit('m')
     setConfirmedPlannedEmom(false)
     // A free session opens the same ready-to-start timer as a saved WOD.
     // Exercises and WOD blocks can be added without resetting the clock.
@@ -1218,7 +1229,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     setFormat(wod?.format || 'Fri trening')
     setDuration(String(wod?.timer_settings?.workout_schema?.duration_seconds ? Math.floor(wod.timer_settings.workout_schema.duration_seconds / 60) : (wod?.duration_minutes || 10)))
     setDurationSeconds(String(wod?.timer_settings?.workout_schema?.duration_seconds ? wod.timer_settings.workout_schema.duration_seconds % 60 : 0))
-    setNote(wod?.notes || '')
+    setNote(retrospective?'':wod?.notes || '')
     setItems([])
     setActiveExerciseIndex(0)
     setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
@@ -1231,9 +1242,9 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     if (orderedSchemaItems.length) {
       setItems(orderedSchemaItems.map((item,itemIndex) => {
         const customComplex=item.is_complex&&item.complex_family==='custom'
-        const {autoFill:fillFixedEmom,reps:prescribedReps,sets:preparedSets}=plannedFixedEmomSets(item,schema?.composite_blocks,selectedLevel,forResult&&!customComplex)
+        const {autoFill:fillFixedEmom,reps:prescribedReps,sets:preparedSets}=plannedFixedEmomSets(item,schema?.composite_blocks,selectedLevel,forResult&&!customComplex&&!retrospective)
         const standaloneReps=Number(item.levels?.[selectedLevel]?.reps ?? item.reps)
-        const standaloneSlots=(!forResult||customComplex)&&isEmomFormat(wod?.format)&&wod?.format!==COMPOSITE_FORMAT?emomPrescribedSetCount({format:wod.format,interval:schema?.interval,durationSeconds:schema?.duration_seconds,minuteSlot:item.minute_slot,exerciseIndex:itemIndex,exerciseCount:orderedSchemaItems.length}):0
+        const standaloneSlots=(!forResult||customComplex||retrospective)&&isEmomFormat(wod?.format)&&wod?.format!==COMPOSITE_FORMAT?emomPrescribedSetCount({format:wod.format,interval:schema?.interval,durationSeconds:schema?.duration_seconds,minuteSlot:item.minute_slot,exerciseIndex:itemIndex,exerciseCount:orderedSchemaItems.length}):0
         const fillStandaloneEmom=standaloneSlots>0&&Number.isInteger(standaloneReps)&&standaloneReps>0&&!item.is_rest&&item.reps_mode!=='amrap'
         const setsForResult=fillStandaloneEmom?Array.from({length:standaloneSlots},(_,i)=>preparedSets[i]||preparedSets[0]||{}):preparedSets
         const plannedReps=fillStandaloneEmom?standaloneReps:prescribedReps
@@ -1254,9 +1265,9 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         prescription_levels: item.levels || null,
         side_mode: item.side_mode || null,
         prescription_label: doseLabel(item,selectedLevel),
-        prescribed_sets_prefilled:!customComplex&&(fillFixedEmom||fillStandaloneEmom),
+        prescribed_sets_prefilled:!retrospective&&!customComplex&&(fillFixedEmom||fillStandaloneEmom),
         description: item.description || item.instructions || exercises.find(exercise=>exercise.id===item.exercise_id)?.description || '',
-        rowValue:'',rowUnit:wodRowUnit(item,'rx'),workSeconds:'',
+        rowValue:'',rowUnit:wodRowUnit(item,selectedLevel),workSeconds:'',
         equipment: item.equipment || exercises.find(exercise => exercise.id === item.exercise_id)?.equipment || '',
         uses_height: getExerciseMeasurementFlags({
           ...item,
@@ -1273,7 +1284,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           sets: item.sets || [],
         }).usesLoad,
         sets: setsForResult.length ? setsForResult.map(set => ({
-          reps: customComplex?'':(fillFixedEmom||fillStandaloneEmom) ? String(Number(set.reps)>0?set.reps:plannedReps) : clearPlannedResults ? '' : set.reps == null ? '' : String(set.reps),
+          reps: customComplex||retrospective?'':(fillFixedEmom||fillStandaloneEmom) ? String(Number(set.reps)>0?set.reps:plannedReps) : clearPlannedResults ? '' : set.reps == null ? '' : String(set.reps),
           load_kg: clearPlannedResults ? '' : customComplex ? '' : set.load_kg == null ? '' : String(set.load_kg),
           time_text: clearPlannedResults ? '' : set.tempo || '',
           time_seconds: '',
@@ -1300,6 +1311,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   function startManualWorkout(){
     setRestoredTimerSnapshot(null)
     setManualEntry(true)
+    setManualLibraryEntry(false);setManualLocation('');setScoreRounds('');setScoreReps('');setBlockScores({});setScoreTime('');setScoreLoad('');setScoreCalories('');setScoreDistance('');setScoreUnit('m');setResultSummary(false);setReviewedResults({});setConfirmedPlannedEmom(false)
     setSessionPrepared(false)
     setFreeEditorOpen(false)
     setTimerLaunchId(0);setClassSessionId(null);setLaunchLinkContext(emptyTrainingLaunchContext());setSaveToken(crypto.randomUUID());setSource(null);setWodLevel('rx')
@@ -1400,8 +1412,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     try {
       const normalizedFormat = format.toLowerCase()
       const combinationMode = source?.timer_settings?.workout_schema?.combination_mode
-      const isAmrapScore = normalizedFormat === COMPOSITE_FORMAT.toLowerCase() || normalizedFormat === 'amrap' || (['couplet','triplet'].includes(normalizedFormat) && combinationMode === 'AMRAP')
-      const isDeathByScore = normalizedFormat === 'death by' && !manualEntry
+      const isAmrapScore = (!manualLibraryEntry&&normalizedFormat === COMPOSITE_FORMAT.toLowerCase()) || normalizedFormat === 'amrap' || (['couplet','triplet'].includes(normalizedFormat) && combinationMode === 'AMRAP')
+      const isDeathByScore = normalizedFormat === 'death by' && (!manualEntry||manualLibraryEntry)
       const isLadderScore = normalizedFormat === 'ladder' && !manualEntry
       const ladderWasCompleted = isLadderScore && timerSnapshot.ladder_finished===true
       const isForTimeScore = ladderWasCompleted || ['for time','chipper'].includes(normalizedFormat) || (['couplet','triplet'].includes(normalizedFormat) && combinationMode === 'For Time')
@@ -1441,7 +1453,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         }
       }
       const explicitResults=explicitBlockResults(explicitScoreBlocks,blockScores,items)
-      const scoredBlocks=compositeScoredBlocks(timerSnapshot.block_summary||[],blockScores).map(block=>explicitScoreIds.has(block.id)?{...block,scoreMode:explicitScoreBlocks.find(part=>part.id===block.id)?.scoreMode||'auto'}:block)
+      const scoredBlocks=(manualLibraryEntry?retrospectiveBlockResults(manualBlocks,blockScores):compositeScoredBlocks(timerSnapshot.block_summary||[],blockScores)).map(block=>explicitScoreIds.has(block.id)?{...block,scoreMode:explicitScoreBlocks.find(part=>part.id===block.id)?.scoreMode||'auto'}:block)
       for(const block of scoredBlocks){
        if((block.format==='AMRAP'||(['Couplet','Triplet'].includes(block.format)&&block.combination_mode==='AMRAP'))&&(!Number.isInteger(block.roundsCompleted)||block.roundsCompleted<0||!Number.isInteger(block.extra_reps)||block.extra_reps<0))throw new Error('Registrer gyldige rundar og ekstra repetisjonar for '+block.title)
        if(!Number.isFinite(Number(block.elapsed))||Number(block.elapsed)<0)throw new Error('Ugyldig tid i '+block.title)
@@ -1449,12 +1461,12 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       const finalAmrap=scoredBlocks.filter(part=>!explicitScoreIds.has(part.id)&&(part.format==='AMRAP'||(['Couplet','Triplet'].includes(part.format)&&part.combination_mode==='AMRAP'))).slice(-1)[0]
       const effectiveScoreRounds=format===COMPOSITE_FORMAT&&finalAmrap?String(finalAmrap.roundsCompleted):isLadderScore?(scoreRounds!==''?scoreRounds:String(Number(timerSnapshot.ladder_completed_rounds)||0)):isDeathByScore?(scoreRounds!==''?scoreRounds:String(Number(timerSnapshot.death_by_completed_rounds)||0)):scoreRounds
       const effectiveScoreReps=format===COMPOSITE_FORMAT&&finalAmrap?String(finalAmrap.extra_reps):scoreReps
-      const hasRecordedScore=explicitResults.some(result=>result.value!==null)||[effectiveScoreRounds,effectiveScoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||(isAmrapScore&&Number(timerSnapshot.roundsCompleted)>0)||items.some(item=>Number(item.rowValue)>0||item.sets?.some(set=>[set.reps,set.load_kg,set.height_cm,set.time_text,set.time_seconds].some(value=>String(value??'').trim()!=='')))
+      const hasRecordedScore=(manualLibraryEntry&&scoredBlocks.length>0)||explicitResults.some(result=>result.value!==null)||[effectiveScoreRounds,effectiveScoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||(isAmrapScore&&Number(timerSnapshot.roundsCompleted)>0)||items.some(item=>Number(item.rowValue)>0||item.sets?.some(set=>[set.reps,set.load_kg,set.height_cm,set.time_text,set.time_seconds].some(value=>String(value??'').trim()!=='')))
       if(manualEntry&&!hasRecordedScore)throw new Error('Registrer minst eitt faktisk resultat – til dømes reps, kg, høgd, tid, distanse eller kaloriar – før du lagrar etterregistreringa.')
       if(classSessionId&&source?.category!=='warmup'&&!hasRecordedScore)throw new Error('Hovud-WOD må ha minst eitt registrert resultat før du kan lagra.')
       const resultData = {
-        version:3,format,combination_mode:combinationMode||null,manual_entry:manualEntry,prescription_level:wodLevel,block_results:timerSnapshot.block_results||null,block_summary:scoredBlocks.length?scoredBlocks:null,composite_breaks:timerSnapshot.composite_breaks||[],wod_engine:source?.timer_settings?.workout_schema?.wod_engine||null,wod_ids:source?.id?[source.id]:manualWodIds,wod_names:(source?.id?[source.id]:manualWodIds).map(id=>wods.find(w=>w.id===id)?.name).filter(Boolean),elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':isLadderScore&&!ladderWasCompleted?'incomplete':'completed',completed:!(isLadderScore&&!ladderWasCompleted),time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
-        completed_rounds:(isAmrapScore||isDeathByScore||isLadderScore)?(effectiveScoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(effectiveScoreRounds)):null,
+        version:3,format,combination_mode:combinationMode||null,manual_entry:manualEntry,training_location:manualEntry?manualLocation.trim()||null:null,prescription_level:wodLevel,block_results:timerSnapshot.block_results||null,block_summary:scoredBlocks.length?scoredBlocks:null,composite_breaks:timerSnapshot.composite_breaks||[],wod_engine:source?.timer_settings?.workout_schema?.wod_engine||null,wod_ids:source?.id?[source.id]:manualWodIds,wod_names:(source?.id?[source.id]:manualWodIds).map(id=>wods.find(w=>w.id===id)?.name).filter(Boolean),elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':isLadderScore&&!ladderWasCompleted?'incomplete':'completed',completed:!(isLadderScore&&!ladderWasCompleted),time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
+        completed_rounds:(isAmrapScore||isDeathByScore||isLadderScore)?(effectiveScoreRounds===''?(manualLibraryEntry?null:Number(timerSnapshot.roundsCompleted)||0):Number(effectiveScoreRounds)):null,
         death_by:isDeathByScore?{completed_rounds:Number(effectiveScoreRounds)||0,failed_round:timerSnapshot.death_by_failed_round??null,interval_seconds:timerSnapshot.death_by_interval_seconds??source?.timer_settings?.workout_schema?.ladder?.interval_seconds??60}:null,
         ladder:isLadderScore?{completed_rounds:Number(effectiveScoreRounds)||0,planned_rounds:Number(source?.timer_settings?.workout_schema?.rounds)||5,finished:ladderWasCompleted}:null,
         extra_reps:(isAmrapScore||isDeathByScore)?(effectiveScoreReps===''?0:Number(effectiveScoreReps)):null,
@@ -1471,13 +1483,13 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         member_id:memberId,save_token:saveToken,title:title.trim(),source_wod_id:source?.id||manualWodIds[0]||null,
         class_live_session_id:classSessionId||null,workout_date:workoutDate||localDateISO(),format,
         rounds:Math.max(1,(isAmrapScore||isDeathByScore||isLadderScore)?(effectiveScoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(effectiveScoreRounds)):Number(effectiveScoreRounds)||1),
-        score_rounds:(isAmrapScore||isDeathByScore||isLadderScore)?(effectiveScoreRounds===''?Number(timerSnapshot.roundsCompleted)||0:Number(effectiveScoreRounds)):effectiveScoreRounds===''?null:Number(effectiveScoreRounds),
-        score_reps:effectiveScoreReps===''?((isAmrapScore||isDeathByScore)?0:null):Number(effectiveScoreReps),
+        score_rounds:(isAmrapScore||isDeathByScore||isLadderScore)?(effectiveScoreRounds===''?(manualLibraryEntry?null:Number(timerSnapshot.roundsCompleted)||0):Number(effectiveScoreRounds)):effectiveScoreRounds===''?null:Number(effectiveScoreRounds),
+        score_reps:effectiveScoreReps===''?((isAmrapScore||isDeathByScore)&&!manualLibraryEntry?0:null):Number(effectiveScoreReps),
         score_time_seconds:parsedTime,score_load_kg:scoreLoad===''?null:Number(scoreLoad),
         score_calories:scoreCalories===''?null:Number(scoreCalories),
         score_distance:scoreDistance===''?null:Number(scoreDistance),score_unit:scoreDistance===''?null:scoreUnit,
         result_data:resultData,
-        note:[note.trim(),scoreTime?'Tid: '+scoreTime:'',manualEntry?'Manuelt etterregistrert':'',!manualEntry?`Timer: ${format} · ${clock(elapsedSeconds)} · ${timerSnapshot.phase}`:'',!manualEntry&&timerSnapshot.laps.length?'Mellomtider: '+timerSnapshot.laps.map((lap,i)=>`${i+1}: ${clock(lap)}`).join(', '):''].filter(Boolean).join('\\n')
+        note:[note.trim(),scoreTime?'Tid: '+scoreTime:'',manualEntry?'Manuelt etterregistrert':'',manualEntry&&manualLocation.trim()?'Treningsstad: '+manualLocation.trim():'',!manualEntry?`Timer: ${format} · ${clock(elapsedSeconds)} · ${timerSnapshot.phase}`:'',!manualEntry&&timerSnapshot.laps.length?'Mellomtider: '+timerSnapshot.laps.map((lap,i)=>`${i+1}: ${clock(lap)}`).join(', '):''].filter(Boolean).join('\\n')
       }
       payload.exercises=items.map((item,index)=>({
         exercise_id:item.exercise_id||null,exercise_name:item.exercise_name.trim(),sort_order:index+1,row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,
@@ -1550,7 +1562,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       <div className="engine-fields">
         <label>Namn på økta<input value={title} onChange={e => setTitle(e.target.value)} placeholder="Til dømes Styrke A" required/></label>
         <div className="training-choice-field"><span>Treningsformat</span><GarageSelect label="Treningsformat" value={format} disabled={Boolean(timerSnapshot.hasStarted)||Boolean(source&&format===COMPOSITE_FORMAT)} options={[...(isEmomFormat(format)&&format!=='EMOM'?[{value:format,label:`${emomDisplayLabel(emomIntervalSeconds(format,source?.timer_settings?.workout_schema?.interval))} · eldre WOD`}]:[]),...FORMATS.map(name=>({value:name,label:name}))]} onChange={setFormat}/>{timerSnapshot.hasStarted&&<small>Formatet er låst medan økta pågår.</small>}</div>
-        <label>Treningsdato<input type="date" value={workoutDate} max={localDateISO()} disabled={Boolean(classSessionId)} onChange={e=>setWorkoutDate(e.target.value)}/></label>
+        <label>Treningsdato<input type="date" value={workoutDate} max={localDateISO()} disabled={Boolean(classSessionId)} onChange={e=>setWorkoutDate(e.target.value)}/></label>{manualEntry&&!classSessionId&&<label>Treningsstad (valfritt)<input value={manualLocation} onChange={e=>setManualLocation(e.target.value)} placeholder="GarasjeGym, Hardingboksen eller annan stad" list="retro-locations"/><datalist id="retro-locations"><option value="GarasjeGym"/><option value="Hardingboksen"/></datalist></label>}
         {(['AMRAP','Nedteljing'].includes(format)||isEmomFormat(format)) && <label>Øktlengd (minutt)<input type="number" min="1" max="600" disabled={Boolean(timerSnapshot.hasStarted)} value={duration} onChange={e => setDuration(e.target.value)}/></label>}
       </div>
       {source?.timer_settings?.workout_schema?.library_category==='warmup'&&<section className="warmup-execution-guide" aria-label="Oppvarming i to delar"><header><span className="section-kicker">OPPVARMING · TO DELAR</span><strong>Førebu kroppen og finn arbeidsnivået</strong></header><div className="warmup-execution-columns"><article><span>1</span><div><strong>Felles oppvarming</strong><p>Gradvis spissing mot hovud-WOD sin stimulus og rørsleform.</p><ul>{items.filter(item=>item.warmup_phase!=='movement_rehearsal'&&!item.is_rest).map(item=><li key={item.key}>{item.exercise_name}</li>)}</ul></div></article><article><span>2</span><div><strong>Fri teknisk innøving</strong><p>Prøv hovudrørsla med lette vekter. Auk gradvis og finn ditt eige arbeidsnivå for WOD-en.</p><ul>{items.filter(item=>item.warmup_phase==='movement_rehearsal'&&!item.is_rest).map(item=><li key={item.key}>{item.exercise_name}</li>)}</ul></div></article></div></section>}
@@ -1561,7 +1573,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         <div className="engine-section-title"><h4>{format==='Stasjonssirkel'?'Stasjonane i økta':'WOD / øvingsrekkjefølgje'}</h4><span>{format==='Stasjonssirkel'?'Alle stasjonar – roter etter eiga startplassering':'Vel øvinga du arbeider med'}</span></div>
         <div className={format==='Stasjonssirkel'?'timer-station-grid':'wod-list'}>{items.map((item, index) => format==='Stasjonssirkel' ? <article className="timer-station-card" key={item.key}><span>STASJON {index+1}</span><strong>{item.exercise_name||'Øving'}</strong><small>{item.reps_mode==='amrap'?'AMRAP · maks reps':item.reps?item.reps+' reps':'Valfritt tal reps'}</small></article> : <button type="button" key={item.key} className={index === activeExerciseIndex ? 'secondary-button active' : 'secondary-button'} onClick={() => setActiveExerciseIndex(index)}>{index + 1}. {item.is_rest?'⏸ Pause · '+clock(Number(item.rest_duration_seconds)||30):item.exercise_name || 'Ny øving'}</button>)}</div>
       </section>}
-      {!source&&<section className="engine-section manual-wod-picker"><div className="engine-section-title"><h4>Legg til WOD i økta</h4><span>Øvingane frå WOD-en blir lagde inn i frie økta. Stoppeklokka held fram.</span></div><div className="manual-wod-picker-row"><button type="button" className="manual-wod-picker-toggle" aria-expanded={manualWodPickerOpen} onClick={()=>setManualWodPickerOpen(value=>!value)}><Search size={17}/><span>{manualWodOptions.find(wod=>wod.id===manualWodSelect)?.name||'Søk og vel WOD frå biblioteket'}</span><ChevronDown size={17}/></button><button type="button" className="secondary-button" disabled={!manualWodSelect} onClick={addManualWod}><Plus size={15}/> Legg til WOD</button></div>{manualWodPickerOpen&&<div className="manual-wod-picker-results"><label><Search size={16}/><input autoFocus value={manualWodQuery} onChange={event=>setManualWodQuery(event.target.value)} placeholder="Søk etter WOD eller format …"/></label><div className="manual-wod-picker-options">{manualWodOptions.filter(wod=>[wod.name,wod.format].some(value=>String(value||'').toLowerCase().includes(manualWodQuery.trim().toLowerCase()))).slice(0,30).map(wod=><button type="button" key={wod.id} className={manualWodSelect===wod.id?'is-selected':''} onClick={()=>{setManualWodSelect(wod.id);setManualWodPickerOpen(false)}}><strong>{wod.name}</strong><small>{wod.format} · {wod.duration_minutes||'–'} min</small></button>)}{!manualWodOptions.some(wod=>[wod.name,wod.format].some(value=>String(value||'').toLowerCase().includes(manualWodQuery.trim().toLowerCase())))&&<p>Ingen WOD-ar passar søket.</p>}</div></div>}{manualWodIds.length>0&&<div className="manual-wod-chips">{manualWodIds.map(id=>{const wod=manualWodOptions.find(item=>item.id===id);return <span key={id}>{wod?.name||'WOD'}<button type="button" aria-label={'Fjern '+(wod?.name||'WOD')} onClick={()=>{setManualWodIds(rows=>rows.filter(value=>value!==id));setItems(rows=>rows.filter(item=>item.manual_wod_id!==id))}}>×</button></span>})}</div>}</section>}
+      {!source&&!manualEntry&&<section className="engine-section manual-wod-picker"><div className="engine-section-title"><h4>Legg til WOD i økta</h4><span>Øvingane frå WOD-en blir lagde inn i frie økta. Stoppeklokka held fram.</span></div><div className="manual-wod-picker-row"><button type="button" className="manual-wod-picker-toggle" aria-expanded={manualWodPickerOpen} onClick={()=>setManualWodPickerOpen(value=>!value)}><Search size={17}/><span>{manualWodOptions.find(wod=>wod.id===manualWodSelect)?.name||'Søk og vel WOD frå biblioteket'}</span><ChevronDown size={17}/></button><button type="button" className="secondary-button" disabled={!manualWodSelect} onClick={addManualWod}><Plus size={15}/> Legg til WOD</button></div>{manualWodPickerOpen&&<div className="manual-wod-picker-results"><label><Search size={16}/><input autoFocus value={manualWodQuery} onChange={event=>setManualWodQuery(event.target.value)} placeholder="Søk etter WOD eller format …"/></label><div className="manual-wod-picker-options">{manualWodOptions.filter(wod=>[wod.name,wod.format].some(value=>String(value||'').toLowerCase().includes(manualWodQuery.trim().toLowerCase()))).slice(0,30).map(wod=><button type="button" key={wod.id} className={manualWodSelect===wod.id?'is-selected':''} onClick={()=>{setManualWodSelect(wod.id);setManualWodPickerOpen(false)}}><strong>{wod.name}</strong><small>{wod.format} · {wod.duration_minutes||'–'} min</small></button>)}{!manualWodOptions.some(wod=>[wod.name,wod.format].some(value=>String(value||'').toLowerCase().includes(manualWodQuery.trim().toLowerCase())))&&<p>Ingen WOD-ar passar søket.</p>}</div></div>}{manualWodIds.length>0&&<div className="manual-wod-chips">{manualWodIds.map(id=>{const wod=manualWodOptions.find(item=>item.id===id);return <span key={id}>{wod?.name||'WOD'}<button type="button" aria-label={'Fjern '+(wod?.name||'WOD')} onClick={()=>{setManualWodIds(rows=>rows.filter(value=>value!==id));setItems(rows=>rows.filter(item=>item.manual_wod_id!==id))}}>×</button></span>})}</div>}</section>}
       <section className="engine-section">
         <div className="engine-section-title"><h4>Øvingar og sett</h4><span>Legg inn resultat per sett</span></div>
         <div className="exercise-search"><Search size={16}/><input ref={exerciseSearchRef} value={query} onChange={e => setQuery(e.target.value)} placeholder="Søk i øvingsbiblioteket …"/></div>
@@ -1620,7 +1632,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
               </>}
             </div>
           </section>:<>
-          <p className="workout-finish-help">Tid og rundar frå klokka er med automatisk. Trykk på ei øving for å kontrollera eller korrigera. Du hast Rekord! blir kontrollert ved lagring av stadfesta løft.</p>
+          <p className="workout-finish-help">{manualEntry?'Registrer berre resultat du faktisk oppnådde. Tomme felt blir ikkje rekna som gjennomførte sett.':'Tid og rundar frå klokka er med automatisk. Trykk på ei øving for å kontrollera eller korrigera.'} Rekordar blir kontrollert ved lagring av stadfesta løft.</p>
           {items.length>0&&<section className="gg-result-review-list gg-result-review-detailed" aria-label="Kontroller øvingar"><div className="gg-result-review-heading"><strong>Samla øvingsresultat</strong><small>{unregisteredCount?unregisteredCount+' av '+items.length+' manglar eller må kontrollerast':'Alle øvingar gjennomgått'}</small></div>{items.map((item,index)=>{const r=resultReviews[index],block=timerSnapshot.block_summary?.find(b=>b.id===item.block_id);return <button type="button" key={item.key} className={'gg-result-row '+r.status} onClick={()=>selectResult(index)}><span className="gg-result-status-dot" aria-hidden="true">{['recorded','planned'].includes(r.status)?'✓':r.status==='rest'?'–':'!'}</span><span className="gg-result-row-text"><strong>{index+1}. {item.exercise_name||'Øving'}</strong>{block&&<small className="gg-result-block-name">{block.title||block.format}</small>}<small>{r.summary}</small></span><span className="gg-result-row-state">{r.label}</span><ChevronRight size={16}/></button>})}</section>}
           {pendingWeightItems.length>0&&<p className="gg-result-weight-warning">Nokre sett manglar vekt. Trykk på øvinga for å fylla inn kg, eller lagra utan vekta dersom ho ikkje skal registrerast.</p>}
           <div className="workout-finish-summary">
@@ -1630,8 +1642,9 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
             {timerSnapshot.roundsCompleted>0&&<div><span>RUNDER</span><strong>{timerSnapshot.roundsCompleted}</strong></div>}
           </div>
           {explicitScoreBlocks.some(block=>!['none','load'].includes(block.scoreMode))&&<section className="gg-composite-result-review" aria-label="Programmerte hovudresultat"><h4>Hovudresultat per del</h4><p>Registrer berre faktiske resultat. Tomme felt blir ikkje registrerte som nullprestasjon.</p>{explicitScoreBlocks.filter(block=>!['none','load'].includes(block.scoreMode)).map(block=>{const definition=blockScoreDefinition(block.scoreMode);const value=blockScores[block.id]?.primary??'';const change=primary=>setBlockScores(old=>({...old,[block.id]:{...old[block.id],primary}}));return <article key={block.id}><strong>{block.title}</strong>{definition.value==='none'?<small>Ingen score</small>:definition.value==='load'?<small>Tyngste godkjende kompleks blir henta frå registrerte komplekssyklusar i denne delen.</small>:definition.value==='completion'?<label>Gjennomføring<select value={value} onChange={e=>change(e.target.value)}><option value="">Ikkje registrert</option><option value="complete">Gjennomført</option><option value="partial">Delvis</option><option value="failed">Ikkje gjennomført</option></select></label>:<label>{definition.label} ({definition.unit})<input type="number" min="0" step={definition.value==='distance'?'any':'1'} inputMode="decimal" value={value} onChange={e=>change(e.target.value)} placeholder="Ikkje registrert"/></label>}</article>})}</section>}
-          {format===COMPOSITE_FORMAT&&timerSnapshot.block_summary?.some(block=>!explicitScoreIds.has(block.id))&&<section className="gg-composite-result-review" aria-label="Resultat per øktdel"><h4>Resultat per del</h4><p>Klokka har lagra deltidene. Kontroller AMRAP-rundar og ekstra reps før du lagrar.</p>{timerSnapshot.block_summary.filter(block=>!explicitScoreIds.has(block.id)).map((block,index)=><article key={block.id||index}><div><strong>{index+1}. {block.title||block.format}</strong><small>{block.format} · {clock(Number(block.elapsed)||0)} · {block.completed?'Fullført':'Ikkje fullført'}</small></div>{(block.format==='AMRAP'||(['Couplet','Triplet'].includes(block.format)&&block.combination_mode==='AMRAP'))&&<div className="gg-composite-score-fields"><label>Rundar<input type="number" min="0" step="1" value={blockScores[block.id]?.rounds??String(block.roundsCompleted||0)} onChange={e=>setBlockScores(v=>({...v,[block.id]:{...v[block.id],rounds:e.target.value}}))}/></label><label>Ekstra reps<input type="number" min="0" step="1" value={blockScores[block.id]?.extraReps??'0'} onChange={e=>setBlockScores(v=>({...v,[block.id]:{...v[block.id],extraReps:e.target.value}}))}/></label></div>}{['Death By','Ladder'].includes(block.format)&&<label>{block.format==='Death By'?'Fullførte intervall':'Fullførte stigetrinn'}<input type="number" min="0" step="1" value={blockScores[block.id]?.rounds??String(block.format==='Death By'?block.death_by_completed_rounds??block.roundsCompleted??0:block.ladder_completed_rounds??block.roundsCompleted??0)} onChange={e=>setBlockScores(v=>({...v,[block.id]:{...v[block.id],rounds:e.target.value}}))}/></label>}{(['For Time','Chipper','Ladder'].includes(block.format)||(['Couplet','Triplet'].includes(block.format)&&block.combination_mode!=='AMRAP'&&block.combination_mode!=='Open'))&&<label>Registrert sluttid (mm:ss)<input value={blockScores[block.id]?.time??clock(Number(block.elapsed)||0)} onChange={e=>setBlockScores(v=>({...v,[block.id]:{...v[block.id],time:e.target.value}}))} placeholder="mm:ss"/></label>}</article>)}</section>}
-          <section className="workout-finish-results"><h4>Kontroller resultatet</h4><p>Resultat frå klokka er med. Fyll berre inn eller korriger det du treng før du lagrar.</p>
+          {manualLibraryEntry&&manualBlocks.some(b=>['rounds','steps','time'].includes(retrospectiveScoreKind(b)))&&<section className="gg-composite-result-review"><h4>Resultat per del</h4><p>Oppgi faktiske resultat. Stadfest fullføring berre når delen vart gjennomført etter oppsettet.</p>{manualBlocks.filter(b=>['rounds','steps','time'].includes(retrospectiveScoreKind(b))).map(b=>{const kind=retrospectiveScoreKind(b),v=blockScores[b.id]||{},change=patch=>setBlockScores(old=>({...old,[b.id]:{...old[b.id],...patch}}));return <article key={b.id}><strong>{b.title||b.format}</strong>{kind==='time'?<label>Sluttid (mm:ss)<input value={v.time??''} placeholder="Ikkje registrert" onChange={e=>change({time:e.target.value})}/></label>:<div className="gg-composite-score-fields"><label>{kind==='steps'?'Fullførte trinn':'Rundar'}<input type="number" min="0" step="1" value={v.rounds??''} placeholder="–" onChange={e=>change({rounds:e.target.value})}/></label>{kind==='rounds'&&<label>Ekstra reps<input type="number" min="0" step="1" value={v.extraReps??''} placeholder="–" onChange={e=>change({extraReps:e.target.value})}/></label>}</div>}<label><input type="checkbox" checked={v.completed===true} onChange={e=>change({completed:e.target.checked})}/> Fullført etter oppsettet</label></article>})}</section>}
+          {!manualLibraryEntry&&format===COMPOSITE_FORMAT&&timerSnapshot.block_summary?.some(block=>!explicitScoreIds.has(block.id))&&<section className="gg-composite-result-review" aria-label="Resultat per øktdel"><h4>Resultat per del</h4><p>Klokka har lagra deltidene. Kontroller AMRAP-rundar og ekstra reps før du lagrar.</p>{timerSnapshot.block_summary.filter(block=>!explicitScoreIds.has(block.id)).map((block,index)=><article key={block.id||index}><div><strong>{index+1}. {block.title||block.format}</strong><small>{block.format} · {clock(Number(block.elapsed)||0)} · {block.completed?'Fullført':'Ikkje fullført'}</small></div>{(block.format==='AMRAP'||(['Couplet','Triplet'].includes(block.format)&&block.combination_mode==='AMRAP'))&&<div className="gg-composite-score-fields"><label>Rundar<input type="number" min="0" step="1" value={blockScores[block.id]?.rounds??String(block.roundsCompleted||0)} onChange={e=>setBlockScores(v=>({...v,[block.id]:{...v[block.id],rounds:e.target.value}}))}/></label><label>Ekstra reps<input type="number" min="0" step="1" value={blockScores[block.id]?.extraReps??'0'} onChange={e=>setBlockScores(v=>({...v,[block.id]:{...v[block.id],extraReps:e.target.value}}))}/></label></div>}{['Death By','Ladder'].includes(block.format)&&<label>{block.format==='Death By'?'Fullførte intervall':'Fullførte stigetrinn'}<input type="number" min="0" step="1" value={blockScores[block.id]?.rounds??String(block.format==='Death By'?block.death_by_completed_rounds??block.roundsCompleted??0:block.ladder_completed_rounds??block.roundsCompleted??0)} onChange={e=>setBlockScores(v=>({...v,[block.id]:{...v[block.id],rounds:e.target.value}}))}/></label>}{(['For Time','Chipper','Ladder'].includes(block.format)||(['Couplet','Triplet'].includes(block.format)&&block.combination_mode!=='AMRAP'&&block.combination_mode!=='Open'))&&<label>Registrert sluttid (mm:ss)<input value={blockScores[block.id]?.time??clock(Number(block.elapsed)||0)} onChange={e=>setBlockScores(v=>({...v,[block.id]:{...v[block.id],time:e.target.value}}))} placeholder="mm:ss"/></label>}</article>)}</section>}
+          <section className="workout-finish-results"><h4>Kontroller resultatet</h4><p>{manualEntry?'Fyll inn det du faktisk gjennomførte.':'Resultat frå klokka er med. Fyll berre inn eller korriger det du treng før du lagrar.'}</p>
             <div className="engine-fields three">
               {format==='Ladder'&&<div className="workout-result-death-by"><strong>{timerSnapshot.ladder_completed_rounds??0} stigetrinn fullførte</strong><small>{timerSnapshot.ladder_finished?'Heile Ladder-opplegget er fullført. Tida blir lagra automatisk.':'Avslutta før alle stigetrinn var fullførte. Dette blir ikkje rekna som ein For Time-PR.'}</small><label>Korriger fullførte trinn<input type="number" min="0" step="1" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder={String(timerSnapshot.ladder_completed_rounds??0)}/></label></div>}
               {format==='Death By'&&<div className="workout-result-death-by"><strong>{timerSnapshot.death_by_completed_rounds??0} førebelse rundar</strong><small>{timerSnapshot.death_by_failed_round?`Stoppa i runde ${timerSnapshot.death_by_failed_round}`:'Klokka går automatisk vidare. Kontroller faktisk fullførte rundar før lagring'}</small><label>Korriger fullførte rundar<input type="number" min="0" step="1" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder={String(timerSnapshot.death_by_completed_rounds??0)}/></label><label>Ekstra reps<input type="number" min="0" step="1" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="0"/></label></div>}
@@ -1640,7 +1653,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
               {['Strength','Pyramid','Superset','Complex'].includes(format)&&<label>Tungaste løft (kg)<input type="number" min="0" step="0.5" value={scoreLoad} onChange={e=>setScoreLoad(e.target.value)} placeholder="Valfritt"/></label>}
               {['Row Intervals','Intervall','Tabata'].includes(format)&&<><label>Kaloriar<input type="number" min="0" step="0.1" value={scoreCalories} onChange={e=>setScoreCalories(e.target.value)} placeholder="Totalt"/></label><label>Avstand<input type="number" min="0" step="1" value={scoreDistance} onChange={e=>setScoreDistance(e.target.value)} placeholder="Total distanse"/></label><div className="training-choice-field"><span>Eining</span><GarageSelect label="Eining for avstand" value={scoreUnit} options={RESULT_UNITS.filter(option=>option.value==='m'||option.value==='km')} onChange={setScoreUnit}/></div></>}
               {(isEmomFormat(format)||format==='Stasjonssirkel')&&<p className="workout-finish-help">Klokka har registrert {timerSnapshot.roundsCompleted||0} fullførte {isEmomFormat(format)?'EMOM-intervall':'stasjonsrundar'}. Du skal ikkje skriva inn total tid eller rundar ein gong til. Kontroller berre aktuelle sett og vekter ovanfor.</p>}
-              {!isEmomFormat(format)&&!['Stasjonssirkel','AMRAP','Death By','Ladder','For Time','Chipper','Couplet','Triplet','Strength','Pyramid','Superset','Complex','Row Intervals','Intervall','Tabata'].includes(format)&&<><label>Rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder="–"/></label><label>Reps<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="–"/></label><label>Tid / sluttid<input value={scoreTime} onChange={e=>setScoreTime(e.target.value)} placeholder="mm:ss"/></label></>}
+              {!isEmomFormat(format)&&!['Stasjonssirkel','AMRAP','Death By','Ladder','For Time','Chipper','Couplet','Triplet','Strength','Pyramid','Superset','Complex','Row Intervals','Intervall','Tabata',COMPOSITE_FORMAT].includes(format)&&<><label>Rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder="–"/></label><label>Reps<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="–"/></label><label>Tid / sluttid<input value={scoreTime} onChange={e=>setScoreTime(e.target.value)} placeholder="mm:ss"/></label></>}
             </div>
             <label className="engine-note">Notat<textarea value={note} onChange={e=>setNote(e.target.value)} rows="2" placeholder="Kommentar eller dagsform …"/></label>
           </section>
@@ -1655,7 +1668,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         </section>
       </div>}
     </form> : <>
-      {mode==='choose' ? <section className="training-choose-hub">
+      {mode==='retro-choose'||mode==='retro-library'?<section className="training-choose-hub"><button type="button" className="text-button" onClick={()=>setMode(mode==='retro-library'?'retro-choose':'home')}>← Tilbake</button><div className="training-heading"><div><span className="section-kicker">ETTERREGISTRERING</span><h3>{mode==='retro-choose'?'Kva har du trena?':'Vel WOD frå biblioteket'}</h3><p>Registrer ei gjennomført økt utan timer.</p></div></div>{mode==='retro-choose'?<div className="training-choose-links"><button type="button" onClick={()=>{setRetroQuery('');setMode('retro-library')}}><List size={22}/><span><strong>WOD frå biblioteket</strong><small>Behald format, øktdelar og dosering</small></span><ChevronRight size={18}/></button><button type="button" onClick={startManualWorkout}><Dumbbell size={22}/><span><strong>Fri trening</strong><small>Registrer eigne øvingar, sett og repetisjonar</small></span><ChevronRight size={18}/></button></div>:<><label className="wod-search"><Search size={17}/><input value={retroQuery} onChange={e=>setRetroQuery(e.target.value)} placeholder="Søk etter WOD …"/></label><div className="training-choose-links">{manualWodOptions.filter(w=>[w.name,w.format].some(v=>String(v||'').toLowerCase().includes(retroQuery.trim().toLowerCase()))).map(w=><button type="button" key={w.id} onClick={()=>startWorkout(w,{autoStart:false,forResult:true,retrospective:true})}><List size={20}/><span><strong>{w.name}</strong><small>{w.format} · {w.duration_minutes||'–'} min</small></span><ChevronRight size={18}/></button>)}{!manualWodOptions.some(w=>[w.name,w.format].some(v=>String(v||'').toLowerCase().includes(retroQuery.trim().toLowerCase())))&&<p>Ingen WOD-ar passar søket.</p>}</div></>}</section>:mode==='choose' ? <section className="training-choose-hub">
         <button type="button" className="text-button" onClick={()=>setMode('home')}>← Tilbake til ØKT</button>
         <div className="training-heading"><div><span className="section-kicker">TRENING · OPPLEGG</span><h3>Vel WOD eller opplegg</h3><p>Alle vegar fører til den same treningsklokka.</p></div></div>
         <div className="training-choose-links">
@@ -1672,7 +1685,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           <button type="button" onClick={()=>startWorkout(null,{autoStart:false})}><Dumbbell size={23}/><span><strong>Fri trening</strong><small>Start eiga økt</small></span><ChevronRight size={18}/></button>
           <button type="button" onClick={()=>onOpenTrainingPlan()}><CalendarDays size={23}/><span><strong>Tildelte økter</strong><small>Treningsplan og PT</small></span><ChevronRight size={18}/></button>
           <button type="button" onClick={()=>onOpenSchedule()}><Clock3 size={23}/><span><strong>Timeplan</strong><small>PT og gruppetimar</small></span><ChevronRight size={18}/></button>
-          <button type="button" className="training-afterregister-link" onClick={startManualWorkout}><History size={23}/><span><strong>Etterregistrering</strong><small>Registrer ei gjennomført økt</small></span><ChevronRight size={18}/></button>
+          <button type="button" className="training-afterregister-link" onClick={()=>{setRetroQuery('');setMode('retro-choose')}}><History size={23}/><span><strong>Etterregistrering</strong><small>Registrer ei gjennomført økt</small></span><ChevronRight size={18}/></button>
         </div>
         <div className="gg-training-home-shortcuts" aria-label="Snarvegar til Mi side">
           <button type="button" onClick={()=>onOpenHistory()}><History size={19}/><strong>Treningslogg</strong><ChevronRight size={16}/></button>
