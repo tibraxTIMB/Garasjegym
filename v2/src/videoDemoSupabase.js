@@ -2,7 +2,9 @@
 // imported by the production app. No requests to Supabase are made here.
 const now = new Date()
 const future = new Date(now.getTime() + 86400000 * 3).toISOString()
-const currentDemoId = () => new URLSearchParams(location.search).get('scenario') === 'maintenance' ? 'demo-admin' : 'demo-member'
+const scenario = () => new URLSearchParams(location.search).get('scenario') || ''
+const isAudit = () => scenario().startsWith('audit')
+const currentDemoId = () => ['maintenance','audit-admin'].includes(scenario()) ? 'demo-admin' : 'demo-member'
 
 let maintenanceLogs = []
 let requests = []
@@ -31,7 +33,9 @@ function rowsFor(table) {
     case 'wod_favorites': case 'wod_daily_schedules': case 'exercise_favorites': return []
     case 'classes': return [{id:'demo-class',title:'Garasjesirkel (døme)',type:'Gruppetime',starts_at:future,duration_minutes:45,capacity:6,published:true,cancelled_at:null,description:'Ei fellesøkt med roing, styrke og mobilitet.',workout_text:'45 min trening',wod_ids:[]}]
     case 'class_bookings': return bookings
-    case 'profiles': return [{id:'demo-admin',display_name:'Demo-eigar',role:'admin',active:true}]
+    case 'profiles': return [{id:'demo-admin',display_name:'Demo-eigar',role:'admin',active:true,membership_status:'approved'},...(isAudit()?[{id:'demo-member',display_name:'Demomedlem med eit langt visningsnamn',role:'member',active:true,membership_status:'approved'}]:[])]
+    case 'pt_programs': return isAudit()?[{id:'audit-plan',client_id:'demo-member',title:'Introkurs med eit ekstra langt programnamn',description:'Seks veker med styrke og teknikk.',status:'active',weeks:6,archived_at:null,flow_unlock_mode:'sequence'}]:[]
+    case 'pt_program_sessions': return isAudit()?[1,2,3,4,5,6].map(n=>({id:'audit-session-'+n,program_id:'audit-plan',sequence_no:n,week_no:n,day_no:1,title:'Økt '+n+' – Alternating Dumbbell Push Jerk og grunnrørsler',status:'planned',session_kind:'training',estimated_minutes:35,focus_area:'Teknikk og styrke',coach_note:'Lett belastning.',wod_id:'demo-wod',archived_at:null,flow_requires_approval:true,flow_approved:false,flow_override:false})):[]
     case 'workout_logs': case 'personal_records': case 'exercises': case 'class_live_sessions': return []
     default: return []
   }
@@ -44,6 +48,9 @@ function query(table) {
   const self = {
     select() { return self },
     eq(column,value) { filters.push(row=>row[column]===value); return self },
+    neq(column,value) { filters.push(row=>row[column]!==value); return self },
+    lte(column,value) { filters.push(row=>row[column]<=value); return self },
+    range() { return self },
     is(column,value) { filters.push(row=>row[column]===value); return self },
     in(column,values) { filters.push(row=>values.includes(row[column])); return self },
     gte(column,value) { filters.push(row=>row[column]>=value); return self },
