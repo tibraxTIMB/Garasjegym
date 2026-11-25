@@ -10,3 +10,10 @@ test('previous result excludes wrong ID, missing values and unrecorded exercise'
 test('muscle map is conservative, no invented mapping of unknown movements or pause',()=>{const p=muscleProfile([{name:'Bench press'},{name:'Deadlift'},{name:'Unknown movement'},{name:'Pause',is_rest:true}]);assert.equal(p.known,2);assert.equal(p.total,3);assert.ok(p.primary.includes('chest'));assert.ok(p.primary.includes('hamstrings'));assert.ok(!p.secondary.includes('chest'))})
 
 test('WOD item identifiers are not exercise identifiers',()=>{assert.equal(previousExerciseResult([{workout_date:'2026-11-01',workout_exercises:[{exercise_id:'exercise',exercise_name:'Bench press',workout_sets:[{reps:4,load_kg:45}]}]}],{id:'wod-item',name:'Bench press'}).summary,'4 reps × 45 kg')})
+
+test('muscle map classifies specific variants and each complex step, without false chest on handstand push-up',()=>{
+ const hspu=muscleProfile([{name:'Handstand Push-up'}]);assert.deepEqual(hspu.primary,['shoulders']);assert.ok(!hspu.primary.includes('chest'))
+ const complex=muscleProfile([{exercise_name:'2 PC + 1 PJ',complex_steps:[{exercise_id:'pc',name:'Power Clean',reps:2},{exercise_id:'pj',name:'Push Jerk',reps:1}]}]);assert.equal(complex.total,2);assert.equal(complex.known,2);assert.ok(complex.primary.includes('quads'));assert.ok(complex.primary.includes('shoulders'))
+ const mixed=muscleProfile([{name:'Row'},{name:'KB Swing'},{name:'Burpee over barbell'},{name:'Unknown movement'}]);assert.equal(mixed.known,3);assert.equal(mixed.total,4);assert.ok(mixed.primary.includes('back'));assert.ok(mixed.primary.includes('glutes'))
+ assert.equal(muscleProfile([{name:'Barbell Row'}]).primary[0],'back')
+})
