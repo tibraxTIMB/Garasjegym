@@ -1,0 +1,28 @@
+/* Architect – existing builder state, shared card vocabulary, no duplicate editor. */
+.gg-architect .gg-architect-overview{display:grid;gap:7px;min-width:0;margin:8px 0;padding:9px;border:1px solid #39484f;border-radius:12px;background:var(--panel,#1b252a)}
+.gg-architect-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:7px;min-width:0}
+.gg-architect-heading label{display:grid;gap:3px;min-width:0;font-size:11px;color:var(--muted,#b4c0c6)}
+.gg-architect-heading input{width:100%;min-width:0;box-sizing:border-box;font-weight:700;font-size:16px}
+.gg-architect-heading button{min-height:44px;white-space:nowrap;padding:8px 12px}
+.gg-architect-scope{color:#eab25e;font-size:12px;overflow-wrap:anywhere}
+.gg-architect-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;min-width:0}
+.gg-architect-meta>span{flex:1 1 100%;color:var(--muted,#b4c0c6)}
+.gg-architect-meta button{min-height:36px;padding:4px 8px!important;font-size:12px}
+.gg-architect-parts{display:flex;gap:5px;overflow-x:auto;max-width:100%;padding:2px;scrollbar-width:thin;position:sticky;top:0;z-index:8;background:var(--panel,#1b252a)}
+.gg-architect-parts button{display:grid;gap:2px;min-width:84px;max-width:148px;flex:1 0 84px;text-align:left;border:1px solid #3f4f56;border-left:3px solid var(--arch-tone,#8f9ca4);border-radius:8px;padding:6px 8px;background:#1a2429;color:inherit;white-space:normal;overflow-wrap:anywhere}
+.gg-architect-parts button.active{border-color:var(--arch-tone,#eab25e);background:#29343a}
+.gg-architect-parts b{color:var(--arch-tone,#eab25e);font-size:13px}.gg-architect-parts span{font-size:12px;font-weight:700}.gg-architect-parts small{font-size:10px;color:var(--muted,#b4c0c6)}
+.gg-arch-tone-warmup{--arch-tone:#65bbcf}.gg-arch-tone-amrap{--arch-tone:#76bf94}.gg-arch-tone-emom{--arch-tone:#e3a653}.gg-arch-tone-strength{--arch-tone:#e3a653}.gg-arch-tone-interval{--arch-tone:#b69adf}.gg-arch-tone-time{--arch-tone:#e79292}
+.gg-architect-levels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}.gg-architect-levels button{min-height:34px;min-width:0;font-size:11px;padding:4px 2px;white-space:normal}.gg-architect-levels button[aria-pressed=true]{border-color:#eab25e;color:#eab25e}
+.gg-architect-map{min-width:0;font-size:12px}.gg-architect-map summary{padding:6px;cursor:pointer;color:#d0d9dd}.gg-architect-map>section{border-left:3px solid var(--arch-tone,#83949b);padding:5px 4px;margin:5px 0}
+.gg-architect-map-row,.gg-architect-part-head{display:flex;align-items:center;justify-content:space-between;gap:7px;width:100%;min-width:0;text-align:left;border:0;background:transparent;color:inherit;padding:7px 5px;min-height:38px;white-space:normal;overflow-wrap:anywhere}
+.gg-architect-part-head{color:var(--arch-tone,#d3dce1);flex-wrap:wrap}.gg-architect-map-row strong{flex:1;min-width:0;font-size:12px}.gg-architect-map-row span{font-size:11px;max-width:55%;text-align:right;color:#b4c0c6}.gg-architect-map-row.has-issue span,.gg-architect-error{color:#ffb4a7}.gg-architect-error{display:block;padding:4px 8px;font-size:12px}
+.gg-architect .gg-architect-part-settings,.gg-architect .wizard-dose-stage{min-width:0;padding:5px!important;margin:0!important;border:0!important;background:transparent!important}
+.gg-architect .gg-composite-editor{padding:7px!important;min-width:0}.gg-architect .gg-composite-editor>p,.gg-architect .gg-composite-editor>.engine-section-title,.gg-architect .wod-order-feedback,.gg-architect .wizard-dose-summary-note{display:none}
+.gg-architect .gg-composite-block{padding:6px!important;min-width:0}.gg-architect .gg-composite-block>summary{cursor:pointer;font-size:13px;font-weight:700}
+.gg-architect .wizard-dose-intro{padding:4px!important;margin:0!important;min-width:0}.gg-architect .wizard-dose-intro h3{font-size:15px;margin:0}
+.gg-architect .wizard-dose-card{min-width:0;padding:4px!important}.gg-architect .gg-dose-card-bar{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:3px;min-width:0}.gg-architect .wizard-dose-card-head{display:grid!important;grid-template-columns:22px minmax(0,1fr) auto;gap:4px!important;padding:4px!important;min-width:0;align-items:center;text-align:left}
+.gg-architect .wizard-dose-card-head strong{grid-column:2;min-width:0;overflow-wrap:anywhere;white-space:normal;font-size:13px}.gg-architect .wizard-dose-card-summary{grid-column:2;grid-row:2;display:block!important;font-size:11px;overflow-wrap:anywhere;white-space:normal;text-align:left}.gg-architect .wizard-dose-card-head>span:last-child{grid-column:3;grid-row:1/3}.gg-architect .gg-reorder-buttons{gap:3px}.gg-architect .gg-reorder-buttons button{min-width:32px!important;width:32px!important;min-height:36px!important;height:36px!important;padding:2px!important}
+.gg-architect .gg-architect-sets{display:grid;gap:4px;max-width:160px}.gg-architect .wizard-dose-card-body{min-width:0}.gg-architect .gg-architect-legacy-preview{display:none!important}.gg-architect .wod-builder-layout{grid-template-columns:minmax(0,1fr)!important}
+.gg-architect .gg-participation-section{padding:6px!important}.gg-architect .gg-participation-section>summary{font-weight:650;cursor:pointer}
+@media(min-width:900px) and (orientation:landscape){.gg-architect .gg-architect-overview{grid-template-columns:minmax(0,1fr);}.gg-architect .gg-architect-parts{position:sticky;top:0}}
