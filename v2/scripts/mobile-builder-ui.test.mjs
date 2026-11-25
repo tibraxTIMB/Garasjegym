@@ -312,3 +312,16 @@ test('discard is visible at every result step and never submits the workout',()=
  assert.match(timer,/if \(saving \|\| saveLock\.current \|\| !window\.confirm\('Forkasta denne økta utan å lagra/)
  assert.match(style,/\.gg-result-footer \.gg-result-discard\{width:100%;min-height:44px/)
 })
+
+
+test('FLOW groups ordinary sets onto one numeric result page per workout part',()=>{
+ const timer=source('../src/components/Training.jsx'),style=source('../src/styles/mobile/experience-system.css')
+ assert.match(timer,/const resultPages=source\?items\.reduce/)
+ assert.match(timer,/aria-label="Alle sett i denne delen"/)
+ assert.match(timer,/resultGroupIndices\.map\(index=>/)
+ assert.match(timer,/item\.sets\.map\(\(set,setIndex\)=>/)
+ assert.match(timer,/inputMode=\{keyboard\}/)
+ assert.match(timer,/markGridSet\(item,setIndex\)/)
+ assert.match(timer,/resultPages\[resultPageIndex\+1\]/)
+ assert.match(style,/\.gg-flow-grid-row input,\.gg-flow-grid-erg input\{min-height:48px/)
+})
