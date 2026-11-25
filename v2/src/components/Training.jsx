@@ -1,4 +1,4 @@
-import {flowItemGroup,clearFlowItem,emptyFlowSet,flowCompletionRows} from '../lib/workoutFlow.js'
+import {flowItemGroup,flowBlockForItem,clearFlowItem,emptyFlowSet,flowCompletionRows,flowReporting,hasMeasuredFlowSet} from '../lib/workoutFlow.js'
 import {blockScoreDefinition,explicitBlockResults} from '../lib/compositeWod.js'
 import {retrospectiveBlocks,retrospectiveScoreKind,retrospectiveBlockResults,hasManualEntryChanges} from '../lib/retrospectiveWod.js'
 import {complexResultSummary,plannedComplexCycles,confirmWeightedComplexSets} from '../lib/wodComplexes.js'
@@ -947,8 +947,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const [victoryOverlay,setVictoryOverlay]=useState([])
   const resultBodyRef=useRef(null)
   const resultTouch=useRef(null)
-  const [resultSetIndex,setResultSetIndex]=useState(0)
-  const [flowDetailed,setFlowDetailed]=useState(false)
+  const [resultSetIndex,setResultSetIndex]=useState(()=>Number(savedDraft?.resultSetIndex)||0)
+  const [flowDetailed,setFlowDetailed]=useState(()=>Boolean(savedDraft?.flowDetailed))
   const [manualEntry,setManualEntry]=useState(() => Boolean(savedDraft?.manualEntry))
   const [manualLibraryEntry,setManualLibraryEntry]=useState(()=>Boolean(savedDraft?.manualLibraryEntry))
   const [manualLocation,setManualLocation]=useState(()=>savedDraft?.manualLocation||'')
@@ -990,10 +990,12 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const resultItem=items[activeExerciseIndex]
   const flowSchema=source?.timer_settings?.workout_schema||{}
   const resultGroup=resultItem?flowItemGroup(resultItem,flowSchema,format):null
+  const resultBlock=resultItem?flowBlockForItem(resultItem,flowSchema,format):null
   const resultGroupIndices=resultGroup?items.map((item,index)=>flowItemGroup(item,flowSchema,format).id===resultGroup.id?index:-1).filter(index=>index>=0):[]
   const flowCompact=Boolean(source)&&!flowDetailed&&resultGroup&&resultGroup.reporting!=='sets'
   const flowRecorded=flowCompletionRows(blockScores)
   const flowSessionStatus=blockScores.__flow_session?.status||''
+  const flowCompletionOnly=Boolean(source)&&format!==COMPOSITE_FORMAT&&items.length>0&&items.every(item=>flowItemGroup(item,flowSchema,format).reporting==='done')
   const customComplexResult=resultItem?.is_complex&&resultItem?.complex_family==='custom'
   const entered=value=>value!==null&&value!==undefined&&String(value).trim()!==''
   const missingLoad=item=>!item?.is_rest&&item?.uses_load?(item.sets||[]).filter(set=>entered(set.reps)&&Number(set.reps)>0&&!entered(set.load_kg)).length:0
@@ -1006,18 +1008,18 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   function markFlowGroup(status){
     if(!resultGroup||saving||saveLock.current)return
     const keys=new Set(resultGroupIndices.map(index=>items[index].key))
-    if(status==='done'&&items.some(item=>keys.has(item.key)&&!item.prescribed_sets_prefilled&&(item.sets||[]).some(set=>[set.load_kg,set.reps,set.height_cm,set.time_seconds].some(entered)))&&!window.confirm('Registrera berre utført for denne delen og fjern dei innskrivne måleresultata?'))return
-    setBlockScores(old=>({...old,['flow:'+resultGroup.id]:{status,title:resultGroup.title}}))
+    if(items.some(item=>keys.has(item.key)&&(entered(item.rowValue)||(item.sets||[]).some(set=>hasMeasuredFlowSet(set,item.prescribed_sets_prefilled))))&&!window.confirm('Registrera berre utført for denne delen og fjern dei innskrivne måleresultata?'))return
+    setBlockScores(old=>({...old,[resultGroup.id]:resultBlock?.scoreMode==='completion'?{primary:status==='done'?'complete':status==='partial'?'partial':'failed'}:{},['flow:'+resultGroup.id]:{status,title:resultGroup.title}}))
     setItems(old=>old.map(item=>keys.has(item.key)?clearFlowItem(item):item))
     setReviewedResults(old=>({...old,...Object.fromEntries([...keys].map(key=>[key,true]))}));nextFlowGroup()
   }
   function moveResult(delta){if(saving||resultSummary||!resultItem)return;if(delta>0){nextResult();return}if(resultSetIndex>0){setResultSetIndex(n=>n-1);return}if(activeExerciseIndex>0){const previous=activeExerciseIndex-1;selectResult(previous);if(flowItemGroup(items[previous],flowSchema,format).reporting==='sets')setResultSetIndex(Math.max(0,items[previous].sets.length-1))}}
-  function markFlowSet(){if(!resultItem||saving)return;const set=resultItem.sets[resultSetIndex];if(!set)return;if([set.load_kg,set.reps,set.height_cm,set.time_seconds].some(entered)&&!resultItem.prescribed_sets_prefilled&&!window.confirm('Fjern måleresultatet for dette settet og marker berre utført?'))return;updateSet(resultItem.key,resultSetIndex,{...emptyFlowSet(set),flow_status:'done'});nextResult()}
+  function markFlowSet(){if(!resultItem||saving)return;const set=resultItem.sets[resultSetIndex];if(!set)return;if(hasMeasuredFlowSet(set,resultItem.prescribed_sets_prefilled)&&!window.confirm('Fjern måleresultatet for dette settet og marker berre utført?'))return;updateSet(resultItem.key,resultSetIndex,{...emptyFlowSet(set),flow_status:'done'});nextResult()}
   function nextResult(){
     if(flowCompact){nextFlowGroup();return}
     if(resultItem&&!resultItem.is_rest&&!isErgExercise(resultItem)&&resultSetIndex<resultItem.sets.length-1){setResultSetIndex(n=>n+1);return}
     if(resultItem)setReviewedResults(old=>({...old,[resultItem.key]:true}))
-    if(activeExerciseIndex<items.length-1)selectResult(activeExerciseIndex+1)
+    if(activeExerciseIndex<items.length-1){const continueDetails=flowDetailed&&flowItemGroup(items[activeExerciseIndex+1],flowSchema,format).id===resultGroup?.id;selectResult(activeExerciseIndex+1);if(continueDetails)setFlowDetailed(true)}
     else {setResultSummary(true);setError('')}
   }
   function copyFirstWeight(){
@@ -1040,7 +1042,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       launchLinkContext, title, workoutDate, manualWodIds, format, duration,
       durationSeconds, note, items, scoreRounds, scoreReps, blockScores, scoreTime, scoreLoad,
       scoreCalories, scoreDistance, scoreUnit, saveToken,
-      activeExerciseIndex, timerSnapshot, finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom,
+      activeExerciseIndex, resultSetIndex,flowDetailed,timerSnapshot, finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom,
   }
   useEffect(() => {
     if (mode !== 'active') { pendingSave.current=null;setSyncNotice('');clearWorkoutDraft(memberId); return }
@@ -1048,7 +1050,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     if(pendingSave.current&&pendingSave.current!==workoutSaveFingerprint(draftSnapshot)){
       pendingSave.current=null;setSyncNotice('Resultatet er endra. Trykk Lagre økt på nytt når du er klar.')
     }
-  }, [memberId,mode,manualEntry,manualLibraryEntry,manualLocation,sessionPrepared,manualCompleted,source,wodLevel,classSessionId,launchLinkContext,title,workoutDate,manualWodIds,format,duration,durationSeconds,note,items,scoreRounds,scoreReps,blockScores,scoreTime,scoreLoad,scoreCalories,scoreDistance,scoreUnit,saveToken,activeExerciseIndex,timerSnapshot,finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom])
+  }, [memberId,mode,manualEntry,manualLibraryEntry,manualLocation,sessionPrepared,manualCompleted,source,wodLevel,classSessionId,launchLinkContext,title,workoutDate,manualWodIds,format,duration,durationSeconds,note,items,scoreRounds,scoreReps,blockScores,scoreTime,scoreLoad,scoreCalories,scoreDistance,scoreUnit,saveToken,activeExerciseIndex,resultSetIndex,flowDetailed,timerSnapshot,finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom])
   useEffect(()=>{
     const retry=()=>{if(!isOffline()&&pendingSave.current&&!saveLock.current)retrySave.current?.()}
     window.addEventListener('online',retry)
@@ -1413,7 +1415,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   }
   function updateSet(key, index, patch) {
     setReviewedResults(old=>({...old,[key]:false}));setConfirmedPlannedEmom(false)
-    setItems(current => current.map(item => item.key === key ? { ...item, sets: item.sets.map((s, i) => i === index ? { ...s, ...patch } : s) } : item))
+    setItems(current => current.map(item => item.key === key ? { ...item, sets: item.sets.map((s, i) => i === index ? { ...s, flow_status:'', ...patch } : s) } : item))
   }
   function addSet(key) {
     setReviewedResults(old=>({...old,[key]:false}));setConfirmedPlannedEmom(false)
@@ -1460,7 +1462,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       const isLadderScore = normalizedFormat === 'ladder' && (!manualEntry||manualLibraryEntry)
       const ladderWasCompleted = isLadderScore && (manualLibraryEntry?manualCompleted:timerSnapshot.ladder_finished===true)
       const retrospectiveTimed=manualLibraryEntry&&(['for time','chipper','ladder'].includes(normalizedFormat)||(['couplet','triplet'].includes(normalizedFormat)&&combinationMode==='For Time'))
-      const isForTimeScore = ladderWasCompleted || ['for time','chipper'].includes(normalizedFormat) || (['couplet','triplet'].includes(normalizedFormat) && combinationMode === 'For Time')
+      const isForTimeScore = !flowCompletionOnly&&(ladderWasCompleted || ['for time','chipper'].includes(normalizedFormat) || (['couplet','triplet'].includes(normalizedFormat) && combinationMode === 'For Time'))
       const elapsedSeconds = Number(timerSnapshot.elapsed)||0
       const parsedTime = scoreTime.trim() ? (()=>{
         const raw=scoreTime.trim()
@@ -1502,7 +1504,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
        if((block.format==='AMRAP'||(['Couplet','Triplet'].includes(block.format)&&block.combination_mode==='AMRAP'))&&(!Number.isInteger(block.roundsCompleted)||block.roundsCompleted<0||!Number.isInteger(block.extra_reps)||block.extra_reps<0))throw new Error('Registrer gyldige rundar og ekstra repetisjonar for '+block.title)
        if(!Number.isFinite(Number(block.elapsed))||Number(block.elapsed)<0)throw new Error('Ugyldig tid i '+block.title)
       }
-      const finalAmrap=scoredBlocks.filter(part=>!explicitScoreIds.has(part.id)&&(part.format==='AMRAP'||(['Couplet','Triplet'].includes(part.format)&&part.combination_mode==='AMRAP'))).slice(-1)[0]
+      const finalAmrap=scoredBlocks.filter(part=>!flowRecorded.some(record=>record.id===part.id)&&!explicitScoreIds.has(part.id)&&(part.format==='AMRAP'||(['Couplet','Triplet'].includes(part.format)&&part.combination_mode==='AMRAP'))).slice(-1)[0]
       const effectiveScoreRounds=format===COMPOSITE_FORMAT&&finalAmrap?String(finalAmrap.roundsCompleted):isLadderScore?(scoreRounds!==''?scoreRounds:manualLibraryEntry?'':String(Number(timerSnapshot.ladder_completed_rounds)||0)):isDeathByScore?(scoreRounds!==''?scoreRounds:manualLibraryEntry?'':String(Number(timerSnapshot.death_by_completed_rounds)||0)):scoreRounds
       const effectiveScoreReps=format===COMPOSITE_FORMAT&&finalAmrap?String(finalAmrap.extra_reps):scoreReps
       const hasRecordedScore=(manualLibraryEntry&&scoredBlocks.length>0)||explicitResults.some(result=>result.value!==null)||[effectiveScoreRounds,effectiveScoreReps,scoreTime,scoreLoad,scoreCalories,scoreDistance].some(value=>String(value??'').trim()!=='')||parsedTime!==null||(isAmrapScore&&Number(timerSnapshot.roundsCompleted)>0)||items.some(item=>Number(item.rowValue)>0||item.sets?.some(set=>[set.reps,set.load_kg,set.height_cm,set.time_text,set.time_seconds].some(value=>String(value??'').trim()!=='')))
@@ -1653,7 +1655,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
             <details className="gg-result-jump"><summary>Alle øvingar · {reviewedCount} av {items.length} gjennomgått <ChevronDown size={16}/></summary>
               <div className="workout-result-tabs" role="tablist" aria-label="Vel øving for resultat">{items.map((item,index)=><button type="button" key={item.key} role="tab" aria-selected={activeExerciseIndex===index} className={activeExerciseIndex===index?'selected':''} title={item.exercise_name||'Øving '+(index+1)} onClick={()=>selectResult(index)}>{index+1}. {item.exercise_name||'Øving'} {reviewedResults[item.key]?'✓':''}</button>)}</div>
             </details>
-            {flowCompact?<div className="gg-flow-part"><span className="section-kicker">ØKTDEL · {resultGroup.reporting==='done'?'GJENNOMFØRING':'HOVUDRESULTAT'}</span><h3>{resultGroup.title}</h3><p>{resultGroupIndices.map(index=>items[index].exercise_name).join(' · ')}</p>{resultGroup.reporting==='done'?<div className="gg-flow-completion"><button type="button" className="primary-button" onClick={()=>markFlowGroup('done')}><CheckCircle2 size={18}/> Utført</button><button type="button" className="secondary-button" onClick={()=>markFlowGroup('partial')}>Delvis</button><button type="button" className="secondary-button" onClick={()=>markFlowGroup('skipped')}>Ikkje utført</button></div>:<><p>Hovudresultatet blir registrert i den samla resultatkontrollen. Ingen krav om å registrera kvart sett.</p><button type="button" className="primary-button" onClick={nextFlowGroup}>Gå vidare til neste del</button></>}<button type="button" className="text-button" onClick={()=>setFlowDetailed(true)}>Registrer detaljer i staden</button></div>:<div className="workout-result-exercise gg-result-current" key={resultItem.key}>
+            {flowCompact?<div className="gg-flow-part"><span className="section-kicker">ØKTDEL · {resultGroup.reporting==='done'?'GJENNOMFØRING':'HOVUDRESULTAT'}</span><h3>{resultGroup.title}</h3><p>{resultGroupIndices.map(index=>items[index].exercise_name).join(' · ')}</p>{resultGroup.reporting==='done'?<div className="gg-flow-completion"><button type="button" className="primary-button" onClick={()=>markFlowGroup('done')}><CheckCircle2 size={18}/> Utført</button><button type="button" className="secondary-button" onClick={()=>markFlowGroup('partial')}>Delvis</button><button type="button" className="secondary-button" onClick={()=>markFlowGroup('skipped')}>Ikkje utført</button></div>:<>{(()=>{const b=resultBlock||{},root=format!==COMPOSITE_FORMAT,mode=b.combinationMode||b.combination_mode||flowSchema.combination_mode,amrap=b.format==='AMRAP'||['Couplet','Triplet'].includes(b.format)&&mode==='AMRAP',steps=['Death By','Ladder'].includes(b.format),timed=['For Time','Chipper','Ladder'].includes(b.format)||['Couplet','Triplet'].includes(b.format)&&mode==='For Time',definition=blockScoreDefinition(b.scoreMode),v=blockScores[b.id]||{},live=timerSnapshot.block_summary?.find(x=>x.id===b.id),change=patch=>setBlockScores(old=>({...old,[b.id]:{...old[b.id],...patch}}));if(!root&&definition.value!=='auto'&&!['none','completion','load'].includes(definition.value))return <label>{definition.label} ({definition.unit})<input type="number" min="0" step="any" value={v.primary??''} onChange={e=>change({primary:e.target.value})}/></label>;return <>{(amrap||steps)&&<div className="gg-composite-score-fields"><label>{steps?'Fullførte trinn / rundar':'Fullførte rundar'}<input type="number" min="0" step="1" value={root?scoreRounds:v.rounds??(live?String(live.roundsCompleted??0):'')} onChange={e=>root?setScoreRounds(e.target.value):change({rounds:e.target.value})}/></label>{amrap&&<label>Ekstra reps<input type="number" min="0" step="1" value={root?scoreReps:v.extraReps??(live?String(live.extra_reps??0):'')} onChange={e=>root?setScoreReps(e.target.value):change({extraReps:e.target.value})}/></label>}</div>}{timed&&<><label>Sluttid (mm:ss)<input value={root?scoreTime:v.time??(live?clock(Number(live.elapsed)||0):'')} onChange={e=>root?setScoreTime(e.target.value):change({time:e.target.value})} placeholder="mm:ss"/></label>{manualEntry&&<label><input type="checkbox" checked={root?manualCompleted:v.completed===true} onChange={e=>root?setManualCompleted(e.target.checked):change({completed:e.target.checked})}/> Fullført etter oppsettet</label>}</>}{!amrap&&!steps&&!timed&&<p>Bruk detaljregistrering eller hovudresultat i oppsummeringa.</p>}</>})()}<button type="button" className="primary-button" onClick={nextFlowGroup}>Neste del</button></>}<button type="button" className="text-button" onClick={()=>{setFlowDetailed(true);setBlockScores(old=>{const next={...old};delete next['flow:'+resultGroup.id];return next})}}>Registrer detaljer i staden</button></div>:<div className="workout-result-exercise gg-result-current" key={resultItem.key}>
               {previousExerciseResult(previousLogs,resultItem)&&<small className="gg-previous-result">Ditt sist lagra · {previousExerciseResult(previousLogs,resultItem).date}: {previousExerciseResult(previousLogs,resultItem).summary}</small>}
               {resultItem.prescription_label&&<div className="gg-result-plan"><span>PLANLAGT I WOD</span><strong>{resultItem.prescription_label}</strong></div>}
               {resultItem.is_rest?<p className="workout-finish-help">Pause · ingen resultat å registrera. Gå vidare.</p>:isErgExercise(resultItem)?<div className="workout-result-erg"><strong>Faktisk resultat</strong><div className="workout-result-erg-fields"><label>Resultat<input type="number" inputMode="decimal" min="0" step="0.1" value={resultItem.rowValue??''} onChange={e=>updateExercise(resultItem.key,{rowValue:e.target.value})} placeholder="Tast tal"/></label><div className="training-choice-field"><span>Eining</span><GarageSelect label="Eining for ro-/ergresultat" value={resultItem.rowUnit||'m'} options={RESULT_UNITS} onChange={value=>updateExercise(resultItem.key,{rowUnit:value})}/></div></div><small>Registrer faktisk resultat dersom du vil logga det.</small></div>:<>
