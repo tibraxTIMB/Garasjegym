@@ -25,10 +25,10 @@ test('only formats requiring a timing decision get the time screen', () => {
 })
 
 test('format tap advances while multi-choice screens keep an explicit next action', () => {
-  assert.match(code, /setWizardStep\(wodFormatNeedsTime\(item\)\?1:2\)/)
+  assert.match(code, /setWizardStep\(wodFormatNeedsTime\(item\)&&item!==COMPOSITE_FORMAT\?1:3\)/)
   assert.match(code, /wizardStep===0&&<section className="gg-format-wizard"/)
   assert.match(code, /wizardStep===1&&<div className="wizard-stage-actions gg-time-next"/)
-  assert.match(code, /wizardStep===2&&!libraryOpen&&<div className="wizard-selected-stage"/)
+  assert.match(code, /\(wizardStep===2\|\|wizardStep===3\)&&!libraryOpen&&<div className="wizard-selected-stage/ )
   assert.match(code, /wizardStep===4&&<section className="gg-review-before"/)
 })
 
@@ -75,9 +75,9 @@ test('metric-sensitive RX input and saving handle reps, distance, calories and t
   assert.match(code, /metric==='distance'/)
   assert.match(code, /metric==='calories'/)
   assert.match(code, /metric==='time'/)
-  assert.match(code, /Number\(d\.distanceMeters\)>0/)
-  assert.match(code, /Number\(d\.calories\)>0/)
-  assert.match(code, /Number\(d\.durationSeconds\)>0/)
+  assert.match(code, /architectDoseIssue\(x,\{/ )
+  assert.match(code, /const invalidItem=selected\.find\(x=>issueFor\(x\)\)/)
+  assert.match(code, /setEditingSelectedKey\(invalidItem\.key\)/)
 })
 
 test('five reps shortcuts and plus/minus use a single editable RX value', () => {
