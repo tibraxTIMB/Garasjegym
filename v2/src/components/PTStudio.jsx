@@ -1,7 +1,7 @@
 import {PT_FLOW_PRESETS,getPtFlowPreset} from '../lib/ptFlowPresets.js'
 import {ptFlowRows,flowStatus,FLOW_MODES,osloDate} from '../lib/ptFlow.js'
 import {copyProgramWeekRows,nextCoachSession} from '../lib/programReuse.js'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, ArrowRight, CalendarDays, CheckCircle2, ClipboardList, Dumbbell, Flag, MessageSquareText, Plus, RefreshCw, Target, UserRound, Users, Search, X, MoreVertical, ChevronRight } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import Notifications from './Notifications.jsx'
@@ -13,6 +13,7 @@ import ScheduleHub from './ScheduleHub.jsx'
 import {useFlowConfirm,FlowConfirmDialog} from './FlowEntry.jsx'
 import WodPicker from './WodPicker.jsx'
 import WodCard from './WodCard.jsx'
+const WodBuilder=lazy(()=>import('./WodBuilder.jsx'))
 import PTClientWods from './PTClientWods.jsx'
 import { isStaff } from '../lib/auth.js'
 import { rankForCount } from './Overview.jsx'
@@ -88,8 +89,11 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
  const [openWodPicker,setOpenWodPicker] = useState(null)
  const evidenceRequest=useRef(0)
  const previewRequest=useRef(0)
+ const [planEditor,setPlanEditor]=useState(null)
+ const privateDraftRef=useRef(null)
+ const planSaveLock=useRef(false)
  const [sessionMenu,setSessionMenu]=useState(null),[previewWod,setPreviewWod]=useState(null),[previewLoading,setPreviewLoading]=useState(false)
- useEffect(()=>{previewRequest.current++;setSessionMenu(null);setPreviewWod(null);setPreviewLoading(false)},[clientId])
+ useEffect(()=>{previewRequest.current++;setSessionMenu(null);setPreviewWod(null);setPreviewLoading(false);setPlanEditor(null);privateDraftRef.current=null},[clientId])
  const [editPlan,setEditPlan]=useState(false),[evidenceTarget,setEvidenceTarget]=useState(null),[evidenceRows,setEvidenceRows]=useState([]),[evidenceError,setEvidenceError]=useState(''),[evidenceLoading,setEvidenceLoading]=useState(false),[evidenceSearch,setEvidenceSearch]=useState('')
  useEffect(()=>{evidenceRequest.current++;setEditPlan(false);setOpenWodPicker(null);setEvidenceTarget(null);setEvidenceRows([]);setShowAllProgress(false)},[clientId])
  const [showCheckin,setShowCheckin] = useState(false)
@@ -477,6 +481,28 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
    setEvidenceTarget(null);setNotice('Tilsvarande PT-økt er kopla til '+s.title+'.')
   })
  }
+ function openPlanEditor(s){
+  if(!staff||busy||!s.wod_id||s.status!=='planned'||s.workout_log_id||evidenceFor(s)||activeProgram?.client_id!==clientId||s.program_id!==activeProgram.id)return
+  privateDraftRef.current=null
+  setSessionMenu(null);setPlanEditor({sessionId:s.id,programId:s.program_id,clientId,clientName:selectedMember.display_name,sessionTitle:s.title,wodId:s.wod_id})
+ }
+ async function savePlanEditor(payload){
+  const ctx=planEditor
+  if(!ctx||!staff||planSaveLock.current||ctx.clientId!==clientId||ctx.programId!==activeProgram?.id||activeProgram.client_id!==clientId)throw new Error('Vel rett kunde og plan på nytt.')
+  planSaveLock.current=true
+  try{
+   const {data:current,error:ce}=await supabase.from('pt_program_sessions').select('id,program_id,wod_id,status,workout_log_id,workout_snapshot').eq('id',ctx.sessionId).eq('program_id',ctx.programId).is('archived_at',null).single()
+   if(ce||!current||current.wod_id!==ctx.wodId||current.status!=='planned'||current.workout_log_id||current.workout_snapshot?.pt_equivalent)throw ce||new Error('Planøkta er endra eller påbegynt. Opna ho på nytt.')
+   const row={...payload,is_published:false}
+   let draftId=privateDraftRef.current
+   if(draftId){const {data,error:e}=await supabase.from('wods').update(row).eq('id',draftId).eq('is_published',false).select('id').single();if(e||!data)throw e||new Error('Privat kladd kunne ikkje oppdaterast.')}
+   else{const {data,error:e}=await supabase.from('wods').insert(row).select('id').single();if(e||!data)throw e||new Error('Privat kladd kunne ikkje lagrast.');draftId=data.id;privateDraftRef.current=draftId}
+   const snapshot={...current.workout_snapshot,id:draftId,title:row.name,wod_title:row.name,format:row.format,duration_minutes:row.duration_minutes,movements:row.movements,notes:row.notes,timer_settings:row.timer_settings}
+   const {data,error:e}=await supabase.from('pt_program_sessions').update({wod_id:draftId,workout_snapshot:snapshot}).eq('id',ctx.sessionId).eq('program_id',ctx.programId).eq('wod_id',ctx.wodId).eq('status','planned').is('workout_log_id',null).is('archived_at',null).select('id').maybeSingle()
+   if(e||!data)throw new Error('Privat kladd er lagra, men kopling til planen feila. Prøv på nytt i same vindauge. '+(e?.message||'Planøkta kan ha blitt endra.'))
+   privateDraftRef.current=null;setPlanEditor(null);await load();setNotice('Tilpassa økt lagra for '+ctx.clientName+'. Original-WOD er uendra.')
+  }finally{planSaveLock.current=false}
+ }
  async function previewPlanWod(s){
   if(!s.wod_id||previewLoading||activeProgram?.client_id!==clientId||s.program_id!==activeProgram.id)return
   const req=++previewRequest.current;setPreviewLoading(true);setError('')
@@ -654,18 +680,19 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
    {canUndo(s)&&<button type="button" onClick={()=>{setSessionMenu(null);undoManual(s)}}>Rett gjennomføring <ChevronRight size={16}/></button>}
    {ev?.assignment_id&&<button type="button" onClick={()=>{setSessionMenu(null);openResult('assignment:'+ev.assignment_id)}}>Sjå kopla resultat <ChevronRight size={16}/></button>}
    {s.workout_log_id&&done&&<button type="button" onClick={()=>{setSessionMenu(null);openResult('program:'+s.id)}}>Sjå resultat <ChevronRight size={16}/></button>}
-   {!done&&<button type="button" onClick={()=>openSessionMenu(s,'move')}>Flytt økt <ChevronRight size={16}/></button>}
+   {staff&&s.status==='planned'&&s.wod_id&&!s.workout_log_id&&!ev&&<button type="button" onClick={()=>openPlanEditor(s)}>Tilpass økt <ChevronRight size={16}/></button>}{!done&&<button type="button" onClick={()=>openSessionMenu(s,'move')}>Flytt økt <ChevronRight size={16}/></button>}
    {!done&&s.session_kind!=='information'&&<button type="button" onClick={()=>{setSessionMenu(null);setOpenWodPicker(s.id)}}>{s.wod_id?'Byt WOD':'Vel WOD'} <ChevronRight size={16}/></button>}
    {!done&&!['rest','information'].includes(s.session_kind)&&<button type="button" onClick={()=>openSessionMenu(s,'flow')}>Opplåsingsreglar <ChevronRight size={16}/></button>}
    {!done&&!s.workout_log_id&&<button type="button" className="pt-compact-danger" disabled={busy} onClick={()=>confirmArchive(s)}>Arkiver økt <ChevronRight size={16}/></button>}
   </div>}
-  {panel==='details'&&<div className="pt-compact-details"><small>{s.estimated_minutes?s.estimated_minutes+' min · ':''}{s.scheduled_date?dateLabel(s.scheduled_date):'Dato ikkje fastsett'}</small>{s.focus_area&&<p><b>Fokus:</b> {s.focus_area}</p>}{s.coach_note&&<p>{s.coach_note}</p>}{ev&&<p>{ev.before_launch?'Før lansering: ':'Tilsvarande: '}{ev.title}</p>}{s.workout_snapshot?.description&&<p>{s.workout_snapshot.description}</p>}{s.workout_snapshot?.exercises?.length>0&&<ul>{s.workout_snapshot.exercises.map((exercise,i)=><li key={i}>{exercise}</li>)}</ul>}{['advancement_criteria','agenda','materials','preparation'].map(key=>s.workout_snapshot?.[key]&&<p key={key}>{s.workout_snapshot[key]}</p>)}{state==='locked'&&<p>{flowRow(s.id)?.flowReason}</p>}{s.wod_id&&<button type="button" className="primary-button" disabled={previewLoading} onClick={()=>previewPlanWod(s)}>Opna WOD</button>}<button type="button" className="secondary-button" onClick={back}>Alle handlingar</button></div>}
+  {panel==='details'&&<div className="pt-compact-details"><small>{s.estimated_minutes?s.estimated_minutes+' min · ':''}{s.scheduled_date?dateLabel(s.scheduled_date):'Dato ikkje fastsett'}</small>{s.focus_area&&<p><b>Fokus:</b> {s.focus_area}</p>}{s.coach_note&&<p>{s.coach_note}</p>}{ev&&<p>{ev.before_launch?'Før lansering: ':'Tilsvarande: '}{ev.title}</p>}{s.workout_snapshot?.description&&<p>{s.workout_snapshot.description}</p>}{s.workout_snapshot?.exercises?.length>0&&<ul>{s.workout_snapshot.exercises.map((exercise,i)=><li key={i}>{exercise}</li>)}</ul>}{['advancement_criteria','agenda','materials','preparation'].map(key=>s.workout_snapshot?.[key]&&<p key={key}>{s.workout_snapshot[key]}</p>)}{state==='locked'&&<p>{flowRow(s.id)?.flowReason}</p>}{s.wod_id&&<button type="button" className="primary-button" disabled={previewLoading} onClick={()=>previewPlanWod(s)}>Opna WOD</button>}{staff&&s.status==='planned'&&s.wod_id&&!s.workout_log_id&&!ev&&<button type="button" className="secondary-button" onClick={()=>openPlanEditor(s)}>Tilpass økt</button>}<button type="button" className="secondary-button" onClick={back}>Alle handlingar</button></div>}
   {panel==='move'&&<><div className="pt2-inline-actions pt2-session-slot-editor"><label>Veke <select aria-label={'Flytt '+s.title+' til veke'} value={sessionSlotDrafts[s.id]?.week_no??String(s.week_no||1)} disabled={busy} onChange={e=>setSessionSlotDrafts(rows=>({...rows,[s.id]:{week_no:e.target.value,day_no:rows[s.id]?.day_no??String(s.day_no||1)}}))}>{Array.from({length:52},(_,i)=>i+1).map(n=><option key={n} value={n}>{n}</option>)}</select></label><label>Dag <select aria-label={'Flytt '+s.title+' til dag'} value={sessionSlotDrafts[s.id]?.day_no??String(s.day_no||1)} disabled={busy} onChange={e=>setSessionSlotDrafts(rows=>({...rows,[s.id]:{week_no:rows[s.id]?.week_no??String(s.week_no||1),day_no:e.target.value}}))}>{[1,2,3,4,5,6,7].map(n=><option key={n} value={n}>{n}</option>)}</select></label><button type="button" className="primary-button" disabled={busy} onClick={()=>moveSessionSlot(s)}>Lagra plassering</button></div>{sameSlot.length>1&&<div className="pt-compact-menu-list"><button type="button" disabled={busy||position===0} onClick={()=>moveSession(s,-1)}>Tidlegare same dag</button><button type="button" disabled={busy||position===sameSlot.length-1} onClick={()=>moveSession(s,1)}>Seinare same dag</button></div>}<button type="button" className="secondary-button" onClick={back}>Tilbake</button></>}
   {panel==='flow'&&<div className="pt-compact-details"><p>{flowRow(s.id)?.flowReason||'Opplåsing'}</p>{activeProgram.flow_unlock_mode==='sequence'&&<label><input type="checkbox" checked={!!s.flow_requires_approval} disabled={busy} onChange={e=>updateFlowSession(s,{flow_requires_approval:e.target.checked})}/> Krev PT-godkjenning</label>}{activeProgram.flow_unlock_mode==='date'&&<label>Opningsdato <input type="date" value={s.scheduled_date||''} disabled={busy} onChange={e=>updateFlowSession(s,{scheduled_date:e.target.value||null})}/></label>}{(state==='locked'||s.flow_override)&&<button type="button" className="secondary-button" disabled={busy} onClick={()=>updateFlowSession(s,{flow_override:!s.flow_override})}>{s.flow_override?'Fjern manuell opplåsing':'Opne manuelt'}</button>}<button type="button" className="secondary-button" onClick={back}>Tilbake</button></div>}
   {error&&<p className="auth-error" role="alert">{error}</p>}
   </section></div>})()}
   {openWodPicker&&clientSessions.some(s=>s.id===openWodPicker&&s.status!=='completed')&&(()=>{const s=clientSessions.find(x=>x.id===openWodPicker);return <div className="pt2-modal-backdrop" onClick={()=>setOpenWodPicker(null)}><section className="pt2-modal pt-plan-picker-modal" role="dialog" aria-modal="true" aria-label="WOD til økta" onClick={e=>e.stopPropagation()}><WodPicker compact wods={wods} selectedIds={s.wod_id?[s.wod_id]:[]} multiple={false} onChange={ids=>attachWodToSession(s,ids[0]||'')} onCancel={()=>setOpenWodPicker(null)} title="WOD til økta" hint="Søk i heile WOD-biblioteket."/>{error&&<p className="auth-error" role="alert">{error}</p>}</section></div>})()}
   {previewWod&&<WodCard wod={previewWod} onClose={()=>setPreviewWod(null)}/>}
+  {planEditor&&planEditor.clientId===clientId&&<div className="pt2-modal-backdrop gg-pt-architect-backdrop"><section className="pt2-modal gg-pt-architect-modal" role="dialog" aria-modal="true" aria-label={'Tilpass økt for '+planEditor.clientName}><Suspense fallback={<p>Opnar WOD Studio …</p>}><WodBuilder key={planEditor.sessionId} editWodId={planEditor.wodId} copyMode planContext={planEditor} onSavePlanWod={savePlanEditor} onCancel={()=>{if(!planSaveLock.current)setPlanEditor(null)}}/></Suspense></section></div>}
   {evidenceTarget&&evidenceTarget.clientId===clientId&&<div className="pt2-modal-backdrop" onClick={()=>setEvidenceTarget(null)}><section className="pt2-modal pt-plan-picker-modal" role="dialog" aria-modal="true" aria-label="Kopla til utført PT-økt" onClick={e=>e.stopPropagation()}><header className="pt-plan-picker-head"><div><strong>{selectedMember?.display_name} · {clientSessions.find(s=>s.id===evidenceTarget.id)?.title}</strong><small>Vel eit allereie delt PT-resultat. Privat treningshistorikk er ikkje synleg her.</small></div><button type="button" className="icon-button" aria-label="Lukk" onClick={()=>setEvidenceTarget(null)}><X size={18}/></button></header><input aria-label="Søk gjennomførte PT-økter" placeholder="Søk gjennomførte PT-økter …" value={evidenceSearch} onChange={e=>setEvidenceSearch(e.target.value)}/>{evidenceLoading?<p>Hentar PT-resultat …</p>:evidenceError?<p className="auth-error">{evidenceError}</p>:<div className="pt-plan-evidence-list">{evidenceRows.filter(a=>String(a.wods?.name||'').toLowerCase().includes(evidenceSearch.trim().toLowerCase())).map(a=><button key={a.id} type="button" className="secondary-button" disabled={busy} onClick={()=>linkEvidence(a)}><strong>{a.wods?.name||'Tidlegare PT-økt'}</strong><small>{a.completed_at?new Date(a.completed_at).toLocaleDateString('nn-NO'):'Dato ikkje registrert'}</small></button>)}{!evidenceRows.length&&<p>Ingen delte PT-resultat å kopla. Bruk Marker utført dersom økta vart gjennomført privat.</p>}</div>}</section></div>}
   <FlowConfirmDialog dialog={completionConfirm.dialog} onClose={completionConfirm.finish}/>
  </div>
