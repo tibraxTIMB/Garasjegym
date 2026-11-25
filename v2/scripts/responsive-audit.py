@@ -68,25 +68,37 @@ with sync_playwright() as pw:
                     page.get_by_role("button",name="Dosering",exact=True).tap()
                     check(page,"card-dose",w,h)
                 if screen=="pt":
-                    edit=page.get_by_role("button",name="Rediger plan",exact=True)
-                    edit.wait_for()
+                    card=page.locator(".pt-compact-session").first
+                    card.wait_for()
                     assert page.get_by_role("button",name="Byt WOD",exact=True).count()==0
-                    card=page.locator(".pt-plan-card").first
-                    card.get_by_role("button",name="Kopla til utført PT-økt").tap()
+                    assert page.get_by_role("button",name="Flytt økt",exact=True).count()==0
+                    assert card.bounding_box()["height"]<160
+                    card.get_by_role("button",name="Handlingar for",exact=False).tap()
+                    menu=page.get_by_role("dialog",name="Øktmeny:",exact=False)
+                    menu.get_by_role("button",name="Kopla til utført PT-økt").tap()
                     evidence=page.get_by_role("dialog",name="Kopla til utført PT-økt")
                     evidence.get_by_role("button",name="Mancave Paincave",exact=False).wait_for()
                     check(page,"pt-equivalent-picker",w,h)
                     evidence.get_by_role("button",name="Lukk",exact=True).tap()
-                    edit.tap()
-                    card.get_by_role("button",name="Byt WOD",exact=True).tap()
+                    card.get_by_role("button",name="Handlingar for",exact=False).tap()
+                    menu.get_by_role("button",name="Flytt økt",exact=True).tap()
+                    menu.get_by_role("button",name="Lagra plassering").wait_for()
+                    check(page,"pt-move-sheet",w,h)
+                    menu.get_by_role("button",name="Tilbake",exact=True).tap()
+                    menu.get_by_role("button",name="Byt WOD",exact=True).tap()
                     picker=page.get_by_role("dialog",name="WOD til økta")
                     picker.wait_for()
                     box=picker.bounding_box()
                     assert box["x"]>=-1 and box["x"]+box["width"]<=w+1
                     check(page,"pt-wod-picker",w,h)
                     picker.get_by_role("button",name="Avbryt",exact=True).tap()
-                    page.get_by_role("button",name="Ferdig med redigering").tap()
                     assert page.get_by_role("button",name="Byt WOD",exact=True).count()==0
+                    card.get_by_role("button",name="Opna WOD").tap()
+                    preview=page.get_by_role("dialog",name="WOD-kort:",exact=False)
+                    preview.wait_for()
+                    assert preview.get_by_role("button",name="Utfør WOD").count()==0
+                    check(page,"pt-preview",w,h)
+                    preview.get_by_role("button",name="Tilbake",exact=True).tap()
                 if screen=="acta":
                     panel=page.get_by_role("region",name="Treningsrapport per del")
                     assert panel.get_by_text("4 + 3",exact=True).is_visible()
