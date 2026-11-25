@@ -43,3 +43,24 @@ test('PT copy is private, scoped and preserves original WOD and program title',(
  assert.match(studio,/is_published:false/)
  assert.match(studio,/update\(\{wod_id:draftId,workout_snapshot:snapshot\}\)/)
 })
+
+import {samspelConfig,samspelIssue,samspelRoles,samspelScoring,samspelResultIssue} from '../src/lib/samspel.js'
+const parallel={version:1,mode:'parallel_round_swap',task:'row',metric:'distance'}
+test('Samspel uses the same AMRAP clock and round count for role rotation and undo',()=>{
+ assert.deepEqual(samspelRoles(parallel,0),['Romaskin','AMRAP'])
+ assert.deepEqual(samspelRoles(parallel,1),['AMRAP','Romaskin'])
+ assert.deepEqual(samspelRoles(parallel,2),['Romaskin','AMRAP'])
+ assert.deepEqual(samspelRoles(parallel,1),['AMRAP','Romaskin'])
+ assert.deepEqual(samspelScoring(parallel,{}),{type:'multi',fields:['rounds_reps','distance']})
+ assert.equal(samspelConfig({}),null)
+ assert.deepEqual(samspelConfig({samspel:parallel}),parallel)
+})
+test('unsupported combinations and incomplete results have actionable errors',()=>{
+ assert.equal(samspelIssue(parallel,{format:'AMRAP',participation:'partner',items:[{name:'Thruster'}]}),null)
+ assert.match(samspelIssue(parallel,{format:'EMOM',participation:'partner'}),/AMRAP/)
+ assert.match(samspelIssue(parallel,{format:'AMRAP',participation:'individual'}),/partnarar/)
+ assert.match(samspelResultIssue(parallel,''),/distanse/)
+ assert.equal(samspelResultIssue(parallel,'0'),null)
+ assert.equal(samspelResultIssue(parallel,'2740'),null)
+ assert.ok(samspelResultIssue(parallel,'-1'))
+})
