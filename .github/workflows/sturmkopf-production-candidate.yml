@@ -9,6 +9,7 @@ on:
       - "gazelle-pt-flow-integration"
       - "gazelle-introkurs-integrity"
       - "gazelle-responsive-audit"
+      - "gazelle-librarium"
     paths:
       - "v2/**"
       - ".github/workflows/sturmkopf-production-candidate.yml"
