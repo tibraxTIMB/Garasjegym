@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
-import {SOUND_PACK_PROFILES,SOUND_PACK_SIGNALS,soundPackUrl,playPackSignal,stopPackAudio} from '../src/lib/trainingAudio.js'
+import {SOUND_PACK_PROFILES,SOUND_PACK_SIGNALS,soundPackUrl,playPackSignal,stopPackAudio,generativePackUrls,readAudioPack,setAudioPack} from '../src/lib/trainingAudio.js'
 const read=p=>readFileSync(new URL(p,import.meta.url),'utf8')
 test('30 distinct local WAV paths and three sample-based profiles',()=>{
  const urls=SOUND_PACK_PROFILES.flatMap(p=>SOUND_PACK_SIGNALS.map(s=>soundPackUrl(p,s,'/Garasjegym/')))
@@ -22,9 +22,9 @@ test('30 distinct local WAV paths and three sample-based profiles',()=>{
 })
 test('live timer uses real files and explicit diagnostics rather than synthesized beeps',()=>{
  const timer=read('../src/components/Training.jsx')
- assert.match(timer,/playPackSignal\(context,signal,volumeRef\.current,prefs\.audioProfile,\{preview:test\}\)/)
+ assert.match(timer,/playPackSignal\(context,signal,volumeRef\.current,prefs\.audioProfile,\{preview:test,format\}\)/)
  assert.match(timer,/DISKOPANZER/)
- assert.match(timer,/playDirectPackSignal\(prefs\.audioProfile,testCue,volumeRef\.current\)/)
+ assert.match(timer,/playDirectPackSignal\(prefs\.audioProfile,testCue,volumeRef\.current,format\)/)
  assert.match(timer,/Lydfeil:/)
  assert.doesNotMatch(timer,/playTrainingTone\(/)
 })
@@ -77,9 +77,25 @@ test('studio render includes detuned club leads, separate gong modes and stereo 
  assert.match(script,/attack<.018/)
 })
 
-test('retired experimental audio always resolves to standard cues and has no controls',()=>{
+test('standard remains default and old experimental key does not change selection',()=>{
  for(const p of SOUND_PACK_PROFILES)for(const s of SOUND_PACK_SIGNALS)assert.equal(soundPackUrl(p,s,'/',true),'/audio/gazelle-v6/'+p+'-'+s+'.wav')
  assert.doesNotMatch(read('../src/components/MyPage.jsx'),/KI lyd/)
- assert.doesNotMatch(read('../src/components/Training.jsx'),/KI lyd/)
+ assert.match(read('../src/components/Training.jsx'),/KI lyd · generativ prototype/)
  assert.match(read('../src/lib/trainingAudio.js'),/removeItem\('garasjegym.timer.ki_audio'\)/)
+})
+
+test('optional generative sound pack maps all formats and preserves standard',()=>{
+ const store=new Map(),storage={getItem:k=>store.get(k),setItem:(k,v)=>store.set(k,v)}
+ assert.equal(readAudioPack(storage),'standard')
+ setAudioPack('generative',storage);assert.equal(readAudioPack(storage),'generative')
+ setAudioPack('standard',storage);assert.equal(readAudioPack(storage),'standard')
+ const urls=new Set(SOUND_PACK_PROFILES.flatMap(p=>generativePackUrls(p,'/Garasjegym/')))
+ assert.equal(urls.size,46)
+ for(const [format,file] of [['AMRAP','amrap'],['E2MOM','emom'],['For Time','for-time'],['Tabata','tabata'],['Death By','death-by'],['Intervall','general']]){
+  const url=soundPackUrl('pt','finish','/Garasjegym/',{pack:'generative',format})
+  assert.equal(url,'/Garasjegym/audio/gazelle-generative-v1/eisen/finish-'+file+'.mp3')
+  assert.ok(urls.has(url))
+ }
+ assert.equal(soundPackUrl('group','pr','/',{pack:'generative'}),'/audio/gazelle-generative-v1/pr-victory/pr-victory.mp3')
+ assert.equal(soundPackUrl('group','finish','/',{pack:'standard',format:'AMRAP'}),'/audio/gazelle-v6/group-finish.wav')
 })

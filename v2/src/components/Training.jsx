@@ -33,7 +33,7 @@ import { exerciseBrowseCategory } from '../lib/exerciseCategories.js'
 import { restoreWorkoutDraft, saveWorkoutDraft, clearWorkoutDraft, resumedElapsedSeconds, workoutSaveFingerprint, isRetryableWorkoutError } from '../lib/workoutDraft.js'
 import { canSaveDurationOnlyWorkout } from '../lib/freeSession.js'
 import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, TRAINING_AUDIO_PROFILES } from '../lib/timerCues.js'
-import { preloadSoundPack, unlockSoundPack, playPackSignal, playDirectPackSignal, stopDirectAudio, stopPackAudio, SOUND_PACK_NAMES, SOUND_PACK_VERSION } from '../lib/trainingAudio.js'
+import { preloadSoundPack, unlockSoundPack, playPackSignal, playDirectPackSignal, stopDirectAudio, stopPackAudio, SOUND_PACK_NAMES, SOUND_PACK_VERSION, readAudioPack, setAudioPack } from '../lib/trainingAudio.js'
 import GarageSelect from './GarageSelect.jsx'
 import './timer-viewport.css'
 import PRVictoryOverlay from './PRVictoryOverlay.jsx'
@@ -153,9 +153,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   useEffect(()=>{const sync=()=>setPRVictoryAudio(isPRVictorySoundEnabled());window.addEventListener('gg-pr-victory-audio-change',sync);window.addEventListener('storage',sync);return()=>{window.removeEventListener('gg-pr-victory-audio-change',sync);window.removeEventListener('storage',sync)}},[])
   const [countdownAudio,setCountdownAudio]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.countdown_audio')!=='off'}catch{return true}})
   const [vibration,setVibration]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.vibration')==='on'}catch{return false}})
+  const [audioPack,chooseAudioPack]=useState(()=>readAudioPack())
   const [testCue,setTestCue]=useState('start')
   const [audioDiagnostic,setAudioDiagnostic]=useState('Lydpakke '+SOUND_PACK_VERSION)
-  useEffect(()=>{let live=true;preloadSoundPack(audioProfile).then(()=>{if(live)setAudioDiagnostic('Lydfiler klare · '+SOUND_PACK_NAMES[audioProfile]+' · standard')}).catch(e=>{if(live)setAudioDiagnostic('Lydfeil: '+e.message)});return()=>{live=false}},[audioProfile])
+  useEffect(()=>{let live=true;preloadSoundPack(audioProfile).then(()=>{if(live)setAudioDiagnostic('Lydfiler klare · '+SOUND_PACK_NAMES[audioProfile]+' · '+(audioPack==='generative'?'KI lyd':'standard'))}).catch(e=>{if(live)setAudioDiagnostic('Lydfeil: '+e.message)});return()=>{live=false}},[audioProfile,audioPack])
   const audioPrefs=useRef({audioProfile,countdownAudio,vibration})
   audioPrefs.current={audioProfile,countdownAudio,vibration}
   useEffect(()=>{try{localStorage.setItem('garasjegym.timer.audio_profile',audioProfile);localStorage.setItem('garasjegym.timer.countdown_audio',countdownAudio?'on':'off');localStorage.setItem('garasjegym.timer.vibration',vibration?'on':'off')}catch{/* Valfritt */}},[audioProfile,countdownAudio,vibration])
@@ -335,12 +336,12 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     if(!soundOnRef.current||volumeRef.current===0||prefs.audioProfile==='silent')return
     const context=ensureAudioContext()
     stopDirectAudio()
-    playPackSignal(context,signal,volumeRef.current,prefs.audioProfile,{preview:test}).then(ok=>{if(ok&&test)setAudioDiagnostic('Web Audio spelar · '+SOUND_PACK_NAMES[prefs.audioProfile]+' · '+signal)}).catch(e=>setAudioDiagnostic('Lydfeil: '+e.message))
+    playPackSignal(context,signal,volumeRef.current,prefs.audioProfile,{preview:test,format}).then(ok=>{if(ok&&test)setAudioDiagnostic('Web Audio spelar · '+SOUND_PACK_NAMES[prefs.audioProfile]+' · '+signal)}).catch(e=>setAudioDiagnostic('Lydfeil: '+e.message))
   }
   function directAudioTest(){
     const prefs=audioPrefs.current
     stopPackAudio(sharedTrainingAudioContext)
-    playDirectPackSignal(prefs.audioProfile,testCue,volumeRef.current).then(()=>setAudioDiagnostic('Vanleg lydavspeling · '+SOUND_PACK_NAMES[prefs.audioProfile]+' · '+testCue)).catch(e=>setAudioDiagnostic('Lydfeil: '+e.message))
+    playDirectPackSignal(prefs.audioProfile,testCue,volumeRef.current,format).then(()=>setAudioDiagnostic('Vanleg lydavspeling · '+SOUND_PACK_NAMES[prefs.audioProfile]+' · '+testCue)).catch(e=>setAudioDiagnostic('Lydfeil: '+e.message))
   }
 
   useEffect(() => {
@@ -615,6 +616,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     <div className="gg-sound-pack-list" role="group" aria-label="Vel lydprofil">
       {[{id:'pt',name:'EISEN',desc:'Classic Fight Club · klokke og metall'},{id:'personal',name:'DISKOPANZER',desc:'Eurodance Kampfparty · synth og klubbslag'},{id:'group',name:'BALKAN BERSERK',desc:'Metal Brass Assault · trompet, gitar og tromme'}].map(p=><button type="button" key={p.id} aria-pressed={audioProfile===p.id} className={audioProfile===p.id?'is-selected':''} onClick={()=>{setAudioProfile(p.id);soundOnRef.current=true;setSoundOn(true)}}><strong>{p.name}</strong><small>{p.desc}</small></button>)}
     </div>
+    <label>Lydpakke<select value={audioPack} onChange={e=>{stopPackAudio(sharedTrainingAudioContext);stopDirectAudio();setAudioPack(e.target.value);chooseAudioPack(e.target.value)}}><option value="standard">Standard · eksisterande</option><option value="generative">KI lyd · generativ prototype</option></select></label>
     <label className="gg-timer-check"><input type="checkbox" checked={soundOn} onChange={e=>setSoundOn(e.target.checked)}/> Lydsignal på</label>
     <label>Timerlyd · {soundVolume}%<input type="range" min="0" max="100" step="5" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label>
     <label className="gg-timer-check"><input type="checkbox" checked={countdownAudio} onChange={e=>setCountdownAudio(e.target.checked)}/> Nedtelling 3–2–1</label>
