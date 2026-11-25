@@ -280,3 +280,5 @@
 .pt2-flow-details label{flex-wrap:wrap}
 .pt2-flow-control select,.pt2-flow-details select{min-width:0;width:100%;max-width:100%}
 .pt2-flow-details button,.pt2-session .pt2-inline-actions button{white-space:normal;overflow-wrap:anywhere;line-height:1.25}
+
+.pt2 .pt2-workspace-switch{display:grid;grid-template-columns:repeat(auto-fit,minmax(82px,1fr));gap:6px;min-width:0}.pt2 .pt2-workspace-switch button{min-height:42px;padding:6px 8px;font-size:12px;white-space:normal}.pt2-acta-progress{display:grid;gap:5px;margin-top:9px;min-width:0}.pt2-acta-progress-row{display:grid;grid-template-columns:26px minmax(0,1fr) auto;align-items:center;gap:7px;border-top:1px solid #45545a;padding:6px 0;min-width:0}.pt2-acta-progress-row strong{font-size:12px;overflow-wrap:anywhere}.pt2-acta-progress-row .secondary-button,.pt2-mark-complete{min-height:40px!important;font-size:11px!important;padding:6px 8px!important}.pt2-acta-seq{color:#e9b365;font-weight:750;font-size:12px}
