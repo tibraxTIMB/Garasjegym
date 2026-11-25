@@ -325,7 +325,7 @@ export default function App() {
     setSelectedWorkout({...log,exercises:null,detailLoading:true,detailError:''})
     try {
       const [logResult,exerciseResult]=await Promise.all([
-        supabase.from('workout_logs').select('id,title,workout_date,format,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,note,result_data').eq('id',log.id).eq('member_id',session.user.id).single(),
+        supabase.from('workout_logs').select('id,title,source_wod_id,workout_date,format,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,note,result_data').eq('id',log.id).eq('member_id',session.user.id).single(),
         supabase.from('workout_exercises').select('id,exercise_name,source_text,sort_order,workout_sets(id,set_number,reps,load_kg,height_cm,time_text,time_seconds)').eq('workout_log_id',log.id).order('sort_order',{ascending:true})
       ])
       if(logResult.error||exerciseResult.error)throw logResult.error||exerciseResult.error
