@@ -49,3 +49,5 @@
 .wod-library-page .librarium-tools:not(.librarium-extra)>select,.wod-library-page .librarium-tools:not(.librarium-extra)>button{grid-column:span 1}
 .wod-library-page .librarium-tools:not(.librarium-extra)>select:only-child{grid-column:1/-1}
 @media(orientation:landscape){.wod-library-page .librarium-tools:not(.librarium-extra){grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* LIBRARIUM 1.2: approved plan folders and recent workouts release; no functional change. */
