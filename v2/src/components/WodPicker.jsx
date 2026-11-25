@@ -1,5 +1,6 @@
 import {useEffect,useMemo,useState} from 'react'
-import {Check,Search,Clock3,Dumbbell,Layers} from 'lucide-react'
+import {Check,Search,Layers} from 'lucide-react'
+import './wod-picker-repair.css'
 
 const categoryLabel=value=>({warmup:'Oppvarming',daily:'Dagens WOD',standard:'Standard-WOD',benchmark:'Benchmark',assessment:'Test og evaluering',rehab:'Rehabilitering',recovery:'Restitusjon',other:'Anna / spesialøkt'}[value]||value||'Standard-WOD')
 
@@ -36,7 +37,6 @@ export default function WodPicker({wods=[],selectedIds=[],onChange,onCancel,mult
   <div className="wod-picker-results">
    {rows.length?rows.map(w=>{
     const active=draftIds.includes(w.id)
-    const kind=w.timer_settings?.workout_schema?.library_category||(w.category==='warmup'?'warmup':'standard')
     const count=(w.timer_settings?.workout_schema?.items||[]).length||w.movements?.split('\\n').filter(Boolean).length||0
     return <button type="button" key={w.id} className={active?'wod-picker-option selected':'wod-picker-option'} onClick={()=>toggle(w.id)} aria-pressed={active}>
      <span className="wod-picker-check">{active?<Check size={15}/>:null}</span>
