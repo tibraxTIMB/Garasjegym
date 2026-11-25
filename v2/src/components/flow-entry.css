@@ -1,0 +1,25 @@
+.gg-flow-entry-host{display:flex;flex:1;min-height:0;flex-direction:column;overflow:hidden}
+.gg-flow-entry-host>.gg-result-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+.gg-flow-keypad{flex:none;padding:6px 8px 7px;background:var(--panel,#171b24);border-top:1px solid #69748766;color:inherit;box-shadow:0 -4px 14px #0002}
+.gg-flow-keypad header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 4px}
+.gg-flow-keypad header strong{font-size:.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gg-flow-keypad button{min-height:36px;min-width:0;border:1px solid #8290a64d;border-radius:7px;background:#7d89971a;color:inherit;font-size:1.15rem;font-weight:700;display:flex;align-items:center;justify-content:center;touch-action:manipulation;padding:2px 5px}
+.gg-flow-keypad header button{font-size:.76rem;min-height:28px;gap:4px}
+.gg-flow-keys{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.gg-flow-keypad .gg-flow-next-key{background:#2264ce;color:white;border-color:#2264ce}
+.gg-flow-keypad button:disabled{opacity:.25}
+.gg-flow-weight-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-bottom:4px}
+.gg-flow-weight-steps button{min-height:28px;font-size:.8rem}
+.gg-flow-entry-host:has(.gg-flow-keypad)>.gg-result-footer .gg-result-skip,.gg-flow-entry-host:has(.gg-flow-keypad)>.gg-result-footer .gg-flow-swipe-hint,.gg-flow-entry-host:has(.gg-flow-keypad)>.gg-result-footer .gg-result-discard{display:none}
+.gg-flow-entry-host input[data-flow-number]{font-size:16px;font-variant-numeric:tabular-nums;min-width:0}
+.gg-flow-entry-host input[data-flow-number]:focus{outline:2px solid #60a5fa;outline-offset:1px}
+.gg-flow-entry-host .gg-flow-grid-row input[data-flow-number]{min-height:42px;text-align:center}
+.gg-flow-confirm-backdrop{position:fixed;inset:0;background:#000a;display:grid;place-items:center;padding:16px;z-index:2147483000;overscroll-behavior:contain}
+.gg-flow-confirm{width:min(100%,420px);max-height:85dvh;overflow:auto;padding:18px;background:#1b202b;color:#f1f5f9;border:1px solid #64748b;border-radius:15px;box-shadow:0 18px 60px #0008}
+.gg-flow-confirm h3{margin:0 0 9px;font-size:1.1rem}
+.gg-flow-confirm p{white-space:pre-line;line-height:1.45;margin:0 0 16px}
+.gg-flow-confirm>div{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gg-flow-confirm button{min-height:46px;white-space:normal}
+.gg-flow-confirm .gg-flow-confirm-danger{background:#a52532;border-color:#a52532;color:white}
+@media(max-height:550px){.gg-flow-keypad button{min-height:29px;font-size:1rem}.gg-flow-keypad header button,.gg-flow-weight-steps button{min-height:24px}.gg-flow-keypad{padding:3px 6px}.gg-flow-keys{gap:3px}.gg-flow-entry-host:has(.gg-flow-keypad)>.gg-result-footer{display:none}}
+@media(min-width:700px){.gg-flow-keypad{align-self:center;width:min(100%,420px);border-radius:12px}.gg-flow-keypad button{min-height:40px}}
