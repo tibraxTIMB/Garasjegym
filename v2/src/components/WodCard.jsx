@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
 import {createPortal} from 'react-dom'
-import {ArrowLeft,Clock3,Layers,Play,Dumbbell,Scan,History,Target,ChevronLeft,ChevronRight} from 'lucide-react'
+import {ArrowLeft,Clock3,Layers,Play,Dumbbell,Scan,History,Target,ChevronLeft,ChevronRight,Edit3,MoreHorizontal} from 'lucide-react'
 import MuscleMap from './MuscleMap.jsx'
 import {muscleProfile,MUSCLE_LABELS} from '../lib/muscleProfile.js'
 import {supabase} from '../lib/supabase.js'
@@ -31,7 +31,7 @@ export default function WodCard({wod,memberId,staff,onClose,onLaunch,onEdit,onAc
  const history=logs.filter(l=>l.source_wod_id===wod.id)
  const focus=Object.keys(MUSCLE_LABELS).filter(g=>!exposure.involvementCounts[g])
  return createPortal(<dialog ref={dialog} className="gg-wod-screen" aria-label={'WOD-kort: '+wod.name} onCancel={e=>{e.preventDefault();onClose()}}>
-  <header className="gg-wod-top"><button type="button" onClick={onClose} aria-label="Tilbake"><ArrowLeft size={23}/></button><strong>WOD-kort</strong><span>{onEdit&&<button type="button" onClick={onEdit} aria-label="Rediger WOD">Rediger</button>}{onActions&&<button type="button" onClick={onActions} aria-label="WOD-handlingar">⋯</button>}</span></header>
+  <header className={"gg-wod-top"+(onEdit||onActions?" gg-wod-top-actions":"")}><button type="button" onClick={onClose} aria-label="Tilbake"><ArrowLeft size={23}/></button><strong>WOD-kort</strong><span className="gg-wod-header-actions">{onEdit&&<button type="button" onClick={onEdit} aria-label="Rediger WOD"><Edit3 size={19}/></button>}{onActions&&<button type="button" onClick={onActions} aria-label="WOD-handlingar"><MoreHorizontal size={21}/></button>}</span></header>
   <nav className="gg-wod-tabs" aria-label="Sider på WOD-kortet">{tabs.map(([key,label,Icon])=><button key={key} type="button" aria-pressed={tab===key} onClick={()=>setTab(key)}><Icon size={17}/><span>{label}</span></button>)}</nav>
   <div className="gg-wod-paper" role="region" aria-label="Kortinnhald" ref={scroll} onTouchStart={e=>{const t=e.touches[0];touch.current={x:t.clientX,y:t.clientY}}} onTouchEnd={e=>{const t=e.changedTouches[0],s=touch.current;touch.current=null;if(!s||!t)return;const dx=t.clientX-s.x,dy=t.clientY-s.y;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.7)move(dx<0?1:-1)}}>
    <div className={"gg-wod-identity"+(tab!=='workout'?' gg-wod-identity-small':'')}><span>{wod.format}</span><h1>{wod.name}</h1><div className="gg-wod-stats"><span><Clock3 size={17}/><b>{seconds>0?formatCardTime(seconds):'Open tid'}</b></span><span><Layers size={17}/>{parts.length} {parts.length===1?'del':'delar'}</span></div></div>
