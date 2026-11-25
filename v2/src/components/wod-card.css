@@ -63,3 +63,5 @@
  .gg-wod-screen .gg-wod-tabs button>span{font-size:11px;line-height:1.1}
  .gg-wod-screen .gg-wod-movement{padding-left:18px}
 }
+
+.gg-wod-screen .gg-wod-top.gg-wod-top-actions{grid-template-columns:44px minmax(0,1fr) auto;gap:4px}.gg-wod-header-actions{display:flex;align-items:center;justify-content:flex-end;min-width:0}.gg-wod-header-actions button{flex:0 0 44px;width:44px;padding:0}.gg-wod-top-actions>strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
