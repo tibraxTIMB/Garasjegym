@@ -251,11 +251,11 @@ export default function App() {
   function navigateBack(fallback='oversikt'){const previous=navigationStack[navigationStack.length-1]||fallback;setNavigationStack(stack=>stack.slice(0,-1));setActive(previous)}
   backAction.current=()=>{
     if(quickMenu){setQuickMenu(false);return}
-    const dialogs=[...document.querySelectorAll('[role="dialog"][aria-modal="true"]')].filter(el=>el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden'&&getComputedStyle(el).display!=='none')
+    const dialogs=[...document.querySelectorAll('[role="dialog"][aria-modal="true"],[role="alertdialog"][aria-modal="true"]')].filter(el=>el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden'&&getComputedStyle(el).display!=='none')
     const top=dialogs.at(-1)
     if(top){
       if(top.classList.contains('workout-detail-dialog')){window.dispatchEvent(new Event('gg:workout-back',{cancelable:true}));return}
-      const close=[...top.querySelectorAll('button:not([disabled])')].find(b=>/^(lukk|tilbake|avbryt|close|cancel)(\s*[×✕])?$/i.test((b.getAttribute('aria-label')||b.textContent||'').trim()))
+      const close=[...top.querySelectorAll('button:not([disabled])')].find(b=>/^(lukk|avbryt|close|cancel)(\s*[×✕])?$/i.test((b.getAttribute('aria-label')||b.textContent||'').trim()))||[...top.querySelectorAll('button:not([disabled])')].find(b=>/^(←\s*)?tilbake$/i.test((b.getAttribute('aria-label')||b.textContent||'').trim()))
       if(close){close.click();return}
       // Do not leave an active result/confirmation dialog with the system Back button.
       return
@@ -275,7 +275,7 @@ export default function App() {
     window.addEventListener('popstate',onPop)
     return()=>window.removeEventListener('popstate',onPop)
   },[session?.user?.id])
-  function exitFromRoot(){if(timerSnapshot.sessionOpen)return;setQuickMenu(false);allowNativeExit.current=true;window.history.go(-2)}
+  function exitFromRoot(){if(timerSnapshot.sessionOpen)return;setQuickMenu(false);allowNativeExit.current=true;window.history.back()}
   function openHelp(topic='navigation'){setHelpTopic(topic);navigateTo('mi-side')}
   function openFromHelp(target){
     setHelpTopic(null)
@@ -485,7 +485,7 @@ export default function App() {
       </aside>}
       <main className={simpleMode?'main simple-app-main':'main'}>
         <header className={'topbar'+(active!=='oversikt'&&navigationStack.length>0?' has-route-back':'')}>
-          <button type="button" className="mobile-brand gg-quick-brand" onClick={()=>setQuickMenu(true)} aria-label="Opna hurtigmeny" title="Hurtigmeny">GARASJEGYM <span>{RELEASE_SHORT}</span></button>
+          <button type="button" className="mobile-brand gg-quick-brand" onClick={()=>setQuickMenu(true)} aria-label="Opna hurtigmeny" title="Hurtigmeny">GARASJEGYM <span>{RELEASE_SHORT}</span><span className="gg-quick-caret" aria-hidden="true">⌄</span></button>
           {active!=='oversikt'&&navigationStack.length>0&&<button type="button" className={simpleMode?'simple-back-button':'route-back-button'} onClick={()=>navigateBack('oversikt')}>← Tilbake</button>}
           <div className="top-meta">
             <span className="member-name">{profile.display_name || session.user.email}</span>
@@ -526,7 +526,7 @@ export default function App() {
         ...(timerSnapshot.sessionOpen?[['trening','Tilbake til økta',PlayCircle]]:[]),
         ['oversikt','Heim',LayoutDashboard],['wod','WOD-bibliotek',BookOpen],['mi-trening','Min treningsplan',CalendarDays],['mi-historikk','Treningslogg',History],['pr-senter','PR-senter',Trophy],['timeplan','Timeplan',CalendarDays],
         ...(!simpleMode&&isStaff(profile)?[['pt-studio','PT-kundar',Users],['pt-admin','PT-drift',Settings],['admin','Drift',Settings]]:[])
-      ].map(([id,label,ItemIcon])=><button type="button" key={id} onClick={()=>{setQuickMenu(false);if(id==='trening')navigateRoot(id);else if(id==='mi-trening')openMyTraining();else if(id==='pt-admin'){setPTStudioWorkspace('studio');setPTStudioInitialTab('administrasjon');navigateTo('pt-studio')}else if(id==='pt-studio'){setPTStudioWorkspace('studio');setPTStudioInitialTab('oversikt');navigateTo('pt-studio')}else handleSectionNavigate(id)}}><ItemIcon size={18}/><span>{label}</span></button>)}</div>{active==='oversikt'&&!timerSnapshot.sessionOpen&&<button type="button" className="gg-quick-exit" onClick={exitFromRoot}>Gå ut av appen</button>}<small>Tips: hald inne Heim for å opna denne menyen.</small></section></div>}
+      ].map(([id,label,ItemIcon])=><button type="button" key={id} onClick={()=>{setQuickMenu(false);if(id==='trening')navigateRoot(id);else if(id==='mi-trening')openMyTraining();else if(id==='pt-admin'){setPTStudioWorkspace('studio');setPTStudioInitialTab('administrasjon');navigateTo('pt-studio')}else if(id==='pt-studio'){setPTStudioWorkspace('studio');setPTStudioInitialTab('oversikt');navigateTo('pt-studio')}else handleSectionNavigate(id)}}><ItemIcon size={18}/><span>{label}</span></button>)}</div>{active==='oversikt'&&!timerSnapshot.sessionOpen&&<button type="button" className="gg-quick-exit" onClick={exitFromRoot}>Tillat å gå ut</button>}<small>Tips: hald inne Heim for å opna denne menyen.</small></section></div>}
       {infotainmentActive&&isStaff(profile)&&<Suspense fallback={<div className="training-state" role="status">Lastar infotainment …</div>}><Infotainment onExit={()=>{try{sessionStorage.removeItem('garasjegym:infotainment-active');sessionStorage.removeItem('garasjegym:infotainment-tab')}catch{}setInfotainmentActive(false)}} timerSnapshot={timerSnapshot}/></Suspense>}
     </div>
     </MusicProvider>
