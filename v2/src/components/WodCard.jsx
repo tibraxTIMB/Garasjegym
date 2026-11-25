@@ -11,7 +11,7 @@ import {personalWeightSuggestion,weightSuggestionText} from '../lib/personalDose
 
 const tabs=[['workout','Økt',Dumbbell],['dose','Dosering',Layers],['muscle','Muskelkart',Scan],['history','Historikk',History]]
 const dateISO=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')
-export default function WodCard({wod,memberId,staff,onClose,onLaunch}){
+export default function WodCard({wod,memberId,staff,onClose,onLaunch,onEdit,onActions}){
  const [historyMode,setHistoryMode]=useState('all'),[muscleChoice,setMuscleChoice]=useState('all')
  const [tab,setTab]=useState('workout'),[level,setLevel]=useState('rx'),[days,setDays]=useState(7),[logs,setLogs]=useState([]),[status,setStatus]=useState('idle')
  const dialog=useRef(null),touch=useRef(null),scroll=useRef(null)
@@ -31,7 +31,7 @@ export default function WodCard({wod,memberId,staff,onClose,onLaunch}){
  const history=logs.filter(l=>l.source_wod_id===wod.id)
  const focus=Object.keys(MUSCLE_LABELS).filter(g=>!exposure.involvementCounts[g])
  return createPortal(<dialog ref={dialog} className="gg-wod-screen" aria-label={'WOD-kort: '+wod.name} onCancel={e=>{e.preventDefault();onClose()}}>
-  <header className="gg-wod-top"><button type="button" onClick={onClose} aria-label="Tilbake"><ArrowLeft size={23}/></button><strong>WOD-kort</strong><span/></header>
+  <header className="gg-wod-top"><button type="button" onClick={onClose} aria-label="Tilbake"><ArrowLeft size={23}/></button><strong>WOD-kort</strong><span>{onEdit&&<button type="button" onClick={onEdit} aria-label="Rediger WOD">Rediger</button>}{onActions&&<button type="button" onClick={onActions} aria-label="WOD-handlingar">⋯</button>}</span></header>
   <nav className="gg-wod-tabs" aria-label="Sider på WOD-kortet">{tabs.map(([key,label,Icon])=><button key={key} type="button" aria-pressed={tab===key} onClick={()=>setTab(key)}><Icon size={17}/><span>{label}</span></button>)}</nav>
   <div className="gg-wod-paper" role="region" aria-label="Kortinnhald" ref={scroll} onTouchStart={e=>{const t=e.touches[0];touch.current={x:t.clientX,y:t.clientY}}} onTouchEnd={e=>{const t=e.changedTouches[0],s=touch.current;touch.current=null;if(!s||!t)return;const dx=t.clientX-s.x,dy=t.clientY-s.y;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.7)move(dx<0?1:-1)}}>
    <div className={"gg-wod-identity"+(tab!=='workout'?' gg-wod-identity-small':'')}><span>{wod.format}</span><h1>{wod.name}</h1><div className="gg-wod-stats"><span><Clock3 size={17}/><b>{seconds>0?formatCardTime(seconds):'Open tid'}</b></span><span><Layers size={17}/>{parts.length} {parts.length===1?'del':'delar'}</span></div></div>
