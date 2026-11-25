@@ -94,3 +94,5 @@
 .acta-has-score .acta-score{order:2;border-color:var(--tone);background:#152421}.acta-has-score header{order:0}.acta-has-score h3{order:1}.acta-has-score .acta-prescription{order:3}.acta-has-score .acta-status,.acta-has-score .acta-complex,.acta-has-score .acta-sets{order:4}.acta-has-score .acta-score>strong{font-size:clamp(30px,7vw,42px)}.gg-quick-brand .gg-quick-caret{display:inline-block!important;font-size:16px;color:#efb76b;margin-left:4px}.gg-quick-brand:focus-visible{outline:2px solid #efb76b;outline-offset:3px}
 
 .gg-pt-home-shortcut{display:flex;align-items:center;gap:8px;min-height:44px;width:100%;min-width:0;padding:7px 10px!important;border:1px solid #46565c!important;border-radius:9px;background:#202c31!important;color:#f1b96a!important;text-align:left;box-shadow:none!important}.gg-pt-home-shortcut>span:first-of-type{font-size:13px;font-weight:800;white-space:nowrap}.gg-pt-home-shortcut small{flex:1;min-width:0;color:#bfcbd0;font-size:11px;text-align:right;overflow-wrap:anywhere}.gg-pt-home-shortcut svg{flex:none}.acta-status-neutral{color:#d2b48c}
+
+/* ACTA & UX Polish: approved production release; no functional change. */
