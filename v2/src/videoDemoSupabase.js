@@ -4,7 +4,7 @@ const now = new Date()
 const future = new Date(now.getTime() + 86400000 * 3).toISOString()
 const scenario = () => new URLSearchParams(location.search).get('scenario') || ''
 const isAudit = () => scenario().startsWith('audit')
-const currentDemoId = () => ['maintenance','audit-admin'].includes(scenario()) ? 'demo-admin' : 'demo-member'
+const currentDemoId = () => ['maintenance','audit-admin','audit-pt-plan'].includes(scenario()) ? 'demo-admin' : 'demo-member'
 
 let maintenanceLogs = []
 let requests = []
@@ -35,6 +35,7 @@ function rowsFor(table) {
     case 'class_bookings': return bookings
     case 'profiles': return [{id:'demo-admin',display_name:'Demo-eigar',role:'admin',active:true,membership_status:'approved'},...(isAudit()?[{id:'demo-member',display_name:'Demomedlem med eit langt visningsnamn',role:'member',active:true,membership_status:'approved'}]:[])]
     case 'pt_programs': return scenario()==='audit-folders'?[{id:'folder-plan',title:'Introkurs',archived_at:null},{id:'empty-plan',title:'Ny treningsplan',archived_at:null}]:isAudit()?[{id:'audit-plan',client_id:'demo-member',title:'Introkurs med eit ekstra langt programnamn',description:'Seks veker med styrke og teknikk.',status:'active',weeks:6,archived_at:null,flow_unlock_mode:'sequence'}]:[]
+    case 'pt_wod_assignments': return scenario()==='audit-pt-plan'?[{id:'audit-assignment',member_id:'demo-member',wod_id:'demo-wod',status:'completed',completed_at:'2026-11-23T19:00:00Z',workout_log_id:'audit-log',wods:{id:'demo-wod',name:'Mancave Paincave med eit ekstra langt namn'}}]:[]
     case 'pt_program_sessions': return scenario()==='audit-folders'?[{program_id:'folder-plan',wod_id:'folder-wod-2',sequence_no:2,archived_at:null},{program_id:'folder-plan',wod_id:'folder-wod-1',sequence_no:1,archived_at:null}]:isAudit()?[1,2,3,4,5,6].map(n=>({id:'audit-session-'+n,program_id:'audit-plan',sequence_no:n,week_no:n,day_no:1,title:'Økt '+n+' – Alternating Dumbbell Push Jerk og grunnrørsler',status:'planned',session_kind:'training',estimated_minutes:35,focus_area:'Teknikk og styrke',coach_note:'Lett belastning.',wod_id:'demo-wod',archived_at:null,flow_requires_approval:true,flow_approved:false,flow_override:false})):[]
     case 'workout_logs': return scenario()==='audit-folders'?[{member_id:'demo-member',source_wod_id:'folder-wod-1',workout_date:'2026-11-24',created_at:'2026-11-24T12:00:00Z'},{member_id:'demo-member',source_wod_id:'demo-wod',workout_date:'2026-11-25',created_at:'2026-11-25T12:00:00Z'},{member_id:'other',source_wod_id:'folder-wod-2',workout_date:'2026-11-25',created_at:'2026-11-25T13:00:00Z'}]:[]
     case 'personal_records': case 'exercises': case 'class_live_sessions': return []
