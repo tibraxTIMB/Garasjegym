@@ -200,5 +200,7 @@ test('new PT follow-up scopes WOD status to the selected client without private 
  assert.match(studio,/selectedRank\.title/)
  assert.match(studio,/selectedRank\.stars/)
  assert.match(css,/pt2-coach-primary-tabs\{display:flex/)
- assert.match(app,/label: 'PT-kundar'/)
+ assert.match(app,/label: 'PT Studio'/)
 })
+
+test('PT daily completion is scoped to the active client program',()=>{const s=readFileSync(new URL('../src/components/PTStudio.jsx',import.meta.url),'utf8');assert.ok(s.includes('markClientSessionComplete'));assert.ok(s.includes('activeProgram.client_id!==clientId'));assert.ok(s.includes("eq('program_id',activeProgram.id)"));assert.ok(s.includes('Marker utført'));assert.ok(s.includes('PT-arbeidsflate'))})
