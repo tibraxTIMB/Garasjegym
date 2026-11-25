@@ -624,7 +624,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
     savedWodId=savedWod?.id||savedWodId
    }
    setNotice(assignedClientId?(canPublishWod&&publishToMembers?'WOD er publisert og tildelt kunden.':'Privat WOD er lagra og tildelt kunden.'):editingWodId?'WOD-en er oppdatert.':canPublishWod&&publishToMembers?'WOD lagra i biblioteket og publisert for medlemmene.':'WOD lagra i det interne biblioteket som utkast.')
-   setCompositeBlocks(defaultCompositeBlocks());setActiveBlockId('a');setSelected([]);setNotes('');setLibraryCategory('standard');setCustomInstructions('');setRxNotes('');setScaledNotes('');setWizardStep(0);setName(suggestUniqueWodName());setEditingWodId(null);onSaved?.()
+   setSamspel(null);setSamspelHelp(false);setShowArchitectMenu(false);setShowArchitectIssues(false);setParticipation('individual');setCollaboration('solo');setCompositeBlocks(defaultCompositeBlocks());setActiveBlockId('a');setSelected([]);setNotes('');setLibraryCategory('standard');setCustomInstructions('');setRxNotes('');setScaledNotes('');setWizardStep(0);setName(suggestUniqueWodName());setEditingWodId(null);onSaved?.()
   }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{setBusy(false)}
  }
   function chooseFormat(item){
