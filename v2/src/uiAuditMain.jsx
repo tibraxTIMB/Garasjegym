@@ -3,6 +3,8 @@ import {useState} from 'react'
 import {createRoot} from 'react-dom/client'
 import WodBuilder from './components/WodBuilder.jsx'
 import PTStudio from './components/PTStudio.jsx'
+import PTClientWods from './components/PTClientWods.jsx'
+import WodPicker from './components/WodPicker.jsx'
 import MyTraining from './components/MyTraining.jsx'
 import WorkoutDetail from './components/WorkoutDetail.jsx'
 import AppMobileNavigation from './components/AppMobileNavigation.jsx'
@@ -40,7 +42,7 @@ function ActaFixture(){
 function Audit(){
  const [choice,setChoice]=useState('a')
  return <MusicProvider memberId="demo-admin"><MobileNativeControls/><div className="app-shell simple-app-shell"><main className="main simple-app-main"><section className="content-card training-content">
- {screen==='acta'?<ActaFixture/>:screen==='flow'?<FlowFixture/>:screen==='card'?<WodCard wod={wod} memberId="demo-member" onClose={()=>{}} onLaunch={()=>{}}/>:screen==='builder'?<WodBuilder/>:screen==='pt'?<PTStudio profile={profile} initialClientId="demo-member" initialTab="plan"/>:screen==='plan'?<MyTraining simpleMode={true}/>:<label>Vel eit alternativ med eit langt namn<select aria-label="Testval" value={choice} onChange={e=>setChoice(e.target.value)}><option value="a">Første alternativ</option><option value="b">{longName}</option></select><output>{choice}</output></label>}
+ {screen==='acta'?<ActaFixture/>:screen==='flow'?<FlowFixture/>:screen==='card'?<WodCard wod={wod} memberId="demo-member" onClose={()=>{}} onLaunch={()=>{}}/>:screen==='builder'?<WodBuilder/>:screen==='picker'?<WodPicker wods={[wod,{...wod,id:'audit-wod-2',name:'Introkurs 06 – Pull-up og kjerne',timer_settings:{workout_schema:{stimulus:longName}}},{...wod,id:'audit-wod-3',name:'Introkurs 05 – Clean',is_published:true}]} onChange={setChoice}/>:screen==='assign'?<PTClientWods clientId="demo-member" clientName="Demomedlem med eit langt visningsnamn"/>:screen==='pt'?<PTStudio profile={profile} initialClientId="demo-member" initialTab="plan"/>:screen==='plan'?<MyTraining simpleMode={true}/>:<label>Vel eit alternativ med eit langt namn<select aria-label="Testval" value={choice} onChange={e=>setChoice(e.target.value)}><option value="a">Første alternativ</option><option value="b">{longName}</option></select><output>{choice}</output></label>}
  </section></main></div></MusicProvider>
 }
 createRoot(document.getElementById('root')).render(<Audit/>)
