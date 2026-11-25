@@ -18,8 +18,9 @@ export function cardDose(item,level='rx',compact=false){
  const d=item.levels?.[level];if(item.levels&&!d)return 'Ikkje dosert på dette nivået'
  const p=[],v=d||{};const steps=item.complex_steps||[]
  if(item.is_complex&&steps.length){p.push(steps.map(s=>(s.reps||1)+' × '+(s.name||s.exercise_name)).join(' + '));if(Number(v.reps||item.reps)>1)p.push((v.reps||item.reps)+' syklusar')}
- else if(v.reps||item.reps)p.push((v.reps||item.reps)+' reps')
- if(v.sets)p.push(v.sets+' sett')
+ else if(item.reps_mode==='amrap'&&!v.reps&&!item.reps)p.push('Maks reps')
+ else if(v.reps||item.reps)p.push((v.sets?v.sets+' × ':'')+(v.reps||item.reps)+(v.sets?'':' reps'))
+ if(v.sets&&(item.is_complex&&steps.length||!(v.reps||item.reps)))p.push(v.sets+' sett')
  if(v.durationSeconds||item.work_seconds)p.push(formatCardTime(v.durationSeconds||item.work_seconds))
  if(v.distanceMeters||item.meters)p.push((v.distanceMeters||item.meters)+' m')
  if(v.calories||item.calories)p.push((v.calories||item.calories)+' cal')
