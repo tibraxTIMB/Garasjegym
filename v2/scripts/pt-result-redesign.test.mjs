@@ -45,11 +45,13 @@ test('missing round times and exercise measurements are never inferred',()=>{
  assert.doesNotMatch(screen,/\.from\('workout_logs'\)/)
 })
 
-test('mobile-first review puts summary and feedback ahead of collapsible details',()=>{
+test('mobile-first review puts summary and result details before feedback',()=>{
  const screen=read('../src/components/PTWodReview.jsx')
  const css=read('../src/components/pt-client-followup.css')
- assert.ok(screen.indexOf('ptreview-metrics')<screen.indexOf('ptreview-next-action'))
- assert.ok(screen.indexOf('ptreview-next-action')<screen.indexOf('ptreview-blocks'))
+ assert.ok(screen.indexOf('ptreview-metrics')<screen.indexOf('ptreview-blocks'))
+ assert.ok(screen.indexOf('ptreview-blocks')<screen.indexOf('ptreview-next-action'))
+ assert.ok(screen.indexOf('ptreview-dose')<screen.indexOf('ptreview-next-action'))
+ assert.match(screen,/Skriv minst 5 teikn for å kunna senda/)
  assert.match(screen,/ptreview-feedback-panel/)
  assert.match(screen,/Gje tilbakemelding/)
  assert.match(screen,/<details className="ptreview-disclosure"/)
