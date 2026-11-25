@@ -259,6 +259,10 @@ jobs:
           result="$(psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -At -F '|' -f v2/supabase/preflight/public_definer_rpc_contract_read_only.sql)"
           printf 'Privileged RPC release contract: %s\n' "$result"
           test "$result" = 't|t|t|t|t|t'
+      - name: Rehearse PT result and feedback authorization with synthetic accounts
+        env:
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres
+        run: psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f v2/supabase/preflight/pt_wod_rpc_authorization_rehearsal.sql
       - name: Verify real Auth signup trigger and pending member gate
         env:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55422/postgres

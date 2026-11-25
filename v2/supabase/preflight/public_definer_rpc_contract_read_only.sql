@@ -15,6 +15,8 @@ WITH approved(name,args) AS (VALUES
  ('get_infotainment_schedule','p_from timestamp with time zone, p_to timestamp with time zone'),
  ('get_member_workout_leaderboard',''),
  ('get_pt_intake_request_state','p_member_id uuid'),
+ ('get_pt_wod_result','p_assignment_id uuid, p_program_session_id uuid'),
+ ('send_pt_wod_feedback','p_feedback_text text, p_dosing text, p_assignment_id uuid, p_program_session_id uuid'),
  ('request_pt_intake','p_member_id uuid'),
  ('is_active_user',''),
  ('is_admin',''),
@@ -50,6 +52,12 @@ WITH approved(name,args) AS (VALUES
             THEN body LIKE '%public.place_coffee_order_v2(%'
           WHEN name IN ('is_active_user','is_admin','is_admin_or_manager')
             THEN body LIKE '%membership_status = ''approved''%' AND body LIKE '%auth.uid()%'
+          WHEN name IN ('get_pt_wod_result','send_pt_wod_feedback')
+            THEN body LIKE '%auth.uid()%' AND body LIKE '%is_active_user()%'
+              AND body LIKE '%is_admin_or_manager()%'
+              AND body LIKE '%is_pt_coach_for_member(v_member)%'
+              AND body LIKE '%wl.member_id=v_member%'
+              AND body LIKE '%wl.source_wod_id=v_wod%'
           ELSE body LIKE '%is_active_user()%'
         END guard_present
  FROM reviewed
