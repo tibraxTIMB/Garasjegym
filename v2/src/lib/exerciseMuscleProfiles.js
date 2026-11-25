@@ -1716,11 +1716,11 @@ export const EXERCISE_MUSCLE_PROFILES={
    "quads",
    "glutes",
    "calves",
-   "triceps"
+   "triceps",
+   "frontDelts",
+   "sideDelts"
   ],
   "secondary": [
-   "frontDelts",
-   "sideDelts",
    "upperBack"
   ],
   "stabilizers": [
@@ -1736,11 +1736,11 @@ export const EXERCISE_MUSCLE_PROFILES={
    "quads",
    "glutes",
    "calves",
-   "triceps"
+   "triceps",
+   "frontDelts",
+   "sideDelts"
   ],
   "secondary": [
-   "frontDelts",
-   "sideDelts",
    "upperBack"
   ],
   "stabilizers": [
@@ -1756,11 +1756,11 @@ export const EXERCISE_MUSCLE_PROFILES={
    "quads",
    "glutes",
    "calves",
-   "triceps"
+   "triceps",
+   "frontDelts",
+   "sideDelts"
   ],
   "secondary": [
-   "frontDelts",
-   "sideDelts",
    "upperBack"
   ],
   "stabilizers": [
@@ -1776,11 +1776,11 @@ export const EXERCISE_MUSCLE_PROFILES={
    "quads",
    "glutes",
    "calves",
-   "triceps"
+   "triceps",
+   "frontDelts",
+   "sideDelts"
   ],
   "secondary": [
-   "frontDelts",
-   "sideDelts",
    "upperBack"
   ],
   "stabilizers": [
@@ -1856,11 +1856,11 @@ export const EXERCISE_MUSCLE_PROFILES={
    "quads",
    "glutes",
    "calves",
-   "triceps"
+   "triceps",
+   "frontDelts",
+   "sideDelts"
   ],
   "secondary": [
-   "frontDelts",
-   "sideDelts",
    "upperBack"
   ],
   "stabilizers": [

@@ -192,3 +192,5 @@
 .gg-composite-history>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;font-size:12px}
 .gg-composite-history span{opacity:.85}
 @media(max-width:500px){.gg-composite-history>div{grid-template-columns:minmax(0,1fr)}}
+
+.wod-light-title{display:block;width:100%;min-height:40px;text-align:left;padding:0!important;background:transparent!important;border:0!important;font:inherit;color:inherit;overflow-wrap:anywhere}.wod-light-parts{color:#b9c8ce;font-size:12px;overflow-wrap:anywhere}.wod-library-card-compact .wod-card-short-stimulus{display:none}.wod-library-card-compact .wod-card-exercise-preview{gap:3px}.wod-library-card-compact .wod-card-exercise-line{padding:4px 6px;border:0;background:transparent}.wod-library-card-compact .wod-card-primary-actions{margin-top:2px}

@@ -249,10 +249,10 @@ export default function WodLibrary({onLaunchWod,onEditWod,staff=true,isAdmin=fal
       {isAdmin&&<button type="button" className="wod-card-danger-action" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);removeWod(w)}}><Archive size={17}/> Fjern frå biblioteket</button>}
       {isAdmin&&<button type="button" className="wod-card-danger-action" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);removeWod(w,{permanent:true})}}><Trash2 size={17}/> Slett WOD permanent</button>}
      </div>}
-    <h4>{w.name}</h4>
+    <h4><button className="wod-light-title" type="button" onClick={()=>{setExpanded(w.id);setOpenCardMenu(null)}}>{w.name}</button></h4>
     <div className="wod-card-mini-category"><span>{categoryLabel(categoryOf(w))}</span>{dailyWodId===w.id&&<strong>Dagens WOD</strong>}</div>
     <div className="wod-library-meta"><span>{w.format}</span><span><Clock3 size={14}/>{w.duration_minutes||'–'} min</span><span><Dumbbell size={14}/>{items.length||w.movements?.split('\n').filter(Boolean).length||0} øvingar</span></div>
-    {compositeBlocks.length>1&&<div className="wod-composite-card-summary">{compositeBlocks.map((block,index)=><span key={block.id}>{index+1}. {block.title} · {block.format} · {Math.floor((block.duration_seconds||Number(block.minutes)*60)/60)}:{String((block.duration_seconds||Number(block.minutes)*60)%60).padStart(2,'0')} min:sek</span>)}</div>}
+    {compositeBlocks.length>1&&<small className="wod-light-parts">{compositeBlocks.length} delar · {[...new Set(compositeBlocks.map(b=>b.format))].join(" / ")}</small>}
     {!simpleMode&&(w.timer_settings?.workout_schema?.stimulus||(staff?w.notes:''))&&<p className="wod-card-short-stimulus">{w.timer_settings?.workout_schema?.stimulus||(staff?w.notes:'')}</p>}
     {!simpleMode&&<div className="wod-card-exercise-preview wod-card-exercise-compact">
       {items.length?(items.slice(0,3)).map((item,index)=>{
@@ -263,7 +263,7 @@ export default function WodLibrary({onLaunchWod,onEditWod,staff=true,isAdmin=fal
       {items.length>3&&<small className="wod-card-exercise-more">+ {items.length-3} fleire øvingar</small>}
      </div>}
     <div className="wod-library-actions wod-card-primary-actions">
-     <button type="button" className="primary-button" onClick={()=>{setExpanded(w.id);setOpenCardMenu(null)}}><BookOpen size={16}/>Opna økt</button>
+     <button type="button" className="primary-button" onClick={()=>{setExpanded(w.id);setOpenCardMenu(null)}}><BookOpen size={16}/>Sjå kort</button>
      {staff&&!simpleMode&&<button type="button" className="secondary-button wod-card-use-button" aria-expanded={useMenuOpen} onClick={()=>setOpenCardMenu(value=>value==='use:'+w.id?null:'use:'+w.id)}>Bruk <ChevronDown size={17}/></button>}
     </div>
     {useMenuOpen&&<div className="wod-card-action-panel wod-card-use-panel" aria-label={'Bruk '+w.name}>

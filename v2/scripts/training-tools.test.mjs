@@ -13,7 +13,7 @@ test('WOD item identifiers are not exercise identifiers',()=>{assert.equal(previ
 
 test('muscle map classifies specific variants and each complex step, without false chest on handstand push-up',()=>{
  const hspu=muscleProfile([{name:'Handstand Push-up'}]);assert.ok(hspu.primary.includes('frontDelts'));assert.ok(hspu.primary.includes('triceps'));assert.ok(!hspu.primary.includes('chest'))
- const complex=muscleProfile([{exercise_name:'2 PC + 1 PJ',complex_steps:[{exercise_id:'pc',name:'Power Clean',reps:2},{exercise_id:'pj',name:'Push Jerk',reps:1}]}]);assert.equal(complex.total,2);assert.equal(complex.known,2);assert.ok(complex.primary.includes('quads'));assert.ok(complex.secondary.includes('frontDelts'))
+ const complex=muscleProfile([{exercise_name:'2 PC + 1 PJ',complex_steps:[{exercise_id:'pc',name:'Power Clean',reps:2},{exercise_id:'pj',name:'Push Jerk',reps:1}]}]);assert.equal(complex.total,2);assert.equal(complex.known,2);assert.ok(complex.primary.includes('quads'));assert.ok(complex.primary.includes('frontDelts'))
  const mixed=muscleProfile([{name:'Row'},{name:'KB Swing'},{name:'Burpee over barbell'},{name:'Unknown movement'}]);assert.equal(mixed.known,3);assert.equal(mixed.total,4);assert.ok(mixed.primary.includes('lats'));assert.ok(mixed.primary.includes('glutes'))
  assert.equal(muscleProfile([{name:'Barbell Row'}]).primary[0],'lats')
 })
@@ -29,3 +29,5 @@ test('clean, jerk, deadlift, mobility and unknown movements have distinct roles'
 test('heatmap counts unique sessions rather than multiplying movements or sets',()=>{const now=new Date(2026,10,25,12);const log={id:'a',workout_date:'2026-11-25',result_data:{exercise_results:[{exercise_name:'Bench Press',sets:[{reps:4},{reps:6}]},{exercise_name:'Push-up',sets:[{reps:5}]}]}};const out=loggedMuscleExposure([log,log],7,now);assert.equal(out.counts.chest,1);assert.equal(out.byMode.strength.chest,1);assert.equal(out.sessions,1);assert.equal(out.loggedSessions,1)})
 
 test('unknown and unrecorded movements block confident absence advice',()=>{const result=loggedMuscleExposure([{workout_date:'2026-11-25',result_data:{exercise_results:[{exercise_name:'Bench Press',sets:[{reps:5}]},{exercise_name:'Deadlift',sets:[{reps:null}]}]}}],7,new Date(2026,10,25,12));assert.equal(result.incomplete,1);assert.equal(result.counts.hamstrings,0)})
+
+test('jerk profiles retain leg drive and substantial shoulder involvement',()=>{for(const name of ['Push Jerk','Split Jerk','Power Jerk','Alternating Dumbbell Push Jerk']){const p=exerciseMuscleProfile(name);for(const group of ['quads','glutes','frontDelts','sideDelts','triceps'])assert.ok(p.primary.includes(group),name+' '+group);assert.ok(p.stabilizers.includes('rotatorCuff'))}})

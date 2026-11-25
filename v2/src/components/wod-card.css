@@ -12,3 +12,39 @@
 .gg-wod-back .gg-muscle-map{border:0;display:grid;gap:8px}.gg-wod-back .gg-muscle-figures{justify-content:center;gap:18px}.gg-wod-back .gg-muscle-figures svg{width:84px;height:180px}.gg-wod-back .gg-muscle-map small{font-size:12px}
 @media(max-width:380px){.gg-wod-tabs button{font-size:11px;gap:3px}.gg-wod-tabs svg{width:13px}.gg-wod-paper{padding:9px}.gg-wod-part-top strong{font-size:13px}.gg-wod-part-top b{font-size:14px}}
 @media(max-height:480px) and (orientation:landscape){.gg-wod-screen[open]{gap:3px}.gg-wod-top{padding:0}.gg-wod-footer{grid-template-columns:1fr 2fr;align-items:center;padding-bottom:3px}.gg-wod-start{min-height:44px}.gg-wod-tabs button{min-height:36px}.gg-wod-top button{min-height:36px}}
+
+/* Standalone card: override global application main/dialog/button layouts.
+   Only the interior scrolls; header and start action remain inside the card viewport. */
+.gg-wod-screen[open]{display:grid!important;grid-template-rows:auto auto minmax(0,1fr) auto!important;justify-items:center!important;align-items:stretch!important;align-content:stretch!important;justify-content:stretch!important;gap:6px!important;min-height:0!important;max-height:100dvh!important;box-sizing:border-box!important}
+.gg-wod-screen .gg-wod-top{min-height:44px!important;height:auto!important;line-height:1.1!important;padding:0 10px!important}
+.gg-wod-screen .gg-wod-tabs{min-height:0!important;padding:0 10px!important}
+.gg-wod-screen .gg-wod-tabs button{height:44px!important;min-height:44px!important;max-height:44px!important;font-size:12px!important;line-height:1.1!important;padding:3px 4px!important;white-space:nowrap}
+.gg-wod-screen .gg-wod-tabs svg{flex:0 0 auto;width:15px;height:15px}
+.gg-wod-screen .gg-wod-paper{display:block!important;position:relative!important;align-self:stretch!important;justify-self:center!important;min-height:0!important;height:auto!important;max-height:none!important;margin:0!important;overflow-y:auto!important;overflow-x:hidden!important;scroll-padding-top:0;overscroll-behavior:contain;box-sizing:border-box!important;border:2px solid #9d7139;border-radius:16px;background:#151d21;padding:11px!important}
+.gg-wod-screen .gg-wod-paper>*{max-width:100%;min-width:0}
+.gg-wod-screen .gg-wod-identity{gap:4px!important;padding:4px 2px 10px!important}
+.gg-wod-screen .gg-wod-identity h1{font-size:clamp(21px,6vw,31px)!important;line-height:1.12!important}
+.gg-wod-screen .gg-wod-identity-small{padding-bottom:8px!important}
+.gg-wod-screen .gg-wod-identity-small h1{font-size:18px!important}
+.gg-wod-screen .gg-wod-identity-small .gg-wod-stats{display:none}
+.gg-wod-screen .gg-wod-parts{gap:6px!important}
+.gg-wod-screen .gg-wod-part{padding:7px!important}
+.gg-wod-screen .gg-wod-part-top strong{font-size:14px!important;line-height:1.2!important}
+.gg-wod-screen .gg-wod-part-top small{font-size:11px!important;line-height:1.2!important}
+.gg-wod-screen .gg-wod-movement{padding-top:4px!important;padding-bottom:1px!important}
+.gg-wod-screen .gg-wod-movement span,.gg-wod-screen .gg-wod-movement strong{font-size:13px!important;line-height:1.25!important}
+.gg-wod-screen .gg-wod-movement small{font-size:12px!important;line-height:1.3!important}
+.gg-wod-screen .gg-wod-footer{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:0!important;align-self:end!important;justify-items:stretch!important;width:min(100%,760px)!important;padding:0 10px 6px!important;margin:0!important;min-height:0!important}
+.gg-wod-screen .gg-wod-swipe{min-height:36px!important;height:36px!important;justify-content:center!important;font-size:11px!important;line-height:1!important}
+.gg-wod-screen .gg-wod-swipe button{height:36px!important;min-height:36px!important}
+.gg-wod-screen .gg-wod-start{display:flex!important;justify-content:center!important;width:100%!important;min-width:0!important;max-width:none!important;min-height:52px!important;height:52px!important;font-size:18px!important;margin:0!important;box-sizing:border-box!important}
+.gg-wod-screen .gg-wod-back{gap:8px!important;display:grid!important;align-content:start!important}
+.gg-wod-screen .gg-wod-back h2{font-size:19px!important;line-height:1.2!important}
+.gg-wod-screen .gg-wod-back h3{font-size:14px!important;line-height:1.25!important}
+.gg-wod-screen .gg-wod-back p,.gg-wod-screen .gg-wod-back small{font-size:12px!important;line-height:1.35!important}
+.gg-wod-screen .gg-wod-back .gg-muscle-figures svg{height:136px!important;width:66px!important}
+.gg-wod-screen .gg-wod-back .gg-muscle-figures{gap:20px!important}
+.gg-wod-muscle-choice{display:grid;gap:4px;font-size:12px;color:#cbd5d8;margin-bottom:8px}
+.gg-wod-muscle-choice select{min-height:40px;width:100%;background:#10191d;color:#f0f4f4;border:1px solid #53636b;border-radius:8px;padding:6px 9px;font-size:13px}
+@media(max-width:380px){.gg-wod-screen .gg-wod-tabs button{font-size:11px!important}.gg-wod-screen .gg-wod-tabs svg{width:12px}}
+@media(max-height:480px) and (orientation:landscape){.gg-wod-screen[open]{grid-template-rows:36px 36px minmax(0,1fr) 48px!important;gap:3px!important}.gg-wod-screen .gg-wod-top{min-height:36px!important}.gg-wod-screen .gg-wod-tabs button{height:36px!important;min-height:36px!important;max-height:36px!important}.gg-wod-screen .gg-wod-footer{grid-template-columns:1fr 2fr!important;align-items:center!important;gap:8px!important}.gg-wod-screen .gg-wod-start{height:44px!important;min-height:44px!important}}
