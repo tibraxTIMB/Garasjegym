@@ -282,3 +282,29 @@
 .pt2-flow-details button,.pt2-session .pt2-inline-actions button{white-space:normal;overflow-wrap:anywhere;line-height:1.25}
 
 .pt2 .pt2-workspace-switch{display:grid;grid-template-columns:repeat(auto-fit,minmax(82px,1fr));gap:6px;min-width:0}.pt2 .pt2-workspace-switch button{min-height:42px;padding:6px 8px;font-size:12px;white-space:normal}.pt2-acta-progress{display:grid;gap:5px;margin-top:9px;min-width:0}.pt2-acta-progress-row{display:grid;grid-template-columns:26px minmax(0,1fr) auto;align-items:center;gap:7px;border-top:1px solid #45545a;padding:6px 0;min-width:0}.pt2-acta-progress-row strong{font-size:12px;overflow-wrap:anywhere}.pt2-acta-progress-row .secondary-button,.pt2-mark-complete{min-height:40px!important;font-size:11px!important;padding:6px 8px!important}.pt2-acta-seq{color:#e9b365;font-weight:750;font-size:12px}
+
+/* Daily PT follow-up: compact flat cards. Editing is an explicit mode. */
+.pt2 .pt-plan-list{display:grid;gap:8px;min-width:0}
+.pt2 .pt-plan-list .pt2-week{padding:0;border:0;background:transparent;min-width:0;box-shadow:none}
+.pt2 .pt-plan-list .pt2-week>header{display:flex;gap:8px;align-items:center;padding:4px 0;font-size:12px;color:var(--muted,#a9b4bc);flex-wrap:wrap}
+.pt2 .pt-plan-card{display:grid!important;grid-template-columns:30px minmax(0,1fr) auto!important;gap:7px!important;padding:9px!important;align-items:start;min-width:0;max-width:100%;box-sizing:border-box}
+.pt2 .pt-plan-card .pt2-session-main{min-width:0;display:grid;gap:4px}
+.pt2 .pt-plan-card .pt2-seq{width:28px;min-width:0;font-size:13px}
+.pt2 .pt-plan-card .pt-plan-card-status{grid-column:3!important;grid-row:1;display:flex!important;flex-wrap:wrap;justify-content:flex-end;min-width:0;gap:4px}
+.pt2 .pt-plan-card .pt-plan-card-status .pt2-order-button{min-width:30px;min-height:34px;padding:3px}
+.pt2 .pt-plan-actions{grid-column:2/-1;display:flex;flex-wrap:wrap;gap:6px;min-width:0;align-items:center}
+.pt2 .pt-plan-actions:empty{display:none}
+.pt2 .pt-plan-actions button{min-height:42px;min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;font-size:12px;padding:6px 10px;flex:0 1 auto}
+.pt2 .pt-plan-evidence{grid-column:2/-1;min-width:0;overflow-wrap:anywhere;color:#b6cebd;font-size:11px}
+.pt2 .pt2-acta-progress-row .pt-plan-actions{grid-column:2/-1}
+.pt2 .pt-plan-picker-modal{width:min(720px,100%);max-width:100%;min-width:0;box-sizing:border-box;max-height:88dvh;overflow:auto;display:grid;gap:10px}
+.pt2 .pt-plan-picker-modal .wod-picker,.pt2 .pt-plan-picker-modal .wod-picker-results{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+.pt2 .pt-plan-picker-modal .wod-picker-option{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:7px;min-width:0;max-width:100%;white-space:normal;text-align:left;height:auto;overflow-wrap:anywhere}
+.pt2 .pt-plan-picker-modal .wod-picker-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));min-width:0}
+.pt2 .pt-plan-picker-modal input,.pt2 .pt-plan-picker-modal select{min-width:0;max-width:100%;width:100%;box-sizing:border-box}
+.pt2 .pt-plan-picker-modal .wod-picker-option-main small{white-space:normal;overflow-wrap:anywhere}
+.pt-plan-picker-head{display:flex;gap:8px;align-items:flex-start;justify-content:space-between;min-width:0}
+.pt-plan-picker-head>div{display:grid;gap:3px;min-width:0;overflow-wrap:anywhere}.pt-plan-picker-head small{color:#b1bfc5;font-size:12px}.pt-plan-picker-head button{flex:none}
+.pt-plan-evidence-list{display:grid;gap:6px;min-width:0}.pt-plan-evidence-list button{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;min-height:44px;white-space:normal;overflow-wrap:anywhere}.pt-plan-evidence-list small{font-size:11px;flex:none}
+.pt2 .pt2-session-slot-editor{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;min-width:0}.pt2 .pt2-session-slot-editor label{min-width:0}.pt2 .pt2-session-slot-editor select{width:100%;min-width:0}.pt2 .pt2-session-slot-editor button{grid-column:1/-1}
+@media(max-width:480px){.pt2 .pt-plan-card{grid-template-columns:26px minmax(0,1fr)!important}.pt2 .pt-plan-card .pt-plan-card-status{grid-column:2!important;grid-row:auto;justify-content:flex-start}.pt2 .pt-plan-actions{grid-column:2/-1}.pt2 .pt-plan-picker-modal .wod-picker-option{grid-template-columns:20px minmax(0,1fr)}.pt2 .pt-plan-picker-modal .wod-picker-status{grid-column:2}.pt2 .pt-plan-picker-modal{padding:12px!important}.pt-plan-evidence-list button{display:grid;grid-template-columns:minmax(0,1fr)}}
