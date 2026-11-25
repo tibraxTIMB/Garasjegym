@@ -1,3 +1,4 @@
+import {samspelConfig,samspelIssue,samspelScoring,SAMSPEL_TASKS,SAMSPEL_METRICS} from '../lib/samspel.js'
 import {architectSections,architectDose,architectDoseIssue,hydrateArchitectLevels} from '../lib/wodArchitect.js'
 import './wod-architect.css'
 import {copyWodPart} from '../lib/programReuse.js'
@@ -224,6 +225,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const wizardTopRef=useRef(null)
  const previousWizardStep=useRef(0)
  const [overviewLevel,setOverviewLevel]=useState('rx')
+ const [samspel,setSamspel]=useState(null),[samspelHelp,setSamspelHelp]=useState(false)
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område'),[equipmentFilter,setEquipmentFilter]=useState('all'),[movementFilter,setMovementFilter]=useState('all'),[openFilter,setOpenFilter]=useState('')
  const rehabBodyAreas=['hofte','skulder','kne','nakke']
  const isRehabExercise=x=>!!(x.is_rehab||x.category==='Rehab / fysio'||rehabBodyAreas.includes((x.body_area||'').toLowerCase()))
@@ -252,6 +254,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   const {data:w,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,is_published,timer_settings,category').eq('id',id).single()
   if(e){setError('Kunne ikkje opna WOD for redigering: '+e.message);setLoading(false);return}
   const schema=w.timer_settings?.workout_schema||{}
+  setSamspel(samspelConfig(schema))
   const items=sortWodItems(getWodSchemaItems(schema))
   const engine=normalizeWodEngine(schema,{format:w.format});setParticipation(engine.participation);setCollaboration(engine.collaboration);setPartnerCount(String(engine.participant_count||3));setEditingWodId(copyMode?null:w.id);setName(copyMode&&!planContext?w.name+' (kopi)':w.name);const legacyFormat=w.format||'AMRAP';const emomMatch=/^EMOM(?: ([1-7]))?$/.exec(legacyFormat);const mappedFormat=isEmomFormat(legacyFormat)?'EMOM':legacyFormat==='Pyramid'?'Strength':legacyFormat==='Couplet / Triplet'?(schema.items?.filter(item=>!item.is_rest).length>=3?'Triplet':'Couplet'):legacyFormat==='Ladder / Death By'?(schema.ladder?.type==='Death By'?'Death By':'Ladder'):legacyFormat==='Intervall / Tabata'?(schema.interval?.work_seconds===20&&schema.interval?.rest_seconds===10?'Tabata':'Intervall'):legacyFormat;setFormat(mappedFormat);setPublishToMembers(!copyMode&&canPublishWod&&!!w.is_published);const storedLibraryCategory=schema.library_category||(w.category==='warmup'?'warmup':'standard');const normalizedLibraryCategory=storedLibraryCategory==='daily'?'standard':storedLibraryCategory;const knownLibraryCategories=['warmup','standard','benchmark','assessment','rehab','recovery','other'];setLibraryCategory(knownLibraryCategories.includes(normalizedLibraryCategory)?normalizedLibraryCategory:'custom');setCustomLibraryCategory(knownLibraryCategories.includes(normalizedLibraryCategory)?'':normalizedLibraryCategory)
   setMinutes(String(schema.duration_seconds?Math.floor(schema.duration_seconds/60):w.duration_minutes||20));setDurationSeconds(String(schema.duration_seconds?schema.duration_seconds%60:0))
@@ -333,6 +336,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const activeArchitectPart=architectParts.find(p=>p.id===activeBlockId)||architectParts[0]
  const itemPart=x=>isComposite?compositeBlocks.find(b=>b.id===x.blockId):{format}
  const issueFor=x=>architectDoseIssue(x,{metric:quickDoseMetricFor(x),format:itemPart(x)?.format,timed:isInterval||isStationItem(x)||isOptionalTimedReps(x),strength:usesSetsForItem(x),level:'rx'})
+ const samspelProblem=samspelIssue(samspel,{format,participation,items:selected})
  const automaticScoreLabel=isComposite?'Resultat per del · etter format':isDeathBy?'Fullførte rundar før fristen':SCORE_TYPES.find(item=>item.value===automaticScoring.type)?.label||'Repetisjonar'
  function loadClassicWod(){
   const preset=CLASSIC_WODS.find(x=>x.name===classicChoice)
@@ -464,7 +468,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   setNotice('Ny WOD er generert. Kontroller dosering og stimulus før publisering.');setError('')
  }
  function reset(){
-  setCompositeBlocks(defaultCompositeBlocks());setActiveBlockId('a');setSelected([]);setIntensity('2');setNotes('');setCustomInstructions('');setCustomUseSets(false);setCombinationMode('For Time');setStimulus('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
+  setSamspel(null);setCompositeBlocks(defaultCompositeBlocks());setActiveBlockId('a');setSelected([]);setIntensity('2');setNotes('');setCustomInstructions('');setCustomUseSets(false);setCombinationMode('For Time');setStimulus('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
   setName(suggestUniqueWodName());setWizardStep(0);setError('');setNotice('Økta er forkasta. Du kan byrja på nytt.')
  }
   function doseForItem(x,level=prescription){
@@ -520,6 +524,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  }
  async function save(event){
   event.preventDefault();setError('');setNotice('')
+   if(samspelProblem){setError(samspelProblem);setSamspelHelp(true);return}
   if(!selected.length){setError('Legg minst ei øving til WOD-en.');return}
   if(isCoupletTriplet&&combinationMode!=='Open'&&(!Number.isInteger(Number(timeCap))||Number(timeCap)<1||Number(timeCap)>300)){setError(`${format} i ${combinationMode} krev gyldig tidsramme 1–300 minutt.`);setWizardStep(1);return}
   if(isComposite){const issue=validateCompositeBlocks(compositeBlocks,selected);if(issue){setError(issue);setWizardStep(2);return}}
@@ -578,7 +583,8 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
      percent_1rm_min:x.percent_1rm_min??null,percent_1rm_max:x.percent_1rm_max??null,reference_rm:x.reference_rm||null,minute_slot:x.minuteSlot||null,superset_group:x.group||'A',prescription:x.prescription||null,levels:x.levels||makeLevels(x.reps,x.prescription_profiles||{})
     }))
    }
-   const engineConfig=createWodEngineConfig({participation,collaboration,partnerCount:Number(partnerCount),scoreType:automaticScoring.type,scoreFields:automaticScoring.fields})
+   const engineConfig=createWodEngineConfig({participation,collaboration,partnerCount:Number(partnerCount),scoreType:samspelScoring(samspel,automaticScoring).type,scoreFields:samspelScoring(samspel,automaticScoring).fields})
+   if(samspel)schema.samspel=samspel
    schema.wod_engine={...engineConfig,blocks:isComposite?compositeBlocksWithItems.map((block,index)=>{const timerBlock=compositeBlockForTimer({...block,items:schema.items.filter(item=>item.block_id===block.id)},index);return {...buildLegacyCompatibleBlock({format:block.format,items:timerBlock.items,durationSeconds:timerBlock.duration_seconds,engine:{...engineConfig,scoring:scoreForWodFormat(block.format,block.combinationMode||'For Time')}}),...timerBlock,scoring:scoreForWodFormat(block.format,block.combinationMode||'For Time')}}):[buildLegacyCompatibleBlock({format:savedFormat,items:schema.items,durationSeconds:schema.duration_seconds,engine:engineConfig,interval:schema.interval})]}
    const movements=selected.map((x,i)=>(i+1)+'. '+(x.is_rest?`Pause · ${Number(x.pauseSeconds)||30} sek`:buildPrescription(x))).join('\n')
    const stationDuration=schema.duration_seconds
@@ -650,7 +656,12 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   {(wizardStep!==0||selected.length>0)&&<section className="gg-architect-overview" aria-label="Heilskap i WOD-en">
    {planContext&&<small className="gg-architect-scope">PT · {planContext.clientName} · {planContext.sessionTitle} · Berre denne planøkta</small>}
    <div className="gg-architect-heading"><label><span>WOD-namn</span><input aria-label="WOD-namn" value={name} onChange={e=>setName(e.target.value)} maxLength={120}/></label><button type="button" className="primary-button" disabled={busy||loading} onClick={()=>save({preventDefault(){}})}><Save size={16}/>{busy?'Lagrar':'Lagra'}</button></div>
-   <div className="gg-architect-meta"><span>{format} · {selected.length} øvingar{isComposite?' · '+Math.ceil(compositeTotalSeconds(compositeBlocksWithItems)/60)+' min':''}</span><button type="button" className="text-button" onClick={()=>setWizardStep(0)}>Format</button><button type="button" className="text-button" onClick={()=>setWizardStep(1)}>Rammer</button><button type="button" className="text-button" onClick={()=>setWizardStep(4)}>Lagringsval</button></div>
+   <div className="gg-architect-meta"><span>{format} · {selected.length} øvingar{isComposite?' · '+Math.ceil(compositeTotalSeconds(compositeBlocksWithItems)/60)+' min':''}</span><button type="button" className="text-button" onClick={()=>setWizardStep(0)}>Format</button><button type="button" className="text-button" onClick={()=>setWizardStep(1)}>Rammer</button><button type="button" className="text-button" onClick={()=>setWizardStep(4)}>Lagringsval</button><button type="button" className="text-button" aria-expanded={samspelHelp} onClick={()=>setSamspelHelp(v=>!v)}>{samspel?'Samspel · aktiv':'⋯ Samspel'}</button></div>
+   {samspelHelp&&<section className="gg-samspel-setup" aria-label="Samspel"><header><strong>Samspel</strong><button type="button" aria-label="Lukk Samspel" onClick={()=>setSamspelHelp(false)}>×</button></header><p>To partnarar arbeider samtidig. AMRAP-runda styrer byte av rolle.</p>
+   <label><input type="checkbox" checked={!!samspel} disabled={format!=='AMRAP'&&!samspel} onChange={e=>{if(e.target.checked){setParticipation('partner');setCollaboration('parallel');setPartnerCount('2');setSamspel({version:1,mode:'parallel_round_swap',task:'row',metric:'distance'})}else setSamspel(null)}}/> Parallelt arbeid med rundebyte</label>
+   {format!=='AMRAP'&&<small>! Rundebyte er førebels tilgjengeleg for AMRAP. Andre format brukar dei eksisterande samarbeidsvala.</small>}
+   {samspel&&<><div className="gg-samspel-fields"><label>Oppgåve 1<select value={samspel.task} onChange={e=>setSamspel(v=>({...v,task:e.target.value}))}>{SAMSPEL_TASKS.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label>Felles resultat<select value={samspel.metric} onChange={e=>setSamspel(v=>({...v,metric:e.target.value}))}>{SAMSPEL_METRICS.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label></div><small>Oppgåve 2: AMRAP-øvingane i byggaren. Byte etter fullført runde. Resultat: rundar + ekstra reps og {samspel.metric==='distance'?'meter':'kaloriar'}.</small><small>Kondisjonsoppgåva skal ikkje leggjast inn som eit ekstra AMRAP-drag.</small>{samspelProblem&&<p className="gg-architect-error" role="alert">! {samspelProblem}</p>}</>}
+  </section>}
    <nav className="gg-architect-parts" aria-label="Delar i WOD-en">{architectParts.map(p=><button type="button" key={p.id} className={'gg-arch-tone-'+p.tone+(p.id===activeArchitectPart?.id?' active':'')} aria-pressed={p.id===activeArchitectPart?.id} onClick={()=>{setActiveBlockId(p.id);setEditingSelectedKey(null);setWizardStep(3)}}><b>{String.fromCharCode(65+p.index)}</b><span>{p.title||p.format}</span><small>{p.label} · {p.time}</small></button>)}</nav>
    <div className="gg-architect-levels" role="group" aria-label="Vis doseringsnivå">{[['rx','RX'],['intermediate','Interm.'],['scaled','Scaled'],['foundation','Foundation']].map(([id,label])=><button type="button" key={id} aria-pressed={overviewLevel===id} onClick={()=>setOverviewLevel(id)}>{label}</button>)}</div>
    <details className="gg-architect-map"><summary>Sjå heile økta · {architectParts.length} delar</summary>{architectParts.map(p=><section key={p.id} className={'gg-arch-tone-'+p.tone}><button type="button" className="gg-architect-part-head" onClick={()=>{setActiveBlockId(p.id);setWizardStep(3);setEditingSelectedKey(null)}}><b>{String.fromCharCode(65+p.index)} · {p.title||p.format}</b><small>{p.label} · {p.time} · {p.reporting==='done'?'Berre utført':p.reporting==='score'?'Hovudresultat':'Settvis'}</small></button>{p.group.map(ex=><button type="button" key={ex.key} className={'gg-architect-map-row'+(issueFor(ex)?' has-issue':'')} onClick={()=>{setActiveBlockId(p.id);setDoseLevelByKey(rows=>({...rows,[ex.key]:overviewLevel}));setEditingSelectedKey(ex.key);setWizardStep(3)}}><strong>{ex.name}</strong><span>{issueFor(ex)||architectDose(ex,overviewLevel)}</span></button>)}</section>)}</details>
@@ -672,7 +683,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
     <div className="wod-engine-fields">
       {participation!=='individual'&&<label>Samarbeidsform<select value={collaboration} onChange={e=>setCollaboration(e.target.value)}>{COLLABORATION_MODES.filter(x=>x.value!=='solo').map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label>}
       {participation==='team'&&<label>Tal utøvarar<input type="number" min="3" max="30" value={partnerCount} onChange={e=>setPartnerCount(e.target.value)}/></label>}
-      <div className="wod-auto-score" role="status"><span>Scoring blir valt automatisk etter format</span><strong>{automaticScoreLabel}</strong></div>
+      <div className="wod-auto-score" role="status"><span>Scoring blir valt automatisk etter format</span><strong>{samspel?'Rundar + reps og '+(samspel.metric==='distance'?'meter':'kaloriar'):automaticScoreLabel}</strong></div>
     </div>
     <p className="wod-help">Gruppetime er ikkje det same som lagøkt. Ein gruppetime kan godt ha individuell scoring.</p>
   </details>}
