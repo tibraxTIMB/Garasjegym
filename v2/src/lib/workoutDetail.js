@@ -53,6 +53,8 @@ export function buildWorkoutReport(workout,partsFromSnapshot=[]){
   if(id&&!parts.some(p=>p.id===id))parts.push({id,title:row.title||'Del',format:row.format||'',items:[],seconds:row.duration_seconds||0,warm:/oppvarming|warm.?up/i.test(row.title||'')})
  }
  if(!parts.length)return null
+ // Old reports without a saved structure retain explicit part letters when available.
+ if(!partsFromSnapshot.length){const order=p=>{const m=String(p.title||'').match(/^Del\s+([A-Z])\b/i);return m?m[1].toUpperCase().charCodeAt(0):Infinity};parts.sort((a,b)=>order(a)-order(b))}
  // Only use positional snapshot mapping if the full list of names matches.
  const norm=x=>String(x||'').trim().toLowerCase()
  const aligned=snap.length===exercises.length&&snap.every((x,i)=>norm(x.exercise_name)===norm(exercises[i].exercise_name))
@@ -63,7 +65,7 @@ export function buildWorkoutReport(workout,partsFromSnapshot=[]){
   const status=flow.find(x=>x.id===part.id)||null
   const rows=exercises.flatMap((ex,i)=>{
    const exact=aligned&&snap[i]?.block_id===part.id
-   const single=parts.length===1&&(!aligned||!snap[i]?.block_id)
+   const single=parts.length===1
    if(!exact&&!single)return []
    used.add(i);return [ex]
   })
@@ -76,5 +78,5 @@ export function buildWorkoutReport(workout,partsFromSnapshot=[]){
  if(amrap.length===1&&!amrap[0].score&&workout.score_rounds!=null&&workout.score_reps!=null){
   amrap[0].score={roundsCompleted:Number(workout.score_rounds),extra_reps:Number(workout.score_reps),legacy:true}
  }
- return {sections,unassigned:exercises.filter((_,i)=>!used.has(i)),unassignedComplex:complex.filter((_,i)=>!usedComplex.has(i)),showOverall:!amrap.some(p=>p.score&&p.score.roundsCompleted!=null),level:data.prescription_level||null}
+ return {sections,unassigned:exercises.filter((_,i)=>!used.has(i)),unassignedComplex:complex.filter((_,i)=>!usedComplex.has(i)),showOverall:!amrap.some(p=>p.score&&p.score.roundsCompleted!=null&&p.score.extra_reps!=null),level:data.prescription_level||null}
 }
