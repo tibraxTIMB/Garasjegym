@@ -160,6 +160,58 @@ export const PT_FLOW_PRESETS = [
         "Godkjend rørslekvalitet; ingen krav om maksløft."
       ]
     ]
+  },
+  {
+    "id": "wall-handstand",
+    "label": "Første handstand mot vegg · 6 steg",
+    "type": "progression",
+    "weeks": 6,
+    "frequency": 1,
+    "focus": [
+      "Teknikk",
+      "Styrke",
+      "Kjernestabilitet",
+      "Mobilitet"
+    ],
+    "description": "Mål: ein kontrollert handstand mot vegg i 10–20 sekund, med trygg veg ned. Seks nivå, ikkje seks obligatoriske veker. PT tilpassar belastning og godkjenner teknikk før neste steg. Øv med rydda golv, stabil vegg, kontrollert nedgang og PT til stades ved nye inverterte steg. Stopp ved smerte, svimmelheit eller tap av kontroll. Ingen spark opp eller makshald er nødvendig.",
+    "steps": [
+      [
+        "Handledd, skuldrer og grunnspenn",
+        "Rolig oppvarming. Gradvis vekt på hendene og øv aktiv skulderposisjon.",
+        "Wrist rocks – 2 × 8 rolege repetisjonar\nPlanke – 3 × 15–20 sekund\nSkulderbladspush-up – 2 × 8",
+        "Tolererer øvingane utan smerte eller svimmelheit, med kontrollert skulder- og kjernestabilitet."
+      ],
+      [
+        "Pike-hald på golv",
+        "Flytt meir vekt over hendene frå pike-posisjon. Korte hald og god pause.",
+        "Pike hold – 3 × 10–15 sekund\nPike shoulder shrugs – 2 × 6",
+        "Tre kontrollerte hald med aktiv skulderposisjon og trygg retur til ståande."
+      ],
+      [
+        "Pike med føtene på låg boks",
+        "Bruk stabil, sklisikker boks. PT tilpassar høgd og hjelper med inn- og utgang.",
+        "Box pike hold – 3 × 10–15 sekund\nBox pike weight shifts – 2 × 5 rolege forskyvingar",
+        "Stabil støtte over hendene, kontrollert pust og sikker nedgang med PT."
+      ],
+      [
+        "Delvis wall walk",
+        "Start lågt. Gå berre så langt opp veggen at kunden sjølv kan reversera rørsla. PT sikrar området.",
+        "Partial wall walk – 3 × 1\nDelvis vegghald – 3 × 5–10 sekund",
+        "Kontrollert opp- og nedgang utan kollaps i skuldrer eller ubehag. PT godkjenner før høgare nivå."
+      ],
+      [
+        "Handstand mot vegg med støtte",
+        "Gradvis nærare loddrett med brystet mot veggen, berre innanfor trygg kontroll. PT står klar til å hjelpa ned.",
+        "Wall walk til tilpassa høgd – 3 × 1\nWall-supported handstand hold – 3 × 5–10 sekund",
+        "Kontrollert hald, jamn pust, aktiv skulderstøtte og trygg sjølvstendig reversering under tilsyn."
+      ],
+      [
+        "Første kontrollerte handstand",
+        "PT vurderer teknikk, hald og nedgang. Avslutt før utmatting. Ingen krav om frittståande handstand.",
+        "Wall-supported handstand – opptil 3 × 10–20 sekund\nKontrollert wall walk ned",
+        "Minst eitt kontrollert 10-sekundars hald mot vegg med trygg nedgang og PT-godkjenning. Gjenta nivået ved behov."
+      ]
+    ]
   }
 ]
 
