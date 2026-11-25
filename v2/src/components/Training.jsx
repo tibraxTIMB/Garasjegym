@@ -260,7 +260,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const stationCount = Math.max(1, Number(stationPlan.station_count) || stationList.length || 1)
   const isCountdown = ['AMRAP', 'Nedteljing'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'AMRAP')
   const isForTime = ['For Time', 'Chipper'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'For Time')
-  const plannedForTimeRounds=isForTime&&Number.isInteger(Number(schema?.rounds))&&Number(schema.rounds)>0?Number(schema.rounds):0
+  const plannedForTimeRounds=format==='For Time'&&Number.isInteger(Number(schema?.planned_for_time_rounds))&&Number(schema.planned_for_time_rounds)>0?Number(schema.planned_for_time_rounds):0
   const isDeathBy = format === 'Death By'
   const isLadder = format === 'Ladder'
     const ladderProgress=ladderStatus(ladderCompletedRounds,schema?.ladder,schema?.rounds??timerSettings?.rounds)
@@ -529,7 +529,11 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     if(!['round','split'].includes(kind)||!laps.length)return
     lastManualAction.current=null;setCanUndoManual(false)
     setLaps(value=>value.slice(0,-1))
-    if(kind==='round')setRound(value=>Math.max(1,value-1))
+    if(kind==='round'){
+      setRound(value=>Math.max(1,value-1))
+      // Undo a confirmed final round without silently restarting the clock.
+      if(plannedForTimeRounds&&phase==='FERDIG'&&laps.length>=plannedForTimeRounds)setPhase('PAUSE')
+    }
   }
   const beginWorkout = (withCountdown = false) => {
     if (hasStarted || running || countdownDeadline !== null) return
@@ -656,7 +660,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           <div className="gg-live-timer__time-label">{countdownDeadline!==null?'STARTAR OM':stageTimeLabel}</div>
           {(isCountdown||isEMOM||isTimedInterval||isStationCircuit||hasTimeCap)&&!isDeathBy&&<div className="gg-live-timer__time-secondary"><span>{isCountdown?'Medgått':isEMOM?'Økta att':isTimedInterval||isStationCircuit?'Økta att':'Tid att'}</span><b>{clock(isCountdown?elapsed:remainingTotal)}</b></div>}
           {stageLapHistory.length>0&&<div className="gg-live-timer__clock-laps" aria-label={stageLapLabel}>
-            <ol ref={landscapeLapsRef} className="gg-live-timer__lap-preview" aria-label="Sveip for å sjå tidlegare rundar">{stageLapHistory.map(lap=><li key={lap.round}><span>{isAmrap?'R':'M'}{lap.round}</span><b>{clock(lap.duration)}</b></li>)}</ol>
+            <ol ref={landscapeLapsRef} className="gg-live-timer__lap-preview" aria-label="Sveip for å sjå tidlegare rundar">{stageLapHistory.map(lap=><li key={lap.round}><span>{isAmrap||plannedForTimeRounds?'R':'M'}{lap.round}</span><b>{clock(lap.duration)}</b></li>)}</ol>
             <button type="button" className="gg-live-timer__lap-all" onClick={()=>setStagePanel('laps')} aria-label={`Vis alle ${laps.length} rundetider`}>Alle</button>
           </div>}
         </div>
@@ -674,7 +678,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       </div>
       <div className="gg-live-timer__music-dock" aria-label="Musikkstyring">{showMusic&&<><MusicMiniPlayer liveCompact/><button type="button" className="gg-music-expand" aria-label="Opna stor musikkspelar" onClick={()=>setStagePanel('music')}><Maximize2 size={16}/></button></>}</div>
       {stageLapHistory.length>0&&<div className="gg-live-timer__laps-portrait" aria-label={stageLapLabel}>
-        <ol ref={portraitLapsRef} className="gg-live-timer__lap-preview" aria-label="Sveip sidelengs for å sjå tidlegare rundar">{stageLapHistory.map(lap=><li key={lap.round}><span>{isAmrap?'R':'M'}{lap.round}</span><b>{clock(lap.duration)}</b></li>)}</ol>
+        <ol ref={portraitLapsRef} className="gg-live-timer__lap-preview" aria-label="Sveip sidelengs for å sjå tidlegare rundar">{stageLapHistory.map(lap=><li key={lap.round}><span>{isAmrap||plannedForTimeRounds?'R':'M'}{lap.round}</span><b>{clock(lap.duration)}</b></li>)}</ol>
         <button type="button" className="gg-live-timer__lap-all" onClick={()=>setStagePanel('laps')} aria-label={`Vis alle ${laps.length} rundetider`}>Alle</button>
       </div>}
       <footer className="gg-live-timer__footer">

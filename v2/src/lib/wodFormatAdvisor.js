@@ -4,15 +4,15 @@ import {isEmomFormat,emomIntervalSeconds} from './wodEngine.js'
 
 export const isFixedInterval=format=>['Intervall','Tabata','Row Intervals'].includes(format)
 export const clockLabel=seconds=>Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')
-export function fixedIntervalSummary({workSeconds,restSeconds,rounds,exerciseCount}){
+export function fixedIntervalSummary({workSeconds,restSeconds,rounds,exerciseCount,includeFinalRest=false}){
  if([workSeconds,restSeconds,rounds,exerciseCount].some(x=>x===''||x==null))return null
  const [work,rest,cycles,count]=[workSeconds,restSeconds,rounds,exerciseCount].map(Number)
  if(![work,rest,cycles,count].every(Number.isInteger)||work<1||work>600||rest<0||rest>600||cycles<1||cycles>30||count<1||count>8)return null
- const state=getFixedSlotTimerState({workSeconds:work,restSeconds:rest,rounds:cycles,slotsPerRound:count})
- return {workSeconds:work,restSeconds:rest,rounds:cycles,exerciseCount:count,totalIntervals:cycles*count,totalSeconds:state.totalSeconds,workTotal:work*cycles*count,restTotal:rest*(cycles*count-1)}
+ const state=getFixedSlotTimerState({workSeconds:work,restSeconds:rest,rounds:cycles,slotsPerRound:count,includeFinalRest})
+ return {workSeconds:work,restSeconds:rest,rounds:cycles,exerciseCount:count,totalIntervals:cycles*count,totalSeconds:state.totalSeconds,workTotal:work*cycles*count,restTotal:rest*(cycles*count-(includeFinalRest?0:1)),...(includeFinalRest?{includeFinalRest:true}:{})}
 }
 export function fixedIntervalLabel(plan){
- return plan?plan.rounds+' rundar × '+plan.exerciseCount+' øvingar = '+plan.totalIntervals+' arbeidsintervall · '+clockLabel(plan.totalSeconds)+' (utan siste kvilepause)':'Kontroller arbeid, kvile, rundar og øvingstal.'
+ return plan?plan.rounds+' rundar × '+plan.exerciseCount+' øvingar = '+plan.totalIntervals+' arbeidsintervall · '+clockLabel(plan.totalSeconds)+(plan.includeFinalRest?' (inkl. siste kvilepause)':' (utan siste kvilepause)'):'Kontroller arbeid, kvile, rundar og øvingstal.'
 }
 // Compact box notation E2MOM35 means 35 total minutes, not 35 repetitions.
 export function readEmomHeader(text){

@@ -205,3 +205,22 @@ test('For Time retains explicit round count and partner block retains metadata',
  const partner=compositeTimerConfig({format:'AMRAP',minutes:10,participation:'partner',participant_count:2,collaboration:'free_split',items:[{exercise_name:'Bike erg'}]});
  assert.equal(partner.timerSettings.workout_schema.wod_engine.participation,'partner');assert.equal(partner.timerSettings.workout_schema.wod_engine.collaboration,'free_split');
 });
+
+import {fixedIntervalSummary,fixedIntervalLabel} from '../src/lib/wodFormatAdvisor.js'
+test('Builder uses the same duration as the timer, without changing legacy or station behavior',()=>{
+ const plan=fixedIntervalSummary({workSeconds:20,restSeconds:40,rounds:3,exerciseCount:3,includeFinalRest:true});
+ assert.equal(plan.totalSeconds,540);assert.equal(plan.restTotal,360);assert.match(fixedIntervalLabel(plan),/inkl\. siste kvilepause/);
+ assert.equal(fixedIntervalSummary({workSeconds:20,restSeconds:40,rounds:3,exerciseCount:3}).totalSeconds,500);
+ assert.equal(compositeBlockDuration({format:'Stasjonssirkel',minutes:9,workSeconds:20,restSeconds:40,rounds:3,includeFinalRest:true},3),500);
+});
+test('Only explicit composite For Time targets stop after planned rounds',()=>{
+ for(const format of ['For Time','Chipper','Couplet','AMRAP']){
+ const s=compositeTimerConfig({format,rounds:4,minutes:10,items:[{exercise_name:'Move'}]}).timerSettings.workout_schema;
+ assert.equal(s.planned_for_time_rounds,format==='For Time'?4:null);
+ }
+ assert.equal(compositeTimerConfig({format:'For Time',rounds:'',minutes:10}).timerSettings.workout_schema.planned_for_time_rounds,null);
+ const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
+ assert.match(read('../src/components/Training.jsx'),/if\(plannedForTimeRounds&&phase==='FERDIG'&&laps\.length>=plannedForTimeRounds\)setPhase\('PAUSE'\)/);
+ assert.match(read('../src/components/WodBuilder.jsx'),/Ta med siste kvilepause/);
+ assert.match(read('../src/components/WodBuilder.jsx'),/Planlagde rundar \(valfritt\)/);
+});

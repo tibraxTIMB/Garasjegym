@@ -32,7 +32,7 @@ export function compositeBlockDuration(block, itemsCount=1) {
   const rounds=Math.max(1,Math.floor(Number(block?.rounds) || (format==='Tabata'?8:3)))
   const slots=Math.max(1,Math.floor(Number(itemsCount)||1))
   const total=rounds*slots
-  return work*total+rest*Math.max(0,total-(block?.includeFinalRest===true?0:1))
+  return work*total+rest*Math.max(0,total-(COMPOSITE_INTERVAL_FORMATS.includes(format)&&block?.includeFinalRest===true?0:1))
  }
  return Math.max(0,Math.round(Number(block?.minutes || 0)*60))
 }
@@ -62,6 +62,7 @@ export function validateCompositeBlocks(blocks,items=[]) {
   if(!exercises.length)return title+': legg til minst éi øving.'
   const every=compositeIntervalMinutes(block.format,block)
   if(every && Math.round(minute*60)%Math.round(every*60)!==0)return title+': øktlengda må gå opp i intervalla på '+Math.round(every*60)+' sekund.'
+  if(block.format==='For Time'&&block.rounds!=null&&String(block.rounds).trim()!==''&&(!Number.isInteger(Number(block.rounds))||Number(block.rounds)<1||Number(block.rounds)>100))return title+': vel 1–100 rundar eller la feltet stå tomt.'
   if(block.format==='Couplet'&&exercises.length!==2)return title+': Couplet krev to øvingar.'
   if(block.format==='Triplet'&&exercises.length!==3)return title+': Triplet krev tre øvingar.'
   if(block.format==='Stasjonssirkel'&&(exercises.length<2||exercises.length>8))return title+': stasjonssirkel krev 2–8 stasjonar.'
@@ -117,10 +118,11 @@ export function compositeTimerConfig(block) {
   stations:items.map((item,i)=>({...item,station_number:i+1})),
  }:null
  const timedCap=current.format==='AMRAP'||deathBy||every!==null||(['Couplet','Triplet'].includes(current.format)?current.combinationMode!=='Open':COMPOSITE_FOR_TIME_FORMATS.includes(current.format))
- const plannedRounds=COMPOSITE_FOR_TIME_FORMATS.includes(current.format)&&current.format!=='Ladder'&&Number.isInteger(Number(current.rounds))&&Number(current.rounds)>0?Number(current.rounds):null
+ const plannedRounds=current.format==='For Time'&&Number.isInteger(Number(current.rounds))&&Number(current.rounds)>0?Number(current.rounds):null
  const schema={
   format:current.format,
   include_final_rest:interval&&current.includeFinalRest===true,
+  planned_for_time_rounds:plannedRounds,
   wod_engine:{version:2,participation:current.participation||'individual',participant_count:Number(current.participant_count)||1,collaboration:current.collaboration||'solo',scoring:current.scoring||{type:'reps',fields:['reps']},blocks:[]},
   duration_seconds:current.duration_seconds,
   time_cap_seconds:timedCap ? current.duration_seconds:null,
