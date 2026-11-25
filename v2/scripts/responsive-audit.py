@@ -85,6 +85,19 @@ with sync_playwright() as pw:
                 page.evaluate("(screen)=>window.__ggVideo.setScreen(screen)",screen)
                 page.wait_for_timeout(350)
                 check(page,"demo-"+screen,w,h)
+                if screen=="wod":
+                    tile=page.locator(".librarium-open").first
+                    tile.wait_for()
+                    assert page.get_by_role("combobox",name="Kategori").is_visible()
+                    page.get_by_role("combobox",name="Sorter WOD").select_option("name")
+                    tile.tap()
+                    card=page.get_by_role("dialog",name="WOD-kort:",exact=False)
+                    card.wait_for()
+                    check(page,"librarium-full-card",w,h)
+                    card.get_by_role("button",name="Dosering",exact=True).tap()
+                    check(page,"librarium-full-dose",w,h)
+                    card.get_by_role("button",name="Tilbake",exact=True).tap()
+                    tile.wait_for()
                 if errors: failures.append(f"demo {screen} {w}x{h}: JS {errors[:2]}")
             except Exception as e: failures.append(f"demo {screen} {w}x{h}: {e}")
             finally:
