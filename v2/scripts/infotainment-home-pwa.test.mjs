@@ -38,3 +38,5 @@ test('Android PWA manifest resolves a real maskable gorilla icon',()=>{
   assert.ok(bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))
  }
 })
+
+test('daily WOD uses a shared compact dated card with real schedule date',()=>{const app=file('../src/App.jsx'),overview=file('../src/components/Overview.jsx'),library=file('../src/components/WodLibrary.jsx'),strip=file('../src/components/DailyWodStrip.jsx');assert.match(app,/wod_id,scheduled_date,wods\(/);assert.match(app,/date=\{dailyWod.scheduled_date\}/);assert.match(overview,/date=\{dailyWod.scheduled_date\}/);assert.match(library,/date=\{dailyDate\}/);assert.match(strip,/<time dateTime=\{date\}/);assert.match(strip,/onClick=\{\(\)=>onOpen\(wod.id\)\}/)})
