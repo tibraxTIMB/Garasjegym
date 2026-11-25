@@ -40,7 +40,7 @@ with sync_playwright() as pw:
     for w,h in sizes:
         context=browser.new_context(viewport={"width":w,"height":h},has_touch=True,is_mobile=w<600,device_scale_factor=1,locale="nn-NO",color_scheme="dark",reduced_motion="reduce")
         context.route("**/*",lambda route:route.continue_() if route.request.url.startswith(BASE) else route.abort())
-        for screen in ["flow","card","builder","pt","plan","select"]:
+        for screen in ["flow","card","builder","pt","plan","select","acta"]:
             page=None
             try:
                 page,errors=open_page(context,f"/ui-audit.html?scenario={'audit-admin' if screen in ['builder','pt'] else 'audit-member'}&screen={screen}")
@@ -67,6 +67,23 @@ with sync_playwright() as pw:
                 if screen=="card":
                     page.get_by_role("button",name="Dosering",exact=True).tap()
                     check(page,"card-dose",w,h)
+                if screen=="acta":
+                    panel=page.get_by_role("region",name="Treningsrapport per del")
+                    assert panel.get_by_text("4 + 3",exact=True).is_visible()
+                    assert panel.get_by_text("19",exact=True).is_visible()
+                    assert panel.get_by_text("8",exact=True).is_visible()
+                    check(page,"acta-report",w,h)
+                    page.evaluate("window.dispatchEvent(new Event('gg:workout-back',{cancelable:true}))")
+                    page.get_by_role("button",name="Opna rapport").wait_for()
+                    home=page.get_by_role("button",name="Heim",exact=True)
+                    if home.is_visible():
+                        home.dispatch_event("pointerdown",{"button":0,"clientX":10,"clientY":10})
+                        page.wait_for_timeout(650)
+                        home.dispatch_event("pointerup")
+                        home.dispatch_event("click")
+                        assert page.get_by_role("dialog",name="Hurtigmeny").is_visible()
+                        assert page.get_by_label("Vanlege trykk").inner_text()=="0"
+                        check(page,"quick-menu-longpress",w,h)
                 if screen=="select":
                     page.get_by_role("combobox",name="Testval").tap()
                     page.get_by_role("listbox").wait_for(timeout=4000)
