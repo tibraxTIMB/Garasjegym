@@ -6,6 +6,7 @@ on:
       - "garasjegym-2.0-sturm­kopf"
       - "gazelle-alternative-audio"
       - "gazelle-flow-compact"
+      - "gazelle-pt-flow-integration"
     paths:
       - "v2/**"
       - ".github/workflows/sturmkopf-production-candidate.yml"
