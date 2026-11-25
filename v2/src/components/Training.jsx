@@ -260,6 +260,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const stationCount = Math.max(1, Number(stationPlan.station_count) || stationList.length || 1)
   const isCountdown = ['AMRAP', 'Nedteljing'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'AMRAP')
   const isForTime = ['For Time', 'Chipper'].includes(format) || (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'For Time')
+  const plannedForTimeRounds=isForTime&&Number.isInteger(Number(schema?.rounds))&&Number(schema.rounds)>0?Number(schema.rounds):0
   const isDeathBy = format === 'Death By'
   const isLadder = format === 'Ladder'
     const ladderProgress=ladderStatus(ladderCompletedRounds,schema?.ladder,schema?.rounds??timerSettings?.rounds)
@@ -282,6 +283,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     rounds,
     slotsPerRound: isStationCircuit ? stationCount : intervalExerciseCount,
     transitionLabel: isStationCircuit ? 'BYTE STASJON' : 'KVILE',
+    includeFinalRest: isTimedInterval && schema?.include_final_rest===true,
   })
   const intervalTotal = fixedSlotState.totalSeconds
   const intervalExerciseIndex = fixedSlotState.currentSlotIndex % intervalExerciseCount
@@ -463,7 +465,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     return undefined
   }, [running])
 
-  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isDeathBy ? deathByCompletedRounds : isLadder ? ladderCompletedRounds : (isStationCircuit||isTimedInterval) ? fixedSlotState.roundsCompleted : isEMOM ? Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)) : isAmrap ? laps.length : round, death_by_completed_rounds:isDeathBy?deathByCompletedRounds:null, death_by_failed_round:isDeathBy?deathByStatus.failedRound:null, death_by_interval_seconds:isDeathBy?deathByStatus.intervalSeconds:null, ladder_completed_rounds:isLadder?ladderCompletedRounds:null, ladder_finished:isLadder?ladderProgress.finished:null, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isDeathBy||isTimedInterval||isStationCircuit||hasTimeCap, currentRound, hasStarted, countdownDeadline, savedAt:Date.now() }) }, [elapsed, laps, round, deathByCompletedRounds, ladderCompletedRounds, phase, running, isCountdown, isDeathBy, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, primaryTime, currentRound, hasStarted, countdownDeadline])
+  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isDeathBy ? deathByCompletedRounds : isLadder ? ladderCompletedRounds : (isStationCircuit||isTimedInterval) ? fixedSlotState.roundsCompleted : isEMOM ? Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)) : (isAmrap||plannedForTimeRounds) ? laps.length : round, death_by_completed_rounds:isDeathBy?deathByCompletedRounds:null, death_by_failed_round:isDeathBy?deathByStatus.failedRound:null, death_by_interval_seconds:isDeathBy?deathByStatus.intervalSeconds:null, ladder_completed_rounds:isLadder?ladderCompletedRounds:null, ladder_finished:isLadder?ladderProgress.finished:null, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isDeathBy||isTimedInterval||isStationCircuit||hasTimeCap, currentRound, hasStarted, countdownDeadline, savedAt:Date.now() }) }, [elapsed, laps, round, deathByCompletedRounds, ladderCompletedRounds, phase, running, isCountdown, isDeathBy, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, primaryTime, currentRound, hasStarted, countdownDeadline])
 
   useEffect(() => {
     if (!running) return
@@ -519,8 +521,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     (['Couplet', 'Triplet'].includes(format) && schema?.combination_mode === 'Open')
   const showTimeCap = hasTimeCap
   const roundsShown = isTimedInterval ? Math.min(currentRound, Number(rounds)) : currentRound
-  const completedRounds = isAmrap ? laps.length : isLadder ? ladderCompletedRounds : isEMOM ? Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)) : (isStationCircuit||isTimedInterval) ? fixedSlotState.roundsCompleted : round
-  const lapAction = () => { if(!running||timerLimitReached||!claimManualAction('round'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); setRound(value => value + 1); playSignal('registered') }
+  const completedRounds = (isAmrap||plannedForTimeRounds) ? laps.length : isLadder ? ladderCompletedRounds : isEMOM ? Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)) : (isStationCircuit||isTimedInterval) ? fixedSlotState.roundsCompleted : round
+  const lapAction = () => { if(!running||timerLimitReached||!claimManualAction('round'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); setRound(value => value + 1); if(plannedForTimeRounds&&laps.length+1>=plannedForTimeRounds){setRunning(false);setPhase('FERDIG');playSignal('finish')}else playSignal('registered') }
   const splitAction = () => { if(!running||timerLimitReached||!claimManualAction('split'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); playSignal('registered') }
   const undoManualAction=()=>{
     const kind=lastManualAction.current
@@ -543,7 +545,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   }
   const autoLaunchRef = useRef(false)
   useEffect(()=>{if(autoStartOnMount&&!autoLaunchRef.current){autoLaunchRef.current=true;beginWorkout(false)}},[autoStartOnMount])
-  const finishCurrent=()=>{onFinish({elapsed,laps:[...laps],roundsCompleted:isDeathBy?deathByCompletedRounds:isLadder?ladderCompletedRounds:isAmrap?laps.length:(isStationCircuit||isTimedInterval)?fixedSlotState.roundsCompleted:isEMOM?Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)):round,death_by_completed_rounds:isDeathBy?deathByCompletedRounds:null,death_by_failed_round:isDeathBy?deathByStatus.failedRound:null,ladder_completed_rounds:isLadder?ladderCompletedRounds:null,ladder_finished:isLadder?ladderProgress.finished:null,phase:phase==='TIDSGRENSE'?'TIDSGRENSE':isDeathBy&&deathByStatus.failed?'FERDIG':'FULLFØRT',hasStarted,running:false,savedAt:Date.now()})}
+  const finishCurrent=()=>{onFinish({elapsed,laps:[...laps],roundsCompleted:isDeathBy?deathByCompletedRounds:isLadder?ladderCompletedRounds:(isAmrap||plannedForTimeRounds)?laps.length:(isStationCircuit||isTimedInterval)?fixedSlotState.roundsCompleted:isEMOM?Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)):round,death_by_completed_rounds:isDeathBy?deathByCompletedRounds:null,death_by_failed_round:isDeathBy?deathByStatus.failedRound:null,ladder_completed_rounds:isLadder?ladderCompletedRounds:null,ladder_finished:isLadder?ladderProgress.finished:null,phase:phase==='TIDSGRENSE'?'TIDSGRENSE':isDeathBy&&deathByStatus.failed?'FERDIG':'FULLFØRT',hasStarted,running:false,savedAt:Date.now()})}
   const completeDeathByRound=()=>{if(!isDeathBy||!running||!deathByStatus.canConfirm||timerLimitReached||!claimManualAction('death'))return;setDeathByCompletedRounds(deathByStatus.round);playSignal('registered')}
   const completeLadderRound=()=>{if(!isLadder||!running||ladderProgress.finished||timerLimitReached||!claimManualAction('ladder'))return;const count=ladderCompletedRounds+1;const next=ladderStatus(count,schema?.ladder,schema?.rounds??timerSettings?.rounds);setLadderCompletedRounds(count);setLaps(value=>[...value,splitDuration(elapsed,value)]);if(next.finished){setRunning(false);setPhase('FERDIG');playSignal('finish')}else playSignal('registered')}
   const toggleRunning = () => { if (countdownDeadline !== null) { stopPackAudio(sharedTrainingAudioContext);setCountdownDeadline(null);setCountdownRemaining(0);setPhase('Klar');return } if (!hasStarted) { beginWorkout(false); return } if (running) { stopPackAudio(sharedTrainingAudioContext);setRunning(false); setPhase('PAUSE'); return } if (phase === 'FERDIG' || phase === 'TIDSGRENSE') return; setPhase('PÅGÅR'); setRunning(true) }
@@ -553,7 +555,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const stageNextExercise = isStationCircuit ? stationList[(visibleStationIndex + 1) % stationCount]?.exercise_name : isTimedInterval ? exerciseList[(intervalExerciseIndex + 1) % intervalExerciseCount]?.exercise_name : nextExercise
   const stageTimeLabel = isDeathBy ? 'INTERVALL ATT' : isCountdown ? 'TID ATT' : isStationCircuit ? (inWorkPhase ? 'ARBEID ATT' : 'BYTE ATT') : isTimedInterval ? (inWorkPhase ? 'ARBEID ATT' : 'KVILE ATT') : isEMOM ? (isEmomWorkPhase ? 'ARBEID ATT' : isEmomRestPhase ? 'KVILE ATT' : 'NESTE START') : 'MEDGÅTT TID'
   const stageIsComplete = phase === 'FERDIG' || phase === 'TIDSGRENSE'
-  const stageLapLabel = (isAmrap||isLadder) ? 'RUNDETIDER' : 'MELLOMTIDER'
+  const stageLapLabel = (isAmrap||isLadder||plannedForTimeRounds) ? 'RUNDETIDER' : 'MELLOMTIDER'
   const stageLapHistory = useMemo(()=>summarizeLapSplits(laps),[laps])
   const portraitLapsRef = useRef(null)
   const landscapeLapsRef = useRef(null)
@@ -602,8 +604,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const requestFinish=()=>{if(!hasStarted)return;if(running&&!stageIsComplete){setFinishConfirm(true);setStagePanel('finish')}else finishCurrent()}
   const manualButtonVisible=hasStarted&&(isAmrap||isLadder||isDeathBy||isStopwatch||isForTime)
   const manualButtonDisabled=!running||timerLimitReached||manualLockSeconds>0||(isLadder&&ladderProgress.finished)||(isDeathBy&&!deathByStatus.canConfirm)
-  const manualButtonText=isAmrap?'RUNDE FULLFØRT':isLadder?`TRINN FULLFØRT · ${ladderProgress.targetReps} REPS`:isDeathBy?`FULLFØRT ${deathByStatus.targetReps} REPS`:'MELLOMTID'
-  const manualButton=<button type="button" className={'gg-manual-action'+(manualLockSeconds>0?' is-registered':'')+(buttonSize==='xl'?' is-xl':'')} onClick={isAmrap?lapAction:isLadder?completeLadderRound:isDeathBy?completeDeathByRound:splitAction} disabled={manualButtonDisabled} aria-label={manualLockSeconds>0?'Registrert – sperra mot dobbelttrykk':manualButtonText}>
+  const manualButtonText=(isAmrap||plannedForTimeRounds)?'RUNDE FULLFØRT':isLadder?`TRINN FULLFØRT · ${ladderProgress.targetReps} REPS`:isDeathBy?`FULLFØRT ${deathByStatus.targetReps} REPS`:'MELLOMTID'
+  const manualButton=<button type="button" className={'gg-manual-action'+(manualLockSeconds>0?' is-registered':'')+(buttonSize==='xl'?' is-xl':'')} onClick={(isAmrap||plannedForTimeRounds)?lapAction:isLadder?completeLadderRound:isDeathBy?completeDeathByRound:splitAction} disabled={manualButtonDisabled} aria-label={manualLockSeconds>0?'Registrert – sperra mot dobbelttrykk':manualButtonText}>
     {manualLockSeconds>0?<CheckCircle2 size={27}/>:<Plus size={27}/>}<span><b>{manualLockSeconds>0?(canUndoManual?'REGISTRERT':'STADFESTA'):manualButtonText}</b>{manualLockSeconds>0&&<small>Vent {manualLockSeconds} sek</small>}</span>
   </button>
   const undoButton=manualButtonVisible&&(isAmrap||isStopwatch||isForTime)&&<button type="button" className="gg-manual-undo" disabled={!canUndoManual} onClick={undoManualAction} aria-label="Angre siste registrering"><Undo2 size={17}/> Angre</button>
@@ -659,7 +661,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           </div>}
         </div>
         <div className="gg-live-timer__context">
-          {isAmrap&&<div className="gg-live-timer__rounds"><span>FULLFØRTE RUNDER</span><strong>{laps.length}</strong></div>}
+          {(isAmrap||plannedForTimeRounds>0)&&<div className="gg-live-timer__rounds"><span>FULLFØRTE RUNDER</span><strong>{laps.length}{plannedForTimeRounds?` / ${plannedForTimeRounds}`:''}</strong></div>}
           {isLadder&&<div className="gg-live-timer__rounds"><span>{ladderProgress.finished?'LADDER FULLFØRT':`TRINN ${ladderProgress.currentRound} AV ${ladderProgress.maxRounds}`}</span><strong>{ladderProgress.finished?`${ladderCompletedRounds} trinn`: `${ladderProgress.targetReps} reps`}</strong><small>{ladderCompletedRounds} trinn fullførte</small></div>}
           {isDeathBy&&<div className="gg-live-timer__rounds"><span>{deathByStatus.failed?`STOPPA I RUNDE ${deathByStatus.failedRound}`:`RUNDE ${deathByStatus.round} · ${deathByStatus.intervalSeconds} SEKUND`}</span><strong>{deathByStatus.targetReps} reps</strong><small>{deathByCompletedRounds} rundar (førebels){deathByStatus.roundConfirmed?' · Klar for neste intervall':' · Neste runde startar automatisk'}</small></div>}
           {(isTimedInterval||isStationCircuit||isEMOM)&&<div className="gg-live-timer__rounds"><span>{isStationCircuit?'STASJON · RUNDE':isEMOM?'INTERVALL':'RUNDE'}</span><strong>{isStationCircuit?`${visibleStationIndex+1}/${stationCount} · ${Math.min(currentRound,Number(rounds)||1)}/${rounds}`:isEMOM?currentEmomRound:`${roundsShown}/${rounds}`}</strong></div>}
@@ -883,7 +885,7 @@ function CompositeTimer({schema,exerciseList=[],previousLogs=[],prescriptionLeve
    ladder_finished:results[index]?.ladder_finished??null,
    laps:results[index]?.laps||[],
    phase:results[index]?.phase||'Klar',
-   completed:['FULLFØRT','FERDIG','TIDSGRENSE'].includes(results[index]?.phase)&&!(part.format==='Ladder'&&results[index]?.ladder_finished!==true),
+   completed:['FULLFØRT','FERDIG','TIDSGRENSE'].includes(results[index]?.phase)&&!(part.format==='Ladder'&&results[index]?.ladder_finished!==true)&&!(part.format==='For Time'&&Number(part.rounds)>0&&(Number(results[index]?.roundsCompleted)||0)<Number(part.rounds)),
    time_cap_reached:results[index]?.phase==='TIDSGRENSE'
   }))
   const current=results[active]||{}
@@ -913,7 +915,7 @@ function CompositeTimer({schema,exerciseList=[],previousLogs=[],prescriptionLeve
     timerSettings={timerConfig.timerSettings}
     onSnapshot={reportBlock} stop={stop} onFinish={finishPart}
     finishLabel={active<blocks.length-1?'Fullfør del · vidare':'Avslutt'}
-    wodName={wodName+' · '+current.title} originLabel={originLabel}/>}
+    wodName={wodName+' · '+current.title} originLabel={current.participation&&current.participation!=='individual'?`${originLabel} · ${formatParticipation(current)}`:originLabel}/>}
   <div className="gg-composite-progress-foot"><strong>{current.title}</strong><span>{interlude?'Førehandsinnstilt pause tel ned.':active<blocks.length-1?'Manuell overgang eller planlagt pause til neste del.':'Lagre dei separate delresultata etterpå.'}</span></div>
  </section>
 }

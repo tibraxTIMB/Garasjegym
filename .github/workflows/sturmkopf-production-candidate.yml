@@ -7,6 +7,7 @@ on:
       - "gazelle-alternative-audio"
       - "gazelle-flow-compact"
       - "gazelle-pt-flow-integration"
+      - "gazelle-introkurs-integrity"
     paths:
       - "v2/**"
       - ".github/workflows/sturmkopf-production-candidate.yml"

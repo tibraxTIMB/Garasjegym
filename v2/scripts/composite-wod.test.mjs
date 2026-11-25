@@ -185,3 +185,23 @@ test('explicit per-part score is independent of format, preserves zero and ignor
  assert.equal(explicitBlockResults(blocks)[0].value,null)
  assert.throws(()=>explicitBlockResults(blocks,{c:{primary:'-1'}}),/Ugyldig/)
 })
+
+import {getFixedSlotTimerState} from '../src/lib/timerClock.js'
+test('Intro 20/40 includes the final rest only when explicitly requested',()=>{
+ for(const [count,rounds,total] of [[3,3,540],[2,5,600]]){
+ const items=Array.from({length:count},(_,i)=>({exercise_name:'Move '+i}));
+ const block={format:'Intervall',minutes:total/60,workSeconds:20,restSeconds:40,rounds,items,includeFinalRest:true};
+ assert.equal(compositeBlockDuration(block,count),total);
+ assert.equal(compositeTimerConfig(block).timerSettings.workout_schema.include_final_rest,true);
+ const state=getFixedSlotTimerState({elapsed:total-1,workSeconds:20,restSeconds:40,rounds,slotsPerRound:count,includeFinalRest:true});
+ assert.equal(state.isTransition,true);assert.equal(state.phaseRemaining,1);assert.equal(state.roundsCompleted,rounds);
+ assert.equal(getFixedSlotTimerState({elapsed:total,workSeconds:20,restSeconds:40,rounds,slotsPerRound:count,includeFinalRest:true}).isComplete,true);
+ assert.equal(compositeBlockDuration({...block,includeFinalRest:false},count),total-40);
+ }
+});
+test('For Time retains explicit round count and partner block retains metadata',()=>{
+ const config=compositeTimerConfig({format:'For Time',minutes:10,rounds:4,items:[{exercise_name:'Snatch'}]});
+ assert.equal(config.timerSettings.rounds,4);assert.equal(config.timerSettings.workout_schema.rounds,4);assert.equal(config.timerSettings.workout_schema.time_cap_seconds,600);
+ const partner=compositeTimerConfig({format:'AMRAP',minutes:10,participation:'partner',participant_count:2,collaboration:'free_split',items:[{exercise_name:'Bike erg'}]});
+ assert.equal(partner.timerSettings.workout_schema.wod_engine.participation,'partner');assert.equal(partner.timerSettings.workout_schema.wod_engine.collaboration,'free_split');
+});

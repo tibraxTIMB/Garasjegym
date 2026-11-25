@@ -38,7 +38,7 @@ export function summarizeLapSplits(splits = []) {
 
 /**
  * Derive a finite work/rest timer made of repeated slots.
- * There is no rest period after the final work slot.
+ * Final rest is opt-in; existing intervals omit it.
  */
 export function getFixedSlotTimerState({
   elapsed = 0,
@@ -47,6 +47,7 @@ export function getFixedSlotTimerState({
   rounds = 1,
   slotsPerRound = 1,
   transitionLabel = 'KVILE',
+  includeFinalRest = false,
 } = {}) {
   const seconds = Math.max(0, Math.floor(Number(elapsed) || 0));
   const work = Math.max(1, Math.floor(Number(workSeconds) || 45));
@@ -55,13 +56,13 @@ export function getFixedSlotTimerState({
   const safeSlotsPerRound = Math.max(1, Math.floor(Number(slotsPerRound) || 1));
   const totalSlots = safeRounds * safeSlotsPerRound;
   const cycleSeconds = work + rest;
-  const totalSeconds = work * totalSlots + rest * Math.max(0, totalSlots - 1);
+  const totalSeconds = work * totalSlots + rest * Math.max(0, totalSlots - (includeFinalRest ? 0 : 1));
   const isComplete = seconds >= totalSeconds;
   const currentSlotIndex = isComplete
     ? totalSlots - 1
     : Math.min(totalSlots - 1, Math.floor(seconds / cycleSeconds));
   const withinSlot = isComplete ? work : seconds - currentSlotIndex * cycleSeconds;
-  const isTransition = !isComplete && currentSlotIndex < totalSlots - 1 && withinSlot >= work;
+  const isTransition = !isComplete && (includeFinalRest || currentSlotIndex < totalSlots - 1) && withinSlot >= work;
   const phaseRemaining = isComplete
     ? 0
     : Math.max(0, isTransition ? cycleSeconds - withinSlot : work - withinSlot);

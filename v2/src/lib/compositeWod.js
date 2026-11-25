@@ -32,7 +32,7 @@ export function compositeBlockDuration(block, itemsCount=1) {
   const rounds=Math.max(1,Math.floor(Number(block?.rounds) || (format==='Tabata'?8:3)))
   const slots=Math.max(1,Math.floor(Number(itemsCount)||1))
   const total=rounds*slots
-  return work*total+rest*Math.max(0,total-1)
+  return work*total+rest*Math.max(0,total-(block?.includeFinalRest===true?0:1))
  }
  return Math.max(0,Math.round(Number(block?.minutes || 0)*60))
 }
@@ -117,14 +117,17 @@ export function compositeTimerConfig(block) {
   stations:items.map((item,i)=>({...item,station_number:i+1})),
  }:null
  const timedCap=current.format==='AMRAP'||deathBy||every!==null||(['Couplet','Triplet'].includes(current.format)?current.combinationMode!=='Open':COMPOSITE_FOR_TIME_FORMATS.includes(current.format))
+ const plannedRounds=COMPOSITE_FOR_TIME_FORMATS.includes(current.format)&&current.format!=='Ladder'&&Number.isInteger(Number(current.rounds))&&Number(current.rounds)>0?Number(current.rounds):null
  const schema={
   format:current.format,
+  include_final_rest:interval&&current.includeFinalRest===true,
+  wod_engine:{version:2,participation:current.participation||'individual',participant_count:Number(current.participant_count)||1,collaboration:current.collaboration||'solo',scoring:current.scoring||{type:'reps',fields:['reps']},blocks:[]},
   duration_seconds:current.duration_seconds,
   time_cap_seconds:timedCap ? current.duration_seconds:null,
   interval:{work_every_minutes:every,work_every_seconds:every?Math.round(every*60):null,work_seconds:every?Math.round(every*60):interval?work:null,rest_seconds:interval?rest:0},
   structure:station?'station_circuit':interval?'interval':COMPOSITE_STRENGTH_FORMATS.includes(current.format)?'strength':'metcon',
   station_circuit:stationPlan,
-  rounds:interval||station?rounds:current.format==='Ladder'?Math.max(1,Number(current.rounds)||5):null,
+  rounds:interval||station?rounds:current.format==='Ladder'?Math.max(1,Number(current.rounds)||5):plannedRounds,
   interval_exercise_count:interval?items.length:null,
   combination_mode:['Couplet','Triplet'].includes(current.format)?(current.combinationMode||'For Time'):null,
   ladder:['Ladder','Death By'].includes(current.format)?{type:current.format,start:Number(current.ladderStart)||(deathBy?1:2),step:Number(current.ladderStep)||(deathBy?1:2),direction:deathBy?'up':current.ladderDirection==='down'?'down':'up',...(deathBy?{interval_seconds:Number(current.deathByIntervalSeconds)||60}:{})}:null,
@@ -134,7 +137,7 @@ export function compositeTimerConfig(block) {
   format:current.format,
   minutes:String(Math.floor(current.duration_seconds/60)),
   seconds:String(current.duration_seconds%60),
-  timerSettings:{workout_schema:schema,work_seconds:interval||station?work:every?every*60:null,rest_seconds:interval||station?rest:0,rounds:interval||station?rounds:current.format==='Ladder'?Math.max(1,Number(current.rounds)||5):every?Math.round(current.duration_seconds/(every*60)):null,duration_seconds:current.duration_seconds}
+  timerSettings:{workout_schema:schema,work_seconds:interval||station?work:every?every*60:null,rest_seconds:interval||station?rest:0,rounds:interval||station?rounds:current.format==='Ladder'?Math.max(1,Number(current.rounds)||5):every?Math.round(current.duration_seconds/(every*60)):plannedRounds,duration_seconds:current.duration_seconds}
  }
 }
 
