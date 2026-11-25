@@ -10,6 +10,6 @@ export function copyProgramWeekRows(programId,allSessions,sourceWeek,targetWeek)
  const rows=all.filter(s=>!s.archived_at&&Number(s.week_no)===sourceWeek).sort((a,b)=>(Number(a.day_no)||1)-(Number(b.day_no)||1)||(Number(a.sequence_no)||0)-(Number(b.sequence_no)||0))
  if(!rows.length)throw Error('Ingen økter å kopiera.')
  const last=all.reduce((n,s)=>Math.max(n,Number(s.sequence_no)||0),0)
- return rows.map((s,i)=>({program_id:programId,sequence_no:last+i+1,title:s.title,wod_id:s.wod_id||null,scheduled_date:null,week_no:targetWeek,day_no:Number(s.day_no)||1,session_kind:s.session_kind||'training',focus_area:s.focus_area||'',estimated_minutes:s.estimated_minutes??null,workout_snapshot:s.workout_snapshot||{},coach_note:s.coach_note||'',status:'planned'}))
+ return rows.map((s,i)=>({program_id:programId,sequence_no:last+i+1,title:s.title,wod_id:s.wod_id||null,scheduled_date:null,week_no:targetWeek,day_no:Number(s.day_no)||1,session_kind:s.session_kind||'training',focus_area:s.focus_area||'',estimated_minutes:s.estimated_minutes??null,workout_snapshot:s.workout_snapshot||{},coach_note:s.coach_note||'',...(s.flow_requires_approval?{flow_requires_approval:true}:{}),status:'planned'}))
 }
 export function nextCoachSession(sessions=[]){return sessions.find(s=>!s.archived_at&&s.status==='planned'&&s.session_kind!=='rest')||null}

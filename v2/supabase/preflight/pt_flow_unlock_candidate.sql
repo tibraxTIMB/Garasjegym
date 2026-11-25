@@ -7,7 +7,7 @@ alter table public.pt_program_sessions add column flow_requires_approval boolean
 
 -- Security invoker: existing RLS limits all data to the caller's own/authorized plans.
 create function public.pt_flow_can_start(p_session_id uuid) returns boolean
-language plpgsql stable security invoker set search_path = pg_catalog,public,app_private
+language plpgsql volatile security invoker set search_path = pg_catalog,public,app_private
 as $$
 declare s public.pt_program_sessions%rowtype; p public.pt_programs%rowtype;
 begin
@@ -71,3 +71,27 @@ create trigger pt_flow_session_guard before insert or update or delete on public
 -- Trigger-only functions must not be exposed as RPCs.
 revoke all on function app_private.pt_flow_plan_guard() from public,anon,authenticated;
 revoke all on function app_private.pt_flow_session_guard() from public,anon,authenticated;
+
+-- Preserve the established validated create RPC; set release policy in the SAME transaction.
+create function public.create_pt_flow_program_with_sessions(p_program jsonb,p_sessions jsonb,p_unlock_mode text,p_require_approval boolean)
+returns uuid language plpgsql security invoker set search_path=pg_catalog,public,app_private as $$
+declare v_id uuid; v_start date;
+begin
+ if auth.uid() is null or not public.is_active_user() then raise exception 'Ei aktiv konto krevst.'; end if;
+ if p_unlock_mode is null or p_unlock_mode not in ('open','sequence','date') then raise exception 'Ugyldig opplåsing.'; end if;
+ if p_require_approval and p_unlock_mode<>'sequence' then raise exception 'PT-godkjenning krev sekvens.'; end if;
+ v_start:=nullif(p_program->>'start_date','')::date;
+ if p_unlock_mode='date' and v_start is null then raise exception 'Datostyrt plan krev startdato.'; end if;
+ v_id:=public.create_pt_program_with_sessions(p_program,p_sessions);
+ update public.pt_programs set flow_unlock_mode=p_unlock_mode where id=v_id;
+ if not found then raise exception 'Opplåsing kunne ikkje lagrast.'; end if;
+ if p_unlock_mode='date' then
+   update public.pt_program_sessions set scheduled_date=coalesce(scheduled_date,v_start+((coalesce(week_no,1)-1)*7+coalesce(day_no,1)-1))
+    where program_id=v_id and session_kind not in ('rest','information');
+ elsif p_unlock_mode='sequence' and p_require_approval then
+   update public.pt_program_sessions set flow_requires_approval=true where program_id=v_id and session_kind not in ('rest','information');
+ end if;
+ return v_id;
+end;$$;
+revoke all on function public.create_pt_flow_program_with_sessions(jsonb,jsonb,text,boolean) from public,anon;
+grant execute on function public.create_pt_flow_program_with_sessions(jsonb,jsonb,text,boolean) to authenticated;
