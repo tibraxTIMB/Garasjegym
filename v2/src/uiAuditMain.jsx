@@ -4,6 +4,9 @@ import {createRoot} from 'react-dom/client'
 import WodBuilder from './components/WodBuilder.jsx'
 import PTStudio from './components/PTStudio.jsx'
 import MyTraining from './components/MyTraining.jsx'
+import WorkoutDetail from './components/WorkoutDetail.jsx'
+import AppMobileNavigation from './components/AppMobileNavigation.jsx'
+import {LayoutDashboard} from 'lucide-react'
 import WodCard from './components/WodCard.jsx'
 import MobileNativeControls from './components/MobileNativeControls.jsx'
 import {FlowEntryProvider,FlowNumberInput,FlowKeypad,FlowConfirmDialog} from './components/FlowEntry.jsx'
@@ -28,10 +31,16 @@ function FlowFixture(){
  <FlowConfirmDialog dialog={confirm?{title:'Forkast denne økta?',message:longName,confirmLabel:'Ja, forkast',cancelLabel:'Avbryt',danger:true}:null} onClose={()=>setConfirm(false)}/>
  </section></div></div>
 }
+function ActaFixture(){
+ const [open,setOpen]=useState(true),[quick,setQuick]=useState(false),[normal,setNormal]=useState(0)
+ const parts=[{id:'a',title:'Oppvarming',format:'Oppvarming',warm:true,items:[]},{id:'e',title:'AMRAP',format:'AMRAP',seconds:240,items:[{exercise_name:'Double DB Hang Squat Clean',levels:{rx:{reps:4}}},{exercise_name:'Broad Jump',levels:{rx:{reps:2}}}]}]
+ const workout={id:'demo-acta',title:'Saman­sett økt',format:'Samansett økt',workout_date:'2026-11-25',score_rounds:4,score_reps:3,exercises:[{id:'x',exercise_name:'Double DB Hang Squat Clean',workout_sets:[]}],result_data:{report_parts:parts,prescription_level:'rx',flow_completion:[{id:'a',status:'done'}],block_summary:[{id:'e',format:'AMRAP',roundsCompleted:4,extra_reps:3}],exercise_results:[{block_id:'e',exercise_name:'Double DB Hang Squat Clean'}]}}
+ return <>{open?<WorkoutDetail workout={workout} memberId="demo-member" onBack={()=>setOpen(false)}/>:<><button onClick={()=>setOpen(true)}>Opna rapport</button><AppMobileNavigation items={[{id:'oversikt',icon:LayoutDashboard}]} active="oversikt" onNavigate={()=>setNormal(n=>n+1)} onQuickMenu={()=>setQuick(true)}/><output aria-label="Vanlege trykk">{normal}</output>{quick&&<div role="dialog" aria-label="Hurtigmeny"><button onClick={()=>setQuick(false)}>Lukk</button></div>}</>}</>
+}
 function Audit(){
  const [choice,setChoice]=useState('a')
  return <MusicProvider memberId="demo-admin"><MobileNativeControls/><div className="app-shell simple-app-shell"><main className="main simple-app-main"><section className="content-card training-content">
- {screen==='flow'?<FlowFixture/>:screen==='card'?<WodCard wod={wod} memberId="demo-member" onClose={()=>{}} onLaunch={()=>{}}/>:screen==='builder'?<WodBuilder/>:screen==='pt'?<PTStudio profile={profile} initialClientId="demo-member" initialTab="program"/>:screen==='plan'?<MyTraining simpleMode={true}/>:<label>Vel eit alternativ med eit langt namn<select aria-label="Testval" value={choice} onChange={e=>setChoice(e.target.value)}><option value="a">Første alternativ</option><option value="b">{longName}</option></select><output>{choice}</output></label>}
+ {screen==='acta'?<ActaFixture/>:screen==='flow'?<FlowFixture/>:screen==='card'?<WodCard wod={wod} memberId="demo-member" onClose={()=>{}} onLaunch={()=>{}}/>:screen==='builder'?<WodBuilder/>:screen==='pt'?<PTStudio profile={profile} initialClientId="demo-member" initialTab="program"/>:screen==='plan'?<MyTraining simpleMode={true}/>:<label>Vel eit alternativ med eit langt namn<select aria-label="Testval" value={choice} onChange={e=>setChoice(e.target.value)}><option value="a">Første alternativ</option><option value="b">{longName}</option></select><output>{choice}</output></label>}
  </section></main></div></MusicProvider>
 }
 createRoot(document.getElementById('root')).render(<Audit/>)
