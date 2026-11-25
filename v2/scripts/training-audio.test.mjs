@@ -1,8 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
-import {createHash} from 'node:crypto'
-import {SOUND_PACK_PROFILES,SOUND_PACK_SIGNALS,soundPackUrl,playPackSignal,stopPackAudio,isKIAudioEnabled,setKIAudioEnabled,KI_AUDIO_KEY} from '../src/lib/trainingAudio.js'
+import {SOUND_PACK_PROFILES,SOUND_PACK_SIGNALS,soundPackUrl,playPackSignal,stopPackAudio} from '../src/lib/trainingAudio.js'
 const read=p=>readFileSync(new URL(p,import.meta.url),'utf8')
 test('30 distinct local WAV paths and three sample-based profiles',()=>{
  const urls=SOUND_PACK_PROFILES.flatMap(p=>SOUND_PACK_SIGNALS.map(s=>soundPackUrl(p,s,'/Garasjegym/')))
@@ -78,41 +77,9 @@ test('studio render includes detuned club leads, separate gong modes and stereo 
  assert.match(script,/attack<.018/)
 })
 
-test('three distinct MusicGen PR masters are committed, verified and separate from ordinary cues',()=>{
- const folder='../public/audio/gazelle-pr-ki-v1/'
- const meta=JSON.parse(read(folder+'provenance.json'))
- assert.equal(meta.model_weights_license,'CC BY-NC 4.0')
- assert.equal(meta.technical_checks_passed,true)
- assert.equal(meta.cues.length,3)
- const hashes=new Set()
- for(const profile of SOUND_PACK_PROFILES){
-  const file=readFileSync(new URL(folder+profile+'-pr.wav',import.meta.url))
-  const item=meta.cues.find(c=>c.profile===profile)
-  assert.equal(createHash('sha256').update(file).digest('hex'),item.sha256)
-  hashes.add(item.sha256)
-  assert.equal(item.seconds,12);assert.equal(item.channels,2)
-  assert.equal(file.toString('ascii',0,4),'RIFF');assert.equal(file.toString('ascii',8,12),'WAVE')
-  assert.equal(soundPackUrl(profile,'pr','/Garasjegym/',true),'/Garasjegym/audio/gazelle-pr-ki-v1/'+profile+'-pr.wav')
-  assert.equal(soundPackUrl(profile,'finish','/Garasjegym/'),'/Garasjegym/audio/gazelle-v6/'+profile+'-finish.wav')
- }
- assert.equal(hashes.size,3)
-})
-
-test('KI lyd is a device-local opt-in and never changes the selected profile or other signals',()=>{
- const data=new Map([['garasjegym.timer.audio_profile','group'],['garasjegym.timer.sound_enabled','off']])
- const storage={getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)}
- assert.equal(isKIAudioEnabled(storage),false)
- setKIAudioEnabled(true,storage);assert.equal(isKIAudioEnabled(storage),true)
- assert.equal(data.get(KI_AUDIO_KEY),'on')
- for(const profile of SOUND_PACK_PROFILES)for(const signal of SOUND_PACK_SIGNALS){
-  const regular=soundPackUrl(profile,signal,'/',false)
-  const experimental=soundPackUrl(profile,signal,'/',true)
-  assert.equal(regular===experimental,signal!=='pr')
-  assert.equal(regular,'/audio/gazelle-v6/'+profile+'-'+signal+'.wav')
- }
- setKIAudioEnabled(false,storage);assert.equal(isKIAudioEnabled(storage),false)
- assert.equal(data.get('garasjegym.timer.audio_profile'),'group')
- assert.equal(data.get('garasjegym.timer.sound_enabled'),'off')
- assert.match(read('../src/components/MyPage.jsx'),/KI lyd/)
- assert.match(read('../src/components/Training.jsx'),/KI lyd · eksperimentell/)
+test('retired experimental audio always resolves to standard cues and has no controls',()=>{
+ for(const p of SOUND_PACK_PROFILES)for(const s of SOUND_PACK_SIGNALS)assert.equal(soundPackUrl(p,s,'/',true),'/audio/gazelle-v6/'+p+'-'+s+'.wav')
+ assert.doesNotMatch(read('../src/components/MyPage.jsx'),/KI lyd/)
+ assert.doesNotMatch(read('../src/components/Training.jsx'),/KI lyd/)
+ assert.match(read('../src/lib/trainingAudio.js'),/removeItem\('garasjegym.timer.ki_audio'\)/)
 })

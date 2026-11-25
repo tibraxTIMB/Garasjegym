@@ -1,6 +1,6 @@
 const CACHE_PREFIX = 'garasjegym-app-shell-'
 // A fresh cache also discards older shell assets and cached partial media responses.
-const CACHE_NAME = CACHE_PREFIX + 'v24-gazelle-training-tools'
+const CACHE_NAME = CACHE_PREFIX + 'v25-gazelle-standard-audio'
 const APP_SCOPE = '/Garasjegym/'
 const SHELL_FILES = [
   APP_SCOPE,
@@ -26,6 +26,12 @@ self.addEventListener('activate', event => {
     await Promise.all(keys
       .filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
       .map(key => caches.delete(key)))
+    // Remove only the retired experimental assets, never the user's training drafts or standard WAVs.
+    try{
+      const audioCache=await caches.open('garasjegym-training-audio-v1')
+      const requests=await audioCache.keys()
+      await Promise.all(requests.filter(r=>new URL(r.url).pathname.startsWith(APP_SCOPE+'audio/gazelle-pr-ki-v1/')).map(r=>audioCache.delete(r)))
+    }catch{}
     await self.clients.claim()
   })())
 })

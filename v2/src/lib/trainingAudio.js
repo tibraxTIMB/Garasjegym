@@ -1,32 +1,22 @@
 // Locally bundled sample-based cues. No runtime network dependency outside the app.
 export const SOUND_PACK_VERSION='gazelle-v6'
-export const PR_SOUND_PACK_VERSION='gazelle-pr-ki-v1'
 export const SOUND_PACK_PROFILES=['pt','personal','group']
 export const SOUND_PACK_SIGNALS=['tick-3','tick-2','tick-1','start','round','rest','station','finish','registered','pr']
 export const SOUND_PACK_NAMES={pt:'EISEN',personal:'DISKOPANZER',group:'BALKAN BERSERK'}
-// Device-local, opt-in experimental extension. Existing profiles remain authoritative.
-export const KI_AUDIO_KEY='garasjegym.timer.ki_audio'
-export const KI_AUDIO_EVENT='gg-ki-audio-change'
-export const KI_AUDIO_SIGNALS=Object.freeze({pt:['pr'],personal:['pr'],group:['pr']})
-export function isKIAudioEnabled(storage){
- try{return (storage??globalThis.localStorage)?.getItem(KI_AUDIO_KEY)==='on'}catch{return false}
-}
-export function setKIAudioEnabled(enabled,storage){
- try{(storage??globalThis.localStorage)?.setItem(KI_AUDIO_KEY,enabled?'on':'off')}catch{}
- if(typeof window!=='undefined')window.dispatchEvent(new Event(KI_AUDIO_EVENT))
-}
-export function soundPackUrl(profile,signal,base=import.meta.env?.BASE_URL||'/',kiEnabled=isKIAudioEnabled()){
+// Retire the former device-local experiment without touching ordinary sound preferences.
+try{globalThis.localStorage?.removeItem('garasjegym.timer.ki_audio')}catch{}
+export function soundPackUrl(profile,signal,base=import.meta.env?.BASE_URL||'/'){
 
  const p=SOUND_PACK_PROFILES.includes(profile)?profile:'personal'
  const s=signal==='transition'?'round':signal
  if(!SOUND_PACK_SIGNALS.includes(s))throw Error('Ukjent lydsignal')
- return base+'audio/'+(kiEnabled&&KI_AUDIO_SIGNALS[p]?.includes(s)?PR_SOUND_PACK_VERSION:SOUND_PACK_VERSION)+'/'+p+'-'+s+'.wav'
+ return base+'audio/'+SOUND_PACK_VERSION+'/'+p+'-'+s+'.wav'
 }
 const OFFLINE_AUDIO_CACHE='garasjegym-training-audio-v1'
 export async function prepareOfflineAudio(){
  if(!globalThis.caches)throw Error('Lydlagring er ikkje tilgjengeleg')
  const cache=await caches.open(OFFLINE_AUDIO_CACHE)
- const urls=[...new Set(SOUND_PACK_PROFILES.flatMap(p=>SOUND_PACK_SIGNALS.flatMap(s=>[soundPackUrl(p,s,undefined,false),soundPackUrl(p,s,undefined,true)])))]
+ const urls=[...new Set(SOUND_PACK_PROFILES.flatMap(p=>SOUND_PACK_SIGNALS.map(s=>soundPackUrl(p,s))))]
  for(const url of urls){if(!await cache.match(url)){const response=await fetch(url);if(!response.ok)throw Error('Lydfil manglar: '+url);await cache.put(url,response)}}
  return urls.length
 }

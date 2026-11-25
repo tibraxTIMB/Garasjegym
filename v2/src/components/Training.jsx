@@ -31,7 +31,7 @@ import { exerciseBrowseCategory } from '../lib/exerciseCategories.js'
 import { restoreWorkoutDraft, saveWorkoutDraft, clearWorkoutDraft, resumedElapsedSeconds, workoutSaveFingerprint, isRetryableWorkoutError } from '../lib/workoutDraft.js'
 import { canSaveDurationOnlyWorkout } from '../lib/freeSession.js'
 import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, TRAINING_AUDIO_PROFILES } from '../lib/timerCues.js'
-import { preloadSoundPack, unlockSoundPack, playPackSignal, playDirectPackSignal, stopDirectAudio, stopPackAudio, SOUND_PACK_NAMES, SOUND_PACK_VERSION, isKIAudioEnabled, setKIAudioEnabled, KI_AUDIO_EVENT, KI_AUDIO_SIGNALS } from '../lib/trainingAudio.js'
+import { preloadSoundPack, unlockSoundPack, playPackSignal, playDirectPackSignal, stopDirectAudio, stopPackAudio, SOUND_PACK_NAMES, SOUND_PACK_VERSION } from '../lib/trainingAudio.js'
 import GarageSelect from './GarageSelect.jsx'
 import './timer-viewport.css'
 import PRVictoryOverlay from './PRVictoryOverlay.jsx'
@@ -147,15 +147,13 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const [audioProfile,setAudioProfile]=useState(()=>{
     try{const value=localStorage.getItem('garasjegym.timer.audio_profile');return TRAINING_AUDIO_PROFILES.includes(value)&&value!=='silent'?value:'personal'}catch{return 'personal'}
   })
-  const [kiAudio,setKIAudio]=useState(()=>isKIAudioEnabled())
-  useEffect(()=>{const sync=()=>setKIAudio(isKIAudioEnabled());window.addEventListener(KI_AUDIO_EVENT,sync);window.addEventListener('storage',sync);return()=>{window.removeEventListener(KI_AUDIO_EVENT,sync);window.removeEventListener('storage',sync)}},[])
   const [prVictoryAudio,setPRVictoryAudio]=useState(()=>isPRVictorySoundEnabled())
   useEffect(()=>{const sync=()=>setPRVictoryAudio(isPRVictorySoundEnabled());window.addEventListener('gg-pr-victory-audio-change',sync);window.addEventListener('storage',sync);return()=>{window.removeEventListener('gg-pr-victory-audio-change',sync);window.removeEventListener('storage',sync)}},[])
   const [countdownAudio,setCountdownAudio]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.countdown_audio')!=='off'}catch{return true}})
   const [vibration,setVibration]=useState(()=>{try{return localStorage.getItem('garasjegym.timer.vibration')==='on'}catch{return false}})
   const [testCue,setTestCue]=useState('start')
   const [audioDiagnostic,setAudioDiagnostic]=useState('Lydpakke '+SOUND_PACK_VERSION)
-  useEffect(()=>{let live=true;preloadSoundPack(audioProfile).then(()=>{if(live)setAudioDiagnostic('Lydfiler klare · '+SOUND_PACK_NAMES[audioProfile]+(kiAudio?' · KI lyd':' · standard'))}).catch(e=>{if(live)setAudioDiagnostic('Lydfeil: '+e.message)});return()=>{live=false}},[audioProfile,kiAudio])
+  useEffect(()=>{let live=true;preloadSoundPack(audioProfile).then(()=>{if(live)setAudioDiagnostic('Lydfiler klare · '+SOUND_PACK_NAMES[audioProfile]+' · standard')}).catch(e=>{if(live)setAudioDiagnostic('Lydfeil: '+e.message)});return()=>{live=false}},[audioProfile])
   const audioPrefs=useRef({audioProfile,countdownAudio,vibration})
   audioPrefs.current={audioProfile,countdownAudio,vibration}
   useEffect(()=>{try{localStorage.setItem('garasjegym.timer.audio_profile',audioProfile);localStorage.setItem('garasjegym.timer.countdown_audio',countdownAudio?'on':'off');localStorage.setItem('garasjegym.timer.vibration',vibration?'on':'off')}catch{/* Valfritt */}},[audioProfile,countdownAudio,vibration])
@@ -615,8 +613,6 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     <div className="gg-sound-pack-list" role="group" aria-label="Vel lydprofil">
       {[{id:'pt',name:'EISEN',desc:'Classic Fight Club · klokke og metall'},{id:'personal',name:'DISKOPANZER',desc:'Eurodance Kampfparty · synth og klubbslag'},{id:'group',name:'BALKAN BERSERK',desc:'Metal Brass Assault · trompet, gitar og tromme'}].map(p=><button type="button" key={p.id} aria-pressed={audioProfile===p.id} className={audioProfile===p.id?'is-selected':''} onClick={()=>{setAudioProfile(p.id);soundOnRef.current=true;setSoundOn(true)}}><strong>{p.name}</strong><small>{p.desc}</small></button>)}
     </div>
-    <label className="gg-timer-check"><input type="checkbox" checked={kiAudio} onChange={e=>{stopDirectAudio();stopPackAudio(sharedTrainingAudioContext);setKIAudio(e.target.checked);setKIAudioEnabled(e.target.checked)}}/> KI lyd · eksperimentell</label>
-    <small>{kiAudio?'KI-versjon: '+(KI_AUDIO_SIGNALS[audioProfile]?.length||0)+' av 10 signal i denne profilen. Andre signal brukar standardlyd.':'Standardlydar er aktive. Slå på KI lyd for å testa alternative signal.'}</small>
     <label className="gg-timer-check"><input type="checkbox" checked={soundOn} onChange={e=>setSoundOn(e.target.checked)}/> Lydsignal på</label>
     <label>Timerlyd · {soundVolume}%<input type="range" min="0" max="100" step="5" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label>
     <label className="gg-timer-check"><input type="checkbox" checked={countdownAudio} onChange={e=>setCountdownAudio(e.target.checked)}/> Nedtelling 3–2–1</label>
@@ -698,7 +694,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         <header><strong>{({settings:'Timerinnstillingar',audio:'Lyd og signal',display:'Klokke og visning',timing:'Øktoppsett',reset:'Nullstill økta',music:'Musikkstudio',pulse:'Puls og intensitet',actions:'Betening under trening'})[stagePanel]}</strong><button type="button" onClick={()=>setStagePanel(null)} aria-label="Lukk innstillingane"><X size={20}/></button></header>
         {stagePanel!=='settings'&&<button type="button" className="gg-timer-menu-back" onClick={()=>setStagePanel('settings')}>‹ Alle innstillingar</button>}
         {stagePanel==='settings'&&<nav className="gg-timer-menu-list" aria-label="Vel innstilling">
-          <button type="button" onClick={()=>setStagePanel('audio')}><Volume2 size={20}/><span><b>Lyd og signal</b><small>{soundVolume}% · {SOUND_PACK_NAMES[audioProfile]||'DISKOPANZER'}{kiAudio?' · KI lyd':''}</small></span><ChevronRight size={17}/></button>
+          <button type="button" onClick={()=>setStagePanel('audio')}><Volume2 size={20}/><span><b>Lyd og signal</b><small>{soundVolume}% · {SOUND_PACK_NAMES[audioProfile]||'DISKOPANZER'}</small></span><ChevronRight size={17}/></button>
           <button type="button" onClick={()=>setStagePanel('music')}><Music2 size={20}/><span><b>Musikkstudio</b><small>Stor Spotify-spelar</small></span><ChevronRight size={17}/></button>
           <button type="button" onClick={()=>setStagePanel('pulse')}><HeartPulse size={20}/><span><b>Puls og intensitet</b><small>Sensor og live-visning</small></span><ChevronRight size={17}/></button>
           <button type="button" onClick={()=>setStagePanel('actions')}><Hand size={20}/><span><b>Betening under trening</b><small>Store knappar · {roundGuardSeconds} sek sperre</small></span><ChevronRight size={17}/></button>

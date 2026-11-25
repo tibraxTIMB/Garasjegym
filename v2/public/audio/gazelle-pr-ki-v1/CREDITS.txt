@@ -1,1 +1,0 @@
-Three original PR cues generated with Meta MusicGen Stereo Small (facebook/musicgen-stereo-small). Model weights CC BY-NC 4.0: https://creativecommons.org/licenses/by-nc/4.0/ . Model card: https://huggingface.co/facebook/musicgen-stereo-small . Noncommercial GarasjeGym use only. Generated 2026-11-24; mastered with gain adjustment and boundary fades. Not an endorsement by Meta.
