@@ -4,7 +4,7 @@ const positive=v=>v!=null&&String(v).trim()!==''&&Number.isFinite(Number(v))&&Nu
 export function percentPrescription(item,level='rx'){
  const d=item.levels?.[level]||{}
  const explicit=d.loadMode==='percent'
- const legacy=(!item.levels||level==='rx')&&!['kg','rir','bodyweight'].includes(d.loadMode)
+ const legacy=level==='rx'&&!['kg','rir','bodyweight'].includes(d.loadMode)
  if(!explicit&&!legacy)return null
  const single=positive(d.percent1rm??item.percent_1rm)
  const low=positive(d.percentMin??(legacy?item.percent_1rm_min:null))||single
