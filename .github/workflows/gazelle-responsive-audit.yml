@@ -1,0 +1,36 @@
+name: Gazelle responsive browser audit (no deploy)
+on:
+  push:
+    branches: [gazelle-responsive-audit]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: pip install playwright==1.56.0 && python -m playwright install --with-deps chromium
+      - name: Check real components with isolated demo data
+        run: |
+          npm run help:demo > /tmp/gg-ui-audit-vite.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" || true' EXIT
+          for i in $(seq 1 60); do curl -fs http://127.0.0.1:4173/ui-audit.html >/dev/null && break; sleep 1; done
+          python scripts/responsive-audit.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gazelle-responsive-audit
+          path: v2/ui-audit-results/
+          retention-days: 7
