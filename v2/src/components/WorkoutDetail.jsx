@@ -3,9 +3,11 @@ import {ArrowLeft,CalendarDays,Check,Clock3,Dumbbell,Edit3,LoaderCircle,MoreHori
 import {supabase} from '../lib/supabase.js'
 import {deleteWorkoutAndLinkedRecords} from '../lib/deleteWorkout.js'
 import {workoutPRVictories} from '../lib/prVictory.js'
-import {formatWorkoutSeconds,formatWorkoutSet,optionalNumber,splitWorkoutNote} from '../lib/workoutDetail.js'
+import {formatWorkoutSeconds,formatWorkoutSet,optionalNumber,splitWorkoutNote,buildWorkoutReport,reportRepTotals} from '../lib/workoutDetail.js'
 import {suggestedEmomSets} from '../lib/workoutCorrections.js'
+import {cardParts,cardDose,cardTone,formatCardTime} from '../lib/wodCard.js'
 import './workout-detail.css'
+import './wod-card.css'
 
 const initialSetValues=set=>({
  reps:set.reps??'',load_kg:set.load_kg??'',height_cm:set.height_cm??'',
@@ -23,6 +25,26 @@ const initialForm=workout=>{
  }
 }
 const dateLabel=date=>date?new Date(date+'T12:00:00').toLocaleDateString('nn-NO',{day:'numeric',month:'long',year:'numeric'}):'Dato manglar'
+const isAmrap=p=>/amrap/i.test(p.format||'')||p.score?.combination_mode==='AMRAP'
+const hasNumber=v=>v!=null&&String(v).trim()!==''&&Number.isFinite(Number(v))
+function ReportRows({rows}){return rows.map((exercise,index)=><article key={exercise.id||index} className="acta-exercise"><strong>{exercise.exercise_name}</strong>{exercise.source_text&&<small>{exercise.source_text}</small>}{(exercise.workout_sets||[]).length?<div className="workout-detail-set-list">{[...exercise.workout_sets].sort((a,b)=>a.set_number-b.set_number).map((set,i)=><div key={set.id||i}><span>Sett {set.set_number||i+1}</span><strong>{formatWorkoutSet(set)}</strong></div>)}</div>:<small>Ingen individuelle måleverdiar</small>}</article>)}
+function ComplexLines({results}){return results.map((r,i)=><div className="acta-complex" key={i}><strong>{r.name}</strong><span>{r.best_load_kg==null?'Tyngste ikkje registrert':r.best_load_kg+' kg · tyngste godkjende'}</span><small>{r.completed??'–'} fullførte · {r.partial??'–'} delvise · {r.failed??'–'} mislukka</small></div>)}
+function ActaReport({report,historical}){return <section className="acta-report" aria-label="Treningsrapport per del">
+ {report.sections.map((p,i)=>{const s=p.score,m=p.main,f=p.status,amrap=isAmrap(p),scored=amrap&&hasNumber(s?.roundsCompleted)&&hasNumber(s?.extra_reps),totals=historical&&scored?reportRepTotals(p,s,report.level):null;const status=f?({done:'Utført',partial:'Delvis utført',failed:'Ikkje utført',skipped:'Ikkje utført'}[f.status]||f.status):null;const duration=Number(p.seconds)||Number(s?.duration_seconds)||0;return <article key={p.id||i} className={'gg-wod-part acta-part gg-wod-tone-'+cardTone(p)}>
+ <header><span>DEL {String.fromCharCode(65+i)} · {p.formatLabel||p.format||'Øktdel'}</span>{duration>0&&<small>{formatCardTime(duration)}</small>}</header>
+ <h3>{p.title?.replace(/^Del\s+[A-H]\s*[–—:-]\s*/i,'')||'Øktdel'}</h3>
+ {p.items.length>0&&(!p.warm||!status)&&<div className="acta-prescription"><small>{historical?'PLANLAGD':'WOD-OPPSETT · NO'}</small>{p.items.filter(x=>!x.is_rest).map((item,j)=><div key={j}><span>{item.exercise_name||item.name}</span><b>{report.level?cardDose(item,report.level,true):'Nivå ikkje lagra'}</b></div>)}</div>}
+ {status&&<div className="acta-status"><Check size={15}/>{status}</div>}
+ {scored&&<div className="acta-score"><small>DITT RESULTAT</small><strong>{s.roundsCompleted} + {s.extra_reps}</strong><span>Rundar + ekstra reps</span>{totals&&<div className="acta-totals">{totals.map((t,j)=><div key={j}><b>{t.reps}</b><span>{t.name}</span></div>)}<small>Utrekna frå lagra dosering og score, føreset øvingsrekkjefølgja.</small></div>}</div>}
+ {!scored&&s&&hasNumber(s.elapsed)&&Number(s.elapsed)>0&&<div className="acta-score"><small>{s.completed?'REGISTRERT TID':'REGISTRERT TID · IKKJE STADFESTA FULLFØRT'}</small><strong>{formatWorkoutSeconds(s.elapsed)}</strong>{s.time_cap_reached&&<span>Tidsgrense nådd</span>}</div>}
+ {!scored&&s&&/death by|ladder/i.test(p.format||'')&&hasNumber(s.roundsCompleted)&&<div className="acta-score"><small>FULLFØRTE RUNDAR</small><strong>{s.roundsCompleted}</strong></div>}
+ {m&&m.type!=='none'&&<div className="acta-score"><small>{m.label||'HOVUDRESULTAT'}</small><strong>{m.value==null?'Ikkje registrert':m.type==='completion'?({complete:'Gjennomført',partial:'Delvis',failed:'Ikkje gjennomført'}[m.value]||'Ikkje registrert'):m.value+' '+(m.unit||'')}</strong></div>}
+ <ComplexLines results={p.complexes}/>
+ {p.rows.length>0&&<details className="acta-sets"><summary>Øvingar og registrerte sett ({p.rows.length})</summary><ReportRows rows={p.rows}/></details>}
+ {!status&&!scored&&!s&&(!m||m.type==='none')&&!p.complexes.length&&!p.rows.length&&<small>Ingen delresultat registrerte.</small>}
+ </article>})}
+ {(report.unassigned.length>0||report.unassignedComplex.length>0)&&<details className="acta-sets acta-unassigned"><summary>Andre registrerte resultat – del ikkje sikkert identifisert</summary><ComplexLines results={report.unassignedComplex}/><ReportRows rows={report.unassigned}/></details>}
+ </section>}
 const blankSet=()=>({reps:'',load_kg:'',height_cm:'',time_seconds:'',time_text:''})
 export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId}){
  const [editing,setEditing]=useState(false)
@@ -33,16 +55,22 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
  const [addedSets,setAddedSets]=useState({})
  const [sourceSchema,setSourceSchema]=useState(null)
  const [sourceStatus,setSourceStatus]=useState('')
+ const [reportSource,setReportSource]=useState(null)
  const [saving,setSaving]=useState(false)
  const [deleting,setDeleting]=useState(false)
  const [error,setError]=useState('')
  const [notice,setNotice]=useState('')
- useEffect(()=>{setEditing(false);setEditMode(null);setMenuOpen(false);setForm(initialForm(workout));setSetDrafts({});setAddedSets({});setSourceSchema(null);setSourceStatus('');setError('');setNotice('')},[workout.id])
+ useEffect(()=>{setEditing(false);setEditMode(null);setMenuOpen(false);setForm(initialForm(workout));setSetDrafts({});setAddedSets({});setSourceSchema(null);setReportSource(null);setSourceStatus('');setError('');setNotice('')},[workout.id])
  useEffect(()=>{
   if(!workout.exercises)return
   setSetDrafts(Object.fromEntries(workout.exercises.flatMap(ex=>(ex.workout_sets||[]).map(set=>[set.id,initialSetValues(set)]))))
  },[workout.exercises])
 
+ const data=workout.result_data||{}
+ const savedParts=Array.isArray(data.report_parts)&&data.report_parts.length?data.report_parts:data.wod_engine?.blocks?.length?cardParts({format:workout.format,timer_settings:{workout_schema:{wod_engine:data.wod_engine,items:data.wod_engine.blocks.flatMap(b=>b.items||[])}}}):[]
+ useEffect(()=>{let alive=true;if(savedParts.length||!workout.source_wod_id||data.wod_ids?.length>1)return;supabase.from('wods').select('id,name,format,duration_minutes,movements,timer_settings').eq('id',workout.source_wod_id).maybeSingle().then(({data:row,error})=>{if(alive&&!error&&row)setReportSource(row)}).catch(()=>{});return()=>{alive=false}},[workout.id,workout.source_wod_id,savedParts.length])
+ const historical=Boolean(savedParts.length)
+ const report=buildWorkoutReport(workout,historical?savedParts:reportSource?cardParts(reportSource):[])
  const note=splitWorkoutNote(workout.note)
  const exercises=workout.exercises||[]
  const resultStats=[
@@ -57,6 +85,7 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
  const complexResults=workout.result_data?.complex_results||[]
  const primaryResults=workout.result_data?.block_primary_results||[]
  const setField=(id,field,value)=>setSetDrafts(previous=>({...previous,[id]:{...previous[id],[field]:value}}))
+ useEffect(()=>{const handle=e=>{e.preventDefault();if(menuOpen){setMenuOpen(false);return}requestBack()};window.addEventListener('gg:workout-back',handle);return()=>window.removeEventListener('gg:workout-back',handle)},[editing,menuOpen,onBack])
  function requestBack(){if(editing&&!window.confirm('Gå tilbake utan å lagra endringane?'))return;onBack()}
  function cancelEdit(){setEditing(false);setEditMode(null);setForm(initialForm(workout));setSetDrafts(Object.fromEntries(exercises.flatMap(ex=>(ex.workout_sets||[]).map(set=>[set.id,initialSetValues(set)]))));setAddedSets({});setError('')}
  function beginEdit(nextMode){
@@ -225,20 +254,20 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
       </article>)}
      </div></>}
     </form>:<>
-     {resultStats.length>0&&<div className="workout-detail-stats">{resultStats.map(stat=><div key={stat.label}><span>{stat.label}</span><strong>{stat.value}</strong></div>)}</div>}
+     {resultStats.filter(stat=>!report||report.showOverall||!['Rundar','Ekstra reps'].includes(stat.label)).length>0&&<div className="workout-detail-stats">{resultStats.filter(stat=>!report||report.showOverall||!['Rundar','Ekstra reps'].includes(stat.label)).map(stat=><div key={stat.label}><span>{stat.label}</span><strong>{stat.value}</strong></div>)}</div>}
      {note.personal&&<section className="workout-detail-note"><h3>Notat frå økta</h3><p>{note.personal}</p></section>}
-     {(workout.result_data?.flow_session_status==='done'||workout.result_data?.flow_completion?.length>0)&&<section className="workout-detail-timing"><h3>Gjennomføring</h3>{workout.result_data.flow_session_status==='done'&&<p>Økta er stadfesta utført.</p>}{(workout.result_data.flow_completion||[]).map(part=><div key={part.id}><strong>{part.title}</strong><p>{part.status==='done'?'Utført':part.status==='partial'?'Delvis utført':'Ikkje utført'}</p></div>)}</section>}{primaryResults.length>0&&<section className="workout-detail-timing"><h3>Hovudresultat per del</h3>{primaryResults.map((result,index)=><div key={result.block_id||index}><strong>{result.title}</strong><p>{result.label}: {result.type==='none'?'Ingen score':result.value==null?'Ikkje registrert':result.type==='completion'?({complete:'Gjennomført',partial:'Delvis',failed:'Ikkje gjennomført'}[result.value]||'Ikkje registrert'):result.value+' '+(result.unit||'')}</p></div>)}</section>}
-     {complexResults.length>0&&<section className="workout-detail-timing"><h3>Kompleksresultat</h3>{complexResults.map((result,i)=><div key={i}><strong>{result.name}</strong><p>Tyngste godkjende: {result.best_load_kg==null?'Ikkje registrert':result.best_load_kg+' kg'} · {result.completed} fullførte · {result.partial} delvise · {result.failed} mislukka</p></div>)}</section>}
+     {report&&<ActaReport report={report} historical={historical}/>} {!report&&(workout.result_data?.flow_session_status==='done'||workout.result_data?.flow_completion?.length>0)&&<section className="workout-detail-timing"><h3>Gjennomføring</h3>{workout.result_data.flow_session_status==='done'&&<p>Økta er stadfesta utført.</p>}{(workout.result_data.flow_completion||[]).map(part=><div key={part.id}><strong>{part.title}</strong><p>{part.status==='done'?'Utført':part.status==='partial'?'Delvis utført':'Ikkje utført'}</p></div>)}</section>}{!report&&primaryResults.length>0&&<section className="workout-detail-timing"><h3>Hovudresultat per del</h3>{primaryResults.map((result,index)=><div key={result.block_id||index}><strong>{result.title}</strong><p>{result.label}: {result.type==='none'?'Ingen score':result.value==null?'Ikkje registrert':result.type==='completion'?({complete:'Gjennomført',partial:'Delvis',failed:'Ikkje gjennomført'}[result.value]||'Ikkje registrert'):result.value+' '+(result.unit||'')}</p></div>)}</section>}
+     {!report&&complexResults.length>0&&<section className="workout-detail-timing"><h3>Kompleksresultat</h3>{complexResults.map((result,i)=><div key={i}><strong>{result.name}</strong><p>Tyngste godkjende: {result.best_load_kg==null?'Ikkje registrert':result.best_load_kg+' kg'} · {result.completed} fullførte · {result.partial} delvise · {result.failed} mislukka</p></div>)}</section>}
      {(splitSeconds.length>0||note.system.length>0)&&<section className="workout-detail-timing"><h3><Clock3 size={17}/> Timer og rundetider</h3>{note.system.filter(line=>!/^Mellomtider:/i.test(line)).map((line,index)=><p key={index}>{line}</p>)}{splitSeconds.length>0?<div className="workout-detail-splits">{splitSeconds.map((seconds,index)=><span key={index}>R{index+1} <b>{formatWorkoutSeconds(seconds)}</b></span>)}</div>:note.system.filter(line=>/^Mellomtider:/i.test(line)).map((line,index)=><p key={index}>{line}</p>)}</section>}
-     <div className="workout-detail-exercises-head"><h3><Dumbbell size={18}/> Øvingar og sett</h3><span>{exercises.length} øvingar</span></div>
+     {!report&&<div className="workout-detail-exercises-head"><h3><Dumbbell size={18}/> Øvingar og sett</h3><span>{exercises.length} øvingar</span></div>}
      {workout.detailLoading&&<div className="training-state"><LoaderCircle className="spin" size={17}/> Hentar øvingsdetaljane …</div>}
      {workout.detailError&&<div className="auth-error" role="alert">{workout.detailError}</div>}
-     <div className="workout-detail-exercise-list">{exercises.map((exercise,index)=><article className="workout-detail-exercise" key={exercise.id}>
+     {!report&&<div className="workout-detail-exercise-list">{exercises.map((exercise,index)=><article className="workout-detail-exercise" key={exercise.id}>
       <div className="workout-detail-exercise-title"><span>{String(index+1).padStart(2,'0')}</span><strong>{exercise.exercise_name}</strong></div>
       {exercise.source_text&&<p>{exercise.source_text}</p>}
       <div className="workout-detail-set-list">{(exercise.workout_sets||[]).sort((a,b)=>a.set_number-b.set_number).map(set=><div key={set.id}><span>Sett {set.set_number}</span><strong>{formatWorkoutSet(set)}</strong></div>)}</div>
-     </article>)}</div>
-     {!workout.detailLoading&&!exercises.length&&<div className="empty-state">Ingen øvingsdetaljar er lagra på denne økta.</div>}
+     </article>)}</div>}
+     {!report&&!workout.detailLoading&&!exercises.length&&<div className="empty-state">Ingen øvingsdetaljar er lagra på denne økta.</div>}
     </>}
    </div>
    {!editing&&!workout.detailLoading&&!workout.detailError&&<footer className="workout-detail-delete-footer"><button type="button" disabled={deleting} onClick={deleteWorkout}><Trash2 size={17}/> {deleting?'Slettar …':'Slett feilregistrert økt'}</button><small>Fjern økta og PR-resultata frå denne gjennomføringa.</small></footer>}
