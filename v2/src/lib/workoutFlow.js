@@ -29,3 +29,5 @@ export function flowItemGroup(item,schema={},format=''){
 }
 export function emptyFlowSet(set={}){return {...set,reps:'',load_kg:'',height_cm:'',time_text:'',time_seconds:'',rir:'',complex_status:''}}
 export function clearFlowItem(item){return {...item,prescribed_sets_prefilled:false,rowValue:'',workSeconds:'',sets:(item.sets||[]).map(emptyFlowSet)}}
+
+export function flowCompletionRows(scores={}){return Object.entries(scores).filter(([key,v])=>key.startsWith('flow:')&&['done','partial','skipped'].includes(v?.status)).map(([key,v])=>({id:key.slice(5),title:v.title||key.slice(5),status:v.status}))}
