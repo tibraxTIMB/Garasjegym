@@ -1,4 +1,5 @@
 import {muscleProfile,MUSCLE_LABELS} from './muscleProfile.js'
+import {exerciseMuscleProfile} from './exerciseMuscleProfiles.js'
 export function formatCardTime(value){const n=Math.max(0,Math.round(Number(value)||0));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0')}
 export function cardParts(wod){
  const schema=wod?.timer_settings?.workout_schema||{},all=Array.isArray(schema.items)&&schema.items.length?schema.items:String(wod?.movements||'').split('\n').filter(Boolean).map(name=>({exercise_name:name}))
@@ -30,9 +31,17 @@ export function cardDose(item,level='rx',compact=false){
  if(!compact){if(v.instruction)p.push(v.instruction);if(item.coach_note&&item.coach_note!==v.instruction)p.push(item.coach_note)}else if(!p.length&&v.instruction)p.push(v.instruction)
  return p.filter(Boolean).join(' · ')||'Dosering ikkje oppgitt'
 }
+// Count distinct sessions, not pseudo physiological workload points.
 export function loggedMuscleExposure(logs,days=7,now=new Date()){
  const start=new Date(now);start.setDate(start.getDate()-(days-1));const iso=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')
- const counts=Object.fromEntries(Object.keys(MUSCLE_LABELS).map(k=>[k,0]));let sessions=0,known=0,total=0;const items=[]
- for(const log of logs||[]){if(!log.workout_date||log.workout_date<iso(start)||log.workout_date>iso(now))continue;const results=log.result_data?.exercise_results;if(!Array.isArray(results))continue;let counted=false;for(const e of results){const performed=(e.sets||[]).some(s=>!['failed','partial'].includes(s.complex_status)&&[s.reps,s.time_seconds].some(v=>Number(v)>0));if(!performed)continue;const p=muscleProfile([e]);total+=p.total;known+=p.known;if(!p.known)continue;counted=true;items.push(e);p.primary.forEach(k=>counts[k]+=1);p.secondary.forEach(k=>counts[k]+=.5)}if(counted)sessions++}
- return {counts,items,sessions,known,total}
+ const zero=()=>Object.fromEntries(Object.keys(MUSCLE_LABELS).map(k=>[k,0]))
+ const counts=zero(),secondaryCounts=zero(),stabilizerCounts=zero(),byMode={};let sessions=0,known=0,total=0,loggedSessions=0,skipped=0;const items=[]
+ const seen=new Set()
+ for(const log of logs||[]){if(!log.workout_date||log.workout_date<iso(start)||log.workout_date>iso(now)||log.id&&seen.has(log.id))continue;if(log.id)seen.add(log.id);loggedSessions++;const results=log.result_data?.exercise_results;if(!Array.isArray(results)){skipped++;continue}let counted=false;const primary=new Set(),secondary=new Set(),stabilizers=new Set(),modes={};for(const e of results){
+  // Row-level meters and calories may represent prescriptions rather than outcomes.
+  const performed=(e.sets||[]).some(s=>!['failed','partial'].includes(s.complex_status)&&[s.reps,s.time_seconds].some(v=>Number(v)>0));if(!performed)continue
+  const p=muscleProfile([e]);total+=p.total;known+=p.known;if(!p.known||p.known===p.mobility)continue;counted=true;items.push(e);p.primary.forEach(k=>primary.add(k));p.secondary.forEach(k=>secondary.add(k));p.stabilizers.forEach(k=>stabilizers.add(k));
+  for(const step of e.complex_steps?.length?e.complex_steps:[e]){const ep=exerciseMuscleProfile(step.name||step.exercise_name);if(!ep||ep.mode==='mobility')continue;const group=modes[ep.mode]||=new Set();ep.primary.forEach(k=>group.add(k))}
+ }if(counted){sessions++;primary.forEach(k=>counts[k]++);secondary.forEach(k=>{if(!primary.has(k))secondaryCounts[k]++});stabilizers.forEach(k=>{if(!primary.has(k)&&!secondary.has(k))stabilizerCounts[k]++});for(const [mode,groups] of Object.entries(modes)){const acc=byMode[mode]||=zero();groups.forEach(k=>acc[k]++)}}else skipped++}
+ return {counts,secondaryCounts,stabilizerCounts,byMode,items,sessions,known,total,loggedSessions,skipped}
 }
