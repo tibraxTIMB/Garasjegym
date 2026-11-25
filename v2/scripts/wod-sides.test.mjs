@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {getWodSideLabel,getWodSideMode,isSideSelectableExercise} from '../src/lib/wodSides.js'
+import {cardParts,cardDose} from '../src/lib/wodCard.js'
 
 const source = path => readFileSync(new URL(path,import.meta.url),'utf8')
 
@@ -34,10 +35,15 @@ test('timer does not cut off later WOD movements in portrait or landscape',()=>{
  assert.match(timer,/getWodSideLabel\(item,prescriptionLevel\)/)
 })
 
-test('expanded WOD library card reveals every exercise and side',()=>{
+test('standalone WOD card reveals every exercise and side',()=>{
  const library=source('../src/components/WodLibrary.jsx')
  const builder=source('../src/components/WodBuilder.jsx')
- assert.match(library,/expanded===w\.id\?items:items\.slice\(0,3\)/)
+ assert.match(library,/<WodCard key=\{expanded\}/)
+ assert.match(source('../src/components/WodCard.jsx'),/part\.items\.map/)
+ const items=Array.from({length:6},(_,i)=>({exercise_name:'Kettlebell Snatch',side_mode:i===5?'left':'right',reps:4}))
+ const card=cardParts({format:'AMRAP',timer_settings:{workout_schema:{items}}})
+ assert.equal(card[0].items.length,6)
+ assert.match(cardDose(card[0].items[5]),/Venstre/)
  assert.match(library,/getWodSideLabel\(item,level\)/)
  assert.match(builder,/side_mode:x\.sideMode===''\?'none':x\.sideMode\|\|null/)
  assert.match(builder,/isSideSelectableExercise\(exercise\)/)

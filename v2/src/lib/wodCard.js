@@ -1,5 +1,6 @@
 import {muscleProfile,MUSCLE_LABELS} from './muscleProfile.js'
 import {exerciseMuscleProfile} from './exerciseMuscleProfiles.js'
+import {getWodSideLabel} from './wodSides.js'
 export function formatCardTime(value){const n=Math.max(0,Math.round(Number(value)||0));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0')}
 export function cardParts(wod){
  const schema=wod?.timer_settings?.workout_schema||{},all=Array.isArray(schema.items)&&schema.items.length?schema.items:String(wod?.movements||'').split('\n').filter(Boolean).map(name=>({exercise_name:name}))
@@ -29,6 +30,7 @@ export function cardDose(item,level='rx',compact=false){
  else if(!d&&val(item.load_kg))p.push(item.load_kg+' kg')
  if(item.percent_1rm_min&&item.percent_1rm_max)p.push(item.percent_1rm_min+'–'+item.percent_1rm_max+' % 1RM '+(item.reference_rm||''))
  if(!compact){if(v.instruction)p.push(v.instruction);if(item.coach_note&&item.coach_note!==v.instruction)p.push(item.coach_note)}else if(!p.length&&v.instruction)p.push(v.instruction)
+ const side=getWodSideLabel(item,level);if(side&&!p.includes(side))p.push(side)
  return p.filter(Boolean).join(' · ')||'Dosering ikkje oppgitt'
 }
 // Count distinct sessions, not pseudo physiological workload points.
