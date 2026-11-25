@@ -992,7 +992,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   useEffect(()=>{const wasOpen=previousFinishOpen.current;previousFinishOpen.current=finishOpen;if(finishOpen&&!wasOpen){setActiveExerciseIndex(0);setResultSetIndex(0);setFlowDetailed(false);setResultSummary(items.length===0);setReviewedResults({});setConfirmedPlannedEmom(false)}},[finishOpen])
   useEffect(()=>{if(finishOpen&&resultBodyRef.current)resultBodyRef.current.scrollTop=0},[finishOpen,activeExerciseIndex,resultSetIndex,resultSummary])
   useEffect(()=>{if(finishOpen&&error)resultAlertRef.current?.focus()},[finishOpen,error])
-  useEffect(()=>{const field=resultCorrectionRef.current;if(!finishOpen||!field)return;const target=resultBodyRef.current?.querySelector('[data-result-field="'+field+'"]');if(target){const details=target.closest('details');if(details)details.open=true;target.focus();target.scrollIntoView({block:'nearest'})}resultCorrectionRef.current=null},[finishOpen,activeExerciseIndex,resultSetIndex,resultSummary,flowDetailed])
+  useEffect(()=>{const field=resultCorrectionRef.current;if(!finishOpen||!field)return;const target=resultBodyRef.current?.querySelector('[data-result-field="'+field+'"]');if(target){const details=target.closest('details');if(details)details.open=true;target.focus();target.scrollIntoView({block:'nearest'})}resultCorrectionRef.current=null},[finishOpen,activeExerciseIndex,resultSetIndex,resultSummary,flowDetailed,error])
   const resultItem=items[activeExerciseIndex]
   const flowSchema=source?.timer_settings?.workout_schema||{}
   const resultGroup=resultItem?flowItemGroup(resultItem,flowSchema,format):null
@@ -1023,7 +1023,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   function moveResult(delta){if(saving||resultSummary||!resultItem)return;if(delta>0){nextResult();return}if(resultSetIndex>0){setResultSetIndex(n=>n-1);return}if(activeExerciseIndex>0){const previous=activeExerciseIndex-1;selectResult(previous);if(flowItemGroup(items[previous],flowSchema,format).reporting==='sets')setResultSetIndex(Math.max(0,items[previous].sets.length-1))}}
   function markFlowSet(){if(!resultItem||saving)return;const set=resultItem.sets[resultSetIndex];if(!set)return;if(hasMeasuredFlowSet(set,resultItem.prescribed_sets_prefilled)&&!window.confirm('Fjern måleresultatet for dette settet og marker berre utført?'))return;updateSet(resultItem.key,resultSetIndex,{...emptyFlowSet(set),flow_status:'done'});nextResult(true)}
   function nextResult(skipValidation=false){
-    if(skipValidation!==true){const issue=resultIssues.find(issue=>flowCompact?issue.score&&issue.blockId===resultGroup?.id:!issue.score&&issue.itemIndex===activeExerciseIndex&&(issue.setIndex==null||issue.setIndex===resultSetIndex));if(issue){setError(resultIssueLabel(issue)+': '+issue.message);return}}
+    if(skipValidation!==true){const issue=resultIssues.find(issue=>flowCompact?(issue.score&&issue.blockId===resultGroup?.id||format!==COMPOSITE_FORMAT&&resultGroup?.reporting==='score'&&issue.itemIndex==null&&!issue.blockId):!issue.score&&issue.itemIndex===activeExerciseIndex&&(issue.setIndex==null||issue.setIndex===resultSetIndex));if(issue){setError(resultIssueLabel(issue)+': '+issue.message);return}}
     setError('')
     if(flowCompact){nextFlowGroup();return}
     if(resultItem&&!resultItem.is_rest&&!isErgExercise(resultItem)&&resultSetIndex<resultItem.sets.length-1){setResultSetIndex(n=>n+1);return}
@@ -1440,7 +1440,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     if(automatic&&(!pendingSave.current||pendingSave.current!==fingerprint||isOffline()))return
     if(!automatic){pendingSave.current=null;setSyncNotice('')}
     if(finishOpen&&!resultSummary){nextResult();return}
-    if(resultIssues.length){setShowResultIssues(true);setResultSummary(true);setError('Rett '+resultIssues.length+' '+(resultIssues.length===1?'felt':'felt')+' før du lagrar. Trykk på feilen for å gå direkte dit.');return}
+    if(resultIssues.length){setShowResultIssues(true);setResultSummary(true);if(resultBodyRef.current)resultBodyRef.current.scrollTop=0;setError('Rett '+resultIssues.length+' felt før du lagrar. Trykk på feilen for å gå direkte dit.');return}
     if (!title.trim()) { setError('Gi økta eit namn før du lagrar.'); return }
     if(manualEntry&&(!workoutDate||workoutDate>localDateISO())){setError('Vel ein gyldig treningsdato.');return}
     if(manualLibraryEntry&&format==='AMRAP'&&scoreRounds.trim()===''&&scoreReps.trim()!==''){setError('Registrer også tal fullførte rundar.');return}
@@ -1451,8 +1451,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     if (items.some(item => !Array.isArray(item.sets) || item.sets.length === 0)) {
       setError('Legg til minst eitt sett på kvar øving før du lagrar.'); return
     }
-    if(!manualEntry&&items.some(item=>item.prescribed_sets_prefilled)&&!confirmedPlannedEmom){setError('Stadfest at du har kontrollert dei førehandsutfylte EMOM-setta, og rett eventuelle avvik før du lagrar.');return}
-    if(!automatic&&finishOpen&&pendingWeightItems.length&&!window.confirm('Nokre sett manglar faktisk vekt. Vil du lagra utan desse vektverdiane? Ingen vekt blir lagt inn automatisk.'))return
+    if(!manualEntry&&items.some(item=>item.prescribed_sets_prefilled)&&!confirmedPlannedEmom){setError('Stadfest at du har kontrollert dei førehandsutfylte EMOM-setta, og rett eventuelle avvik før du lagrar.');resultCorrectionRef.current='confirmEmom';return}
+    if(!automatic&&finishOpen&&pendingWeightItems.length&&!window.confirm('Desse setta manglar vekt:\n'+pendingWeightItems.map(item=>flowItemGroup(item,flowSchema,format).title+' · '+item.exercise_name+': sett '+item.sets.map((set,index)=>entered(set.reps)&&Number(set.reps)>0&&!entered(set.load_kg)?index+1:null).filter(Boolean).join(', ')).join('\n')+'\n\nOK = lagra utan vekt. Avbryt = rett første sett.')){const item=pendingWeightItems[0],itemIndex=items.indexOf(item),setIndex=item.sets.findIndex(set=>entered(set.reps)&&Number(set.reps)>0&&!entered(set.load_kg));correctResultIssue({itemIndex,setIndex,part:flowItemGroup(item,flowSchema,format).title,exercise:item.exercise_name,field:'load_kg',message:'Registrer faktisk vekt, eller vel å lagra utan vekt.'});return}
     const protectedDraft=saveWorkoutDraft(memberId,draftSnapshot)
     setDraftProtected(protectedDraft)
     saveLock.current=true
@@ -1723,7 +1723,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
             </div>
             <label className="engine-note">Notat<textarea value={note} onChange={e=>setNote(e.target.value)} rows="2" placeholder="Kommentar eller dagsform …"/></label>
           </section>
-          {items.some(item=>item.prescribed_sets_prefilled)&&!manualEntry&&<label className="workout-confirm-prescribed gg-result-confirm"><input type="checkbox" checked={confirmedPlannedEmom} onChange={e=>{setConfirmedPlannedEmom(e.target.checked);setError('')}}/><span>Eg har kontrollert dei planlagde EMOM-setta og repetisjonane, retta avvik og lagt inn faktiske vekter der eg vil registrera dei.</span></label>}
+          {items.some(item=>item.prescribed_sets_prefilled)&&!manualEntry&&<label className="workout-confirm-prescribed gg-result-confirm"><input type="checkbox" data-result-field="confirmEmom" checked={confirmedPlannedEmom} onChange={e=>{setConfirmedPlannedEmom(e.target.checked);setError('')}}/><span>Eg har kontrollert dei planlagde EMOM-setta og repetisjonane, retta avvik og lagt inn faktiske vekter der eg vil registrera dei.</span></label>}
           </>}
           </div>
           <div className="gg-result-footer">
