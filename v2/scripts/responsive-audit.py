@@ -103,6 +103,17 @@ with sync_playwright() as pw:
                     picker.wait_for()
                     box=picker.bounding_box()
                     assert box["x"]>=-1 and box["x"]+box["width"]<=w+1
+                    # A document-width check alone misses text spilling between rows.
+                    rows=picker.locator(".wod-picker-option")
+                    assert rows.count()>0
+                    overlaps=rows.evaluate_all("""rows => rows.flatMap((row,i)=>{
+                      const box=row.getBoundingClientRect(),main=row.querySelector('.wod-picker-option-main')?.getBoundingClientRect(),next=rows[i+1]?.getBoundingClientRect();
+                      return (main&&(main.bottom>box.bottom+1||main.top<box.top-1)||next&&box.bottom>next.top+1)?[row.textContent.trim().slice(0,80)]:[]
+                    })""")
+                    assert not overlaps,overlaps
+                    picker.get_by_role("button",name="Filter",exact=False).tap()
+                    assert picker.get_by_role("combobox",name="Filtrer på WOD-format").is_visible()
+                    picker.get_by_role("button",name="Filter",exact=False).tap()
                     check(page,"pt-wod-picker",w,h)
                     picker.get_by_role("button",name="Avbryt",exact=True).tap()
                     assert page.get_by_role("button",name="Byt WOD",exact=True).count()==0
