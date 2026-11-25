@@ -204,3 +204,5 @@ test('new PT follow-up scopes WOD status to the selected client without private 
 })
 
 test('PT daily completion is scoped to the active client program',()=>{const s=readFileSync(new URL('../src/components/PTStudio.jsx',import.meta.url),'utf8');assert.ok(s.includes('markClientSessionComplete'));assert.ok(s.includes('activeProgram.client_id!==clientId'));assert.ok(s.includes("eq('program_id',activeProgram.id)"));assert.ok(s.includes('Marker utført'));assert.ok(s.includes('PT-arbeidsflate'))})
+
+test('PT plan default is follow-up; equivalent evidence preserves original result',()=>{const s=source('../src/components/PTStudio.jsx');assert.ok(s.includes('editPlan,setEditPlan'));assert.ok(s.includes('pt-plan-picker-modal'));assert.ok(s.includes('eq(\'member_id\',clientId)'));assert.ok(s.includes('verified.workout_log_id!==a.workout_log_id'));assert.ok(s.includes('pt_equivalent:evidence'));assert.ok(s.includes('Rett gjennomføring'));assert.ok(s.includes('session.status===\'completed\'||session.workout_log_id'));assert.ok(!s.includes('wod_id:wod?.id||null,title:wod?.name||session.title'))})
