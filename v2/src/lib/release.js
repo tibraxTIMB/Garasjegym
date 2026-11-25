@@ -26,3 +26,5 @@ export const RELEASE_SHORT = 'GAZELLE 1.2'
 // Candidate: manual Finish and Next part are silent; timed completion and completed Ladder retain their signals.
 
 // Candidate: opt-in local training library/audio, explicit offline draft retry, approximate muscle overview and last saved personal exercise results.
+
+// Owner-approved FLOW publication 2026-11-25: shared result review, completion-only sets and retrospective registration; no database changes.
