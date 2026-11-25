@@ -77,7 +77,8 @@ export default function MobileNativeControls(){
   document.body.style.overflow='hidden'
   const frame=requestAnimationFrame(()=>{
    const choices=[...(listRef.current?.querySelectorAll('[role="option"]:not([disabled])')||[])]
-   (choices.find(choice=>choice.getAttribute('aria-selected')==='true')||choices[0])?.focus()
+   const selectedChoice=choices.find(choice=>choice.getAttribute('aria-selected')==='true')||choices[0]
+   selectedChoice?.focus()
   })
   return()=>{
    cancelAnimationFrame(frame)
