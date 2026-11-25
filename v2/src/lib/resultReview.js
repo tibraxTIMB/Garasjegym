@@ -2,8 +2,17 @@ import {complexResultSummary} from './wodComplexes.js'
 import {isErgExercise} from './exerciseMeasurements.js'
 import {exerciseRecordType} from './prMetrics.js'
 const filled=v=>v!==null&&v!==undefined&&String(v).trim()!==''
-export function exerciseResultReview(item,reviewed=false,confirmedPlanned=false){
+export function exerciseResultReview(item,reviewed=false,confirmedPlanned=false,flowStatus=''){
  if(item.is_rest)return {status:'rest',label:'Pause',summary:'Ingen registrering nødvendig'}
+ if(['done','partial','skipped'].includes(flowStatus))return {status:'completion',label:flowStatus==='done'?'Utført':flowStatus==='partial'?'Delvis utført':'Ikkje utført',summary:'Gjennomføring registrert utan måleresultat'}
+ const completionSets=(item.sets||[]).filter(s=>s.flow_status==='done').length
+ if(completionSets){
+  const remaining=item.sets.filter(s=>s.flow_status!=='done')
+  const text=completionSets+' sett berre utført'
+  if(!remaining.length)return {status:'completion',label:'Utført',summary:text}
+  const result=exerciseResultReview({...item,sets:remaining},reviewed,confirmedPlanned)
+  return {...result,status:result.status==='missing'?'partial':result.status,label:result.status==='missing'?'Delvis registrert':result.label,summary:text+' · '+result.summary}
+ }
  if(item.is_complex&&item.complex_family==='custom'){
   const result=complexResultSummary(item)
   if(!result.attempts)return {status:'missing',label:'Ikkje registrert',summary:'Ingen stadfesta kompleks'}

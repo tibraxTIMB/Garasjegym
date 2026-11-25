@@ -40,5 +40,5 @@ export function hasManualEntryChanges(draft={},today=''){
  if(draft.title&&draft.title!==baseline)return true
  if(!draft.source&&draft.items?.length)return true
  if(Object.values(draft.blockScores||{}).some(score=>Object.values(score||{}).some(v=>typeof v==='boolean'?v:entered(v))))return true
- return (draft.items||[]).some(item=>entered(item.rowValue)||entered(item.workSeconds)||(item.sets||[]).some(set=>[set.reps,set.load_kg,set.height_cm,set.time_text,set.time_seconds,set.rir,set.complex_status].some(entered)))
+ return (draft.items||[]).some(item=>entered(item.rowValue)||entered(item.workSeconds)||(item.sets||[]).some(set=>set.flow_status==='done'||[set.reps,set.load_kg,set.height_cm,set.time_text,set.time_seconds,set.rir,set.complex_status].some(entered)))
 }
