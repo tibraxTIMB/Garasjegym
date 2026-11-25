@@ -16,6 +16,7 @@ on:
       - "gazelle-pt-plan"
       - "gazelle-pt-compact"
       - "gazelle-architect"
+      - "gazelle-pt-flow-repair"
     paths:
       - "v2/**"
       - ".github/workflows/sturmkopf-production-candidate.yml"
