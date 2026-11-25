@@ -161,7 +161,7 @@ export function deriveBenchmarkRecords(logs = [], benchmarkWodIds = []) {
   if(better){group.score=score;group.date=log.workout_date;group.logId=log.id}
  }
  for(const log of logs){
-  if(!log.source_wod_id||log.result_data?.flow_completion_only===true)continue
+  if(!log.source_wod_id||log.result_data?.flow_completion_only===true||log.result_data?.samspel?.team_score===true)continue
   const completionOnlyParts=new Set((log.result_data?.flow_completion||[]).map(part=>part.id))
   const rootEligible=eligible.has(log.source_wod_id)
   const level=String(log.result_data?.prescription_level||'rx').toLowerCase()
