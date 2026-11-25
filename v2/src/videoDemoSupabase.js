@@ -29,13 +29,13 @@ function rowsFor(table) {
     case 'pt_coaches': return [{id:'coach-demo',user_id:'demo-coach',public_name:'Garasje PT (døme)',bio:'Hjelp med teknikk, styrke og treningsglede.',specialties:['Styrke','Kom i gang'],is_active:true}]
     case 'pt_services': return [{id:'service-demo',title:'Uforpliktande prat',description:'Finn ut om PT passar for deg.',duration_label:'Etter avtale',price_label:'0 kr i denne demoen',is_active:true}]
     case 'pt_service_requests': return requests
-    case 'wods': return demoWods
+    case 'wods': return scenario()==='audit-folders'?[...demoWods,{...demoWods[0],id:'folder-wod-1',name:'Z – Første økt'},{...demoWods[0],id:'folder-wod-2',name:'A – Andre økt'}]:demoWods
     case 'wod_favorites': case 'wod_daily_schedules': case 'exercise_favorites': return []
     case 'classes': return [{id:'demo-class',title:'Garasjesirkel (døme)',type:'Gruppetime',starts_at:future,duration_minutes:45,capacity:6,published:true,cancelled_at:null,description:'Ei fellesøkt med roing, styrke og mobilitet.',workout_text:'45 min trening',wod_ids:[]}]
     case 'class_bookings': return bookings
     case 'profiles': return [{id:'demo-admin',display_name:'Demo-eigar',role:'admin',active:true,membership_status:'approved'},...(isAudit()?[{id:'demo-member',display_name:'Demomedlem med eit langt visningsnamn',role:'member',active:true,membership_status:'approved'}]:[])]
-    case 'pt_programs': return isAudit()?[{id:'audit-plan',client_id:'demo-member',title:'Introkurs med eit ekstra langt programnamn',description:'Seks veker med styrke og teknikk.',status:'active',weeks:6,archived_at:null,flow_unlock_mode:'sequence'}]:[]
-    case 'pt_program_sessions': return isAudit()?[1,2,3,4,5,6].map(n=>({id:'audit-session-'+n,program_id:'audit-plan',sequence_no:n,week_no:n,day_no:1,title:'Økt '+n+' – Alternating Dumbbell Push Jerk og grunnrørsler',status:'planned',session_kind:'training',estimated_minutes:35,focus_area:'Teknikk og styrke',coach_note:'Lett belastning.',wod_id:'demo-wod',archived_at:null,flow_requires_approval:true,flow_approved:false,flow_override:false})):[]
+    case 'pt_programs': return scenario()==='audit-folders'?[{id:'folder-plan',title:'Introkurs',archived_at:null},{id:'empty-plan',title:'Ny treningsplan',archived_at:null}]:isAudit()?[{id:'audit-plan',client_id:'demo-member',title:'Introkurs med eit ekstra langt programnamn',description:'Seks veker med styrke og teknikk.',status:'active',weeks:6,archived_at:null,flow_unlock_mode:'sequence'}]:[]
+    case 'pt_program_sessions': return scenario()==='audit-folders'?[{program_id:'folder-plan',wod_id:'folder-wod-2',sequence_no:2,archived_at:null},{program_id:'folder-plan',wod_id:'folder-wod-1',sequence_no:1,archived_at:null}]:isAudit()?[1,2,3,4,5,6].map(n=>({id:'audit-session-'+n,program_id:'audit-plan',sequence_no:n,week_no:n,day_no:1,title:'Økt '+n+' – Alternating Dumbbell Push Jerk og grunnrørsler',status:'planned',session_kind:'training',estimated_minutes:35,focus_area:'Teknikk og styrke',coach_note:'Lett belastning.',wod_id:'demo-wod',archived_at:null,flow_requires_approval:true,flow_approved:false,flow_override:false})):[]
     case 'workout_logs': case 'personal_records': case 'exercises': case 'class_live_sessions': return []
     default: return []
   }
