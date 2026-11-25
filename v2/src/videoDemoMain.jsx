@@ -58,7 +58,7 @@ function Demo() {
           onManual={()=>showHelp('manual-log')} onSchedule={()=>goTo('group')}
           onHistory={()=>showHelp('history')} onCoffee={()=>showHelp('coffee-order')}
           onContactPT={()=>goTo('pt')} onHelp={()=>showHelp('navigation')}/></section>}
-        {screen==='wod'&&<section className="content-card training-content"><WodLibrary staff={false} simpleMode={true} onLaunchWod={startWod}/></section>}
+        {screen==='wod'&&<section className="content-card training-content"><WodLibrary staff={new URLSearchParams(location.search).get('scenario')==='audit-folders'} simpleMode={new URLSearchParams(location.search).get('scenario')!=='audit-folders'} onLaunchWod={startWod}/></section>}
         {screen==='free-training'&&<Training key={timerKey} memberId={profile.id} quickStart={quickStart} onQuickStartConsumed={()=>setQuickStart(false)} simpleMode={true} onSaved={()=>goTo('home')} onDiscard={()=>goTo('home')}/>}
         {screen==='wod-timer'&&<Training key={timerKey} memberId={profile.id} launchWodId={launchWodId} onLaunchConsumed={()=>setLaunchWodId(null)} simpleMode={true} onSaved={()=>goTo('home')} onDiscard={()=>goTo('home')}/>}
         {screen==='pt'&&<section className="content-card training-content"><PTInquiry profile={profile} onGroupSchedule={()=>goTo('group')}/></section>}
