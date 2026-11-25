@@ -25,3 +25,18 @@ test('completion-only group and sets are not missing measurements',()=>{
  const missing=exerciseResultReview({...item,sets:[{flow_status:'done'},{reps:'',load_kg:''}]},true)
  assert.equal(missing.status,'partial')
 })
+
+import {collectResultIssues,resultIssueLabel} from '../src/lib/resultValidation.js'
+test('FLOW corrections identify the exact part, exercise and set without requiring optional results',()=>{
+ const items=[{exercise_name:'Clean',block_id:'d',sets:[{reps:'5',load_kg:'40'},{reps:'2.5',load_kg:'-3'},{flow_status:'done'}]},{exercise_name:'Squat',sets:[{}]}]
+ const schema={composite_blocks:[{id:'d',title:'Del D',format:'EMOM'}]}
+ const issues=collectResultIssues({items,schema,format:'Samansett økt'})
+ assert.equal(issues.length,2);assert.equal(issues[0].setIndex,1);assert.equal(issues[0].field,'reps');assert.equal(resultIssueLabel(issues[0]),'Del D · Clean · Sett 2');assert.equal(issues[1].field,'load_kg')
+ assert.deepEqual(collectResultIssues({items:[{exercise_name:'Clean',sets:[{flow_status:'done'},{reps:'5',load_kg:''}]}]}),[])
+})
+test('FLOW corrections distinguish optional scores from invalid or incomplete entries',()=>{
+ const blocks=[{id:'c',title:'Del C',format:'AMRAP'},{id:'d',title:'Del D',format:'For Time'}]
+ const issues=collectResultIssues({blocks,manualLibraryEntry:true,blockScores:{c:{extraReps:'3'},d:{time:'02:99'}}})
+ assert.deepEqual(issues.map(i=>[i.blockId,i.field]),[['c','rounds'],['d','time']])
+ assert.deepEqual(collectResultIssues({blocks,blockScores:{}}),[])
+})
