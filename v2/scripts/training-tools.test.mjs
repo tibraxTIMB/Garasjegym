@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
 import {readOfflineLibrary,writeOfflineLibrary} from '../src/lib/offlineTraining.js'
 import {previousExerciseResult} from '../src/lib/previousResult.js'
 import {muscleProfile} from '../src/lib/muscleProfile.js'
