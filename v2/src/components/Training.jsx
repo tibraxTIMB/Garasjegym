@@ -1387,6 +1387,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     if(!automatic){pendingSave.current=null;setSyncNotice('')}
     if(finishOpen&&!resultSummary){nextResult();return}
     if (!title.trim()) { setError('Gi økta eit namn før du lagrar.'); return }
+    if(manualEntry&&(!workoutDate||workoutDate>localDateISO())){setError('Vel ein gyldig treningsdato.');return}
+    if(manualLibraryEntry&&format==='AMRAP'&&scoreRounds.trim()===''&&scoreReps.trim()!==''){setError('Registrer også tal fullførte rundar.');return}
     const durationOnly = canSaveDurationOnlyWorkout({format,manualEntry,sourceWodId:source?.id,classSessionId,manualWodCount:manualWodIds.length,elapsedSeconds:timerSnapshot.elapsed})
     if ((!items.length && !durationOnly) || items.some(item => !item.exercise_name.trim())) {
       setError('Alle øvingane må ha namn.'); return
@@ -1469,7 +1471,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         completed_rounds:(isAmrapScore||isDeathByScore||isLadderScore)?(effectiveScoreRounds===''?(manualLibraryEntry?null:Number(timerSnapshot.roundsCompleted)||0):Number(effectiveScoreRounds)):null,
         death_by:isDeathByScore?{completed_rounds:Number(effectiveScoreRounds)||0,failed_round:timerSnapshot.death_by_failed_round??null,interval_seconds:timerSnapshot.death_by_interval_seconds??source?.timer_settings?.workout_schema?.ladder?.interval_seconds??60}:null,
         ladder:isLadderScore?{completed_rounds:Number(effectiveScoreRounds)||0,planned_rounds:Number(source?.timer_settings?.workout_schema?.rounds)||5,finished:ladderWasCompleted}:null,
-        extra_reps:(isAmrapScore||isDeathByScore)?(effectiveScoreReps===''?0:Number(effectiveScoreReps)):null,
+        extra_reps:(isAmrapScore||isDeathByScore)?(effectiveScoreReps===''?(manualLibraryEntry?null:0):Number(effectiveScoreReps)):null,
         split_seconds:Array.isArray(timerSnapshot.laps)?timerSnapshot.laps:[],
         score_time_seconds:parsedTime,
         load_kg:scoreLoad===''?null:Number(scoreLoad),
@@ -1652,7 +1654,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
               {(['For Time','Chipper'].includes(format)||(['Couplet','Triplet'].includes(format)&&source?.timer_settings?.workout_schema?.combination_mode==='For Time'))&&<label>Sluttid<input value={scoreTime} onChange={e=>setScoreTime(e.target.value)} placeholder={timerSnapshot.elapsed?clock(timerSnapshot.elapsed):'mm:ss'}/></label>}
               {['Strength','Pyramid','Superset','Complex'].includes(format)&&<label>Tungaste løft (kg)<input type="number" min="0" step="0.5" value={scoreLoad} onChange={e=>setScoreLoad(e.target.value)} placeholder="Valfritt"/></label>}
               {['Row Intervals','Intervall','Tabata'].includes(format)&&<><label>Kaloriar<input type="number" min="0" step="0.1" value={scoreCalories} onChange={e=>setScoreCalories(e.target.value)} placeholder="Totalt"/></label><label>Avstand<input type="number" min="0" step="1" value={scoreDistance} onChange={e=>setScoreDistance(e.target.value)} placeholder="Total distanse"/></label><div className="training-choice-field"><span>Eining</span><GarageSelect label="Eining for avstand" value={scoreUnit} options={RESULT_UNITS.filter(option=>option.value==='m'||option.value==='km')} onChange={setScoreUnit}/></div></>}
-              {(isEmomFormat(format)||format==='Stasjonssirkel')&&<p className="workout-finish-help">Klokka har registrert {timerSnapshot.roundsCompleted||0} fullførte {isEmomFormat(format)?'EMOM-intervall':'stasjonsrundar'}. Du skal ikkje skriva inn total tid eller rundar ein gong til. Kontroller berre aktuelle sett og vekter ovanfor.</p>}
+              {(isEmomFormat(format)||format==='Stasjonssirkel')&&<p className="workout-finish-help">{manualEntry?'Registrer faktiske sett, repetisjonar og vekter for dei intervalla du gjennomførte.':('Klokka har registrert '+(timerSnapshot.roundsCompleted||0)+' fullførte '+(isEmomFormat(format)?'EMOM-intervall':'stasjonsrundar')+'. Kontroller aktuelle sett og vekter ovanfor.')}</p>}
               {!isEmomFormat(format)&&!['Stasjonssirkel','AMRAP','Death By','Ladder','For Time','Chipper','Couplet','Triplet','Strength','Pyramid','Superset','Complex','Row Intervals','Intervall','Tabata',COMPOSITE_FORMAT].includes(format)&&<><label>Rundar<input type="number" min="0" value={scoreRounds} onChange={e=>setScoreRounds(e.target.value)} placeholder="–"/></label><label>Reps<input type="number" min="0" value={scoreReps} onChange={e=>setScoreReps(e.target.value)} placeholder="–"/></label><label>Tid / sluttid<input value={scoreTime} onChange={e=>setScoreTime(e.target.value)} placeholder="mm:ss"/></label></>}
             </div>
             <label className="engine-note">Notat<textarea value={note} onChange={e=>setNote(e.target.value)} rows="2" placeholder="Kommentar eller dagsform …"/></label>

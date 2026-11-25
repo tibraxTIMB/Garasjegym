@@ -59,7 +59,7 @@
     "predev": "node scripts/render-training-audio.mjs && node scripts/build-safehouse.mjs",
     "audio:generate": "node scripts/generate-studio-music.mjs",
     "audio:compile": "node scripts/compile-studio-cues.mjs",
-    "test:training-tools": "node --test scripts/training-tools.test.mjs scripts/workout-draft.test.mjs"
+    "test:training-tools": "node --test scripts/training-tools.test.mjs scripts/workout-draft.test.mjs scripts/retrospective-wod.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.119.2",
