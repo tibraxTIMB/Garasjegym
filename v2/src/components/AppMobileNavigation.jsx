@@ -1,3 +1,4 @@
+import {useEffect,useRef} from 'react'
 import { Settings2, UsersRound } from 'lucide-react'
 
 // Seks faste, tydelege inngangar. Siste posisjon er rollebasert
@@ -14,7 +15,10 @@ function labelFor(id) {
   return 'WOD'
 }
 
-export default function AppMobileNavigation({ items = [], active, staff = false, coach = false, admin = false, onNavigate }) {
+export default function AppMobileNavigation({ items = [], active, staff = false, coach = false, admin = false, onNavigate,onQuickMenu }) {
+  const press=useRef(null),long=useRef(false),start=useRef(null)
+  const cancel=()=>{clearTimeout(press.current);press.current=null;start.current=null}
+  useEffect(()=>()=>clearTimeout(press.current),[])
   const primary = PRIMARY_IDS.map(id => items.find(item => item.id === id)).filter(Boolean)
   const destination = staff ? 'admin' : 'pt-studio'
   const baseDestination = items.find(item => item.id === destination)
@@ -38,7 +42,13 @@ export default function AppMobileNavigation({ items = [], active, staff = false,
             className={'app-mobile-nav-item' + (item.id === 'trening' ? ' app-mobile-nav-item--start' : '') + (selected ? ' is-active' : '')}
             aria-label={title}
             aria-current={selected ? 'page' : undefined}
-            onClick={() => onNavigate?.(item.id)}
+            onPointerDown={item.id==='oversikt'&&onQuickMenu?e=>{if(e.button!==0)return;cancel();long.current=false;start.current=[e.clientX,e.clientY];press.current=setTimeout(()=>{long.current=true;onQuickMenu()},550)}:undefined}
+            onPointerMove={item.id==='oversikt'?e=>{if(start.current&&Math.hypot(e.clientX-start.current[0],e.clientY-start.current[1])>12)cancel()}:undefined}
+            onPointerUp={cancel}
+            onPointerCancel={()=>{cancel();long.current=false}}
+            onPointerLeave={cancel}
+            onContextMenu={item.id==='oversikt'&&onQuickMenu?e=>e.preventDefault():undefined}
+            onClick={() => {if(item.id==='oversikt'&&long.current){long.current=false;return}onNavigate?.(item.id)}}
           >
             <Icon size={20} strokeWidth={selected ? 2.4 : 1.9} aria-hidden="true" />
             <span>{title}</span>
