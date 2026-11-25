@@ -260,7 +260,7 @@ export default function App() {
       // Do not leave an active result/confirmation dialog with the system Back button.
       return
     }
-    if(infotainmentActive){setInfotainmentActive(false);return}
+    if(infotainmentActive){try{sessionStorage.removeItem('garasjegym:infotainment-active')}catch{}setInfotainmentActive(false);return}
     if(selectedWorkout){window.dispatchEvent(new Event('gg:workout-back',{cancelable:true}));return}
     if(active==='trening'&&timerSnapshot.sessionOpen){navigateRoot('oversikt');return}
     if(navigationStack.length||active!=='oversikt'){navigateBack('oversikt');return}
