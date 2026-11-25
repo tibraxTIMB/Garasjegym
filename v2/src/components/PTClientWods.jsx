@@ -1,5 +1,6 @@
 import {lazy,Suspense,useEffect,useMemo,useState} from 'react'
-import {ArrowRight,CheckCircle2,ClipboardList,Dumbbell,Plus,RefreshCw} from 'lucide-react'
+import {createPortal} from 'react-dom'
+import {ArrowRight,CheckCircle2,ClipboardList,Dumbbell,Plus,RefreshCw,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import PTWodReview from './PTWodReview.jsx'
 import './pt-client-followup.css'
@@ -116,11 +117,11 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
     </div>}
     {preview&&<p className="ptfollow-footnote">Du ser berre PT-tilknytte WOD-ar, ikkje andre treningsøkter.</p>}
    </>}
-   {!preview&&showAssign&&<div className="ptfollow-assignment">
-    <div className="ptfollow-assignment-title"><h4>Tildel WOD til {clientName}</h4><span>Vald kunde er låst til denne tildelinga.</span></div>
+   {!preview&&showAssign&&createPortal(<div className="gg-pt-assign-backdrop"><section className="gg-pt-assign-sheet" role="dialog" aria-modal="true" aria-label={'Tildel WOD til '+clientName}>
+    <header className="gg-pt-assign-head"><div><h4>Tildel WOD</h4><small>Mottakar: {clientName}</small></div><button type="button" aria-label="Lukk tildeling" onClick={()=>setShowAssign(false)}><X size={20}/></button></header>
     <Suspense fallback={<p className="ptfollow-info">Opnar WOD-biblioteket …</p>}>
       <WodBuilder key={clientId} assignedClientId={clientId} onAssigned={()=>{setShowAssign(false);setRevision(x=>x+1)}}/>
     </Suspense>
-   </div>}
+   </section></div>,document.body)}
   </section>
 }
