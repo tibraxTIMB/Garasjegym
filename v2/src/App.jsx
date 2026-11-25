@@ -1,3 +1,4 @@
+import DailyWodStrip from './components/DailyWodStrip.jsx'
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import {
   CalendarDays,
@@ -293,7 +294,7 @@ export default function App() {
     })
     return()=>{live=false}
   },[session?.user?.id,profile?.id,profile?.active,profile?.membership_status,profile?.role])
-  useEffect(()=>{let live=true;async function loadDaily(){const now=new Date(),today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;const {data,error}=await supabase.from('wod_daily_schedules').select('wod_id,wods(id,name,format,duration_minutes,movements,notes,timer_settings)').eq('scheduled_date',today).is('target_class_id',null).eq('is_published',true).maybeSingle();if(live&&!error)setDailyWod(data?.wods||null);else if(live&&error)setDailyWod(null)}if(session?.user?.id){loadDaily();const timer=setInterval(loadDaily,60000);return()=>{live=false;clearInterval(timer)}}return()=>{live=false}},[session?.user?.id])
+  useEffect(()=>{let live=true;async function loadDaily(){const now=new Date(),today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;const {data,error}=await supabase.from('wod_daily_schedules').select('wod_id,scheduled_date,wods(id,name,format,duration_minutes,movements,notes,timer_settings)').eq('scheduled_date',today).is('target_class_id',null).eq('is_published',true).maybeSingle();if(live&&!error)setDailyWod(data?.wods?{...data.wods,scheduled_date:data.scheduled_date}:null);else if(live&&error)setDailyWod(null)}if(session?.user?.id){loadDaily();const timer=setInterval(loadDaily,60000);return()=>{live=false;clearInterval(timer)}}return()=>{live=false}},[session?.user?.id])
   useEffect(()=>{
     const memberId=session?.user?.id
     if(!memberId)return
@@ -470,7 +471,7 @@ export default function App() {
           <div className="eyebrow"><Activity size={14} /> GARASJEGYM · SUPERENKEL</div>
           <h1>Hei, <em>{profile.display_name?.split(' ')[0]||'der'}.</em></h1>
           
-        </section> : null}{simpleMode&&active==='oversikt'&&dailyWod&&<button type="button" className="app-daily-wod-strip" onClick={()=>{setFocusWodId(dailyWod.id);navigateTo('wod')}}><span>DAGENS WOD</span><strong>{dailyWod.name}</strong><small>{dailyWod.format} · {dailyWod.duration_minutes||'–'} min · Opne WOD-kortet →</small></button>}
+        </section> : null}{simpleMode&&active==='oversikt'&&dailyWod&&<DailyWodStrip wod={dailyWod} date={dailyWod.scheduled_date} onOpen={id=>{setFocusWodId(id);navigateTo('wod')}}/>}
         <Suspense fallback={<section className="content-card training-content" role="status" aria-live="polite"><div className="training-state">Lastar modul …</div></section>}>
         {(trainingVisited||active==='trening')&&<section className="content-card training-content workout-entry" style={{display:active==='trening'?undefined:'none'}} aria-hidden={active!=='trening'}>
           <Training key={session.user.id} memberId={session.user.id} visible={active==='trening'} onBackground={()=>navigateRoot('oversikt')} onOpenWodLibrary={()=>{setFocusWodId(null);navigateTo('wod')}} onOpenTrainingPlan={openMyTraining} onOpenSchedule={()=>{setScheduleTab('mine');navigateTo('timeplan')}} onOpenDailyWod={id=>{setFocusWodId(id);navigateTo('wod')}} onOpenHistory={()=>navigateTo('mi-historikk')} onOpenPR={()=>navigateTo('pr-senter')} onSaved={({victories=[]}={})=>{setWorkoutRevision(value=>value+1);if(!victories.length)navigateBack('oversikt')}} onDiscard={()=>navigateBack('oversikt')} onTimerSnapshot={handleTimerSnapshot} quickManualEntry={quickManualEntry} onQuickManualEntryConsumed={()=>setQuickManualEntry(false)} launchWodId={launchWodId} launchClassSessionId={launchClassSessionId} launchClassResult={launchClassResult} launchAssignmentId={launchAssignmentId} launchProgramSessionId={launchProgramSessionId} launchProgramSessionTitle={launchProgramSessionTitle} onLaunchConsumed={() => { setLaunchWodId(null); setLaunchClassSessionId(null); setLaunchClassResult(false); setLaunchAssignmentId(null); setLaunchProgramSessionId(null); setLaunchProgramSessionTitle('') }} simpleMode={simpleMode} quickStart={quickStart} onQuickStartConsumed={()=>setQuickStart(false)} />

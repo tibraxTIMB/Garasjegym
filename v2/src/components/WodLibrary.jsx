@@ -1,3 +1,4 @@
+import DailyWodStrip from './DailyWodStrip.jsx'
 import {useEffect,useMemo,useRef,useState} from 'react'
 import {BookOpen,Search,Eye,EyeOff,LoaderCircle,Clock3,Dumbbell,Play,Layers,UserPlus,Trash2,Archive,Edit3,Star,CalendarDays,Info,MoreHorizontal,ChevronDown,ChevronUp,ChevronRight} from 'lucide-react'
 import WodCard from './WodCard.jsx'
@@ -35,7 +36,7 @@ const compactDose=(item,level)=>{
 export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,isAdmin=false,focusWodId=null,onFocusConsumed,simpleMode=false}){
  const [wods,setWods]=useState([]),[query,setQuery]=useState(''),[filter,setFilter]=useState('all'),[quickFilter,setQuickFilter]=useState('all'),[formatFilter,setFormatFilter]=useState('all'),[durationFilter,setDurationFilter]=useState('all'),[intensityFilter,setIntensityFilter]=useState('all'),[currentUserId,setCurrentUserId]=useState(''),[loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [customers,setCustomers]=useState([]),[customersLoading,setCustomersLoading]=useState(true),[assignWod,setAssignWod]=useState(null),[customerId,setCustomerId]=useState(''),[dueDate,setDueDate]=useState(''),[coachNote,setCoachNote]=useState('')
- const [sessionWods,setSessionWods]=useState([]),[sessionName,setSessionName]=useState(''),[sessionDate,setSessionDate]=useState(localDateISO()),[showSession,setShowSession]=useState(false),[favorites,setFavorites]=useState([]),[dailyWodId,setDailyWodId]=useState(null),[classes,setClasses]=useState([]),[classWod,setClassWod]=useState(null),[classId,setClassId]=useState(''),[expanded,setExpanded]=useState(null),[categoryFilter,setCategoryFilter]=useState('all'),[dailyScheduleWod,setDailyScheduleWod]=useState(null),[dailyScheduleDate,setDailyScheduleDate]=useState(localDateISO()),[dailyScheduleClassId,setDailyScheduleClassId]=useState(''),[dailySchedulePublished,setDailySchedulePublished]=useState(true)
+ const [sessionWods,setSessionWods]=useState([]),[sessionName,setSessionName]=useState(''),[sessionDate,setSessionDate]=useState(localDateISO()),[showSession,setShowSession]=useState(false),[favorites,setFavorites]=useState([]),[dailyWodId,setDailyWodId]=useState(null),[dailyDate,setDailyDate]=useState(null),[classes,setClasses]=useState([]),[classWod,setClassWod]=useState(null),[classId,setClassId]=useState(''),[expanded,setExpanded]=useState(null),[categoryFilter,setCategoryFilter]=useState('all'),[dailyScheduleWod,setDailyScheduleWod]=useState(null),[dailyScheduleDate,setDailyScheduleDate]=useState(localDateISO()),[dailyScheduleClassId,setDailyScheduleClassId]=useState(''),[dailySchedulePublished,setDailySchedulePublished]=useState(true)
  const [showAdvancedFilters,setShowAdvancedFilters]=useState(false)
  const [openCardMenu,setOpenCardMenu]=useState(null)
  const loadSequence=useRef(0)
@@ -49,7 +50,7 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
    const [w,fav,daily,cls]=await Promise.all([
     request,
     user?supabase.from('wod_favorites').select('wod_id').eq('user_id',user.id):Promise.resolve({data:[],error:null}),
-    supabase.from('wod_daily_schedules').select('wod_id').eq('scheduled_date',localDateISO()).is('target_class_id',null).eq('is_published',true).maybeSingle(),
+    supabase.from('wod_daily_schedules').select('wod_id,scheduled_date').eq('scheduled_date',localDateISO()).is('target_class_id',null).eq('is_published',true).maybeSingle(),
     staff?supabase.from('classes').select('id,title,starts_at,wod_ids,published').eq('published',true).gte('starts_at',new Date().toISOString()).order('starts_at').limit(50):Promise.resolve({data:[],error:null})
    ])
    if(requestId!==loadSequence.current)return
@@ -60,7 +61,7 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
    setCurrentUserId(user?.id||'')
    setWods(w.data||[])
    setFavorites((fav.data||[]).map(x=>x.wod_id))
-   setDailyWodId(daily.data?.wod_id||null)
+   setDailyWodId(daily.data?.wod_id||null);setDailyDate(daily.data?.scheduled_date||null)
    setClasses(cls.data||[])
   }catch(e){
    if(requestId===loadSequence.current)setError('WOD-biblioteket kunne ikkje hentast: '+(e?.message||'Ukjend feil'))
@@ -82,6 +83,8 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
    &&(intensityFilter==='all'||intensity===intensityFilter)
    &&(`${w.name} ${w.format} ${w.movements} ${w.notes} ${categoryOf(w)}`).toLowerCase().includes(query.toLowerCase())
  }),[wods,query,filter,staff,categoryFilter,quickFilter,formatFilter,durationFilter,intensityFilter,favorites,currentUserId])
+ const featuredDaily=filtered.find(w=>w.id===dailyWodId&&w.is_published&&dailyDate===localDateISO())
+ const ordinaryWods=filtered.filter(w=>staff&&!simpleMode||w.id!==featuredDaily?.id)
  const categoryOptions=useMemo(()=>{const base=['warmup','daily','standard','benchmark','assessment','rehab','recovery','other'];const custom=[...new Set(wods.map(categoryOf).filter(x=>!base.includes(x)))];return [...base,...custom]},[wods])
  const formatOptions=useMemo(()=>[...new Set(wods.filter(w=>!w.is_archived).map(w=>w.format).filter(Boolean))].sort(),[wods])
  const activeAdvancedCount=[quickFilter,formatFilter,durationFilter,intensityFilter,filter].filter(value=>value!=='all').length
@@ -124,7 +127,7 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
     result=await supabase.from('wod_daily_schedules').update(payload).eq('id',concurrent.id)
    }
    if(result.error)throw result.error
-   if(dailyScheduleDate===localDateISO()&&!dailyScheduleClassId&&dailySchedulePublished)setDailyWodId(dailyScheduleWod.id)
+   if(dailyScheduleDate===localDateISO()&&!dailyScheduleClassId){setDailyWodId(dailySchedulePublished?dailyScheduleWod.id:null);setDailyDate(dailySchedulePublished?dailyScheduleDate:null)}
    setNotice(`${dailyScheduleWod.name} er ${dailySchedulePublished?'publisert':'lagra som utkast'} for ${new Date(dailyScheduleDate+'T12:00:00').toLocaleDateString('nn-NO')}${dailyScheduleClassId?' for vald gruppetime':' for alle medlemmar'}.`)
    setDailyScheduleWod(null)
   }catch(e){setError('Kunne ikkje planleggja Dagens WOD: '+(e.message||'Ukjend feil'))}
@@ -213,6 +216,7 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
  function toggleSession(id){setSessionWods(v=>v.includes(id)?v.filter(x=>x!==id):[...v,id])}
  return <div className={simpleMode?"wod-library-page simple-wod-library":"wod-library-page"}>{simpleMode?<div className="training-heading"><div><div className="section-kicker">EIGENTRENING</div><h3>Vel ei økt</h3><p>Trykk på økta for å sjå WOD-kortet.</p></div><span className="count-pill">{filtered.length} økter</span></div>:<div className="wod-library-compact-heading"><strong>WOD-bibliotek</strong><span>{filtered.length} WOD-ar</span></div>}
  {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message">{notice}</div>}
+ {featuredDaily&&!loading&&<DailyWodStrip wod={featuredDaily} date={dailyDate} onOpen={id=>{setExpanded(id);setOpenCardMenu(null)}}/>}
  <div className={simpleMode?"wod-library-toolbar simple-wod-toolbar":"wod-library-toolbar wod-library-compact-toolbar"}>
   <div className="wod-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder={simpleMode?"Søk etter økt …":"Søk namn, øving eller format …"}/></div>
   {simpleMode?<div className="calendar-view-switch">{[['all','Alle'],...['warmup','standard','benchmark','rehab'].map(v=>[v,categoryLabel(v)])].map(([v,label])=><button type="button" key={v} className={categoryFilter===v?'selected':''} aria-pressed={categoryFilter===v} onClick={()=>setCategoryFilter(v)}>{label}</button>)}</div>:<>
@@ -229,7 +233,7 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
  </div>
  {showSession&&<form className="booking-create" onSubmit={e=>{e.preventDefault();createSession()}}><h4>Ny treningsøkt · {sessionWods.length} WOD-ar valde</h4><label>Namn på økta<input value={sessionName} onChange={e=>setSessionName(e.target.value)} placeholder="t.d. Styrke + kondisjon"/></label><label>Dato<input type="date" value={sessionDate} onChange={e=>setSessionDate(e.target.value)}/></label><p>Vel WOD-ar med «Legg til i økt» på korta under. Du kan endra rekkjefølgja seinare.</p><button className="primary-button" disabled={!sessionWods.length||busy==='session'}>Opprett økt med {sessionWods.length} WOD-ar</button><button type="button" className="secondary-button" onClick={()=>setShowSession(false)}>Avbryt</button></form>}
  {loading?<div className="training-state"><LoaderCircle className="spin"/> Hentar WOD-bibliotek …</div>:filtered.length?<div className="wod-library-grid">
-  {filtered.map(w=>{
+  {ordinaryWods.map(w=>{
    const items=w.timer_settings?.workout_schema?.items||[]
    const compositeBlocks=w.timer_settings?.workout_schema?.composite_blocks||[]
    const useMenuOpen=openCardMenu==='use:'+w.id
