@@ -30,3 +30,15 @@ export function retrospectiveBlockResults(blocks=[],scores={}){
  return []
  })
 }
+
+// Selected template and empty result slots do not constitute entered results.
+export function hasManualEntryChanges(draft={},today=''){
+ const entered=v=>v!=null&&String(v).trim()!==''
+ if(draft.manualCompleted||[draft.note,draft.manualLocation,draft.scoreRounds,draft.scoreReps,draft.scoreTime,draft.scoreLoad,draft.scoreCalories,draft.scoreDistance].some(entered))return true
+ if(today&&draft.workoutDate&&draft.workoutDate!==today)return true
+ const baseline=draft.source?.name||'Manuell trening'
+ if(draft.title&&draft.title!==baseline)return true
+ if(!draft.source&&draft.items?.length)return true
+ if(Object.values(draft.blockScores||{}).some(score=>Object.values(score||{}).some(v=>typeof v==='boolean'?v:entered(v))))return true
+ return (draft.items||[]).some(item=>entered(item.rowValue)||entered(item.workSeconds)||(item.sets||[]).some(set=>[set.reps,set.load_kg,set.height_cm,set.time_text,set.time_seconds,set.rir,set.complex_status].some(entered)))
+}

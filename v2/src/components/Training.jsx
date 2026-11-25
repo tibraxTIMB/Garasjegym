@@ -1,5 +1,5 @@
 import {blockScoreDefinition,explicitBlockResults} from '../lib/compositeWod.js'
-import {retrospectiveBlocks,retrospectiveScoreKind,retrospectiveBlockResults} from '../lib/retrospectiveWod.js'
+import {retrospectiveBlocks,retrospectiveScoreKind,retrospectiveBlockResults,hasManualEntryChanges} from '../lib/retrospectiveWod.js'
 import {complexResultSummary,plannedComplexCycles,confirmWeightedComplexSets} from '../lib/wodComplexes.js'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, CalendarDays, CheckCircle2, ChevronDown, Clock3, Dumbbell, History, House, LoaderCircle, Pause, Play, Plus, RotateCcw, Save, Search, Star, Heart, Trash2, Settings2, Settings, ChevronRight, Trophy, Monitor, Timer as TimerIcon, Music2, HeartPulse, Undo2, Hand, List, Volume2, VolumeX, Maximize2, Minimize2, X } from 'lucide-react'
@@ -1192,7 +1192,26 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
 
   const filteredExercises = useMemo(() => {const q=query.trim().toLowerCase();return exercises.filter(e=>(!favoritesOnly||favoriteNames.includes(e.name))&&[e.name,e.category,e.equipment,exerciseBrowseCategory(e)].some(value=>String(value||'').toLowerCase().includes(q)))}, [exercises,query,favoritesOnly,favoriteNames])
 
+  function cancelManualEntry() {
+    if(!manualEntry||saving||saveLock.current)return
+    const pending=Boolean(pendingSave.current)
+    if(pending&&!window.confirm('Lagring er ikkje stadfesta. Avbryt vidare lagringsforsøk og forkast den lokale kladden? Ei økt som allereie er motteken av databasen blir ikkje sletta.'))return
+    if(!pending&&hasManualEntryChanges(draftSnapshot,localDateISO())&&!window.confirm('Avbryta etterregistreringa? Det du har fylt inn i denne kladden blir forkasta. WOD-malen blir behalden.'))return
+    pendingSave.current=null;setSyncNotice('')
+    clearWorkoutDraft(memberId)
+    stopPackAudio(sharedTrainingAudioContext);stopDirectAudio()
+    setFinishOpen(false);setResultSummary(false);setReviewedResults({});setReviewOpen(false)
+    setManualEntry(false);setManualLibraryEntry(false);setManualCompleted(false);setManualLocation('')
+    setRestoredTimerSnapshot(null);setSessionPrepared(false);setFreeEditorOpen(false);setSource(null);setClassSessionId(null)
+    setLaunchLinkContext(emptyTrainingLaunchContext());setItems([]);setManualWodIds([]);setManualWodSelect('');setRetroQuery('')
+    setScoreRounds('');setScoreReps('');setBlockScores({});setScoreTime('');setScoreLoad('');setScoreCalories('');setScoreDistance('');setScoreUnit('m');setNote('')
+    setSaveToken(crypto.randomUUID());setTimerSnapshot({elapsed:0,laps:[],roundsCompleted:0,phase:'Klar',running:false})
+    clearTimerSnapshot();setError('');setNotice('');setMode('retro-choose')
+    window.scrollTo({top:0,behavior:'auto'})
+  }
+
   function leaveWorkout() {
+    if(manualEntry){cancelManualEntry();return}
     if (saving || saveLock.current || !window.confirm('Forkasta denne økta utan å lagra? Ingen resultat eller PR blir registrerte. WOD-malen blir behalden.')) return
     setFinishOpen(false); setMode('home'); setRestoredTimerSnapshot(null); setSource(null); setClassSessionId(null); setItems([])
     setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
@@ -1553,7 +1572,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     {victoryOverlay.length>0&&<PRVictoryOverlay victories={victoryOverlay} onClose={()=>setVictoryOverlay([])}/>}
     {victoryNotice.length>0&&<div className="gg-pr-victory-notice" role="status"><Trophy size={22}/><div><strong>Ny personleg rekord · The Big Seven</strong>{victoryNotice.map(p=><small key={p.name}>{p.label}: {p.previous_kg} → {p.load_kg} kg</small>)}</div><button type="button" aria-label="Lukk rekordmelding" onClick={()=>setVictoryNotice([])}><X size={18}/></button></div>}
     {mode === 'active' ? <form className="engine-form gg-training-session" onSubmit={saveWorkout}>
-      <div className="training-heading"><div><div className="section-kicker">{manualEntry?'RESULTAT · ETTERREGISTRERING':'TRENING · AKTIV ØKT'}</div><h3>{source?.name||'Fri trening'}</h3></div><button type="button" className="workout-return-types" onClick={returnToWorkoutTypes}>← Vel økttype</button></div>
+      <div className="training-heading"><div><div className="section-kicker">{manualEntry?'RESULTAT · ETTERREGISTRERING':'TRENING · AKTIV ØKT'}</div><h3>{source?.name||'Fri trening'}</h3></div><button type="button" className="workout-return-types" disabled={saving} onClick={manualEntry?cancelManualEntry:returnToWorkoutTypes}>{manualEntry?'Avbryt':'← Vel økttype'}</button></div>
       {source&&activeWodEngine.participation!=='individual'&&<section className="wod-execution-partner"><div><strong>{formatParticipation(activeWodEngine)}</strong><span>{({free_split:'Del arbeidet fritt',you_go_i_go:'You go – I go',alternate:'Annankvar / vekselvis',synchronized:'Synkroniserte repetisjonar',parallel:'Parallelt arbeid'})[activeWodEngine.collaboration]||'Felles gjennomføring'}</span></div><small>Resultat blir lagra med partner-/teamoppsettet frå WOD-kortet. Scoring: {(activeWodEngine.scoring?.fields||[]).join(' + ')}</small></section>}
       {source?.timer_settings?.workout_schema?.items?.some(item=>item.levels)&&<section className="wod-execution-level"><strong>Vel doseringsnivå</strong><div className="hub-tabs" role="group" aria-label="Doseringsnivå">{[{id:'rx',label:'RX'},...(source.timer_settings.workout_schema.items.some(item=>item.levels?.intermediate)?[{id:'intermediate',label:'Intermediate'}]:[]),{id:'scaled',label:'Scaled'},{id:'foundation',label:'Foundation'}].map(level=><button type="button" key={level.id} className={wodLevel===level.id?'selected':''} aria-pressed={wodLevel===level.id} disabled={Boolean(timerSnapshot.hasStarted)} onClick={()=>{setWodLevel(level.id);setConfirmedPlannedEmom(false);setItems(rows=>rows.map(item=>{const levels=item.prescription_levels;if(!levels)return item;const dose=levels[level.id]||levels.rx||{};const n=Number(dose.reps);return {...item,prescription_label:doseLabel({levels},level.id),sets:item.prescribed_sets_prefilled&&Number.isInteger(n)&&n>0?item.sets.map(set=>({...set,reps:String(n)})):item.sets}}))}}>{level.label}</button>)}</div></section>}
       <div className="training-session-workspace">
@@ -1601,7 +1620,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       </div>
       {finishOpen&&<div className="workout-finish-backdrop" role="presentation">
         <section className="workout-finish-dialog gg-result-wizard" role="dialog" aria-modal="true" aria-labelledby="finish-workout-title">
-          <div className="workout-finish-head gg-result-header"><div><span className="section-kicker">ETTER ØKTA · REGISTRER RESULTAT</span><h3 id="finish-workout-title">{resultSummary?'Kontroller og lagre':(resultItem?.exercise_name||title||'Treningsøkt')}</h3><small>{resultSummary?title:(items.length?'Øving '+(activeExerciseIndex+1)+' av '+items.length:'Resultat')}</small></div><button type="button" className="gg-result-close" aria-label="Tilbake til økta utan å lagra" onClick={()=>setFinishOpen(false)} title="Tilbake til økta"><X size={20}/></button></div>
+          <div className="workout-finish-head gg-result-header"><div><span className="section-kicker">ETTER ØKTA · REGISTRER RESULTAT</span><h3 id="finish-workout-title">{resultSummary?'Kontroller og lagre':(resultItem?.exercise_name||title||'Treningsøkt')}</h3><small>{resultSummary?title:(items.length?'Øving '+(activeExerciseIndex+1)+' av '+items.length:'Resultat')}</small></div><button type="button" className="gg-result-close" aria-label="Tilbake til økta utan å lagra" onClick={()=>setFinishOpen(false)} title="Tilbake til økta" disabled={saving}><X size={20}/></button></div>
           <div className="gg-result-progress" aria-label="Framdrift">{items.map((item,index)=><button type="button" key={item.key} className={(!resultSummary&&activeExerciseIndex===index?'current ': '')+(reviewedResults[item.key]?'reviewed':'')} aria-label={'Øving '+(index+1)+': '+item.exercise_name} aria-current={!resultSummary&&activeExerciseIndex===index?'step':undefined} onClick={()=>selectResult(index)}/>)}</div>
           {error&&<div className="auth-error gg-result-error" role="alert">{error}</div>}
           <div ref={resultBodyRef} className="gg-result-body">
@@ -1665,7 +1684,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           <div className="gg-result-footer">
             {(syncNotice||offline||!draftProtected)&&<p role="status" className="workout-finish-help">{syncNotice||(!draftProtected?'Lokal sikring feila. Hald appen open.':'Nettutfall · øktkladden blir sikra lokalt.')}</p>}
             {resultSummary?<button type="submit" className="primary-button gg-result-save" disabled={saving}><Save size={20}/>{saving?'Lagrar …':'Lagre økt'}</button>:<><div className="gg-result-nav"><button type="button" className="secondary-button" disabled={activeExerciseIndex===0} onClick={()=>selectResult(activeExerciseIndex-1)}>← Førre</button><button type="button" className="primary-button" onClick={nextResult} title="Stadfest resultata for denne øvinga">{activeExerciseIndex<items.length-1?'Neste øving':'Kontroller resultat'} <ChevronRight size={19}/></button></div><button type="button" className="text-button gg-result-skip" onClick={()=>setResultSummary(true)}>Gå til samla resultatkontroll</button></>}
-            <button type="button" className="gg-result-discard" disabled={saving} onClick={leaveWorkout}><Trash2 size={18}/> Forkast økta · ikkje lagre</button>
+            <button type="button" className="gg-result-discard" disabled={saving} onClick={leaveWorkout}><Trash2 size={18}/> {manualEntry?'Avbryt registrering · ikkje lagre':'Forkast økta · ikkje lagre'}</button>
           </div>
         </section>
       </div>}
