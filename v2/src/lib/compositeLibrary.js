@@ -1,6 +1,7 @@
 import {getWodSchemaItems,sortWodItems} from './wodOrdering.js'
 import {isEmomFormat,emomIntervalSeconds} from './wodEngine.js'
 import {COMPOSITE_FORMAT} from './compositeWod.js'
+import {flowPurpose} from './workoutFlow.js'
 
 /** Snapshot a library WOD into one composite part; future source edits do not mutate it. */
 export function prepareLibraryWodPart(wod,oldBlock){
@@ -14,6 +15,7 @@ export function prepareLibraryWodPart(wod,oldBlock){
  const seconds=Math.max(60,Number(schema.duration_seconds)||Number(schema.time_cap_seconds)||Number(wod.duration_minutes)*60||1200)
  const block={
   ...oldBlock,format,
+  flowPurpose:schema.flowPurpose||flowPurpose({title:wod.name},schema),flowReporting:schema.flowReporting||'auto',
   title:oldBlock.title||wod.name,
   minutes:seconds/60,
   source_wod_id:wod.id,source_wod_name:wod.name,

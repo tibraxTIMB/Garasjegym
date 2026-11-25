@@ -253,7 +253,7 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
       {isAdmin&&<button type="button" className="wod-card-danger-action" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);removeWod(w)}}><Archive size={17}/> Fjern frå biblioteket</button>}
       {isAdmin&&<button type="button" className="wod-card-danger-action" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);removeWod(w,{permanent:true})}}><Trash2 size={17}/> Slett WOD permanent</button>}
      </div>}
-    <h4><button className="wod-light-title" type="button" aria-label={'Opna WOD-kort: '+w.name} onClick={()=>{setExpanded(w.id);setOpenCardMenu(null)}}>{w.name}<ChevronRight size={16} aria-hidden="true"/></button></h4>
+    <h4><button className="wod-light-title" type="button" aria-label={'Opna WOD-kort med fire sider: '+w.name} onClick={()=>{setExpanded(w.id);setOpenCardMenu(null)}}><span>{w.name}</span><span className="gg-wod-more-pages"><Layers size={14} aria-hidden="true"/> 4 sider <ChevronRight size={16} aria-hidden="true"/></span></button></h4>
     <div className="wod-card-mini-category gg-info-meta"><span>{categoryLabel(categoryOf(w))}</span>{dailyWodId===w.id&&<strong>Dagens WOD</strong>}</div>
     <div className="wod-library-meta gg-info-meta"><span>{w.format}</span><span><Clock3 size={14}/>{w.duration_minutes||'–'} min</span><span><Dumbbell size={14}/>{items.length||w.movements?.split('\n').filter(Boolean).length||0} øvingar</span></div>
     {compositeBlocks.length>1&&<small className="wod-light-parts">{compositeBlocks.length} delar · {[...new Set(compositeBlocks.map(b=>b.format))].join(" / ")}</small>}

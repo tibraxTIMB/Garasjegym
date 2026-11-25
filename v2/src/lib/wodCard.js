@@ -2,14 +2,15 @@ import {muscleProfile,MUSCLE_LABELS} from './muscleProfile.js'
 import {exerciseMuscleProfile} from './exerciseMuscleProfiles.js'
 import {muscleGradeSummary,exerciseGrades} from './muscleGrades.js'
 import {getWodSideLabel} from './wodSides.js'
+import {flowPurpose,flowReporting} from './workoutFlow.js'
 export function formatCardTime(value){const n=Math.max(0,Math.round(Number(value)||0));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0')}
 export function cardParts(wod){
  const schema=wod?.timer_settings?.workout_schema||{},all=Array.isArray(schema.items)&&schema.items.length?schema.items:String(wod?.movements||'').split('\n').filter(Boolean).map(name=>({exercise_name:name}))
  const engine=schema.wod_engine?.blocks,legacy=schema.composite_blocks
  const blocks=Array.isArray(engine)&&engine.length>1?engine:Array.isArray(legacy)&&legacy.length?legacy:null
- const make=(b,i)=>{const title=String(b.title||'Del '+(i+1)).replace(/^Del\s+[A-H]\s*[–—:-]\s*/i,'');const warm=/oppvarming|warm.?up/i.test(title);const intervalSeconds=Number(b.emomIntervalSeconds??b.interval?.intervalSeconds??b.interval?.work_every_seconds)||0;const format=b.format||wod.format;return {id:b.id||String(i),title,format,formatLabel:warm?'Oppvarming':intervalSeconds&&/emom|e\d/i.test(format)?'E'+(intervalSeconds/60)+'MOM':format,intervalSeconds,seconds:Number(b.duration_seconds)||Math.round(Number(b.minutes||0)*60),items:Array.isArray(b.items)&&b.items.length?b.items:all.filter(x=>(x.block_id||x.blockId)===b.id),warm}}
+ const make=(b,i)=>{const title=String(b.title||'Del '+(i+1)).replace(/^Del\s+[A-H]\s*[–—:-]\s*/i,'');const warm=/oppvarming|warm.?up/i.test(title);const intervalSeconds=Number(b.emomIntervalSeconds??b.interval?.intervalSeconds??b.interval?.work_every_seconds)||0;const format=b.format||wod.format;return {id:b.id||String(i),title,format,formatLabel:warm?'Oppvarming':intervalSeconds&&/emom|e\d/i.test(format)?'E'+(intervalSeconds/60)+'MOM':format,intervalSeconds,seconds:Number(b.duration_seconds)||Math.round(Number(b.minutes||0)*60),items:Array.isArray(b.items)&&b.items.length?b.items:all.filter(x=>(x.block_id||x.blockId)===b.id),warm,purpose:flowPurpose(b,schema),reporting:flowReporting(b,schema)}}
  if(blocks)return blocks.map(make)
- return [{id:'main',title:wod?.format||'Økt',format:wod?.format,formatLabel:wod?.format,intervalSeconds:Number(schema.interval?.work_every_seconds)||0,seconds:Number(schema.duration_seconds||wod?.timer_settings?.duration_seconds)||Number(wod?.duration_minutes||0)*60,items:all,warm:schema.library_category==='warmup'}]
+ return [{id:'main',title:wod?.format||'Økt',format:wod?.format,formatLabel:wod?.format,intervalSeconds:Number(schema.interval?.work_every_seconds)||0,seconds:Number(schema.duration_seconds||wod?.timer_settings?.duration_seconds)||Number(wod?.duration_minutes||0)*60,items:all,warm:schema.library_category==='warmup',purpose:flowPurpose({title:wod?.name,flowPurpose:schema.flowPurpose},schema),reporting:flowReporting({format:wod?.format,flowReporting:schema.flowReporting},schema)}]
 }
 export function cardTone(p){if(p.warm)return 'warmup';const f=String(p.format||'').toLowerCase();if(/amrap/.test(f))return 'amrap';if(/emom|^e\d/.test(f))return 'emom';if(/strength|complex|superset|styrke/.test(f))return 'strength';if(/intervall|interval|tabata|stasjon/.test(f))return 'interval';if(/for time|chipper|couplet|triplet|ladder|death by/.test(f))return 'time';return 'neutral'}
 export function cardDose(item,level='rx',compact=false){
