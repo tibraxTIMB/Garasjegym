@@ -64,3 +64,9 @@ test('unsupported combinations and incomplete results have actionable errors',()
  assert.equal(samspelResultIssue(parallel,'2740'),null)
  assert.ok(samspelResultIssue(parallel,'-1'))
 })
+
+import {deriveBenchmarkRecords} from '../src/lib/prMetrics.js'
+test('Samspel team score never becomes an individual benchmark record',()=>{
+ const log={id:'team',source_wod_id:'w',format:'AMRAP',score_rounds:7,score_reps:3,result_data:{samspel:{...parallel,team_score:true}}}
+ assert.deepEqual(deriveBenchmarkRecords([log],['w']),[])
+})
