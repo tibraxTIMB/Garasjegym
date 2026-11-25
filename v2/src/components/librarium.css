@@ -30,3 +30,5 @@
 .librarium-menu-label.danger{border-top:1px solid #45434a;margin-top:4px;color:#e5aaa2}
 .wod-library-page .librarium-actions .wod-card-action-panel button.wod-card-danger-action{background:#2a2328!important;border-color:#704a4b!important;color:#ffbcb4!important}
 @media(orientation:landscape){.wod-library-page .librarium-tools{grid-template-columns:repeat(5,minmax(0,1fr))}.wod-library-page .librarium-tools>select,.wod-library-page .librarium-tools>button{grid-column:span 1}}
+
+/* LIBRARIUM 1.1: approved release; no functional change. */
