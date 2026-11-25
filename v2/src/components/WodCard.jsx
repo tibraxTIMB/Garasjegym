@@ -1,0 +1,42 @@
+import {useEffect,useMemo,useRef,useState} from 'react'
+import {createPortal} from 'react-dom'
+import {ArrowLeft,Clock3,Layers,Play,Dumbbell,Scan,History,Target,ChevronLeft,ChevronRight} from 'lucide-react'
+import MuscleMap from './MuscleMap.jsx'
+import {muscleProfile,MUSCLE_LABELS} from '../lib/muscleProfile.js'
+import {supabase} from '../lib/supabase.js'
+import {cardParts,cardDose,formatCardTime,cardTone,loggedMuscleExposure} from '../lib/wodCard.js'
+import './wod-card.css'
+
+const tabs=[['workout','Økt',Dumbbell],['dose','Dosering',Layers],['muscle','Muskelkart',Scan],['history','Historikk',History]]
+const dateISO=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')
+export default function WodCard({wod,memberId,staff,onClose,onLaunch}){
+ const [tab,setTab]=useState('workout'),[level,setLevel]=useState('rx'),[days,setDays]=useState(7),[logs,setLogs]=useState([]),[status,setStatus]=useState('idle')
+ const dialog=useRef(null),touch=useRef(null),scroll=useRef(null)
+ const parts=useMemo(()=>cardParts(wod),[wod]),items=parts.flatMap(p=>p.items)
+ const seconds=Number(wod.timer_settings?.workout_schema?.duration_seconds||wod.timer_settings?.duration_seconds)||parts.reduce((n,p)=>n+p.seconds,0)||Number(wod.duration_minutes)*60
+ const exposure=useMemo(()=>loggedMuscleExposure(logs,days),[logs,days])
+ const profile=muscleProfile(items)
+ useEffect(()=>{const el=dialog.current;if(!el)return;el.showModal();return()=>{if(el.open)el.close()}},[])
+ useEffect(()=>{scroll.current?.scrollTo({top:0})},[tab])
+ useEffect(()=>{if(!memberId){setStatus('unavailable');return}let active=true;setStatus('loading');const start=new Date();start.setDate(start.getDate()-29);async function load(){try{const rows=[];for(let offset=0;offset<5000;offset+=500){const {data,error}=await supabase.from('workout_logs').select('id,workout_date,source_wod_id,title,score_rounds,score_reps,score_time_seconds,score_load_kg,result_data').eq('member_id',memberId).gte('workout_date',dateISO(start)).lte('workout_date',dateISO(new Date())).order('workout_date',{ascending:false}).order('id',{ascending:false}).range(offset,offset+499);if(error)throw error;rows.push(...(data||[]));if((data||[]).length<500){if(active){setLogs(rows);setStatus('ready')}return}}if(active){setLogs(rows);setStatus('partial')}}catch{if(active)setStatus('error')}}load();return()=>{active=false}},[memberId])
+ const index=tabs.findIndex(x=>x[0]===tab)
+ function move(delta){setTab(tabs[Math.min(tabs.length-1,Math.max(0,index+delta))][0])}
+ const history=logs.filter(l=>l.source_wod_id===wod.id)
+ const focus=Object.keys(MUSCLE_LABELS).filter(g=>!exposure.counts[g])
+ return createPortal(<dialog ref={dialog} className="gg-wod-screen" aria-label={'WOD-kort: '+wod.name} onCancel={e=>{e.preventDefault();onClose()}}>
+  <header className="gg-wod-top"><button type="button" onClick={onClose} aria-label="Tilbake"><ArrowLeft size={23}/></button><strong>WOD-kort</strong><span/></header>
+  <nav className="gg-wod-tabs" aria-label="Sider på WOD-kortet">{tabs.map(([key,label,Icon])=><button key={key} type="button" aria-pressed={tab===key} onClick={()=>setTab(key)}><Icon size={17}/><span>{label}</span></button>)}</nav>
+  <main className="gg-wod-paper" ref={scroll} onTouchStart={e=>{const t=e.touches[0];touch.current={x:t.clientX,y:t.clientY}}} onTouchEnd={e=>{const t=e.changedTouches[0],s=touch.current;touch.current=null;if(!s||!t)return;const dx=t.clientX-s.x,dy=t.clientY-s.y;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.7)move(dx<0?1:-1)}}>
+   <div className="gg-wod-identity"><span>{wod.format}</span><h1>{wod.name}</h1><div className="gg-wod-stats"><span><Clock3 size={17}/><b>{seconds>0?formatCardTime(seconds):'Open tid'}</b></span><span><Layers size={17}/>{parts.length} {parts.length===1?'del':'delar'}</span></div></div>
+   {tab==='workout'&&<div className="gg-wod-parts">{parts.map((part,i)=><section key={part.id} className={'gg-wod-part gg-wod-tone-'+cardTone(part)}>
+    <div className="gg-wod-part-top"><span className="gg-wod-letter">{String.fromCharCode(65+i)}</span><div><strong>{part.title}</strong><small>{part.formatLabel}{part.intervalSeconds?' · kvart '+formatCardTime(part.intervalSeconds):''}</small></div><b>{part.seconds?formatCardTime(part.seconds):'–'}</b></div>
+    {part.items.map((item,j)=><div className="gg-wod-movement" key={j}><span>{item.exercise_name||item.name||'Øving'}</span><small>{cardDose(item,level,true)}</small></div>)}
+    {!part.items.length&&<small className="gg-wod-empty">Ingen øvingar spesifiserte.</small>}
+   </section>)}</div>}
+   {tab==='dose'&&<div className="gg-wod-back"><h2>Dosering</h2><div className="gg-wod-levels">{[['rx','RX'],['intermediate','Intermediate'],['scaled','Scaled'],['foundation','Foundation']].filter(([k])=>k!=='intermediate'||items.some(i=>i.levels?.intermediate)).map(([k,l])=><button type="button" key={k} aria-pressed={level===k} onClick={()=>setLevel(k)}>{l}</button>)}</div>{parts.map(p=><section key={p.id}><h3>{p.title}</h3>{p.items.map((item,i)=><div className="gg-wod-movement" key={i}><strong>{item.exercise_name||item.name}</strong><small>{cardDose(item,level,false)}</small></div>)}</section>)}{staff&&wod.notes&&<section><h3>Coach-notat</h3><p>{wod.notes}</p></section>}</div>}
+   {tab==='muscle'&&<div className="gg-wod-back"><h2>Muskelkart</h2><section><h3>Forventa stimulus i denne økta</h3>{profile.known?<MuscleMap items={items}/>:<p>Ingen klassifiserte øvingar.</p>}<p>Rettleiande klassifisering, ikkje målt muskelaktivering.</p></section><section><h3><Target size={16}/> Fokus frå treningsloggen</h3><div className="gg-wod-levels">{[7,30].map(n=><button type="button" key={n} aria-pressed={days===n} onClick={()=>setDays(n)}>Siste {n} dagar</button>)}</div>{status==='loading'?<p>Hentar eigne treningsloggar …</p>:status==='error'||status==='unavailable'?<p>Treningsloggen er ikkje tilgjengeleg.</p>:exposure.known?<><MuscleMap items={exposure.items} heatCounts={exposure.counts}/><p>{exposure.known} av {exposure.total} registrerte rørsler klassifiserte · {exposure.sessions} økter. Fargane viser relativ registrert øvingsførekomst, ikkje belastning eller restitusjon.</p>{status==='partial'&&<p>Berre eit utsnitt av loggen er analysert.</p>}{status==='ready'&&exposure.sessions>=2&&focus.length>0&&<p><strong>Vurder variasjon:</strong> {focus.map(g=>MUSCLE_LABELS[g]).join(', ')} er ikkje registrert i dei klassifiserte øvingane i perioden. Vel ut frå mål og kapasitet.</p>}</>:<p>Ikkje nok registrerte øvingar med resultat til analyse enno.</p>}</section></div>}
+   {tab==='history'&&<div className="gg-wod-back"><h2>Mine resultat · siste 30 dagar</h2>{status==='loading'?<p>Hentar …</p>:status==='error'||status==='unavailable'?<p>Historikk ikkje tilgjengeleg.</p>:history.length?history.map(l=><section key={l.id}><h3>{l.workout_date}</h3><p>{[l.score_rounds!=null?l.score_rounds+' rundar':'',l.score_reps!=null?l.score_reps+' reps':'',l.score_time_seconds!=null?formatCardTime(l.score_time_seconds):'',l.score_load_kg!=null?l.score_load_kg+' kg':''].filter(Boolean).join(' · ')||'Registrert økt'}</p></section>):<p>Ingen lagra resultat for denne WOD-en i perioden.</p>}</div>}
+  </main>
+  <footer className="gg-wod-footer"><div className="gg-wod-swipe"><button type="button" disabled={index===0} onClick={()=>move(-1)} aria-label="Førre kortside"><ChevronLeft size={20}/></button><span>{index+1} / {tabs.length} · Sveip for meir</span><button type="button" disabled={index===tabs.length-1} onClick={()=>move(1)} aria-label="Neste kortside"><ChevronRight size={20}/></button></div><button type="button" className="gg-wod-start" onClick={onLaunch}><Play size={23}/> Utfør WOD</button></footer>
+ </dialog>,document.body)
+}
