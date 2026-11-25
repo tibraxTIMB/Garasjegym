@@ -308,3 +308,5 @@
 .pt-plan-evidence-list{display:grid;gap:6px;min-width:0}.pt-plan-evidence-list button{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;min-height:44px;white-space:normal;overflow-wrap:anywhere}.pt-plan-evidence-list small{font-size:11px;flex:none}
 .pt2 .pt2-session-slot-editor{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;min-width:0}.pt2 .pt2-session-slot-editor label{min-width:0}.pt2 .pt2-session-slot-editor select{width:100%;min-width:0}.pt2 .pt2-session-slot-editor button{grid-column:1/-1}
 @media(max-width:480px){.pt2 .pt-plan-card{grid-template-columns:26px minmax(0,1fr)!important}.pt2 .pt-plan-card .pt-plan-card-status{grid-column:2!important;grid-row:auto;justify-content:flex-start}.pt2 .pt-plan-actions{grid-column:2/-1}.pt2 .pt-plan-picker-modal .wod-picker-option{grid-template-columns:20px minmax(0,1fr)}.pt2 .pt-plan-picker-modal .wod-picker-status{grid-column:2}.pt2 .pt-plan-picker-modal{padding:12px!important}.pt-plan-evidence-list button{display:grid;grid-template-columns:minmax(0,1fr)}}
+
+/* PT Plan Polish: approved production release; no functional change. */
