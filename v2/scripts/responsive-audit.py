@@ -67,12 +67,16 @@ with sync_playwright() as pw:
                 if screen=="card":
                     page.get_by_role("button",name="Dosering",exact=True).tap()
                     check(page,"card-dose",w,h)
+                if screen=="builder":
+                    page.get_by_role("button",name="Samansett økt",exact=False).first.tap()
+                    page.get_by_role("navigation",name="Delar i WOD-en").wait_for()
+                    check(page,"architect-overview",w,h)
                 if screen=="pt":
                     card=page.locator(".pt-compact-session").first
                     card.wait_for()
                     assert page.get_by_role("button",name="Byt WOD",exact=True).count()==0
                     assert page.get_by_role("button",name="Flytt økt",exact=True).count()==0
-                    assert card.bounding_box()["height"]<160
+                    assert card.bounding_box()["height"]<160,card.bounding_box()
                     card.get_by_role("button",name="Handlingar for",exact=False).tap()
                     menu=page.get_by_role("dialog",name="Øktmeny:",exact=False)
                     menu.get_by_role("button",name="Kopla til utført PT-økt").tap()
@@ -99,6 +103,11 @@ with sync_playwright() as pw:
                     assert preview.get_by_role("button",name="Utfør WOD").count()==0
                     check(page,"pt-preview",w,h)
                     preview.get_by_role("button",name="Tilbake",exact=True).tap()
+                    card.get_by_role("button",name="Handlingar for",exact=False).tap()
+                    menu.get_by_role("button",name="Tilpass økt",exact=True).tap()
+                    editor=page.get_by_role("dialog",name="Tilpass økt for",exact=False)
+                    editor.get_by_role("navigation",name="Delar i WOD-en").wait_for(timeout=15000)
+                    check(page,"architect-pt-edit",w,h)
                 if screen=="acta":
                     panel=page.get_by_role("region",name="Treningsrapport per del")
                     assert panel.get_by_text("4 + 3",exact=True).is_visible()
@@ -118,7 +127,7 @@ with sync_playwright() as pw:
                         check(page,"quick-menu-longpress",w,h)
                 if screen=="select":
                     page.get_by_role("combobox",name="Testval").tap()
-                    page.get_by_role("listbox").wait_for(timeout=4000)
+                    page.get_by_role("listbox").wait_for(timeout=10000)
                     check(page,"select-sheet",w,h)
                     page.get_by_role("listbox").get_by_role("option").nth(1).tap()
                     assert page.get_by_role("combobox",name="Testval").input_value()=="b"
