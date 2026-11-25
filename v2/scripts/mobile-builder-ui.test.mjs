@@ -296,7 +296,7 @@ test('result entry is a guided exercise-by-exercise review with clearly labelled
  assert.match(timer,/Vekt \(kg\)/)
  assert.match(timer,/inputMode="decimal"[^]*?placeholder="Tast kg"/)
  assert.match(timer,/Bruk vekta frå sett 1 i tomme felt/)
- assert.match(timer,/entered\(set\.load_kg\)\?set:/)
+ assert.match(timer,/entered\(set\.load_kg\)\|\|set\.flow_status==='done'\?set:/)
  assert.match(timer,/RIR \(valfritt\)/)
  assert.match(timer,/pendingWeightItems\.length&&!window\.confirm/)
  assert.match(style,/\.gg-result-body\{flex:1 1 0;min-height:0/)
