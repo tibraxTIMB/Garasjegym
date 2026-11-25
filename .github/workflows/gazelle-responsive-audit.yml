@@ -1,7 +1,7 @@
 name: Gazelle responsive browser audit (no deploy)
 on:
   push:
-    branches: [gazelle-responsive-audit, gazelle-librarium]
+    branches: [gazelle-responsive-audit, gazelle-librarium, gazelle-librarium-polish]
 permissions:
   contents: read
 jobs:
