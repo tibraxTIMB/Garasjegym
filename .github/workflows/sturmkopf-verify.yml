@@ -36,6 +36,12 @@ jobs:
             sudo apt-get install -y ffmpeg
           fi
           ffmpeg -version
+      - name: Render optional generative audio pack
+        working-directory: ${{ github.workspace }}
+        run: |
+          python3 -m venv "$RUNNER_TEMP/gg-audio-venv"
+          "$RUNNER_TEMP/gg-audio-venv/bin/python" -m pip install --disable-pip-version-check numpy==2.3.5 scipy==1.17.0
+          "$RUNNER_TEMP/gg-audio-venv/bin/python" v2/scripts/render-generative-audio.py
       - name: Check SQL migrations
         run: npm run check:migrations
       - name: Ensure active migration directory contains no TEST-only baseline or seed

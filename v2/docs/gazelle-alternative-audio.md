@@ -1,0 +1,5 @@
+# Gazelle · optional generative audio pack
+
+Standard remains the existing gazelle-v6 WAV library. Timer > Lyd og signal > Lydpakke enables the optional KI lyd (generative prototype), saved per device; changing packs does not change the three profile IDs, volume, or PR toggle. No database changes. Original alternative 46 MP3 arrangements are regenerated at build time by scripts/render-generative-audio.py; no external music API or runtime cloud service. This is procedural synthesis, not a trained AI model. Exact encoded bytes may differ with ffmpeg version. 
+
+Local build: install Python 3.11 or later, numpy==2.3.5, scipy==1.17.0, and ffmpeg with libmp3lame; then from v2 run python scripts/render-generative-audio.py before npm run build. CI performs this step automatically. The candidate workflow does not deploy. Live playback falls back to standard on a failed alternative asset load; the test controls report errors. No new trigger is added to manual Finish; existing timer completion triggers continue to apply. The warning asset is bundled but not given a new live trigger. Check Android audio playback and PR volume before deployment.
