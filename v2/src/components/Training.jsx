@@ -1026,7 +1026,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     if(!resultItem||!entered(resultItem.sets?.[0]?.load_kg))return
     const value=resultItem.sets[0].load_kg
     setReviewedResults(old=>({...old,[resultItem.key]:false}));setConfirmedPlannedEmom(false)
-    setItems(old=>old.map(item=>item.key===resultItem.key?{...item,sets:item.sets.map(set=>entered(set.load_kg)?set:{...set,load_kg:value})}:item))
+    setItems(old=>old.map(item=>item.key===resultItem.key?{...item,sets:item.sets.map(set=>entered(set.load_kg)||set.flow_status==='done'?set:{...set,load_kg:value})}:item))
   }
   function confirmComplexWeights(){
     if(!customComplexResult)return
@@ -1457,9 +1457,9 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     try {
       const normalizedFormat = format.toLowerCase()
       const combinationMode = source?.timer_settings?.workout_schema?.combination_mode
-      const isAmrapScore = (!manualLibraryEntry&&normalizedFormat === COMPOSITE_FORMAT.toLowerCase()) || normalizedFormat === 'amrap' || (['couplet','triplet'].includes(normalizedFormat) && combinationMode === 'AMRAP')
-      const isDeathByScore = normalizedFormat === 'death by' && (!manualEntry||manualLibraryEntry)
-      const isLadderScore = normalizedFormat === 'ladder' && (!manualEntry||manualLibraryEntry)
+      const isAmrapScore = !flowCompletionOnly&&((!manualLibraryEntry&&normalizedFormat === COMPOSITE_FORMAT.toLowerCase()) || normalizedFormat === 'amrap' || (['couplet','triplet'].includes(normalizedFormat) && combinationMode === 'AMRAP'))
+      const isDeathByScore = !flowCompletionOnly&&normalizedFormat === 'death by' && (!manualEntry||manualLibraryEntry)
+      const isLadderScore = !flowCompletionOnly&&normalizedFormat === 'ladder' && (!manualEntry||manualLibraryEntry)
       const ladderWasCompleted = isLadderScore && (manualLibraryEntry?manualCompleted:timerSnapshot.ladder_finished===true)
       const retrospectiveTimed=manualLibraryEntry&&(['for time','chipper','ladder'].includes(normalizedFormat)||(['couplet','triplet'].includes(normalizedFormat)&&combinationMode==='For Time'))
       const isForTimeScore = !flowCompletionOnly&&(ladderWasCompleted || ['for time','chipper'].includes(normalizedFormat) || (['couplet','triplet'].includes(normalizedFormat) && combinationMode === 'For Time'))
@@ -1511,7 +1511,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       if(manualEntry&&!hasRecordedScore&&flowSessionStatus!=='done'&&!flowRecorded.some(part=>part.status==='done'||part.status==='partial')&&!items.some(item=>item.sets?.some(set=>set.flow_status==='done')))throw new Error('Registrer minst eitt faktisk resultat – til dømes reps, kg, høgd, tid, distanse eller kaloriar – før du lagrar etterregistreringa.')
       if(classSessionId&&source?.category!=='warmup'&&!hasRecordedScore&&flowSessionStatus!=='done'&&!flowRecorded.some(part=>part.status==='done'||part.status==='partial')&&!items.some(item=>item.sets?.some(set=>set.flow_status==='done')))throw new Error('Hovud-WOD må ha minst eitt registrert resultat før du kan lagra.')
       const resultData = {
-        version:3,flow_completion:flowRecorded,flow_session_status:flowSessionStatus||null,format,combination_mode:combinationMode||null,manual_entry:manualEntry,training_location:manualEntry?manualLocation.trim()||null:null,prescription_level:wodLevel,block_results:timerSnapshot.block_results||null,block_summary:scoredBlocks.length?scoredBlocks:null,composite_breaks:timerSnapshot.composite_breaks||[],wod_engine:source?.timer_settings?.workout_schema?.wod_engine||null,wod_ids:source?.id?[source.id]:manualWodIds,wod_names:(source?.id?[source.id]:manualWodIds).map(id=>wods.find(w=>w.id===id)?.name).filter(Boolean),elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':retrospectiveTimed&&!manualCompleted||isLadderScore&&!ladderWasCompleted?'incomplete':'completed',completed:!(retrospectiveTimed&&!manualCompleted||isLadderScore&&!ladderWasCompleted),time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
+        version:3,flow_completion:flowRecorded,flow_completion_only:flowCompletionOnly,flow_session_status:flowSessionStatus||null,format,combination_mode:combinationMode||null,manual_entry:manualEntry,training_location:manualEntry?manualLocation.trim()||null:null,prescription_level:wodLevel,block_results:timerSnapshot.block_results||null,block_summary:scoredBlocks.length?scoredBlocks:null,composite_breaks:timerSnapshot.composite_breaks||[],wod_engine:source?.timer_settings?.workout_schema?.wod_engine||null,wod_ids:source?.id?[source.id]:manualWodIds,wod_names:(source?.id?[source.id]:manualWodIds).map(id=>wods.find(w=>w.id===id)?.name).filter(Boolean),elapsed_seconds:elapsedSeconds,timer_phase:timerSnapshot.phase,completion_status:timerSnapshot.phase==='TIDSGRENSE'?'time_cap':retrospectiveTimed&&!manualCompleted||isLadderScore&&!ladderWasCompleted?'incomplete':'completed',completed:!(retrospectiveTimed&&!manualCompleted||isLadderScore&&!ladderWasCompleted),time_cap_reached:timerSnapshot.phase==='TIDSGRENSE',time_cap_seconds:timerSnapshot.phase==='TIDSGRENSE'?elapsedSeconds:null,
         completed_rounds:(isAmrapScore||isDeathByScore||isLadderScore)?(effectiveScoreRounds===''?(manualLibraryEntry?null:Number(timerSnapshot.roundsCompleted)||0):Number(effectiveScoreRounds)):null,
         death_by:isDeathByScore?{completed_rounds:Number(effectiveScoreRounds)||0,failed_round:timerSnapshot.death_by_failed_round??null,interval_seconds:timerSnapshot.death_by_interval_seconds??source?.timer_settings?.workout_schema?.ladder?.interval_seconds??60}:null,
         ladder:isLadderScore?{completed_rounds:Number(effectiveScoreRounds)||0,planned_rounds:Number(source?.timer_settings?.workout_schema?.rounds)||5,finished:ladderWasCompleted}:null,
@@ -1669,6 +1669,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
                     {resultItem.uses_height&&<label>Høgd (cm)<input aria-label={'Sett '+(setIndex+1)+' høgd i centimeter'} type="number" inputMode="numeric" min="1" step="1" value={set.height_cm} onChange={e=>updateSet(resultItem.key,setIndex,{height_cm:e.target.value})} placeholder="Tast cm"/></label>}
                     {exerciseRecordType(resultItem.exercise_name,resultItem.sets)==='hold'&&<label>Tid (sek)<input aria-label={'Sett '+(setIndex+1)+' haldetid i sekund'} type="number" inputMode="numeric" min="0" step="1" value={set.time_seconds} onChange={e=>updateSet(resultItem.key,setIndex,{time_seconds:e.target.value})} placeholder="Tast sek"/></label>}
                   </div>
+                  {!customComplexResult&&!entered(set.reps)&&Number(resultItem.prescription_levels?.[wodLevel]?.reps)>0&&<button type="button" className="secondary-button" onClick={()=>updateSet(resultItem.key,setIndex,{reps:String(resultItem.prescription_levels[wodLevel].reps)})}>Utførte {resultItem.prescription_levels[wodLevel].reps} planlagde reps</button>}
                   {setIndex>0&&entered(resultItem.sets[setIndex-1]?.load_kg)&&resultItem.uses_load&&<button type="button" className="secondary-button" onClick={()=>updateSet(resultItem.key,setIndex,{load_kg:resultItem.sets[setIndex-1].load_kg})}>Same vekt som førre · {resultItem.sets[setIndex-1].load_kg} kg</button>}
                   <button type="button" className="text-button" onClick={markFlowSet}>{set.flow_status==='done'?'Utført · gå vidare':'Berre utført · neste'}</button>
                 </div>)}</div>

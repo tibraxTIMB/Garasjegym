@@ -3,7 +3,9 @@ export const FLOW_PURPOSES=[['prep','Felles oppvarming'],['build','Teknikk / fin
 export const FLOW_REPORTING=[['auto','Automatisk etter føremål og format'],['done','Berre utført'],['sets','Settvis resultat'],['score','Hovudresultat']]
 export function flowPurpose(block={},schema={}){
  if(FLOW_PURPOSES.some(([key])=>key===block.flowPurpose))return block.flowPurpose
- if(schema.library_category==='warmup')return 'prep'
+ if(['warmup','flow_prep'].includes(schema.library_category))return 'prep'
+ if(schema.library_category==='flow_build')return 'build'
+ if(schema.library_category==='flow_recovery')return 'recovery'
  const title=String(block.title||'').replace(/^Del\s+[A-H0-9]+\s*[–—:-]\s*/i,'').trim()
  if(/^(felles )?(oppvarming|warm[ -]?up)\b/i.test(title))return 'prep'
  if(/^(fri teknisk innøving|teknisk førebuing|finn arbeidsvekt|finn vekt|build to (a )?working weight)\b/i.test(title))return 'build'

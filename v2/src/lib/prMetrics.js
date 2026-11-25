@@ -117,14 +117,15 @@ export function deriveBenchmarkRecords(logs = [], benchmarkWodIds = []) {
   if(better){group.score=score;group.date=log.workout_date;group.logId=log.id}
  }
  for(const log of logs){
-  if(!log.source_wod_id)continue
+  if(!log.source_wod_id||log.result_data?.flow_completion_only===true)continue
+  const completionOnlyParts=new Set((log.result_data?.flow_completion||[]).map(part=>part.id))
   const rootEligible=eligible.has(log.source_wod_id)
   const level=String(log.result_data?.prescription_level||'rx').toLowerCase()
   const composite=log.result_data?.block_summary
   if(!rootEligible&&!(Array.isArray(composite)&&composite.length&&String(log.format)==='Samansett økt'))continue
   if(Array.isArray(composite)&&composite.length&&String(log.format)==='Samansett økt'){
    for(const [index,part] of composite.entries()){
-    if(part.completed!==true)continue
+    if(part.completed!==true||completionOnlyParts.has(part.id))continue
     if(part.scoreMode&&part.scoreMode!=='auto')continue
     const linkedId=part.benchmark_source_wod_id||null
     const linkedEligible=linkedId&&eligible.has(linkedId)
