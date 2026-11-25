@@ -32,7 +32,7 @@ const compactDose=(item,level)=>{
  return values.join(' · ')
 }
 
-export default function WodLibrary({onLaunchWod,onEditWod,staff=true,isAdmin=false,focusWodId=null,onFocusConsumed,simpleMode=false}){
+export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,isAdmin=false,focusWodId=null,onFocusConsumed,simpleMode=false}){
  const [wods,setWods]=useState([]),[query,setQuery]=useState(''),[filter,setFilter]=useState('all'),[quickFilter,setQuickFilter]=useState('all'),[formatFilter,setFormatFilter]=useState('all'),[durationFilter,setDurationFilter]=useState('all'),[intensityFilter,setIntensityFilter]=useState('all'),[currentUserId,setCurrentUserId]=useState(''),[loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [customers,setCustomers]=useState([]),[customersLoading,setCustomersLoading]=useState(true),[assignWod,setAssignWod]=useState(null),[customerId,setCustomerId]=useState(''),[dueDate,setDueDate]=useState(''),[coachNote,setCoachNote]=useState('')
  const [sessionWods,setSessionWods]=useState([]),[sessionName,setSessionName]=useState(''),[sessionDate,setSessionDate]=useState(localDateISO()),[showSession,setShowSession]=useState(false),[favorites,setFavorites]=useState([]),[dailyWodId,setDailyWodId]=useState(null),[classes,setClasses]=useState([]),[classWod,setClassWod]=useState(null),[classId,setClassId]=useState(''),[expanded,setExpanded]=useState(null),[categoryFilter,setCategoryFilter]=useState('all'),[dailyScheduleWod,setDailyScheduleWod]=useState(null),[dailyScheduleDate,setDailyScheduleDate]=useState(localDateISO()),[dailyScheduleClassId,setDailyScheduleClassId]=useState(''),[dailySchedulePublished,setDailySchedulePublished]=useState(true)
@@ -244,7 +244,7 @@ export default function WodLibrary({onLaunchWod,onEditWod,staff=true,isAdmin=fal
      </div>
     </div>
     {adminMenuOpen&&<div className="wod-card-action-panel" aria-label={'Administrer '+w.name}>
-      {isAdmin&&<button type="button" onClick={()=>{setOpenCardMenu(null);onEditWod?.(w.id)}}><Edit3 size={17}/> Rediger</button>}
+      {isAdmin&&<button type="button" onClick={()=>{setOpenCardMenu(null);onEditWod?.(w.id)}}><Edit3 size={17}/> Rediger</button>}{isAdmin&&onCopyWod&&<button type="button" onClick={()=>{setOpenCardMenu(null);onCopyWod(w.id)}}>Lag kopi som kladd</button>}
       <button type="button" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);publish(w)}}>{w.is_published?<EyeOff size={17}/>:<Eye size={17}/>} {w.is_published?'Trekk tilbake':'Publiser'}</button>
       {isAdmin&&<button type="button" className="wod-card-danger-action" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);removeWod(w)}}><Archive size={17}/> Fjern frå biblioteket</button>}
       {isAdmin&&<button type="button" className="wod-card-danger-action" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);removeWod(w,{permanent:true})}}><Trash2 size={17}/> Slett WOD permanent</button>}
