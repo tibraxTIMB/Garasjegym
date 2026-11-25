@@ -40,7 +40,7 @@ function ActaFixture(){
 function Audit(){
  const [choice,setChoice]=useState('a')
  return <MusicProvider memberId="demo-admin"><MobileNativeControls/><div className="app-shell simple-app-shell"><main className="main simple-app-main"><section className="content-card training-content">
- {screen==='acta'?<ActaFixture/>:screen==='flow'?<FlowFixture/>:screen==='card'?<WodCard wod={wod} memberId="demo-member" onClose={()=>{}} onLaunch={()=>{}}/>:screen==='builder'?<WodBuilder/>:screen==='pt'?<PTStudio profile={profile} initialClientId="demo-member" initialTab="program"/>:screen==='plan'?<MyTraining simpleMode={true}/>:<label>Vel eit alternativ med eit langt namn<select aria-label="Testval" value={choice} onChange={e=>setChoice(e.target.value)}><option value="a">Første alternativ</option><option value="b">{longName}</option></select><output>{choice}</output></label>}
+ {screen==='acta'?<ActaFixture/>:screen==='flow'?<FlowFixture/>:screen==='card'?<WodCard wod={wod} memberId="demo-member" onClose={()=>{}} onLaunch={()=>{}}/>:screen==='builder'?<WodBuilder/>:screen==='pt'?<PTStudio profile={profile} initialClientId="demo-member" initialTab="plan"/>:screen==='plan'?<MyTraining simpleMode={true}/>:<label>Vel eit alternativ med eit langt namn<select aria-label="Testval" value={choice} onChange={e=>setChoice(e.target.value)}><option value="a">Første alternativ</option><option value="b">{longName}</option></select><output>{choice}</output></label>}
  </section></main></div></MusicProvider>
 }
 createRoot(document.getElementById('root')).render(<Audit/>)
