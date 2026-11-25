@@ -26,10 +26,10 @@ export function cardDose(item,level='rx',compact=false){
  const val=x=>x!=null&&String(x).trim()!==''&&Number.isFinite(Number(x))
  if(v.loadMode==='kg'){const kg=[val(v.loadKgMen)?'M '+v.loadKgMen+' kg':'',val(v.loadKgWomen)?'K '+v.loadKgWomen+' kg':''].filter(Boolean);if(kg.length)p.push((item.load_per_implement?'2 × (':'')+kg.join(' / ')+(item.load_per_implement?') per manual':''));
  else if(val(v.loadKg))p.push(v.loadKg+' kg')}
- else if(v.loadMode==='percent'&&val(v.percent1rm))p.push(v.percent1rm+' % 1RM')
+ else if(v.loadMode==='percent'&&(val(v.percent1rm)||val(v.percentMin)&&val(v.percentMax)))p.push((val(v.percentMin)&&val(v.percentMax)?v.percentMin+'–'+v.percentMax:v.percent1rm)+' % 1RM'+(v.referenceRm?' '+v.referenceRm:''))
  else if(v.loadMode==='rir'&&(v.rirRange||val(v.rir)))p.push('RIR '+(v.rirRange||v.rir))
  else if(!d&&val(item.load_kg))p.push(item.load_kg+' kg')
- if(item.percent_1rm_min&&item.percent_1rm_max)p.push(item.percent_1rm_min+'–'+item.percent_1rm_max+' % 1RM '+(item.reference_rm||''))
+ if(!['kg','rir','bodyweight'].includes(v.loadMode)&&!v.percentMin&&level==='rx'&&item.percent_1rm_min&&item.percent_1rm_max)p.push(item.percent_1rm_min+'–'+item.percent_1rm_max+' % 1RM '+(item.reference_rm||''))
  if(!compact){if(v.instruction)p.push(v.instruction);if(item.coach_note&&item.coach_note!==v.instruction)p.push(item.coach_note)}else if(!p.length&&v.instruction)p.push(v.instruction)
  const side=getWodSideLabel(item,level);if(side&&!p.includes(side))p.push(side)
  return p.filter(Boolean).join(' · ')||'Dosering ikkje oppgitt'
