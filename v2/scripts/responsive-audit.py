@@ -93,7 +93,10 @@ with sync_playwright() as pw:
                     assert columns==(3 if w>h else 2),f"Unexpected column count: {columns}"
                     title=tile.locator(".librarium-name")
                     assert title.evaluate("(el)=>el.getBoundingClientRect().height<=32.5")
+                    assert page.get_by_role("combobox",name="Kategori").count()==0
+                    page.get_by_role("button",name="Vis fleire filter").tap()
                     assert page.get_by_role("combobox",name="Kategori").is_visible()
+                    page.get_by_role("button",name="Vis fleire filter").tap()
                     page.locator(".librarium-more").first.tap()
                     menu=page.get_by_role("dialog",name="Handlingar for",exact=False)
                     menu.wait_for()
@@ -126,6 +129,10 @@ with sync_playwright() as pw:
                     page.get_by_role("button",name="Tilbake til treningsplanar").tap()
                     folders.get_by_role("button",name="Ny treningsplan",exact=False).tap()
                     assert page.locator(".librarium-tile").count()==0
+                    page.get_by_role("combobox",name="Samling").select_option("recent")
+                    page.locator(".librarium-tile").first.wait_for()
+                    assert page.locator(".librarium-name").all_text_contents()==["Stålsnakke · 12 min","Z – Første økt"]
+                    check(page,"recent-personal-wods",w,h)
                 if errors: failures.append(f"demo {screen} {w}x{h}: JS {errors[:2]}")
             except Exception as e: failures.append(f"demo {screen} {w}x{h}: {e}")
             finally:
