@@ -71,7 +71,7 @@ with sync_playwright() as pw:
                     page.get_by_role("combobox",name="Testval").tap()
                     page.get_by_role("listbox").wait_for(timeout=4000)
                     check(page,"select-sheet",w,h)
-                    page.get_by_role("option").nth(1).tap()
+                    page.get_by_role("listbox").get_by_role("option").nth(1).tap()
                     assert page.get_by_role("combobox",name="Testval").input_value()=="b"
                 if errors: failures.append(f"{screen} {w}x{h}: JS {errors[:2]}")
             except Exception as e: failures.append(f"{screen} {w}x{h}: {e}")
