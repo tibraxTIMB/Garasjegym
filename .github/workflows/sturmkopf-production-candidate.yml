@@ -11,6 +11,7 @@ on:
       - "gazelle-responsive-audit"
       - "gazelle-librarium"
       - "gazelle-librarium-polish"
+      - "gazelle-plan-folders"
     paths:
       - "v2/**"
       - ".github/workflows/sturmkopf-production-candidate.yml"
