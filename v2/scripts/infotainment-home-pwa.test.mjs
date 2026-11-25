@@ -9,7 +9,10 @@ test('Infotainment Timer view remains reachable and no private PT sessions appea
  assert.match(src,/activeTab==='oversikt'\|\|activeTab==='musikk'\|\|activeTab==='timer'/)
  assert.match(src,/activeTab==='oversikt'\|\|activeTab==='timer'/)
  assert.match(src,/item\.category!=='pt'/)
- assert.match(src,/Boolean\(timerSnapshot\?\.sessionOpen&&timerSnapshot\?\.title\)/)
+ assert.match(src,/const arenaContext=arenaBlockContext\(timerSnapshot\)/)
+ assert.match(src,/Boolean\(arenaContext&&timerSnapshot\?\.title\)/)
+ const activity=file('../src/lib/trainingActivity.js')
+ assert.match(activity,/!snapshot\?\.sessionOpen\|\|snapshot\.sessionPrepared!==true/)
  assert.match(src,/Date\.now\(\)-\(runStartedAt\.current/)
 })
 
