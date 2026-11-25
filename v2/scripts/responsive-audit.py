@@ -71,6 +71,15 @@ with sync_playwright() as pw:
                     page.get_by_role("button",name="Samansett økt",exact=False).first.tap()
                     page.get_by_role("navigation",name="Delar i WOD-en").wait_for()
                     check(page,"architect-overview",w,h)
+                    page.get_by_role("button",name="WOD-handlingar",exact=True).tap()
+                    page.get_by_role("button",name="Endra format",exact=True).tap()
+                    page.get_by_role("button",name="AMRAP",exact=False).first.tap()
+                    page.get_by_role("button",name="WOD-handlingar",exact=True).tap()
+                    page.get_by_role("button",name="Samspel",exact=True).tap()
+                    panel=page.get_by_role("region",name="Samspel")
+                    panel.get_by_role("checkbox",name="Parallelt arbeid med rundebyte").check()
+                    assert panel.get_by_text("Oppgåve 2:",exact=False).is_visible()
+                    check(page,"architect-samspel",w,h)
                 if screen=="pt":
                     card=page.locator(".pt-compact-session").first
                     card.wait_for()
@@ -107,6 +116,7 @@ with sync_playwright() as pw:
                     menu.get_by_role("button",name="Tilpass økt",exact=True).tap()
                     editor=page.get_by_role("dialog",name="Tilpass økt for",exact=False)
                     editor.get_by_role("navigation",name="Delar i WOD-en").wait_for(timeout=15000)
+                    assert editor.get_by_role("textbox",name="WOD-namn",exact=True).first.input_value().startswith("Stålsnakke")
                     check(page,"architect-pt-edit",w,h)
                 if screen=="acta":
                     panel=page.get_by_role("region",name="Treningsrapport per del")
