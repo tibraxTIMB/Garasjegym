@@ -23,3 +23,61 @@
 .gg-flow-confirm .gg-flow-confirm-danger{background:#a52532;border-color:#a52532;color:white}
 @media(max-height:550px){.gg-flow-keypad button{min-height:29px;font-size:1rem}.gg-flow-keypad header button,.gg-flow-weight-steps button{min-height:24px}.gg-flow-keypad{padding:3px 6px}.gg-flow-keys{gap:3px}.gg-flow-entry-host:has(.gg-flow-keypad)>.gg-result-footer{display:none}}
 @media(min-width:700px){.gg-flow-keypad{align-self:center;width:min(100%,420px);border-radius:12px}.gg-flow-keypad button{min-height:40px}}
+
+/* FLOW compact: page title and controls do not compete with the measurements. */
+.gg-training-session .workout-finish-dialog.gg-result-wizard{gap:5px;padding:10px}
+.gg-result-wizard .gg-result-header{align-items:center;gap:6px}
+.gg-result-wizard .gg-result-header>div{min-width:0;flex:1}
+.gg-result-wizard .gg-result-header .section-kicker{font-size:9px;letter-spacing:.08em;line-height:1.1;display:block}
+.gg-result-wizard .gg-result-header h3{font-size:17px;line-height:1.15;margin:2px 0;font-weight:750}
+.gg-result-wizard .gg-result-header small{font-size:11px;line-height:1.15;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gg-result-wizard .gg-result-close{width:34px;min-width:34px;min-height:36px;padding:0}
+.gg-result-wizard .gg-result-progress{gap:4px}
+.gg-result-wizard .gg-result-progress button{height:5px;min-height:5px!important}
+.gg-result-wizard .gg-result-body{gap:6px;align-content:start;padding:2px 1px 5px;min-height:0}
+.gg-result-wizard .gg-flow-level{margin:0;padding:0;display:block;border:0}
+.gg-result-wizard .gg-flow-level-buttons{display:flex;flex-wrap:nowrap;gap:3px;padding:2px;border:1px solid #526064;border-radius:8px;min-width:0}
+.gg-result-wizard .gg-flow-level-buttons button{flex:1 1 0;min-width:0;min-height:32px;max-height:34px;white-space:nowrap;font-size:11px;line-height:1;padding:2px 3px;border:1px solid transparent;border-radius:6px;color:#c4cecd;background:transparent}
+.gg-result-wizard .gg-flow-level-buttons button.selected{color:#ffc779;background:#3b301f;border-color:#a77838}
+.gg-result-wizard .workout-result-entry,.gg-result-wizard .gg-flow-grid{gap:5px;margin:0;padding:0;min-width:0}
+.gg-result-wizard .gg-flow-grid-exercise{gap:5px;padding:5px 0;border-top:1px solid #536268}
+.gg-result-wizard .gg-flow-grid-name{gap:2px}
+.gg-result-wizard .gg-flow-grid-name strong{font-size:14px}
+.gg-result-wizard .gg-flow-info{font-size:11px;color:#bfcfcd;margin:0}
+.gg-result-wizard .gg-flow-info summary{cursor:pointer;min-height:27px;padding:4px 0}
+.gg-result-wizard .gg-flow-grid-table{gap:4px}
+.gg-result-wizard .gg-flow-grid-row{grid-template-columns:24px repeat(var(--result-columns),minmax(0,1fr)) 42px;gap:4px}
+.gg-result-wizard .gg-flow-grid-row input[data-flow-number]{min-height:44px;font-size:19px;padding:3px}
+.gg-result-wizard .gg-flow-grid-done{min-width:40px;min-height:44px;padding:0}
+.gg-result-wizard .gg-flow-complex-table .gg-flow-grid-row{grid-template-columns:24px repeat(var(--result-columns),minmax(0,1fr)) minmax(132px,1.65fr)}
+.gg-result-wizard .gg-flow-complex-table .gg-flow-grid-row[style]{min-width:0}
+.gg-result-wizard .gg-flow-complex-status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;min-width:0}
+.gg-result-wizard .gg-flow-complex-status button{min-height:44px;min-width:0;padding:0;border:1px solid #617174;border-radius:7px;background:#253137;color:#c4cecd;font-size:21px;font-weight:750}
+.gg-result-wizard .gg-flow-complex-status button[data-status=complete][aria-pressed=true]{background:#244c39;color:#9ce0b9;border-color:#82cba0}
+.gg-result-wizard .gg-flow-complex-status button[data-status=partial][aria-pressed=true]{background:#46361e;color:#ffc779;border-color:#c28a3d}
+.gg-result-wizard .gg-flow-complex-status button[data-status=failed][aria-pressed=true]{background:#48272a;color:#ffb4b5;border-color:#e0918b}
+.gg-result-wizard .gg-flow-complex-caption,.gg-result-wizard .gg-flow-grid-hint{font-size:11px;color:#bfcfcd;line-height:1.2}
+.gg-result-wizard .gg-flow-grid-tools{gap:4px}
+.gg-result-wizard .gg-flow-grid-tools button{min-height:32px;font-size:11px;padding:3px 6px}
+.gg-result-wizard .gg-flow-part{gap:6px;padding:2px 0}
+.gg-result-wizard .gg-composite-score-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.gg-result-wizard .gg-composite-score-fields input[data-flow-number]{font-size:24px;min-height:52px;text-align:center}
+.gg-flow-score-load{display:grid;gap:4px;margin-top:5px}
+.gg-flow-score-load>strong{font-size:13px}.gg-flow-score-load>small{font-size:11px;color:#bfcfcd}
+.gg-flow-score-load-row{display:flex;align-items:center;gap:6px;min-width:0}
+.gg-flow-score-load-row>span{flex:1;min-width:0;font-size:13px}
+.gg-flow-score-load-row label{width:76px;display:flex;align-items:center;gap:3px;font-size:10px}
+.gg-flow-score-load-row input{width:100%;min-height:42px;text-align:center}
+.gg-result-wizard .gg-result-footer{display:grid;grid-template-columns:1fr auto;gap:3px 5px;padding-top:4px}
+.gg-result-wizard .gg-result-footer>.gg-result-nav,.gg-result-wizard .gg-result-footer>.gg-result-save,.gg-result-wizard .gg-result-footer>p{grid-column:1/-1}
+.gg-result-wizard .gg-result-nav button{min-height:44px;padding:5px 8px;font-size:14px}
+.gg-result-wizard .gg-result-footer .gg-result-skip{min-height:32px;font-size:11px;justify-content:flex-start;padding:2px 0}
+.gg-result-wizard .gg-result-footer .gg-result-discard{width:auto;min-height:32px;font-size:11px;padding:3px 7px;grid-column:2}
+.gg-result-wizard .gg-flow-keypad{background:#171d1f;padding:4px 5px}
+.gg-result-wizard .gg-flow-keypad .gg-flow-next-key{background:#efa63c;color:#171d1f;border-color:#efa63c}
+@media(orientation:landscape) and (max-height:520px){
+.gg-result-wizard .gg-flow-entry-host:has(.gg-flow-keypad){display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,37%);grid-template-rows:minmax(0,1fr);gap:5px}
+.gg-result-wizard .gg-flow-entry-host:has(.gg-flow-keypad)>.gg-result-body{grid-column:1;grid-row:1;min-height:0}
+.gg-result-wizard .gg-flow-entry-host:has(.gg-flow-keypad)>.gg-flow-keypad{grid-column:2;grid-row:1;width:100%;align-self:start}
+.gg-result-wizard .gg-flow-entry-host:has(.gg-flow-keypad)>.gg-result-footer{display:none}
+}

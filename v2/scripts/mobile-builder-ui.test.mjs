@@ -333,3 +333,15 @@ test('FLOW groups ordinary sets onto one numeric result page per workout part',(
  assert.match(timer,/resultPages\[resultPageIndex\+1\]/)
  assert.match(style,/\.gg-flow-grid-row input,\.gg-flow-grid-erg input\{min-height:48px/)
 })
+
+test('FLOW compact gives custom complexes one grid and explicit outcome buttons',()=>{
+ const timer=source('../src/components/Training.jsx'),css=source('../src/components/flow-entry.css')
+ assert.doesNotMatch(timer,/resultGroupIndices\.every\(index=>!\(items\[index\]\.is_complex/)
+ assert.match(timer,/gg-flow-complex-status/)
+ assert.match(timer,/function changeComplexStatus/)
+ assert.match(timer,/plannedComplexCycles\(item,wodLevel\)/)
+ assert.match(timer,/next==='complete'\?/)
+ assert.match(timer,/gg-flow-score-load-row/)
+ assert.match(css,/\.gg-flow-level-buttons\{display:flex;flex-wrap:nowrap/)
+ assert.match(css,/\.gg-result-header h3\{font-size:17px/)
+})
