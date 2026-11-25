@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="nn"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GarasjeGym | PT FLOW – prototype</title>
+<style>
+:root{color-scheme:dark;--bg:#111519;--panel:#1b2229;--line:#303b45;--muted:#a8b4be;--green:#a5e6aa;--yellow:#f4cf85}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f5;font:15px system-ui,sans-serif}main{max-width:780px;margin:auto;padding:14px 14px 38px}header{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:14px}small,.muted{color:var(--muted)}.brand{font-size:11px;font-weight:800;letter-spacing:2px;color:var(--green)}h1{font-size:22px;margin:3px 0}h2{font-size:17px;margin:0 0 7px}button,select{font:inherit;color:inherit;background:#28323a;border:1px solid #43515c;border-radius:9px;padding:9px 12px;min-height:42px;cursor:pointer}button[aria-pressed=true],.primary{background:var(--green);border-color:var(--green);color:#102017;font-weight:750}button:focus-visible,select:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}button:disabled{opacity:.5;cursor:not-allowed}.switch{display:flex;gap:5px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px;margin:10px 0}.headline{display:flex;align-items:center;justify-content:space-between;gap:12px}.progress{height:5px;background:#37434b;border-radius:8px;margin:11px 0 4px;overflow:hidden}.progress i{display:block;background:var(--green);height:100%;border-radius:8px}.next{border-left:3px solid var(--green)}.next button{width:100%;margin-top:12px}.next strong{font-size:19px}.week{font-size:11px;color:var(--muted);letter-spacing:1.5px;font-weight:750;margin:14px 0 5px}.item{border-top:1px solid var(--line);padding:11px 0;display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center}.item:first-of-type{border:0}.item b{display:block;font-size:14px}.item small{display:block;margin-top:3px}.status{font-size:12px;font-weight:650;color:var(--muted)}.ready,.done{color:var(--green)}.review{color:var(--yellow)}.item.locked{opacity:.77}.manage{grid-column:2/-1;display:flex;gap:6px;flex-wrap:wrap}.manage button{font-size:12px;min-height:34px;padding:6px 9px}.mode{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.mode button{flex:1;min-width:95px}.foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:16px}.foot button{font-size:12px;min-height:34px}.warning{font-size:12px;color:var(--yellow);margin:0 0 10px}.tiny{font-size:12px}.coach{border-color:#536451}details summary{cursor:pointer;color:var(--muted);padding:5px 0}@media(min-width:650px){main{padding:22px}.next button{width:auto;min-width:180px}.panel{padding:17px}}
+</style>
+<main><header><div><div class="brand">GARASJEGYM · FLOW</div><h1 id="heading">Min treningsplan</h1></div><div class="switch" aria-label="Vising"><button id="customer" aria-pressed="true">Kunde</button><button id="coach" aria-pressed="false">PT</button></div></header>
+<p class="warning">Interaktiv prototype · eksempeldata · ingen produksjonskopling</p><div id="screen"></div><div class="foot"><small>STURMKOPF GAZELLE · PT FLOW</small><button id="reset">Nullstill demonstrasjon</button></div></main>
+<script>
+
+const actionable = s => !['rest','information'].includes(s.kind);
+function sorted(rows){return [...rows].sort((a,b)=>a.week-b.week||a.day-b.day||a.order-b.order)}
+function states(rows,mode,today){
+ const ordered=sorted(rows);
+ let blocker=null;
+ return ordered.map(s=>{
+  let status,reason='';
+  if(!actionable(s)){status='info';reason=s.kind==='rest'?'Kvile':'Infotime'}
+  else if(s.done){status=s.approval&&!s.approved?'review':'done';reason=status==='review'?'Ventar på PT-godkjenning':'Gjennomført'}
+  else if(s.override){status='ready';reason='Opna av PT'}
+  else if(mode==='date'&&(!s.date||s.date>today)){status='locked';reason=s.date?'Opnar '+s.date:'Dato ikkje sett'}
+  else if(mode==='sequence'&&blocker){status='locked';reason=blocker.approval&&blocker.done&&!blocker.approved?'Ventar på PT-godkjenning':'Fullfør '+blocker.title+' først'}
+  else {status='ready';reason='Klar til trening'}
+  if(actionable(s)&&(!s.done||(s.approval&&!s.approved))&&!blocker)blocker=s;
+  return {...s,status,reason}
+ })
+}
+
+const localDate=(offset=0)=>{const d=new Date();d.setDate(d.getDate()+offset);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const sample=()=>[
+{id:1,week:1,day:1,order:1,title:'Grunnteknikk',done:true,date:localDate(-3),minutes:35},
+{id:2,week:1,day:2,order:2,title:'Styrke og stabilitet',done:true,date:localDate(-1),minutes:40},
+{id:3,week:1,day:3,order:3,title:'Mancave Paincave',date:localDate(),minutes:45,approval:true},
+{id:4,week:2,day:1,order:4,title:'Power Clean',date:localDate(2),minutes:40},
+{id:5,week:2,day:2,order:5,title:'Kondisjon og styrke',date:localDate(4),minutes:45},
+{id:6,week:2,day:3,order:6,title:'Avsluttande test',date:localDate(6),minutes:30}];
+let rows=sample(),mode='sequence',view='customer';
+const labels={ready:'Klar',locked:'Låst',done:'Fullført',review:'Til vurdering',info:'Info'};
+const modes={sequence:'I rekkjefølgje',date:'Etter dato',open:'Open plan'};
+const icons={ready:'▶',locked:'▣',done:'✓',review:'◷',info:'·'};
+function render(){
+const coach=view==='coach', data=states(rows,mode,localDate()),todo=data.filter(s=>s.status==='ready'), review=data.filter(s=>s.status==='review'),next=todo[0], n=data.filter(s=>actionable(s)).length,done=data.filter(s=>s.done&&actionable(s)).length;
+document.querySelector('#heading').textContent=coach?'PT · Kundeoppfølging':'Min treningsplan';
+document.querySelector('#customer').setAttribute('aria-pressed',String(!coach));document.querySelector('#coach').setAttribute('aria-pressed',String(coach));
+let out='<section class="panel"><div class="headline"><div><h2>Styrkeprogram 01</h2><small>'+(coach?'Vald kunde: Brako (demo) · ':'')+modes[mode]+'</small></div><b>'+done+' / '+n+'</b></div><div class="progress" role="progressbar" aria-label="Framdrift" aria-valuenow="'+done+'" aria-valuemax="'+n+'"><i style="width:'+100*done/Math.max(n,1)+'%"></i></div><small>'+ (n-done)+' økter att</small></section>';
+if(coach){out+='<section class="panel coach"><h2>Opplåsing</h2><div class="mode">'+Object.entries(modes).map(([k,v])=>'<button data-mode="'+k+'" aria-pressed="'+(mode===k)+'">'+v+'</button>').join('')+'</div><small>'+({sequence:'Neste økt opnar etter lagra resultat og eventuell PT-godkjenning.',date:'Opnar på økta sin dato. Økter utan dato blir låste.',open:'Alle ikkje-fullførte økter er tilgjengelege.'})[mode]+'</small></section>'}
+if(coach&&review.length){out+='<section class="panel next"><h2>Ventar på deg · '+review.length+'</h2><strong>'+review[0].title+'</strong><small> · Resultat lagra</small><button class="primary" data-action="approve" data-id="'+review[0].id+'">Godkjenn og gå vidare (demo)</button></section>'}
+else if(next){out+='<section class="panel next"><h2>'+(coach?'Neste for kunden':'Neste økt')+'</h2><strong>'+next.title+'</strong><div class="muted tiny">'+next.minutes+' min · '+(next.approval?'PT godkjenner etter økta':'Klar til trening')+'</div>'+(!coach?'<button class="primary" data-action="complete" data-id="'+next.id+'">Simuler gjennomført og lagra økt</button>':'')+'</section>'}
+else if(review.length){out+='<section class="panel"><h2>Ventar på PT</h2><small>Resultatet er lagra. PT vurderer økta før neste steg blir opna.</small></section>'}
+else if(done===n){out+='<section class="panel next"><h2>Plan fullført</h2><small>Alle treningsøktene er registrerte.</small></section>'}
+else{out+='<section class="panel"><h2>Ingen økt klar enno</h2><small>Sjå opplåsing under øktlista.</small></section>'}
+out+='<section class="panel"><h2>Øktrekkja</h2>';let week=0;
+for(const s of data){if(s.week!==week){week=s.week;out+='<div class="week">VEKE '+week+'</div>'}
+out+='<div class="item '+s.status+'"><span class="status '+s.status+'">'+icons[s.status]+'</span><div><b>'+s.order+'. '+s.title+'</b><small>'+s.reason+'</small></div><span class="status '+s.status+'">'+labels[s.status]+'</span>';
+if(coach&&!s.done&&actionable(s)){out+='<div class="manage">'+(s.status==='locked'||s.override?'<button data-action="override" data-id="'+s.id+'">'+(s.override?'Fjern manuell opplåsing':'Opne manuelt')+'</button>':'')+'<button data-action="require" data-id="'+s.id+'" aria-pressed="'+!!s.approval+'">'+(s.approval?'Godkjenning på':'Krev godkjenning')+'</button>'+(mode==='date'?'<label class="tiny">Opningsdato <input aria-label="Opningsdato for '+s.title+'" type="date" data-date="'+s.id+'" value="'+(s.date||'')+'"></label>':'')+'</div>'}
+if(coach&&s.status==='review'&&(!review[0]||review[0].id!==s.id)){out+='<div class="manage"><button data-action="approve" data-id="'+s.id+'">Godkjenn (demo)</button></div>'}
+if(!coach&&s.status==='ready'&&s.id!==next?.id){out+='<div class="manage"><button data-action="complete" data-id="'+s.id+'">Simuler lagra økt</button></div>'}out+='</div>'}
+out+='</section>';document.querySelector('#screen').innerHTML=out;
+}
+document.querySelector('#customer').onclick=()=>{view='customer';render()};
+document.querySelector('#coach').onclick=()=>{view='coach';render()};
+document.querySelector('#reset').onclick=()=>{rows=sample();mode='sequence';render()};
+document.querySelector('#screen').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.mode&&view==='coach'){mode=b.dataset.mode;render();return}const id=Number(b.dataset.id),s=rows.find(s=>s.id===id);if(!s)return;const st=states(rows,mode,localDate()).find(r=>r.id===id).status;if(view==='customer'&&b.dataset.action==='complete'&&st==='ready')s.done=true;if(view==='coach'){if(b.dataset.action==='approve'&&st==='review')s.approved=true;if(b.dataset.action==='override'&&!s.done)s.override=!s.override;if(b.dataset.action==='require'&&!s.done)s.approval=!s.approval}render()});
+document.querySelector('#screen').addEventListener('change',e=>{if(view!=='coach'||!e.target.dataset.date)return;const s=rows.find(r=>r.id===Number(e.target.dataset.date));if(s&&!s.done)s.date=e.target.value;render()});render();
+</script></html>
