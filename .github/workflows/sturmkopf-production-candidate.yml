@@ -14,6 +14,7 @@ on:
       - "gazelle-plan-folders"
       - "gazelle-acta"
       - "gazelle-pt-plan"
+      - "gazelle-pt-compact"
     paths:
       - "v2/**"
       - ".github/workflows/sturmkopf-production-candidate.yml"
