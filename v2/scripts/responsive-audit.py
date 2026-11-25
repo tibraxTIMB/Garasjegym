@@ -88,7 +88,18 @@ with sync_playwright() as pw:
                 if screen=="wod":
                     tile=page.locator(".librarium-open").first
                     tile.wait_for()
+                    grid=page.locator(".librarium-grid").first
+                    columns=grid.evaluate("(el)=>getComputedStyle(el).gridTemplateColumns.split(' ').length")
+                    assert columns==(3 if w>h else 2),f"Unexpected column count: {columns}"
+                    title=tile.locator(".librarium-name")
+                    assert title.evaluate("(el)=>el.getBoundingClientRect().height<=32.5")
                     assert page.get_by_role("combobox",name="Kategori").is_visible()
+                    page.locator(".librarium-more").first.tap()
+                    menu=page.get_by_role("dialog",name="Handlingar for",exact=False)
+                    menu.wait_for()
+                    assert menu.get_by_role("button",name="Lukk",exact=True).is_visible()
+                    check(page,"librarium-menu",w,h)
+                    menu.get_by_role("button",name="Lukk",exact=True).tap()
                     page.get_by_role("combobox",name="Sorter WOD").select_option("name")
                     tile.tap()
                     card=page.get_by_role("dialog",name="WOD-kort:",exact=False)
