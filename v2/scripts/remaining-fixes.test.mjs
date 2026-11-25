@@ -97,7 +97,7 @@ test('timer cues are independently adjustable without muting Spotify',()=>{
  assert.match(src,/garasjegym\.timer\.sound_volume/)
  assert.match(src,/raw!=null/)
  const audio=read('../src/lib/timerCues.js')
- assert.match(src,/playPackSignal\(context,signal,volumeRef\.current,prefs\.audioProfile,\{preview:test\}\)/)
+ assert.match(src,/playPackSignal\(context,signal,volumeRef\.current,prefs\.audioProfile,\{preview:test,format\}\)/)
  assert.match(src,/Test lydsignal/)
  assert.match(audio,/const EISEN=/)
  assert.match(audio,/const BALKAN=/)
