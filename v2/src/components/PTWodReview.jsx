@@ -99,19 +99,6 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
     {metrics.map(m=><div className="ptreview-metric" key={m.label}><strong>{m.value}</strong><small>{m.label}</small></div>)}
    </div>
    {result.result_data?.time_cap_reached&&<p className="ptreview-insight is-review">Tidsgrensa vart nådd. For Time-resultat må vurderast ut frå faktisk gjennomført arbeid, ikkje som automatisk fullføring.</p>}
-   <div className="ptreview-next-action">
-    <div><span className="section-kicker">NESTE STEG</span><strong>PT-vurdering</strong><small>Vurder økta og gi {clientName} ei konkret tilbakemelding.</small></div>
-    <button type="button" className="primary-button" aria-expanded={feedbackOpen} onClick={()=>setFeedbackOpen(x=>!x)}><MessageSquareText size={17}/>{feedbackOpen?'Lukk tilbakemelding':'Gje tilbakemelding'}</button>
-   </div>
-   {feedbackOpen&&<section className="ptreview-feedback-panel" aria-label="Personleg PT-tilbakemelding">
-    <p className="ptfollow-footnote">Kunden får tilbakemeldinga i PT-dialogen. Private trenarnotat blir ikkje sende.</p>
-    <form onSubmit={send} className="ptreview-feedback-form">
-     <label>Doseringsvurdering<select value={dosing} onChange={e=>setDosing(e.target.value)}>{ptDosingOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
-     <label>Personleg tilbakemelding<textarea rows="3" maxLength="2000" value={note} onChange={e=>setNote(e.target.value)} placeholder="Korleis opplevde du tempoet? Neste gong kan me prøva …" required/></label>
-     <button type="submit" className="primary-button" disabled={saving||note.trim().length<5}><Send size={16}/>{saving?'Sender …':'Send til kunden'}</button>
-    </form>
-   </section>}
-   {sent&&<p className="auth-message" role="status">Tilbakemeldinga er sendt og knytt til denne WOD-en. Kunden ser ho i PT-dialogen.</p>}
    {blockResults.length>0&&<section className="ptreview-blocks" aria-label="Resultat per øktdel">
     <h4>Korleis gjekk dei ulike delane?</h4>
     {blockResults.map((part,index)=>{
@@ -157,6 +144,19 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
      })}
     </div>
    </details>}
+   <div className="ptreview-next-action">
+    <div><strong>PT-vurdering</strong><small>Gje {clientName} ei konkret tilbakemelding etter å ha sett resultata.</small></div>
+    <button type="button" className="primary-button" aria-expanded={feedbackOpen} onClick={()=>setFeedbackOpen(x=>!x)}><MessageSquareText size={17}/>{feedbackOpen?'Lukk tilbakemelding':'Gje tilbakemelding'}</button>
+   </div>
+   {feedbackOpen&&<section className="ptreview-feedback-panel" aria-label="Personleg PT-tilbakemelding">
+    <p className="ptfollow-footnote">Kunden får tilbakemeldinga i PT-dialogen. Private trenarnotat blir ikkje sende.</p>
+    <form onSubmit={send} className="ptreview-feedback-form">
+     <label>Doseringsvurdering<select value={dosing} onChange={e=>setDosing(e.target.value)}>{ptDosingOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+     <label>Personleg tilbakemelding<textarea rows="3" maxLength="2000" value={note} onChange={e=>setNote(e.target.value)} placeholder="Korleis opplevde du tempoet? Neste gong kan me prøva …" required/></label>
+     {note.trim().length<5&&<small role="status">Skriv minst 5 teikn for å kunna senda.</small>}<button type="submit" className="primary-button" disabled={saving||note.trim().length<5}><Send size={16}/>{saving?'Sender …':'Send til kunden'}</button>
+    </form>
+   </section>}
+   {sent&&<p className="auth-message" role="status">Tilbakemeldinga er sendt og knytt til denne WOD-en. Kunden ser ho i PT-dialogen.</p>}
    {feedback.length>0&&<details className="ptreview-disclosure">
     <summary><span className="ptreview-disclosure-main"><strong>Tidlegare tilbakemeldingar</strong><small>{feedback.length} meldingar på denne WOD-en</small></span><ChevronDown size={18}/></summary>
     <div className="ptreview-disclosure-content">{feedback.map(f=><article className="ptreview-feedback" key={f.id}>
