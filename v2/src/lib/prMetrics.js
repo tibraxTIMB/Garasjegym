@@ -35,8 +35,44 @@ export function deriveExerciseRecords(logs = []) {
     const rows = [...(log.workout_exercises || [])].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))
     for (const [index, exercise] of rows.entries()) {
       const result = log.result_data?.exercise_results?.[index] || {}
-      // Custom complexes have their own success-scoped result. Do not derive an ordinary lift PR.
-      if(result.is_complex&&result.complex_family==='custom')continue
+      // A custom complex is a real sequence of catalogue movements, not a single lift.
+      // Only explicitly completed, weighted cycles supported by the saved set rows count.
+      if(result.is_complex&&result.complex_family==='custom'){
+        if(log.result_data?.flow_completion_only===true ||
+           (log.result_data?.wod_engine?.participation && log.result_data.wod_engine.participation!=='individual'))continue
+        if(String(exercise.exercise_name||'').trim().toLowerCase()!==String(result.exercise_name||'').trim().toLowerCase())continue
+        const steps=result.complex_steps
+        if(!Array.isArray(steps)||steps.length<2||steps.some(step=>!step.exercise_id||!String(step.name||'').trim()||!Number.isInteger(Number(step.reps))||Number(step.reps)<1))continue
+        const available=[...(exercise.workout_sets||[])]
+        const confirmed=[]
+        for(const set of result.sets||[]){
+          const cycles=Number(set.reps),load=positive(set.load_kg)
+          if(set.complex_status!=='complete'||set.flow_status==='done'||!Number.isInteger(cycles)||cycles<1||!load)continue
+          const match=available.findIndex(row=>Number(row.reps)===cycles&&positive(row.load_kg)===load)
+          if(match<0)continue
+          available.splice(match,1)
+          confirmed.push({load_kg:load})
+        }
+        if(!confirmed.length)continue
+        const side=result.side_mode||''
+        const add=(key,name,sets,complexOnly=false)=>{
+          if(!exercises.has(key))exercises.set(key,{key,name,side,type:'load',performances:[]})
+          exercises.get(key).performances.push({sets,complexOnly,fromComplex:true,individual:true,date:log.workout_date||String(log.created_at||'').slice(0,10),title:log.title||'Treningsøkt',logId:log.id})
+        }
+        // Keep the whole sequence distinct from ordinary lifts, with weight only.
+        const signature=JSON.stringify(steps.map(step=>[step.exercise_id,Number(step.reps)]))
+        add('complex:'+signature+'|'+side,steps.map(step=>Number(step.reps)+' '+step.name.trim()).join(' + '),confirmed,true)
+        // Each sequence step has its own actual reps. Never multiply reps by
+        // the number of cycles or join separated steps into a fictitious RM set.
+        const movements=new Map()
+        for(const step of steps){
+          const key=step.exercise_id+'|'+side
+          if(!movements.has(key))movements.set(key,{name:step.name.trim(),sets:[]})
+          movements.get(key).sets.push(...confirmed.map(set=>({...set,reps:Number(step.reps)})))
+        }
+        for(const [key,movement] of movements)add(key,movement.name,movement.sets)
+        continue
+      }
       const name = String(exercise.exercise_name || result.exercise_name || '').trim()
       if (!name) continue
       const side = result.side_mode || ''
@@ -64,6 +100,14 @@ export function deriveExerciseRecords(logs = []) {
       const withReps = sets.filter(set=>positive(set.reps))
       const loads = sets.filter(set=>positive(set.load_kg))
       const countedLoads = loads.filter(set=>positive(set.reps))
+      if(p.fromComplex){
+        if(loads.length)candidates.push(record('load',p.complexOnly?'Tyngste godkjende kompleks':'Høgaste registrerte vekt','kg',Math.max(...loads.map(set=>positive(set.load_kg))),date,title,logId,'Frå stadfesta fullført kompleks i treningsloggen.'))
+        if(!p.complexOnly)for(const reps of [1,2,3,5]){
+          const eligible=loads.filter(set=>Number(set.reps)===reps)
+          if(eligible.length)candidates.push(record('best_'+reps+'rep','Beste registrerte '+reps+'-repssett','kg',Math.max(...eligible.map(set=>positive(set.load_kg))),date,title,logId,'Faktiske reps i fullført kompleks; ikkje estimert RM.'))
+        }
+        continue
+      }
       if(type==='load' && loads.length) {
         const hasUncounted=loads.some(set=>!positive(set.reps))
         candidates.push(record('load','Høgaste registrerte vekt','kg',Math.max(...loads.map(set=>positive(set.load_kg))),date,title,logId,hasUncounted?'Vekta er registrert, men repetisjonstal manglar på nokre sett.':'Vekt og repetisjonar frå treningsloggen.'))

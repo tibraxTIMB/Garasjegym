@@ -70,3 +70,40 @@ test('For Time ignores time-cap results and chooses fastest completed time',()=>
 })
 
 test('exact repetition bests exclude partner data and do not estimate missing single',()=>{const logs=[workout(1,'Back Squat',[{reps:3,load_kg:90},{reps:5,load_kg:80}]),workout(2,'Back Squat',[{reps:1,load_kg:120}],{result_data:{wod_engine:{participation:'partner'}}})];const records=deriveExerciseRecords(logs)[0].records;assert.equal(records.find(r=>r.key==='best_3rep').value,90);assert.equal(records.find(r=>r.key==='best_5rep').value,80);assert.equal(records.some(r=>r.key==='best_1rep'),false)})
+
+
+const complexLog=(sets,overrides={})=>({
+ id:'complex-log',title:'AMPUTATIO',workout_date:'2026-11-25',
+ result_data:{exercise_results:[{exercise_name:'2 Power Clean + 1 Push Jerk',is_complex:true,complex_family:'custom',complex_steps:[{exercise_id:'pc',name:'Power Clean',reps:2},{exercise_id:'pj',name:'Push Jerk',reps:1}],sets}],...overrides},
+ workout_exercises:[{exercise_name:'2 Power Clean + 1 Push Jerk',sort_order:1,workout_sets:sets.map(s=>({reps:s.reps,load_kg:s.complex_status==='complete'?s.load_kg:null}))}]
+})
+test('completed custom complex yields separate actual movement and sequence PRs',()=>{
+ const log=complexLog([{complex_status:'complete',reps:1,load_kg:35},{complex_status:'partial',reps:null,load_kg:80},{complex_status:'failed',reps:null,load_kg:90}])
+ const groups=deriveExerciseRecords([log])
+ assert.equal(groups.length,3)
+ const byName=name=>groups.find(g=>g.name===name).records.map(r=>[r.key,r.value])
+ assert.deepEqual(byName('Power Clean'),[['load',35],['best_2rep',35]])
+ assert.deepEqual(byName('Push Jerk'),[['load',35],['best_1rep',35]])
+ assert.deepEqual(byName('2 Power Clean + 1 Push Jerk'),[['load',35]])
+ assert.equal(groups.find(g=>g.name==='Power Clean').records[0].logId,'complex-log')
+})
+test('complex PR merges by catalogue ID, never turns multiple cycles into an RM',()=>{
+ const log=complexLog([{complex_status:'complete',reps:3,load_kg:35}])
+ const standalone=workout(2,'Power Clean',[{reps:2,load_kg:40}],{result_data:{exercise_results:[{}]},workout_exercises:[{exercise_id:'pc',exercise_name:'Power Clean',workout_sets:[{reps:2,load_kg:40}]}]})
+ const groups=deriveExerciseRecords([log,standalone])
+ assert.equal(groups.filter(g=>g.name==='Power Clean').length,1)
+ const pc=groups.find(g=>g.name==='Power Clean').records
+ assert.equal(pc.find(r=>r.key==='best_2rep').value,40)
+ assert.equal(pc.some(r=>r.key==='best_5rep'||r.key==='best_1rep'),false)
+ const pj=groups.find(g=>g.name==='Push Jerk').records
+ assert.equal(pj.some(r=>r.key==='best_3rep'),false)
+})
+test('unconfirmed, completion-only, partner and stale corrected complex results fail closed',()=>{
+ const sets=[{complex_status:'complete',reps:1,load_kg:35}]
+ assert.equal(deriveExerciseRecords([complexLog([{reps:1,load_kg:35}])]).length,0)
+ assert.equal(deriveExerciseRecords([complexLog(sets,{flow_completion_only:true})]).length,0)
+ assert.equal(deriveExerciseRecords([complexLog(sets,{wod_engine:{participation:'partner'}})]).length,0)
+ const corrected=complexLog(sets)
+ corrected.workout_exercises[0].workout_sets[0].load_kg=30
+ assert.equal(deriveExerciseRecords([corrected]).length,0)
+})
