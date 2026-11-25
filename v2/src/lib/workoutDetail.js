@@ -39,7 +39,7 @@ export function optionalNumber(value){
 export function reportRepTotals(part,score,level){
  if(!level||!score||!Number.isInteger(score.roundsCompleted)||score.roundsCompleted<0||!Number.isInteger(score.extra_reps)||score.extra_reps<0)return null
  const items=part.items||[]
- if(!items.length||items.some(i=>i.is_rest||i.is_complex||i.side_mode||i.reps_mode==='amrap'||i.reps_mode==='max'))return null
+ if(!items.length||items.some(i=>i.is_rest||i.is_complex||(i.side_mode&&i.side_mode!=='none')||i.reps_mode==='amrap'||i.reps_mode==='max'))return null
  const counts=items.map(i=>{const d=i.levels?.[level];if(i.levels&&!d)return NaN;if(d?.durationSeconds||d?.distanceMeters||d?.calories||i.work_seconds||i.meters||i.calories)return NaN;return Number(d?.reps??i.reps)})
  if(counts.some(n=>!Number.isInteger(n)||n<=0)||score.extra_reps>=counts.reduce((a,b)=>a+b,0))return null
  let extra=score.extra_reps
