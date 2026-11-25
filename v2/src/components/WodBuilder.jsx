@@ -225,7 +225,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const wizardTopRef=useRef(null)
  const previousWizardStep=useRef(0)
  const [overviewLevel,setOverviewLevel]=useState('rx')
- const [samspel,setSamspel]=useState(null),[samspelHelp,setSamspelHelp]=useState(false)
+ const [samspel,setSamspel]=useState(null),[samspelHelp,setSamspelHelp]=useState(false),[showArchitectIssues,setShowArchitectIssues]=useState(false),[showArchitectMenu,setShowArchitectMenu]=useState(false)
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område'),[equipmentFilter,setEquipmentFilter]=useState('all'),[movementFilter,setMovementFilter]=useState('all'),[openFilter,setOpenFilter]=useState('')
  const rehabBodyAreas=['hofte','skulder','kne','nakke']
  const isRehabExercise=x=>!!(x.is_rehab||x.category==='Rehab / fysio'||rehabBodyAreas.includes((x.body_area||'').toLowerCase()))
@@ -336,9 +336,11 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const activeArchitectPart=architectParts.find(p=>p.id===activeBlockId)||architectParts[0]
  const itemPart=x=>isComposite?compositeBlocks.find(b=>b.id===x.blockId):{format}
  const issueFor=x=>architectDoseIssue(x,{metric:quickDoseMetricFor(x),format:itemPart(x)?.format,timed:isInterval||isStationItem(x)||isOptionalTimedReps(x),strength:usesSetsForItem(x),level:'rx'})
- const samspelProblem=samspelIssue(samspel,{format,participation,items:selected})
+ const samspelProblem=samspelIssue(samspel,{format,participation,collaboration,items:selected})
+ const architectIssues=selected.filter(x=>issueFor(x)).map(x=>({item:x,message:issueFor(x),part:architectParts.find(p=>p.group.some(y=>y.key===x.key))}))
  const automaticScoreLabel=isComposite?'Resultat per del · etter format':isDeathBy?'Fullførte rundar før fristen':SCORE_TYPES.find(item=>item.value===automaticScoring.type)?.label||'Repetisjonar'
  function loadClassicWod(){
+  setSamspel(null)
   const preset=CLASSIC_WODS.find(x=>x.name===classicChoice)
   if(!preset)return
   const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'')
@@ -379,7 +381,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   if(!imported.length){setError('Ingen øvingar er kopla til biblioteket. Gå tilbake til importen og vel øvingar.');return}
   if(isFixedInterval(parsed.format)){setIntervalExerciseCount(String(imported.length));setWorkSeconds(String(parsed.fixedTiming?.workSeconds??''));setRestSeconds(String(parsed.fixedTiming?.restSeconds??''))}
   if(isEmomFormat(parsed.format)){const every=emomIntervalSeconds(parsed.format,{work_every_seconds:parsed.emomIntervalSeconds});setEmomIntervalMin(String(Math.floor(every/60)));setEmomIntervalSec(String(every%60))}
-  const importedSeconds=Math.round((Number(parsed.minutes)||0)*60);setDurationSeconds(String(importedSeconds%60));setTimeCapSeconds(String(importedSeconds%60));
+  setSamspel(null);const importedSeconds=Math.round((Number(parsed.minutes)||0)*60);setDurationSeconds(String(importedSeconds%60));setTimeCapSeconds(String(importedSeconds%60));
   setCompositeBlocks(Array.isArray(parsed.blocks)&&parsed.blocks.length?parsed.blocks.map(block=>({...block,flowPurpose:flowPurpose(block)})):defaultCompositeBlocks());setActiveBlockId(parsed.blocks?.[0]?.id||'a');setName(parsed.name||'Importert WOD');setFormat(parsed.format||'Eigen økt');setMinutes(String(importedSeconds?Math.floor(importedSeconds/60):20));setTimeCap(importedSeconds?String(Math.floor(importedSeconds/60)):'');setRounds(String(parsed.rounds||1));setSelected(imported);setNotes(parsed.notes||'');setStimulus('Importert WOD – kontroller format, øvingar og dosering før lagring.');setLibraryCategory('standard');setPublishToMembers(false);setWizardStep(2);setError('');setNotice('WOD-teksten er tolka og lagd inn i byggjaren. Kontroller alle øvingar, belastningar og doseringsnivå før lagring.')
  }
  useEffect(()=>{
@@ -389,6 +391,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  function duplicatePart(block){if(compositeBlocks.length>=8)return;const id=crypto.randomUUID();const copy=copyWodPart(block,selected,id,()=>crypto.randomUUID());setCompositeBlocks(rows=>[...rows,copy.block]);setSelected(rows=>[...rows,...copy.items]);setActiveBlockId(id);setNotice('Øktdelen er kopiert til ein ny del i kladden.')}
  function reuseLibraryWod(block,sourceWod){
    if(!sourceWod)return
+   if(samspelConfig(sourceWod.timer_settings?.workout_schema)){setError('Samspel-økta brukar ei felles klokke. Opna som heil WOD; ho kan ikkje kopierast som seriell øktdel enno.');return}
    const existing=selected.filter(item=>item.blockId===block.id)
    if(existing.length&&!window.confirm('Byta ut dei '+existing.length+' eksisterande øvingane i «'+(block.title||block.format)+'» med WOD-en «'+sourceWod.name+'»? Dei andre delane blir urørte.'))return
    try{
@@ -459,6 +462,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    setNotice('Ny rekkjefølgje er vist under og blir lagra i same rekkjefølgje.')
   }
   function randomWod(){
+  setSamspel(null)
   const pool=exercises.filter(x=>!x.is_rehab&&x.category!=='Rehab / fysio')
   if(!pool.length)return
   const chosen=shuffle(pool).slice(0,3+Math.floor(Math.random()*4))
@@ -524,7 +528,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  }
  async function save(event){
   event.preventDefault();setError('');setNotice('')
-   if(samspelProblem){setError(samspelProblem);setSamspelHelp(true);return}
+   if(samspelProblem){setError(samspelProblem);setShowArchitectIssues(true);setSamspelHelp(true);return}
   if(!selected.length){setError('Legg minst ei øving til WOD-en.');return}
   if(isCoupletTriplet&&combinationMode!=='Open'&&(!Number.isInteger(Number(timeCap))||Number(timeCap)<1||Number(timeCap)>300)){setError(`${format} i ${combinationMode} krev gyldig tidsramme 1–300 minutt.`);setWizardStep(1);return}
   if(isComposite){const issue=validateCompositeBlocks(compositeBlocks,selected);if(issue){setError(issue);setWizardStep(2);return}}
@@ -537,7 +541,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   
   if(selected.some(x=>x.is_rest&&(!Number(x.pauseSeconds)||Number(x.pauseSeconds)<1||Number(x.pauseSeconds)>3600))){setError('Alle pausar må ha ei varigheit mellom 1 og 3600 sekund.');return}
   if(!name.trim()){setError('Gi WOD-en eit namn.');return}
-   const invalidItem=selected.find(x=>issueFor(x));if(invalidItem){const part=architectParts.find(p=>p.group.some(x=>x.key===invalidItem.key));setError((part?'Del '+String.fromCharCode(65+part.index)+' · ':'')+invalidItem.name+': '+issueFor(invalidItem));setActiveBlockId(invalidItem.blockId||'a');setEditingSelectedKey(invalidItem.key);setWizardStep(3);return}
+   const invalidItem=selected.find(x=>issueFor(x));if(invalidItem){const part=architectParts.find(p=>p.group.some(x=>x.key===invalidItem.key));setError((part?'Del '+String.fromCharCode(65+part.index)+' · ':'')+invalidItem.name+': '+issueFor(invalidItem));setActiveBlockId(invalidItem.blockId||'a');setEditingSelectedKey(invalidItem.key);setWizardStep(3);setShowArchitectIssues(true);return}
    if(selected.some(x=>x.is_rest&&(!Number(x.pauseSeconds)||Number(x.pauseSeconds)<1||Number(x.pauseSeconds)>3600))){setError('Alle pausar må ha ei varigheit mellom 1 og 3600 sekund.');return}
   if(isStationCircuit&&(Number(stationCount)<2||Number(stationCount)>8||selected.length!==Number(stationCount))){setError(`Stasjonssirkel krev ${stationCount} øvingar – éi per stasjon. Vel mellom 2 og 8 stasjonar.`);return}
   if(isStationCircuit&&(
@@ -656,7 +660,9 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   {(wizardStep!==0||selected.length>0)&&<section className="gg-architect-overview" aria-label="Heilskap i WOD-en">
    {planContext&&<small className="gg-architect-scope">PT · {planContext.clientName} · {planContext.sessionTitle} · Berre denne planøkta</small>}
    <div className="gg-architect-heading"><label><span>WOD-namn</span><input aria-label="WOD-namn" value={name} onChange={e=>setName(e.target.value)} maxLength={120}/></label><button type="button" className="primary-button" disabled={busy||loading} onClick={()=>save({preventDefault(){}})}><Save size={16}/>{busy?'Lagrar':'Lagra'}</button></div>
-   <div className="gg-architect-meta"><span>{format} · {selected.length} øvingar{isComposite?' · '+Math.ceil(compositeTotalSeconds(compositeBlocksWithItems)/60)+' min':''}</span><button type="button" className="text-button" onClick={()=>setWizardStep(0)}>Format</button><button type="button" className="text-button" onClick={()=>setWizardStep(1)}>Rammer</button><button type="button" className="text-button" onClick={()=>setWizardStep(4)}>Lagringsval</button><button type="button" className="text-button" aria-expanded={samspelHelp} onClick={()=>setSamspelHelp(v=>!v)}>{samspel?'Samspel · aktiv':'⋯ Samspel'}</button></div>
+   <div className="gg-architect-meta"><span>{format} · {selected.length} øvingar{isComposite?' · '+Math.ceil(compositeTotalSeconds(compositeBlocksWithItems)/60)+' min':''}</span><button type="button" className="text-button" onClick={()=>setWizardStep(1)}>Rammer</button>{(architectIssues.length>0||samspelProblem||error)&&<button type="button" className="gg-architect-warning" aria-label="Sjå kva som må rettast" onClick={()=>setShowArchitectIssues(true)}>! {architectIssues.length+(samspelProblem?1:0)||1}</button>}<button type="button" className="text-button" aria-label="WOD-handlingar" aria-expanded={showArchitectMenu} onClick={()=>setShowArchitectMenu(v=>!v)}>⋯</button>{samspel&&<small>Samspel · aktiv</small>}</div>
+   {showArchitectMenu&&<div className="gg-architect-menu" role="group" aria-label="WOD-handlingar"><button type="button" onClick={()=>{setShowArchitectMenu(false);setWizardStep(0)}}>Endra format</button><button type="button" onClick={()=>{setShowArchitectMenu(false);setSamspelHelp(true)}}>Samspel {samspel?'· aktiv':''}</button><button type="button" onClick={()=>{setShowArchitectMenu(false);setWizardStep(4)}}>Lagringsval</button></div>}
+   {showArchitectIssues&&createPortal(<div className="gg-architect-issue-backdrop" onClick={()=>setShowArchitectIssues(false)}><section role="dialog" aria-modal="true" aria-label="Kontroller WOD" className="gg-architect-issue-sheet" onClick={e=>e.stopPropagation()}><header><strong>! Kontroller WOD</strong><button type="button" aria-label="Lukk" onClick={()=>setShowArchitectIssues(false)}>×</button></header>{error&&<p>{error}</p>}{samspelProblem&&<button type="button" onClick={()=>{setShowArchitectIssues(false);setSamspelHelp(true)}}>Samspel · {samspelProblem} →</button>}{architectIssues.map(({item,message,part})=><button type="button" key={item.key} onClick={()=>{setShowArchitectIssues(false);setActiveBlockId(part?.id||item.blockId||'a');setEditingSelectedKey(item.key);setWizardStep(3)}}><strong>{part?'Del '+String.fromCharCode(65+part.index)+' · ':''}{item.name}</strong><small>{message} · Rett →</small></button>)}<button type="button" onClick={()=>setShowArchitectIssues(false)}>Tilbake til byggaren</button></section></div>,document.body)}
    {samspelHelp&&<section className="gg-samspel-setup" aria-label="Samspel"><header><strong>Samspel</strong><button type="button" aria-label="Lukk Samspel" onClick={()=>setSamspelHelp(false)}>×</button></header><p>To partnarar arbeider samtidig. AMRAP-runda styrer byte av rolle.</p>
    <label><input type="checkbox" checked={!!samspel} disabled={format!=='AMRAP'&&!samspel} onChange={e=>{if(e.target.checked){setParticipation('partner');setCollaboration('parallel');setPartnerCount('2');setSamspel({version:1,mode:'parallel_round_swap',task:'row',metric:'distance'})}else setSamspel(null)}}/> Parallelt arbeid med rundebyte</label>
    {format!=='AMRAP'&&<small>! Rundebyte er førebels tilgjengeleg for AMRAP. Andre format brukar dei eksisterande samarbeidsvala.</small>}
