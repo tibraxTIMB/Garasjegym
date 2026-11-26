@@ -14,3 +14,21 @@ export function previousExerciseResult(logs,item){
  }
  return null
 }
+
+// Build a compact reference list without changing prescription or result fields.
+export function previousExerciseReferences(logs,items=[]){
+ const seen=new Set()
+ return items.flatMap(item=>{
+  if(!item||item.is_rest)return []
+  const name=String(item.exercise_name||item.name||'').trim()
+  if(!name)return []
+  const key=item.exercise_id?'id:'+item.exercise_id:'name:'+normalized(name)
+  if(seen.has(key))return []
+  seen.add(key)
+  const result=previousExerciseResult(logs,item)
+  return result?[{key,name,...result}]:[]
+ })
+}
+export function ownPreviousLogs(cache,memberId){
+ return memberId&&cache?.memberId===memberId?cache.logs||[]:[]
+}
