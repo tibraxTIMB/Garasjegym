@@ -87,7 +87,7 @@ export default function MyTraining({ onOpenWod, onLaunchProgramSession, onContac
     </header>
     {error && <div className="auth-error" role="alert">{error}</div>}
 
-    <PTWeekCalendar program={activeProgram} plan={orderedSessions} assignments={assignments} appointments={sessions} classes={classes} onOpen={entry=>{if(entry.kind==='plan'&&entry.row.flowState==='ready')launchSession(entry.row);else if(entry.kind==='assignment'&&['assigned','in_progress'].includes(entry.row.status))onOpenWod?.(entry.row.wod_id,entry.row.id);else setError(entry.kind==='plan'?(entry.row.flowReason||'Denne økta er ikkje klar til start.'):'Sjå avtaledetaljane nedanfor.')}}/>
+    <PTWeekCalendar program={activeProgram} plan={orderedSessions} assignments={assignments} appointments={sessions} classes={classes} canOpen={entry=>entry.kind==='plan'?entry.row.flowState==='ready':entry.kind==='assignment'&&['assigned','in_progress'].includes(entry.row.status)} onOpen={entry=>{if(entry.kind==='plan'&&entry.row.flowState==='ready')launchSession(entry.row);else if(entry.kind==='assignment'&&['assigned','in_progress'].includes(entry.row.status))onOpenWod?.(entry.row.wod_id,entry.row.id);else setError(entry.kind==='plan'?(entry.row.flowReason||'Denne økta er ikkje klar til start.'):'Sjå avtaledetaljane nedanfor.')}}/>
     <section className="customer-plan-program" aria-label="Aktiv treningsplan frå PT">
       <div className="customer-plan-program-head"><div><span className="section-kicker">AKTIV TRENINGSPLAN</span><h4>{activeProgram?.title || 'Ingen plan tildelt enno'}</h4></div>{activeProgram && <span className="customer-plan-state"><CheckCircle2 size={15} /> Aktiv</span>}</div>
       {activeProgram ? <>
