@@ -84,3 +84,15 @@ export function memberPlanCalendarEntries(program,sessions=[],today=osloDay()){
   .filter(e=>e.date&&e.kind==='plan')
   .map(e=>({...e,canStart:e.row.flowState==='ready',reason:e.row.flowReason}))
 }
+
+// Same civil-date validation for individual plan entries and bulk scheduling.
+export function resolvePlanSlot(program,{week,day,date='',time=''}={}){
+ const limit=Math.min(Number(program?.weeks)||52,52)
+ if(!program?.id||!Number.isInteger(week)||week<1||week>limit||!Number.isInteger(day)||day<1||day>7)throw Error('Vel ein dag innanfor treningsplanen.')
+ if(date&&!validDate(date)||time&&!validTime(time))throw Error('Vel gyldig dato og klokkeslett.')
+ const expected=slotDate(program,week,day)
+ if(expected&&date&&expected!==date)throw Error('Dato og programdag samsvarar ikkje.')
+ const scheduledDate=date||expected||''
+ if(!scheduledDate&&(time||program.flow_unlock_mode==='date'))throw Error('Vel dato før klokkeslett eller datostyrt trening.')
+ return {week,day,date:scheduledDate,time:time||''}
+}

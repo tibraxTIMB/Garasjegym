@@ -45,3 +45,6 @@ All seven requested templates now have a first standalone implementation: Qualit
 
 ## PT and history safeguards
 Plan review uses only saved plan snapshots for prescription; direct assignment review has no verified immutable prescription snapshot in this UI, so current library dose is not used as historical evidence. Full PT WOD panel remounts for a new customer. Program rows show planned date/time and completion date separately. Samspel history shows recorded team results instead of inferred personal exercise totals. Generic Samspel result correction is blocked (notes remain editable) until a dedicated consistent participant-result correction exists; no data is rewritten. Remaining acceptance: actual correction, composite Samspel, identity binding, dated plan and social end-to-end journeys, practical devices.
+
+## Continued P0/P1 checkpoint
+Dedicated Samspel correction for seven standalone templates (d46fa55d) changes the existing log only; status-changing corrections remain blocked, no database write test. Lastmeister prescription picker (990b5d6d) offers explicit kg values only, requires manual choice and compatibility. PT single-session entry now synchronizes date/plan slot, includes optional time and clears draft on client change. No production or schema changes. Full acceptance remains open.
