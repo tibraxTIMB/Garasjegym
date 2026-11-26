@@ -33,7 +33,7 @@ export default function MyTraining({ onOpenWod, onLaunchProgramSession, onContac
     const now = new Date()
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
     const [a, p, b, d, plans] = await Promise.all([
-      supabase.from('pt_wod_assignments').select('id,wod_id,due_date,linked_session_id,location,coach_note,status,created_at,wods(id,name,format,duration_minutes,movements,notes)').eq('member_id', user.id).in('status', ['assigned', 'in_progress']).order('due_date', { ascending: true, nullsFirst: false }),
+      supabase.from('pt_wod_assignments').select('*,wods(id,name,format,duration_minutes,movements,notes)').eq('member_id', user.id).in('status', ['assigned', 'in_progress']).order('due_date', { ascending: true, nullsFirst: false }),
       supabase.from('pt_sessions').select('id,client_id,title,starts_at,duration_minutes,status,session_type,message').eq('client_id', user.id).in('status', ['published', 'planned', 'completed']).order('starts_at', { ascending: true }).limit(50),
       supabase.from('class_bookings').select('id,status,classes(id,title,type,starts_at,duration_minutes,description)').eq('member_id', user.id).eq('status', 'confirmed').limit(50),
       supabase.from('wod_daily_schedules').select('wod_id,scheduled_date,target_class_id,wods(id,name,format,duration_minutes,movements,notes,timer_settings)').eq('scheduled_date', today).eq('is_published', true),
