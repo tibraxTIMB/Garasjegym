@@ -11,6 +11,7 @@ import {BLOCK_SCORE_OPTIONS} from '../lib/compositeWod.js'
 import {FLOW_PURPOSES,FLOW_REPORTING,flowPurpose,flowReporting} from '../lib/workoutFlow.js'
 import {buildCustomComplex} from '../lib/wodComplexes.js'
 import {useEffect,useMemo,useRef,useState} from 'react'
+import {randomWodName,uniqueWodName} from '../lib/wodNaming.js'
 import {createPortal} from 'react-dom'
 import {Plus,Search,Trash2,ArrowUp,ArrowDown,Save,LoaderCircle,WandSparkles,Dices,Info,Copy,Dumbbell,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
@@ -122,15 +123,6 @@ const CLASSIC_WODS=[
  {name:'Randy',group:'Hero WODs',format:'For Time',minutes:15,items:[['Power snatch','75']],notes:'75 power snatches for time. RX-vekt: 75/55 lb.'},
  {name:'Badger',group:'Hero WODs',format:'For Time',minutes:35,rounds:3,items:[['Squat clean','30'],['Pull-up','30'],['Run','800 m']],notes:'3 rundar: 30 squat cleans, 30 pull-ups, 800 m løp. RX clean: 95/65 lb.'}
 ]
-const nameAdjectives=['Brutale','Wilde','Geile','Scharfe','Eiserne','Explosive','Böse','Dreckige','Donnernde','Panzerstarke','Stählerne','Brachiale','Knallharte','Furchtlose','Massive','Giftige','Hungrige','Brennende','Wuchtige','Legendäre','Gnadenlose','Kraftvolle','Kompromisslose','Jernharde','Svart','Rasande','Dieseldrevne','Elektriske','Høyspent','Ubøyelege','Stålsette','Infernalske']
-const nameNouns=['Panzer','Granate','Berserker','Keule','Kampfsau','Eber','Bär','Wolf','Gorilla','Mammut','Kobra','Hammer','Amboss','Donnerfaust','Stahlkoloss','Kraftpaket','Schlachtschiff','Sprengkopf','Dampfwalze','Kommandant','Knochenbrecher','Rammbock','Stahlfaust','Kampfhamster','Muskelmonster','Stålkjeven','Jernvilje','Betongbass','Dieselherz','Eisenwolf','Panzerpuls','Inferno 808','Hardhaus.exe','Tungt Vær','Svart Stål','Nattoget','Turbohelvete','Stålnakke','Betongbryter']
-const nameNumbers=['1942','1939','69']
-const randomWodName=()=>{
- const base=nameAdjectives[Math.floor(Math.random()*nameAdjectives.length)]+' '+nameNouns[Math.floor(Math.random()*nameNouns.length)]
- if(Math.random()>=0.22)return base
- const n=nameNumbers[Math.floor(Math.random()*nameNumbers.length)]
- return Math.random()<0.5?n+' '+base:base+' '+n
-}
 const shuffle=items=>[...items].sort(()=>Math.random()-.5)
 const newSet=()=>({reps:'8',loadMode:'none',loadKg:'',percent1rm:'',restSeconds:'120',tempo:''})
 const makeLevels=(reps='10',profile={})=>{const levels={};for(const level of ['rx','scaled','foundation']){const p=profile?.levels?.[level]||{};const hasKg=p.men_kg!=null||p.women_kg!=null;levels[level]={sets:'',reps,loadMode:hasKg?'kg':'none',loadKg:'',loadKgMen:p.men_kg==null?'':String(p.men_kg),loadKgWomen:p.women_kg==null?'':String(p.women_kg),percent1rm:'',tempo:'',instruction:'',variant:'',rir:'',rirRange:'',heightCm:'',durationSeconds:'',distanceMeters:'',calories:''}}return levels}
@@ -227,7 +219,7 @@ function WodReviewOrder({ selected, onMove, onEdit }) {
  </section>
 }
 
-export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=null,copyMode=false,initialImport=null,onImportConsumed,onSaved,onCancel,planContext=null,onSavePlanWod=null}){
+export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=null,copyMode=false,initialImport=null,onImportConsumed,onSaved,onCancel,planContext=null,onSavePlanWod=null,officeMode=false,onPreview}){
  const wizardTopRef=useRef(null)
  const previousWizardStep=useRef(0)
  const [overviewLevel,setOverviewLevel]=useState('rx')
@@ -426,7 +418,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    }catch(e){setError(e.message||'Kunne ikkje henta WOD frå biblioteket.')}
   }
   function addPause(){setError('');setSelected(rows=>[...rows,{...blankItem({id:null,name:'Pause',category:'Pause',body_area:'Heile kroppen',equipment:'Ingen',description:'Planlagd pause mellom øvingar.',is_rest:true}),is_rest:true,pauseSeconds:'30',reps:'',blockId:activeBlockId}]);setLibraryOpen(false)}
- function suggestUniqueWodName(){const existing=new Set(libraryWods.map(w=>(w.name||'').trim().toLowerCase()));for(let i=0;i<60;i++){const candidate=randomWodName();if(!existing.has(candidate.toLowerCase())&&candidate.toLowerCase()!==name.trim().toLowerCase())return candidate}return randomWodName()+' '+String(Date.now()).slice(-4)}
+ function suggestUniqueWodName(){return uniqueWodName(libraryWods,name)}
  function combineSelectedComplex(){
   const picked=selected.filter(item=>Object.hasOwn(complexSelection,item.key))
   try{
@@ -536,7 +528,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    onAssigned?.()
   }catch(e){if(e.code==='23505')setNotice('Denne WOD-en vart nettopp aktivt tildelt kunden. Ingen duplikat vart oppretta.');else setError(e.message||'Kunne ikkje tildela WOD.')}finally{setBusy(false)}
  }
- async function save(event){
+ async function save(event,{previewOnly=false}={}){
   event.preventDefault();setError('');setNotice('')
    if(samspelProblem){setError(samspelProblem);setShowArchitectIssues(true);setSamspelHelp(true);return}
   if(!selected.length){setError('Legg minst ei øving til WOD-en.');return}
@@ -607,6 +599,8 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    const stationDuration=schema.duration_seconds
    const timer_settings={workout_schema:schema,work_seconds:isStationCircuit?Number(stationWork):isTimed?emomEverySeconds:Number(workSeconds)||null,rest_seconds:isStationCircuit?Number(stationTransition):isTimed?0:Number(restSeconds)||null,rounds:isStationCircuit?Number(stationRounds):isTimed?Math.floor(emomTotalSeconds/emomEverySeconds):Number(rounds)||null,duration_seconds:stationDuration}
    const wodPayload={name:name.trim(),category:libraryCategory==='warmup'?'warmup':'main',format:savedFormat,duration_minutes:Math.ceil(stationDuration/60)||null,movements,notes:[stimulus,notes,rxNotes?'RX: '+rxNotes:'',scaledNotes?'Scaled: '+scaledNotes:'',customInstructions].filter(Boolean).join('\n\n'),is_published:canPublishWod&&publishToMembers,timer_settings}
+   if(previewOnly){if(!onPreview)throw Error('Nettbrettlaboratoriet er ikkje tilgjengeleg.');onPreview(wodPayload);setNotice('Validert kladd sendt til nettbrettlaboratoriet. Ikkje lagra eller publisert.');return}
+   if(officeMode&&wodPayload.is_published&&!window.confirm('Publisera denne WOD-en for medlemmene no? Test kladden i nettbrettlaboratoriet først ved behov.'))return
    if(!editingWodId)wodPayload.created_by=user.id
    let savedWodId=editingWodId||null
    if(planContext&&onSavePlanWod){
@@ -668,7 +662,9 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    if((next===4)&&((format==='Couplet'&&selected.length!==2)||(format==='Triplet'&&selected.length!==3))){setError(`${format} krev nøyaktig ${format==='Couplet'?2:3} øvingar.`);return}
    setWizardStep(next)
   }
- return <div ref={wizardTopRef} className={'wod-builder gg-architect wod-builder-step-'+wizardStep+(libraryOpen?' wod-library-open':'')}>
+ return <div ref={wizardTopRef} className={'wod-builder gg-architect wod-builder-step-'+wizardStep+(libraryOpen?' wod-library-open':'')+(officeMode?' gg-desktop-wod-production':'')}>
+  {officeMode&&<nav className="gg-production-ribbon" aria-label="WOD prosjektsteg"><div><strong>WOD PRODUKSJON</strong><small>{editingWodId?'Eksisterande prosjekt':'Ny kladd'} · {selected.length} øvingar</small></div>{['Format','Rammer','Øvingsstruktur','Dosering','Godkjenning'].map((label,i)=><button type="button" key={label} aria-current={wizardStep===i?'step':undefined} onClick={()=>{setLibraryOpen(false);setWizardStep(i)}}>{i+1}. {label}</button>)}{onPreview&&<button type="button" className="primary-button" disabled={busy||loading||!selected.length} onClick={()=>save({preventDefault(){}},{previewOnly:true})}>Test kladd på nettbrett</button>}</nav>}
+  {officeMode&&<div className="gg-wod-project-inspector" aria-label="WOD prosjektoversikt"><header><strong>{name||'Ny WOD'}</strong><span>{format} · {automaticScoreLabel}</span><small>{architectIssues.length+(samspelProblem?1:0)?'Kontrollpunkt: '+(architectIssues.length+(samspelProblem?1:0)):'Ingen kjende doseringsavvik · full validering ved test/lagring'}</small></header><div className="gg-wod-project-parts">{architectParts.map(part=><section key={part.id}><button type="button" className="gg-wod-project-part-title" onClick={()=>{setActiveBlockId(part.id);setLibraryOpen(false);setWizardStep(2)}}><strong>{part.title||format}</strong><span>{part.group.length} øvingar</span></button>{part.group.map(item=><button type="button" key={item.key} className="gg-wod-project-item" onClick={()=>{setActiveBlockId(part.id);setEditingSelectedKey(item.key);setLibraryOpen(false);setWizardStep(3)}}><span>{item.name}</span><small>{issueFor(item)?'! '+issueFor(item):item.is_rest?'Pause':doseForItem(item).reps?doseForItem(item).reps+' reps':'Dosering'}</small></button>)}</section>)}</div></div>}
   {(!assignedClientId||builderMode==='build')&&<div className="training-heading wod-builder-heading"><div><div className="section-kicker">GARASJEGYM · PROGRAMMERINGSVERKSTAD</div><h3>{editingWodId?'Rediger WOD':'WOD Studio'}</h3><p>Bygg, tilpass og publiser treningsøkter i GarasjeGym.</p></div><div className="wod-builder-heading-actions"><span className="count-pill"><WandSparkles size={14}/> PRO</span>{onCancel&&<button type="button" className="secondary-button" onClick={()=>{if((editingWodId||selected.length>0)&&!window.confirm('Avbryta? Ulagra endringar i WOD-byggaren blir forkasta.'))return;onCancel()}}>Avbryt · WOD-bibliotek</button>}</div></div>}
   {(!assignedClientId||builderMode==='build')&&(wizardStep!==0||selected.length>0)&&<section className="gg-architect-overview" aria-label="Heilskap i WOD-en">
    {planContext&&<small className="gg-architect-scope">PT · {planContext.clientName} · {planContext.sessionTitle} · Berre denne planøkta</small>}

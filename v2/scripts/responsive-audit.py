@@ -37,6 +37,37 @@ def open_page(context,path):
     return page,errors
 with sync_playwright() as pw:
     browser=pw.chromium.launch(headless=True)
+    # Explicit desktop companion test; synthetic catalogue, no production connection.
+    for w,h in [(1024,768),(1440,900),(1920,1080)]:
+        ctx=browser.new_context(viewport={'width':w,'height':h},accept_downloads=True,locale='nn-NO')
+        ctx.route('**/*',lambda route:route.continue_() if route.request.url.startswith(BASE) else route.abort())
+        page=None
+        try:
+            page,errors=open_page(ctx,'/ui-audit.html?scenario=audit-admin&screen=werkstatt')
+            page.get_by_role('heading',name='WERKSTATT',exact=True).wait_for()
+            check(page,'werkstatt-home',w,h)
+            page.get_by_role('button',name='WOD-eksport',exact=True).click()
+            page.get_by_role('button',name='Vel viste',exact=False).click()
+            page.get_by_role('button',name='CSV',exact=True).wait_for()
+            assert page.get_by_role('button',name='CSV',exact=True).is_enabled()
+            with page.expect_download() as dl:
+                page.get_by_role('button',name='CSV',exact=True).click()
+            assert dl.value.suggested_filename.endswith('.csv')
+            check(page,'werkstatt-export',w,h)
+            page.get_by_role('button',name='Planimport',exact=True).click()
+            page.get_by_role('textbox',name='Planfilinnhald').fill('week;day;title;wod;minutes;kind\n1;1;Grunnstyrke;;45;training')
+            page.get_by_role('button',name='Kontroller plan',exact=True).click()
+            page.get_by_role('button',name='Lagra ny planmal',exact=True).wait_for()
+            assert page.get_by_role('button',name='Lagra ny planmal',exact=True).is_disabled()
+            page.get_by_role('checkbox',name='Eg har kontrollert',exact=False).check()
+            assert page.get_by_role('button',name='Lagra ny planmal',exact=True).is_enabled()
+            check(page,'werkstatt-plan-review',w,h)
+            assert not errors,errors
+        except Exception as error:
+            failures.append(f'werkstatt {w}x{h}: {error}')
+        finally:
+            if page:page.close()
+            ctx.close()
     for w,h in sizes:
         context=browser.new_context(viewport={"width":w,"height":h},has_touch=True,is_mobile=w<600,device_scale_factor=1,locale="nn-NO",color_scheme="dark",reduced_motion="reduce")
         context.route("**/*",lambda route:route.continue_() if route.request.url.startswith(BASE) else route.abort())

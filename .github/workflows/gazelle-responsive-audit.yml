@@ -1,7 +1,7 @@
 name: Gazelle responsive browser audit (no deploy)
 on:
   push:
-    branches: [gazelle-responsive-audit, gazelle-librarium, gazelle-librarium-polish, gazelle-plan-folders, gazelle-acta, gazelle-pt-plan, gazelle-pt-compact, gazelle-architect, gazelle-pt-flow-repair, gazelle-operational-anatomical, volksmaschine-reibungslos, hotfix-pt-dialog-layout-20261126]
+    branches: [gazelle-responsive-audit, gazelle-librarium, gazelle-librarium-polish, gazelle-plan-folders, gazelle-acta, gazelle-pt-plan, gazelle-pt-compact, gazelle-architect, gazelle-pt-flow-repair, gazelle-operational-anatomical, volksmaschine-reibungslos, hotfix-pt-dialog-layout-20261126, werkstatt-pc-companion]
 permissions:
   contents: read
 jobs:
@@ -28,6 +28,18 @@ jobs:
           trap 'kill "$PID" || true' EXIT
           for i in $(seq 1 60); do curl -fs http://127.0.0.1:4173/ui-audit.html >/dev/null && break; sleep 1; done
           python scripts/responsive-audit.py
+      - name: Test built Tablet Lab with isolated storage and backend
+        if: ${{ github.ref_name == 'werkstatt-pc-companion' }}
+        run: |
+          npx vite build --config vite.tablet-lab.config.js
+          mkdir -p /tmp/gg-tablet-lab-host ui-audit-results
+          ln -s "$PWD/dist" /tmp/gg-tablet-lab-host/Garasjegym
+          printf '<!doctype html><html><body>Lab test host</body></html>' > /tmp/gg-tablet-lab-host/host.html
+          python -m http.server 4182 --bind 127.0.0.1 --directory /tmp/gg-tablet-lab-host > /tmp/gg-tablet-lab-server.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" || true' EXIT
+          for i in $(seq 1 30); do curl -fs http://127.0.0.1:4182/host.html >/dev/null && break; sleep 1; done
+          python scripts/tablet-lab-browser-test.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

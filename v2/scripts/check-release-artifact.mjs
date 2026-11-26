@@ -29,6 +29,15 @@ const textFiles = files.filter(file => /\.(html|js|css|webmanifest|json|svg|txt)
 const contents = await Promise.all(textFiles.map(file => readFile(file, 'utf8')))
 const bundle = contents.join('\n')
 const failures = []
+const labFiles=textFiles.filter(file=>file.endsWith('tablet-lab.html')||file.includes(path.sep+'tablet-lab-assets'+path.sep))
+if(!labFiles.length||!labFiles.some(file=>file.endsWith('tablet-lab.html')))failures.push('Isolated tablet laboratory missing')
+const labBundle=(await Promise.all(labFiles.map(file=>readFile(file,'utf8')))).join('\n')
+for(const file of labFiles){
+  const contents=await readFile(file,'utf8')
+  for(const ref of knownProjectRefs)if(contents.includes(ref))failures.push('Production/database project ref found in isolated tablet laboratory: '+path.relative(dist,file))
+  if(/sb_publishable_[A-Za-z0-9_-]{16,}/.test(contents))failures.push('Database publishable key found in isolated tablet laboratory: '+path.relative(dist,file))
+}
+if(!labBundle.includes('werkstatt-isolated-tablet-member-v1')||!labBundle.includes("connect-src 'none'"))failures.push('Isolated test identity or network-deny policy missing')
 
 if (!bundle.includes(expectedProject)) failures.push(`Expected Supabase project reference is missing: ${expectedProject}`)
 for (const projectRef of knownProjectRefs) {

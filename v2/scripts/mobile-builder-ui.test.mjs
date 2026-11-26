@@ -194,7 +194,7 @@ test('an active workout stays mounted across navigation and offers a one-tap ret
   const timer = source('../src/components/Training.jsx')
   const styles = source('../src/styles/mobile/app-shell.css')
   assert.match(app, /trainingVisited\|\|active==='trening'/)
-  assert.match(app, /<Training key=\{session\.user\.id\} memberId=\{session\.user\.id\} visible=\{active==='trening'\} onBackground=/)
+  assert.match(app, /<Training key=\{labMode\?session\.user\.id\+':'\+labRevision:session\.user\.id\} memberId=\{session\.user\.id\} visible=\{active==='trening'\} onBackground=/)
   assert.match(app, /active === 'trening' \? null : active === 'timeplan'/)
   assert.match(app, /timerSnapshot\.sessionOpen&&<button[^>]*className="ongoing-workout-return"/)
   assert.match(timer, /sessionOpen:mode==='active'/)

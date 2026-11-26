@@ -1,6 +1,6 @@
 const CACHE_PREFIX = 'garasjegym-app-shell-'
 // A fresh cache also discards older shell assets and cached partial media responses.
-const CACHE_NAME = CACHE_PREFIX + 'v25-gazelle-standard-audio'
+const CACHE_NAME = CACHE_PREFIX + 'v26-gazelle-tablet-lab'
 const APP_SCOPE = '/Garasjegym/'
 const SHELL_FILES = [
   APP_SCOPE,
@@ -48,6 +48,9 @@ self.addEventListener('fetch', event => {
   if (request.headers.has('range') ||
       request.destination === 'video' || request.destination === 'audio' ||
       /\.(mp4|m4v|webm|mp3|m4a|wav|ogg)$/i.test(url.pathname)) return
+
+  // Test laboratory must never replace the production app-shell cache.
+  if (url.pathname===APP_SCOPE+'tablet-lab.html'||url.pathname.startsWith(APP_SCOPE+'tablet-lab-assets/'))return
 
   if (request.mode === 'navigate') {
     event.respondWith((async () => {
