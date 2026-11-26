@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {anatomyForExercise,summarizeMuscleExposure,MUSCLES,documentedExerciseRows,muscleExerciseEvidence} from '../src/lib/anatomicalIntelligence.js'
+import {anatomyForExercise,summarizeMuscleExposure,MUSCLES,documentedExerciseRows,muscleExerciseEvidence,historyAnatomyExercises} from '../src/lib/anatomicalIntelligence.js'
 assert.equal(MUSCLES.length,17)
 assert.equal(anatomyForExercise(' BENKPRESS '),anatomyForExercise('bench press'))
 assert.equal(anatomyForExercise('unknown'),null)
@@ -48,3 +48,20 @@ assert.equal(muscleMapRole({primary:0,secondary:2,stabilizing:3}),'secondary')
 assert.equal(muscleMapRole({stabilizing:3}),'stabilizing')
 assert.equal(muscleMapRole(undefined),'none')
 console.log('Muscle map coverage and role assertions passed')
+
+const today=new Date(2026,10,26,12)
+const ex={exercise_name:'Bench Press',workout_sets:[{reps:5}]}
+const recent={id:'a',workout_date:'2026-11-20',workout_exercises:[ex]}
+const older={id:'b',workout_date:'2026-11-13',workout_exercises:[ex]}
+const old={id:'c',workout_date:'2026-10-28',workout_exercises:[ex]}
+const teamLog={...recent,id:'d',result_data:{samspel:{team_score:true}}}
+const future={...recent,id:'e',workout_date:'2026-11-27'}
+const input=[recent,recent,older,old,teamLog,future]
+assert.equal(historyAnatomyExercises(input,7,today).length,1)
+assert.equal(historyAnatomyExercises(input,14,today).length,2)
+assert.equal(historyAnatomyExercises(input,30,today).length,3)
+assert.deepEqual(historyAnatomyExercises(input,3,today),[])
+assert.deepEqual(historyAnatomyExercises([{...recent,result_data:{wod_engine:{participation:'partner'}}}],7,today),[])
+assert.deepEqual(historyAnatomyExercises([{...recent,result_data:{flow_completion_only:true}}],7,today),[])
+assert.deepEqual(documentedExerciseRows([{exercise_name:'Bench Press',sets:[{reps:2,complex_status:'partial'},{reps:1,complex_status:'failed'},{reps:Infinity}]}]),[])
+console.log('Personal anatomy window and completed evidence checks passed')
