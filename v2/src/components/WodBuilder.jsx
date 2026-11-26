@@ -600,7 +600,10 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    const timer_settings={workout_schema:schema,work_seconds:isStationCircuit?Number(stationWork):isTimed?emomEverySeconds:Number(workSeconds)||null,rest_seconds:isStationCircuit?Number(stationTransition):isTimed?0:Number(restSeconds)||null,rounds:isStationCircuit?Number(stationRounds):isTimed?Math.floor(emomTotalSeconds/emomEverySeconds):Number(rounds)||null,duration_seconds:stationDuration}
    const wodPayload={name:name.trim(),category:libraryCategory==='warmup'?'warmup':'main',format:savedFormat,duration_minutes:Math.ceil(stationDuration/60)||null,movements,notes:[stimulus,notes,rxNotes?'RX: '+rxNotes:'',scaledNotes?'Scaled: '+scaledNotes:'',customInstructions].filter(Boolean).join('\n\n'),is_published:canPublishWod&&publishToMembers,timer_settings}
    if(previewOnly){if(!onPreview)throw Error('Nettbrettlaboratoriet er ikkje tilgjengeleg.');onPreview(wodPayload);setNotice('Validert kladd sendt til nettbrettlaboratoriet. Ikkje lagra eller publisert.');return}
-   if(officeMode&&wodPayload.is_published&&!window.confirm('Publisera denne WOD-en for medlemmene no? Test kladden i nettbrettlaboratoriet først ved behov.'))return
+   if(officeMode){
+     if(!window.confirm('STACHELDRAHT · Erstprüfung: '+wodPayload.name+' · '+savedFormat+' · '+schema.items.length+' øvingar. Valideringa er bestått. Kontroller dosering og eventuelle tildelingar.'))return
+     if(!window.confirm('STACHELDRAHT · Freigabe: '+(editingWodId?'Oppdater eksisterande WOD (kan påverka framtidige tildelingar)':'Opprett ny WOD')+' «'+wodPayload.name+'»'+(wodPayload.is_published?' og publiser for medlemmene':' som privat/utkast')+'?'))return
+    }
    if(!editingWodId)wodPayload.created_by=user.id
    let savedWodId=editingWodId||null
    if(planContext&&onSavePlanWod){
