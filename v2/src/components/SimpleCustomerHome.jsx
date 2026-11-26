@@ -1,7 +1,7 @@
 import { Activity, BookOpen, CalendarCheck2, ChevronRight, ClipboardList, Coffee, Dumbbell, History, MessageSquareText, Users } from 'lucide-react'
 import './customer-journey.css'
 
-export default function SimpleCustomerHome({ onPlan, onFree, onWod, onManual, onSchedule, onHistory, onCoffee, onContactPT, onHelp = () => {}, newPtWodCount = 0, coach = false }) {
+export default function SimpleCustomerHome({ onPlan, onFree, onWod, onManual, onSchedule, onHistory, onCoffee, onCommunity, onContactPT, onHelp = () => {}, newPtWodCount = 0, coach = false }) {
   return <div className="simple-home customer-home">
     <div className="customer-home-intro"><h2>Kva vil du gjera?</h2></div>
     <button type="button" className="customer-plan-hero" onClick={onPlan}>
@@ -18,7 +18,7 @@ export default function SimpleCustomerHome({ onPlan, onFree, onWod, onManual, on
     {!coach&&<button type="button" className="customer-pt-invite" onClick={onContactPT}><MessageSquareText size={23}/><span><strong>Mi PT-oversikt</strong><small>Førespurnader og oppfølging</small></span><ChevronRight size={20}/></button>}
     <div className="customer-home-quick-actions">
       <button type="button" onClick={onManual}><ClipboardList size={17} /> Etterregistrer</button>
-      <button type="button" onClick={onCoffee}><Coffee size={17} /> Bestill kaffi</button>
+      <button type="button" onClick={onCoffee}><Coffee size={17} /> Bestill kaffi</button>{onCommunity&&<button type="button" onClick={onCommunity}><Users size={17}/> Garasjeprat</button>}
       <button type="button" onClick={onHelp}><BookOpen size={17} /> Hjelp</button>
 
     </div>

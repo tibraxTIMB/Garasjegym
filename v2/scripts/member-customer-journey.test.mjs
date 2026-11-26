@@ -95,3 +95,15 @@ test('Mission Control preserves personal training routes for staff without dupli
  assert.match(overview,/Kaffibar/)
  assert.doesNotMatch(home,/\{coach&&<button/)
 })
+
+test('Kameradschaft reuses existing social and booking systems with explicit publish',()=>{
+ const app=src('../src/App.jsx'),community=src('../src/components/Community.jsx'),booking=src('../src/components/Booking.jsx')
+ assert.match(app,/onCommunity=\{\(\)=>navigateTo\('fellesskap'\)\}/)
+ assert.match(community,/Finn treningspartnar/)
+ assert.match(community,/publishing\.current=true/)
+ assert.match(community,/user\.id!==profile\.id/)
+ assert.match(booking,/startOpenGym/)
+ assert.match(booking,/setPublishOnCreate\(false\);setQuickOpenGym\(true\)/)
+ assert.match(booking,/createLock\.current=true/)
+ assert.match(booking,/supabase\.from\('classes'\)\.insert/)
+})

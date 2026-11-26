@@ -5,7 +5,7 @@ import { isStaff } from '../lib/auth.js'
 import Notifications from './Notifications.jsx'
 import WodPicker from './WodPicker.jsx'
 import { getGroupClassLiveTimer } from '../lib/groupClassLiveTimer.js'
-import { validateClassCapacity } from '../lib/classCapacity.js'
+import { validateClassCapacity,openGymDraft } from '../lib/classCapacity.js'
 import './builder-form-contrast.css'
 
 const LIVE_SESSION_FIELDS = 'id,class_id,status,started_at,session_title,wod_id,wod_ids,active_wod_index,timer_format,timer_duration_seconds,timer_settings,timer_started_at,timer_elapsed_seconds,timer_status,results_published_at'
@@ -60,6 +60,8 @@ export default function Booking({ profile, onLogResult, onOpenWod, initialClassI
   const [instructorId,setInstructorId]=useState('')
   const [publishOnCreate,setPublishOnCreate]=useState(true)
   const [createStep,setCreateStep]=useState(1)
+  const [quickOpenGym,setQuickOpenGym]=useState(false)
+  const createLock=useRef(false)
   const [prepText,setPrepText]=useState('')
   const [mainText,setMainText]=useState('')
   const [finishText,setFinishText]=useState('')
@@ -216,22 +218,30 @@ export default function Booking({ profile, onLogResult, onOpenWod, initialClassI
     setTitle('');setType('Gruppetime');setStartsAt('');setDuration('60');setCapacity('8')
     setDescription('');setInstructorId('');setPublishOnCreate(true)
     setPrepText('');setMainText('');setFinishText('');setCoachNotes('')
-    setCreateWodIds([]);setCreateStep(1);setShowCreate(false)
+    setCreateWodIds([]);setCreateStep(1);setShowCreate(false);setQuickOpenGym(false)
   }
   function cancelCreate(){
     const hasDraft=Boolean(title.trim()||startsAt||type!=='Gruppetime'||duration!=='60'||capacity!=='8'||description.trim()||instructorId||!publishOnCreate||prepText.trim()||mainText.trim()||finishText.trim()||coachNotes.trim()||createWodIds.length)
     if(hasDraft&&!window.confirm('Forkasta utkastet til gruppetime? Ulagra val blir fjerna.'))return
     resetCreateDraft()
   }
+  function startOpenGym(){
+    if(!staff||showCreate||createLock.current)return
+    const draft=openGymDraft()
+    setTitle(draft.title);setType(draft.type);setStartsAt(draft.startsAt);setDuration(draft.duration);setCapacity(draft.capacity)
+    setPublishOnCreate(false);setQuickOpenGym(true);setShowCreate(true)
+  }
   async function create(event){
-    event.preventDefault();setBusy('create');setError('');setNotice('')
+    event.preventDefault();if(!staff||createLock.current)return
+    createLock.current=true;setBusy('create');setError('');setNotice('')
     try{
       if(!title.trim()||!startsAt)throw new Error('Fyll ut namn, dato og klokkeslett før du opprettar timen.')
       if(!Number.isInteger(Number(duration))||Number(duration)<5||Number(duration)>300)throw new Error('Varigheit må vere eit heilt tal mellom 5 og 300 minutt.')
       const capacityCheck=validateClassCapacity(capacity,0)
       if(!capacityCheck.ok)throw new Error(capacityCheck.error)
       if(new Date(startsAt)<=new Date())throw new Error('Gruppetimen må leggjast fram i tid.')
-      const {data:{user}}=await supabase.auth.getUser()
+      const {data:{user},error:userError}=await supabase.auth.getUser()
+      if(userError||!user||user.id!==profile.id)throw Error('Logg inn på nytt før du opprettar timen.')
       const {error:e}=await supabase.from('classes').insert({
         title:title.trim(),type,starts_at:new Date(startsAt).toISOString(),
         duration_minutes:Number(duration),capacity:capacityCheck.value,
@@ -241,7 +251,7 @@ export default function Booking({ profile, onLogResult, onOpenWod, initialClassI
       setNotice(publishOnCreate?'Timen er oppretta og publisert.':'Timen er lagra som utkast.');resetCreateDraft()
       await load()
     }catch(e){setError(e.message||'Kunne ikkje oppretta timen.')}
-    finally{setBusy('')}
+    finally{createLock.current=false;setBusy('')}
   }
   async function markAttendance(row,status){
     setBusy('attendance-'+row.id);setError('');setNotice('')
@@ -369,10 +379,11 @@ export default function Booking({ profile, onLogResult, onOpenWod, initialClassI
   if(loading)return <div className="training-state"><LoaderCircle className="spin" size={20}/> Hentar timeplan …</div>
   return <div className="booking-module">
     <Notifications compact hideWhenEmpty context="group"/>
-    <div className="training-heading"><div><div className="section-kicker">GARASJEGYM · TIMEPLAN</div><h3>Gruppetimar</h3></div>{staff&&<button className="secondary-button" onClick={()=>showCreate?cancelCreate():setShowCreate(true)}><Plus size={15}/> {showCreate?'Avbryt oppretting':'Ny time'}</button>}</div>
+    <div className="training-heading"><div><div className="section-kicker">GARASJEGYM · TIMEPLAN</div><h3>Gruppetimar</h3></div>{staff&&<div className="class-wizard-actions">{!showCreate&&<button type="button" className="primary-button" onClick={startOpenGym}>Opne garasjen</button>}<button type="button" className="secondary-button" onClick={()=>showCreate?cancelCreate():setShowCreate(true)}><Plus size={15}/> {showCreate?'Avbryt oppretting':'Ny time'}</button></div>}</div>
     {error&&<div className="auth-error" role="alert">{error}</div>}
     {notice&&<div className="auth-message" role="status"><CheckCircle2 size={15}/> {notice}</div>}
-    {showCreate&&staff&&<form className="booking-create class-wizard" onSubmit={create}>
+    {showCreate&&staff&&quickOpenGym&&<form className="booking-create class-wizard" onSubmit={create}><h3>Spontan Open Gym</h3><small>Vanleg gruppetime med påmelding. Kontroller tid og kapasitet. Ingen blir automatisk påmelde.</small><label>Namn<input required value={title} onChange={e=>setTitle(e.target.value)}/></label><label>Start<input type="datetime-local" required value={startsAt} onChange={e=>setStartsAt(e.target.value)}/></label><div className="engine-fields"><label>Minutt<input type="number" min="5" max="300" required value={duration} onChange={e=>setDuration(e.target.value)}/></label><label>Plassar<input type="number" min="1" max="100" required value={capacity} onChange={e=>setCapacity(e.target.value)}/></label></div><label>Info (valfritt)<textarea rows="2" value={description} onChange={e=>setDescription(e.target.value)}/></label><label><input type="checkbox" checked={publishOnCreate} onChange={e=>setPublishOnCreate(e.target.checked)}/> Publiser i timeplanen for medlemer</label><div className="class-wizard-actions"><button type="button" className="secondary-button" disabled={busy==='create'} onClick={cancelCreate}>Avbryt</button><button type="submit" className="primary-button" disabled={busy==='create'}>{busy==='create'?'Lagrar …':publishOnCreate?'Opprett og publiser':'Lagre utkast'}</button></div></form>}
+    {showCreate&&staff&&!quickOpenGym&&<form className="booking-create class-wizard" onSubmit={create}>
       <div className="class-wizard-head"><div><span className="section-kicker">NY GRUPPETIME · STEG {createStep} AV 4</span><h4>{['','Tid og rammer','Program og WOD-ar','Oppbygging og instruksjonar','Kontroller og publiser'][createStep]}</h4><p>Du kan gå tilbake utan å mista vala dine. Lagre som kladd når du vil halda fram seinare.</p></div><button type="button" className="icon-button" aria-label="Avbryt oppretting" onClick={cancelCreate}>×</button></div>
       <div className="class-wizard-progress">{['Tid','WOD','Innhald','Publiser'].map((label,index)=><button type="button" key={label} className={createStep===index+1?'active':createStep>index+1?'done':''} onClick={()=>setCreateStep(index+1)}><span>{createStep>index+1?'✓':index+1}</span>{label}</button>)}</div>
       {createStep===1&&<div className="class-wizard-panel"><label>Namn på timen<input value={title} onChange={e=>setTitle(e.target.value)} required placeholder="t.d. Styrke sirkel"/></label><div className="engine-fields"><label>Type<select value={type} onChange={e=>setType(e.target.value)}><option>Gruppetime</option><option>CrossFit</option><option>Styrke</option><option>Kondisjon</option><option>Open Gym</option><option>Infotime</option></select></label><label>Dato og tid<input type="datetime-local" value={startsAt} onChange={e=>setStartsAt(e.target.value)} required/></label></div><div className="engine-fields"><label>Varigheit (min)<input type="number" min="5" max="300" value={duration} onChange={e=>setDuration(e.target.value)}/></label><label>Maks deltakarar<input type="number" min="1" max="100" value={capacity} onChange={e=>setCapacity(e.target.value)}/></label></div><label>Instruktør / ansvarleg<select value={instructorId} onChange={e=>setInstructorId(e.target.value)}><option value="">Ikkje tildelt</option>{instructors.map(person=><option key={person.id} value={person.id}>{person.display_name||'Instruktør'}</option>)}</select></label><small>Gruppetimeadministrasjon og start av fellesøkt er tilgjengeleg for administrator og manager.</small></div>}
