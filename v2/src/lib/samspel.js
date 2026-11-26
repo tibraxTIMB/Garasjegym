@@ -135,3 +135,19 @@ export function samspelStationLabels(s,roles){
  const start=roles.findIndex((role,i)=>role===task&&roles[(i-1+count)%count]==='AMRAP')
  return roles.map((role,i)=>role===task?task+' '+((i-start+count)%count+1):role)
 }
+
+// Cue only a forward swap observed during this running session. No replay on restore,
+// pause, undo or end. A missed interval never emits a burst of historical cues.
+export function samspelCueStep(previous,current,{running=false,finished=false}={}){
+ const next=Number.isSafeInteger(current)&&current>=0?current:null
+ if(next===null)return {next:null,signal:null}
+ return {next,signal:running&&!finished&&Number.isSafeInteger(previous)&&next>previous?'station':null}
+}
+export function samspelSwapIndex(s,{rounds=0,elapsed=0,target=Infinity,manualSwaps=[]}={}){
+ if(!s)return null
+ if(samspelIsManual(s))return normalizeSamspelSwaps(manualSwaps).length
+ if(!samspelIsTimed(s))return Math.max(0,Math.floor(Number(rounds)||0))
+ const t=Number.isFinite(elapsed)?Math.max(0,elapsed):0
+ const end=Number.isFinite(target)&&target>0?Math.max(0,target-0.001):Infinity
+ return Math.floor(Math.min(t,end)/s.switch_seconds)
+}
