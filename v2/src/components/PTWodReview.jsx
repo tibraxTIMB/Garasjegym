@@ -1,3 +1,4 @@
+import SamspelParticipantResults from './SamspelParticipantResults.jsx'
 import AnatomyEvidence from './AnatomyEvidence.jsx'
 import {useEffect,useMemo,useState} from 'react'
 import {ArrowLeft,Award,CheckCircle2,ChevronDown,MessageSquareText,Send,ShieldCheck} from 'lucide-react'
@@ -99,6 +100,7 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
    <div className="ptreview-metrics" aria-label="Resultatsamandrag">
     {metrics.map(m=><div className="ptreview-metric" key={m.label}><strong>{m.value}</strong><small>{m.label}</small></div>)}
    </div>
+   <SamspelParticipantResults samspel={result.result_data?.samspel}/>
    {result.result_data?.time_cap_reached&&<p className="ptreview-insight is-review">Tidsgrensa vart nådd. For Time-resultat må vurderast ut frå faktisk gjennomført arbeid, ikkje som automatisk fullføring.</p>}
    {blockResults.length>0&&<section className="ptreview-blocks" aria-label="Resultat per øktdel">
     <h4>Korleis gjekk dei ulike delane?</h4>
