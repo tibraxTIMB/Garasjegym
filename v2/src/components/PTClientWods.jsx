@@ -13,7 +13,7 @@ const shortDate=value=>value?new Date(value).toLocaleDateString('nn-NO',{day:'nu
 /** PTs can see only explicit PT WOD assignments and their own PT program sessions.
  * No workout_logs query: a customer's unrelated private training remains private.
  */
-export default function PTClientWods({clientId,clientName='',clientRank=null,mode='full',planSessions=[],wods=[],initialReview=null,assignRequest=null,onOpenFull=()=>{},onOpenReview=()=>{},onReviewClosed=()=>{}}){
+export default function PTClientWods({clientId,clientName='',clientRank=null,mode='full',planSessions=[],wods=[],initialReview=null,assignRequest=null,onAssignClosed=()=>{},onOpenFull=()=>{},onOpenReview=()=>{},onReviewClosed=()=>{}}){
  const [assignments,setAssignments]=useState([])
  const [loading,setLoading]=useState(false)
  const [error,setError]=useState('')
@@ -40,6 +40,7 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
   return()=>{active=false}
  },[clientId,revision])
  useEffect(()=>{if(initialReview&&clientId)setOpenedReview(initialReview)},[initialReview,clientId])
+ useEffect(()=>{if(assignRequest?.clientId===clientId&&assignRequest?.id){setOpenedReview(null);setShowAssign(true)}},[assignRequest,clientId])
  const activeAssignments=useMemo(()=>assignments.filter(row=>!completedStatus(row.status)&&row.status!=='cancelled'),[assignments])
  const doneAssignments=useMemo(()=>assignments.filter(row=>completedStatus(row.status)),[assignments])
  const programWods=useMemo(()=>planSessions.filter(row=>row.wod_id&&!row.archived_at).map(session=>({
@@ -118,9 +119,9 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
     {preview&&<p className="ptfollow-footnote">Du ser berre PT-tilknytte WOD-ar, ikkje andre treningsøkter.</p>}
    </>}
    {showAssign&&createPortal(<div className="gg-pt-assign-backdrop"><section className="gg-pt-assign-sheet" role="dialog" aria-modal="true" aria-label={'Tildel WOD til '+clientName}>
-    <header className="gg-pt-assign-head"><div><h4>Tildel WOD</h4><small>Mottakar: {clientName}</small></div><button type="button" aria-label="Lukk tildeling" onClick={()=>setShowAssign(false)}><X size={20}/></button></header>
+    <header className="gg-pt-assign-head"><div><h4>Tildel WOD</h4><small>Mottakar: {clientName}</small></div><button type="button" aria-label="Lukk tildeling" onClick={()=>{setShowAssign(false);onAssignClosed()}}><X size={20}/></button></header>
     <Suspense fallback={<p className="ptfollow-info">Opnar WOD-biblioteket …</p>}>
-      <WodBuilder key={clientId} assignedClientId={clientId} onAssigned={()=>{setShowAssign(false);setRevision(x=>x+1)}}/>
+      <WodBuilder key={clientId} assignedClientId={clientId} onAssigned={()=>{setShowAssign(false);onAssignClosed();setRevision(x=>x+1)}}/>
     </Suspense>
    </section></div>,document.body)}
   </section>
