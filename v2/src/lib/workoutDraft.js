@@ -28,7 +28,7 @@ export function resumedElapsedSeconds(snapshot, now = Date.now()) {
 
 // Compare the exact confirmed result, not a changing clock snapshot timestamp.
 export function workoutSaveFingerprint(draft){
- const {savedAt,version,memberId,activeExerciseIndex,...data}=draft||{}
+ const {savedAt,version,memberId,activeExerciseIndex,resultSetIndex,flowDetailed,resultSummary,...data}=draft||{}
  const {savedAt:clockSavedAt,...timerSnapshot}=data.timerSnapshot||{}
  return JSON.stringify({...data,timerSnapshot})
 }
@@ -46,4 +46,26 @@ export function claimWorkoutAction(lock){
 }
 export function releaseWorkoutAction(lock){
  if(lock)lock.current=false
+}
+
+// A request may have reached the server even if its response was lost. Persist the
+// submitted fingerprint separately so ordinary draft autosave cannot erase it.
+const receiptKey=memberId=>`garasjegym.workout-pending.v1.${memberId}`
+export function readWorkoutSubmission(memberId,saveToken,storage){
+ if(!memberId||!saveToken)return null
+ try{
+  const row=JSON.parse((storage??globalThis.localStorage).getItem(receiptKey(memberId))||'null')
+  return row?.memberId===memberId&&row.saveToken===saveToken&&typeof row.fingerprint==='string'?row:null
+ }catch{return null}
+}
+export function rememberWorkoutSubmission(memberId,saveToken,fingerprint,storage){
+ if(!memberId||!saveToken||typeof fingerprint!=='string')return false
+ try{(storage??globalThis.localStorage).setItem(receiptKey(memberId),JSON.stringify({memberId,saveToken,fingerprint}));return true}catch{return false}
+}
+export function clearWorkoutSubmission(memberId,saveToken,storage){
+ if(!readWorkoutSubmission(memberId,saveToken,storage))return
+ try{(storage??globalThis.localStorage).removeItem(receiptKey(memberId))}catch{}
+}
+export function workoutSubmissionConflict(submission,saveToken,fingerprint){
+ return !!submission&&submission.saveToken===saveToken&&submission.fingerprint!==fingerprint
 }
