@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {samspelConfig,samspelIssue,samspelRoles,samspelResultIssue,samspelScoring,samspelWithCount,samspelRoundInstruction,samspelWithSwitch,samspelRotation,samspelIsTimed,samspelIsManual,appendSamspelSwap,normalizeSamspelSwaps,samspelParticipantRows,samspelParticipantResults,samspelErgSlots,samspelCapacityIssue,samspelStationLabels,samspelCueStep,samspelSwapIndex,samspelMixed,samspelWithStations,samspelStationRows,samspelStationResults} from '../src/lib/samspel.js'
+import {samspelConfig,samspelIssue,samspelRoles,samspelResultIssue,samspelScoring,samspelWithCount,samspelRoundInstruction,samspelWithSwitch,samspelRotation,samspelIsTimed,samspelIsManual,appendSamspelSwap,normalizeSamspelSwaps,samspelParticipantRows,samspelParticipantResults,samspelErgSlots,samspelCapacityIssue,samspelStationLabels,samspelCueStep,samspelSwapIndex,samspelMixed,samspelWithStations,samspelStationRows,samspelStationResults,samspelStationCapacityKeys} from '../src/lib/samspel.js'
 const legacy={version:1,mode:'parallel_round_swap',task:'row',metric:'distance'}
 const context={format:'AMRAP',participation:'partner',collaboration:'parallel',items:[{name:'Push-up'}]}
 assert.equal(samspelConfig({samspel:legacy}),legacy)
@@ -144,3 +144,13 @@ assert.deepEqual(samspelStationResults(legacy,{}),{rows:[],issue:null})
 assert.deepEqual(samspelParticipantResults({...multi,individual_scores:true},{1:{rounds:'2',erg:'400'}}).rows,[{slot:1,rounds:2,extra_reps:null,erg_value:null}])
 for(let p=0;p<4;p++){const roles=Array.from({length:4},(_,i)=>samspelRoles(multi,i)[p]);assert.equal(roles.filter(x=>x==='Romaskin · S1').length,1);assert.equal(roles.filter(x=>x==='Sykkel · S2').length,1);assert.equal(roles.filter(x=>x==='AMRAP').length,2)}
 console.log('Separate station rotation and scores passed')
+
+
+const strength={...multi,station_tasks:[{task:'strength',metric:'reps',exercise_id:'squat',exercise_name:'Back Squat',instruction:'5 reps · 40 kg',equipment:'Vektstong'},{task:'bike',metric:'calories'}],station_capacity:{'strength:vektstong':1,bike:1}}
+assert.equal(samspelIssue(strength,multiContext),null)
+assert.deepEqual(samspelRoles(strength,0),['Back Squat · S1','Sykkel · S2','AMRAP','AMRAP'])
+assert.deepEqual(samspelStationCapacityKeys(strength),[['strength:vektstong','Vektstong'],['bike','Sykkel']])
+assert.ok(samspelIssue({...strength,station_capacity:{bike:1}},multiContext))
+assert.ok(samspelIssue({...strength,station_tasks:[{...strength.station_tasks[0],instruction:''},strength.station_tasks[1]]},multiContext))
+assert.ok(samspelStationResults(strength,{'station-1':{erg:'1.5'},'station-2':{erg:'2'}}).issue)
+assert.deepEqual(samspelStationResults(strength,{'station-1':{erg:'20'},'station-2':{erg:'2'}}).rows.map(x=>[x.value,x.unit]),[[20,'reps'],[2,'cal']])
