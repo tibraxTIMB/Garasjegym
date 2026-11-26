@@ -276,3 +276,19 @@ assert.equal(relayRows[0].extra_reps,3)
 assert.equal(samspelErgSlots(relay),0)
 assert.equal(samspelResultIssue(relay,''),null)
 console.log('You Go I Go independent results passed')
+
+import {teamChipperConfig,teamChipperProgress,teamChipperComplete} from '../src/lib/samspel.js'
+const chipper={...teamChipperConfig(),targets:[{exercise_name:'Push-up',target_reps:50},{exercise_name:'Air squat',target_reps:100}]}
+const chipperCtx={...context,format:'Chipper',collaboration:'free_split',items:[{name:'Push-up'},{name:'Air squat'}]}
+assert.equal(samspelIssue(chipper,chipperCtx),null)
+assert.equal(samspelErgSlots(chipper),0)
+assert.equal(samspelResultIssue(chipper,''),null)
+assert.ok(samspelParticipantResults(chipper,{}).issue)
+const chipperInput={1:{'chipper-0':'20','chipper-1':'40'},2:{'chipper-0':'30','chipper-1':'60'}}
+const chipperRows=samspelParticipantResults(chipper,chipperInput).rows
+assert.equal(teamChipperComplete(chipper,chipperRows),true)
+assert.deepEqual(teamChipperProgress(chipper,chipperRows).map(x=>x.reps),[50,100])
+assert.equal(teamChipperComplete(chipper,chipperRows.slice(1)),false)
+assert.ok(samspelParticipantResults(chipper,{...chipperInput,2:{...chipperInput[2],'chipper-0':'31'}}).issue)
+assert.equal(teamChipperComplete(chipper,samspelParticipantResults(chipper,{...chipperInput,2:{...chipperInput[2],'chipper-1':'59'}}).rows),false)
+console.log('Team Chipper contribution checks passed')

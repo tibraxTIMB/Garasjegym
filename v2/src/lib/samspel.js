@@ -5,6 +5,20 @@ export const SAMSPEL_METRICS=[['distance','Meter'],['calories','Kaloriar']]
 // Quality & Row is a non-competitive two-person track using the existing timer.
 export function samspelQuality(s){return s?.version===2&&s.main_track==='quality'}
 // Relay: work/rest alternation, with explicit results independent of handovers.
+// Team Chipper: one shared target per movement and measured individual contributions.
+export function samspelChipper(s){return s?.version===2&&s.main_track==='chipper'}
+export function teamChipperConfig(){return {version:2,mode:'parallel_round_swap',main_track:'chipper',participant_count:2,switch_rule:'fixed',individual_scores:true,targets:[]}}
+export function teamChipperProgress(s,rows=[]){
+ if(!samspelChipper(s)||!samspelConfig({samspel:s})||!Array.isArray(rows))return []
+ return s.targets.map((target,i)=>{
+  const reps=rows.reduce((sum,row)=>{const n=row.chipper_reps?.[i];return sum+(Number.isSafeInteger(n)&&n>=0?n:0)},0)
+  return {...target,reps,remaining:Math.max(0,target.target_reps-reps),complete:reps===target.target_reps}
+ })
+}
+export function teamChipperComplete(s,rows=[]){
+ const progress=teamChipperProgress(s,rows)
+ return progress.length>0&&progress.every(r=>r.complete)&&rows.length===s.participant_count&&Array.from({length:s.participant_count},(_,i)=>i+1).every(slot=>rows.filter(r=>r.slot===slot&&Array.isArray(r.chipper_reps)&&r.chipper_reps.length===s.targets.length&&r.chipper_reps.every(n=>Number.isSafeInteger(n)&&n>=0)).length===1)
+}
 export function samspelRelay(s){return s?.version===2&&s.main_track==='relay'}
 export function youGoIGoConfig(){return {version:2,mode:'parallel_round_swap',main_track:'relay',participant_count:2,switch_rule:'manual',individual_scores:true}}
 export function relayTotal(s,rows=[]){
@@ -57,6 +71,7 @@ export function samspelEmomComplete(s,rows=[],{elapsed}={}){
 export function samspelConfig(schema={}){
  const s=schema?.samspel
  if(s?.mode!=='parallel_round_swap')return null
+ if(samspelChipper(s))return Number.isInteger(s.participant_count)&&s.participant_count>=2&&s.participant_count<=8&&s.switch_rule==='fixed'&&s.individual_scores===true&&!s.station_tasks&&Array.isArray(s.targets)&&s.targets.length>=1&&s.targets.length<=30&&s.targets.every(x=>typeof x?.exercise_name==='string'&&!!x.exercise_name.trim()&&Number.isSafeInteger(x.target_reps)&&x.target_reps>=1&&x.target_reps<=10000)?s:null
  if(samspelRelay(s))return Number.isInteger(s.participant_count)&&s.participant_count>=2&&s.participant_count<=8&&s.switch_rule==='manual'&&s.individual_scores===true&&!s.station_tasks?s:null
  if(samspelRecovery(s))return Number.isInteger(s.participant_count)&&s.participant_count>=2&&s.participant_count<=8&&s.individual_scores===true&&s.switch_rule==='fixed'&&Number.isInteger(s.duration_seconds)&&s.duration_seconds>=60&&s.duration_seconds<=10800&&!s.station_tasks?s:null
  if(samspelDouble(s))return s.participant_count===2&&s.individual_scores===true&&['fixed','time'].includes(s.switch_rule)&&Number.isInteger(s.switch_seconds)&&s.switch_seconds>=5&&s.switch_seconds<=3600&&Number.isInteger(s.duration_seconds)&&s.duration_seconds>=s.switch_seconds*(s.switch_rule==='time'?2:1)&&s.duration_seconds<=10800&&s.duration_seconds%(s.switch_seconds*(s.switch_rule==='time'?2:1))===0&&Array.isArray(s.tracks)&&s.tracks.length===2&&s.tracks.every(x=>typeof x==='string'&&x.trim())&&!s.station_tasks?s:null
@@ -70,6 +85,12 @@ export function samspelConfig(schema={}){
 }
 export function samspelIssue(s,{format,participation,collaboration,participantCount=2,items=[]}={}){
  if(!s)return null
+ if(samspelChipper(s)){
+  if(!samspelConfig({samspel:s}))return 'Vel 1–30 øvingar med 1–10 000 felles reps per øving.'
+  if(format!=='Chipper'||collaboration!=='free_split'||(s.participant_count===2?participation!=='partner':participation!=='team'||Number(participantCount)!==s.participant_count))return 'Team Chipper krev Chipper og fritt delt arbeid.'
+  if(items.length!==s.targets.length||items.some((x,i)=>x.is_rest||x.is_complex||String(x.name||x.exercise_name||'').trim()!==s.targets[i].exercise_name))return 'Vel vanlege repetisjonsbaserte øvingar utan pausar.'
+  return null
+ }
  if(samspelRelay(s)){
   if(!samspelConfig({samspel:s}))return 'Vel 2–8 utøvarar.'
   if(format!=='AMRAP'||collaboration!=='you_go_i_go'||(s.participant_count===2?participation!=='partner':participation!=='team'||Number(participantCount)!==s.participant_count))return 'You Go I Go krev AMRAP og vekselvis arbeid.'
@@ -101,6 +122,7 @@ export function samspelIssue(s,{format,participation,collaboration,participantCo
  return null
 }
 export function samspelRoles(s,rounds=0){
+ if(samspelChipper(s))return Array.from({length:s.participant_count},()=> 'Delt arbeid')
  if(samspelRelay(s)){const i=Math.max(0,Math.floor(Number(rounds)||0))%s.participant_count;return Array.from({length:s.participant_count},(_,j)=>i===j?'Arbeid':'Kvile')}
  if(samspelRecovery(s))return Array.from({length:s.participant_count},()=> 'Rolig arbeid')
  if(samspelDouble(s)){const roles=['A · '+(s.tracks[0]||'Spor A'),'B · '+(s.tracks[1]||'Spor B')];return s.switch_rule==='time'&&Math.floor(Number(rounds)||0)%2?roles.reverse():roles}
@@ -114,10 +136,11 @@ export function samspelRoles(s,rounds=0){
  return Array.from({length:count},(_,i)=>{const offset=(i-index+count)%count;return offset<slots?(stations?stations[offset]?.label||'Uavklart stasjon':task):samspelMainLabel(s)})
 }
 export function samspelResultIssue(s,value){
- if(!s||samspelStrength(s)||samspelDouble(s)||samspelRecovery(s)||samspelRelay(s))return null
+ if(!s||samspelStrength(s)||samspelDouble(s)||samspelRecovery(s)||samspelRelay(s)||samspelChipper(s))return null
  return value==null||String(value).trim()===''||!Number.isFinite(Number(value))||Number(value)<0?'Registrer faktisk samla '+(s.metric==='distance'?'distanse i meter':'kaloriar')+' (0 dersom ingen).':null
 }
 export function samspelScoring(s,base){
+ if(samspelChipper(s))return {type:'time',fields:['time']}
  if(samspelRelay(s))return {type:'rounds_reps',fields:['rounds_reps']}
  if(samspelRecovery(s))return {type:'reps',fields:[]} // legacy engine type only; actual result is completion status
  if(samspelDouble(s))return {type:'reps',fields:['reps']}
@@ -134,6 +157,7 @@ export function samspelWithCount(s,count){
  return {...s,version:2,participant_count:count}
 }
 export function samspelRoundInstruction(s){
+ if(samspelChipper(s))return 'Del repetisjonane fritt innan kvar øving. Gå vidare når laget har nådd målet for øvinga. Registrer kvar utøvar sitt faktiske bidrag. Ikkje registrer same reps to gonger.'
  if(samspelRelay(s))return 'Éin arbeider medan resten kviler. Byt manuelt etter avtalt arbeidsbolk. Eit byte er ikkje ei fullført runde. Registrer faktiske rundar og ekstra reps per utøvar etterpå.'
  if(samspelRecovery(s))return 'Gjer dei rolege øvingane i eige tempo, med pausar ved behov. Ingen konkurranse. Avslutt når de er ferdige eller når tidsramma går ut.'
  if(samspelDouble(s))return s.switch_rule==='fixed'?'To ulike øvingar på same klokke. Hald kvart dykkar spor gjennom økta.':'To ulike øvingar på same klokke. Byt spor ved kvart nye intervall.'
@@ -149,6 +173,7 @@ export function samspelIsTimed(s){
  return s?.version===2&&s.switch_rule==='time'&&!!samspelConfig({samspel:s})
 }
 export function samspelWithSwitch(s,rule,seconds=60){
+ if(samspelChipper(s))return rule==='fixed'?s:null
  if(samspelRelay(s))return rule==='manual'?s:null
  if(samspelRecovery(s))return rule==='fixed'?s:null
  if(samspelDouble(s))return ['fixed','time'].includes(rule)?{...s,switch_rule:rule}:null
@@ -164,7 +189,7 @@ export function samspelWithSwitch(s,rule,seconds=60){
 // Driven by the existing active elapsed clock: pauses and reloads need no second timer.
 // At the workout deadline preserve the final working roles, rather than announcing an extra swap.
 export function samspelRotation(s,{rounds=0,elapsed=0,target=Infinity,manualSwaps=[]}={}){
- if(samspelRecovery(s))return {roles:samspelRoles(s,0),nextSwitchSeconds:null,timed:false}
+ if(samspelChipper(s)||samspelRecovery(s))return {roles:samspelRoles(s,0),nextSwitchSeconds:null,timed:false}
  if(samspelDouble(s)&&s.switch_rule==='fixed')return {roles:samspelRoles(s,0),nextSwitchSeconds:null,timed:false}
  if(samspelStrength(s))return {roles:['Styrke','Styrke'],nextSwitchSeconds:null,timed:false}
  if(samspelIsManual(s))return {roles:samspelRoles(s,normalizeSamspelSwaps(manualSwaps).length),nextSwitchSeconds:null,timed:false}
@@ -202,6 +227,7 @@ export function samspelParticipantRows(s,values={}){
  if(!samspelConfig({samspel:s})||!s.individual_scores)return []
  return Array.from({length:count},(_,i)=>{
   const slot=i+1, row=values[slot]||{}
+  if(samspelChipper(s))return {slot,chipper:s.targets.map((_,i)=>row['chipper-'+i]??'')}
   if(samspelRelay(s))return {slot,rounds:row.rounds??'',reps:row.reps??''}
   if(samspelDouble(s))return {slot,trackA:row.trackA??'',trackB:row.trackB??''}
   if(samspelStrength(s))return {slot,sets:Array.from({length:s.planned_sets},(_,i)=>({set_number:i+1,reps:row['reps-'+i]??'',load_kg:row['load-'+i]??'',rir:row['rir-'+i]??''}))}
@@ -214,6 +240,16 @@ export function samspelParticipantRows(s,values={}){
 export function samspelParticipantResults(s,values={}, {elapsed}={}){
  const rows=samspelParticipantRows(s,values), results=[]
  for(const row of rows){
+  if(samspelChipper(s)){
+   const actual=[]
+   for(const [i,value] of row.chipper.entries()){
+    const n=Number(value)
+    if(String(value).trim()===''||!Number.isSafeInteger(n)||n<0||n>s.targets[i].target_reps)return {rows:[],issue:'Utøvar '+row.slot+' · '+s.targets[i].exercise_name+': oppgi faktisk reps (0 dersom ingen).',slot:row.slot,field:'chipper-'+i}
+    actual.push(n)
+   }
+   results.push({slot:row.slot,chipper_reps:actual,rounds:null,extra_reps:null,erg_value:null})
+   continue
+  }
   if(samspelRelay(s)){
    for(const field of ['rounds','reps'])if(String(row[field]).trim()===''||!Number.isSafeInteger(Number(row[field]))||Number(row[field])<0)return {rows:[],issue:'Utøvar '+row.slot+': oppgi faktisk '+(field==='rounds'?'tal rundar':'ekstra reps')+' (0 dersom ingen).',slot:row.slot,field}
    results.push({slot:row.slot,rounds:Number(row.rounds),extra_reps:Number(row.reps),erg_value:null})
@@ -266,18 +302,22 @@ export function samspelParticipantResults(s,values={}, {elapsed}={}){
   }
   results.push({slot:row.slot,rounds:entered.includes('rounds')?Number(row.rounds):null,extra_reps:entered.includes('reps')?Number(row.reps):null,erg_value:entered.includes('erg')?Number(row.erg):null})
  }
+ if(samspelChipper(s)){
+  const excess=teamChipperProgress(s,results).findIndex(r=>r.reps>r.target_reps)
+  if(excess>=0)return {rows:[],issue:s.targets[excess].exercise_name+': summen av registrerte reps overstig felles mål. Kontroller dobbelregistrering.',slot:1,field:'chipper-'+excess}
+ }
  return {rows:results,issue:null}
 }
 
 // Multiple identical erg stations share one metric. Mixed-machine results must not be summed.
 export function samspelErgSlots(s){
- if(samspelStrength(s)||samspelDouble(s)||samspelRecovery(s)||samspelRelay(s))return 0
+ if(samspelStrength(s)||samspelDouble(s)||samspelRecovery(s)||samspelRelay(s)||samspelChipper(s))return 0
  const count=s?.version===2?s.participant_count:2
  const slots=s?.version===2?(s.erg_slots??1):1
  return Number.isInteger(slots)&&slots>=1&&slots<count?slots:1
 }
 export function samspelCapacityIssue(s){
- if(samspelStrength(s)||samspelDouble(s)||samspelRecovery(s)||samspelRelay(s))return null // Existing equipment preparation owns capacity checks.
+ if(samspelStrength(s)||samspelDouble(s)||samspelRecovery(s)||samspelRelay(s)||samspelChipper(s))return null // Existing equipment preparation owns capacity checks.
  if(s?.version!==2)return null
  if(samspelMixed(s))return samspelMixedCapacityIssue(s)
  const slots=s.erg_slots??1, available=s.available_ergs
@@ -287,7 +327,7 @@ export function samspelCapacityIssue(s){
  return null
 }
 export function samspelStationLabels(s,roles){
- if(samspelStrength(s)||samspelDouble(s)||samspelRecovery(s)||samspelRelay(s))return [...roles]
+ if(samspelStrength(s)||samspelDouble(s)||samspelRecovery(s)||samspelRelay(s)||samspelChipper(s))return [...roles]
  if(samspelMixed(s))return [...roles]
  const task=SAMSPEL_TASKS.find(([id])=>id===s?.task)?.[1]||'Kondisjon'
  const slots=samspelErgSlots(s)
@@ -306,7 +346,7 @@ export function samspelCueStep(previous,current,{running=false,finished=false}={
  return {next,signal:running&&!finished&&Number.isSafeInteger(previous)&&next>previous?'station':null}
 }
 export function samspelSwapIndex(s,{rounds=0,elapsed=0,target=Infinity,manualSwaps=[]}={}){
- if(!s||samspelStrength(s)||samspelRecovery(s)||samspelDouble(s)&&s.switch_rule==='fixed')return null
+ if(!s||samspelStrength(s)||samspelRecovery(s)||samspelChipper(s)||samspelDouble(s)&&s.switch_rule==='fixed')return null
  if(samspelIsManual(s))return normalizeSamspelSwaps(manualSwaps).length
  if(!samspelIsTimed(s))return Math.max(0,Math.floor(Number(rounds)||0))
  const t=Number.isFinite(elapsed)?Math.max(0,elapsed):0
@@ -341,7 +381,7 @@ export function samspelMixedCapacityIssue(s){
 }
 export function samspelWithStations(s,enabled,slots=s?.erg_slots??1){
  if(!s)return null
- if(samspelNoncompetitive(s)||samspelClockedEmom(s)||samspelStrength(s)||samspelRelay(s))return s
+ if(samspelNoncompetitive(s)||samspelClockedEmom(s)||samspelStrength(s)||samspelRelay(s)||samspelChipper(s))return s
  if(!enabled){const {station_tasks,station_capacity,...legacy}=s;return legacy}
  const n=Math.max(2,Math.min(Number(slots)||2,s.participant_count-1))
  if(s.participant_count<3)return s
