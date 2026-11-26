@@ -106,5 +106,46 @@ with sync_playwright() as pw:
     assert not errors,errors
     print("FRONTDIENST Quality & Row: validation, draft reload, partial result and single team payload passed",flush=True)
     ctx.close()
+    # Exercise-library-backed builder and grouped Del 0: actual UI, no live writes.
+    ctx=browser.new_context(viewport={"width":390,"height":844},has_touch=True)
+    ctx.route("**/*",lambda route:route.continue_() if route.request.url.startswith(BASE+"/") else route.abort())
+    page=ctx.new_page()
+    errors=[]
+    page.on("pageerror",lambda error:errors.append(str(error)))
+    page.goto(BASE+"/ui-audit.html?scenario=audit-admin&screen=builder",wait_until="domcontentloaded")
+    page.get_by_role("button",name="Samansett økt",exact=False).first.click(timeout=15000)
+    page.get_by_text("ZÜNDUNG · Legg til / byt Del 0",exact=True).click()
+    page.get_by_label("Oppvarming",exact=True).select_option("eisenkette")
+    page.get_by_label("Gjennomføring",exact=True).select_option("partner")
+    page.get_by_role("button",name="Legg til Del 0",exact=True).click()
+    nav=page.get_by_role("navigation",name="Delar i WOD-en")
+    expect(nav.get_by_role("button")).to_have_count(5)
+    labels=nav.locator("button > b").all_text_contents()
+    assert labels==["0.1","0.2","0.3","A","B"],labels
+    assert not errors,errors
+    ctx.close()
+    for w,h in [(390,844),(844,390),(800,1280)]:
+        ctx=browser.new_context(viewport={"width":w,"height":h},has_touch=True)
+        ctx.route("**/*",lambda route:route.continue_() if route.request.url.startswith(BASE+"/") else route.abort())
+        page=ctx.new_page()
+        errors=[]
+        page.on("pageerror",lambda error:errors.append(str(error)))
+        page.on("dialog",lambda dialog:dialog.accept())
+        page.goto(URL+"&launch=zuendung",wait_until="domcontentloaded")
+        skip=page.get_by_role("button",name="Hopp over Del 0",exact=True)
+        expect(skip).to_be_visible(timeout=15000)
+        skip.click()
+        page.wait_for_function("(k)=>{const d=JSON.parse(localStorage.getItem(k)||'{}');return d.timerSnapshot?.active_block_index===3&&Object.values(d.blockScores||{}).filter(b=>b.status==='skipped').length===3}",arg=DRAFT,timeout=15000)
+        draft=page.evaluate("(k)=>JSON.parse(localStorage.getItem(k))",DRAFT)
+        assert draft["timerSnapshot"]["hasStarted"] is False
+        assert all(draft["timerSnapshot"]["block_results"][str(i)]["prep_skipped"] for i in range(3))
+        # Reload without a launch parameter so only the actual persisted draft restores.
+        page.goto(URL,wait_until="domcontentloaded")
+        expect(skip).to_have_count(0)
+        page.wait_for_function("(k)=>JSON.parse(localStorage.getItem(k)||'{}').timerSnapshot?.active_block_index===3",arg=DRAFT,timeout=15000)
+        assert page.evaluate("(k)=>localStorage.getItem(k)",WRITES) is None
+        assert not errors,errors
+        print(f"FRONTDIENST ZÜNDUNG {w}x{h}: actual skip, stored status, no start or save, reload passed",flush=True)
+        ctx.close()
     browser.close()
-print("FRONTDIENST AUDIT: 3 free-entry viewports and Quality & Row manual result passed",flush=True)
+print("FRONTDIENST AUDIT: registration, Quality & Row and ZÜNDUNG journeys passed",flush=True)

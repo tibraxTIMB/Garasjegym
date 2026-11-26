@@ -60,3 +60,6 @@ Shared optional warmup guidance based on reviewed movement profiles; explicit pr
 
 ## ZÜNDUNG pre-release checkpoint
 Six recipe families, twelve selectable individual/partner drafts, fixed introduction core, three grouped prep subparts in existing serial timer (a38168cd). Prior Mobilitas build passed all four workflows. ZÜNDUNG initial build passed isolated validation, Frontdienst and production-target build; responsive pending at observation. Untouched leading Del 0 can be skipped before main work; persisted skipped participant status, no automatic start. WOD cards use Del 0 numbering. Three name-only preparation cues require explicit confirmation because catalogue links not verified. Remaining: actual browser journey for presets and Del 0, role automation beyond noncompetitive Samspel, grouped editing/limit and production acceptance. No DB change or deploy.
+
+## ZÜNDUNG release gate – actual browser journeys
+edc5aade passed isolated validation, Frontdienst and production-target build; responsive pending. Skip action moved inside the existing full-screen and ordinary timer controls. Added actual builder insertion using catalogue fixtures and actual timer skip/reload at three sizes, with no real writes. CI pending. Publication not authorised by build alone; no database changes.

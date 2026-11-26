@@ -101,7 +101,7 @@ function TimerPanel({id,title,layout,onMove,onResize,onLock,locked,children,devi
 }
 // Keep the unlocked audio context through automatic composite WOD transitions.
 let sharedTrainingAudioContext=null
-function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], previousLogs = [], prescriptionLevel = 'rx', ghostWod = null, timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, finishLabel = 'Avslutt', onBackground = () => {}, onCancelBeforeStart = null, onEditWorkout = null, visible = true, originLabel = 'EIGA ØKT', wodName = '', autoStartToken = 0, autoStartOnMount = false, resumeState = null, offline=false, draftProtected=true }) {
+function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise = '', exerciseList = [], previousLogs = [], prescriptionLevel = 'rx', ghostWod = null, timerSettings = null, onSnapshot = () => {}, stop = false, onFinish = () => {}, finishLabel = 'Avslutt', onBackground = () => {}, onCancelBeforeStart = null, onSkipWarmup = null, onEditWorkout = null, visible = true, originLabel = 'EIGA ØKT', wodName = '', autoStartToken = 0, autoStartOnMount = false, resumeState = null, offline=false, draftProtected=true }) {
   const timerConfigKey = JSON.stringify({format,minutes,seconds,timerSettings})
   const lastTimerConfigKey = useRef(timerConfigKey)
   const [elapsed, setElapsed] = useState(() => resumedElapsedSeconds(resumeState))
@@ -622,6 +622,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       steps:Array.isArray(item.complex_steps)?item.complex_steps:[],
     }
   })
+  const canSkipWarmup=Boolean(onSkipWarmup)&&!hasStarted&&!running&&elapsed===0&&countdownDeadline===null&&!laps.length
   const canExitBeforeStart=Boolean(onCancelBeforeStart)&&!hasStarted&&!running&&elapsed===0&&!laps.length
   const cancelBeforeStart=()=>{
     if(!canExitBeforeStart||(countdownDeadline!==null&&countdownDeadline<=Date.now()))return
@@ -712,6 +713,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         <button type="button" className="gg-live-timer__pause" onClick={toggleRunning} disabled={stageIsComplete}>{countdownDeadline!==null?<><X size={21}/> Avbryt</>:running?<><Pause size={21}/> Pause</>:phase==='PAUSE'?<><Play size={21}/> Hald fram</>:<><Play size={21}/> Start no</>}</button>
         {!hasStarted&&countdownDeadline===null&&<button type="button" className="gg-live-timer__round-button" onClick={()=>beginWorkout(true)}><Play size={21}/> Start · 10 sek</button>}
         {hasStarted&&(finishLabel==='Avslutt'?<button type="button" className="gg-live-timer__finish" onClick={requestFinish}><CheckCircle2 size={20}/> Avslutt</button>:<button type="button" className="gg-live-timer__finish" onClick={requestFinish}><CheckCircle2 size={20}/> Neste del</button>)}
+        {canSkipWarmup&&<button type="button" className="gg-live-timer__finish" onClick={onSkipWarmup}>Hopp over Del 0</button>}
         {canExitBeforeStart&&<button type="button" className="gg-live-timer__finish" onClick={cancelBeforeStart} aria-label="Tilbake utan å starta WOD"><X size={18}/> Tilbake</button>}
         {undoButton}
         </div>
@@ -816,6 +818,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           <button type="button" className="secondary-button" onClick={toggleFocus}>{focused ? 'Avslutt stor klokke' : 'Stor klokke'}</button>
         </div>
         <div className="timer-finish-row">
+          {canSkipWarmup&&<button type="button" className="secondary-button" onClick={onSkipWarmup}>Hopp over Del 0</button>}
           {canExitBeforeStart?<button type="button" className="timer-finish-button" onClick={cancelBeforeStart}><X size={18}/><span>Tilbake utan å starta</span></button>:<button type="button" className="timer-finish-button" onClick={()=>{if(!running||stageIsComplete||window.confirm(finishLabel==='Avslutt'?'Avslutta økta og gå til resultat?':'Fullføra denne delen og gå vidare?'))finishCurrent()}} disabled={!hasStarted}>
             <CheckCircle2 size={18}/><span>{finishLabel==='Avslutt'?'Avslutt økta':finishLabel}</span>
           </button>}
@@ -933,7 +936,7 @@ function CompositeTimer({schema,exerciseList=[],previousLogs=[],prescriptionLeve
  const nextTitle=blocks[active+1]?.title||'Neste del'
  return <section className="gg-composite-training" aria-label="Samansett WOD">
   <div className={'gg-composite-progress gg-wod-tone-'+cardTone({...current,warm:/oppvarming|warm.?up/i.test(current.title||'')})}><strong>{wodName}</strong><span>Del {compositePartLabel(blocks,active)} · {current.title} · {current.format}</span><small>{active<blocks.length-1?'Neste: '+nextTitle+' · '+blocks[active+1].format:'Siste del · avslutt og før resultata'}</small><div className="gg-architect-runtime-parts" aria-label="Delar i økta">{blocks.map((b,i)=><span key={b.id||i} className={'gg-wod-tone-'+cardTone({...b,warm:/oppvarming|warm.?up/i.test(b.title||'')})+(i===active?' current':'')} aria-current={i===active?'step':undefined} title={b.title||b.format}>{compositePartLabel(blocks,i)}</span>)}</div></div>
-  {skip&&<button type="button" className="secondary-button" onClick={()=>{if(!window.confirm('Hoppa over heile Del 0 og gå til hovudøkta?'))return;onSkipWarmup?.(blocks.slice(0,skip.next));setResults(skip.results);setAutoStartIndex(null);setActive(skip.next)}}>Hopp over Del 0</button>}
+
   {interlude?<section className="gg-composite-break" aria-label="Pause mellom øktdelar" role="timer">
     <span className="wod-classic-kicker">PAUSE MELLOM DELANE</span>
     <strong>{String(Math.floor(remaining/60)).padStart(2,'0')}:{String(remaining%60).padStart(2,'0')}</strong>
@@ -941,6 +944,7 @@ function CompositeTimer({schema,exerciseList=[],previousLogs=[],prescriptionLeve
     <button type="button" className="primary-button" onClick={()=>{setBreakHistory(old=>[...old,{from:active,planned_seconds:interlude.seconds,elapsed_seconds:Math.round((Date.now()-interlude.startedAt)/1000),skipped:true}]);advance(false)}}>Hopp over pausa · klargjer neste del</button>
    </section>
    :<Timer key={current.id||active} visible={visible} offline={offline} draftProtected={draftProtected} onBackground={onBackground}
+    onSkipWarmup={skip?()=>{if(!window.confirm('Hoppa over heile Del 0 og gå til hovudøkta?'))return;stopPackAudio(sharedTrainingAudioContext);stopDirectAudio();if(document.fullscreenElement)document.exitFullscreen?.().catch(()=>{});onSkipWarmup?.(blocks.slice(0,skip.next));setResults(skip.results);setAutoStartIndex(null);setActive(skip.next)}:null}
     onCancelBeforeStart={active===0&&canLeavePreparedWod({block_results:results,composite_transition:interlude})?onCancelBeforeStart:null}
     resumeState={resumeState?.block_results?.[active]||null}
     autoStartOnMount={autoStartIndex===active}

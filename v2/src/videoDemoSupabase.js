@@ -1,6 +1,9 @@
 // Video recording only. Resolved through vite.video-demo.config.js and never
 // imported by the production app. No requests to Supabase are made here.
 import {qualityRowConfig} from './lib/samspel.js'
+import {buildZuendung} from './lib/zuendung.js'
+import {compositeBlockForTimer,compositeTotalSeconds} from './lib/compositeWod.js'
+import catalogueManifest from '../supabase/catalog/exercise_catalogue_manifest_sturmKopf_feuer_1_1.json'
 const now = new Date()
 const future = new Date(now.getTime() + 86400000 * 3).toISOString()
 const scenario = () => new URLSearchParams(location.search).get('scenario') || ''
@@ -31,6 +34,15 @@ const demoWods = [{
 }]
 
 const auditQualityWod={id:'audit-quality',name:'Audit Quality & Row',format:'Eigen økt',duration_minutes:10,movements:'Bird dog',notes:'Isolert test',category:'flow_prep',is_published:true,is_archived:false,created_by:'demo-admin',created_at:now.toISOString(),timer_settings:{workout_schema:{format:'Eigen økt',duration_seconds:600,library_category:'flow_prep',flowReporting:'done',flowPurpose:'prep',samspel:qualityRowConfig(),items:[{exercise_name:'Bird dog',equipment:'Kroppsvekt',reps:6,levels:{rx:{reps:6,loadMode:'none'}}}],wod_engine:{participation:'partner',collaboration:'parallel',participant_count:2}}}}
+const auditCatalogue=catalogueManifest.exercises.map((e,i)=>({...e,id:'audit-ex-'+i,is_active:true}))
+function auditWarmupWod(){
+ const draft=buildZuendung('eisenkette','partner',auditCatalogue,()=> 'audit-prep')
+ const main={id:'audit-main',title:'Hovudøkt',format:'AMRAP',minutes:2,flowPurpose:'perform',transitionMode:'manual'}
+ const items=[...draft.items.map(({exercise,blockId,phase,move})=>({exercise_id:exercise.id,exercise_name:exercise.name,equipment:exercise.equipment,block_id:blockId,warmup_phase:phase,reps:Number(move.reps)||null,side_mode:move.side,minute_slot:move.minuteSlot||null,coach_note:move.note,levels:{rx:{reps:move.reps,durationSeconds:move.seconds||'',loadMode:'none'}}})),{exercise_name:'Air Squat',block_id:main.id,reps:5,levels:{rx:{reps:5,loadMode:'none'}}}]
+ const blocks=[...draft.blocks,main].map((b,i)=>compositeBlockForTimer({...b,items:items.filter(x=>x.block_id===b.id)},i))
+ const duration=compositeTotalSeconds(blocks)
+ return {id:'audit-zuendung',name:'Audit ZÜNDUNG',format:'Samansett økt',category:'main',duration_minutes:Math.ceil(duration/60),movements:'Oppvarming og hovudøkt',is_published:true,is_archived:false,created_by:'demo-admin',timer_settings:{workout_schema:{format:'Samansett økt',duration_seconds:duration,library_category:'standard',items,composite_blocks:blocks,wod_engine:{version:2,participation:'individual',participant_count:1,collaboration:'solo',blocks}}}}
+}
 function rowsFor(table) {
   switch (table) {
     case 'garage_maintenance_schedule': return [{id:true,started_at:new Date(now.getTime()-1000*60*60*24*8).toISOString()}]
@@ -38,7 +50,7 @@ function rowsFor(table) {
     case 'pt_coaches': return [{id:'coach-demo',user_id:'demo-coach',public_name:'Garasje PT (døme)',bio:'Hjelp med teknikk, styrke og treningsglede.',specialties:['Styrke','Kom i gang'],is_active:true}]
     case 'pt_services': return [{id:'service-demo',title:'Uforpliktande prat',description:'Finn ut om PT passar for deg.',duration_label:'Etter avtale',price_label:'0 kr i denne demoen',is_active:true}]
     case 'pt_service_requests': return requests
-    case 'wods': return scenario()==='audit-frontdienst'?[...demoWods,auditQualityWod]:scenario()==='audit-folders'?[...demoWods,{...demoWods[0],id:'folder-wod-1',name:'Z – Første økt'},{...demoWods[0],id:'folder-wod-2',name:'A – Andre økt'}]:demoWods
+    case 'wods': return scenario()==='audit-frontdienst'?[...demoWods,auditQualityWod,auditWarmupWod()]:scenario()==='audit-folders'?[...demoWods,{...demoWods[0],id:'folder-wod-1',name:'Z – Første økt'},{...demoWods[0],id:'folder-wod-2',name:'A – Andre økt'}]:demoWods
     case 'wod_favorites': case 'wod_daily_schedules': case 'exercise_favorites': return []
     case 'classes': return [{id:'demo-class',title:'Garasjesirkel (døme)',type:'Gruppetime',starts_at:future,duration_minutes:45,capacity:6,published:true,cancelled_at:null,description:'Ei fellesøkt med roing, styrke og mobilitet.',workout_text:'45 min trening',wod_ids:[]}]
     case 'class_bookings': return bookings
@@ -47,7 +59,8 @@ function rowsFor(table) {
     case 'pt_wod_assignments': return memberCalendarAudit()?[calendarAssignment()]:scheduleAudit()?scheduleAssignments:scenario()==='audit-pt-plan'?[{id:'audit-assignment',member_id:'demo-member',wod_id:'demo-wod',status:'completed',completed_at:'2026-11-23T19:00:00Z',workout_log_id:'audit-log',wods:{id:'demo-wod',name:'Mancave Paincave med eit ekstra langt namn'}}]:[]
     case 'pt_program_sessions': return memberCalendarAudit()?calendarPlanRows():scheduleAudit()?scheduleRows:scenario()==='audit-folders'?[{program_id:'folder-plan',wod_id:'folder-wod-2',sequence_no:2,archived_at:null},{program_id:'folder-plan',wod_id:'folder-wod-1',sequence_no:1,archived_at:null}]:isAudit()?[1,2,3,4,5,6].map(n=>({id:'audit-session-'+n,program_id:'audit-plan',sequence_no:n,week_no:n,day_no:1,title:'Økt '+n+' – Alternating Dumbbell Push Jerk og grunnrørsler',status:'planned',session_kind:'training',estimated_minutes:35,focus_area:'Teknikk og styrke',coach_note:'Lett belastning.',wod_id:'demo-wod',archived_at:null,flow_requires_approval:true,flow_approved:false,flow_override:false})):[]
     case 'workout_logs': return scenario()==='audit-folders'?[{member_id:'demo-member',source_wod_id:'folder-wod-1',workout_date:'2026-11-24',created_at:'2026-11-24T12:00:00Z'},{member_id:'demo-member',source_wod_id:'demo-wod',workout_date:'2026-11-25',created_at:'2026-11-25T12:00:00Z'},{member_id:'other',source_wod_id:'folder-wod-2',workout_date:'2026-11-25',created_at:'2026-11-25T13:00:00Z'}]:[]
-    case 'personal_records': case 'exercises': case 'class_live_sessions': return []
+    case 'exercises': return scenario()==='audit-admin'||scenario()==='audit-frontdienst'?auditCatalogue:[]
+    case 'personal_records': case 'class_live_sessions': return []
     default: return []
   }
 }
