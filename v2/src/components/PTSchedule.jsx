@@ -27,7 +27,7 @@ export function PTWeekCalendar({program,plan=[],assignments=[],appointments=[],c
   <small>Datoar er i garasjen si tidssone (Oslo). Frist er ikkje ein avtale.</small>
  </section>
 }
-export function PTScheduleDialog({clientId,clientName,program,existing=[],wods=[],appointments=[],initialDate='',initialMode,onClose,onSaved}){
+export function PTScheduleDialog({clientId,clientName,program,existing=[],wods=[],usage=null,appointments=[],initialDate='',initialMode,onClose,onSaved}){
  const [mode,setMode]=useState(initialMode||(program&&initialDate?'plan':'free'))
  const [date,setDate]=useState(initialDate||osloDay()),[time,setTime]=useState(''),[week,setWeek]=useState(()=>String(dateSlot(program,initialDate||osloDay())?.week||1)),[day,setDay]=useState(()=>String(dateSlot(program,initialDate||osloDay())?.day||1))
  const [appointmentId,setAppointmentId]=useState(''),[ids,setIds]=useState([]),[note,setNote]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[choose,setChoose]=useState(true)
@@ -73,7 +73,7 @@ export function PTScheduleDialog({clientId,clientName,program,existing=[],wods=[
  }
  return <div className="pt2-modal-backdrop gg-schedule-backdrop"><section className="pt2-modal gg-schedule-dialog" role="dialog" aria-modal="true" aria-label={'Tildel WOD til '+clientName}>
   <header className="gg-schedule-head"><div><h3>Tildel WOD</h3><small>Mottakar: <b>{clientName}</b></small></div><button type="button" className="icon-button" aria-label="Lukk tildeling" disabled={busy} onClick={onClose}><X size={20}/></button></header>
-  {choose?<WodPicker compact wods={wods} selectedIds={ids} multiple onChange={v=>{setIds(v);if(v.length)setChoose(false)}} onCancel={onClose} title="Vel ein eller fleire WOD-ar" hint="Gjenbruk frå biblioteket – ingen kopiar."/>:<>
+  {choose?<WodPicker compact wods={wods} usage={usage} selectedIds={ids} multiple onChange={v=>{setIds(v);if(v.length)setChoose(false)}} onCancel={onClose} title="Vel ein eller fleire WOD-ar" hint="Gjenbruk frå biblioteket – ingen kopiar."/>:<>
    <div className="gg-schedule-selection"><strong>{chosen.map(w=>w.name).join(' · ')}</strong><button type="button" className="text-button" disabled={busy} onClick={()=>setChoose(true)}>Endra val</button></div>
    <label>Når og korleis?<select aria-label="Tildelingstype" value={mode} disabled={busy} onChange={e=>setMode(e.target.value)}><option value="free">Valfri dag – utan frist</option><option value="deadline">Gjennomfør innan dato</option><option value="appointment">Knytt til eksisterande PT-avtale</option>{program&&<option value="plan">Plasser i treningsplan</option>}</select></label>
    {mode==='deadline'&&<label>Frist<input type="date" value={date} onChange={e=>setDate(e.target.value)}/></label>}
