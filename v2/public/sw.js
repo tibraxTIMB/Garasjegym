@@ -49,6 +49,9 @@ self.addEventListener('fetch', event => {
       request.destination === 'video' || request.destination === 'audio' ||
       /\.(mp4|m4v|webm|mp3|m4a|wav|ogg)$/i.test(url.pathname)) return
 
+  // Test laboratory must never replace the production app-shell cache.
+  if (url.pathname===APP_SCOPE+'tablet-lab.html'||url.pathname.startsWith(APP_SCOPE+'tablet-lab-assets/'))return
+
   if (request.mode === 'navigate') {
     event.respondWith((async () => {
       try {

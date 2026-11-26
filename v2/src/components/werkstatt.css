@@ -25,3 +25,13 @@
 .gg-plan-exchange{margin:8px 0;padding:10px;border:1px solid var(--line);border-radius:8px}
 .gg-plan-exchange summary{cursor:pointer;font-weight:600}
 @media(min-width:1000px){.gg-office-shell .main{padding-inline:24px}.gg-office-shell .content-card{max-width:none;width:100%}.gg-office-shell .training-content{max-width:none}.gg-office-shell .gg-werkstatt-grid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}}
+
+.gg-tablet-dock{position:fixed;right:16px;bottom:16px;z-index:1500;background:#202629;color:#eef0f1;border:1px solid #606b70;border-radius:12px;padding:8px;box-shadow:0 12px 45px #0009;max-width:calc(100vw - 12px)}
+.gg-tablet-dock header,.gg-tablet-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gg-tablet-dock header button,.gg-tablet-controls button{display:inline-flex;align-items:center;gap:5px;padding:6px;border:1px solid #536064;background:#262e31;color:inherit;border-radius:5px}
+.gg-tablet-grip{display:flex;align-items:center;gap:6px;cursor:grab;touch-action:none}
+.gg-lab-status{font-size:10px;color:#f4c27e}.gg-tablet-controls{margin:7px 0;font-size:12px}.gg-tablet-controls label{display:flex;align-items:center;gap:4px}.gg-tablet-controls input{width:75px}
+.gg-tablet-viewport{position:relative;overflow:hidden;background:#141819;border:1px solid #566166;border-radius:8px}.gg-tablet-viewport iframe{border:0;transform-origin:top left;display:block;max-width:none;max-height:none}
+.gg-lab-foot{display:block;font-size:11px;max-width:400px;padding-top:6px;color:#bac3c5}.gg-lab-banner{position:sticky;top:0;z-index:2000;background:#5e3b17;color:#fff3d8;text-align:center;font-size:12px;padding:6px}
+.gg-production-ribbon{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px;background:#21282a;border:1px solid var(--line);border-radius:8px;margin-bottom:14px}.gg-production-ribbon>div{display:grid;gap:3px;margin-right:8px}.gg-production-ribbon small{font-size:11px;color:var(--muted)}.gg-production-ribbon button{border:1px solid var(--line);border-radius:6px;background:#1a2022;color:inherit;padding:8px 10px}.gg-production-ribbon button[aria-current=step]{border-color:var(--orange);color:var(--orange)}
+@media(min-width:1200px){.gg-office-shell .gg-desktop-wod-production{max-width:none}.gg-office-shell .gg-production-ribbon{position:sticky;top:0;z-index:12}.gg-office-shell .gg-desktop-wod-production .wod-selected-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:8px}}

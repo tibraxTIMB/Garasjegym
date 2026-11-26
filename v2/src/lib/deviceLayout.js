@@ -11,15 +11,16 @@ export function readDeviceProfile() {
   const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches || false
   const touch = coarsePointer || (navigator.maxTouchPoints || 0) > 0
   const screenOrientation = window.screen?.orientation?.type
-  const orientation = screenOrientation
+  const lab=document.documentElement.dataset.ggTabletLab==='true'
+  const orientation = lab?(width>=height?'landscape':'portrait'):screenOrientation
     ? (screenOrientation.startsWith('landscape') ? 'landscape' : 'portrait')
     : (window.matchMedia?.('(orientation: landscape)').matches ? 'landscape' : 'portrait')
-  const device = shortSide < 600 || width < 600
+  const device = lab?'tablet':shortSide < 600 || width < 600
     ? 'mobile'
     : (touch || width < 1100)
       ? 'tablet'
       : 'desktop'
-  return { width, height, orientation, device, touch, layout: `${device}-${orientation}` }
+  return { width, height, orientation, device, touch:lab||touch, layout: `${device}-${orientation}` }
 }
 
 export function useDeviceProfile() {

@@ -227,7 +227,7 @@ function WodReviewOrder({ selected, onMove, onEdit }) {
  </section>
 }
 
-export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=null,copyMode=false,initialImport=null,onImportConsumed,onSaved,onCancel,planContext=null,onSavePlanWod=null}){
+export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=null,copyMode=false,initialImport=null,onImportConsumed,onSaved,onCancel,planContext=null,onSavePlanWod=null,officeMode=false,onPreview}){
  const wizardTopRef=useRef(null)
  const previousWizardStep=useRef(0)
  const [overviewLevel,setOverviewLevel]=useState('rx')
@@ -536,7 +536,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    onAssigned?.()
   }catch(e){if(e.code==='23505')setNotice('Denne WOD-en vart nettopp aktivt tildelt kunden. Ingen duplikat vart oppretta.');else setError(e.message||'Kunne ikkje tildela WOD.')}finally{setBusy(false)}
  }
- async function save(event){
+ async function save(event,{previewOnly=false}={}){
   event.preventDefault();setError('');setNotice('')
    if(samspelProblem){setError(samspelProblem);setShowArchitectIssues(true);setSamspelHelp(true);return}
   if(!selected.length){setError('Legg minst ei øving til WOD-en.');return}
@@ -607,6 +607,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    const stationDuration=schema.duration_seconds
    const timer_settings={workout_schema:schema,work_seconds:isStationCircuit?Number(stationWork):isTimed?emomEverySeconds:Number(workSeconds)||null,rest_seconds:isStationCircuit?Number(stationTransition):isTimed?0:Number(restSeconds)||null,rounds:isStationCircuit?Number(stationRounds):isTimed?Math.floor(emomTotalSeconds/emomEverySeconds):Number(rounds)||null,duration_seconds:stationDuration}
    const wodPayload={name:name.trim(),category:libraryCategory==='warmup'?'warmup':'main',format:savedFormat,duration_minutes:Math.ceil(stationDuration/60)||null,movements,notes:[stimulus,notes,rxNotes?'RX: '+rxNotes:'',scaledNotes?'Scaled: '+scaledNotes:'',customInstructions].filter(Boolean).join('\n\n'),is_published:canPublishWod&&publishToMembers,timer_settings}
+   if(previewOnly){if(!onPreview)throw Error('Nettbrettlaboratoriet er ikkje tilgjengeleg.');onPreview(wodPayload);setNotice('Validert kladd sendt til nettbrettlaboratoriet. Ikkje lagra eller publisert.');return}
    if(!editingWodId)wodPayload.created_by=user.id
    let savedWodId=editingWodId||null
    if(planContext&&onSavePlanWod){
@@ -668,7 +669,8 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    if((next===4)&&((format==='Couplet'&&selected.length!==2)||(format==='Triplet'&&selected.length!==3))){setError(`${format} krev nøyaktig ${format==='Couplet'?2:3} øvingar.`);return}
    setWizardStep(next)
   }
- return <div ref={wizardTopRef} className={'wod-builder gg-architect wod-builder-step-'+wizardStep+(libraryOpen?' wod-library-open':'')}>
+ return <div ref={wizardTopRef} className={'wod-builder gg-architect wod-builder-step-'+wizardStep+(libraryOpen?' wod-library-open':'')+(officeMode?' gg-desktop-wod-production':'')}>
+  {officeMode&&<nav className="gg-production-ribbon" aria-label="WOD prosjektsteg"><div><strong>WOD PRODUKSJON</strong><small>{editingWodId?'Eksisterande prosjekt':'Ny kladd'} · {selected.length} øvingar</small></div>{['Format','Rammer','Øvingsstruktur','Dosering','Godkjenning'].map((label,i)=><button type="button" key={label} aria-current={wizardStep===i?'step':undefined} onClick={()=>{setLibraryOpen(false);setWizardStep(i)}}>{i+1}. {label}</button>)}{onPreview&&<button type="button" className="primary-button" disabled={busy||loading||!selected.length} onClick={()=>save({preventDefault(){}},{previewOnly:true})}>Test kladd på nettbrett</button>}</nav>}
   {(!assignedClientId||builderMode==='build')&&<div className="training-heading wod-builder-heading"><div><div className="section-kicker">GARASJEGYM · PROGRAMMERINGSVERKSTAD</div><h3>{editingWodId?'Rediger WOD':'WOD Studio'}</h3><p>Bygg, tilpass og publiser treningsøkter i GarasjeGym.</p></div><div className="wod-builder-heading-actions"><span className="count-pill"><WandSparkles size={14}/> PRO</span>{onCancel&&<button type="button" className="secondary-button" onClick={()=>{if((editingWodId||selected.length>0)&&!window.confirm('Avbryta? Ulagra endringar i WOD-byggaren blir forkasta.'))return;onCancel()}}>Avbryt · WOD-bibliotek</button>}</div></div>}
   {(!assignedClientId||builderMode==='build')&&(wizardStep!==0||selected.length>0)&&<section className="gg-architect-overview" aria-label="Heilskap i WOD-en">
    {planContext&&<small className="gg-architect-scope">PT · {planContext.clientName} · {planContext.sessionTitle} · Berre denne planøkta</small>}
