@@ -1036,7 +1036,6 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   useEffect(()=>{const correction=resultCorrectionRef.current;if(!finishOpen||!correction)return;const field=typeof correction==='string'?correction:correction.field;const scoped=typeof correction==='object'&&correction.itemIndex!=null?resultBodyRef.current?.querySelector('[data-flow-item="'+correction.itemIndex+'"]'):null;const row=scoped&&correction.setIndex!=null&&scoped.dataset.flowSet!==String(correction.setIndex)?scoped.querySelector('[data-flow-set="'+correction.setIndex+'"]'):scoped;const target=(row||resultBodyRef.current)?.querySelector('[data-result-field="'+field+'"]')||resultBodyRef.current?.querySelector('[data-result-field="'+field+'"]');if(target){const details=target.closest('details');if(details)details.open=true;target.focus();target.scrollIntoView({block:'nearest'})}resultCorrectionRef.current=null},[finishOpen,activeExerciseIndex,resultSetIndex,resultSummary,flowDetailed,error])
   const resultItem=items[activeExerciseIndex]
   const flowSchema=source?.timer_settings?.workout_schema||{}
-  const warmupChoice=needsWarmupChoice({source,manualEntry,classSessionId,started:timerSnapshot.hasStarted||timerSnapshot.elapsed>0,accepted:blockScores.__warmup_choice?.accepted})
   const resultGroup=resultItem?flowItemGroup(resultItem,flowSchema,format):null
   const resultBlock=resultItem?flowBlockForItem(resultItem,flowSchema,format):null
   const resultGroupIndices=resultGroup?items.map((item,index)=>flowItemGroup(item,flowSchema,format).id===resultGroup.id?index:-1).filter(index=>index>=0):[]
@@ -1098,6 +1097,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     setItems(old=>old.map(item=>item.key===resultItem.key?{...item,sets:confirmWeightedComplexSets(item.sets,plannedComplexCycles(item,wodLevel))}:item))
   }
   const [timerSnapshot, setTimerSnapshot] = useState(() => savedDraft?.timerSnapshot || { elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
+  const warmupChoice=needsWarmupChoice({source,manualEntry,classSessionId,started:timerSnapshot.hasStarted||timerSnapshot.elapsed>0,accepted:blockScores.__warmup_choice?.accepted})
   const [restoredTimerSnapshot,setRestoredTimerSnapshot] = useState(() => savedDraft?.timerSnapshot ? {...savedDraft.timerSnapshot,restored:true} : null)
   const [timerLaunchId, setTimerLaunchId] = useState(0)
   const loadSequence = useRef(0)
