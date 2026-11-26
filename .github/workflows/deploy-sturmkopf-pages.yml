@@ -1,4 +1,4 @@
-name: Deploy STURMKOPF production
+name: GarasjeGym · Production release
 
 on:
   push:
@@ -9,8 +9,8 @@ on:
       - ".github/workflows/deploy-sturmkopf-pages.yml"
   workflow_dispatch:
     inputs:
-      publish_preview:
-        description: "Publiser til den delte GitHub Pages-adressa (erstattar innhaldet som ligg der no)"
+      publish_production:
+        description: "Publiser til eksisterande produksjonsadresse (ingen flytting av data eller app)"
         required: true
         type: boolean
         default: false
@@ -25,6 +25,7 @@ concurrency:
 
 jobs:
   build:
+    if: ${{ github.ref == 'refs/heads/garasjegym-2.0-sturm­kopf' }}
     # Playwright's pinned Chromium build supports 24.04, not the rolling 26.04 runner.
     runs-on: ubuntu-24.04
     steps:
@@ -112,6 +113,8 @@ jobs:
         run: npm run build
       - name: Check built release artifact environment and secrets
         working-directory: v2
+        env:
+          EXPECTED_SUPABASE_PROJECT_REF: izwzwvlexqxqewzijhhd
         run: npm run check:release-artifact
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -119,12 +122,8 @@ jobs:
           path: v2/dist
 
   deploy:
-    # A production deploy requires an explicitly approved manual workflow_dispatch.
-    # explicit owner approval through manual workflow_dispatch.
-    # explicit owner approval via manual workflow_dispatch with publish_preview=true.
-    # Owner explicitly approved a single Pages update. This one-time commit is the only push allowed to deploy.
-    # All later pushes return to build/test only. TEST Supabase binding is unchanged.
-    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.publish_preview) || (github.event_name == 'push' && github.event.head_commit.message == 'GG-ONE-SHOT-PUBLISH GAZELLE TO EXISTING TEST-PAGES') }}
+    # Only deliberate manual approval on the existing production branch may publish.
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_production == true && github.ref == 'refs/heads/garasjegym-2.0-sturm­kopf' }}
     permissions:
       pages: write
       id-token: write
