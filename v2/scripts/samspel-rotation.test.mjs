@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {samspelConfig,samspelIssue,samspelRoles,samspelResultIssue,samspelScoring,samspelWithCount,samspelRoundInstruction,samspelWithSwitch,samspelRotation,samspelIsTimed,samspelIsManual,appendSamspelSwap,normalizeSamspelSwaps,samspelParticipantRows,samspelParticipantResults,samspelErgSlots,samspelCapacityIssue,samspelStationLabels,samspelCueStep,samspelSwapIndex} from '../src/lib/samspel.js'
+import {samspelConfig,samspelIssue,samspelRoles,samspelResultIssue,samspelScoring,samspelWithCount,samspelRoundInstruction,samspelWithSwitch,samspelRotation,samspelIsTimed,samspelIsManual,appendSamspelSwap,normalizeSamspelSwaps,samspelParticipantRows,samspelParticipantResults,samspelErgSlots,samspelCapacityIssue,samspelStationLabels,samspelCueStep,samspelSwapIndex,samspelMixed,samspelWithStations,samspelStationRows,samspelStationResults} from '../src/lib/samspel.js'
 const legacy={version:1,mode:'parallel_round_swap',task:'row',metric:'distance'}
 const context={format:'AMRAP',participation:'partner',collaboration:'parallel',items:[{name:'Push-up'}]}
 assert.equal(samspelConfig({samspel:legacy}),legacy)
@@ -119,3 +119,28 @@ assert.equal(samspelSwapIndex(manual,{manualSwaps:[10,20],rounds:9}),2)
 assert.equal(samspelSwapIndex(legacy,{rounds:9,elapsed:900}),9)
 assert.equal(samspelSwapIndex(null),null)
 console.log('Samspel cue and synchronization checks passed')
+
+const multi={...samspelWithStations(samspelWithCount(legacy,4),true,2),station_tasks:[{task:'row',metric:'distance'},{task:'bike',metric:'calories'}],station_capacity:{row:1,bike:1}}
+const multiContext={...context,participation:'team',participantCount:4}
+assert.equal(samspelMixed(multi),true)
+assert.equal(samspelIssue(multi,multiContext),null)
+assert.deepEqual(samspelRoles(multi,0),['Romaskin · S1','Sykkel · S2','AMRAP','AMRAP'])
+assert.deepEqual(samspelRoles(multi,1),['AMRAP','Romaskin · S1','Sykkel · S2','AMRAP'])
+assert.deepEqual(samspelRoles(multi,3),['Sykkel · S2','AMRAP','AMRAP','Romaskin · S1'])
+assert.deepEqual(samspelStationLabels(multi,samspelRoles(multi,3)),samspelRoles(multi,3))
+assert.deepEqual(samspelScoring(multi,{}),{type:'rounds_reps',fields:['rounds_reps']})
+assert.ok(samspelIssue({...multi,station_capacity:{row:1,bike:0}},multiContext))
+assert.ok(samspelIssue({...multi,station_tasks:[{task:'row',metric:'distance'},{task:'row',metric:'calories'}]},multiContext))
+assert.equal(samspelIssue({...multi,station_tasks:[{task:'row',metric:'distance'},{task:'row',metric:'calories'}],station_capacity:{row:2}},multiContext),null)
+assert.ok(samspelIssue({...multi,station_tasks:[{task:'bad',metric:'distance'},{task:'bike',metric:'calories'}]},multiContext))
+assert.equal(samspelStationResults(multi,{}).slot,1)
+assert.equal(samspelStationResults(multi,{'station-1':{erg:'0'}}).slot,2)
+assert.ok(samspelStationResults(multi,{'station-1':{erg:'1200'},'station-2':{erg:'-1'}}).issue)
+const separate=samspelStationResults(multi,{'station-1':{erg:'1200'},'station-2':{erg:'32'}})
+assert.equal(separate.issue,null)
+assert.deepEqual(separate.rows.map(x=>[x.task,x.value,x.unit]),[['row',1200,'m'],['bike',32,'cal']])
+assert.equal(samspelMixed(samspelWithStations(multi,false)),false)
+assert.deepEqual(samspelStationResults(legacy,{}),{rows:[],issue:null})
+assert.deepEqual(samspelParticipantResults({...multi,individual_scores:true},{1:{rounds:'2',erg:'400'}}).rows,[{slot:1,rounds:2,extra_reps:null,erg_value:null}])
+for(let p=0;p<4;p++){const roles=Array.from({length:4},(_,i)=>samspelRoles(multi,i)[p]);assert.equal(roles.filter(x=>x==='Romaskin · S1').length,1);assert.equal(roles.filter(x=>x==='Sykkel · S2').length,1);assert.equal(roles.filter(x=>x==='AMRAP').length,2)}
+console.log('Separate station rotation and scores passed')
