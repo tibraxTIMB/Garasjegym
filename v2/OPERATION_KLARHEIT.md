@@ -5,7 +5,7 @@
 - Supabase prosjektref: `izwzwvlexqxqewzijhhd`. Visingsnamnet i Supabase er førebels `garasjegym-2-test`. Ønskt visingsnamn: `GarasjeGym-PROD`; endre berre visingsnamnet i prosjektinnstillingane, aldri opprett nytt prosjekt.
 - GitHub produksjonsgrein: `garasjegym-2.0-sturm­kopf` (inneheld historisk mjuk bindestrek U+00AD; ikkje endre greinnamnet i denne operasjonen).
 - GitHub Pages-miljø: `github-pages`.
-- Publisering: `Deploy`-jobben krev manuell `publish_production=true` på nøyaktig produksjonsgrein. Vanleg push byggjer og testar, men publiserer ikkje. Ingen historiske commit-frasar kan utløyse deploy.
+- Publisering: `Deploy`-jobben krev anten manuell `publish_production=true` eller ein uttrykkeleg eigargodkjend releaseordre på nøyaktig produksjonsgrein. Vanleg push byggjer og testar, men publiserer ikkje. Ingen historiske commit-frasar kan utløyse deploy. Releaseordren er ein separat commit som berre endrar `.github/production-release.json`, med `version: 1`, `intent: PUBLISH_PRODUCTION`, `target: <eksakt føregåande produksjons-SHA>`. Ingen kodeendringar kan kombinerast med ordren. Full test, nettlesarrevisjon og artifaktkontroll må passera før deploy; eksisterande Pages-miljøvern gjeld.
 - Standardgreina `main` er eldre kode, ikkje produksjonskjelda for SturmKopf. For at manuell workflow skal vera tilgjengeleg frå GitHub, trengst ei minimal inngang på standardgreina med same filnamn og input. Inngangen skal nekte å publisera frå main. Vel alltid produksjonsgreina i Run workflow.
 
 ## Utvikling og test
@@ -14,7 +14,7 @@ Utvikling skjer på kandidatgreiner/PR-ar. Bruk lokale syntetiske data og isoler
 ## Releasekontroll
 1. Bestått automatisert test og relevant nettlesarrevisjon for kandidaten.
 2. Integrer i produksjonsgreina; kontroller prosjektref og release-artifakt.
-3. Manuell publiseringsgodkjenning på korrekt grein.
+3. Eigargodkjend releaseordre eller manuell publiseringsgodkjenning på korrekt grein. Releaseordren må peika på kontrollert produksjons-SHA.
 4. Verifiser vellykka Pages-deploy og faktisk live-versjon; ikkje erklær live frå byggjestatus aleine.
 5. Bevar eksisterande brukarar, økter, PR og treningshistorikk. Ingen nullstilling eller flytting.
 
