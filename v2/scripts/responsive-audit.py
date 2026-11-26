@@ -77,8 +77,15 @@ with sync_playwright() as pw:
                     page.get_by_role("button",name="WOD-handlingar",exact=True).tap()
                     page.get_by_role("button",name="Samspel",exact=True).tap()
                     panel=page.get_by_role("region",name="Samspel")
-                    panel.get_by_role("checkbox",name="Parallelt arbeid med rundebyte").check()
-                    assert panel.get_by_text("Oppgåve 2:",exact=False).is_visible()
+                    panel.get_by_role("checkbox",name="Parallelt arbeid med rollebyte").check()
+                    panel.get_by_label("Tal utøvarar").select_option("4")
+                    panel.get_by_role("checkbox",name="Separate arbeidsstasjonar",exact=False).check()
+                    stations=panel.locator("fieldset")
+                    assert stations.count()==2
+                    stations.nth(1).get_by_label("Arbeidsoppgåve").select_option("bike")
+                    stations.nth(1).get_by_label("Måleeining").select_option("calories")
+                    panel.get_by_label("Tilgjengeleg · Romaskin",exact=True).fill("1")
+                    panel.get_by_label("Tilgjengeleg · Sykkel",exact=True).fill("1")
                     check(page,"architect-samspel",w,h)
                 if screen=="picker":
                     picker=page.locator(".wod-picker")
