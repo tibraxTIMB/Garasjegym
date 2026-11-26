@@ -13,7 +13,7 @@ const shortDate=value=>value?new Date(value).toLocaleDateString('nn-NO',{day:'nu
 /** PTs can see only explicit PT WOD assignments and their own PT program sessions.
  * No workout_logs query: a customer's unrelated private training remains private.
  */
-export default function PTClientWods({clientId,clientName='',clientRank=null,mode='full',planSessions=[],wods=[],initialReview=null,assignRequest=null,onAssignClosed=()=>{},onOpenFull=()=>{},onOpenReview=()=>{},onReviewClosed=()=>{}}){
+export default function PTClientWods({clientId,clientName='',clientRank=null,mode='full',planSessions=[],wods=[],initialReview=null,assignRequest=null,onAssignClosed=()=>{},onAssign=null,revisionToken=0,onOpenFull=()=>{},onOpenReview=()=>{},onReviewClosed=()=>{}}){
  const [assignments,setAssignments]=useState([])
  const [loading,setLoading]=useState(false)
  const [error,setError]=useState('')
@@ -38,7 +38,7 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
     setLoading(false)
    })
   return()=>{active=false}
- },[clientId,revision])
+ },[clientId,revision,revisionToken])
  useEffect(()=>{if(initialReview&&clientId)setOpenedReview(initialReview)},[initialReview,clientId])
  useEffect(()=>{if(assignRequest?.clientId===clientId&&assignRequest?.id){setOpenedReview(null);setShowAssign(true)}},[assignRequest,clientId])
  const activeAssignments=useMemo(()=>assignments.filter(row=>!completedStatus(row.status)&&row.status!=='cancelled'),[assignments])
@@ -92,7 +92,7 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
     <div className="ptfollow-heading-actions">
      {!preview&&<button type="button" className="secondary-button" onClick={()=>setRevision(x=>x+1)} disabled={loading}><RefreshCw size={15}/> Oppdater</button>}
      {preview?<button type="button" className="secondary-button" onClick={onOpenFull}>Sjå tildelingar og resultat <ArrowRight size={15}/></button>:
-      <button type="button" className="primary-button" onClick={()=>setShowAssign(value=>!value)}><Plus size={16}/>{showAssign?'Lukk tildeling':'Tildel WOD'}</button>}
+      <button type="button" className="primary-button" onClick={()=>onAssign?onAssign():setShowAssign(value=>!value)}><Plus size={16}/>{showAssign?'Lukk tildeling':'Tildel WOD'}</button>}
     </div>
    </div>
    {loading&&<p role="status" className="ptfollow-info">Hentar WOD-tildelingane …</p>}
