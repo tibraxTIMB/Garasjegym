@@ -110,3 +110,11 @@ test('mobility and stability have purposeful browse group and no compulsory load
  for(const name of ['Open book','Hip CARs','Cossack squat','Bird dog','Dead bug'])assert.ok(isSideSelectableExercise({name,equipment:'Matte'}));
  assert.equal(isSideSelectableExercise({name:'I-T-Y-W',equipment:'Matte'}),false);
 });
+
+import {readFileSync} from 'node:fs';
+test('Bibliothekar snapshot has full exact anatomical classification',()=>{
+ const snapshot=JSON.parse(readFileSync(new URL('../supabase/catalog/bibliothekar_review_2026_11_26.json',import.meta.url),'utf8'));
+ assert.equal(snapshot.names.length,snapshot.activeCount+snapshot.candidateCount);
+ assert.equal(new Set(snapshot.names.map(s=>s.toLowerCase().replace(/[^a-z0-9æøå]+/g,' ').trim())).size,snapshot.names.length);
+ for(const name of snapshot.names)assert.ok(exerciseMuscleProfile(name),name);
+});

@@ -3596,12 +3596,6 @@ export const EXERCISE_MUSCLE_PROFILES={
   "secondary": [],
   "stabilizers": []
  },
- "tibialis raise": {
-  "mode": "strength",
-  "primary": [],
-  "secondary": [],
-  "stabilizers": []
- },
  "banded lateral walk": {
   "mode": "stability",
   "primary": [
@@ -3655,6 +3649,110 @@ export const EXERCISE_MUSCLE_PROFILES={
    "abductors",
    "lowerBack",
    "abs"
+  ]
+ },
+ "bear crawl": {
+  "mode": "stability",
+  "primary": [
+   "frontDelts",
+   "abs"
+  ],
+  "secondary": [
+   "quads",
+   "triceps"
+  ],
+  "stabilizers": [
+   "obliques",
+   "rotatorCuff"
+  ]
+ },
+ "clean deadlift": {
+  "mode": "strength",
+  "primary": [
+   "glutes",
+   "quads",
+   "hamstrings"
+  ],
+  "secondary": [
+   "upperBack"
+  ],
+  "stabilizers": [
+   "lowerBack",
+   "abs",
+   "forearms"
+  ]
+ },
+ "hanging knees to chest": {
+  "mode": "strength",
+  "primary": [
+   "abs",
+   "hipFlexors"
+  ],
+  "secondary": [],
+  "stabilizers": [
+   "forearms",
+   "lats"
+  ]
+ },
+ "sumo deadlift high pull": {
+  "mode": "mixed",
+  "primary": [
+   "glutes",
+   "quads",
+   "upperBack"
+  ],
+  "secondary": [
+   "hamstrings",
+   "sideDelts"
+  ],
+  "stabilizers": [
+   "abs",
+   "lowerBack",
+   "forearms"
+  ]
+ },
+ "landmine press": {
+  "mode": "strength",
+  "primary": [
+   "frontDelts",
+   "triceps"
+  ],
+  "secondary": [
+   "chest"
+  ],
+  "stabilizers": [
+   "abs",
+   "obliques",
+   "rotatorCuff"
+  ]
+ },
+ "landmine row": {
+  "mode": "strength",
+  "primary": [
+   "lats",
+   "upperBack"
+  ],
+  "secondary": [
+   "biceps",
+   "rearDelts"
+  ],
+  "stabilizers": [
+   "lowerBack",
+   "abs"
+  ]
+ },
+ "landmine squat": {
+  "mode": "strength",
+  "primary": [
+   "quads",
+   "glutes"
+  ],
+  "secondary": [
+   "adductors"
+  ],
+  "stabilizers": [
+   "abs",
+   "lowerBack"
   ]
  }
 }

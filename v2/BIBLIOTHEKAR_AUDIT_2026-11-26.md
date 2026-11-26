@@ -9,17 +9,12 @@ Active catalogue checked against deployed workflow database: 213 active, 19 Mobi
 - Quality-only movements added by the mobility expansion do not produce derived exercise records. Historical log rows are never deleted; historic derived records for these exact names may no longer be shown. Weighted variants of these quality-only catalogue names remain outside automatic PRs.
 - Anatomical catalogue: exact profiles for the new movements, with mobility-only rows intentionally empty of strength-role muscle counts. These are provisional qualitative labels, not measurements.
 
-## Unclassified names after this code change (4)
-- Bear Crawl
-- Clean Deadlift
-- Hanging Knees to Chest
-- Sumo Deadlift High Pull
+## Follow-up
+All 213 active names now resolve an exact provisional anatomical profile, including Bear Crawl, Clean Deadlift, Hanging Knees to Chest and Sumo Deadlift High Pull. No actual muscle-activation measurements are claimed.
 
-## Missing coverage candidates (not inserted by this build)
-- Shoulder CARs, wrist circles, wrist flexor/extension stretch, adductor rock back, couch stretch, hamstring stretch, pec doorway stretch, lat stretch.
-- Yoga: child's pose, downward dog, low lunge, pigeon stretch.
-- Stability: tibialis raise, banded lateral walk, single-leg balance, single-leg glute bridge, Pallof press, single-leg RDL.
-- Verify equipment ownership and actual variant names before seed. Do not merge semantic aliases silently; no fabricated videos or universal loading values.
+21 new candidate catalogue entries (none persisted by this commit): Shoulder CARs, Wrist circles, Wrist flexor stretch, Wrist extension stretch, Adductor rock back, Couch stretch, Hamstring stretch, Pec doorway stretch, Lat stretch, Child's pose, Downward dog, Low lunge, Pigeon stretch, Banded lateral walk, Single-leg balance, Single-leg glute bridge, Pallof press, Single-leg RDL, Landmine press, Landmine row, Landmine squat. All have an exact anatomical profile. Existing catalogue IDs remain unchanged. Tibialis raise is deferred because the current anatomy model does not represent tibialis anterior. No equipment ownership is assumed beyond candidate equipment labels; verify in the app.
+
+Read-only audit SQL and additive candidate seed are in v2/supabase/preflight. Mobility default dose suggestions are descriptive, not prescribed universal loads.
 
 ## Release gate
-Run npm test and npm run build; manually exercise WOD builder, side-aware dosage, timer, completed-only registration and PR screen. Review missing anatomical profiles, broad area labels and catalogue aliases. No deployment or database mutation authorized by this candidate alone.
+Run npm test and npm run build, confirm target database, review candidate seed and apply only once release approved. Manually exercise WOD builder, side-aware dosage, timer, completed-only registration and PR screen. Review broad area labels and catalogue aliases, and verify video demonstrations. No deployment or database mutation authorized by this candidate alone.
