@@ -6,7 +6,7 @@
 - GitHub produksjonsgrein: `garasjegym-2.0-sturm­kopf` (inneheld historisk mjuk bindestrek U+00AD; ikkje endre greinnamnet i denne operasjonen).
 - GitHub Pages-miljø: `github-pages`.
 - Publisering: `Deploy`-jobben krev anten manuell `publish_production=true` eller ein uttrykkeleg eigargodkjend releaseordre på nøyaktig produksjonsgrein. Vanleg push byggjer og testar, men publiserer ikkje. Ingen historiske commit-frasar kan utløyse deploy. Releaseordren er ein separat commit som berre endrar `.github/production-release.json`, med `version: 1`, `intent: PUBLISH_PRODUCTION`, `target: <eksakt føregåande produksjons-SHA>`. Ingen kodeendringar kan kombinerast med ordren. Full test, nettlesarrevisjon og artifaktkontroll må passera før deploy; eksisterande Pages-miljøvern gjeld.
-- Standardgreina `main` er eldre kode, ikkje produksjonskjelda for SturmKopf. For at manuell workflow skal vera tilgjengeleg frå GitHub, trengst ei minimal inngang på standardgreina med same filnamn og input. Inngangen skal nekte å publisera frå main. Vel alltid produksjonsgreina i Run workflow.
+- Standardgreina `main` er eldre kode, ikkje produksjonskjelda for SturmKopf. PR #7 om manuell inngang er arkivert; den SHA-bundne releaseordren er verifisert i vellykka produksjonsrun 45900808469. Ingen merge av produksjonsgreina inn i main er nødvendig.
 
 ## Utvikling og test
 Utvikling skjer på kandidatgreiner/PR-ar. Bruk lokale syntetiske data og isolerte nettlesartestar; ingen testskriving mot produksjon. Det gamle prosjektet `kultdmklwmilhoytrrig` er legacy, ikkje ein godkjend testdatabase. Ingen ny betalt Supabase-instans blir oppretta. Faktisk isolert testdatabase kan etablerast seinare dersom det finst kostnadsfri løysing.
@@ -18,4 +18,4 @@ Utvikling skjer på kandidatgreiner/PR-ar. Bruk lokale syntetiske data og isoler
 4. Verifiser vellykka Pages-deploy og faktisk live-versjon; ikkje erklær live frå byggjestatus aleine.
 5. Bevar eksisterande brukarar, økter, PR og treningshistorikk. Ingen nullstilling eller flytting.
 
-Status ved oppretting: 234 aktive øvingar i gjeldande produksjonsdatabase. Pages-kjeldeinnstillinga og fysisk installert app kan ikkje lesast direkte gjennom noverande tilkopling. Historiske rapportar med TEST/preview-terminologi er arkiv, ikkje gjeldande miljøkontrakt.
+Siste stadfesta GitHub Pages-deploy: run 45900808469, releasecommit bff5abf9fc34ead22142fca1adae1c1dd98769cf. Direkte live-lesing er ikkje verifisert. Sjå driftsregisteret i `docs/OPERATIONS.md`. Historiske rapportar med TEST/preview-terminologi er arkiv, ikkje gjeldande miljøkontrakt.

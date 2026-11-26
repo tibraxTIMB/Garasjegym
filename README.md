@@ -1,30 +1,22 @@
-# GarasjeGym 2.0 – STURMKOPF
+# GarasjeGym 2.0 – STURMKOPF GAZELLE
 
-Dette er ein separat utviklingsgrunnmur for GarasjeGym 2.0. Han endrar ikkje 1.8.16 eller Supabase-databasen.
+GarasjeGym er i produksjon. Dette er den aktive produksjonsgreina; appkoden ligg i `v2/`. Rotkoden og `main` er eldre historiske prototypar, ikkje kjelda til dagens app.
 
-## Teknologi
-- React
-- Vite
-- Supabase JS-klient (førebudd, ikkje kopla til)
-- Lucide-ikon
+- [Opna GarasjeGym](https://tibraxtimb.github.io/Garasjegym/)
+- [Opna WERKSTATT på PC](https://tibraxtimb.github.io/Garasjegym/?office=1)
+- [Driftsregister / STAMMORDNUNG 49](docs/OPERATIONS.md)
+- [Miljø- og releasekontrakt](v2/OPERATION_KLARHEIT.md)
+- [Utviklardokumentasjon](v2/README.md)
 
-## Køyr lokalt
-Krev Node.js installert på maskina.
-
-```bash
-npm install
-npm run dev
+## Lokal utvikling
+```sh
+cd v2
+npm ci
+npm test
+npm run build
 ```
 
-## Supabase
-1. Kopier `.env.example` til `.env.local`.
-2. Legg inn Supabase Project URL og publishable/anon key.
-3. Bruk aldri `service_role`-nøkkel i nettlesarkode.
+Bruk isolert demo/testdata til nettlesartestar. Ikkje bruk produksjonsbasen til testskriving. Ingen passord, service-role-nøklar, databasedumpar eller persondata i GitHub.
 
-Supabase er ikkje aktivert i denne prototypen. Ingen tabellar, policies eller data blir endra.
-
-## Viktig om migrering
-GarasjeGym 1.8.16 skal liggja urørt. Før funksjonar blir flytta over må me kartleggja lokal lagring, databaseoperasjonar, RLS og datakjelder. Ikkje køyr migrerings-SQL mot produksjonsdatabasen før planen er gjennomgått og godkjend.
-
-## Status
-Dette er berre første tekniske og visuelle grunnmur. Innlogging, treningsmotor, booking, PT, sosialt, kaffibar og synkronisering er ikkje implementerte enno.
+## Publisering
+Vanleg push testar, men publiserer ikkje. Bruk KLARHEIT med eksplisitt eigargodkjend releaseordre mot kontrollert produksjons-SHA. Bevar produksjonsdata. Gjeldande release er den siste verifiserte vellykka Pages-deployen, ikkje nødvendigvis siste commit.
