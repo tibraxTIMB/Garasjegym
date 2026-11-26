@@ -1,4 +1,4 @@
-name: Deploy STURMKOPF production
+name: GarasjeGym · Production release
 
 on:
   push:
@@ -7,10 +7,11 @@ on:
     paths:
       - "v2/**"
       - ".github/workflows/deploy-sturmkopf-pages.yml"
+      - ".github/production-release.json"
   workflow_dispatch:
     inputs:
-      publish_preview:
-        description: "Publiser til den delte GitHub Pages-adressa (erstattar innhaldet som ligg der no)"
+      publish_production:
+        description: "Publiser til eksisterande produksjonsadresse (ingen flytting av data eller app)"
         required: true
         type: boolean
         default: false
@@ -25,11 +26,21 @@ concurrency:
 
 jobs:
   build:
+    if: ${{ github.ref == 'refs/heads/garasjegym-2.0-sturm­kopf' }}
+    outputs:
+      release_approved: ${{ steps.release_gate.outputs.approved }}
     # Playwright's pinned Chromium build supports 24.04, not the rolling 26.04 runner.
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify explicit release order
+        id: release_gate
+        if: ${{ github.event_name == 'push' }}
+        run: node v2/scripts/check-release-order.mjs
       - name: Report build run to release issue
         if: ${{ github.event_name == 'push' }}
         continue-on-error: true
@@ -98,6 +109,38 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' }}
         working-directory: v2
         run: npm run help:videos:live-check
+      - name: Prepare release browser verification
+        if: ${{ steps.release_gate.outputs.approved == 'true' || (github.event_name == 'workflow_dispatch' && inputs.publish_production == true) }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install release browser
+        if: ${{ steps.release_gate.outputs.approved == 'true' || (github.event_name == 'workflow_dispatch' && inputs.publish_production == true) }}
+        run: |
+          python -m pip install 'playwright==1.56.0'
+          python -m playwright install --with-deps chromium
+      - name: Run full release responsive browser audit with isolated demo data
+        if: ${{ steps.release_gate.outputs.approved == 'true' || (github.event_name == 'workflow_dispatch' && inputs.publish_production == true) }}
+        working-directory: v2
+        run: |
+          npm run help:demo > /tmp/gg-ui-audit-vite.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" || true' EXIT
+          for i in $(seq 1 60); do curl -fs http://127.0.0.1:4173/ui-audit.html >/dev/null && break; sleep 1; done
+          python scripts/responsive-audit.py
+      - name: Test built isolated Tablet Lab before production deploy
+        if: ${{ steps.release_gate.outputs.approved == 'true' || (github.event_name == 'workflow_dispatch' && inputs.publish_production == true) }}
+        working-directory: v2
+        run: |
+          npx vite build --config vite.tablet-lab.config.js
+          mkdir -p /tmp/gg-tablet-lab-host ui-audit-results
+          ln -s "$PWD/dist" /tmp/gg-tablet-lab-host/Garasjegym
+          printf '<!doctype html><html><body>Lab test host</body></html>' > /tmp/gg-tablet-lab-host/host.html
+          python -m http.server 4182 --bind 127.0.0.1 --directory /tmp/gg-tablet-lab-host > /tmp/gg-tablet-lab-server.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" || true' EXIT
+          for i in $(seq 1 30); do curl -fs http://127.0.0.1:4182/host.html >/dev/null && break; sleep 1; done
+          python scripts/tablet-lab-browser-test.py
       - name: Verify application and owner bootstrap
         working-directory: v2
         run: npm test
@@ -110,8 +153,13 @@ jobs:
           VITE_HELP_VIDEO_REV: ${{ github.sha }}
           VITE_SPOTIFY_CLIENT_ID: ${{ vars.VITE_SPOTIFY_CLIENT_ID }}
         run: npm run build
+      - name: Record build identity
+        working-directory: v2
+        run: node -e 'require("node:fs").writeFileSync("dist/release-info.json",JSON.stringify({commit:process.env.GITHUB_SHA,run_id:process.env.GITHUB_RUN_ID})+"\\n")'
       - name: Check built release artifact environment and secrets
         working-directory: v2
+        env:
+          EXPECTED_SUPABASE_PROJECT_REF: izwzwvlexqxqewzijhhd
         run: npm run check:release-artifact
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -119,12 +167,8 @@ jobs:
           path: v2/dist
 
   deploy:
-    # A production deploy requires an explicitly approved manual workflow_dispatch.
-    # explicit owner approval through manual workflow_dispatch.
-    # explicit owner approval via manual workflow_dispatch with publish_preview=true.
-    # Owner explicitly approved a single Pages update. This one-time commit is the only push allowed to deploy.
-    # All later pushes return to build/test only. TEST Supabase binding is unchanged.
-    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.publish_preview) || (github.event_name == 'push' && github.event.head_commit.message == 'GG-ONE-SHOT-PUBLISH GAZELLE TO EXISTING TEST-PAGES') }}
+    # Only an explicit verified order or deliberate manual approval; never ordinary pushes.
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.publish_production == true && github.ref == 'refs/heads/garasjegym-2.0-sturm­kopf') || (github.event_name == 'push' && needs.build.outputs.release_approved == 'true' && github.ref == 'refs/heads/garasjegym-2.0-sturm­kopf') }}
     permissions:
       pages: write
       id-token: write

@@ -1,107 +1,50 @@
-# GarasjeGym 2.0 – STURMKOPF FEUER 1.1
+# GarasjeGym 49 – STURMKOPF GAZELLE 1.2
 
-Dette er ei separat utviklingsutgåve. GarasjeGym 1.8.16 og produksjonsdata skal vera urørte fram til 2.0 er testa og uttrykkeleg godkjend.
+Gjeldande produksjonsapp. Sjå [OPERATION KLARHEIT](OPERATION_KLARHEIT.md) for bindande miljøkontrakt. Historiske utviklingsrapportar frå før produksjonssetting er arkiv, ikkje gjeldande driftsinstruks.
 
-## Teknologi
-- React 18
-- Vite 6
-- Supabase JS
-- Lucide-ikon
+## Miljø
+
+| Miljø | Bruk |
+|---|---|
+| Produksjon | https://tibraxtimb.github.io/Garasjegym/ · Supabase prosjektref `izwzwvlexqxqewzijhhd` (historisk visingsnamn `garasjegym-2-test`) |
+| Utvikling | GitHub kandidatgreiner og pull requests |
+| Test | Lokale syntetiske data, isolerte CI- og nettlesarprøver; ikkje produksjonsdata |
+| Legacy | `main` inneheld eldre appkode; `kultdmklwmilhoytrrig` er eldre Supabase-prosjekt, ikkje målet for nye produksjonsbygg |
+
+Produksjonsgreina er `garasjegym-2.0-sturm­kopf`. Adressa og databasebindinga er uendra. Ei ny Pages-utrulling erstattar appinnhaldet på eksisterande adresse. Ein godkjend build er ikkje det same som ei gjennomført deploy.
 
 ## Lokal utvikling
-Krev Node.js 20 eller nyare. På Windows kan du dobbeltklikka `START-GARASJEGYM-2.0.bat`; sjå `TESTE-LOKALT.md` for trygg oppstart mot eit eige testprosjekt. Ikkje bruk produksjonsprosjektet som testdatabase.
+
+React 18, Vite 6, Supabase JS og Lucide. Node.js 22 i CI.
 
 ```bash
 cd v2
-npm install
-cp .env.example .env.local
-npm run dev
+npm ci
+npm test
+npm run help:demo
 ```
 
-Fyll inn VITE_SUPABASE_URL (Project URL) og VITE_SUPABASE_PUBLISHABLE_KEY (publishable key som byrjar med sb_publishable_).
-Bruk aldri service_role eller ein secret key i nettlesarkode. Ikkje legg .env.local i Git.
+Demoen brukar syntetiske data. Bruk berre godkjend separat testbinding ved behov for reell databaseintegrasjon. Ikkje kopier produksjonsnøklar til ei utviklingsøkt. Aldri service_role/secret key i klientkode, og aldri `.env.local` i Git.
 
-## Funksjonar som er bygde i klienten
-- E-post/passord-innlogging, registrering og passordlenkje.
-- Medlemsprofil og rollebasert navigasjon.
-- Oversikt med treningsaktivitet, Garasjekadett-rangering og styrkeprosentar.
-- Felles treningsmotor for fri økt og WOD: øvingsliste, favorittar, sett, reps, kg, tid, notat og historikk.
-- Timer for EMOM, AMRAP, For Time, Tabata, intervall, stoppeklokke og nedteljing.
-- Registrering og vising av personlege rekordar.
-- Gruppetimar med oppretting for staff og på-/avmelding for medlem.
-- PT-studio med publiserte timar, booking via database-RPC og førespurnad.
-- Garasjeprat med innlegg, kommentarar, bilete, reaksjonar og sletting av eigne innlegg/kommentarar.
-- Utfordringar med påmelding, mål og individuell framgang.
-- Kaffibar med produkt, handlekorg, bestilling og ordrestatus for staff.
-- Admin med medlemsroller/aktiv status, WOD-studio og øvingsbibliotek med redigering.
-- Kaffibaradministrasjon med oppretting, redigering og publisering/skjuling av menyprodukt.
+## Produksjonspublisering
 
-## Database-migreringar
-SQL-filene ligg i supabase/migrations/. Dei er staged i GitHub. I eit separat Supabase Free-testprosjekt er ein tom baseline utan produksjonsdata og migreringane 001–015 installerte. Supabase sin aktive migreringslogg må kontrollerast før kvar utrulling. Prosjektbudsjettet er 0 kroner: ikkje opprett betalte databasegreiner, oppgrader abonnement eller utløyse andre kostnader. Ingen migrering skal køyrast mot produksjon utan trygg gjennomgang og uttrykkeleg godkjenning.
+1. Full automatisert test og relevante nettlesarkontrollar på kandidaten.
+2. Integrer godkjend kandidat i produksjonsgreina. Push byggjer og testar, men publiserer ikkje.
+3. I GitHub Actions, vel GarasjeGym · Production release, korrekt produksjonsgrein, og `publish_production=true`.
+4. Kontroller vellukka deploy-jobb og faktisk live-versjon.
 
-1. 202611160001_save_workout_atomic.sql – atomisk lagring av økt, øvingar og sett.
-2. 202611160002_coffee_bar.sql – kaffiprodukt, ordre, ordrelinjer, RLS og bestillings-RPC.
-3. 202611160003_exercise_favorites.sql – medlemsfavorittar for øvingar.
-4. 202611160004_lock_class_capacity.sql – transaksjonslås ved kapasitetssjekk, trigger og unik indeks mot doble aktive påmeldingar.
-5. 202611160005_class_live_sessions.sql – delt live-tilstand for gruppetimar.
-6. 202611160006_wod_timer_settings.sql – timerinnstillingar på WOD.
-7. 202611160007_group_session_wod_timer.sql – delt WOD- og timeroppsett for gruppetime.
-8. 202611160008_class_workout_results.sql – kopling av personlege treningsresultat til live gruppetime og oppdatert atomisk lagrings-RPC.
-9. 202611160009_social_reactions.sql – atomisk reaksjonshandtering for Garasjeprat med kontrollert reaksjonsliste.
-10. 202611160010_challenges.sql – utfordringar, deltaking, mål og individuell framgang med RLS.
-11. 202611160011_harden_rpc_grants.sql – avgrensar EXECUTE-rettar for sensitive SECURITY DEFINER-hjelpefunksjonar og PT-booking til authenticated.
-12. 202611160012_restrict_trigger_rpc.sql – stengjer direkte RPC-kall til triggerfunksjonar.
-13. 202611160013_test_seed_data.sql – demoøvingar, WOD, kaffiprodukt og gruppetime for isolert testprosjekt; skal ikkje brukast i produksjon.
-14. 202611160014_index_foreign_keys.sql – legg til manglande FK-indeksar og fjernar duplikat indeks for gruppetimepåmelding.
+Ikkje køyr ein automatisk eller historisk eingongs-commit som publiseringssignal. Standardgreina er ikkje produksjonskjelda. Manuell produksjonspublisering frå standardgreina er blokkert.
 
-Migrering 008 byggjer vidare på 001 og krev at 005 har oppretta `class_live_sessions`. Migrering 009 er uavhengig av dei andre funksjonsmigreringane. Kontroller heile SQL-pakken og funksjonstryggleiken før installasjon. Ikkje køyr migreringane direkte mot produksjonsdatabasen utan backup, gjennomgang og uttrykkeleg godkjenning. Klientfunksjonar som nyttar nye tabellar, kolonnar eller RPC-ar vil ikkje fungera før tilhøyrande migrering er installert. Treningsklienten har fallback dersom `wods.timer_settings` enno ikkje finst, slik at WOD-biblioteket framleis kan lastast.
+## Database og tryggleik
 
-## Kjende avgrensingar / vidare arbeid
-- Timerlogikken må testast på faktiske telefonar, særleg når skjermen går i dvale eller nettlesaren blir minimert.
-- Live gruppetime og felles WOD-timer krev migreringane 005–008. Klienten har fallback for perioden før timerutvidinga er installert.
-- PT-planar, meldingar og klientnotat har første klientversjon, men må gjennom funksjons- og tilgangstestar.
-- Favorittfunksjonen krev at favorittmigreringa er installert i databasen.
-- Kaffibar-geofence, lyd/varsel og eventuelle betalingar er ikkje implementerte.
-- Sosiale bilete, sletting og reaksjonar er implementerte i klienten; reaksjonar krev migrering 009. Utfordringar og varsling står att.
-- Admin manglar full drift for booking, PT, kaffibar, varsling og innstillingar.
-- Jamleg oppfrisking er lagt til for sentrale moduldata. Full ende-til-ende-testing med medlem, manager, admin og fleire einingar er ikkje utført.
-
-## Test-URL og publisering
-
-Ei tidlegare STURMKOPF-testutgåve ligg på `https://tibraxtimb.github.io/Garasjegym/` og brukar berre det isolerte Supabase-testprosjektet `garasjegym-2-test`. Den publiserte sida svarar til commit `dd1fdc0d9d691c973857ba743745336252b9166d`, ikkje siste kode på utviklingsgreina. Adressa er delt med repoet si eksisterande GitHub Pages-side, ikkje ein eigen preview-host. Ei ny Pages-publisering erstattar innhaldet på denne adressa.
-
-Workflowen `.github/workflows/deploy-sturmkopf-pages.yml` byggjer på push til STURMKOPF-greina, men publiseringsjobben er no hoppa over ved vanlege push. Han krev eit eksplisitt manuelt `publish_preview=true`-val. Ikkje endra dette til automatisk publisering utan uttrykkeleg klarsignal. Den nyaste byggpakka er verifisert i Actions, men ikkje publisert til den delte sida.
-
-## Nyleg kvalitetssikra
-
-- WOD Builder brukar éin felles ordensfunksjon for flytting, posisjonsval, dra/slipp, lagring og gjenopning.
-- Elleve automatiske testar dekkjer WOD-rekkjefølgje og appens base-URL for Auth-redirectar; migreringskontroll og Vite-bygg er stadfesta grøne i GitHub Actions.
-- Hovudmodular blir no lazy-lasta. I byggloggen gjekk første JavaScript-bundle frå 947,53 kB til 463,08 kB (gzip 251,60 → 130,79 kB). PT Studio, WOD Builder, trening, timeplan, kaffibar, admin og infotainment blir lasta ved behov.
-- PT-meldingar har slettemoglegheit i PT-dialogen og på medlemssida, under eksisterande RLS-reglar.
-- Passordreset brukar Vite sin `BASE_URL`, slik at e-postlenkja returnerer til `/Garasjegym/` på GitHub Pages.
-- SECURITY DEFINER-funksjonane i testdatabasen har eksplisitt `search_path = pg_catalog, public, pg_temp`, med unntak av funksjonen som allereie brukar tomt search path.
-- Ingen av desse endringane er køyrde mot produksjonsdatabasen.
+- Eksisterande brukarar, økter, WOD-ar, PR og historikk skal bevarast. Ingen nullstilling.
+- Migreringar og preflight ligg i `supabase/`. Kontroller faktisk migreringslogg og backup før godkjende schemaendringar. Ikkje køyr demo-seed eller historiske clean-start-skript i produksjon.
+- RLS og server-side kontrollar er tilgangsgrensa; klientrollar er ikkje nok.
+- Budsjett 0 kroner. Ikkje opprett betalte databasegreiner eller nye abonnement.
+- Bevar `BASE_URL` og PWA-scope, slik at innlogging og installert app held fram på same adresse.
 
 ## Kvalitetssikring
-Testplanen ligg i QA-2.0.md. GitHub Actions køyrer òg `npm run check:migrations`, som kontrollerer migreringsfilnamn og balanserte dollar-quote-delimiterar, før Vite-bygginga. Han skil mellom planlagde testar og testar som faktisk er stadfesta køyrde.
 
-## Tryggleik og lansering
-- Supabase RLS er den endelege tilgangskontrollen.
-- Rollene admin og manager blir lesne frå profiles; dei kan ikkje veljast i registreringsskjemaet.
-- Nye Auth-brukarar skal få medlemsprofil gjennom handle_new_auth_user.
-- Ingen produksjonssetting eller endring av 1.8.16 er godkjend. Testprosjektet `garasjegym-2-test` er separat og skal berre brukast med testkontoar og testdata.
+`npm test`, `npm run check:migrations`, `npm run build` og `npm run check:release-artifact`. Nettlesarrevisjon: `scripts/responsive-audit.py` mot lokal demo. Fysisk mobil-/nettbrettest, reell drift og databasekapasitet må kontrollerast separat.
 
-### Nye staged migreringar (ikkje køyrde)
-
-- `202611160005_class_live_sessions.sql` opprettar delt tilstand for aktive gruppetimar, med RLS for instruktørar og påmelde deltakarar. Migreringa er berre lagra i utviklingsgreina og er ikkje køyrd mot Supabase.
-
-- Booking-klienten viser no delt live-status for gruppetimar og gir stab start/pause/gjenoppta/avslutt. Krev `202611160005_class_live_sessions.sql` før funksjonen kan brukast.
-
-
-### Kostnads- og utviklingsramme
-
-- Budsjett: **0 kroner**. Ingen betalte Supabase-greiner eller abonnementstillegg er tillatne.
-- Utvikling skjer berre på `garasjegym-2.0-sturm­kopf` i GitHub.
-- Produksjonsversjon 1.8.16 og aktiv Supabase-database skal ikkje endrast som del av denne utviklingsøkta.
-- Bygg og funksjonstestar må stadfestast før ein kan rekna funksjonane som ferdige.
-\n\n### Gruppetime-resultat – 18.11.2026\n- Instruktøren avsluttar gruppetimen og publiserer automatisk WOD-ane til alle stadfesta påmelde via GarasjeGym sitt interne varslingssenter.\n- Medlem finn uteståande WOD-ar på Mi side. Oppvarming blir kvittert som gjennomført utan poengføring; hovud-WOD blir opna direkte i treningsmotoren for resultatregistrering.\n- Medlem vel RX, Scaled eller Foundation i treningsmotoren og kan registrera kvar hovud-WOD separat.\n- Instruktøren får ei deltakaroversikt med tal WOD-ar registrert per medlem.\n- Migrering 015 er installert og kontrollert i det isolerte testprosjektet `garasjegym-2-test`. Dette er intern varsling i appen, ikkje operativsystem-/nettlesar-push.\n
+Release kan òg utløysast med ein eksplisitt eigargodkjend releaseordre etter KLARHEIT-kontrakten; vanlege pushar publiserer aldri.
