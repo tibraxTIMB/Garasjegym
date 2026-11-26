@@ -26,3 +26,12 @@ assert.deepEqual([...muscleExerciseEvidence(rows).get('chest').primary],['bench 
 assert.deepEqual([...muscleExerciseEvidence(rows).get('spinal_erectors').stabilizing],['deadlift'])
 assert.deepEqual(documentedExerciseRows([{exercise_name:'bench press',sets:[{load_kg:50},{time_seconds:0},{reps:null}]}]),[])
 console.log('Documented exercise evidence assertions passed')
+
+assert.ok(anatomyForExercise('Row').primary.includes('quadriceps'))
+assert.ok(anatomyForExercise('Barbell Row').primary.includes('lats'))
+assert.ok(!anatomyForExercise('Barbell Row').primary.includes('quadriceps'))
+assert.ok(anatomyForExercise('Wall Sit').primary.includes('quadriceps'))
+assert.ok(anatomyForExercise('Plank').primary.includes('abdominals'))
+assert.equal(anatomyForExercise('Ankle rocks'),null)
+assert.equal(anatomyForExercise('Band external rotation'),null)
+console.log('Catalogue variant and isometric role assertions passed')
