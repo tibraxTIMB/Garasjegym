@@ -1702,7 +1702,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     {offline&&<div className="auth-message" role="status">Nettutfall · {mode==='active'?'Økta held fram.':'Tilkoplinga kjem tilbake automatisk.'}</div>}
     {mode==='active'&&!draftProtected&&<div className="auth-error" role="alert">Lokal sikring feila. Hald appen open til økta er lagra på nett.</div>}
     {syncNotice&&!finishOpen&&<div className="auth-message" role="status">{syncNotice}</div>}
-    {error && <div className="auth-error" role="alert">{error}</div>}
+    {error && !finishOpen && <div className="auth-error" role="alert">{error}</div>}
     {notice && <div className="auth-message" role="status"><CheckCircle2 size={16}/> {notice}</div>}
     <FlowConfirmDialog dialog={flowConfirm.dialog} onClose={flowConfirm.finish}/>
     {victoryOverlay.length>0&&<PRVictoryOverlay victories={victoryOverlay} onClose={()=>setVictoryOverlay([])}/>}
