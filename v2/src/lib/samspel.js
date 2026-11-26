@@ -105,7 +105,7 @@ export function samspelParticipantResults(s,values={}){
   if(!entered.length)continue
   for(const k of entered){
    const n=Number(row[k])
-   if(!Number.isFinite(n)||n<0||k!=='erg'&&!Number.isSafeInteger(n))return {rows:[],issue:'Utøvar '+row.slot+': registrer gyldige positive tal eller null.'}
+   if(!Number.isFinite(n)||n<0||k!=='erg'&&!Number.isSafeInteger(n))return {rows:[],issue:'Utøvar '+row.slot+': registrer gyldige positive tal eller null.',slot:row.slot,field:k}
   }
   results.push({slot:row.slot,rounds:entered.includes('rounds')?Number(row.rounds):null,extra_reps:entered.includes('reps')?Number(row.reps):null,erg_value:entered.includes('erg')?Number(row.erg):null})
  }
