@@ -51,17 +51,18 @@ export function makePlanRows({program,existing=[],wods,week,day,date='',time='',
  const next=existing.filter(s=>s.program_id===program.id).reduce((max,s)=>Math.max(max,Number(s.sequence_no)||0),0)
  return wods.map((w,i)=>({program_id:program.id,sequence_no:next+i+1,title:w.name,wod_id:w.id,week_no:week,day_no:day,scheduled_date:date||null,session_kind:'training',estimated_minutes:Number(w.duration_minutes)>0?Number(w.duration_minutes):null,workout_snapshot:planSnapshot(w,time),coach_note:note.trim(),status:'planned'}))
 }
-export function makeDirectRows({memberId,actorId,wods,deadline='',appointment=null,note='',location='Valfritt'}){
+export function makeDirectRows({memberId,actorId,wods,deadline='',appointment=null,scheduleDate='',scheduleTime='',note='',location='Valfritt'}){
  if(!memberId||!actorId||!wods.length||new Set(wods.map(w=>w.id)).size!==wods.length||wods.some(w=>!w.id||w.is_archived))throw Error('Vel kunde og gyldige WOD-ar.')
  if(deadline&&!validDate(deadline))throw Error('Vel ein gyldig frist.')
+ if(scheduleDate&&!validDate(scheduleDate)||scheduleTime&&(!scheduleDate||!validTime(scheduleTime))||appointment&&(scheduleDate||scheduleTime))throw Error('Vel gyldig tidspunkt utan dobbel booking.')
  if(appointment&&(appointment.client_id!==memberId||!appointment.id||!['planned','published'].includes(appointment.status)||!osloDay(appointment.starts_at)))throw Error('Vel ei gyldig PT-avtale for kunden.')
- return wods.map(w=>({member_id:memberId,wod_id:w.id,assigned_by:actorId,due_date:deadline||null,linked_session_id:appointment?.id||null,location,coach_note:note.trim(),status:'assigned'}))
+ return wods.map(w=>({member_id:memberId,wod_id:w.id,assigned_by:actorId,due_date:deadline||null,linked_session_id:appointment?.id||null,...(scheduleDate?{scheduled_date:scheduleDate,scheduled_time:scheduleTime||null}:{}),location,coach_note:note.trim(),status:'assigned'}))
 }
 export function calendarEntries({program,plan=[],assignments=[],appointments=[],classes=[]}={}){
  const linked=new Map(appointments.map(a=>[a.id,a]))
  return [
   ...plan.filter(s=>!s.archived_at).map(s=>({key:'plan:'+s.id,kind:'plan',date:planDate(program,s),time:planTime(s),title:s.title,status:s.flowState||s.status,minutes:s.estimated_minutes,row:s})),
-  ...assignments.filter(a=>a.status!=='cancelled').map(a=>{const p=linked.get(a.linked_session_id);return {key:'assignment:'+a.id,kind:'assignment',date:p?osloDay(p.starts_at):a.due_date||'',time:p?appointmentTime(p.starts_at):'',title:a.wods?.name||'Tildelt WOD',status:a.status,minutes:a.wods?.duration_minutes,deadline:!p&&!!a.due_date,row:a}}),
+  ...assignments.filter(a=>a.status!=='cancelled').map(a=>{const p=linked.get(a.linked_session_id),scheduled=validDate(a.scheduled_date);return {key:'assignment:'+a.id,kind:'assignment',date:p?osloDay(p.starts_at):scheduled?a.scheduled_date:a.due_date||'',time:p?appointmentTime(p.starts_at):scheduled&&validTime(String(a.scheduled_time||'').slice(0,5))?String(a.scheduled_time).slice(0,5):'',title:a.wods?.name||'Tildelt WOD',status:a.status,minutes:a.wods?.duration_minutes,deadline:!p&&!scheduled&&!!a.due_date,row:a}}),
   ...appointments.filter(a=>a.status!=='cancelled').map(a=>({key:'appointment:'+a.id,kind:'appointment',date:osloDay(a.starts_at),time:appointmentTime(a.starts_at),title:a.title||'PT-time',status:a.status,minutes:a.duration_minutes,row:a})),
   ...classes.filter(a=>!a.cancelled_at).map(a=>({key:'class:'+(a.booking_id||a.id),kind:'class',date:osloDay(a.starts_at),time:appointmentTime(a.starts_at),title:a.title||'Gruppetime',status:'booked',minutes:a.duration_minutes,row:a}))
  ]
@@ -70,3 +71,5 @@ export function entriesForDay(entries,date){
  return entries.filter(e=>e.date===date).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99')||a.title.localeCompare(b.title,'nn'))
 }
 export function canMovePlan(session){return session?.status==='planned'&&!session.workout_log_id&&!session.archived_at&&!session.workout_snapshot?.pt_equivalent}
+
+export function canMoveDirect(assignment){return assignment?.status==='assigned'&&!assignment.workout_log_id&&!assignment.linked_session_id&&Object.hasOwn(assignment,'scheduled_date')}
