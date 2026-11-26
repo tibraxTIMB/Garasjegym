@@ -1,3 +1,4 @@
+import {applyQualityStarter,isMetconCandidate} from '../lib/qualityPrescription.js'
 import { isMobilityExercise } from '../lib/exerciseQuality.js'
 import {equipmentCapacity,equipmentPlanSnapshot,readEquipmentInventory,saveEquipmentInventory,applyEquipmentInventory} from '../lib/equipmentPreparation.js'
 import EquipmentPreparation from './EquipmentPreparation.jsx'
@@ -133,7 +134,7 @@ const randomWodName=()=>{
 const shuffle=items=>[...items].sort(()=>Math.random()-.5)
 const newSet=()=>({reps:'8',loadMode:'none',loadKg:'',percent1rm:'',restSeconds:'120',tempo:''})
 const makeLevels=(reps='10',profile={})=>{const levels={};for(const level of ['rx','scaled','foundation']){const p=profile?.levels?.[level]||{};const hasKg=p.men_kg!=null||p.women_kg!=null;levels[level]={sets:'',reps,loadMode:hasKg?'kg':'none',loadKg:'',loadKgMen:p.men_kg==null?'':String(p.men_kg),loadKgWomen:p.women_kg==null?'':String(p.women_kg),percent1rm:'',tempo:'',instruction:'',variant:'',rir:'',rirRange:'',heightCm:'',durationSeconds:'',distanceMeters:'',calories:''}}return levels}
-const blankItem=ex=>({key:crypto.randomUUID(),...ex,sideMode:/\balternating\b/i.test(ex.name||'')?'alternating':'',reps:ex.is_complex?'5':ex.equipment==='Romaskin'?'':'10',repsMode:'fixed',rowValue:ex.equipment==='Romaskin'?'500':'',rowUnit:'m',loadMode:'none',loadKg:'',percent1rm:'',rir:'',rpe:'',meters:ex.equipment==='Romaskin'?'500':'',calories:'',workSeconds:'',restSeconds:'',tempo:'',coachNote:'',sets:[newSet()],minuteSlot:'',group:'A',levels:makeLevels(ex.is_complex?'5':ex.equipment==='Romaskin'?'500':'10',ex.prescription_profiles||{})})
+const blankItem=ex=>{const item=({key:crypto.randomUUID(),...ex,sideMode:/\balternating\b/i.test(ex.name||'')?'alternating':'',reps:ex.is_complex?'5':ex.equipment==='Romaskin'?'':'10',repsMode:'fixed',rowValue:ex.equipment==='Romaskin'?'500':'',rowUnit:'m',loadMode:'none',loadKg:'',percent1rm:'',rir:'',rpe:'',meters:ex.equipment==='Romaskin'?'500':'',calories:'',workSeconds:'',restSeconds:'',tempo:'',coachNote:'',sets:[newSet()],minuteSlot:'',group:'A',levels:makeLevels(ex.is_complex?'5':ex.equipment==='Romaskin'?'500':'10',ex.prescription_profiles||{})});return applyQualityStarter(ex,item)}
 const doseFieldsFor=ex=>{if(isMobilityExercise(ex)&&!ex.is_complex&&!/manual|dumbbell|barbell|vektstong|kettlebell|medisinball|landmine/.test((ex.equipment||'').toLowerCase()))return {height:false,time:true,distance:false,calories:false,load:false,tempo:false};const n=(ex.name||'').toLowerCase(),eq=(ex.equipment||'').toLowerCase();const height=/box jump|box step.?up|box step.?over|burpee box/.test(n);const time=/plank|stretch|hold|hundred|balance|dead hang|active hang|flexed.arm hang|wall sit/.test(n);const erg=/(?:^|\s)rowerg|bike erg|ski erg|romaskin/.test(n)||/bikeerg|ski.?erg|romaskin/.test(eq);const distance=erg||/carry|walk|run|crawl/.test(n);const calories=erg;const bodyOnly=/air squat|burpee|double under|single under|toes-to-bar|pull-up|push-up|handstand push-up/.test(n)||/^trx\b/.test(n)||time||/ab wheel|rollout/.test(n);const externalLoad=/manual|dumbbell|barbell|vektstong|kettlebell|medisinball|medicine.?ball|landmine|weight vest|vektvest/.test(eq);const load=!!ex.is_complex||externalLoad||((!height||/step.?up/.test(n))&&!bodyOnly&&(/squat|deadlift|press|curl|row|clean|snatch|jerk|thrust|pulldown|leg press|swing|lunge|carry|wall ball|step.?up/.test(n)||externalLoad));return{height,time,distance,calories,load,tempo:load&&!erg}};
 const fmtLoad=x=>x.loadMode==='kg'&&x.loadKg?x.loadKg+' kg':x.loadMode==='percent'&&x.percent1rm?x.percent1rm+' % 1RM':x.loadMode==='bodyweight'?'Kroppsvekt':''
 
@@ -472,7 +473,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   }
   function randomWod(){
   setEquipmentPlan({});setSamspel(null)
-  const pool=exercises.filter(x=>!x.is_rehab&&x.category!=='Rehab / fysio')
+  const pool=exercises.filter(isMetconCandidate)
   if(!pool.length)return
   const chosen=shuffle(pool).slice(0,3+Math.floor(Math.random()*4))
   setSelected(chosen.map(blankItem));setFormat(['AMRAP','E1MOM','For Time','Chipper','Intervall'][Math.floor(Math.random()*5)])

@@ -123,3 +123,15 @@ test('explicit unweighted equipment does not imply compulsory kilograms',()=>{
  for(const [name,equipment] of [['Bird dog','Matte'],['Dead bug','Matte'],['Single-leg glute bridge','Matte'],['Pallof press','Strikk'],['Single-leg balance','Kroppsvekt']])assert.equal(getExerciseMeasurementFlags({name,equipment}).usesLoad,false);
  assert.equal(getExerciseMeasurementFlags({name:'Glute bridge',equipment:'Matte',sets:[{load_kg:10}]}).usesLoad,true);
 });
+
+import {applyQualityStarter,isMetconCandidate} from '../src/lib/qualityPrescription.js';
+test('reviewed quality starter uses a single editable dose, not compulsory kg',()=>{
+ const item={reps:'10',workSeconds:'',sideMode:'',coachNote:'',levels:{rx:{reps:'10',loadMode:'none',durationSeconds:''},scaled:{reps:'10',loadMode:'none',durationSeconds:''}}};
+ const hold=applyQualityStarter({name:'Deep squat hold'},item);
+ assert.equal(hold.reps,'');assert.equal(hold.workSeconds,'20');assert.equal(hold.levels.rx.durationSeconds,'20');assert.equal(hold.levels.scaled.reps,'');
+ const sided=applyQualityStarter({name:'Open book'},item);assert.equal(sided.reps,'5');assert.equal(sided.sideMode,'both');assert.equal(sided.levels.rx.reps,'5');
+ assert.equal(applyQualityStarter({name:'I-T-Y-W'},item).coachNote.includes('bokstavposisjon'),true);
+ assert.equal(applyQualityStarter({name:'Open book',prescription_profiles:{levels:{rx:{reps:12}}}},item),item);
+ assert.equal(applyQualityStarter({name:'Back squat'},item),item);assert.equal(item.reps,'10');
+ assert.equal(isMetconCandidate({name:'Open book',category:'Mobilitet'}),false);assert.equal(isMetconCandidate({name:'Downward dog',category:'Yoga'}),false);assert.equal(isMetconCandidate({name:'Air squat',category:'Styrke'}),true);
+});
