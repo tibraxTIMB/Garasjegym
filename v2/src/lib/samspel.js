@@ -16,6 +16,13 @@ export function samspelEmomOpportunity(s,slot,elapsed=s?.duration_seconds){
  const ergIntervals=intervals>offset?1+Math.floor((intervals-1-offset)/s.participant_count):0
  return intervals-ergIntervals
 }
+// Full team completion requires all individual interval counts, not merely
+// an expired clock. Missing or partial evidence remains incomplete.
+export function samspelEmomComplete(s,rows=[],{elapsed}={}){
+ if(!samspelEmom(s)||!samspelConfig({samspel:s})||!Array.isArray(rows)||rows.length!==s.participant_count)return false
+ if(elapsed!==undefined&&(!Number.isFinite(elapsed)||elapsed<s.duration_seconds))return false
+ return Array.from({length:s.participant_count},(_,i)=>i+1).every(slot=>rows.filter(r=>r.slot===slot).length===1&&rows.find(r=>r.slot===slot).completed_intervals===samspelEmomOpportunity(s,slot))
+}
 export function samspelConfig(schema={}){
  const s=schema?.samspel
  if(s?.mode!=='parallel_round_swap')return null

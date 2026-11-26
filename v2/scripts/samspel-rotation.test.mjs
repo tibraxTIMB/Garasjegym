@@ -193,3 +193,11 @@ assert.ok(samspelParticipantResults(engineSwap,{1:{intervals:'1.5'}}).issue)
 assert.deepEqual(samspelParticipantResults(engineSwap,{2:{intervals:'1',erg:'0'}},{elapsed:60}).rows,[{slot:2,completed_intervals:1,rounds:null,extra_reps:null,erg_value:0}])
 assert.deepEqual(samspelParticipantResults(engineSwap,{}).rows,[])
 console.log('Engine Swap rotation and individual interval checks passed')
+
+import {samspelEmomComplete} from '../src/lib/samspel.js'
+const fullEngineResult=samspelParticipantResults(engineSwap,{1:{intervals:'5'},2:{intervals:'5'}}).rows
+assert.equal(samspelEmomComplete(engineSwap,fullEngineResult,{elapsed:600}),true)
+assert.equal(samspelEmomComplete(engineSwap,fullEngineResult,{elapsed:599}),false)
+assert.equal(samspelEmomComplete(engineSwap,fullEngineResult.slice(0,1)),false)
+assert.equal(samspelEmomComplete(engineSwap,[fullEngineResult[0],fullEngineResult[0]]),false)
+assert.equal(samspelEmomComplete(engineSwap,[{...fullEngineResult[0],completed_intervals:4},fullEngineResult[1]]),false)
