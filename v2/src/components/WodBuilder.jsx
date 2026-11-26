@@ -685,12 +685,12 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   </section>}
   {wizardStep===3&&<details className="wod-engine-setup gg-participation-section"><summary>Gjennomføring · {participation==='individual'?'Individuell':participation==='partner'?'Partner':'Lag'}</summary>
     <div className="engine-section-title"><div><h4>Gjennomføring</h4><p>Individuell er standard. Vel partner eller lag berre når utøvarane deler arbeidet.</p></div></div>
-    <div className="gg-participation-choices" role="group" aria-label="Gjennomføringsform">
+    {samspel?<div><small>Samspel · {samspel.participant_count||2} utøvarar · parallelt arbeid</small><button type="button" className="text-button" onClick={()=>setSamspelHelp(true)}>Endra Samspel</button></div>:<><div className="gg-participation-choices" role="group" aria-label="Gjennomføringsform">
       {PARTICIPATION_MODES.map(item=><button type="button" key={item.value} aria-pressed={participation===item.value} className={participation===item.value?'selected':''} onClick={()=>{setParticipation(item.value);setCollaboration(item.value==='individual'?'solo':'free_split');setPartnerCount(item.value==='partner'?'2':'3')}}>{item.label}</button>)}
-    </div>
+    </div></>}
     <div className="wod-engine-fields">
-      {participation!=='individual'&&<label>Samarbeidsform<select value={collaboration} onChange={e=>setCollaboration(e.target.value)}>{COLLABORATION_MODES.filter(x=>x.value!=='solo').map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label>}
-      {participation==='team'&&<label>Tal utøvarar<input type="number" min="3" max="30" value={partnerCount} onChange={e=>setPartnerCount(e.target.value)}/></label>}
+      {!samspel&&participation!=='individual'&&<label>Samarbeidsform<select value={collaboration} onChange={e=>setCollaboration(e.target.value)}>{COLLABORATION_MODES.filter(x=>x.value!=='solo').map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label>}
+      {!samspel&&participation==='team'&&<label>Tal utøvarar<input type="number" min="3" max="30" value={partnerCount} onChange={e=>setPartnerCount(e.target.value)}/></label>}
       <div className="wod-auto-score" role="status"><span>Scoring blir valt automatisk etter format</span><strong>{samspel?'Rundar + reps og '+(samspel.metric==='distance'?'meter':'kaloriar'):automaticScoreLabel}</strong></div>
     </div>
     <p className="wod-help">Gruppetime er ikkje det same som lagøkt. Ein gruppetime kan godt ha individuell scoring.</p>
