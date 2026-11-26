@@ -1,87 +1,19 @@
-// Shared anatomical classification. Estimates, not measured activation.
-export const MUSCLES = Object.freeze(['chest','front_deltoids','side_deltoids','rear_deltoids','triceps','biceps','forearms','lats','upper_back','spinal_erectors','abdominals','obliques','glutes','quadriceps','hamstrings','adductors','calves'])
-const entries = [
-[['back squat','barbell back squat'],['quadriceps','glutes'],['adductors'],['abdominals','spinal_erectors']],
-[['front squat'],['quadriceps','glutes'],['adductors'],['upper_back','abdominals','spinal_erectors']],
-[['deadlift','markløft','conventional deadlift'],['glutes','hamstrings'],['quadriceps','adductors'],['spinal_erectors','upper_back','forearms','abdominals']],
-[['romanian deadlift','rdl','rumensk markløft'],['hamstrings','glutes'],['adductors'],['spinal_erectors','forearms','abdominals']],
-[['bench press','barbell bench press','benkpress'],['chest','triceps'],['front_deltoids'],['upper_back']],
-[['push-up','push-ups','push up','push ups'],['chest','triceps'],['front_deltoids'],['abdominals']],
-[['pull-up','pull-ups','pull up','pull ups'],['lats','biceps'],['upper_back','forearms'],['abdominals']],
-[['goblet squat'],['quadriceps','glutes'],['adductors'],['abdominals','upper_back']],
-[['kettlebell swing','kettlebell swings'],['glutes','hamstrings'],['quadriceps'],['abdominals','spinal_erectors','forearms']],
-[['rowing','row ergometer','romaskin','roing','Row'],['quadriceps','glutes','upper_back'],['hamstrings','lats','biceps'],['abdominals','spinal_erectors']],
-[['calf raise','calf raises'],['calves'],[],[]],
-[['plank','planke'],['abdominals','obliques'],[],['glutes','front_deltoids']],
-[["Air Squat","Medicine Ball Squat","Medicine Ball Bear-hug Squat","TRX Assisted Squat","Dumbbell Front Squat","Kettlebell Front Rack Squat"],["quadriceps","glutes"],["adductors"],["abdominals","spinal_erectors"]],
-[["Box Step-up","Step-up","Dumbbell Step-up","Dumbbell Box Step-over","Walking Lunge","Dumbbell Reverse Lunge","Kettlebell Reverse Lunge","Medicine Ball Reverse Lunge","TRX Reverse Lunge","Bulgarian Split Squat"],["quadriceps","glutes"],["adductors","hamstrings"],["abdominals","calves"]],
-[["Leg Press"],["quadriceps","glutes"],["adductors","hamstrings"],[]],
-[["Glute bridge","Hip Thrust","Pilates Shoulder Bridge"],["glutes"],["hamstrings"],["abdominals"]],
-[["Kettlebell markløft","Kettlebell Deadlift / Markløft","Markløft med manualar","Markløft med medisinball"],["glutes","hamstrings"],["quadriceps","adductors"],["spinal_erectors","upper_back","forearms","abdominals"]],
-[["Kettlebell Suitcase Deadlift"],["glutes","hamstrings"],["quadriceps","adductors"],["obliques","spinal_erectors","forearms"]],
-[["Dumbbell Romanian Deadlift"],["hamstrings","glutes"],["adductors"],["spinal_erectors","forearms","abdominals"]],
-[["Barbell Row","Bent-over row"],["lats","upper_back"],["biceps","rear_deltoids"],["spinal_erectors","forearms","abdominals"]],
-[["One-arm Dumbbell Row","Dumbbell row","Kettlebell Single-arm Row"],["lats","upper_back"],["biceps","rear_deltoids"],["forearms","obliques"]],
-[["Chest-supported Dumbbell Row","TRX Row","Ring row"],["lats","upper_back"],["biceps","rear_deltoids"],["forearms"]],
-[["TRX High Row","TRX Face Pull","TRX Reverse Fly","Dumbbell Rear Delt Fly","Band pull-apart"],["rear_deltoids","upper_back"],[],["forearms"]],
-[["Lat Pulldown","Strict pull-up","Chest-to-Bar Pull-up"],["lats","biceps"],["upper_back","rear_deltoids"],["forearms","abdominals"]],
-[["Bench press – manualar, flat","Dumbbell Floor Press","TRX Chest Press","TRX Push-up"],["chest","triceps"],["front_deltoids"],["upper_back"]],
-[["Incline bench press – manualar","Incline bench press – stong","Incline Dumbbell Press"],["chest","front_deltoids"],["triceps"],["upper_back"]],
-[["Dips"],["triceps","chest"],["front_deltoids"],["upper_back"]],
-[["Strict press","Dumbbell Shoulder Press","Dumbbell Arnold Press","Handstand Push-up"],["front_deltoids","side_deltoids","triceps"],["upper_back"],["abdominals"]],
-[["Dumbbell Lateral Raise","Cable Lateral Raise"],["side_deltoids"],["upper_back"],[]],
-[["Dumbbell Front Raise"],["front_deltoids"],["chest"],[]],
-[["Biceps Curl","Dumbbell Biceps Curl","EZ Bar Biceps Curl","Barbell Biceps Curl","Incline Dumbbell Biceps Curl","Alternating Dumbbell Biceps Curl","Preacher EZ Bar Curl","TRX Biceps Curl","Hammer Curl"],["biceps"],["forearms"],[]],
-[["Triceps Pushdown","EZ Bar Skull Crusher","Dumbbell Skull Crusher","Dumbbell Overhead Triceps Extension","Dumbbell Triceps Kickback","Overhead Cable Triceps Extension","TRX Triceps Extension"],["triceps"],[],[]],
-[["Farmer Carry","Farmers Carry","Farmer's Carry"],["forearms"],[],["upper_back","abdominals","obliques","glutes"]],
-[["Dead Hang"],["forearms"],[],[]],
-[["Active Hang"],["upper_back","lats"],[],["forearms"]],
-[["Flexed-arm Hang"],["biceps","lats"],["forearms","upper_back"],[]],
-[["Wall Sit"],["quadriceps","glutes"],[],[]],
-[["Ab Wheel Rollout","Standing Ab Wheel Rollout","Barbell Rollout","TRX Fallout","TRX Body Saw"],["abdominals"],["lats"],["obliques","glutes","front_deltoids"]],
-[["Side plank","Pilates Side Plank"],["obliques"],["glutes"],["front_deltoids"]],
-[["TRX Plank","Hollow hold"],["abdominals","obliques"],[],[]],
-[["Sit-up","Pilates Roll Up","Pilates Hundred","Pilates Double Leg Stretch","Pilates Single Leg Stretch"],["abdominals"],["obliques"],[]],
-[["Russian twist","Pilates Criss Cross"],["obliques"],["abdominals"],[]],
-[["Dead bug","Bird dog"],[],[],["abdominals","obliques","spinal_erectors"]],
-[["TRX Hamstring Curl"],["hamstrings"],["glutes"],["abdominals"]],
-[["TRX Pike","Toes-to-Bar","Mountain climber","TRX Mountain Climber"],["abdominals"],["obliques"],["front_deltoids"]],
-[["Box Jump","Box Jump Over","Burpee Broad Jump"],["quadriceps","glutes","calves"],["hamstrings"],["abdominals"]],
-[["Double Under","Single Under","Jump rope"],["calves"],["quadriceps"],["forearms","abdominals"]],
-[["Bike Erg"],["quadriceps","glutes"],["hamstrings","calves"],[]],
-[["Jogging"],["quadriceps","glutes","calves"],["hamstrings"],["abdominals"]],
-[["SkiErg"],["lats","triceps","abdominals"],["glutes","hamstrings"],["forearms"]],
-[["Burpee","Burpee Box Jump Over","Bar-facing Burpee Over Barbell","Lateral Burpee Over Barbell","Burpee Over Dumbbell","Burpee to Target"],["quadriceps","glutes","chest","triceps"],["calves","front_deltoids"],["abdominals"]],
-[["Push Press","Dumbbell Push Press","Kettlebell Push Press","Push Jerk","Power Jerk","Split Jerk"],["quadriceps","glutes","front_deltoids","triceps"],["side_deltoids","calves"],["abdominals","upper_back"]],
-[["Thruster","Dumbbell Thruster","Kettlebell Thruster","Wall Ball Shot"],["quadriceps","glutes","front_deltoids","triceps"],["calves"],["abdominals","upper_back"]],
-[["Power Clean","Hang Power Clean","High Hang Clean","Hang Clean","Dumbbell Hang Clean","Kettlebell Clean","Medicine Ball Clean","Squat Clean","Hang Squat Clean"],["quadriceps","glutes","hamstrings"],["upper_back","calves"],["abdominals","spinal_erectors","forearms"]],
-[["Power Snatch","Hang Power Snatch","High Hang Snatch","Snatch","Hang Squat Snatch","Dumbbell Snatch","Kettlebell Snatch"],["quadriceps","glutes","hamstrings"],["upper_back","calves"],["abdominals","spinal_erectors","forearms","side_deltoids"]],
-[["Clean Pull","Clean High Pull","Snatch Pull","Kettlebell High Pull"],["glutes","hamstrings","quadriceps"],["upper_back","calves"],["forearms","spinal_erectors"]],
-[["Overhead Squat","Snatch Balance","Squat Jerk"],["quadriceps","glutes"],["adductors"],["upper_back","side_deltoids","abdominals"]],
-[["Kettlebell Dead-stop Swing"],["glutes","hamstrings"],["quadriceps"],["abdominals","spinal_erectors","forearms"]],
-[["Medicine Ball Slam"],["lats","abdominals"],["triceps","glutes"],["forearms"]],
-[["Dumbbell Pullover"],["lats","chest"],["triceps"],["abdominals"]],
-[["Pilates Clam","Pilates Side Kick"],["glutes"],[],["obliques"]],
-[["Pilates Swan Prep","Pilates Swimming"],["spinal_erectors"],["glutes","upper_back"],["abdominals"]],
-[["Quad set"],["quadriceps"],[],[]],
-[["Scapular retraction","TRX Y-Fly"],["upper_back"],["rear_deltoids"],[]],
-[["Sit-to-stand","TRX Assisted Pistol Squat"],["quadriceps","glutes"],["adductors"],["abdominals"]],
-[["TRX Atomic Push-up"],["chest","triceps","abdominals"],["front_deltoids"],["obliques"]],
-[["Clean and Jerk","Kettlebell Clean and Press"],["quadriceps","glutes","front_deltoids","triceps"],["hamstrings","upper_back"],["abdominals","forearms"]],
-[["Burpee Pull-up"],["quadriceps","glutes","chest","triceps","lats","biceps"],["front_deltoids","calves"],["abdominals","forearms"]],
-[["Dumbbell Upright Row"],["side_deltoids","upper_back"],["biceps"],["forearms"]],
-[["Muscle Clean","Tall Clean"],["upper_back"],["biceps","front_deltoids"],["abdominals","forearms"]],
-[["Muscle Snatch","Tall Snatch"],["upper_back","side_deltoids"],["triceps"],["abdominals","forearms"]]
-]
-const normalize = value => String(value ?? '').normalize('NFKC').trim().toLowerCase().replace(/\s+/g,' ')
-const profiles = new Map()
-for (const [aliases,primary,secondary,stabilizing] of entries) {
- const all=[...primary,...secondary,...stabilizing]
- if(new Set(all).size!==all.length || all.some(m=>!MUSCLES.includes(m))) throw new Error('Invalid anatomy profile')
- const profile=Object.freeze({primary:Object.freeze(primary),secondary:Object.freeze(secondary),stabilizing:Object.freeze(stabilizing),reviewStatus:'provisional'})
- for(const alias of aliases){const key=normalize(alias);if(profiles.has(key))throw new Error('Duplicate anatomy alias');profiles.set(key,profile)}
+import {exerciseMuscleProfile,DETAILED_MUSCLE_LABELS} from './exerciseMuscleProfiles.js'
+// One exercise classification catalogue; history adapts its group identifiers only.
+const keyMap=Object.freeze({"chest":"chest","frontDelts":"front_deltoids","sideDelts":"side_deltoids","rearDelts":"rear_deltoids","triceps":"triceps","biceps":"biceps","forearms":"forearms","lats":"lats","upperBack":"upper_back","lowerBack":"spinal_erectors","abs":"abdominals","obliques":"obliques","glutes":"glutes","quads":"quadriceps","hamstrings":"hamstrings","adductors":"adductors","calves":"calves","abductors":"abductors","hipFlexors":"hip_flexors","rotatorCuff":"rotator_cuff"})
+export const MUSCLES=Object.freeze(Object.values(keyMap))
+const normalize=value=>String(value??'').normalize('NFKC').trim().toLowerCase().replace(/\s+/g,' ')
+const cache=new WeakMap()
+export function anatomyForExercise(name){
+ const profile=exerciseMuscleProfile(name)
+ if(!profile)return null
+ if(cache.has(profile))return cache.get(profile)
+ const used=new Set()
+ const translate=keys=>Object.freeze((keys||[]).map(k=>keyMap[k]).filter(k=>k&&!used.has(k)&&(used.add(k),true)))
+ const result=Object.freeze({primary:translate(profile.primary),secondary:translate(profile.secondary),stabilizing:translate(profile.stabilizers),mode:profile.mode,reviewStatus:'provisional'})
+ cache.set(profile,result)
+ return result
 }
-export function anatomyForExercise(name){return profiles.get(normalize(name))??null}
 // Role counts are descriptive, not a physiological load or recovery score.
 export function summarizeMuscleExposure(rows){
  const roles=Object.fromEntries(MUSCLES.map(m=>[m,{primary:0,secondary:0,stabilizing:0}]))
@@ -97,7 +29,7 @@ export function summarizeMuscleExposure(rows){
  return {roles,classifiedSets,unclassifiedSets,unclassified:[...unclassified],metric:'documented-sets-by-muscle-role',reviewStatus:'provisional'}
 }
 
-export const MUSCLE_LABELS=Object.freeze({chest:'Bryst',front_deltoids:'Framside skulder',side_deltoids:'Side skulder',rear_deltoids:'Bakside skulder',triceps:'Triceps',biceps:'Biceps',forearms:'Underarmar',lats:'Breie ryggmuskel',upper_back:'Øvre rygg',spinal_erectors:'Ryggstrekkjarar',abdominals:'Mage',obliques:'Skrå magemusklar',glutes:'Sete',quadriceps:'Framside lår',hamstrings:'Bakside lår',adductors:'Innside lår',calves:'Leggar'})
+export const MUSCLE_LABELS=Object.freeze(Object.fromEntries(Object.entries(keyMap).map(([key,id])=>[id,DETAILED_MUSCLE_LABELS[key]])))
 // Only explicit positive performed reps or duration constitute evidence here.
 // A prescribed weight, empty set or aggregate WOD score does not establish exercise completion.
 export function documentedExerciseRows(exercises){
