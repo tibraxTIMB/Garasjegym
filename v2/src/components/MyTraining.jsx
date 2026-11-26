@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, CalendarCheck2, CalendarDays, CheckCircle2, ClipboardList, LoaderCircle, MessageSquareText, Play, RefreshCw } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
-import {ptFlowRows,FLOW_MODES} from '../lib/ptFlow.js'
+import {ptFlowRows,ptNextAction,FLOW_MODES} from '../lib/ptFlow.js'
+import PTPreparation from './PTPreparation.jsx'
 import './customer-journey.css'
 
-const ACTIVE_SESSION_KINDS = new Set(['training', 'assessment', 'recovery', 'progression_step'])
 const SESSION_KIND_LABELS = { training: 'Treningsøkt', assessment: 'Test', recovery: 'Restitusjon', rest: 'Kviledag', information: 'Infotime', progression_step: 'Progresjonssteg' }
 
 const formatDate = date => date ? new Date(date + (date.length === 10 ? 'T12:00:00' : '')).toLocaleDateString('nn-NO', { day: 'numeric', month: 'short' }) : ''
@@ -19,6 +19,8 @@ export default function MyTraining({ onOpenWod, onLaunchProgramSession, onContac
   const [classes, setClasses] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const launchLock=useRef(false)
+  const [launching,setLaunching]=useState(false)
 
   async function load(showLoader = false) {
     if (showLoader) setLoading(true)
@@ -57,22 +59,21 @@ export default function MyTraining({ onOpenWod, onLaunchProgramSession, onContac
 
   const activeProgram = useMemo(() => programs.find(program => program.status === 'active'), [programs])
   const orderedSessions = ptFlowRows(activeProgram,programSessions)
-  const actionable = orderedSessions.filter(session => ACTIVE_SESSION_KINDS.has(session.session_kind))
-  const completedCount = actionable.filter(session => session.status === 'completed').length
-  const nextSession = actionable.find(session => session.flowState === 'ready')
-  const waitingSession = actionable.find(session=>session.flowState==='review')
-  const blockedSession = actionable.find(session=>session.flowState==='locked')
-  const progress = actionable.length ? Math.round(100 * completedCount / actionable.length) : 0
+  const {next:nextSession,review:waitingSession,blocked:blockedSession,completed:completedCount,total:totalSessions,percent:progress}=ptNextAction(orderedSessions)
   // A reusable WOD id is not the identity of a plan session.
   const uniqueDailyWods = [...new Map(dailyWods.map(row => [row.wod_id, row])).values()]
   const remainingAssignments = assignments.filter(row => !uniqueDailyWods.some(day => day.wod_id === row.wod_id))
   const programWeeks = [...new Set(orderedSessions.map(session => Number(session.week_no) || 1))].sort((a, b) => a - b)
 
   async function launchSession(session) {
-    if(session.flowState!=='ready')return
-    const {data,error:launchError}=await supabase.rpc('pt_flow_can_start',{p_session_id:session.id})
-    if(launchError||data!==true){await load();setError('Økta er ikkje tilgjengeleg no. Oppdater planen eller spør PT.');return}
-    onLaunchProgramSession?.(session,null)
+    if(launchLock.current||session.flowState!=='ready'||!onLaunchProgramSession)return
+    launchLock.current=true;setLaunching(true)
+    try{
+      const {data,error:launchError}=await supabase.rpc('pt_flow_can_start',{p_session_id:session.id})
+      if(launchError||data!==true){await load();setError('Økta er ikkje tilgjengeleg no. Oppdater planen eller spør PT.');return}
+      await onLaunchProgramSession(session,null)
+    }catch(e){setError(e.message||'Kunne ikkje starta økta.')}
+    finally{launchLock.current=false;setLaunching(false)}
   }
 
   if (loading) return <div className="training-state"><LoaderCircle className="spin" /> Hentar treningsplanen din …</div>
@@ -88,11 +89,11 @@ export default function MyTraining({ onOpenWod, onLaunchProgramSession, onContac
       <div className="customer-plan-program-head"><div><span className="section-kicker">AKTIV TRENINGSPLAN</span><h4>{activeProgram?.title || 'Ingen plan tildelt enno'}</h4></div>{activeProgram && <span className="customer-plan-state"><CheckCircle2 size={15} /> Aktiv</span>}</div>
       {activeProgram ? <>
         <small>{FLOW_MODES[activeProgram.flow_unlock_mode]||FLOW_MODES.open}</small>{activeProgram.description && <details className="customer-plan-details"><summary>Om planen</summary><p className="customer-plan-description">{activeProgram.description}</p></details>}
-        <div className="customer-plan-progress-label"><span>{completedCount} av {actionable.length} økter gjennomførte</span><strong>{progress} %</strong></div>
+        <div className="customer-plan-progress-label"><span>{completedCount} av {totalSessions} økter gjennomførte</span><strong>{progress} %</strong></div>
         <div className="customer-plan-progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Framdrift i treningsplan"><span style={{ width: `${progress}%` }} /></div>
-        {nextSession ? <article className="customer-next-session"><span className="section-kicker">NESTE ØKT · VEKE {nextSession.week_no || 1}</span><h4>{nextSession.title}</h4><p>{SESSION_KIND_LABELS[nextSession.session_kind] || 'Treningsøkt'}{nextSession.estimated_minutes ? ` · ${nextSession.estimated_minutes} min` : ''}{nextSession.scheduled_date ? ` · ${formatDate(nextSession.scheduled_date)}` : ''}</p>{nextSession.coach_note && <p>{nextSession.coach_note}</p>}<button type="button" className="primary-button" onClick={() => launchSession(nextSession)}><Play size={17} /> Gjennomfør økta</button></article> : <div className="customer-plan-complete"><CheckCircle2 size={18} /> {waitingSession ? 'Resultat lagra. Ventar på PT-godkjenning.' : blockedSession ? blockedSession.flowReason : actionable.length ? 'Alle øktene i denne planen er gjennomførte!' : 'PT-en har ikkje lagt inn økter i planen enno.'}</div>}
+        {nextSession ? <article className="customer-next-session"><span className="section-kicker">NESTE ØKT · VEKE {nextSession.week_no || 1}</span><h4>{nextSession.title}</h4><p>{SESSION_KIND_LABELS[nextSession.session_kind] || 'Treningsøkt'}{nextSession.estimated_minutes ? ` · ${nextSession.estimated_minutes} min` : ''}{nextSession.scheduled_date ? ` · ${formatDate(nextSession.scheduled_date)}` : ''}</p><PTPreparation session={nextSession}/><button type="button" className="primary-button" disabled={launching} onClick={() => launchSession(nextSession)}><Play size={17} /> {launching?'Opnar …':nextSession.status==='in_progress'?'Hald fram':'Gjennomfør økta'}</button></article> : <div className="customer-plan-complete"><CheckCircle2 size={18} /> {waitingSession ? 'Resultat lagra. Ventar på PT-godkjenning.' : blockedSession ? blockedSession.flowReason : totalSessions ? 'Alle øktene i denne planen er gjennomførte!' : 'PT-en har ikkje lagt inn økter i planen enno.'}</div>}
         <details className="customer-plan-details" open={!simpleMode || undefined}><summary>Sjå heile treningsplanen <span>{orderedSessions.length} punkt</span></summary><div className="customer-plan-weeks">
-          {programWeeks.map(week => <section key={week}><h5>Veke {week}</h5>{orderedSessions.filter(session => (Number(session.week_no) || 1) === week).map(session => <article key={session.id} className="customer-plan-session"><div className="customer-plan-session-copy"><strong>{session.sequence_no}. {session.title}</strong><small>{SESSION_KIND_LABELS[session.session_kind] || 'Trening'}{session.scheduled_date ? ` · ${formatDate(session.scheduled_date)}` : ''}{session.estimated_minutes ? ` · ${session.estimated_minutes} min` : ''}</small>{session.coach_note && <p>{session.coach_note}</p>}{session.session_kind === 'progression_step' && session.workout_snapshot?.description && <p>{session.workout_snapshot.description}</p>}{session.session_kind === 'information' && session.workout_snapshot?.preparation && <p>Førebuing: {session.workout_snapshot.preparation}</p>}</div>{session.flowState==='review'?<span className="customer-session-note">Til PT-vurdering</span>:session.flowState==='done'?<span className="customer-session-done"><CheckCircle2 size={16}/> Ferdig</span>:session.flowState==='ready'&&session.id!==nextSession?.id?<button type="button" className="secondary-button" onClick={()=>launchSession(session)}><Play size={14}/> Start</button>:<span className="customer-session-note">{session.id===nextSession?.id?'Neste økt':session.flowReason}</span>}</article>)}</section>)}
+          {programWeeks.map(week => <section key={week}><h5>Veke {week}</h5>{orderedSessions.filter(session => (Number(session.week_no) || 1) === week).map(session => <article key={session.id} className="customer-plan-session"><div className="customer-plan-session-copy"><strong>{session.sequence_no}. {session.title}</strong><small>{SESSION_KIND_LABELS[session.session_kind] || 'Trening'}{session.scheduled_date ? ` · ${formatDate(session.scheduled_date)}` : ''}{session.estimated_minutes ? ` · ${session.estimated_minutes} min` : ''}</small>{session.coach_note && <p>{session.coach_note}</p>}{session.session_kind === 'progression_step' && session.workout_snapshot?.description && <p>{session.workout_snapshot.description}</p>}{session.session_kind === 'information' && session.workout_snapshot?.preparation && <p>Førebuing: {session.workout_snapshot.preparation}</p>}</div>{session.flowState==='review'?<span className="customer-session-note">Til PT-vurdering</span>:session.flowState==='done'?<span className="customer-session-done"><CheckCircle2 size={16}/> Ferdig</span>:session.flowState==='ready'&&session.id!==nextSession?.id?<button type="button" className="secondary-button" disabled={launching} onClick={()=>launchSession(session)}><Play size={14}/> Start</button>:<span className="customer-session-note">{session.id===nextSession?.id?'Neste økt':session.flowReason}</span>}</article>)}</section>)}
         </div></details>
       </> : <p className="customer-plan-description">Når PT-en lagar eit program til deg, kjem det automatisk opp her. Tildelte enkeltøkter finn du nedanfor.</p>}
     </section>
