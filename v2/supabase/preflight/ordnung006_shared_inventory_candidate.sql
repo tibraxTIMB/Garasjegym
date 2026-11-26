@@ -6,7 +6,7 @@ create table public.garage_equipment_inventory (
  equipment_label text not null check (length(btrim(equipment_label)) between 1 and 160),
  available integer not null check (available between 0 and 999),
  updated_at timestamptz not null default now(),
- updated_by uuid not null default auth.uid() references public.profiles(id)
+ updated_by uuid default auth.uid() references public.profiles(id) on delete set null
 );
 alter table public.garage_equipment_inventory enable row level security;
 revoke all on public.garage_equipment_inventory from public,anon,authenticated;
