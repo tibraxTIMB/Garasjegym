@@ -39,9 +39,11 @@ with sync_playwright() as pw:
   launch=frame.get_by_role('button',name='Utfør WOD',exact=True)
   # A normal pointer click on the scaled viewport, not a forced/JS click.
   launch.click(timeout=15000)
-  start=frame.get_by_role('button',name='Start',exact=True)
+  start=frame.get_by_role('button',name='Start no',exact=True)
   start.wait_for(timeout=20000)
   start.click(timeout=15000)
+  frame.get_by_text('PÅGÅR',exact=True).wait_for(timeout=10000)
+  frame.get_by_role('button',name='Pause',exact=True).wait_for(timeout=10000)
   page.screenshot(path='ui-audit-results/tablet-lab-actual-timer.png')
  except Exception:
   print('LAB TIMER DIAGNOSTICS',json.dumps({'body':child.locator('body').inner_text()[:6000],'errors':errors,'dataset':child.evaluate('({...document.documentElement.dataset})')},ensure_ascii=False),flush=True)
