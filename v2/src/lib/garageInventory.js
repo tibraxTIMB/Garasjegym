@@ -421,3 +421,82 @@ export function inventoryNotes(items=[],rows=[]){
  if(groups.has('stong')||groups.has('squat rack'))groups.add('racktilbehøyr')
  return rows.filter(r=>r.inventory_kind==='item'&&r.notes&&groups.has(inventoryGroup(r.group_key))&&r.available!==0)
 }
+
+// Lastmeister: known stock only; no reservation or automatic dose changes.
+export function plateAllocation(rows,requests){
+ const invalid=reason=>({status:'invalid',reason})
+ if(!Array.isArray(rows)||!Array.isArray(requests)||requests.length<1||requests.length>8)return invalid('Vel 1–8 stenger.')
+ const grams=v=>v!==null&&v!==undefined&&String(v).trim()!==''&&Number.isFinite(Number(v))&&Number(v)>0&&Number(v)<=1000&&Math.abs(Number(v)*1000-Math.round(Number(v)*1000))<1e-6?Math.round(Number(v)*1000):null
+ const known=v=>Number.isSafeInteger(v)&&v>=0&&v<=999
+ const stock=rows.filter(r=>r?.inventory_kind==='item'&&['stong','ez-stong','vektskiver'].includes(r.group_key))
+ if(new Set(stock.map(r=>r.equipment_key)).size!==stock.length||stock.some(r=>!r.equipment_key))return invalid('Duplikat eller manglande utstyrs-ID.')
+ const bars=new Map(stock.filter(r=>r.group_key!=='vektskiver').map(r=>[r.equipment_key,r]))
+ const plates=stock.filter(r=>r.group_key==='vektskiver'&&known(r.available)&&grams(r.weight_kg)!==null&&r.available>=2).map(r=>({key:r.equipment_key,weight:grams(r.weight_kg),pairs:Math.floor(r.available/2)})).sort((a,b)=>b.weight-a.weight)
+ const unknownPlates=stock.some(r=>r.group_key==='vektskiver'&&r.available!==0&&(!known(r.available)||grams(r.weight_kg)===null))
+ const used=new Map(),jobs=[]
+ for(const [index,req] of requests.entries()){
+  const bar=bars.get(req.barKey),target=grams(req.targetKg)
+  if(!bar||target===null)return invalid('Vel stong og gyldig målvekt.')
+  if(!known(bar.available)||grams(bar.weight_kg)===null)return {status:'unknown',reason:'Stongvekt eller tal er ukjent.'}
+  if(req.compatible!==true)return {status:'unknown',reason:'Stadfest kompatibilitet og bruksrestriksjonar for kvar stong.'}
+  const count=(used.get(req.barKey)||0)+1;used.set(req.barKey,count)
+  if(count>bar.available)return {status:'shortage',reason:'For få stenger av vald variant.'}
+  if(target<grams(bar.weight_kg))return invalid('Målvekta er lågare enn eigenvekta til stonga.')
+  jobs.push({index,bar,target,need:target-grams(bar.weight_kg)})
+ }
+ if(plates.length>32)return {status:'unknown',reason:'For mange skivevariantar for automatisk berekning.'}
+ let steps=0,limited=false;const limit=100000
+ const tick=()=>{if(++steps>limit){limited=true;return false}return true}
+ const capacity=plates.map(p=>p.pairs),solutions=[]
+ const ordered=[...jobs].sort((a,b)=>b.need-a.need)
+ function allocate(jobIndex){
+  if(!tick())return false
+  if(jobIndex===ordered.length)return true
+  const job=ordered[jobIndex],pick=[]
+  function choose(i,left){
+   if(!tick())return false
+   if(left===0){
+    solutions[job.index]=pick.slice()
+    if(allocate(jobIndex+1))return true
+    return false
+   }
+   if(i===plates.length||left<0)return false
+   const w=2*plates[i].weight
+   for(let n=Math.min(capacity[i],Math.floor(left/w));n>=0;n--){
+    capacity[i]-=n;pick[i]=n
+    if(choose(i+1,left-n*w))return true
+    capacity[i]+=n
+    if(limited)break
+   }
+   pick.length=i
+   return false
+  }
+  return choose(0,job.need)
+ }
+ const describe=(job,pick,total)=>({barKey:job.bar.equipment_key,barKg:Number(job.bar.weight_kg),targetKg:job.target/1000,totalKg:total/1000,perSide:plates.flatMap((p,i)=>pick[i]>0?[{key:p.key,kg:p.weight/1000,count:pick[i]}]:[]),notes:job.bar.notes||''})
+ if(allocate(0))return {status:'exact',loads:jobs.map(job=>describe(job,solutions[job.index],job.target))}
+ if(limited)return {status:'unknown',reason:'Berekninga nådde søkjegrensa. Kontroller manuelt.'}
+ if(unknownPlates||!plates.length&&!stock.some(r=>r.group_key==='vektskiver'))return {status:'unknown',reason:'Skiveinventaret er ufullstendig.'}
+ // Alternatives are independent, never a simultaneous allocation or an automatic change.
+ const alternatives=[]
+ for(const job of jobs){
+  let below=null,above=null
+  function visit(i,total,pick){
+   if(!tick())return
+   if(i===plates.length){
+    if(total<=1000000&&total<job.target&&(!below||total>below.totalKg*1000))below=describe(job,pick,total)
+    if(total<=1000000&&total>job.target&&(!above||total<above.totalKg*1000))above=describe(job,pick,total)
+    return
+   }
+   const w=2*plates[i].weight
+   for(let n=0;n<=Math.min(plates[i].pairs,Math.floor((1000000-total)/w));n++){
+    pick[i]=n;visit(i+1,total+n*w,pick);if(limited)break
+   }
+   pick.length=i
+  }
+  visit(0,grams(job.bar.weight_kg),[])
+  if(limited)return {status:'shortage',reason:'Ingen eksakt samtidig fordeling. Alternativberekning nådde søkjegrensa.',alternatives:[]}
+  alternatives.push({index:job.index,below,above})
+ }
+ return {status:'shortage',reason:'Ingen eksakt samtidig fordeling med registrerte skivepar.',alternatives}
+}
