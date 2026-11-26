@@ -1,12 +1,12 @@
 import {useEffect,useRef,useState} from 'react'
 import {Monitor,RotateCw,Minus,X,RefreshCw,ExternalLink} from 'lucide-react'
-import {LAB_CHANNEL,isLabMessage,labWod} from '../lib/tabletLabProtocol.js'
+import {LAB_CHANNEL,isLabMessage,labWod,labPlan} from '../lib/tabletLabProtocol.js'
 export default function TabletLabDock({wod,onClose}){
  const [landscape,setLandscape]=useState(false),[minimized,setMinimized]=useState(false),[revision,setRevision]=useState(0),[ready,setReady]=useState(false),[error,setError]=useState(''),[position,setPosition]=useState(null),[scale,setScale]=useState(.55)
  const frame=useRef(null),drag=useRef(null),pending=useRef(wod),currentReady=useRef(false)
  const url=import.meta.env.BASE_URL+'tablet-lab.html'
  const width=landscape?1280:800,height=landscape?800:1280
- function send(value){if(!value||!currentReady.current||!frame.current?.contentWindow)return;try{frame.current.contentWindow.postMessage({channel:LAB_CHANNEL,type:'wod',wod:labWod(value)},location.origin);setError('')}catch(e){setError(e.message)}}
+ function send(value){if(!value||!currentReady.current||!frame.current?.contentWindow)return;try{frame.current.contentWindow.postMessage(value.kind==='plan'?{channel:LAB_CHANNEL,type:'plan',plan:labPlan(value)}:{channel:LAB_CHANNEL,type:'wod',wod:labWod(value)},location.origin);setError('')}catch(e){setError(e.message)}}
  useEffect(()=>{pending.current=wod;send(wod)},[wod])
  useEffect(()=>{function receive(e){if(e.origin!==location.origin||e.source!==frame.current?.contentWindow)return;if(isLabMessage(e.data,'ready')){currentReady.current=true;setReady(true);send(pending.current)}if(isLabMessage(e.data,'error'))setError(String(e.data.message||'Testlaboratoriet melde feil.'))}window.addEventListener('message',receive);return()=>window.removeEventListener('message',receive)},[])
  function reload(){currentReady.current=false;setReady(false);setRevision(x=>x+1)}

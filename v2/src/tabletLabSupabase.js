@@ -8,6 +8,15 @@ let wods=[{id:LAB_WOD_ID,name:'Prøveøkt · 4 min',format:'AMRAP',category:'mai
 const tables=new Map([['profiles',[profile]],['member_preferences',[{user_id:uid,super_simple_mode:true,preferred_display_mode:'simple'}]],['exercises',[exercise]],['workout_logs',[]]])
 const read=table=>table==='wods'?wods:tables.get(table)||[]
 export function setLabWod(row){wods=[{...row,id:LAB_WOD_ID,created_at:new Date().toISOString()}];const names=new Map();for(const item of row.timer_settings.workout_schema.items||[]){if(item.exercise_id)names.set(item.exercise_id,{id:item.exercise_id,name:item.exercise_name,category:item.category||'Styrke',equipment:item.equipment||'Kroppsvekt',is_active:true})}tables.set('exercises',[exercise,...names.values()])}
+export function setLabPlan(plan){
+ // The sender has reduced the plan to synthetic IDs and planning fields.
+ if(plan?.kind!=='plan'||!Array.isArray(plan.sessions)||!Array.isArray(plan.wods)||plan.sessions.length>364||plan.wods.length>364)throw Error('Ugyldig testplan.')
+ wods=plan.wods.map(w=>({...w,is_published:true,is_archived:false,created_at:new Date().toISOString()}))
+ tables.set('pt_programs',[{id:'lab-program',client_id:uid,title:plan.title,status:'active',weeks:plan.weeks,start_date:new Date().toISOString().slice(0,10),archived_at:null,flow_unlock_mode:'open'}])
+ tables.set('pt_program_sessions',plan.sessions.map(s=>({...s,program_id:'lab-program',archived_at:null,flow_requires_approval:false,flow_approved:false,flow_override:false})))
+ const ex=new Map();for(const w of wods)for(const item of w.timer_settings?.workout_schema?.items||[])if(item.exercise_id)ex.set(item.exercise_id,{id:item.exercise_id,name:item.exercise_name,category:item.category||'Styrke',equipment:item.equipment||'Kroppsvekt',is_active:true})
+ tables.set('exercises',[exercise,...ex.values()])
+}
 let serial=0
 function query(table){
  let filters=[],mode='select',payload=null,limit=Infinity,offset=0,descending=false,orderKey='',head=false
@@ -40,6 +49,7 @@ export const supabase={from:query,auth:{getUser:async()=>({data:{user},error:nul
   if(receipts.has(p.save_token))return {data:receipts.get(p.save_token),error:null}
   const id='lab-workout-'+(++serial);receipts.set(p.save_token,id);tables.set('workout_logs',[...read('workout_logs'),{...p,id}]);return {data:id,error:null}
  }
+ if(name==='pt_flow_can_start')return {data:true,error:null}
  if(name==='get_class_attendance_counts')return {data:[],error:null}
  return {data:null,error:{message:'RPC '+name+' er ikkje simulert i testlaboratoriet.'}}
 }}
