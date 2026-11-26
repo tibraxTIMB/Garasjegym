@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {samspelConfig,samspelIssue,samspelRoles,samspelResultIssue,samspelScoring,samspelWithCount,samspelRoundInstruction,samspelWithSwitch,samspelRotation,samspelIsTimed} from '../src/lib/samspel.js'
+import {samspelConfig,samspelIssue,samspelRoles,samspelResultIssue,samspelScoring,samspelWithCount,samspelRoundInstruction,samspelWithSwitch,samspelRotation,samspelIsTimed,samspelIsManual,appendSamspelSwap,normalizeSamspelSwaps} from '../src/lib/samspel.js'
 const legacy={version:1,mode:'parallel_round_swap',task:'row',metric:'distance'}
 const context={format:'AMRAP',participation:'partner',collaboration:'parallel',items:[{name:'Push-up'}]}
 assert.equal(samspelConfig({samspel:legacy}),legacy)
@@ -46,3 +46,24 @@ assert.ok(samspelIssue(samspelWithSwitch(team,'time',15.5),{...context,participa
 assert.equal(samspelIsTimed(samspelWithSwitch(timed,'round')),false)
 assert.equal(samspelRotation(legacy,{elapsed:300,rounds:1}).roles[1],'Romaskin')
 console.log('Timed Samspel swap checks passed')
+
+const manual=samspelWithSwitch(team,'manual')
+const action={elapsed:10,running:true,target:180}
+assert.equal(samspelIsManual(manual),true)
+assert.equal(samspelIsTimed(manual),false)
+assert.equal(samspelIssue(manual,{...context,participation:'team',participantCount:4}),null)
+assert.deepEqual(appendSamspelSwap(manual,[],action),[10])
+assert.deepEqual(appendSamspelSwap(manual,[10],action),[10])
+assert.deepEqual(appendSamspelSwap(manual,[10],{...action,elapsed:11}),[10])
+assert.deepEqual(appendSamspelSwap(manual,[10],{...action,elapsed:12}),[10,12])
+assert.deepEqual(appendSamspelSwap(manual,[10],{...action,elapsed:20,running:false}),[10])
+assert.deepEqual(appendSamspelSwap(manual,[10],{...action,elapsed:180}),[10])
+assert.deepEqual(appendSamspelSwap(timed,[],action),[])
+assert.deepEqual(normalizeSamspelSwaps([10,10,9,11,12,'14',null,Infinity,20]),[10,12,20])
+assert.deepEqual(normalizeSamspelSwaps(null),[])
+assert.equal(samspelRotation(manual,{manualSwaps:[10,20],rounds:99,elapsed:60}).roles[2],'Romaskin')
+assert.deepEqual(samspelRotation(manual,{manualSwaps:[10],rounds:99,elapsed:60}),samspelRotation(manual,{manualSwaps:[10],rounds:0,elapsed:0}))
+assert.equal(samspelRotation(manual,{manualSwaps:[10,20].slice(0,-1)}).roles[1],'Romaskin')
+assert.equal(samspelRotation(manual,{manualSwaps:[]}).roles[0],'Romaskin')
+assert.equal(samspelIsManual(samspelWithSwitch(manual,'round')),false)
+console.log('Manual Samspel swap checks passed')
