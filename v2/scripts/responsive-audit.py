@@ -38,7 +38,7 @@ def open_page(context,path):
 with sync_playwright() as pw:
     browser=pw.chromium.launch(headless=True)
     # Explicit desktop companion test; synthetic catalogue, no production connection.
-    for w,h in [(1024,768),(1440,900),(1920,1080)]:
+    for w,h in [(320,568),(390,844),(844,390),(1024,768),(1440,900),(1920,1080)]:
         ctx=browser.new_context(viewport={'width':w,'height':h},accept_downloads=True,locale='nn-NO')
         ctx.route('**/*',lambda route:route.continue_() if route.request.url.startswith(BASE) else route.abort())
         page=None
@@ -62,6 +62,16 @@ with sync_playwright() as pw:
             page.get_by_role('checkbox',name='Eg har kontrollert',exact=False).check()
             assert page.get_by_role('button',name='Lagra ny planmal',exact=True).is_enabled()
             check(page,'werkstatt-plan-review',w,h)
+            page.get_by_role('button',name='LIBRARIUM',exact=True).click()
+            page.get_by_role('heading',name='LIBRARIUM · øvingsbank').wait_for()
+            check(page,'werkstatt-librarium',w,h)
+            page.get_by_role('button',name='EXPORTWERK',exact=True).click()
+            page.get_by_role('heading',name='EXPORTWERK 49 · eigne treningsdata').wait_for()
+            check(page,'werkstatt-exportwerk',w,h)
+            page.get_by_role('button',name='Oppvarming',exact=True).click()
+            page.get_by_role('button',name='Panzer Mobility',exact=False).wait_for()
+            assert page.get_by_role('button',name='Blitz Herz',exact=False).is_visible()
+            check(page,'werkstatt-warmups',w,h)
             assert not errors,errors
         except Exception as error:
             failures.append(f'werkstatt {w}x{h}: {error}')
