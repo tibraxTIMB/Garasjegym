@@ -6,6 +6,11 @@ const positive = value => {
   return Number.isFinite(number) && number > 0 ? number : 0
 }
 
+// A team score or completion-only record is not evidence of individual performance.
+export function isIndividualPerformance(log){
+ const data=log?.result_data||{}
+ return data.flow_completion_only!==true&&data.samspel?.team_score!==true&&(!data.wod_engine?.participation||data.wod_engine.participation==='individual')
+}
 const SIDE_LABELS = {right:'Høgre',left:'Venstre',both:'Per side',alternating:'Vekslande'}
 
 export function exerciseRecordType(name, sets = [], result = {}) {
@@ -32,6 +37,7 @@ const bestBy = (candidates, key, direction = 'max') => {
 export function deriveExerciseRecords(logs = []) {
   const exercises = new Map()
   for (const log of logs) {
+    if(!isIndividualPerformance(log))continue
     const rows = [...(log.workout_exercises || [])].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))
     for (const [index, exercise] of rows.entries()) {
       const result = log.result_data?.exercise_results?.[index] || {}
@@ -161,7 +167,7 @@ export function deriveBenchmarkRecords(logs = [], benchmarkWodIds = []) {
   if(better){group.score=score;group.date=log.workout_date;group.logId=log.id}
  }
  for(const log of logs){
-  if(!log.source_wod_id||log.result_data?.flow_completion_only===true||log.result_data?.samspel?.team_score===true)continue
+  if(!log.source_wod_id||!isIndividualPerformance(log))continue
   const completionOnlyParts=new Set((log.result_data?.flow_completion||[]).map(part=>part.id))
   const rootEligible=eligible.has(log.source_wod_id)
   const level=String(log.result_data?.prescription_level||'rx').toLowerCase()
@@ -175,7 +181,9 @@ export function deriveBenchmarkRecords(logs = [], benchmarkWodIds = []) {
     const linkedEligible=linkedId&&eligible.has(linkedId)
     if(!rootEligible&&!linkedEligible)continue
     const format=String(part.format||'')
-    const key=linkedEligible?`${linkedId}|${level}|${format.toLowerCase()}`:`${log.source_wod_id}|${part.id||index}|${level}|${format.toLowerCase()}`
+    const variant=['Couplet','Triplet'].includes(format)?'|'+String(part.combination_mode||'unknown').toLowerCase():''
+    if(variant==='|unknown'||variant==='|open')continue
+    const key=linkedEligible?`${linkedId}|${level}|${format.toLowerCase()}${variant}`:`${log.source_wod_id}|${part.id||index}|${level}|${format.toLowerCase()}${variant}`
     const name=linkedEligible?(part.source_wod_name||part.title||'Benchmark-WOD'):(log.result_data?.wod_names?.[0]||log.title||'Samansett WOD')+' · '+(part.title||'Del '+(index+1))
     let score=null
     if(format==='AMRAP'||(['Couplet','Triplet'].includes(format)&&part.combination_mode==='AMRAP')){
@@ -199,7 +207,9 @@ export function deriveBenchmarkRecords(logs = [], benchmarkWodIds = []) {
   const engineFields=log.result_data?.wod_engine?.scoring?.fields||[]
   const isCombo=['couplet','triplet'].includes(format)
   const comboAmrap=isCombo&&(combinationMode==='amrap'||(!combinationMode&&engineFields.includes('rounds_reps')))
-  const key=`${log.source_wod_id}|${level}|${format}`
+  const variant=isCombo?(comboAmrap?'|amrap':combinationMode==='for time'||engineFields.includes('time')?'|for time':'|unknown'):''
+  if(variant==='|unknown')continue
+  const key=`${log.source_wod_id}|${level}|${format}${variant}`
   let score=null
   if(format==='death by'){
    if(log.score_rounds==null)continue
