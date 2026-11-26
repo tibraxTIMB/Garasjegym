@@ -7,6 +7,7 @@ import { RELEASE_NAME } from '../lib/release.js'
 import { canManageMemberAccess } from '../lib/membershipAccess.js'
 import WodImportPanel from './WodImportPanel.jsx'
 import GarageMaintenance from './GarageMaintenance.jsx'
+import GarageInventory from './GarageInventory.jsx'
 import Safehouse from './Safehouse.jsx'
 import './admin-advanced.css'
 import GarageOwnerBadge from './GarageOwnerBadge.jsx'
@@ -159,7 +160,7 @@ export default function Admin({profile,onOpenWodImport,onOpenPTAdmin=()=>{},onOp
     <button type="button" title="Opna øvingsbibliotek" onClick={()=>setAdminTab('ovingar')}><Plus size={16} aria-hidden="true"/><strong>{exercises.length}</strong><span>Øvingar</span></button>
    </div>
   <nav className="admin-tabs" aria-label="Administrasjonsområde">
-   {[['oversikt','Oversikt',ShieldCheck],['medlemmer','Medlemmer og tilgang',Users],['rang','Rang & achievements',Trophy],['kaffi','Kaffebar',Coffee],['ovingar','Øvingsbibliotek',Dumbbell],...(isAdmin?[['drift','Drift',ShieldCheck]]:[])].map(([id,label,Icon])=><button type="button" key={id} className={adminTab===id?'selected':''} onClick={()=>setAdminTab(id)}><Icon size={15}/>{label}</button>)}
+   {[['oversikt','Oversikt',ShieldCheck],['medlemmer','Medlemmer og tilgang',Users],['rang','Rang & achievements',Trophy],['kaffi','Kaffebar',Coffee],['ovingar','Øvingsbibliotek',Dumbbell],['utstyr','Utstyr',Dumbbell],...(isAdmin?[['drift','Drift',ShieldCheck]]:[])].map(([id,label,Icon])=><button type="button" key={id} className={adminTab===id?'selected':''} onClick={()=>setAdminTab(id)}><Icon size={15}/>{label}</button>)}
   </nav>
   {adminTab==='oversikt'&&<div className="admin-dashboard-grid">
    <article className="admin-dashboard-card"><span className="section-kicker">MEDLEMSSTATUS</span><strong>{members.filter(m=>m.active).length} / {members.length}</strong><p>Aktive medlemmar</p><button className="secondary-button" onClick={()=>setAdminTab('medlemmer')}>Opne medlemsregister</button></article>
@@ -167,6 +168,7 @@ export default function Admin({profile,onOpenWodImport,onOpenPTAdmin=()=>{},onOp
    <article className="admin-dashboard-card"><span className="section-kicker">INNHALD</span><strong>{wods.length+wods.filter(w=>w.is_published).length*0} WOD-ar · {exercises.length} øvingar</strong><p>Bibliotek og øvingsbank</p><button className="secondary-button" onClick={()=>setAdminTab('ovingar')}>Administrer øvingar</button></article>
    <article className="admin-dashboard-card"><span className="section-kicker">DRIFT</span><strong>Kaffi · booking · PT</strong><p>Daglege arbeidsflater ligg i eigne menyar</p><button className="secondary-button" onClick={()=>setAdminTab(isAdmin?'drift':'kaffi')}>{isAdmin?'Opne drift':'Opne kaffebar'}</button></article>
   </div>}
+  {adminTab==='utstyr'&&<GarageInventory profile={profile}/>}
   {isAdmin&&adminTab==='drift'&&<section className="engine-section admin-drift-hub"><div className="training-heading"><div><span className="section-kicker">GARASJEGYM · DAGLEG DRIFT</span><h4>Drift</h4><p>Vel oppgåva du skal gjera. Verktøy og vedlikehald ligg eitt nivå under.</p></div></div>
     <div className="admin-drift-actions">
       <button type="button" onClick={onOpenPTClients}><span>PT-kundar – dagleg oppfølging</span><small>Vel kunde, sjå tildelte WOD-ar, før PT-notat og planlegg vidare</small><b>Opna PT-kundar →</b></button>

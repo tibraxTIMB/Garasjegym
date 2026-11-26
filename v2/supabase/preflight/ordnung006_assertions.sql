@@ -45,4 +45,19 @@ do $schedule$begin
  begin update public.pt_wod_assignments set scheduled_time='18:00' where id='30000000-0000-0000-0000-000000000004';raise exception 'member reschedule allowed';exception when insufficient_privilege then null;end;
 end$schedule$;
 reset role;
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
+insert into public.garage_equipment_inventory(equipment_key,equipment_label,inventory_kind,group_key,available,weight_kg,notes) values ('item:bar','Stong','item','stong',1,20,'Ikkje dropp'),('item:bands','Strikk','item','strikk',null,null,'Ukjend mengd');
+update public.garage_equipment_inventory set available=2 where equipment_key='item:bar';
+do $inventory$begin
+ if (select available from public.garage_equipment_inventory where equipment_key='item:bar') is distinct from 2 then raise exception 'staff detail update';end if;
+ begin insert into public.garage_equipment_inventory(equipment_key,equipment_label,available) values ('bad','Bad',null);raise exception 'capacity null allowed';exception when check_violation then null;end;
+end$inventory$;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',false);
+do $inventory$declare n integer;begin
+ if (select count(*) from public.garage_equipment_inventory where inventory_kind='item')<>2 then raise exception 'member detail read';end if;
+ update public.garage_equipment_inventory set notes='changed' where equipment_key='item:bar';get diagnostics n=row_count;
+ if n<>0 then raise exception 'member detail update';end if;
+end$inventory$;
+reset role;
 select 'ORDRE 006 SQL REHEARSAL PASSED' as result;
