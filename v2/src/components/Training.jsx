@@ -12,7 +12,7 @@ import { Music, MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
 import { getWodSchemaItems, sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
-import {samspelConfig,samspelRotation,samspelIsTimed,samspelIsManual,normalizeSamspelSwaps,appendSamspelSwap,samspelResultIssue,samspelRoundInstruction} from '../lib/samspel.js'
+import {samspelConfig,samspelRotation,samspelIsTimed,samspelIsManual,normalizeSamspelSwaps,appendSamspelSwap,samspelResultIssue,samspelRoundInstruction,samspelParticipantRows,samspelParticipantResults} from '../lib/samspel.js'
 import {cardParts,cardTone,cardDose} from '../lib/wodCard.js'
 import './wod-architect.css'
 import { formatParticipation, normalizeWodEngine, isEmomFormat, emomIntervalSeconds, emomDisplayLabel, emomPrescribedSetCount } from '../lib/wodEngine.js'
@@ -1005,6 +1005,9 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const [scoreCalories, setScoreCalories] = useState(() => savedDraft?.scoreCalories || '')
   const [scoreDistance, setScoreDistance] = useState(() => savedDraft?.scoreDistance || '')
   const [scoreUnit, setScoreUnit] = useState(() => savedDraft?.scoreUnit || 'm')
+  const [participantDraft,setParticipantDraft]=useState(()=>({token:savedDraft?.saveToken,values:savedDraft?.participantScores||{}}))
+  const participantScores=participantDraft.token===saveToken?participantDraft.values:{}
+  const updateParticipantScore=(slot,field,value)=>setParticipantDraft(old=>{const values=old.token===saveToken?old.values:{};return {token:saveToken,values:{...values,[slot]:{...values[slot],[field]:value}}}})
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(() => savedDraft?.activeExerciseIndex || 0)
   // Review results independently from the live timer; actual values stay in the existing draft.
   const previousFinishOpen=useRef(Boolean(savedDraft?.finishOpen))
@@ -1081,7 +1084,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       mode, manualEntry, manualLibraryEntry, manualLocation, sessionPrepared, manualCompleted, source, wodLevel, classSessionId,
       launchLinkContext, title, workoutDate, manualWodIds, format, duration,
       durationSeconds, note, items, scoreRounds, scoreReps, blockScores, scoreTime, scoreLoad,
-      scoreCalories, scoreDistance, scoreUnit, saveToken,
+      scoreCalories, scoreDistance, scoreUnit, saveToken, participantScores,
       activeExerciseIndex, resultSetIndex,flowDetailed,timerSnapshot, finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom,
   }
   useEffect(() => {
@@ -1090,7 +1093,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     if(pendingSave.current&&pendingSave.current!==workoutSaveFingerprint(draftSnapshot)){
       pendingSave.current=null;setSyncNotice('Resultatet er endra. Trykk Lagre økt på nytt når du er klar.')
     }
-  }, [memberId,mode,manualEntry,manualLibraryEntry,manualLocation,sessionPrepared,manualCompleted,source,wodLevel,classSessionId,launchLinkContext,title,workoutDate,manualWodIds,format,duration,durationSeconds,note,items,scoreRounds,scoreReps,blockScores,scoreTime,scoreLoad,scoreCalories,scoreDistance,scoreUnit,saveToken,activeExerciseIndex,resultSetIndex,flowDetailed,timerSnapshot,finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom])
+  }, [memberId,mode,manualEntry,manualLibraryEntry,manualLocation,sessionPrepared,manualCompleted,source,wodLevel,classSessionId,launchLinkContext,title,workoutDate,manualWodIds,format,duration,durationSeconds,note,items,scoreRounds,scoreReps,blockScores,scoreTime,scoreLoad,scoreCalories,scoreDistance,scoreUnit,saveToken,participantDraft,activeExerciseIndex,resultSetIndex,flowDetailed,timerSnapshot,finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom])
   useEffect(()=>{
     const retry=()=>{if(!isOffline()&&pendingSave.current&&!saveLock.current)retrySave.current?.()}
     window.addEventListener('online',retry)
@@ -1485,6 +1488,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     if(automatic&&(!pendingSave.current||pendingSave.current!==fingerprint||isOffline()))return
     if(!automatic){pendingSave.current=null;setSyncNotice('')}
     if(finishOpen&&!resultSummary){nextResult();return}
+    const participantResult=samspelParticipantResults(sessionSamspel,participantScores)
+    if(participantResult.issue){setError(participantResult.issue);setResultSummary(true);return}
     if(sessionSamspel){const issue=samspelResultIssue(sessionSamspel,sessionSamspel.metric==='distance'?scoreDistance:scoreCalories);if(issue){setError(issue);setResultSummary(true);return}}
     if(resultIssues.length){setShowResultIssues(true);setResultSummary(true);if(resultBodyRef.current)resultBodyRef.current.scrollTop=0;setError('Rett '+resultIssues.length+' felt før du lagrar. Trykk på feilen for å gå direkte dit.');return}
     if (!title.trim()) { setError('Gi økta eit namn før du lagrar.'); return }
@@ -1578,7 +1583,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         score_time_seconds:parsedTime,
         load_kg:scoreLoad===''?null:Number(scoreLoad),
         calories:scoreCalories===''?null:Number(scoreCalories),
-        distance:scoreDistance===''?null:Number(scoreDistance),distance_unit:sessionSamspel?.metric==='distance'?'m':scoreUnit,samspel:sessionSamspel?{...sessionSamspel,team_score:true,...(samspelIsManual(sessionSamspel)&&!manualEntry?{manual_swaps:normalizeSamspelSwaps(timerSnapshot.samspel_swaps)}:{})}:null,
+        distance:scoreDistance===''?null:Number(scoreDistance),distance_unit:sessionSamspel?.metric==='distance'?'m':scoreUnit,samspel:sessionSamspel?{...sessionSamspel,team_score:true,...(sessionSamspel.individual_scores?{participant_results:participantResult.rows}:{}),...(samspelIsManual(sessionSamspel)&&!manualEntry?{manual_swaps:normalizeSamspelSwaps(timerSnapshot.samspel_swaps)}:{})}:null,
         block_primary_results:explicitResults,
         complex_results:items.filter(item=>item.is_complex&&item.complex_family==='custom').map(item=>({block_id:item.block_id||null,name:item.exercise_name,steps:item.complex_steps,...complexResultSummary(item)})),
         exercise_results:items.map(item=>({block_id:item.block_id||null,exercise_name:item.exercise_name,side_mode:item.side_mode||null,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps.map(step=>({exercise_id:step.exercise_id||null,name:step.name,reps:Number(step.reps)||1})):[],row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,sets:item.sets.map(s=>({flow_status:s.flow_status||null,complex_status:item.is_complex&&item.complex_family==='custom'?s.complex_status||null:null,reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm),rir:s.rir===''||s.rir==null?null:Number(s.rir)}))}))
@@ -1713,7 +1718,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           <FlowEntryProvider key={String(resultSummary)+':'+activeExerciseIndex+':'+resultSetIndex+':'+flowDetailed}>
            <div ref={resultBodyRef} className="gg-result-body" onTouchStart={e=>{if(e.target.closest('input,select,textarea,button'))return;const t=e.touches[0];resultTouch.current={x:t.clientX,y:t.clientY}}} onTouchEnd={e=>{const start=resultTouch.current,t=e.changedTouches[0];resultTouch.current=null;if(!start||!t)return;const dx=t.clientX-start.x,dy=t.clientY-start.y;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.7)moveResult(dx<0?1:-1)}}>
           {resultSummary&&showResultIssues&&resultIssues.length>0&&<section className="gg-result-issues" aria-label="Felt som må rettast">{resultIssues.map((issue,index)=><button type="button" key={index} className="secondary-button" onClick={()=>correctResultIssue(issue)}><span><strong>{resultIssueLabel(issue)}</strong><small>{issue.message}</small></span><span>Rett <ChevronRight size={16}/></span></button>)}</section>}
-          {sessionSamspel&&<section className="gg-samspel-result" aria-label="Felles Samspel-resultat"><strong>Felles resultat · kondisjonsoppgåve</strong><label>{sessionSamspel.metric==='distance'?'Samla distanse (m)':'Samla kaloriar'}<FlowNumberInput type="number" min="0" step="1" inputMode="numeric" data-result-field={sessionSamspel.metric==='distance'?'scoreDistance':'scoreCalories'} value={sessionSamspel.metric==='distance'?scoreDistance:scoreCalories} onChange={e=>{if(sessionSamspel.metric==='distance'){setScoreDistance(e.target.value);setScoreUnit('m')}else setScoreCalories(e.target.value)}} placeholder="Les av maskina"/></label><small>Samla for heile laget. Rundar og ekstra reps blir registrerte separat. {samspelRoundInstruction(sessionSamspel)}</small></section>}
+          {sessionSamspel&&<section className="gg-samspel-result" aria-label="Felles Samspel-resultat"><strong>Felles resultat · kondisjonsoppgåve</strong><label>{sessionSamspel.metric==='distance'?'Samla distanse (m)':'Samla kaloriar'}<FlowNumberInput type="number" min="0" step="1" inputMode="numeric" data-result-field={sessionSamspel.metric==='distance'?'scoreDistance':'scoreCalories'} value={sessionSamspel.metric==='distance'?scoreDistance:scoreCalories} onChange={e=>{if(sessionSamspel.metric==='distance'){setScoreDistance(e.target.value);setScoreUnit('m')}else setScoreCalories(e.target.value)}} placeholder="Les av maskina"/></label><small>Samla for heile laget. Rundar og ekstra reps blir registrerte separat. {samspelRoundInstruction(sessionSamspel)}</small>{sessionSamspel.individual_scores&&<details open={resultSummary||undefined}><summary>Resultat per utøvar (valfritt)</summary><small>Plassnummer frå timeren. Tomt felt betyr ikkje registrert. Ingen individuelle PR-ar vert oppretta.</small>{samspelParticipantRows(sessionSamspel,participantScores).map(row=><fieldset key={row.slot} disabled={saving} style={{minWidth:0,margin:'8px 0',padding:8}}><legend>Utøvar {row.slot}</legend><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(85px,1fr))',gap:6}}>{[['rounds','Rundar'],['reps','Ekstra reps'],['erg',sessionSamspel.metric==='distance'?'Meter':'Kaloriar']].map(([field,label])=><label key={field}>{label}<FlowNumberInput type="number" min="0" step={field==='erg'?'0.1':'1'} inputMode={field==='erg'?'decimal':'numeric'} value={row[field]} onChange={e=>updateParticipantScore(row.slot,field,e.target.value)} placeholder="–"/></label>)}</div></fieldset>)}</details>}</section>}
           {source&&<div className="gg-flow-level"><div className="gg-flow-level-buttons" role="group" aria-label="Faktisk doseringsnivå">{[{id:'rx',label:'RX'},...(items.some(item=>item.prescription_levels?.intermediate)?[{id:'intermediate',label:'Intermediate'}]:[]),{id:'scaled',label:'Scaled'},{id:'foundation',label:'Foundation'}].map(level=><button type="button" key={level.id} className={wodLevel===level.id?'selected':''} aria-pressed={wodLevel===level.id} onClick={()=>{setWodLevel(level.id);setItems(rows=>rows.map(item=>item.prescription_levels?{...item,prescription_label:doseLabel({levels:item.prescription_levels},level.id)}:item))}}>{level.label}</button>)}</div></div>}
           {!resultSummary&&resultItem?<section className="workout-result-entry">
             <details className="gg-result-jump" hidden={flowGrid||flowCompact}><summary>Alle øvingar · {reviewedCount} av {items.length} gjennomgått <ChevronDown size={16}/></summary>
