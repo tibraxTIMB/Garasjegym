@@ -29,7 +29,7 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
   if(!clientId){setLoading(false);return()=>{active=false}}
   setLoading(true)
   supabase.from('pt_wod_assignments')
-   .select('id,member_id,wod_id,assigned_by,status,created_at,due_date,completed_at,workout_log_id,wods(id,name,format,duration_minutes,timer_settings)')
+   .select('*,wods(id,name,format,duration_minutes,timer_settings)')
    .eq('member_id',clientId).order('created_at',{ascending:false}).limit(150)
    .then(({data,error:readError})=>{
     if(!active)return
@@ -54,7 +54,7 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
    <div className="ptfollow-wod-icon"><Dumbbell size={17}/></div>
    <div className="ptfollow-wod-main">
     <strong>{row.wods?.name||'WOD frå tidlegare tildeling'}</strong>
-    <small>{[row.wods?.format,row.due_date?'Frist '+shortDate(row.due_date):null,row.completed_at?'Fullført '+shortDate(row.completed_at):null].filter(Boolean).join(' · ')}</small>
+    <small>{[row.wods?.format,row.scheduled_date?'Planlagt '+shortDate(row.scheduled_date)+(row.scheduled_time?' kl. '+String(row.scheduled_time).slice(0,5):''):null,row.due_date?'Frist '+shortDate(row.due_date):null,row.completed_at?'Fullført '+shortDate(row.completed_at):null].filter(Boolean).join(' · ')}</small>
    </div>
    <div className="ptfollow-wod-actions">
     <span className={'ptfollow-status '+(completedStatus(row.status)?'is-done':'')}>{statusLabel(row.status)}</span>
