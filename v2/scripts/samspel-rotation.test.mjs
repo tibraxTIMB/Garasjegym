@@ -221,3 +221,27 @@ assert.equal(twins.rows[1].strength_sets[1].reps,0)
 assert.equal(samspelStrengthComplete(iron,twins.rows),false)
 assert.equal(samspelStrengthComplete(iron,twins.rows.map(row=>({...row,strength_sets:row.strength_sets.map(set=>({...set,reps:5}))}))),true)
 console.log('Iron Twins actual independent strength results passed')
+
+import {doubleEmomConfig,doubleEmomOpportunity,doubleEmomComplete} from '../src/lib/samspel.js'
+const double={...doubleEmomConfig(60,600),tracks:['Push-up','Air squat']}
+const doubleContext={...context,format:'EMOM',items:[{name:'Push-up'},{name:'Air squat'}]}
+assert.equal(samspelIssue(double,doubleContext),null)
+assert.ok(samspelIssue(double,{...doubleContext,items:[{name:'Push-up',minuteSlot:'1'},{name:'Air squat'}]}))
+assert.deepEqual(samspelRoles(double,0),['A · Push-up','B · Air squat'])
+assert.deepEqual(samspelRotation(double,{elapsed:60,target:600}).roles,['B · Air squat','A · Push-up'])
+assert.deepEqual(doubleEmomOpportunity(double,1,60),[1,0])
+assert.deepEqual(doubleEmomOpportunity(double,2,60),[0,1])
+assert.deepEqual(doubleEmomOpportunity(double,1),[5,5])
+assert.ok(samspelParticipantResults(double,{1:{trackB:'1'}},{elapsed:60}).issue)
+const doubleResult=samspelParticipantResults(double,{1:{trackA:'5',trackB:'5'},2:{trackA:'5',trackB:'5'}})
+assert.equal(doubleResult.issue,null)
+assert.equal(doubleEmomComplete(double,doubleResult.rows,{elapsed:600}),true)
+assert.equal(doubleEmomComplete(double,doubleResult.rows,{elapsed:599}),false)
+assert.equal(doubleEmomComplete(double,doubleResult.rows.slice(1)),false)
+const fixedDouble={...double,switch_rule:'fixed'}
+assert.deepEqual(samspelRotation(fixedDouble,{elapsed:180,target:600}).roles,['A · Push-up','B · Air squat'])
+assert.deepEqual(doubleEmomOpportunity(fixedDouble,1),[10,0])
+assert.deepEqual(doubleEmomOpportunity(fixedDouble,2),[0,10])
+assert.ok(samspelParticipantResults(fixedDouble,{1:{trackB:'1'}}).issue)
+assert.equal(doubleEmomComplete(fixedDouble,samspelParticipantResults(fixedDouble,{1:{trackA:'10'},2:{trackB:'10'}}).rows),true)
+console.log('Double EMOM checks passed')
