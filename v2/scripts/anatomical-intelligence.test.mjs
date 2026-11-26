@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import {anatomyForExercise,summarizeMuscleExposure,MUSCLES,documentedExerciseRows,muscleExerciseEvidence,historyAnatomyExercises} from '../src/lib/anatomicalIntelligence.js'
-assert.equal(MUSCLES.length,17)
+assert.equal(MUSCLES.length,20)
 assert.equal(anatomyForExercise(' BENKPRESS '),anatomyForExercise('bench press'))
 assert.equal(anatomyForExercise('unknown'),null)
 assert.notEqual(anatomyForExercise('deadlift'),anatomyForExercise('rdl'))
@@ -9,7 +9,7 @@ assert.equal(result.classifiedSets,1)
 assert.equal(result.unclassifiedSets,1)
 assert.equal(result.roles.chest.primary,1)
 assert.equal(result.roles.front_deltoids.secondary,1)
-assert.equal(result.roles.upper_back.stabilizing,1)
+assert.equal(result.roles.rotator_cuff.stabilizing,1)
 assert.equal(result.roles.calves.primary,0)
 assert.deepEqual(result.unclassified,['unknown'])
 assert.equal(summarizeMuscleExposure([]).classifiedSets,0)
@@ -32,13 +32,13 @@ assert.ok(anatomyForExercise('Barbell Row').primary.includes('lats'))
 assert.ok(!anatomyForExercise('Barbell Row').primary.includes('quadriceps'))
 assert.ok(anatomyForExercise('Wall Sit').primary.includes('quadriceps'))
 assert.ok(anatomyForExercise('Plank').primary.includes('abdominals'))
-assert.equal(anatomyForExercise('Ankle rocks'),null)
-assert.equal(anatomyForExercise('Band external rotation'),null)
+assert.equal(anatomyForExercise('Ankle rocks').mode,'mobility')
+assert.ok(anatomyForExercise('Band external rotation').primary.includes('rotator_cuff'))
 console.log('Catalogue variant and isometric role assertions passed')
 
 import {BODY_REGIONS,muscleMapRole} from '../src/lib/anatomyMap.js'
 const mapKeys=Object.values(BODY_REGIONS).flat().map(([muscle])=>muscle)
-assert.deepEqual([...new Set(mapKeys)].sort(),[...MUSCLES].sort())
+assert.deepEqual([...new Set(mapKeys)].sort(),MUSCLES.filter(k=>!['abductors','hip_flexors','rotator_cuff'].includes(k)).sort())
 for(const side of Object.values(BODY_REGIONS)){
  assert.equal(new Set(side.map(([muscle])=>muscle)).size,side.length)
  assert.ok(side.every(([,d])=>d.startsWith('M')))
@@ -65,3 +65,13 @@ assert.deepEqual(historyAnatomyExercises([{...recent,result_data:{wod_engine:{pa
 assert.deepEqual(historyAnatomyExercises([{...recent,result_data:{flow_completion_only:true}}],7,today),[])
 assert.deepEqual(documentedExerciseRows([{exercise_name:'Bench Press',sets:[{reps:2,complex_status:'partial'},{reps:1,complex_status:'failed'},{reps:Infinity}]}]),[])
 console.log('Personal anatomy window and completed evidence checks passed')
+
+import {EXERCISE_MUSCLE_PROFILES} from '../src/lib/exerciseMuscleProfiles.js'
+for(const name of Object.keys(EXERCISE_MUSCLE_PROFILES)){
+ const profile=anatomyForExercise(name)
+ assert.ok(profile)
+ const groups=[...profile.primary,...profile.secondary,...profile.stabilizing]
+ assert.equal(new Set(groups).size,groups.length)
+ assert.ok(groups.every(k=>MUSCLES.includes(k)))
+}
+console.log('Canonical catalogue coverage checks passed')
