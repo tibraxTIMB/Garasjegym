@@ -26,14 +26,15 @@ export function samspelRoles(s,rounds=0){
  const n=Number(rounds)
  const index=(Number.isFinite(n)?Math.max(0,Math.floor(n)):0)%count
  const slots=samspelErgSlots(s)
- return Array.from({length:count},(_,i)=>(i-index+count)%count<slots?task:'AMRAP')
+ const stations=samspelMixed(s)?samspelStationRows(s):null
+ return Array.from({length:count},(_,i)=>{const offset=(i-index+count)%count;return offset<slots?(stations?stations[offset]?.label||'Uavklart stasjon':task):'AMRAP'})
 }
 export function samspelResultIssue(s,value){
  if(!s)return null
  return value==null||String(value).trim()===''||!Number.isFinite(Number(value))||Number(value)<0?'Registrer faktisk samla '+(s.metric==='distance'?'distanse i meter':'kaloriar')+' (0 dersom ingen).':null
 }
 export function samspelScoring(s,base){
- return s?{type:'multi',fields:['rounds_reps',s.metric]}:base
+ return s?samspelMixed(s)?{type:'rounds_reps',fields:['rounds_reps']}:{type:'multi',fields:['rounds_reps',s.metric]}:base
 }
 
 export function samspelWithCount(s,count){
@@ -100,7 +101,7 @@ export function samspelParticipantRows(s,values={}){
 export function samspelParticipantResults(s,values={}){
  const rows=samspelParticipantRows(s,values), results=[]
  for(const row of rows){
-  const fields=['rounds','reps','erg']
+  const fields=samspelMixed(s)?['rounds','reps']:['rounds','reps','erg']
   const entered=fields.filter(k=>String(row[k]).trim()!=='')
   if(!entered.length)continue
   for(const k of entered){
@@ -120,6 +121,7 @@ export function samspelErgSlots(s){
 }
 export function samspelCapacityIssue(s){
  if(s?.version!==2)return null
+ if(samspelMixed(s))return samspelMixedCapacityIssue(s)
  const slots=s.erg_slots??1, available=s.available_ergs
  if(!Number.isInteger(slots)||slots<1||slots>=s.participant_count)return 'Vel minst eitt kondisjonsspor og lat minst éin utøvar vera på AMRAP-sporet.'
  if(available==null&&slots===1)return null
@@ -127,6 +129,7 @@ export function samspelCapacityIssue(s){
  return null
 }
 export function samspelStationLabels(s,roles){
+ if(samspelMixed(s))return [...roles]
  const task=SAMSPEL_TASKS.find(([id])=>id===s?.task)?.[1]||'Kondisjon'
  const slots=samspelErgSlots(s)
  if(slots===1)return [...roles]
@@ -150,4 +153,41 @@ export function samspelSwapIndex(s,{rounds=0,elapsed=0,target=Infinity,manualSwa
  const t=Number.isFinite(elapsed)?Math.max(0,elapsed):0
  const end=Number.isFinite(target)&&target>0?Math.max(0,target-0.001):Infinity
  return Math.floor(Math.min(t,end)/s.switch_seconds)
+}
+
+// Explicit per-station configuration. Historical v1/v2 single-type scores stay unchanged.
+export function samspelMixed(s){return s?.version===2&&Array.isArray(s.station_tasks)}
+export function samspelStationRows(s){
+ if(!samspelMixed(s))return []
+ return s.station_tasks.map((row,i)=>({slot:i+1,task:row.task,metric:row.metric,label:(SAMSPEL_TASKS.find(([id])=>id===row.task)?.[1]||'Uavklart')+' · S'+(i+1)}))
+}
+export function samspelMixedCapacityIssue(s){
+ const stations=s.station_tasks,count=s.participant_count
+ if(!Array.isArray(stations)||stations.length<2||stations.length>=count||s.erg_slots!==stations.length)return 'Vel minst to stasjonar og minst éin utøvar på AMRAP.'
+ const needed={}
+ for(const row of stations){
+  if(!SAMSPEL_TASKS.some(([id])=>id===row?.task)||!SAMSPEL_METRICS.some(([id])=>id===row?.metric))return 'Vel maskintype og måleeining for kvar stasjon.'
+  needed[row.task]=(needed[row.task]||0)+1
+ }
+ for(const [task,n] of Object.entries(needed)){
+  const available=s.station_capacity?.[task]
+  if(!Number.isInteger(available)||available<n||available>30)return 'Oppgi minst '+n+' tilgjengelege '+SAMSPEL_TASKS.find(([id])=>id===task)[1]+'-stasjonar.'
+ }
+ return null
+}
+export function samspelWithStations(s,enabled,slots=s?.erg_slots??1){
+ if(!s)return null
+ if(!enabled){const {station_tasks,station_capacity,...legacy}=s;return legacy}
+ const n=Math.max(2,Math.min(Number(slots)||2,s.participant_count-1))
+ if(s.participant_count<3)return s
+ return {...s,erg_slots:n,station_tasks:Array.from({length:n},(_,i)=>s.station_tasks?.[i]||{task:s.task||'row',metric:s.metric||'distance'}),station_capacity:s.station_capacity||{}}
+}
+export function samspelStationResults(s,values={}){
+ const rows=[]
+ for(const station of samspelStationRows(s)){
+  const raw=values['station-'+station.slot]?.erg
+  if(raw==null||String(raw).trim()===''||!Number.isFinite(Number(raw))||Number(raw)<0)return {rows:[],issue:'Registrer faktisk resultat for '+station.label+' (0 dersom ingen).',slot:station.slot}
+  rows.push({...station,value:Number(raw),unit:station.metric==='distance'?'m':'cal'})
+ }
+ return {rows,issue:null}
 }
