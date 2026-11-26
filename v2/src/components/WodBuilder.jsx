@@ -11,6 +11,7 @@ import {BLOCK_SCORE_OPTIONS} from '../lib/compositeWod.js'
 import {FLOW_PURPOSES,FLOW_REPORTING,flowPurpose,flowReporting} from '../lib/workoutFlow.js'
 import {buildCustomComplex} from '../lib/wodComplexes.js'
 import {useEffect,useMemo,useRef,useState} from 'react'
+import {randomWodName,uniqueWodName} from '../lib/wodNaming.js'
 import {createPortal} from 'react-dom'
 import {Plus,Search,Trash2,ArrowUp,ArrowDown,Save,LoaderCircle,WandSparkles,Dices,Info,Copy,Dumbbell,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
@@ -122,15 +123,6 @@ const CLASSIC_WODS=[
  {name:'Randy',group:'Hero WODs',format:'For Time',minutes:15,items:[['Power snatch','75']],notes:'75 power snatches for time. RX-vekt: 75/55 lb.'},
  {name:'Badger',group:'Hero WODs',format:'For Time',minutes:35,rounds:3,items:[['Squat clean','30'],['Pull-up','30'],['Run','800 m']],notes:'3 rundar: 30 squat cleans, 30 pull-ups, 800 m løp. RX clean: 95/65 lb.'}
 ]
-const nameAdjectives=['Brutale','Wilde','Geile','Scharfe','Eiserne','Explosive','Böse','Dreckige','Donnernde','Panzerstarke','Stählerne','Brachiale','Knallharte','Furchtlose','Massive','Giftige','Hungrige','Brennende','Wuchtige','Legendäre','Gnadenlose','Kraftvolle','Kompromisslose','Jernharde','Svart','Rasande','Dieseldrevne','Elektriske','Høyspent','Ubøyelege','Stålsette','Infernalske']
-const nameNouns=['Panzer','Granate','Berserker','Keule','Kampfsau','Eber','Bär','Wolf','Gorilla','Mammut','Kobra','Hammer','Amboss','Donnerfaust','Stahlkoloss','Kraftpaket','Schlachtschiff','Sprengkopf','Dampfwalze','Kommandant','Knochenbrecher','Rammbock','Stahlfaust','Kampfhamster','Muskelmonster','Stålkjeven','Jernvilje','Betongbass','Dieselherz','Eisenwolf','Panzerpuls','Inferno 808','Hardhaus.exe','Tungt Vær','Svart Stål','Nattoget','Turbohelvete','Stålnakke','Betongbryter']
-const nameNumbers=['1942','1939','69']
-const randomWodName=()=>{
- const base=nameAdjectives[Math.floor(Math.random()*nameAdjectives.length)]+' '+nameNouns[Math.floor(Math.random()*nameNouns.length)]
- if(Math.random()>=0.22)return base
- const n=nameNumbers[Math.floor(Math.random()*nameNumbers.length)]
- return Math.random()<0.5?n+' '+base:base+' '+n
-}
 const shuffle=items=>[...items].sort(()=>Math.random()-.5)
 const newSet=()=>({reps:'8',loadMode:'none',loadKg:'',percent1rm:'',restSeconds:'120',tempo:''})
 const makeLevels=(reps='10',profile={})=>{const levels={};for(const level of ['rx','scaled','foundation']){const p=profile?.levels?.[level]||{};const hasKg=p.men_kg!=null||p.women_kg!=null;levels[level]={sets:'',reps,loadMode:hasKg?'kg':'none',loadKg:'',loadKgMen:p.men_kg==null?'':String(p.men_kg),loadKgWomen:p.women_kg==null?'':String(p.women_kg),percent1rm:'',tempo:'',instruction:'',variant:'',rir:'',rirRange:'',heightCm:'',durationSeconds:'',distanceMeters:'',calories:''}}return levels}
@@ -426,7 +418,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    }catch(e){setError(e.message||'Kunne ikkje henta WOD frå biblioteket.')}
   }
   function addPause(){setError('');setSelected(rows=>[...rows,{...blankItem({id:null,name:'Pause',category:'Pause',body_area:'Heile kroppen',equipment:'Ingen',description:'Planlagd pause mellom øvingar.',is_rest:true}),is_rest:true,pauseSeconds:'30',reps:'',blockId:activeBlockId}]);setLibraryOpen(false)}
- function suggestUniqueWodName(){const existing=new Set(libraryWods.map(w=>(w.name||'').trim().toLowerCase()));for(let i=0;i<60;i++){const candidate=randomWodName();if(!existing.has(candidate.toLowerCase())&&candidate.toLowerCase()!==name.trim().toLowerCase())return candidate}return randomWodName()+' '+String(Date.now()).slice(-4)}
+ function suggestUniqueWodName(){return uniqueWodName(libraryWods,name)}
  function combineSelectedComplex(){
   const picked=selected.filter(item=>Object.hasOwn(complexSelection,item.key))
   try{
