@@ -32,3 +32,30 @@ export function ghostPace(ghost,laps,elapsed){
  const delta=sameRound?laps.reduce((a,b)=>a+b,0)-ghost.splits.slice(0,laps.length).reduce((a,b)=>a+b,0):null
  return {ghostRounds,ownRounds:laps.length,delta}
 }
+
+// Compare logged weights only: never assume the prescription was actually used,
+// and never equate identical weights with identical effort or training dose.
+export function ghostRecordedLoads(data,signature=data?.ghost_signature){
+ if(!signature||data?.ghost_signature!==signature||data.manual_entry||data.flow_completion_only||data.samspel?.team_score||data.wod_engine?.participation&&data.wod_engine.participation!=='individual')return null
+ let planned
+ try{planned=JSON.parse(signature).items.filter(x=>!x.is_rest)}catch{return null}
+ const actual=data.exercise_results
+ if(!planned.length||!Array.isArray(actual)||actual.length!==planned.length)return null
+ const name=x=>String(x||'').trim().toLowerCase().replace(/\s+/g,' ')
+ const rows=[]
+ for(let i=0;i<planned.length;i++){
+  const p=planned[i],a=actual[i]
+  if(!a||name(p.exercise_name||p.name)!==name(a.exercise_name)||a.is_complex||!Array.isArray(a.sets)||!a.sets.length)return null
+  const performed=a.sets.filter(s=>!['failed','partial'].includes(s.complex_status)&&[s.reps,s.time_seconds].some(v=>Number.isFinite(Number(v))&&Number(v)>0))
+  if(!performed.length||performed.some(s=>s.load_kg==null||String(s.load_kg).trim()===''||!Number.isFinite(Number(s.load_kg))||Number(s.load_kg)<0))return null
+  rows.push({name:a.exercise_name,kg:[...new Set(performed.map(s=>Number(s.load_kg)))].sort((x,y)=>x-y)})
+ }
+ return rows
+}
+export function compareGhostRecordedLoads(first,second){
+ if(!first?.ghost_signature||first.ghost_signature!==second?.ghost_signature)return {status:'different-plan',rows:[]}
+ const a=ghostRecordedLoads(first),b=ghostRecordedLoads(second)
+ if(!a||!b)return {status:'unknown',rows:[]}
+ const rows=a.map((row,i)=>({name:row.name,first:row.kg,second:b[i].kg,same:JSON.stringify(row.kg)===JSON.stringify(b[i].kg)}))
+ return {status:rows.every(r=>r.same)?'same-recorded-weights':'changed-recorded-weights',rows}
+}
