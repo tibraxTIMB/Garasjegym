@@ -52,7 +52,8 @@ test('the home and group timetable lead to a genuine PT enquiry', () => {
   assert.match(home, /<strong>Gruppetimar<\/strong>/)
   assert.match(schedule, /Spør om PT/)
   assert.match(studio, /<PTInquiry profile=\{profile\}/)
-  assert.match(app, /setPTStudioInitialTab\(isPTCoach\?'oversikt':'tenester'\)/)
+  assert.match(app, /preparePTEntry\(isPTCoach\?'oversikt':'tenester'\)/)
+  assert.match(app, /function preparePTEntry\(tab\)\{clearPTDeepLink\(\);setPTStudioWorkspace\('studio'\);setPTStudioInitialTab\(tab\)\}/)
 })
 
 test('PT enquiries work without published services and have an honest status and cancellation', () => {
