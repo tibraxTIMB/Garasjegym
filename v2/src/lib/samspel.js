@@ -5,7 +5,7 @@ export function samspelConfig(schema={}){
  const s=schema?.samspel
  if(s?.mode!=='parallel_round_swap')return null
  if(s.version===1)return s
- if(s.version===2&&Number.isInteger(s.participant_count)&&s.participant_count>=2&&s.participant_count<=8)return s
+ if(s.version===2&&Number.isInteger(s.participant_count)&&s.participant_count>=2&&s.participant_count<=8&&(!s.switch_rule||s.switch_rule==='round'||s.switch_rule==='time'&&Number.isInteger(s.switch_seconds)&&s.switch_seconds>=15&&s.switch_seconds<=600))return s
  return null
 }
 export function samspelIssue(s,{format,participation,collaboration,participantCount=2,items=[]}={}){
@@ -38,5 +38,30 @@ export function samspelWithCount(s,count){
  return {...s,version:2,participant_count:count}
 }
 export function samspelRoundInstruction(s){
+ if(samspelIsTimed(s))return 'Byt på klokka. Registrer berre faktisk fullførte felles rundar; byte tel ikkje som runde.'
  return s?.version===2&&s.participant_count>2?'Alle på AMRAP-sporet fullfører éi runde før de byter. Éin felles runde vert registrert.':'Byt rolle når AMRAP-partnaren har fullført éi runde.'
+}
+
+export function samspelIsTimed(s){
+ return s?.version===2&&s.switch_rule==='time'&&!!samspelConfig({samspel:s})
+}
+export function samspelWithSwitch(s,rule,seconds=60){
+ if(!s||!['round','time'].includes(rule))return null
+ const next={...s,version:2,participant_count:s.participant_count||2,switch_rule:rule}
+ if(rule==='time')next.switch_seconds=Number(seconds)
+ else delete next.switch_seconds
+ return next
+}
+// Driven by the existing active elapsed clock: pauses and reloads need no second timer.
+// At the workout deadline preserve the final working roles, rather than announcing an extra swap.
+export function samspelRotation(s,{rounds=0,elapsed=0,target=Infinity}={}){
+ if(!samspelIsTimed(s))return {roles:samspelRoles(s,rounds),nextSwitchSeconds:null,timed:false}
+ const n=Number(elapsed),end=Number(target)
+ const t=Number.isFinite(n)?Math.max(0,n):0
+ const finiteEnd=Number.isFinite(end)&&end>0
+ const finished=finiteEnd&&t>=end
+ const active=finiteEnd?Math.min(t,Math.max(0,end-0.001)):t
+ const index=Math.floor(active/s.switch_seconds)
+ const next=(index+1)*s.switch_seconds
+ return {roles:samspelRoles(s,index),nextSwitchSeconds:finished||(finiteEnd&&next>=end)?null:Math.max(0,Math.ceil(next-t)),timed:true}
 }
