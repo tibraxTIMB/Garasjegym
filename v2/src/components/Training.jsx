@@ -628,13 +628,13 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     onCancelBeforeStart()
   }
   const requestFinish=()=>{if(!hasStarted)return;if(running&&!stageIsComplete){setFinishConfirm(true);setStagePanel('finish')}else finishCurrent()}
-  const manualButtonVisible=hasStarted&&(samspelManual||isAmrap||isLadder||isDeathBy||isStopwatch||isForTime)
+  const manualButtonVisible=hasStarted&&(isAmrap||isLadder||isDeathBy||isStopwatch||isForTime)
   const manualButtonDisabled=!running||timerLimitReached||manualLockSeconds>0||(isLadder&&ladderProgress.finished)||(isDeathBy&&!deathByStatus.canConfirm)
   const manualButtonText=(isAmrap||plannedForTimeRounds)?(samspel&&!samspelIsTimed(samspel)&&!samspelIsManual(samspel)?'RUNDE FULLFØRT · BYT':'RUNDE FULLFØRT'):isLadder?`TRINN FULLFØRT · ${ladderProgress.targetReps} REPS`:isDeathBy?`FULLFØRT ${deathByStatus.targetReps} REPS`:'MELLOMTID'
-  const manualButton=<button type="button" className={'gg-manual-action'+(manualLockSeconds>0?' is-registered':'')+(buttonSize==='xl'?' is-xl':'')} onClick={(isAmrap||plannedForTimeRounds)?lapAction:isLadder?completeLadderRound:isDeathBy?completeDeathByRound:splitAction} disabled={manualButtonDisabled} aria-label={manualLockSeconds>0?'Registrert – sperra mot dobbelttrykk':manualButtonText}>
+  const manualButton=!samspelQuality(samspel)&&<button type="button" className={'gg-manual-action'+(manualLockSeconds>0?' is-registered':'')+(buttonSize==='xl'?' is-xl':'')} onClick={(isAmrap||plannedForTimeRounds)?lapAction:isLadder?completeLadderRound:isDeathBy?completeDeathByRound:splitAction} disabled={manualButtonDisabled} aria-label={manualLockSeconds>0?'Registrert – sperra mot dobbelttrykk':manualButtonText}>
     {manualLockSeconds>0?<CheckCircle2 size={27}/>:<Plus size={27}/>}<span><b>{manualLockSeconds>0?(canUndoManual?'REGISTRERT':'STADFESTA'):manualButtonText}</b>{manualLockSeconds>0&&<small>Vent {manualLockSeconds} sek</small>}</span>
   </button>
-  const undoButton=manualButtonVisible&&(isAmrap||isStopwatch||isForTime)&&<button type="button" className="gg-manual-undo" disabled={!canUndoManual} onClick={undoManualAction} aria-label="Angre siste registrering"><Undo2 size={17}/> Angre</button>
+  const undoButton=manualButtonVisible&&!samspelQuality(samspel)&&(isAmrap||isStopwatch||isForTime)&&<button type="button" className="gg-manual-undo" disabled={!canUndoManual} onClick={undoManualAction} aria-label="Angre siste registrering"><Undo2 size={17}/> Angre</button>
   const actionControls=<div className="gg-timer-audio-controls">
     <label>Trefflate<select value={buttonSize} onChange={e=>setButtonSize(e.target.value)}><option value="large">Stor (standard)</option><option value="xl">Ekstra stor</option></select></label>
     <label>Sperre mot dobbelttrykk<select value={roundGuardSeconds} onChange={e=>setRoundGuardSeconds(Number(e.target.value))}>{[1,2,3,5,10].map(s=><option key={s} value={s}>{s} sekund</option>)}</select></label>
@@ -704,7 +704,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         <button type="button" className="gg-live-timer__lap-all" onClick={()=>setStagePanel('laps')} aria-label={`Vis alle ${laps.length} rundetider`}>Alle</button>
       </div>}
       <footer className="gg-live-timer__footer">
-        {manualButtonVisible&&<div className={'gg-timer-work-actions'+(samspelManual?' gg-timer-work-actions--swap':'')}>{!samspelQuality(samspel)&&manualButton}{samspelSwapButton}</div>}
+        {manualButtonVisible&&<div className={'gg-timer-work-actions'+(samspelManual?' gg-timer-work-actions--swap':'')}>{manualButton}{samspelSwapButton}</div>}
         <div className="gg-timer-secondary-actions">
         <button type="button" className="gg-live-timer__pause" onClick={toggleRunning} disabled={stageIsComplete}>{countdownDeadline!==null?<><X size={21}/> Avbryt</>:running?<><Pause size={21}/> Pause</>:phase==='PAUSE'?<><Play size={21}/> Hald fram</>:<><Play size={21}/> Start no</>}</button>
         {!hasStarted&&countdownDeadline===null&&<button type="button" className="gg-live-timer__round-button" onClick={()=>beginWorkout(true)}><Play size={21}/> Start · 10 sek</button>}
@@ -805,7 +805,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
         {isLadder && <div className="timer-round-total"><span>{ladderProgress.finished?'LADDER FERDIG':`TRINN ${ladderProgress.currentRound} AV ${ladderProgress.maxRounds}`}</span><b>{ladderProgress.finished?`${ladderCompletedRounds} trinn`:`${ladderProgress.targetReps} reps`}</b></div>}
         {isDeathBy && <div className="timer-round-total"><span>{deathByStatus.failed?`STOPPA I RUNDE ${deathByStatus.failedRound}`:`RUNDE ${deathByStatus.round} · MÅL`}</span><b>{deathByStatus.targetReps} reps</b><small>Førebels: {deathByCompletedRounds} rundar</small></div>}
         {!isStationCircuit && !isAmrap && (isTimedInterval ? (exerciseList[intervalExerciseIndex + 1]?.exercise_name || exerciseList[0]?.exercise_name) : nextExercise) && <div className="timer-next-exercise"><span>NESTE ØVING</span><b>{isTimedInterval ? (exerciseList[intervalExerciseIndex + 1]?.exercise_name || exerciseList[0]?.exercise_name) : nextExercise}</b></div>}
-        {manualButtonVisible&&<div className="gg-manual-desktop"><div className={'gg-timer-work-actions'+(samspelManual?' gg-timer-work-actions--swap':'')}>{!samspelQuality(samspel)&&manualButton}{samspelSwapButton}</div>{undoButton}</div>}
+        {manualButtonVisible&&<div className="gg-manual-desktop"><div className={'gg-timer-work-actions'+(samspelManual?' gg-timer-work-actions--swap':'')}>{manualButton}{samspelSwapButton}</div>{undoButton}</div>}
         <div className="timer-actions">
           <button type="button" className="secondary-button" onClick={toggleRunning} disabled={phase === 'FERDIG' || phase === 'TIDSGRENSE'}>{running ? <><Pause size={14}/> Pause</> : phase==='PAUSE' ? <><Play size={14}/> Gjenoppta</> : <><Play size={14}/> Start</>}</button>
           <button type="button" className="secondary-button" onClick={()=>{if(window.confirm('Nullstille tid og rundar?'))resetTimer()}}><RotateCcw size={14}/> Nullstill</button>
