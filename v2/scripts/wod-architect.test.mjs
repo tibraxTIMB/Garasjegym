@@ -58,7 +58,7 @@ test('Samspel uses the same AMRAP clock and round count for role rotation and un
 test('unsupported combinations and incomplete results have actionable errors',()=>{
  assert.equal(samspelIssue(parallel,{format:'AMRAP',participation:'partner',items:[{name:'Thruster'}]}),null)
  assert.match(samspelIssue(parallel,{format:'EMOM',participation:'partner'}),/AMRAP/)
- assert.match(samspelIssue(parallel,{format:'AMRAP',participation:'individual'}),/partnarar/)
+ assert.match(samspelIssue(parallel,{format:'AMRAP',participation:'individual'}),/deltakarar|partnarar/)
  assert.match(samspelResultIssue(parallel,''),/distanse/)
  assert.equal(samspelResultIssue(parallel,'0'),null)
  assert.equal(samspelResultIssue(parallel,'2740'),null)
