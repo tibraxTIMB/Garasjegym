@@ -13,7 +13,7 @@ export function priorPtReferences({clientId,wodId,assignments=[],programs=[],ses
 export function priorPtSummary(result){
  if(!result||!result.id)return null
  const d=result.result_data||{}
- if(d.samspel?.team_score||d.wod_engine?.participation&&d.wod_engine.participation!=='individual')return {date:result.workout_date,team:true,rows:[]}
+ if(d.participation_verified!=='individual')return {date:result.workout_date,team:d.participation_verified==='team',unverified:true,rows:[]}
  // No effort inference; show exactly saved values. Partial complexes do not supply a load reference.
  const present=v=>v!=null&&String(v).trim()!==''&&Number.isFinite(Number(v))&&Number(v)>=0
  const rows=(Array.isArray(d.exercise_results)?d.exercise_results:[]).flatMap(e=>{
