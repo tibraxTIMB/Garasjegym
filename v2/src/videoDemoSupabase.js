@@ -84,7 +84,20 @@ function query(table) {
 
 export const supabase = {
   from: query,
-  rpc: async name => ({data:name==='get_class_attendance_counts'?[{class_id:'demo-class',confirmed_count:2}]:[],error:null}),
+  rpc: async (name,args) => {
+    if(scenario()==='audit-frontdienst'&&name==='save_workout_with_pt_links'){
+      const payload=args?.p_workout
+      if(payload?.member_id!=='demo-member'||!payload.save_token)return {data:null,error:{message:'Invalid synthetic save'}}
+      const key='gg.audit.frontdienst.writes'
+      const entries=JSON.parse(localStorage.getItem(key)||'[]')
+      const prior=entries.find(row=>row.payload.save_token===payload.save_token)
+      if(prior)return {data:prior.id,error:null}
+      const id='audit-workout-'+(entries.length+1)
+      localStorage.setItem(key,JSON.stringify([...entries,{id,payload}]))
+      return {data:id,error:null}
+    }
+    return {data:name==='get_class_attendance_counts'?[{class_id:'demo-class',confirmed_count:2}]:[],error:null}
+  },
   auth: {
     getUser: async () => ({data:{user:{id:currentDemoId(),email:'demo@example.invalid'}},error:null}),
     getSession: async () => ({data:{session:null},error:null}),
