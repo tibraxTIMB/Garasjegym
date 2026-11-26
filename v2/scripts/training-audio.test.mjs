@@ -120,6 +120,7 @@ test('FLOW keypad replaces selection, handles decimals and preserves empty resul
  assert.match(src,/field=\{field\} data-result-field=\{field\}/)
  assert.doesNotMatch(src,/window\.confirm\('Desse setta manglar vekt/)
  const keypad=read('../src/components/FlowEntry.jsx')
- assert.match(keypad,/inputMode="none"/)
+ assert.match(keypad,/inputMode=\{ctx\?\'none\'/)
+ assert.match(keypad,/decimal\?\'decimal\':\'numeric\'/)
  assert.match(keypad,/aria-label="Neste talfelt"/)
 })
