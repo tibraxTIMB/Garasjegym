@@ -1,3 +1,4 @@
+import EquipmentPreparation from './EquipmentPreparation.jsx'
 import {samspelConfig,samspelIssue,samspelScoring,samspelWithCount,samspelWithSwitch,samspelRoundInstruction,SAMSPEL_TASKS,SAMSPEL_METRICS} from '../lib/samspel.js'
 import {architectSections,architectDose,architectDoseIssue,hydrateArchitectLevels} from '../lib/wodArchitect.js'
 import './wod-architect.css'
@@ -672,6 +673,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   </section>}
    <nav className="gg-architect-parts" aria-label="Delar i WOD-en">{architectParts.map(p=><button type="button" key={p.id} className={'gg-arch-tone-'+p.tone+(p.id===activeArchitectPart?.id?' active':'')} aria-pressed={p.id===activeArchitectPart?.id} onClick={()=>{setActiveBlockId(p.id);setEditingSelectedKey(null);setWizardStep(3)}}><b>{String.fromCharCode(65+p.index)}</b><span>{p.title||p.format}</span><small>{p.label} · {p.time}</small></button>)}</nav>
    <div className="gg-architect-levels" role="group" aria-label="Vis doseringsnivå">{[['rx','RX'],['intermediate','Interm.'],['scaled','Scaled'],['foundation','Foundation']].map(([id,label])=><button type="button" key={id} aria-pressed={overviewLevel===id} onClick={()=>setOverviewLevel(id)}>{label}</button>)}</div>
+   <EquipmentPreparation items={selected}/>
    <details className="gg-architect-map"><summary>Sjå heile økta · {architectParts.length} delar</summary>{architectParts.map(p=><section key={p.id} className={'gg-arch-tone-'+p.tone}><button type="button" className="gg-architect-part-head" onClick={()=>{setActiveBlockId(p.id);setWizardStep(3);setEditingSelectedKey(null)}}><b>{String.fromCharCode(65+p.index)} · {p.title||p.format}</b><small>{p.label} · {p.time} · {p.reporting==='done'?'Berre utført':p.reporting==='score'?'Hovudresultat':'Settvis'}</small></button>{p.group.map(ex=><button type="button" key={ex.key} className={'gg-architect-map-row'+(issueFor(ex)?' has-issue':'')} onClick={()=>{setActiveBlockId(p.id);setDoseLevelByKey(rows=>({...rows,[ex.key]:overviewLevel}));setEditingSelectedKey(ex.key);setWizardStep(3)}}><strong>{ex.name}</strong><span>{issueFor(ex)||architectDose(ex,overviewLevel)}</span></button>)}</section>)}</details>
   </section>}
   {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message">{notice}</div>}
