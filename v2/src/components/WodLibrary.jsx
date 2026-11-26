@@ -46,7 +46,7 @@ const compactDose=(item,level)=>{
  return values.join(' · ')
 }
 
-export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,isAdmin=false,focusWodId=null,onFocusConsumed,simpleMode=false}){
+export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,isAdmin=false,focusWodId=null,onFocusConsumed,simpleMode=false,protectedMode=false}){
  const [wods,setWods]=useState([]),[query,setQuery]=useState(''),[filter,setFilter]=useState('all'),[quickFilter,setQuickFilter]=useState('all'),[formatFilter,setFormatFilter]=useState('all'),[durationFilter,setDurationFilter]=useState('all'),[intensityFilter,setIntensityFilter]=useState('all'),[currentUserId,setCurrentUserId]=useState(''),[loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [customers,setCustomers]=useState([]),[customersLoading,setCustomersLoading]=useState(true),[assignWod,setAssignWod]=useState(null),[customerId,setCustomerId]=useState(''),[dueDate,setDueDate]=useState(''),[coachNote,setCoachNote]=useState('')
  const [sessionWods,setSessionWods]=useState([]),[sessionName,setSessionName]=useState(''),[sessionDate,setSessionDate]=useState(localDateISO()),[showSession,setShowSession]=useState(false),[favorites,setFavorites]=useState([]),[dailyWodId,setDailyWodId]=useState(null),[dailyDate,setDailyDate]=useState(null),[classes,setClasses]=useState([]),[classWod,setClassWod]=useState(null),[classId,setClassId]=useState(''),[expanded,setExpanded]=useState(null),[categoryFilter,setCategoryFilter]=useState('all'),[dailyScheduleWod,setDailyScheduleWod]=useState(null),[dailyScheduleDate,setDailyScheduleDate]=useState(localDateISO()),[dailyScheduleClassId,setDailyScheduleClassId]=useState(''),[dailySchedulePublished,setDailySchedulePublished]=useState(true)
@@ -120,7 +120,7 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
  const activeAdvancedCount=[catalogCat,categoryFilter,formatFilter,durationFilter,intensityFilter,filter,equipmentFilter,scope].filter(value=>value!=='all').length
  useEffect(()=>{setVisibleCount(36)},[query,categoryFilter,catalogCat,quickFilter,formatFilter,durationFilter,intensityFilter,filter,equipmentFilter,planFilter,sortBy,scope]);
  const actionWod=wods.find(w=>openCardMenu?.endsWith(':'+w.id))
- async function publish(w){setBusy(w.id);setError('');const {error:e}=await supabase.from('wods').update({is_published:!w.is_published}).eq('id',w.id);if(e)setError(e.message);else{setWods(rows=>rows.map(x=>x.id===w.id?{...x,is_published:!w.is_published}:x));setNotice(w.is_published?'WOD-en er no berre i PT-biblioteket.':'WOD-en er publisert for medlemmene.')}setBusy('')}
+ async function publish(w){if(protectedMode){setNotice('Bruk LIBRARIUM for kontrollert publisering.');return}setBusy(w.id);setError('');const {error:e}=await supabase.from('wods').update({is_published:!w.is_published}).eq('id',w.id);if(e)setError(e.message);else{setWods(rows=>rows.map(x=>x.id===w.id?{...x,is_published:!w.is_published}:x));setNotice(w.is_published?'WOD-en er no berre i PT-biblioteket.':'WOD-en er publisert for medlemmene.')}setBusy('')}
  async function toggleFavorite(w){
   if(busy===w.id)return
   setBusy(w.id);setError('');setNotice('')
@@ -200,6 +200,7 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
   finally{setBusy('')}
  }
  async function removeWod(w,{permanent=false}={}){
+   if(protectedMode){setNotice('Arkivering og sletting er sperra i verna arbeidsflate. Bruk kontrollert bibliotekshandsaming.');return}
    if(!isAdmin)return
    const ask=permanent
     ? 'Slette «'+w.name+'» PERMANENT? Dette er berre tillate dersom WOD-en ikkje har lagra resultat, tildelingar eller andre koplingar. Ei forkasta økt utan slike koplingar hindrar ikkje sletting. Vel «Fjern frå biblioteket» for å ta vare på historikk.'
@@ -297,8 +298,8 @@ export default function WodLibrary({onLaunchWod,onEditWod,onCopyWod,staff=true,i
   {adminMenuOpen&&<div className="wod-card-action-panel" aria-label={'Administrer '+w.name}><small className="librarium-menu-label">ADMINISTRASJON</small>
       {isAdmin&&<button type="button" onClick={()=>{setOpenCardMenu(null);onEditWod?.(w.id)}}><Edit3 size={17}/> Rediger</button>}{isAdmin&&onCopyWod&&<button type="button" onClick={()=>{setOpenCardMenu(null);onCopyWod(w.id)}}>Lag kopi som kladd</button>}
       <button type="button" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);publish(w)}}>{w.is_published?<EyeOff size={17}/>:<Eye size={17}/>} {w.is_published?'Trekk tilbake':'Publiser'}</button>
-      {isAdmin&&<small className="librarium-menu-label danger">ARKIV OG SLETTING</small>}{isAdmin&&<button type="button" className="wod-card-danger-action" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);removeWod(w)}}><Archive size={17}/> Fjern frå biblioteket</button>}
-      {isAdmin&&<button type="button" className="wod-card-danger-action" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);removeWod(w,{permanent:true})}}><Trash2 size={17}/> Slett WOD permanent</button>}
+      {isAdmin&&!protectedMode&&<small className="librarium-menu-label danger">ARKIV OG SLETTING</small>}{isAdmin&&!protectedMode&&<button type="button" className="wod-card-danger-action" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);removeWod(w)}}><Archive size={17}/> Fjern frå biblioteket</button>}
+      {isAdmin&&!protectedMode&&<button type="button" className="wod-card-danger-action" disabled={busy===w.id} onClick={()=>{setOpenCardMenu(null);removeWod(w,{permanent:true})}}><Trash2 size={17}/> Slett WOD permanent</button>}
      </div>}
     
   </section></div>})()}
