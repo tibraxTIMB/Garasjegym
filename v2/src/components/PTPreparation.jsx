@@ -1,3 +1,4 @@
+import WarmupGuide from './WarmupGuide.jsx'
 import {compositeSamspelConfig} from '../lib/compositeWod.js'
 import {samspelConfig,samspelRoles,samspelRoundInstruction,samspelStationLabels} from '../lib/samspel.js'
 import {preparationItems,equipmentItemsForSamspel} from '../lib/equipmentPreparation.js'
@@ -28,6 +29,7 @@ export default function PTPreparation({session,references=[],onReview,expanded=f
    {samspelParts.map(part=><section key={part.id} aria-label={'Samspel-førebuing · '+part.title}><strong>{part.title} · {part.config.participant_count} utøvarar</strong><div className="gg-samspel-roles">{samspelStationLabels(part.config,samspelRoles(part.config,0)).map((role,i)=><small key={i}>P{i+1} · {role}</small>)}</div><small>{samspelRoundInstruction(part.config)}</small></section>)}
    {p.focus&&<div><strong>Fokus:</strong> {p.focus}</div>}
    {p.preparation&&<div><strong>Førebuing:</strong> {p.preparation}</div>}
+   {!p.preparation&&<WarmupGuide schema={schema} items={preparationItems(session?.workout_snapshot||{})}/>}
    {p.materials&&<div><strong>Utstyr og materiell:</strong> {p.materials}</div>}
    {items.length>0&&<small>{inventoryStatus==='ready'?'Tilgjengeleg utstyr: felles inventar der registrert, elles opphavleg plan.':'Tilgjengeleg utstyr: opphavleg plan; felles inventar ikkje stadfesta.'}</small>}
    <InventoryNotes items={items} rows={inventoryRows}/><EquipmentPreparation items={items} values={capacityValues}/>{inventoryStatus==='ready'&&hasBarbellWork(items)&&<Lastmeister rows={inventoryRows} items={items} level={session?.workout_snapshot?.timer_settings?.workout_schema?.prescription||'rx'}/>}
