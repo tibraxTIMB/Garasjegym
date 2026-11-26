@@ -40,10 +40,10 @@ with sync_playwright() as pw:
     for w,h in sizes:
         context=browser.new_context(viewport={"width":w,"height":h},has_touch=True,is_mobile=w<600,device_scale_factor=1,locale="nn-NO",color_scheme="dark",reduced_motion="reduce")
         context.route("**/*",lambda route:route.continue_() if route.request.url.startswith(BASE) else route.abort())
-        for screen in ["flow","card","builder","pt","pt-workbench","plan","select","acta","picker","assign"]:
+        for screen in ["flow","card","builder","pt","pt-workbench","pt-schedule","plan","select","acta","picker","assign"]:
             page=None
             try:
-                page,errors=open_page(context,f"/ui-audit.html?scenario={'audit-pt-plan' if screen in ('pt','pt-workbench') else 'audit-admin' if screen in ('builder','assign') else 'audit-member'}&screen={screen}")
+                page,errors=open_page(context,f"/ui-audit.html?scenario={'audit-pt-schedule' if screen=='pt-schedule' else 'audit-pt-plan' if screen in ('pt','pt-workbench') else 'audit-admin' if screen in ('builder','assign') else 'audit-member'}&screen={'pt' if screen=='pt-schedule' else screen}")
                 check(page,screen,w,h)
                 if screen=="flow":
                     field=page.get_by_role("textbox",name="Arbeidsvekt kg")
@@ -130,6 +130,43 @@ with sync_playwright() as pw:
                     bench.wait_for()
                     assert assign.count()==0
                     check(page,"pt-workbench-return",w,h)
+                if screen=="pt-schedule":
+                    calendar=page.get_by_role("region",name="Treningskalender")
+                    calendar.wait_for()
+                    today=calendar.locator(".gg-schedule-day.today")
+                    date=today.get_by_role("button",name="Legg til økt",exact=False).get_attribute("aria-label").split()[-1]
+                    today.get_by_role("button",name="Legg til økt",exact=False).tap()
+                    dialog=page.get_by_role("dialog",name="Tildel WOD til",exact=False)
+                    dialog.locator(".wod-picker-option").first.tap()
+                    dialog.get_by_role("button",name="Bruk val (1)",exact=True).tap()
+                    assert dialog.get_by_label("Tildelingstype").input_value()=="plan"
+                    assert dialog.locator('input[type=date]').input_value()==date
+                    dialog.locator('input[type=time]').fill("17:15")
+                    check(page,"pt-schedule-confirm",w,h)
+                    dialog.get_by_role("button",name="Stadfest tildeling").tap()
+                    dialog.wait_for(state="hidden",timeout=10000)
+                    card=today.locator(".gg-schedule-plan")
+                    card.wait_for(timeout=10000)
+                    assert "17:15" in card.inner_text()
+                    check(page,"pt-schedule-saved",w,h)
+                    card.get_by_role("button",name="Flytt",exact=False).tap()
+                    move=page.get_by_role("dialog",name="Flytt planøkt")
+                    move.locator('input[type=time]').fill("18:30")
+                    move.get_by_role("button",name="Lagre tidspunkt").tap()
+                    move.wait_for(state="hidden",timeout=10000)
+                    page.wait_for_function("document.querySelector('.gg-schedule-day.today .gg-schedule-plan')?.innerText.includes('18:30')")
+                    assert today.locator(".gg-schedule-plan").count()==1
+                    check(page,"pt-schedule-moved",w,h)
+                    today.get_by_role("button",name="Legg til økt",exact=False).tap()
+                    dialog.locator(".wod-picker-option").first.tap()
+                    dialog.get_by_role("button",name="Bruk val (1)",exact=True).tap()
+                    dialog.get_by_label("Tildelingstype").select_option("deadline")
+                    dialog.get_by_role("button",name="Stadfest tildeling").tap()
+                    dialog.wait_for(state="hidden",timeout=10000)
+                    today.locator(".gg-schedule-assignment").wait_for(timeout=10000)
+                    assert today.locator(".gg-schedule-plan").count()==1
+                    assert "Frist" in today.locator(".gg-schedule-assignment").inner_text()
+                    check(page,"pt-schedule-direct",w,h)
                 if screen=="pt":
                     card=page.locator(".pt-compact-session").first
                     card.wait_for()
