@@ -31,4 +31,5 @@ jobs:
             -f v2/supabase/preflight/ordnung006_fixture.sql \
             -f v2/supabase/preflight/ordnung006_shared_inventory_candidate.sql \
             -f v2/supabase/preflight/ordnung006_pt_result_provenance_candidate.sql \
+            -f v2/supabase/preflight/ordnung006_assignment_schedule_candidate.sql \\
             -f v2/supabase/preflight/ordnung006_assertions.sql
