@@ -8,7 +8,7 @@ import './pt-schedule.css'
 const STATUS={planned:'Planlagd',assigned:'Tildelt',in_progress:'Påbegynt',completed:'Utført',done:'Utført',ready:'Klar',review:'Til vurdering',locked:'Låst',published:'Avtalt',booked:'Påmeld'}
 const KIND={plan:'Programøkt',assignment:'Tildelt WOD',appointment:'PT-avtale',class:'Gruppetime'}
 const fmt=d=>validDate(d)?new Date(d+'T12:00:00Z').toLocaleDateString('nn-NO',{timeZone:'UTC',weekday:'short',day:'numeric',month:'short'}):''
-export function PTWeekCalendar({program,plan=[],assignments=[],appointments=[],classes=[],onAdd,onOpen,onMove,initialDate}){
+export function PTWeekCalendar({program,plan=[],assignments=[],appointments=[],classes=[],onAdd,onOpen,onMove,canOpen=()=>true,initialDate}){
  const [start,setStart]=useState(()=>weekStart(initialDate||osloDay()))
  const entries=useMemo(()=>calendarEntries({program,plan,assignments,appointments,classes}),[program,plan,assignments,appointments,classes])
  const days=Array.from({length:7},(_,i)=>addDays(start,i))
@@ -16,7 +16,7 @@ export function PTWeekCalendar({program,plan=[],assignments=[],appointments=[],c
  const overdue=entries.filter(e=>e.deadline&&e.date<osloDay()&&['assigned','in_progress'].includes(e.status))
  function card(e){return <article className={'gg-schedule-entry gg-schedule-'+e.kind} key={e.key}>
   <div className="gg-schedule-copy"><small>{e.time&&e.time+' · '}{e.deadline?'Frist':KIND[e.kind]}{e.minutes?' · '+e.minutes+' min':''}</small><strong>{e.title}</strong><small>{STATUS[e.status]||e.status}</small></div>
-  <div className="gg-schedule-actions">{onOpen&&<button type="button" className="secondary-button" onClick={()=>onOpen(e)} aria-label={'Opna '+e.title}>Opna</button>}{onMove&&e.kind==='plan'&&canMovePlan(e.row)&&<button type="button" className="text-button" onClick={()=>onMove(e.row)} aria-label={'Flytt '+e.title}>Flytt</button>}</div>
+  <div className="gg-schedule-actions">{onOpen&&canOpen(e)&&<button type="button" className="secondary-button" onClick={()=>onOpen(e)} aria-label={'Opna '+e.title}>Opna</button>}{onMove&&e.kind==='plan'&&canMovePlan(e.row)&&<button type="button" className="text-button" onClick={()=>onMove(e.row)} aria-label={'Flytt '+e.title}>Flytt</button>}</div>
  </article>}
  return <section className="gg-schedule" aria-label="Treningskalender">
   <div className="gg-schedule-head"><h3><CalendarDays size={18}/> Treningskalender</h3><button type="button" className="text-button" onClick={()=>setStart(weekStart(osloDay()))}>I dag</button></div>
@@ -33,7 +33,7 @@ export function PTScheduleDialog({clientId,clientName,program,existing=[],wods=[
  const [appointmentId,setAppointmentId]=useState(''),[ids,setIds]=useState([]),[note,setNote]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[choose,setChoose]=useState(true)
  const lock=useRef(false)
  const eligible=appointments.filter(a=>a.client_id===clientId&&['planned','published'].includes(a.status)&&a.starts_at&&osloDay(a.starts_at)>=osloDay())
- const chosen=wods.filter(w=>ids.includes(w.id)),planSlotDate=slotDate(program,Number(week),Number(day))
+ const chosen=ids.map(id=>wods.find(w=>w.id===id)).filter(Boolean),planSlotDate=slotDate(program,Number(week),Number(day))
  const setPlanDate=d=>{setDate(d);const slot=dateSlot(program,d);if(slot){setWeek(String(slot.week));setDay(String(slot.day))}}
  const setSlot=(w,d)=>{setWeek(w);setDay(d);const next=slotDate(program,Number(w),Number(d));if(next)setDate(next)}
  useEffect(()=>{if(mode==='plan'&&program?.start_date&&planSlotDate)setDate(planSlotDate)},[mode,program?.id,planSlotDate])
@@ -49,11 +49,17 @@ export function PTScheduleDialog({clientId,clientName,program,existing=[],wods=[
     if(pe||!p)throw pe||Error('Planen er ikkje lenger aktiv.')
     const {data:s,error:se}=await supabase.from('pt_program_sessions').select('program_id,sequence_no').eq('program_id',p.id)
     if(se)throw se
-    rows=makePlanRows({program:p,existing:s||[],wods:chosen,week:Number(week),day:Number(day),date:p.start_date?slotDate(p,Number(week),Number(day)):date||'',time,note,memberId:clientId})
+    rows=makePlanRows({program:p,existing:s||[],wods:chosen,week:Number(week),day:Number(day),date:date||'',time,note,memberId:clientId})
     table='pt_program_sessions'
    }else{
-    const appointment=mode==='appointment'?eligible.find(a=>a.id===appointmentId):null
-    if(mode==='appointment'&&!appointment)throw Error('Vel ein eksisterande PT-avtale.')
+    let appointment=null
+    if(mode==='appointment'){
+     if(!eligible.some(a=>a.id===appointmentId))throw Error('Vel ein eksisterande PT-avtale.')
+     const {data:fresh,error:pe}=await supabase.from('pt_sessions').select('id,client_id,status,starts_at').eq('id',appointmentId).eq('client_id',clientId).in('status',['planned','published']).maybeSingle()
+     if(pe||!fresh||new Date(fresh.starts_at)<=new Date())throw pe||Error('PT-avtalen er ikkje lenger tilgjengeleg. Oppdater planen.')
+     appointment=fresh
+    }
+    if(mode==='deadline'&&!validDate(date))throw Error('Vel ein gyldig frist.')
     const {data:active,error:ae}=await supabase.from('pt_wod_assignments').select('id,wod_id').eq('member_id',clientId).in('status',['assigned','in_progress']).in('wod_id',ids)
     if(ae)throw ae
     if(active?.length)throw Error('Minst éin vald WOD er allereie aktivt tildelt. Bruk programøkter for planlagde gjentakingar.')
@@ -72,7 +78,7 @@ export function PTScheduleDialog({clientId,clientName,program,existing=[],wods=[
    <label>Når og korleis?<select aria-label="Tildelingstype" value={mode} disabled={busy} onChange={e=>setMode(e.target.value)}><option value="free">Valfri dag – utan frist</option><option value="deadline">Gjennomfør innan dato</option><option value="appointment">Knytt til eksisterande PT-avtale</option>{program&&<option value="plan">Plasser i treningsplan</option>}</select></label>
    {mode==='deadline'&&<label>Frist<input type="date" value={date} onChange={e=>setDate(e.target.value)}/></label>}
    {mode==='appointment'&&<label>PT-avtale<select value={appointmentId} onChange={e=>setAppointmentId(e.target.value)}><option value="">Vel dato og klokkeslett</option>{eligible.map(a=><option key={a.id} value={a.id}>{fmt(osloDay(a.starts_at))} kl. {appointmentTime(a.starts_at)} · {a.title}</option>)}</select>{!eligible.length&&<small>Ingen framtidige PT-avtalar. Opprett avtalen i PT-timar først.</small>}</label>}
-   {mode==='plan'&&program&&<><strong>{program.title}</strong><div className="gg-schedule-fields"><label>Programveke<input type="number" min="1" max={program.weeks||52} value={week} onChange={e=>setSlot(e.target.value,day)}/></label><label>Dag i programveka<select value={day} onChange={e=>setSlot(week,e.target.value)}>{[1,2,3,4,5,6,7].map(d=><option key={d} value={d}>Dag {d}</option>)}</select></label></div><div className="gg-schedule-fields"><label>Dato{program.start_date?<input type="date" value={planSlotDate||''} onChange={e=>setPlanDate(e.target.value)}/>:<input type="date" value={date} onChange={e=>setDate(e.target.value)}/>}</label><label>Klokkeslett (valfritt)<input type="time" value={time} onChange={e=>setTime(e.target.value)}/></label></div><small>Programdag 1 er startdatoen for kvar programveke. Klokkeslett er planlagt trening, ikkje ei PT-booking.</small></>}
+   {mode==='plan'&&program&&<><strong>{program.title}</strong><div className="gg-schedule-fields"><label>Programveke<input type="number" min="1" max={program.weeks||52} value={week} onChange={e=>setSlot(e.target.value,day)}/></label><label>Dag i programveka<select value={day} onChange={e=>setSlot(week,e.target.value)}>{[1,2,3,4,5,6,7].map(d=><option key={d} value={d}>Dag {d}</option>)}</select></label></div><div className="gg-schedule-fields"><label>Dato{program.start_date?<input type="date" value={date} onChange={e=>setPlanDate(e.target.value)}/>:<input type="date" value={date} onChange={e=>setDate(e.target.value)}/>}</label><label>Klokkeslett (valfritt)<input type="time" value={time} onChange={e=>setTime(e.target.value)}/></label></div><small>Programdag 1 er startdatoen for kvar programveke. Klokkeslett er planlagt trening, ikkje ei PT-booking.</small></>}
    <label>PT-notat (valfritt)<textarea rows={2} value={note} onChange={e=>setNote(e.target.value)}/></label>
    <div className="gg-schedule-selection"><small>{chosen.length} WOD-ar · {clientName} · {mode==='plan'?'Treningsplan':mode==='deadline'?'Frist '+date:mode==='appointment'?'PT-avtale':'Valfri dag'}</small></div>
    <button type="button" className="primary-button" disabled={busy||!chosen.length} onClick={save}>{busy?'Lagrar …':'Stadfest tildeling'}</button>
