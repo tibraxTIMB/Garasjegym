@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict'
+import {anatomyForExercise,summarizeMuscleExposure,MUSCLES} from '../src/lib/anatomicalIntelligence.js'
+assert.equal(MUSCLES.length,17)
+assert.equal(anatomyForExercise(' BENKPRESS '),anatomyForExercise('bench press'))
+assert.equal(anatomyForExercise('unknown'),null)
+assert.notEqual(anatomyForExercise('deadlift'),anatomyForExercise('rdl'))
+const result=summarizeMuscleExposure([{exerciseName:'bench press',completed:true},{exerciseName:'bench press',completed:false},{exerciseName:'unknown',completed:true}])
+assert.equal(result.classifiedSets,1)
+assert.equal(result.unclassifiedSets,1)
+assert.equal(result.roles.chest.primary,1)
+assert.equal(result.roles.front_deltoids.secondary,1)
+assert.equal(result.roles.upper_back.stabilizing,1)
+assert.equal(result.roles.calves.primary,0)
+assert.deepEqual(result.unclassified,['unknown'])
+assert.equal(summarizeMuscleExposure([]).classifiedSets,0)
+console.log('Anatomical intelligence assertions passed')
