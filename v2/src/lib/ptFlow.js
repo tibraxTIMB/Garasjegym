@@ -7,7 +7,8 @@ export function osloDate(now = new Date()) {
  return ['year','month','day'].map(t=>parts.find(p=>p.type===t).value).join('-')
 }
 export function ptFlowRows(program, sessions=[], today=osloDate()) {
- const mode=program?.flow_unlock_mode||'open'
+ if(!program?.id)return []
+ const mode=program.flow_unlock_mode||'open'
  const rows=sessions.filter(s=>s.program_id===program?.id&&!s.archived_at).sort(flowOrder)
  let blocker=null
  return rows.map(s=>{
@@ -28,3 +29,19 @@ export function ptFlowRows(program, sessions=[], today=osloDate()) {
  })
 }
 export const flowStatus = (program,sessions,id,today) => ptFlowRows(program,sessions,today).find(s=>s.id===id)
+
+ // Presentation derives from the same flow rows; never unlocks anything itself.
+export function ptNextAction(rows=[]){
+ const training=rows.filter(isFlowTraining)
+ const ready=training.filter(s=>s.flowState==='ready')
+ const next=ready.find(s=>s.status==='in_progress')||ready[0]||null
+ const review=training.find(s=>s.flowState==='review')||null
+ const blocked=training.find(s=>s.flowState==='locked')||null
+ const completed=training.filter(s=>s.status==='completed').length
+ return {next,review,blocked,completed,total:training.length,percent:training.length?Math.round(completed/training.length*100):0,state:next?'ready':review?'review':blocked?'locked':training.length?'complete':'empty'}
+}
+export function ptPreparation(session){
+ const snapshot=session?.workout_snapshot||{}
+ const clean=value=>typeof value==='string'?value.trim():''
+ return {format:clean(snapshot.format),minutes:Number(session?.estimated_minutes||snapshot.duration_minutes)>0?Number(session.estimated_minutes||snapshot.duration_minutes):null,focus:clean(session?.focus_area),note:clean(session?.coach_note),preparation:clean(snapshot.preparation),materials:clean(snapshot.materials)}
+}
