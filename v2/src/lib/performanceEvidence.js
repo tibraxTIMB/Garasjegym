@@ -8,7 +8,7 @@ export function isIndividualPerformance(log){
  return true
 }
 export function isUsablePerformedSet(set){
- return !!set&&set.flow_status!=='skipped'&&!['partial','failed'].includes(set.complex_status)
+ return !!set&&!['skipped','done'].includes(set.flow_status)&&!['partial','failed'].includes(set.complex_status)
 }
 // Match metadata to the actual stored set identity; do not use old prescribed
 // numbers as the recorded result. A correction does not undo explicit skipping.
