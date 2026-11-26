@@ -12,7 +12,7 @@ import { Music, MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
 import { getWodSchemaItems, sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
-import {samspelConfig,samspelRotation,samspelStationLabels,samspelErgSlots,samspelIsTimed,samspelIsManual,normalizeSamspelSwaps,appendSamspelSwap,samspelResultIssue,samspelRoundInstruction,samspelParticipantRows,samspelParticipantResults} from '../lib/samspel.js'
+import {samspelConfig,samspelRotation,samspelSwapIndex,samspelCueStep,samspelStationLabels,samspelErgSlots,samspelIsTimed,samspelIsManual,normalizeSamspelSwaps,appendSamspelSwap,samspelResultIssue,samspelRoundInstruction,samspelParticipantRows,samspelParticipantResults} from '../lib/samspel.js'
 import {cardParts,cardTone,cardDose} from '../lib/wodCard.js'
 import {ghostSignature,findRoundGhost,ghostPace} from '../lib/roundGhost.js'
 import './wod-architect.css'
@@ -144,7 +144,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     const id=window.setInterval(refresh,100)
     return()=>window.clearInterval(id)
   },[manualLockUntil])
-  function clearManualAction(){lastRunningCueSecondRef.current=-1;manualActionDeadline.current=0;setManualLockUntil(0);setManualLockSeconds(0);lastManualAction.current=null;setCanUndoManual(false);setFinishConfirm(false)}
+  function clearManualAction(){lastSamspelCueRef.current=null;lastRunningCueSecondRef.current=-1;manualActionDeadline.current=0;setManualLockUntil(0);setManualLockSeconds(0);lastManualAction.current=null;setCanUndoManual(false);setFinishConfirm(false)}
   function claimManualAction(kind){
     const next=nextManualActionDeadline(Date.now(),manualActionDeadline.current,roundGuardSeconds)
     if(next===null)return false
@@ -178,6 +178,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   useEffect(()=>{if(!soundOn){stopPackAudio(sharedTrainingAudioContext);stopDirectAudio()}},[soundOn])
   const lastCountdownCueRef = useRef({deadline:null,second:null})
   const lastRunningCueSecondRef = useRef(-1)
+  const lastSamspelCueRef=useRef(null)
   const [showTimerSettings, setShowTimerSettings] = useState(false)
   const [stagePanel, setStagePanel] = useState(null)
   const [confirmReset, setConfirmReset] = useState(false)
@@ -472,7 +473,11 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     return undefined
   }, [running])
 
-  useEffect(() => { onSnapshot({ elapsed, laps, ghost_target:target, samspel_swaps:samspelIsManual(samspel)?samspelSwaps:[], roundsCompleted: isDeathBy ? deathByCompletedRounds : isLadder ? ladderCompletedRounds : (isStationCircuit||isTimedInterval) ? fixedSlotState.roundsCompleted : isEMOM ? Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)) : (isAmrap||plannedForTimeRounds) ? laps.length : round, death_by_completed_rounds:isDeathBy?deathByCompletedRounds:null, death_by_failed_round:isDeathBy?deathByStatus.failedRound:null, death_by_interval_seconds:isDeathBy?deathByStatus.intervalSeconds:null, ladder_completed_rounds:isLadder?ladderCompletedRounds:null, ladder_finished:isLadder?ladderProgress.finished:null, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isDeathBy||isTimedInterval||isStationCircuit||hasTimeCap, currentRound, hasStarted, countdownDeadline, savedAt:Date.now() }) }, [elapsed, laps, samspelSwaps, samspel, round, deathByCompletedRounds, ladderCompletedRounds, phase, running, isCountdown, isDeathBy, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, primaryTime, currentRound, hasStarted, countdownDeadline])
+  const samspelContext=samspel?{rounds:laps.length,elapsed,target,manualSwaps:samspelSwaps}:null
+  const samspelIndex=samspelContext?samspelSwapIndex(samspel,samspelContext):null
+  const samspelLive=samspelContext?samspelRotation(samspel,samspelContext):null
+  useEffect(()=>{const cue=samspelCueStep(lastSamspelCueRef.current,samspelIndex,{running,finished:timerLimitReached});lastSamspelCueRef.current=cue.next;if(cue.signal)playSignal(cue.signal)},[samspelIndex,running,timerLimitReached])
+  useEffect(() => { onSnapshot({ elapsed, laps, samspel_roles:samspelLive?samspelStationLabels(samspel,samspelLive.roles):null,samspel_next_switch:samspelLive?.nextSwitchSeconds??null,samspel_rotation:samspelIndex,ghost_target:target, samspel_swaps:samspelIsManual(samspel)?samspelSwaps:[], roundsCompleted: isDeathBy ? deathByCompletedRounds : isLadder ? ladderCompletedRounds : (isStationCircuit||isTimedInterval) ? fixedSlotState.roundsCompleted : isEMOM ? Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)) : (isAmrap||plannedForTimeRounds) ? laps.length : round, death_by_completed_rounds:isDeathBy?deathByCompletedRounds:null, death_by_failed_round:isDeathBy?deathByStatus.failedRound:null, death_by_interval_seconds:isDeathBy?deathByStatus.intervalSeconds:null, ladder_completed_rounds:isLadder?ladderCompletedRounds:null, ladder_finished:isLadder?ladderProgress.finished:null, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isDeathBy||isTimedInterval||isStationCircuit||hasTimeCap, currentRound, hasStarted, countdownDeadline, savedAt:Date.now() }) }, [elapsed, laps, target, samspelIndex, samspelSwaps, samspel, round, deathByCompletedRounds, ladderCompletedRounds, phase, running, isCountdown, isDeathBy, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, primaryTime, currentRound, hasStarted, countdownDeadline])
 
   useEffect(() => {
     if (!running) return
@@ -533,9 +538,9 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const ghost=useMemo(()=>findRoundGhost(previousLogs,ghostKey),[previousLogs,ghostKey])
   const pace=showGhost?ghostPace(ghost,laps,elapsed):null
   const ghostDisplay=ghost&&<div className="gg-round-ghost"><button type="button" className="text-button" aria-expanded={showGhost} onClick={()=>setShowGhost(v=>!v)}>Ghost · {showGhost?'Skjul':'Vis'}</button>{pace&&<><small>{ghost.date} · same planlagde dosering</small><strong>Du {pace.ownRounds} · Ghost {pace.ghostRounds} rundar</strong>{pace.delta!==null&&<small>{pace.delta===0?'Lik rundetid':clock(Math.abs(pace.delta))+(pace.delta>0?' bak':' framfor')+' ved same runde'}</small>}<small>Faktisk belastning kan vera ulik.</small></>}</div>
-  const samspelState=samspel?samspelRotation(samspel,{rounds:completedRounds,elapsed,target,manualSwaps:samspelSwaps}):null
+  const samspelState=samspelLive
   const samspelDisplay=samspelState&&<div className="gg-samspel-roles" aria-label="Aktuelle partnarroller" style={{flexWrap:'wrap'}}>{samspelStationLabels(samspel,samspelState.roles).map((role,i)=><span key={i} className={role==='AMRAP'?'gg-samspel-amrap':'gg-samspel-erg'}><small>P{i+1}</small> {role}</span>)}{samspelState.timed&&samspelState.nextSwitchSeconds!==null&&<strong style={{flexBasis:'100%'}}>Byte om {clock(samspelState.nextSwitchSeconds)}</strong>}{samspelIsManual(samspel)&&<div style={{flexBasis:'100%',display:'flex',gap:6,alignItems:'center',flexWrap:'wrap'}}><button type="button" className="secondary-button" disabled={!running||timerLimitReached||(samspelSwaps.length>0&&elapsed-samspelSwaps[samspelSwaps.length-1]<2)} onClick={()=>setSamspelSwaps(old=>appendSamspelSwap(samspel,old,{elapsed,running,target}))}>Byt rolle</button><small>{samspelSwaps.length} byte</small><button type="button" className="text-button" disabled={!samspelSwaps.length||running} onClick={()=>setSamspelSwaps(old=>old.slice(0,-1))}>Angra byte (pause)</button></div>}<small style={{flexBasis:'100%'}}>{samspelRoundInstruction(samspel)}</small></div>
-  const lapAction = () => { if(!running||timerLimitReached||!claimManualAction('round'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); setRound(value => value + 1); if(plannedForTimeRounds&&laps.length+1>=plannedForTimeRounds){setRunning(false);setPhase('FERDIG');playSignal('finish')}else playSignal('registered') }
+  const lapAction = () => { if(!running||timerLimitReached||!claimManualAction('round'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); setRound(value => value + 1); if(plannedForTimeRounds&&laps.length+1>=plannedForTimeRounds){setRunning(false);setPhase('FERDIG');playSignal('finish')}else if(!samspel||samspelIsTimed(samspel)||samspelIsManual(samspel))playSignal('registered') }
   const splitAction = () => { if(!running||timerLimitReached||!claimManualAction('split'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); playSignal('registered') }
   const undoManualAction=()=>{
     const kind=lastManualAction.current
