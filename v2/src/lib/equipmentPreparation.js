@@ -1,3 +1,4 @@
+import {samspelConfig,samspelMixed,samspelStationRows,SAMSPEL_TASKS} from './samspel.js'
 import {exerciseMuscleProfile} from './exerciseMuscleProfiles.js'
 // A preparation checklist, not an inventory count. Equipment descriptions are
 // explicit catalogue text; alternatives and sharing must be confirmed by the coach.
@@ -43,7 +44,7 @@ export function equipmentPlanSnapshot(items,values={}){
 // Same mode, exact primary role set and overlapping explicit movement tags. These are
 // candidates for coach review, not equivalent dosage, rehab or automatic substitutions.
 export function equipmentAlternatives(item,catalogue=[],tagsFor=()=>[]){
- if(!item||item.is_rest||item.is_complex||item.is_rehab)return []
+ if(!item||item.is_rest||item.is_complex||item.is_rehab||item.is_samspel_station)return []
  const name=item.exercise_name||item.name,profile=exerciseMuscleProfile(name)
  const tags=tagsFor({...item,name})||[]
  if(!profile||!profile.primary.length||profile.mode==='mobility'||!tags.length)return []
@@ -74,4 +75,19 @@ export function applyEquipmentInventory(items,values,inventory){
  const next={...values}
  for(const row of equipmentCapacity(items,values))if(Object.hasOwn(inventory,row.key)&&(inventory[row.key]===null||Number.isSafeInteger(inventory[row.key])&&inventory[row.key]>=0&&inventory[row.key]<=999))next[row.key]={...next[row.key],available:inventory[row.key]}
  return next
+}
+
+// Include explicit parallel stations in the same preparation checklist; never
+// infer quantities or alter exercise prescriptions from participant count.
+export function equipmentItemsForSamspel(items=[],samspel){
+ const s=samspelConfig({samspel})
+ if(!s)return items
+ const ergEquipment={row:'Romaskin',bike:'Sykkel',ski:'SkiErg'}
+ const stations=samspelMixed(s)?samspelStationRows(s):[{task:s.task,label:SAMSPEL_TASKS.find(([id])=>id===s.task)?.[1]}]
+ return [...items,...stations.map((station,i)=>({
+  key:'samspel-equipment-'+i,
+  name:'Samspel · '+(station.label||'Uavklart stasjon'),
+  equipment:station.task==='strength'?station.equipment:ergEquipment[station.task],
+  is_samspel_station:true
+ }))]
 }

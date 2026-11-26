@@ -85,3 +85,18 @@ const bt=plateAllocation(backtrack,[load('bar',44),load('bar',32)])
 assert.equal(bt.status,'exact')
 assert.deepEqual(bt.loads[0].perSide.map(p=>[p.kg,p.count]),[[4,3]])
 assert.deepEqual(bt.loads[1].perSide.map(p=>[p.kg,p.count]),[[6,1]])
+
+import {equipmentItemsForSamspel} from '../src/lib/equipmentPreparation.js'
+const main=[{name:'Air squat',equipment:'Kroppsvekt'}]
+const rotating={version:2,mode:'parallel_round_swap',participant_count:2,task:'row',metric:'distance'}
+assert.equal(equipmentItemsForSamspel(main,null),main)
+assert.equal(equipmentItemsForSamspel(main,{...rotating,participant_count:1}),main)
+const parallel=equipmentItemsForSamspel(main,rotating)
+assert.deepEqual(equipmentPreparation(parallel).groups.map(x=>x.equipment),['Romaskin'])
+assert.equal(equipmentCapacity(parallel,{})[0].status,'unknown')
+assert.equal(equipmentCapacity(parallel,{romaskin:{required:1,available:0}})[0].status,'shortage')
+const mixed={...rotating,participant_count:3,erg_slots:2,station_tasks:[{task:'row',metric:'distance'},{task:'strength',metric:'reps',exercise_id:'p',exercise_name:'Press',instruction:'5 reps',equipment:'Vektstong'}]}
+const mixedItems=equipmentItemsForSamspel(main,mixed)
+assert.deepEqual(equipmentPreparation(mixedItems).groups.map(x=>x.equipment),['Romaskin','Vektstong'])
+assert.equal(main.length,1)
+assert.equal(equipmentAlternatives(mixedItems[2],candidates,tags).length,0)
