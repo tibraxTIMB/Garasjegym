@@ -33,4 +33,16 @@ do $$begin
  begin perform public.get_pt_wod_result('30000000-0000-0000-0000-000000000001',null);raise exception 'anon RPC allowed';exception when insufficient_privilege then null;end;
 end$$;
 reset role;
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
+update public.pt_wod_assignments set scheduled_date='2026-12-02',scheduled_time='17:15' where id='30000000-0000-0000-0000-000000000004';
+do $begin
+ if (select scheduled_time from public.pt_wod_assignments where id='30000000-0000-0000-0000-000000000004') is distinct from '17:15'::time then raise exception 'staff reschedule';end if;
+ begin update public.pt_wod_assignments set scheduled_date='2026-12-02' where id='30000000-0000-0000-0000-000000000001';raise exception 'completed update allowed';exception when invalid_parameter_value then null;end;
+end$;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',false);
+do $begin
+ begin update public.pt_wod_assignments set scheduled_time='18:00' where id='30000000-0000-0000-0000-000000000004';raise exception 'member reschedule allowed';exception when insufficient_privilege then null;end;
+end$;
+reset role;
 select 'ORDRE 006 SQL REHEARSAL PASSED' as result;
