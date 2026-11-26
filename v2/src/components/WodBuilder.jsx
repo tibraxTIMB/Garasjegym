@@ -378,13 +378,14 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    }
    item.levels=Object.fromEntries(Object.entries(item.levels).map(([level,existing])=>[level,level==='rx'?dose:{...existing,reps:item.reps,...(quantity?.unit==='m'?{distanceMeters:String(quantity.value)}:{}),...(quantity?.unit==='s'?{durationSeconds:String(quantity.value)}:{}),...(quantity?.unit==='min'?{durationSeconds:String(quantity.value*60)}:{}),...(quantity?.unit==='cal'?{calories:String(quantity.value)}:{})}]))
    item.coachNote=row.loadKg?'Importert belastning ca. '+row.loadKg.toFixed(1)+' kg – stadfest belastning per nivå.':''
+   if(parsed.warmupPreset){item.warmup_phase=row.warmup_phase;item.sideMode=row.sideMode||'';item.coachNote=row.coachNote||'';item.levels=Object.fromEntries(Object.entries(item.levels).map(([level,d])=>[level,{...d,loadMode:'none',loadKg:'',loadKgMen:'',loadKgWomen:'',percent1rm:'',rir:'',rirRange:'',instruction:row.coachNote||''}]))}
    return item
   })
   if(!imported.length){setError('Ingen øvingar er kopla til biblioteket. Gå tilbake til importen og vel øvingar.');return}
   if(isFixedInterval(parsed.format)){setIntervalExerciseCount(String(imported.length));setWorkSeconds(String(parsed.fixedTiming?.workSeconds??''));setRestSeconds(String(parsed.fixedTiming?.restSeconds??''))}
   if(isEmomFormat(parsed.format)){const every=emomIntervalSeconds(parsed.format,{work_every_seconds:parsed.emomIntervalSeconds});setEmomIntervalMin(String(Math.floor(every/60)));setEmomIntervalSec(String(every%60))}
   setEquipmentPlan({});setSamspel(null);const importedSeconds=Math.round((Number(parsed.minutes)||0)*60);setDurationSeconds(String(importedSeconds%60));setTimeCapSeconds(String(importedSeconds%60));
-  setCompositeBlocks(Array.isArray(parsed.blocks)&&parsed.blocks.length?parsed.blocks.map(block=>({...block,flowPurpose:flowPurpose(block)})):defaultCompositeBlocks());setActiveBlockId(parsed.blocks?.[0]?.id||'a');setName(parsed.name||'Importert WOD');setFormat(parsed.format||'Eigen økt');setMinutes(String(importedSeconds?Math.floor(importedSeconds/60):20));setTimeCap(importedSeconds?String(Math.floor(importedSeconds/60)):'');setRounds(String(parsed.rounds||1));setSelected(imported);setNotes(parsed.notes||'');setStimulus('Importert WOD – kontroller format, øvingar og dosering før lagring.');setLibraryCategory('standard');setPublishToMembers(false);setWizardStep(2);setError('');setNotice('WOD-teksten er tolka og lagd inn i byggjaren. Kontroller alle øvingar, belastningar og doseringsnivå før lagring.')
+  setCompositeBlocks(Array.isArray(parsed.blocks)&&parsed.blocks.length?parsed.blocks.map(block=>({...block,flowPurpose:flowPurpose(block)})):defaultCompositeBlocks());setActiveBlockId(parsed.blocks?.[0]?.id||'a');setName(parsed.name||'Importert WOD');setFormat(parsed.format||'Eigen økt');setMinutes(String(importedSeconds?Math.floor(importedSeconds/60):20));setTimeCap(importedSeconds?String(Math.floor(importedSeconds/60)):'');setRounds(String(parsed.rounds||1));setSelected(imported);setNotes(parsed.notes||'');setStimulus(parsed.warmupPreset?parsed.stimulus:'Importert WOD – kontroller format, øvingar og dosering før lagring.');setLibraryCategory(parsed.warmupPreset?'warmup':'standard');if(parsed.warmupPreset){setIntensity('1');setParticipation('individual');setCollaboration('solo')}setPublishToMembers(false);setWizardStep(2);setError('');setNotice('WOD-teksten er tolka og lagd inn i byggjaren. Kontroller alle øvingar, belastningar og doseringsnivå før lagring.')
  }
  useEffect(()=>{
   if(!loading&&initialImport&&!editWodId){applyImportedWod(initialImport);onImportConsumed?.()}
@@ -600,7 +601,10 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    const timer_settings={workout_schema:schema,work_seconds:isStationCircuit?Number(stationWork):isTimed?emomEverySeconds:Number(workSeconds)||null,rest_seconds:isStationCircuit?Number(stationTransition):isTimed?0:Number(restSeconds)||null,rounds:isStationCircuit?Number(stationRounds):isTimed?Math.floor(emomTotalSeconds/emomEverySeconds):Number(rounds)||null,duration_seconds:stationDuration}
    const wodPayload={name:name.trim(),category:libraryCategory==='warmup'?'warmup':'main',format:savedFormat,duration_minutes:Math.ceil(stationDuration/60)||null,movements,notes:[stimulus,notes,rxNotes?'RX: '+rxNotes:'',scaledNotes?'Scaled: '+scaledNotes:'',customInstructions].filter(Boolean).join('\n\n'),is_published:canPublishWod&&publishToMembers,timer_settings}
    if(previewOnly){if(!onPreview)throw Error('Nettbrettlaboratoriet er ikkje tilgjengeleg.');onPreview(wodPayload);setNotice('Validert kladd sendt til nettbrettlaboratoriet. Ikkje lagra eller publisert.');return}
-   if(officeMode&&wodPayload.is_published&&!window.confirm('Publisera denne WOD-en for medlemmene no? Test kladden i nettbrettlaboratoriet først ved behov.'))return
+   if(officeMode){
+     if(!window.confirm('STACHELDRAHT · Erstprüfung: '+wodPayload.name+' · '+savedFormat+' · '+schema.items.length+' øvingar. Valideringa er bestått. Kontroller dosering og eventuelle tildelingar.'))return
+     if(!window.confirm('STACHELDRAHT · Freigabe: '+(editingWodId?'Oppdater eksisterande WOD (kan påverka framtidige tildelingar)':'Opprett ny WOD')+' «'+wodPayload.name+'»'+(wodPayload.is_published?' og publiser for medlemmene':' som privat/utkast')+'?'))return
+    }
    if(!editingWodId)wodPayload.created_by=user.id
    let savedWodId=editingWodId||null
    if(planContext&&onSavePlanWod){

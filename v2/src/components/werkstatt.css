@@ -46,3 +46,5 @@
 @media(min-width:1400px){.gg-office-shell .gg-desktop-wod-production{position:relative;padding-left:245px;min-height:500px}.gg-office-shell .gg-wod-project-inspector{position:absolute;left:0;top:64px;width:230px;max-height:calc(100vh - 150px);overflow:auto}.gg-office-shell .gg-production-ribbon{margin-left:-245px}.gg-office-shell .gg-desktop-wod-production .gg-architect-overview{max-width:none}}
 
 .gg-meisterwerk-control{display:grid;gap:8px;padding:12px;border:1px solid var(--line);border-radius:8px;background:#1a2022}.gg-meisterwerk-control details{min-width:0}.gg-meisterwerk-control summary{cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 0}.gg-meisterwerk-control small{color:var(--muted)}
+
+@media(max-width:999px){.gg-werkstatt{gap:10px}.gg-werkstatt-head{padding-bottom:10px;gap:8px}.gg-werkstatt-panel,.gg-werkstatt-preview{padding:10px;gap:8px}.gg-werkstatt-grid>button{min-height:94px;padding:12px}.gg-werkstatt-tabs>button,.gg-werkstatt-toolbar>button{min-height:44px}.gg-office-shell .gg-werkstatt-table-wrap{max-width:100%;overflow:auto}.gg-werkstatt-tabs>span{display:none}}
