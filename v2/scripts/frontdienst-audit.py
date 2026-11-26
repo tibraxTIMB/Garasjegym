@@ -14,6 +14,8 @@ with sync_playwright() as pw:
         page=ctx.new_page()
         errors=[]
         page.on("pageerror",lambda error:errors.append(str(error)))
+        page.on("console",lambda msg: print("BROWSER",msg.type,msg.text[:1000],flush=True) if msg.type=="error" else None)
+        page.on("pageerror",lambda error:print("BROWSER EXCEPTION",str(error),flush=True))
         # Seed one synthetic already-performed workout, then use the real result UI.
         page.add_init_script("""() => {
           if(sessionStorage.getItem('frontdienst-seeded'))return;
@@ -30,7 +32,13 @@ with sync_playwright() as pw:
         }""")
         page.goto(URL,wait_until="domcontentloaded")
         save=page.get_by_role("button",name="Lagre økt",exact=True)
-        expect(save).to_be_visible(timeout=15000)
+        try:
+            expect(save).to_be_visible(timeout=15000)
+        except Exception:
+            print("FRONTDIENST INITIAL UI",page.locator("body").inner_text()[:3000],flush=True)
+            print("FRONTDIENST DRAFT",page.evaluate("(key)=>localStorage.getItem(key)",DRAFT),flush=True)
+            print("FRONTDIENST ERRORS",errors,flush=True)
+            raise
         # Reload and verify that all data is still present.
         page.reload(wait_until="domcontentloaded")
         expect(save).to_be_visible(timeout=15000)
