@@ -46,3 +46,5 @@ Ikkje køyr ein automatisk eller historisk eingongs-commit som publiseringssigna
 ## Kvalitetssikring
 
 `npm test`, `npm run check:migrations`, `npm run build` og `npm run check:release-artifact`. Nettlesarrevisjon: `scripts/responsive-audit.py` mot lokal demo. Fysisk mobil-/nettbrettest, reell drift og databasekapasitet må kontrollerast separat.
+
+Release kan òg utløysast med ein eksplisitt eigargodkjend releaseordre etter KLARHEIT-kontrakten; vanlege pushar publiserer aldri.
