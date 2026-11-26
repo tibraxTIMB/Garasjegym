@@ -330,7 +330,7 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
    const existing=sessions.filter(s=>s.program_id===activeProgram.id)
    const nextSequenceNo=existing.reduce((max,row)=>Math.max(max,Number(row.sequence_no)||0),0)+1
    const snapshot=wod
-    ? {id:wod.id,title:wod.name,wod_title:wod.name,format:wod.format,duration_minutes:wod.duration_minutes,movements:wod.movements,notes:wod.notes}
+    ? {id:wod.id,title:wod.name,wod_title:wod.name,format:wod.format,duration_minutes:wod.duration_minutes,movements:wod.movements,notes:wod.notes,timer_settings:wod.timer_settings}
     : sessionDraft.session_kind==='information'
      ? {title:sessionDraft.title.trim(),format:'Informasjonstime',agenda:sessionDraft.agenda.trim(),materials:sessionDraft.materials.trim(),preparation:sessionDraft.preparation.trim(),movements:[],notes:sessionDraft.notes.trim()}
      : {title:sessionDraft.title.trim()||'Eigen økt',format:'Eigen økt',movements:[],notes:sessionDraft.notes.trim()}
@@ -394,7 +394,7 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
  async function attachWodToSession(session,wodId) {
   await run(async()=>{
    const wod=wods.find(x=>x.id===wodId)
-   const snapshot=wod?{id:wod.id,title:wod.name,format:wod.format,duration_minutes:wod.duration_minutes,movements:wod.movements,notes:wod.notes}:{title:session.title,format:'Eigen økt',movements:[],notes:session.coach_note||''}
+   const snapshot=wod?{id:wod.id,title:wod.name,format:wod.format,duration_minutes:wod.duration_minutes,movements:wod.movements,notes:wod.notes,timer_settings:wod.timer_settings}:{title:session.title,format:'Eigen økt',movements:[],notes:session.coach_note||''}
    if(!canManageClients||activeProgram?.client_id!==clientId||session.program_id!==activeProgram.id||session.status==='completed'||session.workout_log_id||session.workout_snapshot?.pt_equivalent)throw new Error('Fullførte økter kan ikkje bytast ut.')
    const {data,error:e}=await supabase.from('pt_program_sessions').update({wod_id:wod?.id||null,workout_snapshot:snapshot}).eq('id',session.id).eq('program_id',activeProgram.id).in('status',['planned','in_progress']).is('workout_log_id',null).is('archived_at',null).select('id').maybeSingle()
    if(e||!data)throw e||new Error('Økta er ikkje oppdatert.')
