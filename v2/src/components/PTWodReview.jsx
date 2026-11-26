@@ -1,3 +1,4 @@
+import AnatomyEvidence from './AnatomyEvidence.jsx'
 import {useEffect,useMemo,useState} from 'react'
 import {ArrowLeft,Award,CheckCircle2,ChevronDown,MessageSquareText,Send,ShieldCheck} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
@@ -126,6 +127,7 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
     <summary><span className="ptreview-disclosure-main"><strong>Rundetider og disponering</strong><small>AMRAP · registrerte rundar</small></span><ChevronDown size={18}/></summary>
     <div className="ptreview-disclosure-content">{renderPacing(laps)}</div>
    </details>}
+   {exerciseResults.length>0&&<AnatomyEvidence exercises={exerciseResults} scope="Denne PT-økta"/>}
    {exerciseResults.length>0&&<details className="ptreview-disclosure ptreview-dose">
     <summary><span className="ptreview-disclosure-main"><strong><CheckCircle2 size={16}/> Planlagt og utført dosering</strong><small>{exerciseResults.length} øvingar · opna for sett, reps og vekt</small></span><ChevronDown size={18}/></summary>
     <div className="ptreview-disclosure-content">
