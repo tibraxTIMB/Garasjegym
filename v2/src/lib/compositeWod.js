@@ -124,6 +124,8 @@ export function compositeTimerConfig(block) {
  const samspel=compositeSamspelConfig(current)
  const schema={
   ...(samspel?{samspel}:{}),
+  prep_countdown:current.prep_countdown===true&&current.flowPurpose==='prep',
+  prep_only:['prep','build','recovery'].includes(current.flowPurpose),
   format:current.format,
   include_final_rest:interval&&current.includeFinalRest===true,
   planned_for_time_rounds:plannedRounds,
@@ -249,13 +251,13 @@ export function compositeSamspelResults(blocks=[],scores={},timerResults={},manu
   const draft=scores['samspel:'+block.id]||{}
   const result=samspelParticipantResults(s,draft.participants||{})
   if(result.issue)return {rows:[],issue:title+' · '+result.issue,field:'samspel-block-'+block.id+'-'+result.slot+'-'+result.field}
-  const issue=samspelResultIssue(s,draft.distance)
+  const issue=block.warmup_group&&String(draft.distance??'').trim()===''?null:samspelResultIssue(s,draft.distance)
   if(issue)return {rows:[],issue:title+' · '+issue,field:'samspel-block-'+block.id+'-distance'}
   const snapshot=timerResults[index]||{}
   const started=manual||snapshot.hasStarted===true||Number(snapshot.elapsed)>0
   if(!started&&result.rows.some(r=>r.quality_status!=='skipped'))return {rows:[],issue:title+': delen vart ikkje starta. Stadfest ikkje utført eller etterregistrer økta.',field:'samspel-block-'+block.id+'-1-quality'}
-  if(!started&&samspelQuality(s)&&Number(draft.distance)!==0)return {rows:[],issue:title+': delen vart ikkje starta. Distanse må vera 0.',field:'samspel-block-'+block.id+'-distance'}
-  rows.push({block_id:block.id,title,samspel:{...s,team_score:true,participant_results:result.rows,manual_swaps:manual?[]:normalizeSamspelSwaps(snapshot.samspel_swaps)},distance:samspelQuality(s)?Number(draft.distance):null,elapsed:manual?null:Number(snapshot.elapsed)||0,completed:result.rows.every(r=>r.quality_status==='done')})
+  if(!started&&samspelQuality(s)&&Number(draft.distance||0)!==0)return {rows:[],issue:title+': delen vart ikkje starta. Distanse må vera 0.',field:'samspel-block-'+block.id+'-distance'}
+  rows.push({block_id:block.id,title,samspel:{...s,team_score:true,participant_results:result.rows,manual_swaps:manual?[]:normalizeSamspelSwaps(snapshot.samspel_swaps)},distance:samspelQuality(s)&&String(draft.distance??'').trim()!==''?Number(draft.distance):null,elapsed:manual?null:Number(snapshot.elapsed)||0,completed:result.rows.every(r=>r.quality_status==='done')})
  }
  return {rows,issue:null}
 }
