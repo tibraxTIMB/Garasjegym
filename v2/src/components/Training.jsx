@@ -1538,6 +1538,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     if(!claimWorkoutAction(saveLock))return
     let protectedDraft=false
     let validated=false
+    let savedId=null
     setSaving(true)
     try {
     if(!automatic&&finishOpen&&pendingWeightItems.length&&!await flowConfirm.ask({title:'Vekt manglar',message:pendingWeightItems.map(item=>flowItemGroup(item,flowSchema,format).title+' · '+item.exercise_name+': sett '+item.sets.map((set,index)=>entered(set.reps)&&Number(set.reps)>0&&!entered(set.load_kg)?index+1:null).filter(Boolean).join(', ')).join('\n')+'\n\nDu kan lagra utan vekt eller retta første felt.',confirmLabel:'Lagra utan vekt',cancelLabel:'Rett vekt'})){const item=pendingWeightItems[0],itemIndex=items.indexOf(item),setIndex=item.sets.findIndex(set=>entered(set.reps)&&Number(set.reps)>0&&!entered(set.load_kg));correctResultIssue({itemIndex,setIndex,part:flowItemGroup(item,flowSchema,format).title,exercise:item.exercise_name,field:'load_kg',message:'Registrer faktisk vekt, eller vel å lagra utan vekt.'});return}
@@ -1662,6 +1663,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       })
       if(saveError)throw saveError
       if(!workoutId)throw new Error('Databasen returnerte ikkje ID for den lagra økta.')
+      savedId=workoutId
       validated=false // Server acknowledged the write; refresh failures must not retry it.
       clearWorkoutSubmission(memberId,saveToken);submissionRef.current=null;clearWorkoutDraft(memberId)
       pendingSave.current=null;setSyncNotice('')
@@ -1677,11 +1679,13 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       await loadAll()
       onSaved?.({victories})
     } catch (err) {
+      if(savedId){pendingSave.current=null;setSyncNotice('');setNotice('Økta er lagra. Oppdatering av oversikta feila; opna treningsloggen på nytt.');setError('');return}
       if(validated&&isRetryableWorkoutError(err,isOffline())){
         pendingSave.current=fingerprint
         setSyncNotice(protectedDraft?'Resultatet er sikra på eininga. Prøver lagring igjen når sambandet er tilbake.':'Lokal lagring feila. Hald appen open medan me prøver igjen.')
       }else{
-        pendingSave.current=null;setSyncNotice('')
+        pendingSave.current=null
+        setSyncNotice(submissionRef.current?.saveToken===saveToken?'Lagring ikkje stadfesta. Kontroller treningsloggen før du endrar eller forkastar resultatet.':'')
         setError(err.message || 'Kunne ikkje lagra økta. Kladden er framleis open.')
       }
     } finally {
