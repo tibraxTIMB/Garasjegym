@@ -60,8 +60,9 @@ jobs:
       - name: Install audio rendering dependency
         run: |
           if ! command -v ffmpeg >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install -y ffmpeg
+            test -r /etc/apt/sources.list.d/ubuntu.sources
+            sudo apt-get -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/ubuntu.sources -o Dir::Etc::sourceparts=- update
+            sudo apt-get -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/ubuntu.sources -o Dir::Etc::sourceparts=- install -y ffmpeg
           fi
           ffmpeg -version
       - name: Render optional generative audio pack
