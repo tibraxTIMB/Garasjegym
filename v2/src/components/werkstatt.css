@@ -1,0 +1,27 @@
+/* Scoped to the opt-in PC companion. No mobile layout changes. */
+.gg-werkstatt{display:grid;gap:16px;min-width:0}
+.gg-werkstatt-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:16px}
+.gg-werkstatt-head h2{font-size:clamp(26px,3vw,40px);letter-spacing:.06em;margin:4px 0}
+.gg-werkstatt-head p,.gg-werkstatt-panel p{margin:4px 0 12px;line-height:1.5}
+.gg-werkstatt-tabs,.gg-werkstatt-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.gg-werkstatt-tabs>span{display:flex;gap:6px;align-items:center;margin-right:8px}
+.gg-werkstatt-tabs>button{padding:9px 14px;border:1px solid var(--line);border-radius:8px;background:transparent;color:inherit}
+.gg-werkstatt-tabs>button.selected{border-color:var(--orange);background:#30271d}
+.gg-werkstatt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:12px}
+.gg-werkstatt-grid>button{min-height:130px;display:grid;gap:10px;text-align:left;align-content:start;border:1px solid var(--line);border-radius:12px;background:#1c2022;color:inherit;padding:18px}
+.gg-werkstatt-grid>button:hover,.gg-werkstatt-grid>button:focus-visible{border-color:var(--orange)}
+.gg-werkstatt-grid>button svg{color:var(--orange)}
+.gg-werkstatt-grid>button strong{font-size:17px}
+.gg-werkstatt-grid>button span{color:var(--muted);font-size:13px;line-height:1.45}
+.gg-werkstatt-panel,.gg-werkstatt-preview{display:grid;gap:12px;padding:16px;border:1px solid var(--line);border-radius:10px;min-width:0}
+.gg-werkstatt-panel label{display:grid;gap:6px;min-width:0}
+.gg-werkstatt-panel label:has(input[type=checkbox]){display:flex;align-items:flex-start}
+.gg-werkstatt-panel input:not([type=checkbox]),.gg-werkstatt-panel textarea,.gg-werkstatt-panel select{min-width:0;max-width:100%;font:inherit}
+.gg-werkstatt-panel textarea{width:100%;resize:vertical}
+.gg-werkstatt-table-wrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:8px;min-width:0}
+.gg-werkstatt-table-wrap table{width:100%;border-collapse:collapse;text-align:left;font-size:14px}
+.gg-werkstatt-table-wrap th,.gg-werkstatt-table-wrap td{padding:10px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.gg-werkstatt-table-wrap th{position:sticky;top:0;background:#222729}
+.gg-plan-exchange{margin:8px 0;padding:10px;border:1px solid var(--line);border-radius:8px}
+.gg-plan-exchange summary{cursor:pointer;font-weight:600}
+@media(min-width:1000px){.gg-office-shell .main{padding-inline:24px}.gg-office-shell .content-card{max-width:none;width:100%}.gg-office-shell .training-content{max-width:none}.gg-office-shell .gg-werkstatt-grid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}}

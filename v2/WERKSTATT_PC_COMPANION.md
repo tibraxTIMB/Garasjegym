@@ -1,0 +1,7 @@
+# GARASJEGYM WERKSTATT – PC companion
+
+Phase 1: opt-in desktop workspace on existing app/PWA, no new app database, no native installer or fee. Same auth and RLS. Open from desktop header or ?office=1 on existing URL after sign-in. Staff can use existing WOD builder, PT Studio, administration, scheduling. Coaches only get existing authorized PT/library functions. Member view preference is not persisted/overwritten by office view.
+
+File exchange: published library WOD exports JSON (structured reference), Excel-compatible CSV, Markdown, TXT, print/PDF. CSV/JSON source converted to text and passed to current reviewed import; JSON complex/composite/samspel/sided imports fail closed because they are not lossless. Existing text/image OCR and PDF reference remain. Plan CSV/JSON imports use exact published WOD name matches and reviewed new template only, never auto-assign a customer. Selected active plan can export CSV/JSON/TXT/ICS all-day/print-PDF with no private notes or results; review free-text titles before sharing. No customer data bulk export. All write access remains subject to existing RLS. No added dependencies or database migrations.
+
+Next phases: native XLSX/DOCX/PDF text extraction, lossless versioned full-schema WOD and multi-WOD imports, mapping column editor, draft persistence and multi-document queue, dedicated calendar/table editors, optional portable admin reports. These are not implemented in Phase 1. Validate actual desktop browser and role journeys before production. Do not publish independently of the current KLARHEIT release gate.

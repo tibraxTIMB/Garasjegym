@@ -1,11 +1,12 @@
-import {useState} from 'react'
+import {useEffect,useState} from 'react'
 import {BookOpen,WandSparkles,Plus} from 'lucide-react'
 import WodBuilder from './WodBuilder.jsx'
 import WodLibrary from './WodLibrary.jsx'
 import './wod-compact.css'
 
-export default function WodHub({onLaunchWod,staff,isAdmin=false,focusWodId=null,onFocusConsumed,simpleMode=false,launchAssignmentId=null,launchClassSessionId=null,initialImportedWod=null,onImportConsumed}){
- const [tab,setTab]=useState(initialImportedWod&&isAdmin?'builder':'library')
+export default function WodHub({onLaunchWod,staff,isAdmin=false,focusWodId=null,onFocusConsumed,simpleMode=false,launchAssignmentId=null,launchClassSessionId=null,initialImportedWod=null,onImportConsumed,initialBuilder=false,onBuilderConsumed}){
+ const [tab,setTab]=useState((initialImportedWod&&isAdmin)||(initialBuilder&&staff)?'builder':'library')
+ useEffect(()=>{if(initialBuilder&&staff){setTab('builder');onBuilderConsumed?.()}},[initialBuilder,staff])
  const [editWodId,setEditWodId]=useState(null),[copyMode,setCopyMode]=useState(false)
  function editWod(id){setCopyMode(false);setEditWodId(id);setTab('builder')}
  function copyWod(id){setCopyMode(true);setEditWodId(id);setTab('builder')}

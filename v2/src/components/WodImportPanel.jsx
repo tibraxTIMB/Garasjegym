@@ -6,8 +6,8 @@ import {isEmomFormat,emomIntervalSeconds} from '../lib/wodEngine.js'
 import {COMPOSITE_FORMAT, validateCompositeBlocks} from '../lib/compositeWod.js'
 import './wod-import.css'
 
-export default function WodImportPanel({exerciseCatalog=[],onApply}){
- const [source,setSource]=useState('')
+export default function WodImportPanel({exerciseCatalog=[],onApply,initialSource=''}){
+ const [source,setSource]=useState(initialSource)
  const [fileName,setFileName]=useState('')
  const [filePreview,setFilePreview]=useState('')
  const [isPdf,setIsPdf]=useState(false)
