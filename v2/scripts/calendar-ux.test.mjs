@@ -48,3 +48,14 @@ test('timeplan has a true calendar grid and My Page no longer substitutes a date
  assert.match(styles,/\.my-page \.history-calendar \.calendar-grid \{ display:block !important;/)
  assert.match(styles,/\.my-page \.history-mobile-agenda \{ display:none !important;/)
 })
+
+test('member calendar uses shared schedule semantics and preserves assignment identity on launch',()=>{
+ const personal=read('../src/components/PersonalCalendar.jsx')
+ const hub=read('../src/components/ScheduleHub.jsx')
+ const app=read('../src/App.jsx')
+ assert.match(personal,/calendarEntries\(\{assignments:assignments\.data/)
+ assert.match(personal,/onOpenAssignment\(event\.wodId,event\.assignmentId\)/)
+ assert.doesNotMatch(personal,/\.gte\('due_date',lowerDay\)/)
+ assert.match(hub,/onOpenAssignment\?\.\(wodId,assignmentId\)/)
+ assert.match(app,/<ScheduleHub[^\n]*onOpenAssignment=\{\(wodId,assignmentId\)=>\{setLaunchWodId\(wodId\);setLaunchAssignmentId\(assignmentId\)/)
+})

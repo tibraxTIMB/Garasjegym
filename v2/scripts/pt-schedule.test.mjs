@@ -37,3 +37,13 @@ assert.equal(canMoveDirect({status:'assigned',scheduled_date:null}),true)
 assert.equal(canMoveDirect({status:'completed',scheduled_date:'2026-12-09'}),false)
 assert.equal(canMoveDirect({status:'assigned',linked_session_id:'s',scheduled_date:null}),false)
 console.log('PT schedule: 11 standalone timing checks passed')
+
+// One assignment keeps one calendar entry even when scheduled time and deadline differ.
+const timedWithDeadline={...standalone[0],id:'a2',due_date:'2026-12-11',wods:wod}
+const timedEntries=calendarEntries({assignments:[timedWithDeadline]})
+assert.equal(timedEntries.length,1)
+assert.deepEqual([timedEntries[0].date,timedEntries[0].time,timedEntries[0].dueDate,timedEntries[0].deadline],['2026-12-09','17:15','2026-12-11',false])
+const linkedEntries=calendarEntries({assignments:[{...direct[0],id:'a3',linked_session_id:'pt1',wods:wod}],appointments:[{id:'pt1',starts_at:'2026-12-08T16:30:00Z',status:'planned'}]})
+const linkedAssignment=linkedEntries.find(e=>e.kind==='assignment')
+assert.deepEqual([linkedAssignment.date,linkedAssignment.time,linkedAssignment.dueDate],['2026-12-08','17:30','2026-12-09'])
+assert.equal(calendarEntries({assignments:[{...direct[0],id:'a4'}]})[0].deadline,true)

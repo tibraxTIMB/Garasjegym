@@ -13,9 +13,9 @@ export function PTWeekCalendar({program,plan=[],assignments=[],appointments=[],c
  const entries=useMemo(()=>calendarEntries({program,plan,assignments,appointments,classes}),[program,plan,assignments,appointments,classes])
  const days=Array.from({length:7},(_,i)=>addDays(start,i))
  const undated=entries.filter(e=>!e.date)
- const overdue=entries.filter(e=>e.deadline&&e.date<osloDay()&&['assigned','in_progress'].includes(e.status))
+ const overdue=entries.filter(e=>e.dueDate&&e.dueDate<osloDay()&&['assigned','in_progress'].includes(e.status))
  function card(e){return <article className={'gg-schedule-entry gg-schedule-'+e.kind} key={e.key}>
-  <div className="gg-schedule-copy"><small>{e.time&&e.time+' · '}{e.deadline?'Frist':KIND[e.kind]}{e.minutes?' · '+e.minutes+' min':''}</small><strong>{e.title}</strong><small>{STATUS[e.status]||e.status}</small></div>
+  <div className="gg-schedule-copy"><small>{e.time&&e.time+' · '}{e.deadline?'Frist':KIND[e.kind]}{e.minutes?' · '+e.minutes+' min':''}</small><strong>{e.title}</strong><small>{STATUS[e.status]||e.status}{!e.deadline&&e.dueDate?' · Frist '+fmt(e.dueDate):''}</small></div>
   <div className="gg-schedule-actions">{onOpen&&canOpen(e)&&<button type="button" className="secondary-button" onClick={()=>onOpen(e)} aria-label={'Opna '+e.title}>Opna</button>}{onMoveAssignment&&e.kind==='assignment'&&canMoveDirect(e.row)&&<button type="button" className="text-button" onClick={()=>onMoveAssignment(e.row)} aria-label={'Flytt '+e.title}>Flytt</button>}{onMove&&e.kind==='plan'&&canMovePlan(e.row)&&<button type="button" className="text-button" onClick={()=>onMove(e.row)} aria-label={'Flytt '+e.title}>Flytt</button>}</div>
  </article>}
  return <section className="gg-schedule" aria-label="Treningskalender">

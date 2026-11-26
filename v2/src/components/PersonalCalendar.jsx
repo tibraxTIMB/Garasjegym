@@ -3,6 +3,7 @@ import {CalendarDays,ChevronLeft,ChevronRight,LoaderCircle} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import {isStaff} from '../lib/auth.js'
 import {localCalendarDay,monthCalendarCells,weekCalendarDays} from '../lib/calendarView.js'
+import {calendarEntries} from '../lib/ptSchedule.js'
 
 const eventTypes={class:'Gruppetime',pt:'PT-time',assigned:'Tildelt WOD',completed:'Utført økt',meeting:'Avtale'}
 const dateFromKey=key=>new Date(key+'T12:00:00')
@@ -37,7 +38,7 @@ export default function PersonalCalendar({profile,onOpenClass=()=>{},onOpenPT=()
      staff?supabase.from('classes').select('id,title,starts_at,duration_minutes,cancelled_at').gte('starts_at',lower).lt('starts_at',upper).or(`created_by.eq.${userId},instructor_id.eq.${userId}`):Promise.resolve({data:[],error:null}),
      supabase.from('pt_bookings').select('id,session_id,status').eq('member_id',userId).in('status',['booked','waitlist']).limit(300),
      (staff?supabase.from('pt_sessions').select('id,title,client_id,starts_at,duration_minutes,status,created_by').gte('starts_at',lower).lt('starts_at',upper).or(`client_id.eq.${userId},created_by.eq.${userId}`):supabase.from('pt_sessions').select('id,title,client_id,starts_at,duration_minutes,status,created_by').eq('client_id',userId).gte('starts_at',lower).lt('starts_at',upper)),
-     supabase.from('pt_wod_assignments').select('id,status,due_date,wods(id,name,format)').eq('member_id',userId).in('status',['assigned','in_progress']).gte('due_date',lowerDay).lt('due_date',upperDay).limit(300),
+     supabase.from('pt_wod_assignments').select('*,wods(id,name,format,duration_minutes)').eq('member_id',userId).in('status',['assigned','in_progress']).limit(300),
      supabase.from('workout_logs').select('id,title,workout_date,format').eq('member_id',userId).gte('workout_date',lowerDay).lt('workout_date',upperDay).limit(300),
      staff?supabase.from('calendar_events').select('id,title,event_type,starts_at,ends_at,client_id,created_by').gte('starts_at',lower).lt('starts_at',upper).or(`client_id.eq.${userId},created_by.eq.${userId}`):Promise.resolve({data:[],error:null})
     ])
@@ -64,9 +65,11 @@ export default function PersonalCalendar({profile,onOpenClass=()=>{},onOpenPT=()
      if(!session.starts_at)continue
      items.push({id:'pt-'+session.id,type:'pt',title:session.title||'PT-time',date:localCalendarDay(session.starts_at),time:timeOf(session.starts_at),detail:session.status==='cancelled'?'Avlyst':ptStatus.get(session.id)==='waitlist'?'Venteliste':`${session.duration_minutes||60} min`,clientId:session.client_id})
     }
-    for(const assignment of assignments.data||[]) {
-     if(!assignment.due_date)continue
-     items.push({id:'assigned-'+assignment.id,type:'assigned',title:assignment.wods?.name||'Tildelt WOD',date:localCalendarDay(assignment.due_date),time:'',detail:'Planlagt · '+(assignment.wods?.format||'WOD'),wodId:assignment.wods?.id})
+    for(const entry of calendarEntries({assignments:assignments.data||[],appointments:[...uniquePT.values()]}).filter(e=>e.kind==='assignment'&&e.date)) {
+     const assignment=entry.row
+     const timing=entry.deadline?'Frist':assignment.linked_session_id?'PT-avtale':'Planlagd'
+     const due=!entry.deadline&&entry.dueDate?' · Frist '+entry.dueDate:''
+     items.push({id:'assigned-'+assignment.id,type:'assigned',title:entry.title,date:entry.date,time:entry.time,detail:timing+' · '+(assignment.wods?.format||'WOD')+due,wodId:assignment.wods?.id,assignmentId:assignment.id})
     }
     for(const workout of workouts.data||[]) {
      if(!workout.workout_date)continue
@@ -101,7 +104,7 @@ export default function PersonalCalendar({profile,onOpenClass=()=>{},onOpenPT=()
  }
  function jumpToday() {const date=new Date();setSelectedDay(localCalendarDay(date));setCursor(new Date(date.getFullYear(),date.getMonth(),1))}
  function chooseDay(date) {setSelectedDay(localCalendarDay(date));setCursor(new Date(date.getFullYear(),date.getMonth(),1))}
- function openEvent(event) {if(event.type==='class')onOpenClass(event.classId);else if(event.type==='pt')onOpenPT(event.clientId);else if(event.type==='assigned'&&event.wodId)onOpenAssignment(event.wodId)}
+ function openEvent(event) {if(event.type==='class')onOpenClass(event.classId);else if(event.type==='pt')onOpenPT(event.clientId);else if(event.type==='assigned'&&event.wodId)onOpenAssignment(event.wodId,event.assignmentId)}
 
  return <section className="gg-personal-calendar" aria-label="Min timeplan">
   <header className="gg-cal-intro"><div><span className="section-kicker">MI TIMEPLAN</span><h3>Kalender</h3><p>PT-timar, påmeldingar og trening samla på éin stad.</p></div><div><CalendarDays size={25} aria-hidden="true"/><button type="button" className="secondary-button" onClick={onOpenClasses}>Sjå og meld deg på gruppetimar</button></div></header>
@@ -119,6 +122,6 @@ export default function PersonalCalendar({profile,onOpenClass=()=>{},onOpenPT=()
    })}</div>
   </div>}
   {error&&<div className="gg-cal-error auth-error" role="alert"><span>{error}</span><button type="button" className="secondary-button" onClick={()=>setReload(value=>value+1)}>Prøv igjen</button></div>}
-  <div className="gg-cal-agenda"><h4>{currentDate.toLocaleDateString('nn-NO',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}<span>{selectedEvents.length} aktivitetar</span></h4>{selectedEvents.length?selectedEvents.map(event=><article className={'gg-cal-agenda-item '+event.type} key={event.id}><span className="gg-cal-agenda-time">{event.time||<CalendarDays size={16}/>}</span><div><strong>{event.title}</strong><small>{eventTypes[event.type]} · {event.detail}</small></div>{['class','pt','assigned'].includes(event.type)&&<button type="button" onClick={()=>openEvent(event)}>{event.type==='assigned'?'Opne WOD':'Opne'}</button>}</article>):!loading&&<p className="gg-cal-agenda-empty">Ingen aktivitetar denne dagen.</p>}</div>
+  <div className="gg-cal-agenda"><h4>{currentDate.toLocaleDateString('nn-NO',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}<span>{selectedEvents.length} aktivitetar</span></h4>{selectedEvents.length?selectedEvents.map(event=><article className={'gg-cal-agenda-item '+event.type} key={event.id}><span className="gg-cal-agenda-time">{event.time||<CalendarDays size={16}/>}</span><div><strong>{event.title}</strong><small>{eventTypes[event.type]} · {event.detail}</small></div>{(['class','pt'].includes(event.type)||(event.type==='assigned'&&event.wodId&&event.assignmentId))&&<button type="button" onClick={()=>openEvent(event)}>{event.type==='assigned'?'Opne WOD':'Opne'}</button>}</article>):!loading&&<p className="gg-cal-agenda-empty">Ingen aktivitetar denne dagen.</p>}</div>
  </section>
 }
