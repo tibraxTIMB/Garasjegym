@@ -17,8 +17,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Inspect pinned official Garmin SDK registry metadata
-        run: npm view @garmin/fitsdk@21.217.0 dist dependencies --json
+      - run: npm ci --prefix v2 --ignore-scripts --no-audit --no-fund
+      - run: node --test v2/scripts/exportwerk-fit.test.mjs
       - run: node --test v2/scripts/exportwerk.test.mjs
       - run: node v2/scripts/exportwerk-xlsx-fixture.mjs
       - run: pip install openpyxl==3.1.5 && python v2/scripts/exportwerk-xlsx-check.py

@@ -19,7 +19,7 @@ export async function ownWorkoutExport(client,profile,from,to){
  if(!exportAllowed(profile))throw Error('Eksporten krev godkjend administrator.')
  const identity=async()=>{const {data,error}=await client.auth.getUser();if(error||data?.user?.id!==profile.id)throw Error('Innlogginga er endra.');const p=await client.from('profiles').select('id,role,active,membership_status').eq('id',profile.id).single();if(p.error||!exportAllowed(p.data)||p.data.id!==profile.id)throw Error('Tilgangen er endra.')}
  await identity()
- const logs=await pages(()=>client.from('workout_logs').select('id,title,workout_date,format,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit').eq('member_id',profile.id).gte('workout_date',from).lte('workout_date',to),10000)
+ const logs=await pages(()=>client.from('workout_logs').select('id,title,workout_date,format,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,result_data').eq('member_id',profile.id).gte('workout_date',from).lte('workout_date',to),10000)
  const exercises=[],sets=[]
  for(const ids of batches(logs.map(x=>x.id))){exercises.push(...await pages(()=>client.from('workout_exercises').select('id,workout_log_id,exercise_name,sort_order').in('workout_log_id',ids)));if(exercises.length>50000)throw Error('For stort utval av øvingar.')}
  for(const ids of batches(exercises.map(x=>x.id))){sets.push(...await pages(()=>client.from('workout_sets').select('id,workout_exercise_id,set_number,reps,load_kg,height_cm,time_seconds').in('workout_exercise_id',ids)));if(sets.length>100000)throw Error('For stort utval av sett.')}
@@ -33,7 +33,7 @@ export function makeWorkoutExport(logs,exercises,sets){
  const lr=[...logs].sort((a,b)=>String(a.workout_date).localeCompare(String(b.workout_date))||a.id.localeCompare(b.id))
  const sr=[]
  for(const e of [...exercises].sort((a,b)=>a.workout_log_id.localeCompare(b.workout_log_id)||(a.sort_order??0)-(b.sort_order??0))){const l=lm.get(e.workout_log_id);const rows=(setMap.get(e.id)||[]).sort((a,b)=>(a.set_number??0)-(b.set_number??0));for(const s of rows.length?rows:[null])sr.push([l.id,l.workout_date,l.title,e.exercise_name,e.sort_order,s?.set_number,s?.reps,s?.load_kg,s?.height_cm,s?.time_seconds,s?'registrert sett':'ingen registrerte sett'])}
- return {logs:lr.length,exercises:exercises.length,sets:sets.length,records:{logs:lr,exercises,sets},
+ return {logs:lr.length,exercises:exercises.length,sets:sets.length,records:{logs:lr.map(({result_data,...row})=>({...row,fit_evidence:{participation:result_data?.wod_engine?.participation||null,team:result_data?.samspel?.team_score===true,completionOnly:result_data?.flow_completion_only===true,manual:result_data?.manual_entry===true,elapsed:result_data?.manual_entry?null:result_data?.elapsed_seconds??null}})),exercises,sets},
  workouts:makeCsv(['økt_id','dato','namn','format','rundar','reps','resultattid_sekund','resultatvekt_kg','kaloriar','distanse','resultateining'],lr.map(l=>[l.id,l.workout_date,l.title,l.format,l.score_rounds,l.score_reps,l.score_time_seconds,l.score_load_kg,l.score_calories,l.score_distance,l.score_unit])),
  setRows:makeCsv(['økt_id','dato','økt','øving','øving_rekkjefølgje','sett','reps','kg','høgd_cm','tid_sekund','datastatus'],sr)}
 }
