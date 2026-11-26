@@ -4,10 +4,11 @@ import WodBuilder from './WodBuilder.jsx'
 import WodLibrary from './WodLibrary.jsx'
 import './wod-compact.css'
 
-export default function WodHub({onLaunchWod,staff,isAdmin=false,focusWodId=null,onFocusConsumed,simpleMode=false,launchAssignmentId=null,launchClassSessionId=null,initialImportedWod=null,onImportConsumed,initialBuilder=false,onBuilderConsumed,officeMode=false,onPreview}){
- const [tab,setTab]=useState((initialImportedWod&&isAdmin)||(initialBuilder&&staff)?'builder':'library')
+export default function WodHub({onLaunchWod,staff,isAdmin=false,focusWodId=null,onFocusConsumed,simpleMode=false,launchAssignmentId=null,launchClassSessionId=null,initialImportedWod=null,onImportConsumed,initialBuilder=false,onBuilderConsumed,initialEditRequest=null,onEditRequestConsumed,officeMode=false,onPreview}){
+ const [tab,setTab]=useState((initialImportedWod&&isAdmin)||((initialBuilder||initialEditRequest)&&staff)?'builder':'library')
  useEffect(()=>{if(initialBuilder&&staff){setTab('builder');onBuilderConsumed?.()}},[initialBuilder,staff])
- const [editWodId,setEditWodId]=useState(null),[copyMode,setCopyMode]=useState(false)
+ const [editWodId,setEditWodId]=useState(initialEditRequest?.id||null),[copyMode,setCopyMode]=useState(!!initialEditRequest?.copy)
+ useEffect(()=>{if(initialEditRequest?.id&&staff){setEditWodId(initialEditRequest.id);setCopyMode(!!initialEditRequest.copy);setTab('builder');onEditRequestConsumed?.()}},[initialEditRequest,staff])
  function editWod(id){setCopyMode(false);setEditWodId(id);setTab('builder')}
  function copyWod(id){setCopyMode(true);setEditWodId(id);setTab('builder')}
  function saved(){setCopyMode(false);setEditWodId(null);setTab('library')}

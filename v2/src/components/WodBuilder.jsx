@@ -7,6 +7,7 @@ import {samspelConfig,samspelIssue,samspelScoring,samspelWithCount,samspelWithSw
 import {architectSections,architectDose,architectDoseIssue,hydrateArchitectLevels} from '../lib/wodArchitect.js'
 import './wod-architect.css'
 import {copyWodPart} from '../lib/programReuse.js'
+import {authorizeLibrary,same} from '../lib/stacheldraht.js'
 import {BLOCK_SCORE_OPTIONS} from '../lib/compositeWod.js'
 import {FLOW_PURPOSES,FLOW_REPORTING,flowPurpose,flowReporting} from '../lib/workoutFlow.js'
 import {buildCustomComplex} from '../lib/wodComplexes.js'
@@ -222,6 +223,7 @@ function WodReviewOrder({ selected, onMove, onEdit }) {
 export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=null,copyMode=false,initialImport=null,onImportConsumed,onSaved,onCancel,planContext=null,onSavePlanWod=null,officeMode=false,onPreview}){
  const wizardTopRef=useRef(null)
  const previousWizardStep=useRef(0)
+ const officeSource=useRef(null),officeSaveLock=useRef(false)
  const [overviewLevel,setOverviewLevel]=useState('rx')
  const [equipmentPlan,setEquipmentPlan]=useState({})
  const [inventoryOwner,setInventoryOwner]=useState(null),[inventoryMessage,setInventoryMessage]=useState('')
@@ -252,8 +254,9 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  async function loadWodForEdit(id){
   if(!id)return
   setLoading(true);setError('')
-  const {data:w,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,is_published,timer_settings,category').eq('id',id).single()
+  const {data:w,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,is_published,timer_settings,category,updated_at,is_archived').eq('id',id).single()
   if(e||!w){setError('Kunne ikkje opna WOD for redigering: '+(e?.message||'WOD ikkje funnen'));setLoading(false);return}
+  officeSource.current=w
   const schema=w.timer_settings?.workout_schema||{}
   setSamspel(samspelConfig(schema));setEquipmentPlan(schema.equipment_plan||{})
   const items=sortWodItems(getWodSchemaItems(schema))
@@ -530,7 +533,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   }catch(e){if(e.code==='23505')setNotice('Denne WOD-en vart nettopp aktivt tildelt kunden. Ingen duplikat vart oppretta.');else setError(e.message||'Kunne ikkje tildela WOD.')}finally{setBusy(false)}
  }
  async function save(event,{previewOnly=false}={}){
-  event.preventDefault();setError('');setNotice('')
+  event.preventDefault();if(officeSaveLock.current)return;setError('');setNotice('')
    if(samspelProblem){setError(samspelProblem);setShowArchitectIssues(true);setSamspelHelp(true);return}
   if(!selected.length){setError('Legg minst ei øving til WOD-en.');return}
   if(isCoupletTriplet&&combinationMode!=='Open'&&(!Number.isInteger(Number(timeCap))||Number(timeCap)<1||Number(timeCap)>300)){setError(`${format} i ${combinationMode} krev gyldig tidsramme 1–300 minutt.`);setWizardStep(1);return}
@@ -560,7 +563,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    if(isInterval&&selected.length!==Number(intervalExerciseCount)){setError(`Du må velja ${intervalExerciseCount} øvingar/drag før du går vidare.`);setWizardStep(2);return}
   if(isTabata&&Number(workSeconds)+Number(restSeconds)<=0){setError('Kontroller arbeid og pause i Tabata.');return}
   if(libraryCategory==='warmup'){const prep=selected.some(x=>!x.is_rest&&x.warmup_phase!=='movement_rehearsal'),rehearsal=selected.some(x=>!x.is_rest&&x.warmup_phase==='movement_rehearsal');if(!prep||!rehearsal){setError('Oppvarminga må ha øvingar i begge delar: Felles oppvarming og Fri teknisk innøving.');setWizardStep(2);return}}
-  setBusy(true)
+  officeSaveLock.current=true;setBusy(true)
   try{
    const {data:{user}}=await supabase.auth.getUser()
    if(!user)throw new Error('Du må vera innlogga for å publisera WOD.')
@@ -602,8 +605,12 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    const wodPayload={name:name.trim(),category:libraryCategory==='warmup'?'warmup':'main',format:savedFormat,duration_minutes:Math.ceil(stationDuration/60)||null,movements,notes:[stimulus,notes,rxNotes?'RX: '+rxNotes:'',scaledNotes?'Scaled: '+scaledNotes:'',customInstructions].filter(Boolean).join('\n\n'),is_published:canPublishWod&&publishToMembers,timer_settings}
    if(previewOnly){if(!onPreview)throw Error('Nettbrettlaboratoriet er ikkje tilgjengeleg.');onPreview(wodPayload);setNotice('Validert kladd sendt til nettbrettlaboratoriet. Ikkje lagra eller publisert.');return}
    if(officeMode){
+     if(editingWodId&&!officeSource.current?.updated_at)throw Error('Kjelderevisjonen manglar. Opna WOD på nytt.')
      if(!window.confirm('STACHELDRAHT · Erstprüfung: '+wodPayload.name+' · '+savedFormat+' · '+schema.items.length+' øvingar. Valideringa er bestått. Kontroller dosering og eventuelle tildelingar.'))return
      if(!window.confirm('STACHELDRAHT · Freigabe: '+(editingWodId?'Oppdater eksisterande WOD (kan påverka framtidige tildelingar)':'Opprett ny WOD')+' «'+wodPayload.name+'»'+(wodPayload.is_published?' og publiser for medlemmene':' som privat/utkast')+'?'))return
+     const {data:currentProfile,error:profileError}=await supabase.from('profiles').select('id,role,active,membership_status').eq('id',user.id).single()
+     if(profileError)throw profileError;await authorizeLibrary(supabase,currentProfile)
+     if(editingWodId){const {data:current,error:e}=await supabase.from('wods').select('id,updated_at').eq('id',editingWodId).single();if(e||current?.updated_at!==officeSource.current.updated_at)throw Error('WOD-en er endra sidan arbeidskopien vart opna. Opna han på nytt.')}
     }
    if(!editingWodId)wodPayload.created_by=user.id
    let savedWodId=editingWodId||null
@@ -629,14 +636,17 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
     }
     onAssigned?.()
    }else{
-    const wodRequest=editingWodId?supabase.from('wods').update(wodPayload).eq('id',editingWodId).select('id').single():supabase.from('wods').insert(wodPayload).select('id').single()
+    let wodRequest=editingWodId?supabase.from('wods').update(wodPayload).eq('id',editingWodId):supabase.from('wods').insert(wodPayload)
+    if(officeMode&&editingWodId)wodRequest=wodRequest.eq('updated_at',officeSource.current.updated_at)
+    wodRequest=wodRequest.select(officeMode?'id,name,category,format,duration_minutes,movements,notes,is_published,timer_settings':'id').single()
     const {data:savedWod,error:e}=await wodRequest
     if(e)throw e
     savedWodId=savedWod?.id||savedWodId
+    if(officeMode&&(!savedWodId||!Object.entries(wodPayload).filter(([k])=>k!=='created_by').every(([k,v])=>same(savedWod[k],v))))throw Error('Etterkontrollen av WOD avvik. Opna biblioteket før nytt forsøk.')
    }
    setNotice(assignedClientId?(canPublishWod&&publishToMembers?'WOD er publisert og tildelt kunden.':'Privat WOD er lagra og tildelt kunden.'):editingWodId?'WOD-en er oppdatert.':canPublishWod&&publishToMembers?'WOD lagra i biblioteket og publisert for medlemmene.':'WOD lagra i det interne biblioteket som utkast.')
    setEquipmentPlan({});setSamspel(null);setSamspelHelp(false);setShowArchitectMenu(false);setShowArchitectIssues(false);setParticipation('individual');setCollaboration('solo');setCompositeBlocks(defaultCompositeBlocks());setActiveBlockId('a');setSelected([]);setNotes('');setLibraryCategory('standard');setCustomInstructions('');setRxNotes('');setScaledNotes('');setWizardStep(0);setName(suggestUniqueWodName());setEditingWodId(null);onSaved?.()
-  }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{setBusy(false)}
+  }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{officeSaveLock.current=false;setBusy(false)}
  }
   function chooseFormat(item){
    const changed=item!==format

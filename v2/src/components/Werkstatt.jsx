@@ -3,6 +3,7 @@ import {Dumbbell,CalendarDays,Users,Settings,Upload,Download,RefreshCw,Monitor,F
 import {supabase} from '../lib/supabase.js'
 import WodImportPanel from './WodImportPanel.jsx'
 import {WARMUP_PRESETS,warmupDraft} from '../lib/warmupPresets49.js'
+import Librarium from './Librarium.jsx'
 import Exportwerk from './Exportwerk.jsx'
 import PlanProduction from './PlanProduction.jsx'
 import ProjectControl from './ProjectControl.jsx'
@@ -11,7 +12,7 @@ import {readPlanProject,savePlanProject,clearPlanProject} from '../lib/werkstatt
 import {exchangeRole,MAX_EXCHANGE_BYTES,parsePlanDocument,planCsv,planDocument,planText,wodDocument,wodText,wodCsv,wodImportSource,saveExchange,printExchange} from '../lib/werkstattExchange.js'
 import './werkstatt.css'
 
-export default function Werkstatt({profile,coachMode,onOpenWod,onBuildWod,onOpenPT,onOpenAdmin,onOpenCalendar,onOpenImport,onExit,onPreview}){
+export default function Werkstatt({profile,coachMode,onOpenWod,onBuildWod,onLibraryWod,onOpenPT,onOpenAdmin,onOpenCalendar,onOpenImport,onExit,onPreview}){
  const role=exchangeRole(profile,coachMode)
  const [tab,setTab]=useState('home'),[wods,setWods]=useState([]),[catalog,setCatalog]=useState([]),[loaded,setLoaded]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [query,setQuery]=useState(''),[selected,setSelected]=useState([]),[source,setSource]=useState(''),[sourceVersion,setSourceVersion]=useState(0)
@@ -53,8 +54,10 @@ export default function Werkstatt({profile,coachMode,onOpenWod,onBuildWod,onOpen
    const {data:auth,error:a}=await supabase.auth.getUser();if(a||auth?.user?.id!==profile.id)throw Error('Innlogginga er endra.')
    const {data:current,error:e}=await supabase.from('profiles').select('id,role,active,membership_status').eq('id',profile.id).single()
    if(e||!exchangeRole(current).planTemplate)throw Error('Du har ikkje lenger tilgang til planmalar.')
-   const {error:failure}=await supabase.from('pt_program_templates').insert({title:planTitle.trim().slice(0,160),description:'Importert og kontrollert i Werkstatt',template_type:'training_plan',weeks:preview.weeks,sessions_per_week:preview.sessions_per_week,focus_areas:[],sessions:preview.sessions,created_by:profile.id})
-   if(failure)throw failure
+   const payload={title:planTitle.trim().slice(0,160),description:'Importert og kontrollert i Werkstatt',template_type:'training_plan',weeks:preview.weeks,sessions_per_week:preview.sessions_per_week,focus_areas:[],sessions:preview.sessions,created_by:profile.id}
+   const {data:saved,error:failure}=await supabase.from('pt_program_templates').insert(payload).select('id,title,weeks,sessions_per_week,sessions').single()
+   if(failure||!saved?.id)throw failure||Error('Lagringa vart ikkje stadfesta.')
+   if(saved.title!==payload.title||saved.weeks!==payload.weeks||saved.sessions?.length!==payload.sessions.length)throw Error('Etterkontrollen av planmalen avvik. Hent biblioteket før nytt forsøk.')
    setNotice('Planmalen er lagra. Vel kunden og tildel malen i PT Studio. Ingen kundeplan er oppretta eller endra.');setPreview(null);setConfirmed(false);setPlanSource('')
   }catch(e){setError(e.message||'Kunne ikkje lagra malen.')}finally{lock.current=false;setSaving(false)}
  }
@@ -78,7 +81,7 @@ export default function Werkstatt({profile,coachMode,onOpenWod,onBuildWod,onOpen
   </div>}
   {tab==='warmups'&&role.importWod&&<section className="gg-werkstatt-panel"><h3>Oppvarming · seks arbeidskopiar</h3><p>Felles rutine frå introkurset, deretter teknisk førebuing. Vel ein kladd, kontroller dosering og publiser gjennom den originale byggjaren. Ingen automatisk databaseendring.</p><div className="gg-werkstatt-grid">{WARMUP_PRESETS.map(p=><button type="button" key={p.name} disabled={!loaded} onClick={()=>{try{onOpenImport(warmupDraft(p.name,catalog))}catch(e){setError(e.message)}}}><strong>{p.name}</strong><span>{p.target}</span><small>Opna arbeidskopi</small></button>)}</div></section>}
   {tab==='exportwerk'&&role.importWod&&<Exportwerk key={profile.id} profile={profile}/>}
-  {tab==='catalog'&&role.staff&&<section className="gg-werkstatt-panel"><h3>LIBRARIUM · øvingsbank</h3><p>Les biblioteket utan å endra data. Bruk den originale WOD-byggjaren eller administrasjonen til kontrollert redigering.</p><div className="gg-werkstatt-toolbar"><input aria-label="Søk i øvingsbank" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Namn, kategori eller utstyr"/><button type="button" onClick={onOpenWod}>WOD-bibliotek</button><button type="button" onClick={onOpenAdmin}>Administrasjon · øvingar og utstyr</button><button type="button" onClick={()=>setTab('project')}>Planmalar</button></div><div className="gg-werkstatt-table-wrap"><table><thead><tr><th>Øving</th><th>Kategori</th><th>Utstyr</th><th>Status</th></tr></thead><tbody>{catalog.filter(e=>[e.name,e.category,e.equipment,e.body_area].some(v=>String(v||'').toLowerCase().includes(query.toLowerCase()))).map(e=><tr key={e.id}><td>{e.name}</td><td>{e.category}</td><td>{e.equipment}</td><td>{e.is_active?'Aktiv':'Arkivert'}</td></tr>)}</tbody></table></div></section>}
+  {tab==='catalog'&&role.staff&&<Librarium profile={profile} onWod={onLibraryWod} onNewWod={onBuildWod} onPT={onOpenPT} onPlan={template=>{if(template){if(!Array.isArray(template.sessions)||template.sessions.some(s=>s.archived_at||s.workout_snapshot&&!s.wod_id||s.wod_id&&!wods.some(w=>w.id===s.wod_id))){setError('Malen har private, arkiverte eller frikopla økter. Bruk originalen i PT Studio; kopien ville mista innhald.');return}if(!window.confirm('Kopier til nytt planprosjekt? Den eksisterande lokale kladden blir erstatta. Originalmalen blir bevart.'))return;setProjectId(null);setUndo([]);setRedo([]);setProjectTitle(template.title+' (kopi)');setProjectRows(template.sessions.map(s=>({week:s.week_no||1,day:s.day_no||1,title:s.title||'',wod:wods.find(w=>w.id===s.wod_id)?.name||'',minutes:s.estimated_minutes||45,kind:s.session_kind||'training'})));invalidateProject();setNotice('Kopi av planstruktur. WOD-ar blir knytte til dagens publiserte bibliotek; originalmalen er urørt.')}setTab('project')}}/>}
   {tab==='library'&&<section className="gg-werkstatt-panel"><h3>Eksporter publiserte WOD-ar</h3><p>Vel éi eller fleire økter. Private kunde-WOD-ar og personlege resultat er ikkje med.</p><div className="gg-werkstatt-toolbar"><input aria-label="Søk i eksportbibliotek" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Søk namn eller format"/><button type="button" className="secondary-button" onClick={()=>setSelected(old=>[...new Set([...old,...filtered.map(w=>w.id)])])}>Vel viste ({filtered.length})</button><button type="button" className="secondary-button" onClick={()=>setSelected([])}>Nullstill val</button></div>
     <div className="gg-werkstatt-toolbar">{['csv','json','md','txt','pdf'].map(f=><button type="button" key={f} className="secondary-button" disabled={!loaded||!picked.length} onClick={()=>exportWods(f)}>{f==='pdf'?'Skriv ut / PDF':f.toUpperCase()}</button>)}<small>{picked.length} valde</small></div>
     <div className="gg-werkstatt-table-wrap"><table><thead><tr><th>Vel</th><th>Namn</th><th>Format</th><th>Min</th></tr></thead><tbody>{filtered.map(w=><tr key={w.id}><td><input type="checkbox" aria-label={'Vel '+w.name} checked={selected.includes(w.id)} onChange={e=>setSelected(old=>e.target.checked?[...old,w.id]:old.filter(id=>id!==w.id))}/></td><td>{w.name}{onPreview&&w.timer_settings?.workout_schema&&<button type="button" className="text-button" onClick={()=>onPreview(w)}>Test på nettbrett</button>}</td><td>{w.format}</td><td>{w.duration_minutes??'–'}</td></tr>)}</tbody></table></div>{!filtered.length&&<p>{loaded?'Ingen WOD-ar funne.':'Hentar bibliotek …'}</p>}
