@@ -15,6 +15,8 @@ export function samspelIssue(s,{format,participation,collaboration,participantCo
  if(format!=='AMRAP'||(count===2?participation!=='partner':participation!=='team'||Number(participantCount)!==count))return 'Samspel krev AMRAP og samsvar mellom tal deltakarar og gjennomføringsform.'
  if(collaboration&&collaboration!=='parallel')return 'Vel parallelt arbeid under Gjennomføring, eller slå av rundebyte.'
  if(!SAMSPEL_TASKS.some(([id])=>id===s.task)||!SAMSPEL_METRICS.some(([id])=>id===s.metric))return 'Vel kondisjonsoppgåve og resultatmål.'
+ const capacityIssue=samspelCapacityIssue(s)
+ if(capacityIssue)return capacityIssue
  if(!items.some(x=>!x.is_rest))return 'Legg til minst ei øving i AMRAP-runda.'
  return null
 }
@@ -23,7 +25,8 @@ export function samspelRoles(s,rounds=0){
  const count=s?.version===2&&samspelConfig({samspel:s})?s.participant_count:2
  const n=Number(rounds)
  const index=(Number.isFinite(n)?Math.max(0,Math.floor(n)):0)%count
- return Array.from({length:count},(_,i)=>i===index?task:'AMRAP')
+ const slots=samspelErgSlots(s)
+ return Array.from({length:count},(_,i)=>(i-index+count)%count<slots?task:'AMRAP')
 }
 export function samspelResultIssue(s,value){
  if(!s)return null
@@ -107,4 +110,28 @@ export function samspelParticipantResults(s,values={}){
   results.push({slot:row.slot,rounds:entered.includes('rounds')?Number(row.rounds):null,extra_reps:entered.includes('reps')?Number(row.reps):null,erg_value:entered.includes('erg')?Number(row.erg):null})
  }
  return {rows:results,issue:null}
+}
+
+// Multiple identical erg stations share one metric. Mixed-machine results must not be summed.
+export function samspelErgSlots(s){
+ const count=s?.version===2?s.participant_count:2
+ const slots=s?.version===2?(s.erg_slots??1):1
+ return Number.isInteger(slots)&&slots>=1&&slots<count?slots:1
+}
+export function samspelCapacityIssue(s){
+ if(s?.version!==2)return null
+ const slots=s.erg_slots??1, available=s.available_ergs
+ if(!Number.isInteger(slots)||slots<1||slots>=s.participant_count)return 'Vel minst eitt kondisjonsspor og lat minst éin utøvar vera på AMRAP-sporet.'
+ if(available==null&&slots===1)return null
+ if(!Number.isInteger(available)||available<slots||available>30)return 'Oppgi nok tilgjengelege maskiner av same type ('+slots+' nødvendige).'
+ return null
+}
+export function samspelStationLabels(s,roles){
+ const task=SAMSPEL_TASKS.find(([id])=>id===s?.task)?.[1]||'Kondisjon'
+ const slots=samspelErgSlots(s)
+ if(slots===1)return [...roles]
+ // Preserve station numbering across the wraparound of the rotating block.
+ const count=roles.length
+ const start=roles.findIndex((role,i)=>role===task&&roles[(i-1+count)%count]==='AMRAP')
+ return roles.map((role,i)=>role===task?task+' '+((i-start+count)%count+1):role)
 }
