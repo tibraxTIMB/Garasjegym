@@ -129,7 +129,7 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
     <summary><span className="ptreview-disclosure-main"><strong>Rundetider og disponering</strong><small>AMRAP · registrerte rundar</small></span><ChevronDown size={18}/></summary>
     <div className="ptreview-disclosure-content">{renderPacing(laps)}</div>
    </details>}
-   {exerciseResults.length>0&&<AnatomyEvidence exercises={exerciseResults} scope="Denne PT-økta"/>}
+   {exerciseResults.length>0&&(result.result_data?.samspel?.team_score||result.result_data?.wod_engine?.participation&&result.result_data.wod_engine.participation!=='individual'?<small>Lagresultat · ikkje grunnlag for personleg muskelkart.</small>:<AnatomyEvidence exercises={exerciseResults} scope="Denne PT-økta"/>)}
    {exerciseResults.length>0&&<details className="ptreview-disclosure ptreview-dose">
     <summary><span className="ptreview-disclosure-main"><strong><CheckCircle2 size={16}/> Planlagt og utført dosering</strong><small>{exerciseResults.length} øvingar · opna for sett, reps og vekt</small></span><ChevronDown size={18}/></summary>
     <div className="ptreview-disclosure-content">
