@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {samspelConfig,samspelIssue,samspelRoles,samspelResultIssue,samspelScoring,samspelWithCount,samspelRoundInstruction,samspelWithSwitch,samspelRotation,samspelIsTimed,samspelIsManual,appendSamspelSwap,normalizeSamspelSwaps,samspelParticipantRows,samspelParticipantResults,samspelErgSlots,samspelCapacityIssue,samspelStationLabels} from '../src/lib/samspel.js'
+import {samspelConfig,samspelIssue,samspelRoles,samspelResultIssue,samspelScoring,samspelWithCount,samspelRoundInstruction,samspelWithSwitch,samspelRotation,samspelIsTimed,samspelIsManual,appendSamspelSwap,normalizeSamspelSwaps,samspelParticipantRows,samspelParticipantResults,samspelErgSlots,samspelCapacityIssue,samspelStationLabels,samspelCueStep,samspelSwapIndex} from '../src/lib/samspel.js'
 const legacy={version:1,mode:'parallel_round_swap',task:'row',metric:'distance'}
 const context={format:'AMRAP',participation:'partner',collaboration:'parallel',items:[{name:'Push-up'}]}
 assert.equal(samspelConfig({samspel:legacy}),legacy)
@@ -103,3 +103,19 @@ for(let count=2;count<=8;count++)for(let slots=1;slots<count;slots++){
  assert.equal(rotations.every(roles=>new Set(samspelStationLabels(config,roles).filter(x=>x!=='AMRAP')).size===slots),true)
 }
 console.log('Concurrent station and capacity checks passed')
+
+assert.deepEqual(samspelCueStep(null,2,{running:true}),{next:2,signal:null})
+assert.deepEqual(samspelCueStep(2,3,{running:true}),{next:3,signal:'station'})
+assert.deepEqual(samspelCueStep(3,3,{running:true}),{next:3,signal:null})
+assert.deepEqual(samspelCueStep(3,2,{running:true}),{next:2,signal:null})
+assert.deepEqual(samspelCueStep(2,3,{running:false}),{next:3,signal:null})
+assert.deepEqual(samspelCueStep(3,4,{running:true,finished:true}),{next:4,signal:null})
+assert.deepEqual(samspelCueStep(3,7,{running:true}),{next:7,signal:'station'})
+assert.deepEqual(samspelCueStep(3,null,{running:true}),{next:null,signal:null})
+assert.equal(samspelSwapIndex(timed,{elapsed:59,target:180}),0)
+assert.equal(samspelSwapIndex(timed,{elapsed:60,target:180}),1)
+assert.equal(samspelSwapIndex(timed,{elapsed:180,target:180}),2)
+assert.equal(samspelSwapIndex(manual,{manualSwaps:[10,20],rounds:9}),2)
+assert.equal(samspelSwapIndex(legacy,{rounds:9,elapsed:900}),9)
+assert.equal(samspelSwapIndex(null),null)
+console.log('Samspel cue and synchronization checks passed')
