@@ -1,0 +1,8 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {warmupDraft,WARMUP_PRESETS} from '../src/lib/warmupPresets49.js'
+import {validateCompositeBlocks,compositeBlockDuration} from '../src/lib/compositeWod.js'
+const names=['Bird dog','Dead bug','ITYW + rygghev','Thread the needle','Thoracic rotation','Row','Jump rope','Shoulder pass-through','Overhead Squat','Wall slides','Ankle rocks','Air squat','Glute bridge','Romanian deadlift','Scapular push-ups','Push-up','Strict press','Dead Hang','Scapular pull-ups','TRX Row','Walking lunge']
+const catalogue=names.map((name,i)=>({id:'e'+i,name,is_active:true}))
+test('six two-phase warmups share intro routine and have exact catalogue identity and no scoring',()=>{assert.equal(WARMUP_PRESETS.length,6);for(const p of WARMUP_PRESETS){const d=warmupDraft(p.name,catalogue);assert.equal(d.format,'Samansett økt');assert.equal(validateCompositeBlocks(d.blocks,d.items),'');assert.ok(d.items.every(i=>i.exercise.id));assert.deepEqual(d.items.filter(i=>i.block_id==='b').map(i=>i.exercise.name),names.slice(0,5));assert.ok(d.items.filter(i=>i.block_id==='c').every(i=>i.warmup_phase==='movement_rehearsal'));assert.ok(d.blocks.every(b=>b.flowReporting==='done'&&b.scoreMode==='none'));assert.ok(compositeBlockDuration(d.blocks[0],1)>=180);assert.ok(compositeBlockDuration(d.blocks[0],1)<=300)}})
+test('no silent substitution or duplicate catalogue identity',()=>{assert.throws(()=>warmupDraft(WARMUP_PRESETS[0].name,catalogue.filter(e=>e.name!=='Dead bug')),/Dead bug/);assert.throws(()=>warmupDraft(WARMUP_PRESETS[0].name,[...catalogue,{...catalogue[0],id:'duplicate'}]),/Bird dog/)})
