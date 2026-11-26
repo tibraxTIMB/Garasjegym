@@ -1,3 +1,4 @@
+import {samspelConfig,samspelNoncompetitive,samspelQuality,samspelIssue,samspelParticipantResults,samspelResultIssue,normalizeSamspelSwaps} from './samspel.js'
 import {complexResultSummary} from './wodComplexes.js'
 // Multi-part workouts reuse the existing WOD engine and Timer for each part.
 // No separate timer is introduced. Blocks, pauses and outcomes live in the WOD schema.
@@ -60,6 +61,7 @@ export function validateCompositeBlocks(blocks,items=[]) {
   if(!Number.isFinite(minute)||minute<=0||minute>180||Math.abs(Math.round(minute*60)-minute*60)>0.001)return title+': vel inntil 180 minutt (med sekundpresisjon).'
   const exercises=items.filter(item=>(item.blockId||item.block_id)===block.id&&!item.is_rest)
   if(!exercises.length)return title+': legg til minst éi øving.'
+  if(block.samspel){const s=compositeSamspelConfig(block);if(!s)return title+': berre Quality & Row og Active Recovery i Eigen økt er støtta per del enno.';const issue=samspelIssue(s,{format:block.format,participation:s.participant_count===2?'partner':'team',participantCount:s.participant_count,collaboration:'parallel',items:exercises});if(issue)return title+': '+issue;if(block.scoreMode&&!['auto','none'].includes(block.scoreMode))return title+': bruk Samspel-resultat, ikkje eit ekstra hovudresultat.'}
   const every=compositeIntervalMinutes(block.format,block)
   if(every && Math.round(minute*60)%Math.round(every*60)!==0)return title+': øktlengda må gå opp i intervalla på '+Math.round(every*60)+' sekund.'
   if(block.format==='For Time'&&block.rounds!=null&&String(block.rounds).trim()!==''&&(!Number.isInteger(Number(block.rounds))||Number(block.rounds)<1||Number(block.rounds)>100))return title+': vel 1–100 rundar eller la feltet stå tomt.'
@@ -119,11 +121,13 @@ export function compositeTimerConfig(block) {
  }:null
  const timedCap=current.format==='AMRAP'||deathBy||every!==null||(['Couplet','Triplet'].includes(current.format)?current.combinationMode!=='Open':COMPOSITE_FOR_TIME_FORMATS.includes(current.format))
  const plannedRounds=current.format==='For Time'&&Number.isInteger(Number(current.rounds))&&Number(current.rounds)>0?Number(current.rounds):null
+ const samspel=compositeSamspelConfig(current)
  const schema={
+  ...(samspel?{samspel}:{}),
   format:current.format,
   include_final_rest:interval&&current.includeFinalRest===true,
   planned_for_time_rounds:plannedRounds,
-  wod_engine:{version:2,participation:current.participation||'individual',participant_count:Number(current.participant_count)||1,collaboration:current.collaboration||'solo',scoring:current.scoring||{type:'reps',fields:['reps']},blocks:[]},
+  wod_engine:{version:2,participation:samspel?(samspel.participant_count===2?'partner':'team'):current.participation||'individual',participant_count:samspel?.participant_count||Number(current.participant_count)||1,collaboration:samspel?'parallel':current.collaboration||'solo',scoring:current.scoring||{type:'reps',fields:['reps']},blocks:[]},
   duration_seconds:current.duration_seconds,
   time_cap_seconds:timedCap ? current.duration_seconds:null,
   interval:{work_every_minutes:every,work_every_seconds:every?Math.round(every*60):null,work_seconds:every?Math.round(every*60):interval?work:null,rest_seconds:interval?rest:0},
@@ -227,4 +231,31 @@ export function explicitBlockResults(blocks=[],overrides={},items=[]){
   }
   return {block_id:block.id,title:block.title||'Øktdel',type:definition.value,label:definition.label,value,unit}
  })
+}
+
+// First composite integration: noncompetitive quality tracks only. The block
+// owns its clock and participant results; never use them as a root AMRAP score.
+export function compositeSamspelConfig(block){
+ if(!block?.samspel||block.format!=='Eigen økt'||!samspelNoncompetitive(block.samspel))return null
+ const config={...block.samspel,duration_seconds:compositeBlockDuration(block)}
+ return samspelConfig({samspel:config})
+}
+export function compositeSamspelResults(blocks=[],scores={},timerResults={},manual=false){
+ const rows=[]
+ for(const [index,block] of blocks.entries()){
+  if(!block.samspel)continue
+  const s=compositeSamspelConfig(block),title=block.title||'Del '+(index+1)
+  if(!s)return {rows:[],issue:title+': Samspel-oppsettet er ikkje støtta.'}
+  const draft=scores['samspel:'+block.id]||{}
+  const result=samspelParticipantResults(s,draft.participants||{})
+  if(result.issue)return {rows:[],issue:title+' · '+result.issue,field:'samspel-block-'+block.id+'-'+result.slot+'-'+result.field}
+  const issue=samspelResultIssue(s,draft.distance)
+  if(issue)return {rows:[],issue:title+' · '+issue,field:'samspel-block-'+block.id+'-distance'}
+  const snapshot=timerResults[index]||{}
+  const started=manual||snapshot.hasStarted===true||Number(snapshot.elapsed)>0
+  if(!started&&result.rows.some(r=>r.quality_status!=='skipped'))return {rows:[],issue:title+': delen vart ikkje starta. Stadfest ikkje utført eller etterregistrer økta.',field:'samspel-block-'+block.id+'-1-quality'}
+  if(!started&&samspelQuality(s)&&Number(draft.distance)!==0)return {rows:[],issue:title+': delen vart ikkje starta. Distanse må vera 0.',field:'samspel-block-'+block.id+'-distance'}
+  rows.push({block_id:block.id,title,samspel:{...s,team_score:true,participant_results:result.rows,manual_swaps:manual?[]:normalizeSamspelSwaps(snapshot.samspel_swaps)},distance:samspelQuality(s)?Number(draft.distance):null,elapsed:manual?null:Number(snapshot.elapsed)||0,completed:result.rows.every(r=>r.quality_status==='done')})
+ }
+ return {rows,issue:null}
 }

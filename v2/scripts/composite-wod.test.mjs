@@ -224,3 +224,24 @@ test('Only explicit composite For Time targets stop after planned rounds',()=>{
  assert.match(read('../src/components/WodBuilder.jsx'),/Ta med siste kvilepause/);
  assert.match(read('../src/components/WodBuilder.jsx'),/Planlagde rundar \(valfritt\)/);
 });
+
+import {qualityRowConfig,activeRecoveryConfig} from '../src/lib/samspel.js'
+import {compositeSamspelConfig,compositeSamspelResults} from '../src/lib/compositeWod.js'
+import {isIndividualPerformance} from '../src/lib/performanceEvidence.js'
+test('quality and recovery parts retain their own timer, status and distance',()=>{
+ const q={id:'a',title:'Oppvarming',format:'Eigen økt',minutes:10,samspel:qualityRowConfig(),scoreMode:'none'}
+ const r={id:'b',title:'Ro ned',format:'Eigen økt',minutes:5,samspel:activeRecoveryConfig(5,3),scoreMode:'none'}
+ const items=[{block_id:'a',exercise_name:'Bird dog'},{block_id:'b',exercise_name:'Stretch'}]
+ assert.equal(validateCompositeBlocks([q,r],items),'')
+ assert.equal(compositeTimerConfig(q).timerSettings.workout_schema.samspel.main_track,'quality')
+ assert.equal(compositeTimerConfig(r).timerSettings.workout_schema.wod_engine.participant_count,3)
+ assert.equal(compositeSamspelConfig({...q,minutes:8}).duration_seconds,480)
+ assert.ok(validateCompositeBlocks([{...q,format:'AMRAP'},r],items))
+ const scores={'samspel:a':{distance:'900',participants:{1:{quality:'done'},2:{quality:'partial'}}},'samspel:b':{participants:{1:{quality:'done'},2:{quality:'done'},3:{quality:'done'}}}}
+ const result=compositeSamspelResults([q,r],scores,{},true)
+ assert.equal(result.issue,null);assert.equal(result.rows[0].distance,900);assert.equal(result.rows[0].completed,false);assert.equal(result.rows[1].completed,true)
+ assert.ok(compositeSamspelResults([q,r],scores,{},false).issue)
+ assert.ok(compositeSamspelResults([q,r],{}, {},true).issue)
+ assert.equal(isIndividualPerformance({result_data:{samspel_blocks:result.rows}}),false)
+ assert.equal(isIndividualPerformance({result_data:{wod_engine:{blocks:[q,r]}}}),false)
+})

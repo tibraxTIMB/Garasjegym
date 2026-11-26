@@ -20,7 +20,7 @@ export function formatDuration(seconds) {
 }
 export function ptTeamResult(result){
  const d=result?.result_data||{}
- return !!d.samspel||d.participation_verified==='team'||['partner','team'].includes(d.wod_engine?.participation)
+ return !!d.samspel||!!d.samspel_blocks?.length||!!d.wod_engine?.blocks?.some?.(b=>b.samspel)||d.participation_verified==='team'||['partner','team'].includes(d.wod_engine?.participation)
 }
 export function ptTeamSummary(result){
  const d=result?.result_data||{},s=d.samspel,rows=Array.isArray(s?.participant_results)?s.participant_results:[]
