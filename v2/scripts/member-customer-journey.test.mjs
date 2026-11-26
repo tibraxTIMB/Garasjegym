@@ -85,3 +85,13 @@ test('optional after-action entry appears only after a confirmed save and is mem
  assert.ok(training.indexOf('savedId=workoutId')<training.indexOf('onSaved?.({victories})'))
  assert.match(training,/onSaved\?\.\(\{victories\}\)\s+await loadAll\(\)/)
 })
+
+test('Mission Control preserves personal training routes for staff without duplicate coach entry',()=>{
+ const app=src('../src/App.jsx'),home=src('../src/components/SimpleCustomerHome.jsx'),overview=src('../src/components/Overview.jsx')
+ assert.match(app,/coach=\{isPTCoach\|\|isStaff\(profile\)\}/)
+ assert.match(app,/<Overview key=\{session\.user\.id\}[^\n]+onPlan=\{openMyTraining\}/)
+ assert.match(overview,/Min treningsplan/)
+ assert.match(overview,/onFree\|\|/)
+ assert.match(overview,/Kaffibar/)
+ assert.doesNotMatch(home,/\{coach&&<button/)
+})

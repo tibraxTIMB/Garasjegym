@@ -65,3 +65,10 @@
 .pt2-member-extra[open] summary { border-bottom: 1px solid #435154; }
 .pt2-member-extra nav { margin: 10px 0; }
 @media(max-width: 400px) { .customer-plan-hero { padding: 13px; gap: 10px; min-height: 103px; } .customer-plan-hero-icon { width: 43px; height: 43px; } .customer-home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .customer-home-grid .simple-home-action { min-height: 112px; flex-direction: column; align-items: flex-start; } .customer-home-quick-actions button { min-width: 130px; } .customer-plan-refresh { font-size: 0; padding: 9px; } .customer-plan-refresh svg { width: 20px; height: 20px; } }
+
+/* Mission Control: compact tasks, readable labels, same navigation targets. */
+.customer-home-intro h2{font-size:clamp(20px,4vw,27px);margin:0}
+.customer-plan-hero{min-height:84px;padding:12px 14px}
+.customer-home-grid .simple-home-action{min-height:84px;padding:10px;min-width:0}
+.customer-pt-invite{padding:10px 12px}
+@media(max-width:400px){.customer-plan-hero{min-height:76px;padding:10px 12px}.customer-home-grid .simple-home-action{min-height:88px}.customer-home-quick-actions button{min-width:0;flex:1 1 100px;min-height:44px}}
