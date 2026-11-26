@@ -1,3 +1,4 @@
+import {isIndividualPerformance} from './performanceEvidence.js'
 import {sortWodItems,getWodSchemaItems} from './wodOrdering.js'
 import {isEmomFormat,emomPrescribedSetCount} from './wodEngine.js'
 import {plannedFixedEmomSets} from './compositeWod.js'
@@ -5,7 +6,7 @@ import {plannedFixedEmomSets} from './compositeWod.js'
 const sameMovement=(a,b)=>String(a||'').trim().toLocaleLowerCase('nn-NO')===String(b||'').trim().toLocaleLowerCase('nn-NO')
 /** Proposed historical EMOM sets; NEVER update a training log without athlete approval. */
 export function suggestedEmomSets(workout,schema,exercise,index){
- if(!schema)return null
+ if(!schema||!isIndividualPerformance(workout))return null
  const items=sortWodItems(getWodSchemaItems(schema))
  const item=sameMovement(items[index]?.exercise_name,exercise.exercise_name)?items[index]:items.find(x=>sameMovement(x.exercise_name,exercise.exercise_name))
  if(!item)return null

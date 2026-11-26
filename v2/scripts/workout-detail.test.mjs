@@ -73,3 +73,12 @@ test('Android Back stays within the app; quick menu has a visible and long-press
  assert.match(nav,/long.current=false;return/)
  assert.match(detail,/gg:workout-back/)
 })
+
+import {suggestedEmomSets} from '../src/lib/workoutCorrections.js'
+test('Samspel never receives inferred individual EMOM correction sets',()=>{
+ const schema={duration_seconds:600,interval:{work_every_seconds:60},items:[{exercise_name:'Squat',reps:5}]}
+ const log={format:'EMOM',result_data:{completed:true,samspel:{main_track:'double_emom'}}}
+ assert.equal(suggestedEmomSets(log,schema,{exercise_name:'Squat'},0),null)
+ assert.match(read('../src/components/WorkoutDetail.jsx'),/Lagresultat krev eiga korrigering av utøvarbidrag/)
+ assert.match(read('../src/components/WorkoutDetail.jsx'),/const report=isSamspel\?null:/)
+})

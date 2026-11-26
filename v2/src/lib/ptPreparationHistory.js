@@ -33,3 +33,15 @@ export function clientWodUsage({clientId,programs=[],sessions=[],assignments=[]}
  for(const a of assignments)if(a.member_id===clientId&&a.status!=='cancelled')add(a.wod_id,a.status==='completed'?'completed':'assigned')
  return usage
 }
+
+ // The plan's own snapshot is the only historical prescription source here.
+export function savedPlanPrescription(session){
+ const snapshot=session?.workout_snapshot
+ if(!snapshot||snapshot.id&&session.wod_id&&snapshot.id!==session.wod_id)return null
+ const schema=snapshot.timer_settings?.workout_schema
+ return schema&&typeof schema==='object'&&Array.isArray(schema.items)?schema:null
+}
+export function planWodDisplayName(session,liveWod){
+ const snapshot=session?.workout_snapshot
+ return String(snapshot?.wod_title||snapshot?.title||session?.title||liveWod?.name||'Program-WOD')
+}
