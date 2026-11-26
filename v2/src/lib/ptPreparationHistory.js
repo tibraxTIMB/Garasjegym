@@ -23,3 +23,12 @@ export function priorPtSummary(result){
  })
  return {date:result.workout_date,team:false,rows}
 }
+
+export function clientWodUsage({clientId,programs=[],sessions=[],assignments=[]}={}){
+ const ids=new Set(programs.filter(p=>p.client_id===clientId&&!p.archived_at).map(p=>p.id))
+ const usage={}
+ const add=(id,key)=>{if(!id)return;const row=usage[id]||(usage[id]={planned:0,assigned:0,completed:0});row[key]++}
+ for(const s of sessions)if(ids.has(s.program_id)&&!s.archived_at)add(s.wod_id,s.status==='completed'?'completed':'planned')
+ for(const a of assignments)if(a.member_id===clientId&&a.status!=='cancelled')add(a.wod_id,a.status==='completed'?'completed':'assigned')
+ return usage
+}
