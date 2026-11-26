@@ -1,11 +1,12 @@
 import {useState} from 'react'
-import {plateAllocation,inventoryGroup} from '../lib/garageInventory.js'
+import {plateAllocation,inventoryGroup,prescribedBarbellLoads} from '../lib/garageInventory.js'
 import './garage-inventory.css'
 export function hasBarbellWork(items=[]){return items.some(item=>!item?.is_rest&&String(item?.equipment||'').split('/').some(e=>['stong','ez-stong'].includes(inventoryGroup(e))))}
 const newLoad=()=>({barKey:'',targetKg:'',compatible:false})
 const kg=n=>Number(n).toLocaleString('nn-NO')+' kg'
-export default function Lastmeister({rows=[]}){
+export default function Lastmeister({rows=[],items=[],level='rx'}){
  const [requests,setRequests]=useState([newLoad()])
+ const suggestions=prescribedBarbellLoads(items,level)
  const bars=rows.filter(r=>r.inventory_kind==='item'&&['stong','ez-stong'].includes(r.group_key)&&r.available!==0)
  const update=(index,patch)=>setRequests(prev=>prev.map((r,i)=>i===index?{...r,...patch}:r))
  const ready=requests.every(r=>r.barKey&&r.targetKg!==''&&r.compatible)
@@ -16,6 +17,7 @@ export default function Lastmeister({rows=[]}){
   <small>Brukar registrert inventar. Vel stong og totalvekt for kvar deltakar. Kontroller fysisk passform, låsar, stongkapasitet og skiveplass. Berekninga er ikkje ei reservasjon eller tryggleiksgodkjenning.</small>
   {requests.map((req,i)=>{const bar=bars.find(b=>b.equipment_key===req.barKey);return <div key={i} style={{padding:'10px 0'}}>
    <strong>Stong {i+1}</strong>
+   {suggestions.length>0&&<label>Hent målvekt frå WOD ({level.toUpperCase()})<select aria-label={'Målvekt frå WOD for stong '+(i+1)} value="" onChange={e=>{const selected=suggestions.find(x=>x.id===e.target.value);if(selected)update(i,{targetKg:String(selected.kg),barKey:bar?.group_key===selected.group?req.barKey:'',compatible:false})}}><option value="">Vel foreskriven vekt</option>{suggestions.map(x=><option key={x.id} value={x.id}>{x.name} · {x.label} · {kg(x.kg)}</option>)}</select></label>}
    <div className="gg-inventory-fields"><label>Stong<select value={req.barKey} onChange={e=>update(i,{barKey:e.target.value,compatible:false})}><option value="">Vel stong</option>{bars.map(b=><option key={b.equipment_key} value={b.equipment_key}>{b.equipment_label} · {b.weight_kg==null?'ukjend vekt':kg(b.weight_kg)} · {b.available??'?'} stk</option>)}</select></label>
    <label>Totalvekt (kg)<input inputMode="decimal" value={req.targetKg} onChange={e=>update(i,{targetKg:e.target.value.replace(',','.'),compatible:false})} placeholder="80"/></label></div>
    {bar?.notes&&<p role="note">{bar.notes}</p>}

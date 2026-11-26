@@ -100,3 +100,12 @@ const mixedItems=equipmentItemsForSamspel(main,mixed)
 assert.deepEqual(equipmentPreparation(mixedItems).groups.map(x=>x.equipment),['Romaskin','Vektstong'])
 assert.equal(main.length,1)
 assert.equal(equipmentAlternatives(mixedItems[2],candidates,tags).length,0)
+
+import {prescribedBarbellLoads} from '../src/lib/garageInventory.js'
+const doseItem={name:'Squat',equipment:'Vektstong',levels:{rx:{loadMode:'kg',loadKgMen:'80',loadKgWomen:'65'},scaled:{loadMode:'rir',loadKgMen:'50'}}}
+assert.deepEqual(prescribedBarbellLoads([doseItem]).map(x=>x.kg),[80,65])
+assert.deepEqual(prescribedBarbellLoads([doseItem],'scaled'),[])
+assert.deepEqual(prescribedBarbellLoads([{...doseItem,equipment:'Vektstong / Manualar'}]),[])
+assert.deepEqual(prescribedBarbellLoads([{...doseItem,levels:{rx:{loadMode:'kg',loadKgMen:'',loadKgWomen:'0'}}}]),[])
+assert.deepEqual(prescribedBarbellLoads([{...doseItem,is_rest:true}]),[])
+assert.deepEqual(prescribedBarbellLoads([{...doseItem,levels:{rx:{load_mode:'kg',load_kg:40}}}]).map(x=>x.kg),[40])

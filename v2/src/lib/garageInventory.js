@@ -500,3 +500,25 @@ export function plateAllocation(rows,requests){
  }
  return {status:'shortage',reason:'Ingen eksakt samtidig fordeling med registrerte skivepar.',alternatives}
 }
+
+// Explicit load options only. Gender-labelled prescription alternatives are not
+// a participant identity, a personal recommendation, or simultaneous demand.
+export function prescribedBarbellLoads(items=[],level='rx'){
+ const options=[]
+ for(const [index,item] of items.entries()){
+  if(!item||item.is_rest||item.is_samspel_station)continue
+  const group=inventoryGroup(item.equipment)
+  if(!['stong','ez-stong'].includes(group))continue
+  const name=item.exercise_name||item.name
+  if(!name)continue
+  const dose=item.levels?.[level]
+  if(!dose||!['kg'].includes(dose.loadMode??dose.load_mode))continue
+  for(const [label,value] of [['M',dose.loadKgMen??dose.load_kg_men],['K',dose.loadKgWomen??dose.load_kg_women],['Felles',dose.loadKg??dose.load_kg]]){
+   if(value==null||String(value).trim()==='')continue
+   const kg=Number(value)
+   if(!Number.isFinite(kg)||kg<=0||kg>1000)continue
+   options.push({id:index+':'+label,group,name,label,level,kg})
+  }
+ }
+ return options
+}

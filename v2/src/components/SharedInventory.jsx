@@ -22,12 +22,12 @@ export function useSharedInventory(enabled){
  useEffect(()=>{if(enabled)refresh();return()=>{request.current++}},[enabled])
  return {...state,refresh}
 }
-export default function SharedInventory({items=[],values={},canEdit=false,actorId,onApply}){
+export default function SharedInventory({items=[],values={},canEdit=false,actorId,onApply,level='rx'}){
  const shared=useSharedInventory(!!actorId&&items.length>0)
  const rows=equipmentCapacity(items,values)
  if(!rows.length)return null
  return <details className="customer-plan-details"><summary>Felles utstyrsliste · {shared.status==='ready'?'Garasjen':shared.status==='loading'?'Hentar':'Ikkje tilgjengeleg'}</summary>
-  {shared.status==='ready'?<><small>{Object.keys(shared.inventory).length} registrerte utstyrstypar. Mengdene er generell kapasitet, ikkje reservasjon eller garanti for riktig vekt. Sjå avgrensingar i inventaret.</small><InventoryNotes items={items} rows={shared.rows}/>{hasBarbellWork(items)&&<Lastmeister rows={shared.rows}/>}<div className="gg-architect-meta"><button type="button" className="secondary-button" disabled={!onApply} onClick={()=>onApply?.(shared.inventory)}>Hent felles mengder</button>{canEdit&&<small>Endra det felles inventaret i Administrasjon → Utstyr.</small>}</div></>:<small>Felles lista er ikkje tilgjengeleg. Lokal liste og WOD-plan er separate kjelder.</small>}
+  {shared.status==='ready'?<><small>{Object.keys(shared.inventory).length} registrerte utstyrstypar. Mengdene er generell kapasitet, ikkje reservasjon eller garanti for riktig vekt. Sjå avgrensingar i inventaret.</small><InventoryNotes items={items} rows={shared.rows}/>{hasBarbellWork(items)&&<Lastmeister rows={shared.rows} items={items} level={level}/>}<div className="gg-architect-meta"><button type="button" className="secondary-button" disabled={!onApply} onClick={()=>onApply?.(shared.inventory)}>Hent felles mengder</button>{canEdit&&<small>Endra det felles inventaret i Administrasjon → Utstyr.</small>}</div></>:<small>Felles lista er ikkje tilgjengeleg. Lokal liste og WOD-plan er separate kjelder.</small>}
   <button type="button" className="text-button" disabled={shared.status==='loading'} onClick={shared.refresh}>Oppdater status</button>
  </details>
 }
