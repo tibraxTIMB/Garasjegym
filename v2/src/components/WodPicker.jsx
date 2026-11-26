@@ -21,14 +21,13 @@ export default function WodPicker({wods=[],selectedIds=[],onChange,onCancel,mult
  const formats=useMemo(()=>[...new Set(wods.filter(w=>!w.is_archived).map(w=>w.format).filter(Boolean))].sort(),[wods])
  const categories=useMemo(()=>{const base=['warmup','daily','standard','benchmark','assessment','rehab','recovery','other'];return [...base,...new Set(wods.filter(w=>!w.is_archived).map(w=>w.timer_settings?.workout_schema?.library_category||(w.category==='warmup'?'warmup':'standard')).filter(v=>!base.includes(v)))]},[wods])
  function toggle(id){
-  if(multiple)setDraftIds(draftIds.includes(id)?draftIds.filter(x=>x!==id):[...draftIds,id])
-  else setDraftIds(draftIds[0]===id?[]:[id])
+  setDraftIds(previous=>multiple?(previous.includes(id)?previous.filter(x=>x!==id):[...previous,id]):previous[0]===id?[]:[id])
  }
  function cancelSelection(){setDraftIds(selectedIds);onCancel?.()}
- async function confirmSelection(){await onChange?.(draftIds)}
+ async function confirmSelection(){if(multiple&&!draftIds.length)return;await onChange?.(draftIds)}
  return <section className={compact?'wod-picker compact':'wod-picker'}>
   <div className="wod-picker-heading"><div><strong>{title}</strong><small>{hint}</small></div><span className="count-pill">{draftIds.length} valde</span></div>
-  <div className="wod-picker-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Søk på namn, øving, format eller innhald …"/></div>
+  <div className="wod-picker-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} aria-label="Søk i WOD-biblioteket" placeholder="Søk namn, øving, format …"/></div>
   <button type="button" className="gg-picker-filter-toggle" aria-expanded={filtersOpen} onClick={()=>setFiltersOpen(v=>!v)}>Filter{format!=='all'||visibility!=='all'||category!=='all'?' · aktivt':''} {filtersOpen?'−':'+'}</button>{filtersOpen&&<div className="wod-picker-filters">
    <select value={format} onChange={e=>setFormat(e.target.value)} aria-label="Filtrer på WOD-format"><option value="all">Alle format</option>{formats.map(x=><option key={x} value={x}>{x}</option>)}</select>
    <select value={category} onChange={e=>setCategory(e.target.value)} aria-label="Filtrer på WOD-type"><option value="all">Alle kategoriar</option>{categories.map(value=><option key={value} value={value}>{categoryLabel(value)}</option>)}</select>
@@ -37,7 +36,7 @@ export default function WodPicker({wods=[],selectedIds=[],onChange,onCancel,mult
   <div className="wod-picker-results">
    {rows.length?rows.map(w=>{
     const active=draftIds.includes(w.id)
-    const count=(w.timer_settings?.workout_schema?.items||[]).length||w.movements?.split('\\n').filter(Boolean).length||0
+    const count=(w.timer_settings?.workout_schema?.items||[]).length||w.movements?.split('\n').filter(Boolean).length||0
     return <button type="button" key={w.id} className={active?'wod-picker-option selected':'wod-picker-option'} onClick={()=>toggle(w.id)} aria-pressed={active}>
      <span className="wod-picker-check">{active?<Check size={15}/>:null}</span>
      <span className="wod-picker-option-main"><b>{w.name}</b><small>{w.format||'Eigen økt'} · {w.duration_minutes||'–'} min · {count} øvingar</small>{usage?.[w.id]&&<small>{usage[w.id].planned} i plan · {usage[w.id].assigned} tildelte · {usage[w.id].completed} utførte</small>}{!compact&&w.timer_settings?.workout_schema?.stimulus&&<small>{w.timer_settings.workout_schema.stimulus}</small>}</span>
@@ -45,6 +44,6 @@ export default function WodPicker({wods=[],selectedIds=[],onChange,onCancel,mult
     </button>
    }):<div className="wod-picker-empty">Ingen WOD-ar treff søket. Prøv eit anna søk eller opprett ein ny WOD i WOD-biblioteket.</div>}
   </div>
-  {draftIds.length>0&&<div className="wod-picker-selected"><Layers size={14}/>{draftIds.map(id=>wods.find(w=>w.id===id)?.name).filter(Boolean).join(' → ')}<button type="button" onClick={()=>setDraftIds([])}>Tøm val</button></div>}<div className="wod-picker-actions"><button type="button" className="secondary-button" onClick={cancelSelection}>Avbryt</button><button type="button" className="primary-button" onClick={confirmSelection}>Bruk val ({draftIds.length})</button></div>
+  {draftIds.length>0&&<div className="wod-picker-selected"><Layers size={14}/><span className="wod-picker-selected-names">{draftIds.map(id=>wods.find(w=>w.id===id)?.name).filter(Boolean).join(' → ')}</span><button type="button" onClick={()=>setDraftIds([])}>Tøm val</button></div>}<div className="wod-picker-actions"><button type="button" className="secondary-button" onClick={cancelSelection}>Avbryt</button><button type="button" className="primary-button" disabled={multiple&&!draftIds.length} onClick={confirmSelection}>Bruk val ({draftIds.length})</button></div>
  </section>
 }

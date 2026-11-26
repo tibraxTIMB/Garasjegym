@@ -166,8 +166,21 @@ with sync_playwright() as pw:
                     date=today.get_by_role("button",name="Legg til økt",exact=False).get_attribute("aria-label").split()[-1]
                     today.get_by_role("button",name="Legg til økt",exact=False).tap()
                     dialog=page.get_by_role("dialog",name="Tildel WOD til",exact=False)
-                    dialog.locator(".wod-picker-option").first.tap()
-                    dialog.get_by_role("button",name="Bruk val (1)",exact=True).tap()
+                    # Actual schedule dialog with app bottom navigation present.
+                    assert dialog.evaluate("e=>e.parentElement.parentElement===document.body")
+                    rows=dialog.locator(".wod-picker-option")
+                    rows.first.wait_for()
+                    assert not rows.evaluate_all("""rows=>rows.flatMap((row,i)=>{
+                      const box=row.getBoundingClientRect(), main=row.querySelector('.wod-picker-option-main').getBoundingClientRect(), next=rows[i+1]?.getBoundingClientRect();
+                      return main.bottom>box.bottom+1||main.top<box.top-1||next&&box.bottom>next.top+1?[row.textContent]:[]
+                    })""")
+                    assert dialog.get_by_role("button",name="Bruk val (0)",exact=True).is_disabled()
+                    rows.first.tap()
+                    action=dialog.get_by_role("button",name="Bruk val (1)",exact=True)
+                    action.scroll_into_view_if_needed()
+                    assert action.evaluate("""e=>{const r=e.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;return y>=0&&y<innerHeight&&e.contains(document.elementFromPoint(x,y))}""")
+                    check(page,"pt-schedule-picker-selected",w,h)
+                    action.tap()
                     assert dialog.get_by_label("Tildelingstype").input_value()=="plan"
                     assert dialog.locator('input[type=date]').input_value()==date
                     dialog.locator('input[type=time]').fill("17:15")
