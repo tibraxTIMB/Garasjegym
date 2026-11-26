@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {samspelConfig,samspelIssue,samspelRoles,samspelResultIssue,samspelScoring,samspelWithCount,samspelRoundInstruction,samspelWithSwitch,samspelRotation,samspelIsTimed,samspelIsManual,appendSamspelSwap,normalizeSamspelSwaps} from '../src/lib/samspel.js'
+import {samspelConfig,samspelIssue,samspelRoles,samspelResultIssue,samspelScoring,samspelWithCount,samspelRoundInstruction,samspelWithSwitch,samspelRotation,samspelIsTimed,samspelIsManual,appendSamspelSwap,normalizeSamspelSwaps,samspelParticipantRows,samspelParticipantResults} from '../src/lib/samspel.js'
 const legacy={version:1,mode:'parallel_round_swap',task:'row',metric:'distance'}
 const context={format:'AMRAP',participation:'partner',collaboration:'parallel',items:[{name:'Push-up'}]}
 assert.equal(samspelConfig({samspel:legacy}),legacy)
@@ -67,3 +67,16 @@ assert.equal(samspelRotation(manual,{manualSwaps:[10,20].slice(0,-1)}).roles[1],
 assert.equal(samspelRotation(manual,{manualSwaps:[]}).roles[0],'Romaskin')
 assert.equal(samspelIsManual(samspelWithSwitch(manual,'round')),false)
 console.log('Manual Samspel swap checks passed')
+
+const scoredTeam={...manual,individual_scores:true}
+assert.equal(samspelParticipantRows(scoredTeam).length,4)
+assert.deepEqual(samspelParticipantRows(manual),[])
+assert.deepEqual(samspelParticipantResults(scoredTeam,{}),{rows:[],issue:null})
+assert.deepEqual(samspelParticipantResults(scoredTeam,{1:{rounds:'0',reps:'',erg:'400.5'},3:{rounds:'2',reps:'7'},9:{rounds:'9'}}),{rows:[{slot:1,rounds:0,extra_reps:null,erg_value:400.5},{slot:3,rounds:2,extra_reps:7,erg_value:null}],issue:null})
+assert.ok(samspelParticipantResults(scoredTeam,{1:{rounds:'1.5'}}).issue)
+assert.ok(samspelParticipantResults(scoredTeam,{1:{reps:'-1'}}).issue)
+assert.ok(samspelParticipantResults(scoredTeam,{1:{erg:'Infinity'}}).issue)
+assert.deepEqual(samspelParticipantResults(null,{1:{rounds:'4'}}),{rows:[],issue:null})
+assert.deepEqual(samspelParticipantResults(manual,{1:{rounds:'4'}}),{rows:[],issue:null})
+assert.equal(samspelParticipantRows({...legacy,individual_scores:true}).length,2)
+console.log('Participant-slot score checks passed')
