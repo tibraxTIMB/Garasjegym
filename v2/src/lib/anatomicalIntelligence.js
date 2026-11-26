@@ -101,7 +101,7 @@ export const MUSCLE_LABELS=Object.freeze({chest:'Bryst',front_deltoids:'Framside
 // Only explicit positive performed reps or duration constitute evidence here.
 // A prescribed weight, empty set or aggregate WOD score does not establish exercise completion.
 export function documentedExerciseRows(exercises){
- return (exercises??[]).flatMap(exercise=>(exercise.workout_sets??exercise.sets??[]).filter(set=>Number(set.reps)>0||Number(set.time_seconds)>0).map(()=>({exerciseName:exercise.exercise_name,completed:true})))
+ return (exercises??[]).flatMap(exercise=>(exercise.workout_sets??exercise.sets??[]).filter(set=>!['partial','failed'].includes(set.complex_status)&&[set.reps,set.time_seconds].some(v=>Number.isFinite(Number(v))&&Number(v)>0)).map(()=>({exerciseName:exercise.exercise_name,completed:true})))
 }
 export function muscleExerciseEvidence(rows){
  const groups=new Map()
@@ -115,4 +115,29 @@ export function muscleExerciseEvidence(rows){
   }
  }
  return groups
+}
+
+// Calendar-day window in the device's local time, not a UTC rolling interval.
+// Team results cannot establish an individual member's muscle exposure.
+export function historyAnatomyExercises(logs,days=7,now=new Date()){
+ const end=new Date(now),start=new Date(now)
+ if(![7,14,30].includes(days)||!Number.isFinite(end.getTime()))return []
+ start.setDate(start.getDate()-days+1)
+ const iso=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')
+ const seen=new Set()
+ return (logs||[]).flatMap(log=>{
+  const data=log.result_data||{},date=log.workout_date
+  if(!date||date<iso(start)||date>iso(end)||log.id&&seen.has(log.id)||data.flow_completion_only||data.samspel?.team_score||data.wod_engine?.participation&&data.wod_engine.participation!=='individual')return []
+  if(log.id)seen.add(log.id)
+  const recorded=log.workout_exercises||[],snapshots=data.exercise_results||[]
+  return recorded.map((ex,i)=>{
+   const snapshot=snapshots[i]
+   // For complexes, only use explicitly completed cycles; unmatched evidence is unknown.
+   if(snapshot?.is_complex&&snapshot.complex_family==='custom'){
+    if(normalize(snapshot.exercise_name)!==normalize(ex.exercise_name))return {...ex,workout_sets:[]}
+    return {...ex,workout_sets:(snapshot.sets||[]).filter(s=>s.complex_status==='complete')}
+   }
+   return ex
+  })
+ })
 }
