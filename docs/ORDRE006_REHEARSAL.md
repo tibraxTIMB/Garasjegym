@@ -1,0 +1,3 @@
+# ORDRE006 installed schema rehearsal
+
+Source: installed migration 20261126150410 (read-only inspection). The isolated rehearsal contains the exact schema prefix before the inventory seed. No production inventory seed, accounts or logs are included. The workflow tests staff, manager, active/inactive/unrelated member and anon against synthetic fixtures and restores a synthetic custom-format PostgreSQL 17 archive. Existing role helpers and base tables in the fixture are simplified, so this is not proof of full production-role behavior or a successful DATABUNKER recovery. Never run the preflight on production. No release or migration is authorized by this PR.
