@@ -1,4 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
+import {createPortal} from 'react-dom'
 import {CalendarDays,ChevronLeft,ChevronRight,Plus,X,Clock3} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import WodPicker from './WodPicker.jsx'
@@ -26,6 +27,19 @@ export function PTWeekCalendar({program,plan=[],assignments=[],appointments=[],c
   {!!undated.length&&<details><summary>Utan dato ({undated.length})</summary>{undated.map(card)}</details>}
   <small>Datoar er i garasjen si tidssone (Oslo). Frist er ikkje ein avtale.</small>
  </section>
+}
+// Portal all schedule dialogs outside app-shell stacking contexts. Keep native
+// select/keypad overlays above this layer; do not change assignment logic.
+function ScheduleModal({label,choosing=false,children}){
+ const dialog=useRef(null)
+ useEffect(()=>{
+  const previous=document.activeElement
+  const oldOverflow=document.body.style.overflow
+  document.body.style.overflow='hidden'
+  dialog.current?.focus({preventScroll:true})
+  return()=>{document.body.style.overflow=oldOverflow;if(previous instanceof HTMLElement&&previous.isConnected)previous.focus({preventScroll:true})}
+ },[])
+ return createPortal(<div className="pt2-modal-backdrop gg-schedule-backdrop"><section ref={dialog} tabIndex={-1} className={'pt2-modal gg-schedule-dialog'+(choosing?' gg-schedule-choosing':'')} role="dialog" aria-modal="true" aria-label={label}>{children}</section></div>,document.body)
 }
 export function PTScheduleDialog({clientId,clientName,program,existing=[],wods=[],usage=null,appointments=[],initialDate='',initialMode,onClose,onSaved}){
  const [mode,setMode]=useState(initialMode||(program&&initialDate?'plan':'free'))
@@ -74,7 +88,7 @@ export function PTScheduleDialog({clientId,clientName,program,existing=[],wods=[
    onSaved?.(rows.length,mode)
   }catch(e){setError(e.message||'Kunne ikkje lagra tildelinga.')}finally{lock.current=false;setBusy(false)}
  }
- return <div className="pt2-modal-backdrop gg-schedule-backdrop"><section className="pt2-modal gg-schedule-dialog" role="dialog" aria-modal="true" aria-label={'Tildel WOD til '+clientName}>
+ return <ScheduleModal label={'Tildel WOD til '+clientName} choosing={choose}>
   <header className="gg-schedule-head"><div><h3>Tildel WOD</h3><small>Mottakar: <b>{clientName}</b></small></div><button type="button" className="icon-button" aria-label="Lukk tildeling" disabled={busy} onClick={onClose}><X size={20}/></button></header>
   {choose?<WodPicker compact wods={wods} usage={usage} selectedIds={ids} multiple onChange={v=>{setIds(v);if(v.length)setChoose(false)}} onCancel={onClose} title="Vel ein eller fleire WOD-ar" hint="Gjenbruk frå biblioteket – ingen kopiar."/>:<>
    <div className="gg-schedule-selection"><strong>{chosen.map(w=>w.name).join(' · ')}</strong><button type="button" className="text-button" disabled={busy} onClick={()=>setChoose(true)}>Endra val</button></div>
@@ -87,7 +101,7 @@ export function PTScheduleDialog({clientId,clientName,program,existing=[],wods=[
    <button type="button" className="primary-button" disabled={busy||!chosen.length} onClick={save}>{busy?'Lagrar …':'Stadfest tildeling'}</button>
   </>}
   {error&&<p role="alert" className="auth-error">{error}</p>}
- </section></div>
+ </ScheduleModal>
 }
 export function PTMoveDialog({program,session,clientId,onClose,onSaved}){
  const [date,setDate]=useState(()=>planDate(program,session)),[time,setTime]=useState(()=>planTime(session)),[week,setWeek]=useState(String(session.week_no||1)),[day,setDay]=useState(String(session.day_no||1)),[busy,setBusy]=useState(false),[error,setError]=useState('')
@@ -110,7 +124,7 @@ export function PTMoveDialog({program,session,clientId,onClose,onSaved}){
    onSaved?.()
   }catch(e){setError(e.message||'Kunne ikkje flytta økta.')}finally{lock.current=false;setBusy(false)}
  }
- return <div className="pt2-modal-backdrop gg-schedule-backdrop"><section className="pt2-modal gg-schedule-dialog" role="dialog" aria-modal="true" aria-label="Flytt planøkt"><header className="gg-schedule-head"><div><h3>Flytt økt</h3><small>{session.title}</small></div><button className="icon-button" aria-label="Avbryt flytting" disabled={busy} onClick={onClose}><X size={18}/></button></header><div className="gg-schedule-fields"><label>Programveke<input type="number" min="1" max={program.weeks||52} value={week} onChange={e=>changeSlot(e.target.value,day)}/></label><label>Dag<select value={day} onChange={e=>changeSlot(week,e.target.value)}>{[1,2,3,4,5,6,7].map(d=><option key={d} value={d}>{d}</option>)}</select></label><label>Dato<input type="date" value={date} onChange={e=>changeDate(e.target.value)}/></label><label>Klokkeslett<input type="time" value={time} onChange={e=>setTime(e.target.value)}/></label></div>{error&&<p className="auth-error" role="alert">{error}</p>}<button className="primary-button" disabled={busy} onClick={save}>{busy?'Lagrar …':'Lagre tidspunkt'}</button></section></div>
+ return <ScheduleModal label="Flytt planøkt"><header className="gg-schedule-head"><div><h3>Flytt økt</h3><small>{session.title}</small></div><button className="icon-button" aria-label="Avbryt flytting" disabled={busy} onClick={onClose}><X size={18}/></button></header><div className="gg-schedule-fields"><label>Programveke<input type="number" min="1" max={program.weeks||52} value={week} onChange={e=>changeSlot(e.target.value,day)}/></label><label>Dag<select value={day} onChange={e=>changeSlot(week,e.target.value)}>{[1,2,3,4,5,6,7].map(d=><option key={d} value={d}>{d}</option>)}</select></label><label>Dato<input type="date" value={date} onChange={e=>changeDate(e.target.value)}/></label><label>Klokkeslett<input type="time" value={time} onChange={e=>setTime(e.target.value)}/></label></div>{error&&<p className="auth-error" role="alert">{error}</p>}<button className="primary-button" disabled={busy} onClick={save}>{busy?'Lagrar …':'Lagre tidspunkt'}</button></ScheduleModal>
 }
 
 export function PTDirectMoveDialog({assignment,clientId,onClose,onSaved}){
@@ -130,5 +144,5 @@ export function PTDirectMoveDialog({assignment,clientId,onClose,onSaved}){
    onSaved?.()
   }catch(e){setError(e.message||'Kunne ikkje flytta tildelinga.')}finally{lock.current=false;setBusy(false)}
  }
- return <div className="pt2-modal-backdrop gg-schedule-backdrop"><section className="pt2-modal gg-schedule-dialog" role="dialog" aria-modal="true" aria-label="Flytt tildelt WOD"><header className="gg-schedule-head"><div><h3>Flytt tildelt WOD</h3><small>{assignment.wods?.name||'Tildelt WOD'}</small></div><button type="button" className="icon-button" aria-label="Avbryt flytting" disabled={busy} onClick={onClose}><X size={18}/></button></header><div className="gg-schedule-fields"><label>Dato<input type="date" value={date} onChange={e=>setDate(e.target.value)}/></label><label>Klokkeslett<input type="time" value={time} onChange={e=>setTime(e.target.value)}/></label></div>{assignment.due_date&&<small>Eksisterande frist blir ikkje endra: {assignment.due_date}</small>}{error&&<p className="auth-error" role="alert">{error}</p>}<button className="primary-button" disabled={busy} onClick={save}>{busy?'Lagrar …':'Lagre tidspunkt'}</button></section></div>
+ return <ScheduleModal label="Flytt tildelt WOD"><header className="gg-schedule-head"><div><h3>Flytt tildelt WOD</h3><small>{assignment.wods?.name||'Tildelt WOD'}</small></div><button type="button" className="icon-button" aria-label="Avbryt flytting" disabled={busy} onClick={onClose}><X size={18}/></button></header><div className="gg-schedule-fields"><label>Dato<input type="date" value={date} onChange={e=>setDate(e.target.value)}/></label><label>Klokkeslett<input type="time" value={time} onChange={e=>setTime(e.target.value)}/></label></div>{assignment.due_date&&<small>Eksisterande frist blir ikkje endra: {assignment.due_date}</small>}{error&&<p className="auth-error" role="alert">{error}</p>}<button className="primary-button" disabled={busy} onClick={save}>{busy?'Lagrar …':'Lagre tidspunkt'}</button></ScheduleModal>
 }
