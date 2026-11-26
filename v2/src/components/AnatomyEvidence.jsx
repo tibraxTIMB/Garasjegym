@@ -4,7 +4,7 @@ import {BODY_REGIONS,BODY_OUTLINE,muscleMapRole} from '../lib/anatomyMap.js'
 
 const roleLabels={primary:'Primær',secondary:'Sekundær',stabilizing:'Stabilisering'}
 const colors={primary:'#2d9d78',secondary:'#d9a441',stabilizing:'#6f91bc',none:'#9299a4'}
-const mapLabels={...roleLabels,none:'Ingen dokumenterte sett'}
+const mapLabels={...roleLabels,none:'Ingen dokumentert aktivitet'}
 function BodyMap({side,roles,selected,onSelect,planned=false}){
  return <figure style={{margin:0,minWidth:0,textAlign:'center'}}>
   <figcaption>{side==='front'?'Framside':'Bakside'}</figcaption>
@@ -17,14 +17,14 @@ function BodyMap({side,roles,selected,onSelect,planned=false}){
 export default function AnatomyEvidence({exercises=[],scope='Registrerte øvingar',planned=false,expanded=false}){
  const [selected,setSelected]=useState(null)
  const rows=planned?plannedAnatomyRows(exercises):documentedExerciseRows(exercises)
- const unit=planned?'rørsler':'sett'
+ const unit=planned?'rørsler':'registreringar'
  const result=summarizeMuscleExposure(rows)
  const evidence=muscleExerciseEvidence(rows)
  const selectedEvidence=evidence.get(selected)
  const select=muscle=>setSelected(old=>old===muscle?null:muscle)
  return <details className="engine-section" open={expanded||undefined}>
   <summary>Muskelgrupper · {scope}</summary>
-  <p>{planned?'Planlagd anatomisk involvering. Ikkje dokumentert gjennomføring.':'Førebels klassifisering av øvingar med registrerte reps eller tid.'} Ikkje målt belastning eller restitusjon.</p>
+  <p>{planned?'Planlagd anatomisk involvering. Ikkje dokumentert gjennomføring.':'Basert på registrerte repetisjonar, tid eller målt kondisjonsarbeid.'} Ikkje målt belastning eller restitusjon.</p>
   <small>{result.classifiedSets} klassifiserte {unit} · {result.unclassifiedSets} uklassifiserte {unit}</small>
   <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:8,maxWidth:420,margin:'12px auto'}}>
    <BodyMap side="front" roles={result.roles} selected={selected} onSelect={select} planned={planned}/>
@@ -34,10 +34,10 @@ export default function AnatomyEvidence({exercises=[],scope='Registrerte øvinga
   <small>Skjematiske regionar. Fargen viser anatomisk rolle, ikkje intensitet. Rotatormansjett, hoftebøyarar og hofteabduktorar kan veljast i lista. Begge sider vert viste likt når side ikkje er dokumentert.</small>
   <label style={{display:'block',marginTop:12}}>Vel muskelgruppe <select value={selected||''} onChange={e=>setSelected(e.target.value||null)} style={{display:'block',maxWidth:'100%'}}><option value="">Alle muskelgrupper</option>{Object.entries(MUSCLE_LABELS).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
   {selected&&<section aria-live="polite"><h4>{MUSCLE_LABELS[selected]}</h4>{selectedEvidence?Object.entries(selectedEvidence).filter(([,names])=>names.size).map(([role,names])=><p key={role}><strong>{roleLabels[role]} · {result.roles[selected][role]} {unit}</strong> · {[...names].join(', ')}</p>):<p>Ingen oppføringar for denne gruppa i utvalet.</p>}</section>}
-  {!selected&&(evidence.size?[...evidence].map(([muscle,roles])=><details key={muscle}>
+  {!selected&&(evidence.size?<details className="gg-anatomy-evidence-list"><summary>Øvingar per muskelgruppe</summary>{[...evidence].map(([muscle,roles])=><details key={muscle}>
     <summary>{MUSCLE_LABELS[muscle]}</summary>
     {Object.entries(roles).filter(([,names])=>names.size).map(([role,names])=><p key={role}><strong>{roleLabels[role]}</strong> · {[...names].join(', ')}</p>)}
-  </details>):<p>Ingen klassifiserte øvingar med slike resultat.</p>)}
+  </details>)}</details>:<p>Ingen klassifiserte øvingar med slike resultat.</p>)}
   {result.unclassified.length>0&&<p>Uklassifiserte øvingar: {result.unclassified.join(', ')}</p>}
  </details>
 }
