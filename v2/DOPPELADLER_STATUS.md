@@ -63,3 +63,6 @@ Six recipe families, twelve selectable individual/partner drafts, fixed introduc
 
 ## ZÜNDUNG release gate – actual browser journeys
 edc5aade passed isolated validation, Frontdienst and production-target build; responsive pending. Skip action moved inside the existing full-screen and ordinary timer controls. Added actual builder insertion using catalogue fixtures and actual timer skip/reload at three sizes, with no real writes. CI pending. Publication not authorised by build alone; no database changes.
+
+### Browser release gate
+b4cf2782: responsive, isolated and release build green. Frontdienst registration and Quality & Row green; new ZÜNDUNG journey failed at native select's accessible-name lookup before insertion. Added explicit unique accessible labels and updated test; end-to-end skip/reload not yet verified. No production deploy.
