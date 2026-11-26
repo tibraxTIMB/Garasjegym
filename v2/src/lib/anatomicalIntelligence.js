@@ -37,3 +37,23 @@ export function summarizeMuscleExposure(rows){
  }
  return {roles,classifiedSets,unclassifiedSets,unclassified:[...unclassified],metric:'documented-sets-by-muscle-role',reviewStatus:'provisional'}
 }
+
+export const MUSCLE_LABELS=Object.freeze({chest:'Bryst',front_deltoids:'Framside skulder',side_deltoids:'Side skulder',rear_deltoids:'Bakside skulder',triceps:'Triceps',biceps:'Biceps',forearms:'Underarmar',lats:'Breie ryggmuskel',upper_back:'Øvre rygg',spinal_erectors:'Ryggstrekkjarar',abdominals:'Mage',obliques:'Skrå magemusklar',glutes:'Sete',quadriceps:'Framside lår',hamstrings:'Bakside lår',adductors:'Innside lår',calves:'Leggar'})
+// Only explicit positive performed reps or duration constitute evidence here.
+// A prescribed weight, empty set or aggregate WOD score does not establish exercise completion.
+export function documentedExerciseRows(exercises){
+ return (exercises??[]).flatMap(exercise=>(exercise.workout_sets??exercise.sets??[]).filter(set=>Number(set.reps)>0||Number(set.time_seconds)>0).map(()=>({exerciseName:exercise.exercise_name,completed:true})))
+}
+export function muscleExerciseEvidence(rows){
+ const groups=new Map()
+ for(const row of rows??[]){
+  if(row.completed!==true)continue
+  const profile=anatomyForExercise(row.exerciseName)
+  if(!profile)continue
+  for(const role of ['primary','secondary','stabilizing'])for(const muscle of profile[role]){
+   if(!groups.has(muscle))groups.set(muscle,{primary:new Set(),secondary:new Set(),stabilizing:new Set()})
+   groups.get(muscle)[role].add(row.exerciseName)
+  }
+ }
+ return groups
+}
