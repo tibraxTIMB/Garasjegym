@@ -88,6 +88,8 @@ export const supabase = {
     if(scenario()==='audit-frontdienst'&&name==='save_workout_with_pt_links'){
       const payload=args?.p_workout
       if(payload?.member_id!=='demo-member'||!payload.save_token)return {data:null,error:{message:'Invalid synthetic save'}}
+      const attempts='gg.audit.frontdienst.attempts'
+      localStorage.setItem(attempts,String(Number(localStorage.getItem(attempts)||0)+1))
       const key='gg.audit.frontdienst.writes'
       const entries=JSON.parse(localStorage.getItem(key)||'[]')
       const prior=entries.find(row=>row.payload.save_token===payload.save_token)
