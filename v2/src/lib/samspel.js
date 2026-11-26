@@ -2,13 +2,17 @@
 export const SAMSPEL_TASKS=[['row','Romaskin'],['bike','Sykkel'],['ski','SkiErg']]
 export const SAMSPEL_METRICS=[['distance','Meter'],['calories','Kaloriar']]
 export function samspelConfig(schema={}){
- const s=schema.samspel
- if(s?.version!==1||s.mode!=='parallel_round_swap')return null
- return s
+ const s=schema?.samspel
+ if(s?.mode!=='parallel_round_swap')return null
+ if(s.version===1)return s
+ if(s.version===2&&Number.isInteger(s.participant_count)&&s.participant_count>=2&&s.participant_count<=8)return s
+ return null
 }
-export function samspelIssue(s,{format,participation,collaboration,items=[]}={}){
+export function samspelIssue(s,{format,participation,collaboration,participantCount=2,items=[]}={}){
  if(!s)return null
- if(format!=='AMRAP'||participation!=='partner')return 'Parallelt rundebyte krev førebels AMRAP med to partnarar.'
+ if(!samspelConfig({samspel:s}))return 'Ugyldig Samspel-oppsett.'
+ const count=s.version===2?s.participant_count:2
+ if(format!=='AMRAP'||(count===2?participation!=='partner':participation!=='team'||Number(participantCount)!==count))return 'Samspel krev AMRAP og samsvar mellom tal deltakarar og gjennomføringsform.'
  if(collaboration&&collaboration!=='parallel')return 'Vel parallelt arbeid under Gjennomføring, eller slå av rundebyte.'
  if(!SAMSPEL_TASKS.some(([id])=>id===s.task)||!SAMSPEL_METRICS.some(([id])=>id===s.metric))return 'Vel kondisjonsoppgåve og resultatmål.'
  if(!items.some(x=>!x.is_rest))return 'Legg til minst ei øving i AMRAP-runda.'
@@ -16,7 +20,10 @@ export function samspelIssue(s,{format,participation,collaboration,items=[]}={})
 }
 export function samspelRoles(s,rounds=0){
  const task=SAMSPEL_TASKS.find(([id])=>id===s?.task)?.[1]||'Kondisjon'
- return Math.max(0,Math.floor(Number(rounds)||0))%2===0?[task,'AMRAP']:['AMRAP',task]
+ const count=s?.version===2&&samspelConfig({samspel:s})?s.participant_count:2
+ const n=Number(rounds)
+ const index=(Number.isFinite(n)?Math.max(0,Math.floor(n)):0)%count
+ return Array.from({length:count},(_,i)=>i===index?task:'AMRAP')
 }
 export function samspelResultIssue(s,value){
  if(!s)return null
@@ -24,4 +31,12 @@ export function samspelResultIssue(s,value){
 }
 export function samspelScoring(s,base){
  return s?{type:'multi',fields:['rounds_reps',s.metric]}:base
+}
+
+export function samspelWithCount(s,count){
+ if(!s||!Number.isInteger(count)||count<2||count>8)return null
+ return {...s,version:2,participant_count:count}
+}
+export function samspelRoundInstruction(s){
+ return s?.version===2&&s.participant_count>2?'Alle på AMRAP-sporet fullfører éi runde før de byter. Éin felles runde vert registrert.':'Byt rolle når AMRAP-partnaren har fullført éi runde.'
 }
