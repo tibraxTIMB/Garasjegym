@@ -98,3 +98,12 @@ assert.deepEqual(documentedExerciseRows(workoutAnatomyExercises({...ergLog,resul
 assert.deepEqual(workoutAnatomyExercises({...ergLog,result_data:{...ergLog.result_data,samspel:{team_score:true}}}),[])
 assert.equal(anatomyForExercise('constructor'),null)
 console.log('Nine performed-report and measured erg evidence checks passed')
+
+const custom={exercise_name:'Mitt kompleks',is_complex:true,complex_family:'custom',complex_steps:[{name:'Power Clean'},{name:'Push Jerk'}],sets:[{reps:2,complex_status:'complete'},{reps:1,complex_status:'partial'}]}
+assert.deepEqual(documentedExerciseRows([custom]).map(r=>r.exerciseName),['Power Clean','Push Jerk'])
+assert.equal(documentedExerciseRows([{exercise_name:'Plank',sets:[{flow_status:'done'}]}])[0].evidenceKind,'confirmed')
+const complexLog={workout_exercises:[{exercise_name:'Mitt kompleks',sort_order:1,workout_sets:[{set_number:1,reps:2},{set_number:2,reps:1}]}],result_data:{exercise_results:[custom]}}
+assert.equal(documentedExerciseRows(workoutAnatomyExercises(complexLog)).length,2)
+assert.deepEqual(documentedExerciseRows(workoutAnatomyExercises({...complexLog,workout_exercises:[{exercise_name:'Mitt kompleks',sort_order:1,workout_sets:[{set_number:1,reps:0}]}]})),[])
+assert.equal(documentedExerciseRows(workoutAnatomyExercises({workout_exercises:[{exercise_name:'Bench Press',sort_order:2,workout_sets:[{reps:5}]}],result_data:{exercise_results:[custom,{exercise_name:'Bench Press',sets:[{reps:5}]}]}})).length,1)
+console.log('Completed complex and corrected evidence assertions passed')
