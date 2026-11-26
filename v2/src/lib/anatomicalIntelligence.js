@@ -6,7 +6,7 @@ const normalize=value=>String(value??'').normalize('NFKC').trim().toLowerCase().
 const cache=new WeakMap()
 export function anatomyForExercise(name){
  const profile=exerciseMuscleProfile(name)
- if(!profile)return null
+ if(!profile||!Array.isArray(profile.primary))return null
  if(cache.has(profile))return cache.get(profile)
  const used=new Set()
  const translate=keys=>Object.freeze((keys||[]).map(k=>keyMap[k]).filter(k=>k&&!used.has(k)&&(used.add(k),true)))
@@ -33,7 +33,17 @@ export const MUSCLE_LABELS=Object.freeze(Object.fromEntries(Object.entries(keyMa
 // Only explicit positive performed reps or duration constitute evidence here.
 // A prescribed weight, empty set or aggregate WOD score does not establish exercise completion.
 export function documentedExerciseRows(exercises){
- return (exercises??[]).flatMap(exercise=>(exercise.workout_sets??exercise.sets??[]).filter(set=>!['partial','failed'].includes(set.complex_status)&&[set.reps,set.time_seconds].some(v=>Number.isFinite(Number(v))&&Number(v)>0)).map(()=>({exerciseName:exercise.exercise_name,completed:true})))
+ return (exercises??[]).flatMap(exercise=>{
+  if(!exercise||exercise.is_rest)return []
+  const name=exercise.exercise_name||exercise.name
+  if(!name)return []
+  const positive=v=>v!=null&&String(v).trim()!==''&&Number.isFinite(Number(v))&&Number(v)>0
+  const sets=(exercise.workout_sets??exercise.sets??[]).filter(set=>set&&set.flow_status!=='skipped'&&!['partial','failed'].includes(set.complex_status)&&[set.reps,set.time_seconds].some(positive))
+  if(sets.length)return sets.map(()=>({exerciseName:name,completed:true}))
+  // Explicitly recorded erg measurements are evidence of movement, not strength sets.
+  if([exercise.meters,exercise.calories,exercise.work_seconds].some(positive))return [{exerciseName:name,completed:true}]
+  return []
+ })
 }
 // Planned movement occurrences, not performed sets or estimated muscle load.
 export function plannedAnatomyRows(items=[]){
@@ -68,19 +78,25 @@ export function historyAnatomyExercises(logs,days=7,now=new Date()){
  const iso=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')
  const seen=new Set()
  return (logs||[]).flatMap(log=>{
-  const data=log.result_data||{},date=log.workout_date
-  if(!date||date<iso(start)||date>iso(end)||log.id&&seen.has(log.id)||data.flow_completion_only||data.samspel?.team_score||data.wod_engine?.participation&&data.wod_engine.participation!=='individual')return []
+  const date=log.workout_date
+  if(!date||date<iso(start)||date>iso(end)||log.id&&seen.has(log.id))return []
   if(log.id)seen.add(log.id)
-  const recorded=log.workout_exercises||[],snapshots=Array.isArray(data.exercise_results)?data.exercise_results:[]
-  if(!recorded.length)return snapshots
-  return recorded.map((ex,i)=>{
-   const snapshot=snapshots[i]
-   // For complexes, only use explicitly completed cycles; unmatched evidence is unknown.
-   if(snapshot?.is_complex&&snapshot.complex_family==='custom'){
-    if(normalize(snapshot.exercise_name)!==normalize(ex.exercise_name))return {...ex,workout_sets:[]}
-    return {...ex,workout_sets:(snapshot.sets||[]).filter(s=>s.complex_status==='complete')}
-   }
-   return ex
-  })
+  return workoutAnatomyExercises(log)
+ })
+}
+
+// Shared evidence selection for an individual completed report and its history.
+export function workoutAnatomyExercises(log={}){
+ const data=log.result_data||{}
+ if(data.flow_completion_only||data.samspel?.team_score||data.wod_engine?.participation&&data.wod_engine.participation!=='individual')return []
+ const recorded=log.workout_exercises||log.exercises||[],snapshots=Array.isArray(data.exercise_results)?data.exercise_results:[]
+ if(!recorded.length)return snapshots
+ return [...recorded].sort((a,b)=>(a.sort_order??0)-(b.sort_order??0)).map((ex,i)=>{
+  const snapshot=snapshots[i],matches=snapshot&&normalize(snapshot.exercise_name)===normalize(ex.exercise_name)
+  if(snapshot?.is_complex&&snapshot.complex_family==='custom'){
+   if(!matches)return {...ex,workout_sets:[]}
+   return {...ex,workout_sets:(snapshot.sets||[]).filter(s=>s.complex_status==='complete')}
+  }
+  return matches?{...ex,meters:ex.meters??snapshot.meters,calories:ex.calories??snapshot.calories,work_seconds:ex.work_seconds??snapshot.work_seconds}:ex
  })
 }
