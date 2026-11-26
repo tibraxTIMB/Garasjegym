@@ -48,3 +48,6 @@ Plan review uses only saved plan snapshots for prescription; direct assignment r
 
 ## Continued P0/P1 checkpoint
 Dedicated Samspel correction for seven standalone templates (d46fa55d) changes the existing log only; status-changing corrections remain blocked, no database write test. Lastmeister prescription picker (990b5d6d) offers explicit kg values only, requires manual choice and compatibility. PT single-session entry now synchronizes date/plan slot, includes optional time and clears draft on client change. No production or schema changes. Full acceptance remains open.
+
+## Mission Control, Kameradschaft and acceptance checkpoint
+Dedicated result screen for all seven templates (d2e08cc1); profile shortcut restored (3a13ce06); isolated validation, production-target build and Frontdienst passed on 3a13ce06, responsive pending at observation. Quick Open Gym uses ordinary booking, explicit publication, no automatic enrolment; opt-in text drafts reuse social posts (bd0a70b1). Added real Training browser journey for manual Quality & Row, invalid empty contribution, draft reload, partial result, no personal PR; awaiting CI, not yet passed. No production deployment or database change. Composite Samspel and authenticated slot identity remain open. The 17 acceptance journeys are not fully verified.

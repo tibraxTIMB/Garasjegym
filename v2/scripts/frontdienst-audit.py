@@ -69,5 +69,42 @@ with sync_playwright() as pw:
         assert not errors,errors
         print(f"FRONTDIENST {w}x{h}: restore, discard cancel, offline save, reconnect, exact payload and single RPC passed",flush=True)
         ctx.close()
+    # A real manual Samspel result through Training, not a visual fixture.
+    ctx=browser.new_context(viewport={"width":390,"height":844},has_touch=True)
+    ctx.route("**/*",lambda route:route.continue_() if route.request.url.startswith(BASE+"/") else route.abort())
+    page=ctx.new_page()
+    errors=[]
+    page.on("pageerror",lambda error:errors.append(str(error)))
+    page.goto(URL,wait_until="domcontentloaded")
+    page.get_by_role("button",name="Etterregistrering",exact=False).click(timeout=15000)
+    page.get_by_role("button",name="WOD frå biblioteket",exact=False).click()
+    page.get_by_role("button",name="Audit Quality & Row",exact=False).click()
+    save=page.get_by_role("button",name="Lagre økt",exact=True)
+    expect(save).to_be_visible(timeout=15000)
+    expect(page.get_by_role("heading",name="Quality & Row",exact=True)).to_be_visible()
+    expect(page.get_by_role("button",name="Neste øving",exact=False)).to_have_count(0)
+    save.click()
+    expect(page.get_by_role("alert").filter(has_text="Utøvar 1")).to_be_visible()
+    page.locator('[data-result-field="samspel-1-quality"]').select_option("done")
+    page.locator('[data-result-field="samspel-2-quality"]').select_option("partial")
+    page.locator('[data-result-field="scoreDistance"]').fill("900")
+    keypad=page.get_by_role("complementary",name="Garasjegym taltastatur")
+    if keypad.is_visible():
+        keypad.get_by_role("button",name="Lukk taltastatur").click()
+    page.wait_for_function("(key)=>JSON.parse(localStorage.getItem(key)||'{}').scoreDistance==='900'",arg=DRAFT)
+    page.reload(wait_until="domcontentloaded")
+    expect(save).to_be_visible(timeout=15000)
+    expect(page.locator('[data-result-field="samspel-2-quality"]')).to_have_value("partial")
+    save.click()
+    page.wait_for_function("(key)=>JSON.parse(localStorage.getItem(key)||'[]').length===1",arg=WRITES,timeout=20000)
+    payload=page.evaluate("(key)=>JSON.parse(localStorage.getItem(key))[0].payload",WRITES)
+    assert payload["score_distance"]==900
+    assert payload["score_rounds"] is None and payload["score_reps"] is None
+    assert payload["result_data"]["completed"] is False
+    assert [r["quality_status"] for r in payload["result_data"]["samspel"]["participant_results"]]==["done","partial"]
+    assert not payload["result_data"].get("pr_victories")
+    assert not errors,errors
+    print("FRONTDIENST Quality & Row: validation, draft reload, partial result and single team payload passed",flush=True)
+    ctx.close()
     browser.close()
-print("FRONTDIENST AUDIT: 3 viewports passed",flush=True)
+print("FRONTDIENST AUDIT: 3 free-entry viewports and Quality & Row manual result passed",flush=True)

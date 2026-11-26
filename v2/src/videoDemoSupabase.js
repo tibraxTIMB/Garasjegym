@@ -1,5 +1,6 @@
 // Video recording only. Resolved through vite.video-demo.config.js and never
 // imported by the production app. No requests to Supabase are made here.
+import {qualityRowConfig} from './lib/samspel.js'
 const now = new Date()
 const future = new Date(now.getTime() + 86400000 * 3).toISOString()
 const scenario = () => new URLSearchParams(location.search).get('scenario') || ''
@@ -29,6 +30,7 @@ const demoWods = [{
   ]}},
 }]
 
+const auditQualityWod={id:'audit-quality',name:'Audit Quality & Row',format:'Eigen økt',duration_minutes:10,movements:'Bird dog',notes:'Isolert test',category:'flow_prep',is_published:true,is_archived:false,created_by:'demo-admin',created_at:now.toISOString(),timer_settings:{workout_schema:{format:'Eigen økt',duration_seconds:600,library_category:'flow_prep',flowReporting:'done',flowPurpose:'prep',samspel:qualityRowConfig(),items:[{exercise_name:'Bird dog',equipment:'Kroppsvekt',reps:6,levels:{rx:{reps:6,loadMode:'none'}}}],wod_engine:{participation:'partner',collaboration:'parallel',participant_count:2}}}}
 function rowsFor(table) {
   switch (table) {
     case 'garage_maintenance_schedule': return [{id:true,started_at:new Date(now.getTime()-1000*60*60*24*8).toISOString()}]
@@ -36,7 +38,7 @@ function rowsFor(table) {
     case 'pt_coaches': return [{id:'coach-demo',user_id:'demo-coach',public_name:'Garasje PT (døme)',bio:'Hjelp med teknikk, styrke og treningsglede.',specialties:['Styrke','Kom i gang'],is_active:true}]
     case 'pt_services': return [{id:'service-demo',title:'Uforpliktande prat',description:'Finn ut om PT passar for deg.',duration_label:'Etter avtale',price_label:'0 kr i denne demoen',is_active:true}]
     case 'pt_service_requests': return requests
-    case 'wods': return scenario()==='audit-folders'?[...demoWods,{...demoWods[0],id:'folder-wod-1',name:'Z – Første økt'},{...demoWods[0],id:'folder-wod-2',name:'A – Andre økt'}]:demoWods
+    case 'wods': return scenario()==='audit-frontdienst'?[...demoWods,auditQualityWod]:scenario()==='audit-folders'?[...demoWods,{...demoWods[0],id:'folder-wod-1',name:'Z – Første økt'},{...demoWods[0],id:'folder-wod-2',name:'A – Andre økt'}]:demoWods
     case 'wod_favorites': case 'wod_daily_schedules': case 'exercise_favorites': return []
     case 'classes': return [{id:'demo-class',title:'Garasjesirkel (døme)',type:'Gruppetime',starts_at:future,duration_minutes:45,capacity:6,published:true,cancelled_at:null,description:'Ei fellesøkt med roing, styrke og mobilitet.',workout_text:'45 min trening',wod_ids:[]}]
     case 'class_bookings': return bookings
