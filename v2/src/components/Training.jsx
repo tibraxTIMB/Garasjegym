@@ -1268,6 +1268,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
 
   function returnToWorkoutTypes() {
     if(saveLock.current)return
+    if(submissionRef.current?.saveToken===saveToken||readWorkoutSubmission(memberId,saveToken)){leaveWorkout();return}
     if (mode === 'active') {
       const hasUnsavedWorkout = sessionPrepared || manualEntry || timerSnapshot.elapsed > 0 || items.some(item=>item.exercise_name.trim())
       const untouchedWod=Boolean(source)&&!manualEntry&&canLeavePreparedWod(timerSnapshot)
@@ -1658,6 +1659,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       })
       if(saveError)throw saveError
       if(!workoutId)throw new Error('Databasen returnerte ikkje ID for den lagra økta.')
+      validated=false // Server acknowledged the write; refresh failures must not retry it.
       clearWorkoutSubmission(memberId,saveToken);submissionRef.current=null;clearWorkoutDraft(memberId)
       pendingSave.current=null;setSyncNotice('')
       const programSyncMessage = ''
