@@ -24,3 +24,7 @@ The production migration ledger contained 179 entries. A filename-version scan a
 - Reconcile remaining timestamp matches by content as needed; a filename match is not equivalence.
 - Use the existing Safehouse/DATABUNKER tool on the owner's PC. The structural receipt checks and actual restore are different: verify SHA256SUMS, correct project, Auth/public data, source ZIP, and restore into a disposable local instance; never restore onto production merely to test. Do not commit the database dump or receipt containing personal data.
 - Review advisor findings in a restricted channel. Do not revoke legitimate app RPC access or remove indexes on warning counts alone.
+
+## Isolated verification
+
+The exact installed ORDRE006 schema prefix (without production inventory seed) is now retained in `v2/supabase/preflight/ordnung006_installed_schema_rehearsal.sql`. [Run 45902426913](https://github.com/tibraxTIMB/Garasjegym/actions/runs/45902426913) passed the synthetic role checks and actual PostgreSQL 17 custom-format dump/restore. This resolves the schema-source gap for the excerpt; the production seed remains private and is not part of a public replay. Full production-role behavior and the owner's actual DATABUNKER are not certified by this test.

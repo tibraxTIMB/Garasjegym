@@ -66,3 +66,7 @@ GitHub compare verified 21 ancestors, of which 19 are archive candidates and two
 3. `v2/README.md`: implementation and local developer commands.
 4. `v2/OPERATION_MEISTERWERK.md`, `v2/WERKSTATT_PC_COMPANION.md`, `v2/WERKSTATT_TABLET_LAB.md`: module-specific design.
 5. Other historical operation reports and migrations: historical evidence, not new instructions to deploy.
+
+## Maintenance checkpoint – 2026-11-26
+
+PR #12 merged after successful [installed-schema role and synthetic restore rehearsal](https://github.com/tibraxTIMB/Garasjegym/actions/runs/45902426913) and [build](https://github.com/tibraxTIMB/Garasjegym/actions/runs/45902434517). This is test infrastructure only, not a new app release. See [ORDRE006 rehearsal](ORDRE006_REHEARSAL.md). Actual owner's DATABUNKER restore remains unverified; project display-name change and branch deletion require tooling/owner-side access. No live database writes or deletion authorized by this checkpoint.
