@@ -12,7 +12,7 @@ import { Music, MusicMiniPlayer } from './Music.jsx'
 import { readDeviceProfile, useDeviceProfile } from '../lib/deviceLayout.js'
 import { getWodSchemaItems, sortWodItems } from '../lib/wodOrdering.js'
 import { formatComplexSequence } from '../lib/wodComplexes.js'
-import {samspelConfig,samspelRotation,samspelIsTimed,samspelResultIssue,samspelRoundInstruction} from '../lib/samspel.js'
+import {samspelConfig,samspelRotation,samspelIsTimed,samspelIsManual,normalizeSamspelSwaps,appendSamspelSwap,samspelResultIssue,samspelRoundInstruction} from '../lib/samspel.js'
 import {cardParts,cardTone,cardDose} from '../lib/wodCard.js'
 import './wod-architect.css'
 import { formatParticipation, normalizeWodEngine, isEmomFormat, emomIntervalSeconds, emomDisplayLabel, emomPrescribedSetCount } from '../lib/wodEngine.js'
@@ -120,6 +120,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const scheduledStartedAt = useRef(null)
   const [phase, setPhase] = useState(() => resumeState?.phase || 'Klar')
   const [laps, setLaps] = useState(() => Array.isArray(resumeState?.laps) ? resumeState.laps : [])
+  const [samspelSwaps,setSamspelSwaps]=useState(()=>normalizeSamspelSwaps(resumeState?.samspel_swaps))
   const [soundOn, setSoundOn] = useState(()=>{try{return localStorage.getItem('garasjegym.timer.audio_profile')!=='silent'&&localStorage.getItem('garasjegym.timer.sound_enabled')!=='off'}catch{return true}})
   useEffect(()=>{try{localStorage.setItem('garasjegym.timer.sound_enabled',soundOn?'on':'off')}catch{}},[soundOn])
   const [roundGuardSeconds,setRoundGuardSeconds]=useState(()=>{try{const n=Number(localStorage.getItem('garasjegym.timer.round_guard'));return [1,2,3,5,10].includes(n)?n:5}catch{return 5}})
@@ -358,7 +359,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     timerRunStartedAt.current = null
     timerRunBaseElapsed.current = 0
     elapsedRef.current = 0
-    clearManualAction(); setElapsed(0); setRunning(false); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setPhase('Klar'); setLaps([])
+    clearManualAction(); setElapsed(0); setRunning(false); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setPhase('Klar'); setLaps([]); setSamspelSwaps([])
     setHasStarted(false); setCountdownDeadline(null); setCountdownRemaining(0); scheduledStartedAt.current = null
     setWorkSeconds(getDefaultWorkSeconds(format,timerSettings))
     setRestSeconds(getDefaultRestSeconds(format,timerSettings))
@@ -377,7 +378,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     setRound(1)
     setDeathByCompletedRounds(0)
     setLadderCompletedRounds(0)
-    setLaps([])
+    setLaps([]); setSamspelSwaps([])
     setDurationOverride(null); setEmomEveryOverride(null)
     setWorkSeconds(getDefaultWorkSeconds(format,timerSettings))
     setRestSeconds(getDefaultRestSeconds(format,timerSettings))
@@ -469,7 +470,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     return undefined
   }, [running])
 
-  useEffect(() => { onSnapshot({ elapsed, laps, roundsCompleted: isDeathBy ? deathByCompletedRounds : isLadder ? ladderCompletedRounds : (isStationCircuit||isTimedInterval) ? fixedSlotState.roundsCompleted : isEMOM ? Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)) : (isAmrap||plannedForTimeRounds) ? laps.length : round, death_by_completed_rounds:isDeathBy?deathByCompletedRounds:null, death_by_failed_round:isDeathBy?deathByStatus.failedRound:null, death_by_interval_seconds:isDeathBy?deathByStatus.intervalSeconds:null, ladder_completed_rounds:isLadder?ladderCompletedRounds:null, ladder_finished:isLadder?ladderProgress.finished:null, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isDeathBy||isTimedInterval||isStationCircuit||hasTimeCap, currentRound, hasStarted, countdownDeadline, savedAt:Date.now() }) }, [elapsed, laps, round, deathByCompletedRounds, ladderCompletedRounds, phase, running, isCountdown, isDeathBy, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, primaryTime, currentRound, hasStarted, countdownDeadline])
+  useEffect(() => { onSnapshot({ elapsed, laps, samspel_swaps:samspelIsManual(samspel)?samspelSwaps:[], roundsCompleted: isDeathBy ? deathByCompletedRounds : isLadder ? ladderCompletedRounds : (isStationCircuit||isTimedInterval) ? fixedSlotState.roundsCompleted : isEMOM ? Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)) : (isAmrap||plannedForTimeRounds) ? laps.length : round, death_by_completed_rounds:isDeathBy?deathByCompletedRounds:null, death_by_failed_round:isDeathBy?deathByStatus.failedRound:null, death_by_interval_seconds:isDeathBy?deathByStatus.intervalSeconds:null, ladder_completed_rounds:isLadder?ladderCompletedRounds:null, ladder_finished:isLadder?ladderProgress.finished:null, phase, running, remaining:remainingTotal, displayTime:primaryTime, countdown:isCountdown||isEMOM||isDeathBy||isTimedInterval||isStationCircuit||hasTimeCap, currentRound, hasStarted, countdownDeadline, savedAt:Date.now() }) }, [elapsed, laps, samspelSwaps, samspel, round, deathByCompletedRounds, ladderCompletedRounds, phase, running, isCountdown, isDeathBy, onSnapshot, isStationCircuit, cycle, stationCount, stationPlan.rounds, schema?.rounds, rounds, remainingTotal, primaryTime, currentRound, hasStarted, countdownDeadline])
 
   useEffect(() => {
     if (!running) return
@@ -526,8 +527,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const showTimeCap = hasTimeCap
   const roundsShown = isTimedInterval ? Math.min(currentRound, Number(rounds)) : currentRound
   const completedRounds = (isAmrap||plannedForTimeRounds) ? laps.length : isLadder ? ladderCompletedRounds : isEMOM ? Math.min(Math.floor(target/emomCycle),Math.floor(elapsed/emomCycle)) : (isStationCircuit||isTimedInterval) ? fixedSlotState.roundsCompleted : round
-  const samspelState=samspel?samspelRotation(samspel,{rounds:completedRounds,elapsed,target}):null
-  const samspelDisplay=samspelState&&<div className="gg-samspel-roles" aria-label="Aktuelle partnarroller" style={{flexWrap:'wrap'}}>{samspelState.roles.map((role,i)=><span key={i} className={role==='AMRAP'?'gg-samspel-amrap':'gg-samspel-erg'}><small>P{i+1}</small> {role}</span>)}{samspelState.timed&&samspelState.nextSwitchSeconds!==null&&<strong style={{flexBasis:'100%'}}>Byte om {clock(samspelState.nextSwitchSeconds)}</strong>}<small style={{flexBasis:'100%'}}>{samspelRoundInstruction(samspel)}</small></div>
+  const samspelState=samspel?samspelRotation(samspel,{rounds:completedRounds,elapsed,target,manualSwaps:samspelSwaps}):null
+  const samspelDisplay=samspelState&&<div className="gg-samspel-roles" aria-label="Aktuelle partnarroller" style={{flexWrap:'wrap'}}>{samspelState.roles.map((role,i)=><span key={i} className={role==='AMRAP'?'gg-samspel-amrap':'gg-samspel-erg'}><small>P{i+1}</small> {role}</span>)}{samspelState.timed&&samspelState.nextSwitchSeconds!==null&&<strong style={{flexBasis:'100%'}}>Byte om {clock(samspelState.nextSwitchSeconds)}</strong>}{samspelIsManual(samspel)&&<div style={{flexBasis:'100%',display:'flex',gap:6,alignItems:'center',flexWrap:'wrap'}}><button type="button" className="secondary-button" disabled={!running||timerLimitReached||(samspelSwaps.length>0&&elapsed-samspelSwaps[samspelSwaps.length-1]<2)} onClick={()=>setSamspelSwaps(old=>appendSamspelSwap(samspel,old,{elapsed,running,target}))}>Byt rolle</button><small>{samspelSwaps.length} byte</small><button type="button" className="text-button" disabled={!samspelSwaps.length||running} onClick={()=>setSamspelSwaps(old=>old.slice(0,-1))}>Angra byte (pause)</button></div>}<small style={{flexBasis:'100%'}}>{samspelRoundInstruction(samspel)}</small></div>
   const lapAction = () => { if(!running||timerLimitReached||!claimManualAction('round'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); setRound(value => value + 1); if(plannedForTimeRounds&&laps.length+1>=plannedForTimeRounds){setRunning(false);setPhase('FERDIG');playSignal('finish')}else playSignal('registered') }
   const splitAction = () => { if(!running||timerLimitReached||!claimManualAction('split'))return; setLaps(value => [...value, splitDuration(elapsed, value)]); playSignal('registered') }
   const undoManualAction=()=>{
@@ -614,7 +615,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const requestFinish=()=>{if(!hasStarted)return;if(running&&!stageIsComplete){setFinishConfirm(true);setStagePanel('finish')}else finishCurrent()}
   const manualButtonVisible=hasStarted&&(isAmrap||isLadder||isDeathBy||isStopwatch||isForTime)
   const manualButtonDisabled=!running||timerLimitReached||manualLockSeconds>0||(isLadder&&ladderProgress.finished)||(isDeathBy&&!deathByStatus.canConfirm)
-  const manualButtonText=(isAmrap||plannedForTimeRounds)?(samspel&&!samspelIsTimed(samspel)?'RUNDE FULLFØRT · BYT':'RUNDE FULLFØRT'):isLadder?`TRINN FULLFØRT · ${ladderProgress.targetReps} REPS`:isDeathBy?`FULLFØRT ${deathByStatus.targetReps} REPS`:'MELLOMTID'
+  const manualButtonText=(isAmrap||plannedForTimeRounds)?(samspel&&!samspelIsTimed(samspel)&&!samspelIsManual(samspel)?'RUNDE FULLFØRT · BYT':'RUNDE FULLFØRT'):isLadder?`TRINN FULLFØRT · ${ladderProgress.targetReps} REPS`:isDeathBy?`FULLFØRT ${deathByStatus.targetReps} REPS`:'MELLOMTID'
   const manualButton=<button type="button" className={'gg-manual-action'+(manualLockSeconds>0?' is-registered':'')+(buttonSize==='xl'?' is-xl':'')} onClick={(isAmrap||plannedForTimeRounds)?lapAction:isLadder?completeLadderRound:isDeathBy?completeDeathByRound:splitAction} disabled={manualButtonDisabled} aria-label={manualLockSeconds>0?'Registrert – sperra mot dobbelttrykk':manualButtonText}>
     {manualLockSeconds>0?<CheckCircle2 size={27}/>:<Plus size={27}/>}<span><b>{manualLockSeconds>0?(canUndoManual?'REGISTRERT':'STADFESTA'):manualButtonText}</b>{manualLockSeconds>0&&<small>Vent {manualLockSeconds} sek</small>}</span>
   </button>
@@ -645,7 +646,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       <a href={(import.meta.env.BASE_URL||'/')+'audio/'+SOUND_PACK_VERSION+'/credits.txt'} target="_blank" rel="noreferrer">Lydkjelder og lisens</a>
     </details>
   </div>
-  const resetTimer = () => { stopPackAudio(sharedTrainingAudioContext);stopDirectAudio();clearManualAction(); timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; scheduledStartedAt.current=null; setCountdownDeadline(null);setCountdownRemaining(0); setRunning(false); setElapsed(0); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setLaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
+  const resetTimer = () => { stopPackAudio(sharedTrainingAudioContext);stopDirectAudio();clearManualAction(); timerRunStartedAt.current = null; timerRunBaseElapsed.current = 0; elapsedRef.current = 0; scheduledStartedAt.current=null; setCountdownDeadline(null);setCountdownRemaining(0); setRunning(false); setElapsed(0); setRound(1); setDeathByCompletedRounds(0); setLadderCompletedRounds(0); setLaps([]); setSamspelSwaps([]); setPhase('Klar'); setHasStarted(false); setConfirmReset(false); setStagePanel(null) }
   return <div ref={timerContainerRef} className={stageVisible ? 'engine-timer timer-focused timer-customized' : 'engine-timer timer-customized'} style={{ '--timer-clock-size': `${appearance.clockSize}px`, '--timer-accent': appearance.accent }}>
     {stageVisible ? <section className={'gg-live-timer'+(stageLapHistory.length?' gg-live-timer--with-laps':'')+(manualButtonVisible?' gg-live-timer--manual':'')+(buttonSize==='xl'?' gg-live-timer--xl':'')+(!showMusic?' gg-live-timer--no-music':'')} aria-label="Fullskjermsklokke for treningsøkt">
       <header className="gg-live-timer__header">
@@ -1577,7 +1578,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         score_time_seconds:parsedTime,
         load_kg:scoreLoad===''?null:Number(scoreLoad),
         calories:scoreCalories===''?null:Number(scoreCalories),
-        distance:scoreDistance===''?null:Number(scoreDistance),distance_unit:sessionSamspel?.metric==='distance'?'m':scoreUnit,samspel:sessionSamspel?{...sessionSamspel,team_score:true}:null,
+        distance:scoreDistance===''?null:Number(scoreDistance),distance_unit:sessionSamspel?.metric==='distance'?'m':scoreUnit,samspel:sessionSamspel?{...sessionSamspel,team_score:true,...(samspelIsManual(sessionSamspel)&&!manualEntry?{manual_swaps:normalizeSamspelSwaps(timerSnapshot.samspel_swaps)}:{})}:null,
         block_primary_results:explicitResults,
         complex_results:items.filter(item=>item.is_complex&&item.complex_family==='custom').map(item=>({block_id:item.block_id||null,name:item.exercise_name,steps:item.complex_steps,...complexResultSummary(item)})),
         exercise_results:items.map(item=>({block_id:item.block_id||null,exercise_name:item.exercise_name,side_mode:item.side_mode||null,is_complex:!!item.is_complex,complex_family:item.complex_family||null,complex_steps:Array.isArray(item.complex_steps)?item.complex_steps.map(step=>({exercise_id:step.exercise_id||null,name:step.name,reps:Number(step.reps)||1})):[],row_value:item.rowValue===''?null:Number(item.rowValue),row_unit:item.rowUnit||null,meters:item.rowUnit==='m'?Number(item.rowValue)||null:item.rowUnit==='km'?(Number(item.rowValue)||0)*1000||null:null,calories:item.rowUnit==='cal'?Number(item.rowValue)||null:null,work_seconds:item.rowUnit==='s'?Number(item.rowValue)||null:item.rowUnit==='min'?(Number(item.rowValue)||0)*60||null:null,sets:item.sets.map(s=>({flow_status:s.flow_status||null,complex_status:item.is_complex&&item.complex_family==='custom'?s.complex_status||null:null,reps:s.reps===''?null:Number(s.reps),load_kg:s.load_kg===''?null:Number(s.load_kg),time_seconds:s.time_seconds===''?null:Number(s.time_seconds),time_text:s.time_text||null,height_cm:s.height_cm===''?null:Number(s.height_cm),rir:s.rir===''||s.rir==null?null:Number(s.rir)}))}))
