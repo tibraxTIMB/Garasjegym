@@ -40,10 +40,10 @@ with sync_playwright() as pw:
     for w,h in sizes:
         context=browser.new_context(viewport={"width":w,"height":h},has_touch=True,is_mobile=w<600,device_scale_factor=1,locale="nn-NO",color_scheme="dark",reduced_motion="reduce")
         context.route("**/*",lambda route:route.continue_() if route.request.url.startswith(BASE) else route.abort())
-        for screen in ["flow","card","builder","pt","plan","select","acta","picker","assign"]:
+        for screen in ["flow","card","builder","pt","pt-workbench","plan","select","acta","picker","assign"]:
             page=None
             try:
-                page,errors=open_page(context,f"/ui-audit.html?scenario={'audit-pt-plan' if screen=='pt' else 'audit-admin' if screen in ('builder','assign') else 'audit-member'}&screen={screen}")
+                page,errors=open_page(context,f"/ui-audit.html?scenario={'audit-pt-plan' if screen in ('pt','pt-workbench') else 'audit-admin' if screen in ('builder','assign') else 'audit-member'}&screen={screen}")
                 check(page,screen,w,h)
                 if screen=="flow":
                     field=page.get_by_role("textbox",name="Arbeidsvekt kg")
@@ -114,6 +114,22 @@ with sync_playwright() as pw:
                     check(page,"pt-assign-selected",w,h)
                     sheet.get_by_role("button",name="Lukk tildeling").tap()
                     assert sheet.count()==0
+                if screen=="pt-workbench":
+                    bench=page.get_by_role("region",name="Kva vil du gjera med kunden?")
+                    bench.wait_for(timeout=15000)
+                    bench.get_by_role("button",name="Tildel WOD",exact=True).tap()
+                    assign=page.get_by_role("dialog",name="Tildel WOD til",exact=False)
+                    assign.wait_for()
+                    assert "Demomedlem" in assign.inner_text()
+                    check(page,"pt-workbench-assign",w,h)
+                    assign.get_by_role("button",name="Lukk tildeling").tap()
+                    assert assign.count()==0
+                    bench.get_by_role("button",name="Jobb med treningsplan",exact=True).tap()
+                    page.locator(".pt-compact-plan").wait_for()
+                    page.get_by_role("button",name="Arbeidsflate",exact=True).tap()
+                    bench.wait_for()
+                    assert assign.count()==0
+                    check(page,"pt-workbench-return",w,h)
                 if screen=="pt":
                     card=page.locator(".pt-compact-session").first
                     card.wait_for()
