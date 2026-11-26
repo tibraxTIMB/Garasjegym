@@ -427,3 +427,9 @@ export function samspelTemplateChoice(key,{format,interval=60,duration=600,compo
  const config=factories[key]()
  return {config,name:samspelTemplateName(config),format:['quality','recovery'].includes(key)?'Eigen økt':format,collaboration:key==='relay'?'you_go_i_go':key==='chipper'?'free_split':'parallel'}
 }
+
+// Standalone templates have their own measured contributions. Legacy Samspel
+// retains its original result pages and its original aggregate scoring.
+export function samspelDedicatedResults(s){
+ return !!samspelConfig({samspel:s})&&['quality','recovery','emom','double_emom','strength','relay','chipper'].includes(s.main_track)
+}

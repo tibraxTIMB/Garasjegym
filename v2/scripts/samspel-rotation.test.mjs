@@ -300,3 +300,8 @@ assert.equal(samspelTemplateChoice('relay',{format:'AMRAP'}).collaboration,'you_
 assert.equal(samspelTemplateChoice('chipper',{format:'Chipper'}).collaboration,'free_split')
 assert.equal(samspelTemplateChoice('quality',{format:'AMRAP'}).format,'Eigen økt')
 assert.equal(samspelTemplateName(samspelTemplateChoice('double_emom',{format:'EMOM'}).config),'Double EMOM')
+
+import {samspelDedicatedResults} from '../src/lib/samspel.js'
+for(const template of [quality,engineSwap,iron,double,recovery,relay,chipper])assert.equal(samspelDedicatedResults(template),true)
+assert.equal(samspelDedicatedResults(null),false)
+assert.equal(samspelDedicatedResults({version:2,mode:'parallel_round_swap',participant_count:2,task:'row',metric:'distance'}),false)
