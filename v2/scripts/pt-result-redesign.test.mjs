@@ -112,3 +112,16 @@ test('EMOM prescription follows saved minute slots and standalone rotation',()=>
  const specific={...schema,items:[{...schema.items[0],minute_slot:'1, 4, 7'},schema.items[1]]}
  assert.match(ptPrescribedWorkContext(multi,specific,{exercise_name:'Strict press',sets:[]}).text,/3 planlagde intervall × 5 reps/)
 })
+
+import {ptTeamResult,ptTeamSummary,ptResultSummary} from '../src/lib/ptWodReview.js'
+test('PT Samspel review keeps team evidence separate from individual prescription',()=>{
+ const s={version:2,mode:'parallel_round_swap',main_track:'chipper',participant_count:2,switch_rule:'fixed',individual_scores:true,targets:[{exercise_name:'Squat',target_reps:10}],participant_results:[{slot:1,chipper_reps:[3]},{slot:2,chipper_reps:[6]}]}
+ const log={format:'Chipper',score_load_kg:99,score_time_seconds:120,result_data:{samspel:s,participation_verified:'individual',completed:false,elapsed_seconds:120}}
+ assert.equal(ptTeamResult(log),true)
+ assert.equal(ptTeamSummary(log).find(x=>x.label==='Felles øvingsmål').value,'0 / 1')
+ assert.equal(ptResultSummary(log).some(x=>x.label==='Tungaste løft'),false)
+ assert.equal(ptReviewHighlights(log).find(x=>x.label==='Status').value,'Delvis / ikkje stadfesta')
+ assert.equal(ptPrescribedWorkContext({...log,format:'EMOM'},{items:[{exercise_name:'Squat',reps:5}]},{exercise_name:'Squat',sets:[]}).kind,'unconfirmed')
+ assert.equal(ptTeamResult({result_data:{wod_engine:{participation:'partner'}}}),true)
+ assert.equal(ptTeamResult({result_data:{wod_engine:{participation:'individual'}}}),false)
+})

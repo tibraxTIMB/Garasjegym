@@ -4,7 +4,7 @@ import {workoutAnatomyExercises} from '../lib/anatomicalIntelligence.js'
 import {useEffect,useMemo,useState} from 'react'
 import {ArrowLeft,Award,CheckCircle2,ChevronDown,MessageSquareText,Send,ShieldCheck} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
-import {dosageLabel,formatDuration,pacingReview,plannedDoseForExercise,ptDosingOptions,ptIsAmrapPart,ptPartCompletion,ptPartScore,ptPrescribedWorkContext,ptReviewHighlights,ptRoundSplits,validRoundSplits} from '../lib/ptWodReview.js'
+import {dosageLabel,formatDuration,pacingReview,plannedDoseForExercise,ptDosingOptions,ptIsAmrapPart,ptPartCompletion,ptPartScore,ptPrescribedWorkContext,ptReviewHighlights,ptTeamResult,ptRoundSplits,validRoundSplits} from '../lib/ptWodReview.js'
 
 const formattedDate=value=>value?new Date(value+'T12:00:00').toLocaleDateString('nn-NO',{day:'numeric',month:'long',year:'numeric'}):'Dato ikkje registrert'
 const array=value=>Array.isArray(value)?value:[]
@@ -47,6 +47,7 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
  const laps=useMemo(()=>validRoundSplits(result),[result])
  const metrics=useMemo(()=>ptReviewHighlights(result),[result])
  const isAmrap=String(result?.format||'').toLowerCase()==='amrap'||['couplet','triplet'].includes(String(result?.format||'').toLowerCase())&&result?.result_data?.combination_mode==='AMRAP'
+ const teamResult=ptTeamResult(result)
  const exerciseResults=array(result?.result_data?.exercise_results)
  const blockResults=array(result?.result_data?.block_summary)
  const firstAmrapPart=blockResults.findIndex(ptIsAmrapPart)
@@ -101,6 +102,7 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
    <div className="ptreview-metrics" aria-label="Resultatsamandrag">
     {metrics.map(m=><div className="ptreview-metric" key={m.label}><strong>{m.value}</strong><small>{m.label}</small></div>)}
    </div>
+   {teamResult&&<p className="ptreview-insight is-note">Lagøkt · utøvarplassane er ikkje knytte til medlemsidentitet. Bruk resultata som samtalegrunnlag, ikkje som personleg progresjon.</p>}
    <SamspelParticipantResults samspel={result.result_data?.samspel}/>
    {result.result_data?.time_cap_reached&&<p className="ptreview-insight is-review">Tidsgrensa vart nådd. For Time-resultat må vurderast ut frå faktisk gjennomført arbeid, ikkje som automatisk fullføring.</p>}
    {blockResults.length>0&&<section className="ptreview-blocks" aria-label="Resultat per øktdel">
@@ -126,12 +128,12 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
      </details>
     })}
    </section>}
-   {!blockResults.length&&isAmrap&&<details className="ptreview-disclosure" defaultOpen>
+   {!teamResult&&!blockResults.length&&isAmrap&&<details className="ptreview-disclosure" defaultOpen>
     <summary><span className="ptreview-disclosure-main"><strong>Rundetider og disponering</strong><small>AMRAP · registrerte rundar</small></span><ChevronDown size={18}/></summary>
     <div className="ptreview-disclosure-content">{renderPacing(laps)}</div>
    </details>}
-   {exerciseResults.length>0&&(result.result_data?.participation_verified!=='individual'?<small>{result.result_data?.participation_verified==='team'?'Lagresultat · ikkje grunnlag for personleg muskelkart.':'Individuell gjennomføring er ikkje stadfesta i PT-resultatgrensesnittet. Muskelkart blir ikkje gjetta.'}</small>:<AnatomyEvidence exercises={workoutAnatomyExercises(result)} scope="Denne PT-økta"/>)}
-   {exerciseResults.length>0&&<details className="ptreview-disclosure ptreview-dose">
+   {exerciseResults.length>0&&(teamResult||result.result_data?.participation_verified!=='individual'?<small>{result.result_data?.participation_verified==='team'?'Lagresultat · ikkje grunnlag for personleg muskelkart.':'Individuell gjennomføring er ikkje stadfesta i PT-resultatgrensesnittet. Muskelkart blir ikkje gjetta.'}</small>:<AnatomyEvidence exercises={workoutAnatomyExercises(result)} scope="Denne PT-økta"/>)}
+   {!teamResult&&exerciseResults.length>0&&<details className="ptreview-disclosure ptreview-dose">
     <summary><span className="ptreview-disclosure-main"><strong><CheckCircle2 size={16}/> Planlagt og utført dosering</strong><small>{exerciseResults.length} øvingar · opna for sett, reps og vekt</small></span><ChevronDown size={18}/></summary>
     <div className="ptreview-disclosure-content">
      <p className="ptfollow-footnote">Når ein AMRAP- eller EMOM-del er registrert gjennomført, er WOD-oppsettet utgangspunktet dersom ingen avvik er meldt. Separate sett, repetisjonar og vekter blir berre viste som målingar når dei faktisk er registrerte.</p>

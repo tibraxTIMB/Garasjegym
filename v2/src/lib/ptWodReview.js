@@ -1,3 +1,4 @@
+import {samspelConfig,teamChipperProgress} from './samspel.js'
 /** PT follow-up metrics derived solely from a workout explicitly linked to a PT assignment. */
 export function validRoundSplits(result) {
  const values=result?.result_data?.split_seconds
@@ -17,8 +18,27 @@ export function formatDuration(seconds) {
  const n=Math.max(0,Math.round(Number(seconds)||0))
  return n>=3600?`${Math.floor(n/3600)}:${String(Math.floor(n%3600/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`:`${Math.floor(n/60)}:${String(n%60).padStart(2,'0')}`
 }
+export function ptTeamResult(result){
+ const d=result?.result_data||{}
+ return !!d.samspel||d.participation_verified==='team'||['partner','team'].includes(d.wod_engine?.participation)
+}
+export function ptTeamSummary(result){
+ const d=result?.result_data||{},s=d.samspel,rows=Array.isArray(s?.participant_results)?s.participant_results:[]
+ const metrics=[{label:'Resultattype',value:'Lagøkt'}]
+ if(d.completed===false||d.completion_status==='incomplete')metrics.push({label:'Status',value:'Delvis / ikkje stadfesta'})
+ else if(d.completed===true)metrics.push({label:'Status',value:'Registrert fullført'})
+ const time=Number(d.elapsed_seconds||result?.score_time_seconds)
+ if(Number.isFinite(time)&&time>0)metrics.push({label:'Medgått tid',value:formatDuration(time)})
+ if(s?.main_track==='chipper'&&samspelConfig({samspel:s})){
+  const progress=teamChipperProgress(s,rows)
+  metrics.push({label:'Felles øvingsmål',value:progress.filter(x=>x.complete).length+' / '+progress.length})
+ }else if(s?.main_track==='relay'&&result.score_rounds!=null&&Number.isSafeInteger(Number(result.score_rounds)))metrics.push({label:'Lagets rundar',value:Number(result.score_rounds)})
+ if(rows.length)metrics.push({label:'Utøvarplassar registrerte',value:rows.length})
+ return metrics
+}
 export function ptResultSummary(result) {
  if(!result)return []
+ if(ptTeamResult(result))return ptTeamSummary(result)
  const d=result.result_data||{}
  const f=String(result.format||'').toLowerCase()
  const metrics=[]
@@ -101,6 +121,7 @@ export function ptRoundSplits(result,part=null) {
 }
 export function ptReviewHighlights(result) {
  if(!result)return []
+ if(ptTeamResult(result))return ptTeamSummary(result)
  const parts=Array.isArray(result.result_data?.block_summary)?result.result_data.block_summary:[]
  if(!parts.length)return ptResultSummary(result)
  const out=[]
@@ -119,6 +140,7 @@ export function ptReviewHighlights(result) {
  */
 export function ptPrescribedWorkContext(result,schema,exercise) {
  if(!result||!exercise)return null
+ if(ptTeamResult(result))return {kind:'unconfirmed',text:'Lagresultat: sjå registrerte bidrag per utøvarplass. Planlagd dosering eller lagets resultat stadfestar ikkje kunden sine individuelle repetisjonar, vekter eller sett.'}
  const blocks=Array.isArray(result.result_data?.block_summary)?result.result_data.block_summary:[]
  const part=exercise.block_id?blocks.find(block=>String(block.id)===String(exercise.block_id)):null
  const format=String(part?.format||result.format||'').toLowerCase()
