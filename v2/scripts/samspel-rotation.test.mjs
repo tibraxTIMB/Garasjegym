@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {samspelConfig,samspelIssue,samspelRoles,samspelResultIssue,samspelScoring,samspelWithCount,samspelRoundInstruction} from '../src/lib/samspel.js'
+import {samspelConfig,samspelIssue,samspelRoles,samspelResultIssue,samspelScoring,samspelWithCount,samspelRoundInstruction,samspelWithSwitch,samspelRotation,samspelIsTimed} from '../src/lib/samspel.js'
 const legacy={version:1,mode:'parallel_round_swap',task:'row',metric:'distance'}
 const context={format:'AMRAP',participation:'partner',collaboration:'parallel',items:[{name:'Push-up'}]}
 assert.equal(samspelConfig({samspel:legacy}),legacy)
@@ -28,3 +28,21 @@ assert.equal(samspelResultIssue(team,0),null)
 assert.ok(samspelResultIssue(team,''))
 assert.deepEqual(samspelScoring(team,{}),{type:'multi',fields:['rounds_reps','distance']})
 console.log('Samspel rotation checks passed')
+
+const timed=samspelWithSwitch(team,'time',60)
+assert.equal(samspelIsTimed(timed),true)
+assert.equal(samspelIssue(timed,{...context,participation:'team',participantCount:4}),null)
+assert.deepEqual(samspelRotation(timed,{elapsed:0,target:180,rounds:5}),{roles:['Romaskin','AMRAP','AMRAP','AMRAP'],nextSwitchSeconds:60,timed:true})
+assert.equal(samspelRotation(timed,{elapsed:59,target:180}).nextSwitchSeconds,1)
+assert.equal(samspelRotation(timed,{elapsed:60,target:180}).roles[1],'Romaskin')
+assert.deepEqual(samspelRotation(timed,{elapsed:60,target:180,rounds:99}),samspelRotation(timed,{elapsed:60,target:180,rounds:0}))
+assert.equal(samspelRotation(timed,{elapsed:120,target:180}).nextSwitchSeconds,null)
+assert.equal(samspelRotation(timed,{elapsed:180,target:180}).roles[2],'Romaskin')
+assert.equal(samspelRotation(timed,{elapsed:200,target:180}).roles[2],'Romaskin')
+assert.equal(samspelRotation(timed,{elapsed:60,target:60}).roles[0],'Romaskin')
+assert.ok(samspelIssue(samspelWithSwitch(team,'time',14),{...context,participation:'team',participantCount:4}))
+assert.ok(samspelIssue(samspelWithSwitch(team,'time',601),{...context,participation:'team',participantCount:4}))
+assert.ok(samspelIssue(samspelWithSwitch(team,'time',15.5),{...context,participation:'team',participantCount:4}))
+assert.equal(samspelIsTimed(samspelWithSwitch(timed,'round')),false)
+assert.equal(samspelRotation(legacy,{elapsed:300,rounds:1}).roles[1],'Romaskin')
+console.log('Timed Samspel swap checks passed')
