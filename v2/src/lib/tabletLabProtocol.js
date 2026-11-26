@@ -10,7 +10,7 @@ export function labWod(wod){
 }
 export function isLabMessage(message,type){return !!message&&message.channel===LAB_CHANNEL&&message.type===type}
 
-export function labPlan(plan){
+export function labPlan(plan,scenario='open'){
  if(!plan||typeof plan.title!=='string'||!Array.isArray(plan.sessions)||plan.sessions.length<1||plan.sessions.length>364)throw Error('Planen manglar validerte økter.')
  const wods=[],sessions=plan.sessions.map((s,i)=>{
   const week=Number(s.week_no),day=Number(s.day_no),minutes=Number(s.estimated_minutes)
@@ -19,7 +19,7 @@ export function labPlan(plan){
   if(s.wod_id){const snap=s.workout_snapshot;if(!snap)throw Error('WOD-kopling manglar.');wod={...labWod({...snap,name:snap.wod_title||snap.title}),id:'lab-plan-wod-'+(i+1)};wods.push(wod)}
   return {id:'lab-plan-session-'+(i+1),sequence_no:i+1,week_no:week,day_no:day,title:s.title,estimated_minutes:minutes,session_kind:s.session_kind,status:'planned',wod_id:wod?.id||null,workout_snapshot:wod?{...wod,title:wod.name,wod_title:wod.name}:null}
  })
- const out={kind:'plan',title:plan.title,weeks:Math.max(...sessions.map(s=>s.week_no)),sessions,wods}
+ const out={kind:'plan',title:plan.title,weeks:Math.max(...sessions.map(s=>s.week_no)),sessions,wods,flowMode:scenario==='sequence'?'sequence':'open'}
  if(JSON.stringify(out).length>2000000)throw Error('Planen er for stor for testlaboratoriet.')
  return out
 }

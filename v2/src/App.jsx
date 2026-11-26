@@ -196,7 +196,7 @@ export default function App() {
   const labMode=document.documentElement.dataset.ggTabletLab==='true'
   const [labPending,setLabPending]=useState('')
   const [labRevision,setLabRevision]=useState(0)
-  useEffect(()=>{if(!labMode)return;const receive=e=>setLabPending(e.detail==='plan'?'plan':'wod');window.addEventListener('gg-tablet-lab-content',receive);if(window.parent!==window)window.parent.postMessage({channel:LAB_CHANNEL,type:'ready'},location.origin);return()=>window.removeEventListener('gg-tablet-lab-content',receive)},[labMode])
+  useEffect(()=>{if(!labMode)return;const receive=e=>setLabPending(e.detail==='plan'?'plan':'wod');window.addEventListener('gg-tablet-lab-content',receive);const queued=document.documentElement.dataset.ggLabContent;if(queued)setLabPending(queued);if(window.parent!==window)window.parent.postMessage({channel:LAB_CHANNEL,type:'ready'},location.origin);return()=>window.removeEventListener('gg-tablet-lab-content',receive)},[labMode])
   const officeAllowed=exchangeRole(profile,isPTCoach).office
   const officeMode=officeAllowed&&officeRequested&&deviceProfile.width>=1000&&!labMode
   const [trainingVisited, setTrainingVisited] = useState(false)

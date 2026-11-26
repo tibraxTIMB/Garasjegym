@@ -23,3 +23,5 @@ test('plan preview copies only validated planning fields and assigns synthetic I
 
 import {readPlanProject,savePlanProject,clearPlanProject} from '../src/lib/werkstattProjects.js'
 test('plan project local autosave is scoped to actor and retains only planning fields',()=>{const map=new Map(),storage={getItem:k=>map.get(k)||null,setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)};assert.equal(savePlanProject('a',{title:'Kladd',rows:[{week:1,day:1,title:'Økt',client_id:'private'}]},storage),true);assert.equal(readPlanProject('a',storage).title,'Kladd');assert.equal(readPlanProject('a',storage).rows[0].client_id,undefined);assert.equal(readPlanProject('b',storage),null);clearPlanProject('a',storage);assert.equal(readPlanProject('a',storage),null)})
+
+test('lab plan scenario is explicitly restricted to supported flow modes',()=>{const p=parsePlanDocument('week;day;title;wod;minutes;kind\n1;1;A;Test WOD;30;training','csv',[wod]);assert.equal(labPlan(p,'sequence').flowMode,'sequence');assert.equal(labPlan(p,'open').flowMode,'open');assert.equal(labPlan(p,'unknown').flowMode,'open')})
