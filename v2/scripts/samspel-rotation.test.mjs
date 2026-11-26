@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {samspelConfig,samspelIssue,samspelRoles,samspelResultIssue,samspelScoring,samspelWithCount,samspelRoundInstruction,samspelWithSwitch,samspelRotation,samspelIsTimed,samspelIsManual,appendSamspelSwap,normalizeSamspelSwaps,samspelParticipantRows,samspelParticipantResults} from '../src/lib/samspel.js'
+import {samspelConfig,samspelIssue,samspelRoles,samspelResultIssue,samspelScoring,samspelWithCount,samspelRoundInstruction,samspelWithSwitch,samspelRotation,samspelIsTimed,samspelIsManual,appendSamspelSwap,normalizeSamspelSwaps,samspelParticipantRows,samspelParticipantResults,samspelErgSlots,samspelCapacityIssue,samspelStationLabels} from '../src/lib/samspel.js'
 const legacy={version:1,mode:'parallel_round_swap',task:'row',metric:'distance'}
 const context={format:'AMRAP',participation:'partner',collaboration:'parallel',items:[{name:'Push-up'}]}
 assert.equal(samspelConfig({samspel:legacy}),legacy)
@@ -80,3 +80,26 @@ assert.deepEqual(samspelParticipantResults(null,{1:{rounds:'4'}}),{rows:[],issue
 assert.deepEqual(samspelParticipantResults(manual,{1:{rounds:'4'}}),{rows:[],issue:null})
 assert.equal(samspelParticipantRows({...legacy,individual_scores:true}).length,2)
 console.log('Participant-slot score checks passed')
+
+const dual={...team,erg_slots:2,available_ergs:2}
+const teamContext={...context,participation:'team',participantCount:4}
+assert.equal(samspelCapacityIssue(dual),null)
+assert.equal(samspelIssue(dual,teamContext),null)
+assert.ok(samspelIssue({...dual,available_ergs:1},teamContext))
+assert.ok(samspelIssue({...dual,available_ergs:null},teamContext))
+assert.ok(samspelIssue({...dual,erg_slots:4},teamContext))
+assert.ok(samspelIssue({...dual,erg_slots:0},teamContext))
+assert.ok(samspelIssue({...dual,available_ergs:2.5},teamContext))
+assert.equal(samspelErgSlots(legacy),1)
+assert.deepEqual(samspelRoles(dual,0),['Romaskin','Romaskin','AMRAP','AMRAP'])
+assert.deepEqual(samspelStationLabels(dual,samspelRoles(dual,3)),['Romaskin 2','AMRAP','AMRAP','Romaskin 1'])
+assert.deepEqual(samspelRotation(samspelWithSwitch(dual,'time',60),{elapsed:60,target:180}).roles,samspelRoles(dual,1))
+assert.deepEqual(samspelRotation(samspelWithSwitch(dual,'manual'),{manualSwaps:[10,20],rounds:99}).roles,samspelRoles(dual,2))
+for(let count=2;count<=8;count++)for(let slots=1;slots<count;slots++){
+ const config={...samspelWithCount(legacy,count),erg_slots:slots,available_ergs:slots}
+ const rotations=Array.from({length:count},(_,i)=>samspelRoles(config,i))
+ assert.equal(rotations.every(roles=>roles.filter(x=>x==='Romaskin').length===slots),true)
+ assert.equal(Array.from({length:count},(_,i)=>rotations.filter(roles=>roles[i]==='Romaskin').length).every(n=>n===slots),true)
+ assert.equal(rotations.every(roles=>new Set(samspelStationLabels(config,roles).filter(x=>x!=='AMRAP')).size===slots),true)
+}
+console.log('Concurrent station and capacity checks passed')
