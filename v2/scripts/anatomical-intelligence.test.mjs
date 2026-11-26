@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {anatomyForExercise,summarizeMuscleExposure,MUSCLES,documentedExerciseRows,muscleExerciseEvidence,historyAnatomyExercises} from '../src/lib/anatomicalIntelligence.js'
+import {anatomyForExercise,summarizeMuscleExposure,MUSCLES,documentedExerciseRows,muscleExerciseEvidence,historyAnatomyExercises,plannedAnatomyRows} from '../src/lib/anatomicalIntelligence.js'
 assert.equal(MUSCLES.length,20)
 assert.equal(anatomyForExercise(' BENKPRESS '),anatomyForExercise('bench press'))
 assert.equal(anatomyForExercise('unknown'),null)
@@ -75,3 +75,13 @@ for(const name of Object.keys(EXERCISE_MUSCLE_PROFILES)){
  assert.ok(groups.every(k=>MUSCLES.includes(k)))
 }
 console.log('Canonical catalogue coverage checks passed')
+
+const planned=plannedAnatomyRows([{name:'Bench Press'},{is_rest:true,name:'Pause'},{name:'Complex',complex_steps:[{name:'Power Clean',reps:2},{name:'Push Jerk',reps:1}]},'Unknown'])
+assert.deepEqual(planned.map(x=>x.exerciseName),['Bench Press','Power Clean','Push Jerk','Unknown'])
+assert.equal(summarizeMuscleExposure(planned).classifiedSets,3)
+assert.equal(summarizeMuscleExposure(planned).unclassifiedSets,1)
+const onlySnapshot={id:'snap',workout_date:'2026-11-25',result_data:{exercise_results:[{exercise_name:'Bench Press',sets:[{reps:5},{reps:0}]}]}}
+assert.equal(documentedExerciseRows(historyAnatomyExercises([onlySnapshot],7,today)).length,1)
+assert.deepEqual(historyAnatomyExercises([{...onlySnapshot,result_data:{...onlySnapshot.result_data,samspel:{team_score:true}}}],7,today),[])
+assert.deepEqual(plannedAnatomyRows([{name:'Rest'},null,{is_rest:true,name:'Push Jerk'}]),[])
+console.log('Shared planned and historical role checks passed')
