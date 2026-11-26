@@ -33,7 +33,7 @@ export function makeWorkoutExport(logs,exercises,sets){
  const lr=[...logs].sort((a,b)=>String(a.workout_date).localeCompare(String(b.workout_date))||a.id.localeCompare(b.id))
  const sr=[]
  for(const e of [...exercises].sort((a,b)=>a.workout_log_id.localeCompare(b.workout_log_id)||(a.sort_order??0)-(b.sort_order??0))){const l=lm.get(e.workout_log_id);const rows=(setMap.get(e.id)||[]).sort((a,b)=>(a.set_number??0)-(b.set_number??0));for(const s of rows.length?rows:[null])sr.push([l.id,l.workout_date,l.title,e.exercise_name,e.sort_order,s?.set_number,s?.reps,s?.load_kg,s?.height_cm,s?.time_seconds,s?'registrert sett':'ingen registrerte sett'])}
- return {logs:lr.length,exercises:exercises.length,sets:sets.length,
+ return {logs:lr.length,exercises:exercises.length,sets:sets.length,records:{logs:lr,exercises,sets},
  workouts:makeCsv(['økt_id','dato','namn','format','rundar','reps','resultattid_sekund','resultatvekt_kg','kaloriar','distanse','resultateining'],lr.map(l=>[l.id,l.workout_date,l.title,l.format,l.score_rounds,l.score_reps,l.score_time_seconds,l.score_load_kg,l.score_calories,l.score_distance,l.score_unit])),
  setRows:makeCsv(['økt_id','dato','økt','øving','øving_rekkjefølgje','sett','reps','kg','høgd_cm','tid_sekund','datastatus'],sr)}
 }
