@@ -261,3 +261,18 @@ assert.equal(recoveryResult.issue,null)
 assert.equal(recoveryResult.rows[0].erg_value,null)
 assert.deepEqual(recoveryResult.rows.map(r=>r.quality_status),['done','partial','skipped','done'])
 console.log('Active Recovery individual completion checks passed')
+
+import {youGoIGoConfig,relayTotal} from '../src/lib/samspel.js'
+const relay=youGoIGoConfig()
+assert.equal(samspelIssue(relay,{...context,collaboration:'you_go_i_go'}),null)
+assert.deepEqual(samspelRoles(relay,0),['Arbeid','Kvile'])
+assert.deepEqual(samspelRotation(relay,{manualSwaps:[10],elapsed:10,target:60}).roles,['Kvile','Arbeid'])
+assert.ok(samspelParticipantResults(relay,{}).issue)
+assert.ok(samspelParticipantResults(relay,{1:{rounds:'1',reps:'-1'}}).issue)
+const relayRows=samspelParticipantResults(relay,{1:{rounds:'2',reps:'3'},2:{rounds:'4',reps:'5'}}).rows
+assert.equal(relayTotal(relay,relayRows),6)
+assert.equal(relayTotal(relay,relayRows.slice(0,1)),null)
+assert.equal(relayRows[0].extra_reps,3)
+assert.equal(samspelErgSlots(relay),0)
+assert.equal(samspelResultIssue(relay,''),null)
+console.log('You Go I Go independent results passed')
