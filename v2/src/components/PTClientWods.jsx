@@ -13,7 +13,7 @@ const shortDate=value=>value?new Date(value).toLocaleDateString('nn-NO',{day:'nu
 /** PTs can see only explicit PT WOD assignments and their own PT program sessions.
  * No workout_logs query: a customer's unrelated private training remains private.
  */
-export default function PTClientWods({clientId,clientName='',clientRank=null,mode='full',planSessions=[],wods=[],initialReview=null,onOpenFull=()=>{},onOpenReview=()=>{},onReviewClosed=()=>{}}){
+export default function PTClientWods({clientId,clientName='',clientRank=null,mode='full',planSessions=[],wods=[],initialReview=null,assignRequest=null,onAssignClosed=()=>{},onAssign=null,revisionToken=0,onOpenFull=()=>{},onOpenReview=()=>{},onReviewClosed=()=>{}}){
  const [assignments,setAssignments]=useState([])
  const [loading,setLoading]=useState(false)
  const [error,setError]=useState('')
@@ -29,7 +29,7 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
   if(!clientId){setLoading(false);return()=>{active=false}}
   setLoading(true)
   supabase.from('pt_wod_assignments')
-   .select('id,member_id,wod_id,assigned_by,status,created_at,due_date,completed_at,workout_log_id,wods(id,name,format,duration_minutes,timer_settings)')
+   .select('*,wods(id,name,format,duration_minutes,timer_settings)')
    .eq('member_id',clientId).order('created_at',{ascending:false}).limit(150)
    .then(({data,error:readError})=>{
     if(!active)return
@@ -38,8 +38,9 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
     setLoading(false)
    })
   return()=>{active=false}
- },[clientId,revision])
+ },[clientId,revision,revisionToken])
  useEffect(()=>{if(initialReview&&clientId)setOpenedReview(initialReview)},[initialReview,clientId])
+ useEffect(()=>{if(assignRequest?.clientId===clientId&&assignRequest?.id){setOpenedReview(null);setShowAssign(true)}},[assignRequest,clientId])
  const activeAssignments=useMemo(()=>assignments.filter(row=>!completedStatus(row.status)&&row.status!=='cancelled'),[assignments])
  const doneAssignments=useMemo(()=>assignments.filter(row=>completedStatus(row.status)),[assignments])
  const programWods=useMemo(()=>planSessions.filter(row=>row.wod_id&&!row.archived_at).map(session=>({
@@ -53,7 +54,7 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
    <div className="ptfollow-wod-icon"><Dumbbell size={17}/></div>
    <div className="ptfollow-wod-main">
     <strong>{row.wods?.name||'WOD frå tidlegare tildeling'}</strong>
-    <small>{[row.wods?.format,row.due_date?'Frist '+shortDate(row.due_date):null,row.completed_at?'Fullført '+shortDate(row.completed_at):null].filter(Boolean).join(' · ')}</small>
+    <small>{[row.wods?.format,row.scheduled_date?'Planlagt '+shortDate(row.scheduled_date)+(row.scheduled_time?' kl. '+String(row.scheduled_time).slice(0,5):''):null,row.due_date?'Frist '+shortDate(row.due_date):null,row.completed_at?'Fullført '+shortDate(row.completed_at):null].filter(Boolean).join(' · ')}</small>
    </div>
    <div className="ptfollow-wod-actions">
     <span className={'ptfollow-status '+(completedStatus(row.status)?'is-done':'')}>{statusLabel(row.status)}</span>
@@ -85,13 +86,13 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
  }
  return <section className={'ptfollow ptfollow-'+mode} aria-label={'PT-tildelte WOD-ar for '+clientName}>
    <div className="ptfollow-heading">
-    <div><span className="section-kicker">WOD-OPPFØLGING</span><h3>{preview?'Tildelte WOD-ar':'WOD-ar · '+clientName}</h3>
+    <div><span className="section-kicker">WOD-TILDELINGAR</span><h3>{preview?'Tildelte WOD-ar':'WOD-ar · '+clientName}</h3>
       {!preview&&<p>Berre WOD-ar knytte til PT-tildelingar og treningsplanar. Privat treningshistorikk blir ikkje vist.</p>}
     </div>
     <div className="ptfollow-heading-actions">
      {!preview&&<button type="button" className="secondary-button" onClick={()=>setRevision(x=>x+1)} disabled={loading}><RefreshCw size={15}/> Oppdater</button>}
-     {preview?<button type="button" className="secondary-button" onClick={onOpenFull}>Sjå alle <ArrowRight size={15}/></button>:
-      <button type="button" className="primary-button" onClick={()=>setShowAssign(value=>!value)}><Plus size={16}/>{showAssign?'Lukk tildeling':'Tildel WOD'}</button>}
+     {preview?<button type="button" className="secondary-button" onClick={onOpenFull}>Sjå tildelingar og resultat <ArrowRight size={15}/></button>:
+      <button type="button" className="primary-button" onClick={()=>onAssign?onAssign():setShowAssign(value=>!value)}><Plus size={16}/>{showAssign?'Lukk tildeling':'Tildel WOD'}</button>}
     </div>
    </div>
    {loading&&<p role="status" className="ptfollow-info">Hentar WOD-tildelingane …</p>}
@@ -103,24 +104,24 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
      {programWods.length>0&&<span><b>{programWods.length}</b> i PT-planar</span>}
     </div>
     <div className="ptfollow-section">
-     <h4>Ventar eller pågår</h4>
+     <h4>Klare / pågåande WOD-ar</h4>
      {shownActive.length?shownActive.map(renderAssignment):<p className="ptfollow-empty">Ingen aktive WOD-tildelingar.</p>}
     </div>
     <div className="ptfollow-section">
      <h4><CheckCircle2 size={16}/> Gjennomførte tildelingar</h4>
      {shownDone.length?shownDone.map(renderAssignment):<p className="ptfollow-empty">Ingen tildelte WOD-ar er registrerte som gjennomførte.</p>}
     </div>
-    {programWods.length>0&&<div className="ptfollow-section">
+    {!preview&&programWods.length>0&&<div className="ptfollow-section">
      <h4>WOD-ar i PT-planar</h4>
      {shownProgram.map(renderProgram)}
      <small className="ptfollow-footnote">Programstatus er separat frå direkte WOD-tildeling og privat treningslogg.</small>
     </div>}
     {preview&&<p className="ptfollow-footnote">Du ser berre PT-tilknytte WOD-ar, ikkje andre treningsøkter.</p>}
    </>}
-   {!preview&&showAssign&&createPortal(<div className="gg-pt-assign-backdrop"><section className="gg-pt-assign-sheet" role="dialog" aria-modal="true" aria-label={'Tildel WOD til '+clientName}>
-    <header className="gg-pt-assign-head"><div><h4>Tildel WOD</h4><small>Mottakar: {clientName}</small></div><button type="button" aria-label="Lukk tildeling" onClick={()=>setShowAssign(false)}><X size={20}/></button></header>
+   {showAssign&&createPortal(<div className="gg-pt-assign-backdrop"><section className="gg-pt-assign-sheet" role="dialog" aria-modal="true" aria-label={'Tildel WOD til '+clientName}>
+    <header className="gg-pt-assign-head"><div><h4>Tildel WOD</h4><small>Mottakar: {clientName}</small></div><button type="button" aria-label="Lukk tildeling" onClick={()=>{setShowAssign(false);onAssignClosed()}}><X size={20}/></button></header>
     <Suspense fallback={<p className="ptfollow-info">Opnar WOD-biblioteket …</p>}>
-      <WodBuilder key={clientId} assignedClientId={clientId} onAssigned={()=>{setShowAssign(false);setRevision(x=>x+1)}}/>
+      <WodBuilder key={clientId} assignedClientId={clientId} onAssigned={()=>{setShowAssign(false);onAssignClosed();setRevision(x=>x+1)}}/>
     </Suspense>
    </section></div>,document.body)}
   </section>

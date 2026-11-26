@@ -33,3 +33,13 @@ test('single static PanserGorilla celebration has correct verified local image a
  assert.doesNotMatch(o,/GameRekordScene|RekordLift|RekordGorilla|<video|load_kg|previous_kg/)
  assert.match(c,/orientation:landscape/);assert.match(c,/object-fit:contain/);assert.doesNotMatch(c,/animation\s*:|@keyframes/)
 })
+
+test('team, unknown provenance and explicitly skipped sets cannot supply a PR baseline or badge',()=>{
+ const team={result_data:{samspel:{team_score:true}},workout_exercises:[lift('Deadlift',200)]}
+ const unknown={...team,result_data:{participation_verified:'unknown'}}
+ const skipped={result_data:{exercise_results:[{exercise_name:'Deadlift',sets:[{flow_status:'skipped'}]}]},workout_exercises:[lift('Deadlift',200)]}
+ assert.equal(findPRVictories([lift('Deadlift',90)],[team,unknown,skipped,previous]).length,1)
+ assert.equal(findPRVictories([{exercise_name:'Deadlift',sets:[{reps:1,load_kg:90,flow_status:'skipped'}]}],[previous]).length,0)
+ const victories=findPRVictories([lift('Deadlift',90)],[previous])
+ assert.equal(workoutPRVictories({result_data:{...team.result_data,pr_victories:victories},workout_exercises:[lift('Deadlift',90)]}).length,0)
+})

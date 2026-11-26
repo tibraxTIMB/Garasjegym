@@ -4,7 +4,7 @@ import './wod-picker-repair.css'
 
 const categoryLabel=value=>({warmup:'Oppvarming',daily:'Dagens WOD',standard:'Standard-WOD',benchmark:'Benchmark',assessment:'Test og evaluering',rehab:'Rehabilitering',recovery:'Restitusjon',other:'Anna / spesialøkt'}[value]||value||'Standard-WOD')
 
-export default function WodPicker({wods=[],selectedIds=[],onChange,onCancel,multiple=true,title='Vel WOD frå biblioteket',hint='Søk, filtrer og vel øktene som skal brukast.',compact=false}){
+export default function WodPicker({wods=[],selectedIds=[],onChange,onCancel,multiple=true,title='Vel WOD frå biblioteket',hint='Søk, filtrer og vel øktene som skal brukast.',compact=false,usage=null}){
  const [query,setQuery]=useState('')
  const [format,setFormat]=useState('all')
  const [visibility,setVisibility]=useState('all')
@@ -40,7 +40,7 @@ export default function WodPicker({wods=[],selectedIds=[],onChange,onCancel,mult
     const count=(w.timer_settings?.workout_schema?.items||[]).length||w.movements?.split('\\n').filter(Boolean).length||0
     return <button type="button" key={w.id} className={active?'wod-picker-option selected':'wod-picker-option'} onClick={()=>toggle(w.id)} aria-pressed={active}>
      <span className="wod-picker-check">{active?<Check size={15}/>:null}</span>
-     <span className="wod-picker-option-main"><b>{w.name}</b><small>{w.format||'Eigen økt'} · {w.duration_minutes||'–'} min · {count} øvingar</small>{!compact&&w.timer_settings?.workout_schema?.stimulus&&<small>{w.timer_settings.workout_schema.stimulus}</small>}</span>
+     <span className="wod-picker-option-main"><b>{w.name}</b><small>{w.format||'Eigen økt'} · {w.duration_minutes||'–'} min · {count} øvingar</small>{usage?.[w.id]&&<small>{usage[w.id].planned} i plan · {usage[w.id].assigned} tildelte · {usage[w.id].completed} utførte</small>}{!compact&&w.timer_settings?.workout_schema?.stimulus&&<small>{w.timer_settings.workout_schema.stimulus}</small>}</span>
      <span className={w.is_published?'wod-picker-status published':'wod-picker-status'}>{w.is_published?'Publisert':'Privat'}</span>
     </button>
    }):<div className="wod-picker-empty">Ingen WOD-ar treff søket. Prøv eit anna søk eller opprett ein ny WOD i WOD-biblioteket.</div>}

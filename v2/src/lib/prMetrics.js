@@ -1,4 +1,6 @@
 import { isErgExercise } from './exerciseMeasurements.js'
+import {isIndividualPerformance,isUsablePerformedSet,recordedSetsWithStatus,performanceSnapshot} from './performanceEvidence.js'
+export {isIndividualPerformance} from './performanceEvidence.js'
 
 const positive = value => {
   if (value === '' || value == null) return 0
@@ -6,11 +8,6 @@ const positive = value => {
   return Number.isFinite(number) && number > 0 ? number : 0
 }
 
-// A team score or completion-only record is not evidence of individual performance.
-export function isIndividualPerformance(log){
- const data=log?.result_data||{}
- return data.flow_completion_only!==true&&data.samspel?.team_score!==true&&(!data.wod_engine?.participation||data.wod_engine.participation==='individual')
-}
 const SIDE_LABELS = {right:'Høgre',left:'Venstre',both:'Per side',alternating:'Vekslande'}
 
 export function exerciseRecordType(name, sets = [], result = {}) {
@@ -40,7 +37,7 @@ export function deriveExerciseRecords(logs = []) {
     if(!isIndividualPerformance(log))continue
     const rows = [...(log.workout_exercises || [])].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))
     for (const [index, exercise] of rows.entries()) {
-      const result = log.result_data?.exercise_results?.[index] || {}
+      const result = performanceSnapshot(log,exercise,index) || {}
       // A custom complex is a real sequence of catalogue movements, not a single lift.
       // Only explicitly completed, weighted cycles supported by the saved set rows count.
       if(result.is_complex&&result.complex_family==='custom'){
@@ -53,7 +50,7 @@ export function deriveExerciseRecords(logs = []) {
         const confirmed=[]
         for(const set of result.sets||[]){
           const cycles=Number(set.reps),load=positive(set.load_kg)
-          if(set.complex_status!=='complete'||set.flow_status==='done'||!Number.isInteger(cycles)||cycles<1||!load)continue
+          if(set.complex_status!=='complete'||['done','skipped'].includes(set.flow_status)||!Number.isInteger(cycles)||cycles<1||!load)continue
           const match=available.findIndex(row=>Number(row.reps)===cycles&&positive(row.load_kg)===load)
           if(match<0)continue
           available.splice(match,1)
@@ -83,7 +80,7 @@ export function deriveExerciseRecords(logs = []) {
       if (!name) continue
       const side = result.side_mode || ''
       const key = `${exercise.exercise_id || name.toLowerCase()}|${side}`
-      const sets = (exercise.workout_sets?.length ? exercise.workout_sets : result.sets) || []
+      const sets = (Array.isArray(exercise.workout_sets)?recordedSetsWithStatus(exercise,result):result.sets||[]).filter(isUsablePerformedSet)
       const type = exerciseRecordType(name, sets, result)
       if (!exercises.has(key)) exercises.set(key,{key,name,side,type,performances:[]})
       const distance = result.row_unit === 'km' ? positive(result.row_value)*1000 : result.row_unit === 'm' ? positive(result.row_value) : positive(result.meters)

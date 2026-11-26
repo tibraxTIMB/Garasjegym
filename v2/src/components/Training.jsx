@@ -1166,7 +1166,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       const user=auth.data?.user
       if(user?.id===memberId){
         if(!w.error&&!e.error)writeOfflineLibrary(memberId,w.data||[],e.data||[])
-        supabase.from('workout_logs').select('id,source_wod_id,workout_date,score_rounds,result_data,workout_exercises(exercise_id,exercise_name,workout_sets(reps,load_kg,height_cm,time_seconds))').eq('member_id',memberId).order('workout_date',{ascending:false}).order('created_at',{ascending:false}).limit(60).then(({data,error})=>{if(!error&&requestId===loadSequence.current)setPreviousCache({memberId,logs:data||[]})}).catch(()=>{})
+        supabase.from('workout_logs').select('id,source_wod_id,workout_date,score_rounds,result_data,workout_exercises(exercise_id,exercise_name,sort_order,workout_sets(set_number,reps,load_kg,height_cm,time_seconds))').eq('member_id',memberId).order('workout_date',{ascending:false}).order('created_at',{ascending:false}).limit(60).then(({data,error})=>{if(!error&&requestId===loadSequence.current)setPreviousCache({memberId,logs:data||[]})}).catch(()=>{})
         const [daily,fav,wodFav]=await Promise.all([
           supabase.from('wod_daily_schedules').select('wod_id').eq('scheduled_date',localDateISO()).is('target_class_id',null).eq('is_published',true).maybeSingle(),
           supabase.from('exercise_favorites').select('exercise_name').eq('user_id',user.id),
@@ -1651,7 +1651,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       let victories=[]
       // Only explicitly reviewed standard-lift sets; never infer PRs from timer
       // scores, planned weights, estimated 1RM, or combined partner results.
-      try{if(!source||activeWodEngine.participation==='individual')victories=await checkPRVictories(supabase,user.id,verifiedRows)}catch{/* The actual workout remains saveable. */}
+      try{if(!flowCompletionOnly&&!sessionSamspel&&(!source||activeWodEngine.participation==='individual'))victories=await checkPRVictories(supabase,user.id,verifiedRows)}catch{/* The actual workout remains saveable. */}
       if(victories.length)resultData.pr_victories=victories
       submissionRef.current={memberId,saveToken,fingerprint}
       const receiptProtected=rememberWorkoutSubmission(memberId,saveToken,fingerprint)

@@ -1,3 +1,4 @@
+import {isIndividualPerformance,isUsablePerformedSet} from './performanceEvidence.js'
 // Conservative AMRAP pacing reference: same saved WOD, prescription and clock.
 // This compares planned standards and recorded round splits, not verified actual loading.
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(k=>[k,canonical(value[k])])):value
@@ -13,7 +14,7 @@ export function findRoundGhost(logs,signature){
  if(!signature)return null
  for(const log of logs||[]){
   const d=log.result_data||{}
-  if(d.ghost_signature!==signature||d.manual_entry||d.flow_completion_only||d.samspel?.team_score||d.wod_engine?.participation&&d.wod_engine.participation!=='individual'||d.completed!==true||!Array.isArray(d.split_seconds))continue
+  if(d.ghost_signature!==signature||d.manual_entry||!isIndividualPerformance(log)||d.completed!==true||!Array.isArray(d.split_seconds))continue
   const splits=d.split_seconds
   if(!splits.length||!Number.isSafeInteger(log.score_rounds)||log.score_rounds!==splits.length||splits.some(v=>typeof v!=='number'||!Number.isFinite(v)||v<=0))continue
   const total=splits.reduce((a,b)=>a+b,0)
@@ -36,7 +37,7 @@ export function ghostPace(ghost,laps,elapsed){
 // Compare logged weights only: never assume the prescription was actually used,
 // and never equate identical weights with identical effort or training dose.
 export function ghostRecordedLoads(data,signature=data?.ghost_signature){
- if(!signature||data?.ghost_signature!==signature||data.manual_entry||data.flow_completion_only||data.samspel?.team_score||data.wod_engine?.participation&&data.wod_engine.participation!=='individual')return null
+ if(!signature||data?.ghost_signature!==signature||data.manual_entry||!isIndividualPerformance({result_data:data}))return null
  let planned
  try{planned=JSON.parse(signature).items.filter(x=>!x.is_rest)}catch{return null}
  const actual=data.exercise_results
@@ -46,7 +47,7 @@ export function ghostRecordedLoads(data,signature=data?.ghost_signature){
  for(let i=0;i<planned.length;i++){
   const p=planned[i],a=actual[i]
   if(!a||name(p.exercise_name||p.name)!==name(a.exercise_name)||a.is_complex||!Array.isArray(a.sets)||!a.sets.length)return null
-  const performed=a.sets.filter(s=>!['failed','partial'].includes(s.complex_status)&&[s.reps,s.time_seconds].some(v=>Number.isFinite(Number(v))&&Number(v)>0))
+  const performed=a.sets.filter(s=>isUsablePerformedSet(s)&&[s.reps,s.time_seconds].some(v=>Number.isFinite(Number(v))&&Number(v)>0))
   if(!performed.length||performed.some(s=>s.load_kg==null||String(s.load_kg).trim()===''||!Number.isFinite(Number(s.load_kg))||Number(s.load_kg)<0))return null
   rows.push({name:a.exercise_name,kg:[...new Set(performed.map(s=>Number(s.load_kg)))].sort((x,y)=>x-y)})
  }

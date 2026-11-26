@@ -1,11 +1,13 @@
 // Browser audit only. Excluded from the production entrypoint.
 import {useState} from 'react'
 import {createRoot} from 'react-dom/client'
+import Training from './components/Training.jsx'
 import WodBuilder from './components/WodBuilder.jsx'
 import PTStudio from './components/PTStudio.jsx'
 import PTClientWods from './components/PTClientWods.jsx'
 import WodPicker from './components/WodPicker.jsx'
 import MyTraining from './components/MyTraining.jsx'
+import ScheduleHub from './components/ScheduleHub.jsx'
 import WorkoutDetail from './components/WorkoutDetail.jsx'
 import AppMobileNavigation from './components/AppMobileNavigation.jsx'
 import {LayoutDashboard} from 'lucide-react'
@@ -39,10 +41,17 @@ function ActaFixture(){
  const workout={id:'demo-acta',title:'Saman­sett økt',format:'Samansett økt',workout_date:'2026-11-25',score_rounds:4,score_reps:3,exercises:[{id:'x',exercise_name:'Double DB Hang Squat Clean',workout_sets:[]}],result_data:{report_parts:parts,prescription_level:'rx',flow_completion:[{id:'a',status:'done'}],block_summary:[{id:'e',format:'AMRAP',roundsCompleted:4,extra_reps:3}],exercise_results:[{block_id:'e',exercise_name:'Double DB Hang Squat Clean'}]}}
  return <>{open?<WorkoutDetail workout={workout} memberId="demo-member" onBack={()=>setOpen(false)}/>:<><button onClick={()=>setOpen(true)}>Opna rapport</button><AppMobileNavigation items={[{id:'oversikt',icon:LayoutDashboard}]} active="oversikt" onNavigate={()=>setNormal(n=>n+1)} onQuickMenu={()=>setQuick(true)}/><output aria-label="Vanlege trykk">{normal}</output>{quick&&<div role="dialog" aria-label="Hurtigmeny"><button onClick={()=>setQuick(false)}>Lukk</button></div>}</>}</>
 }
+function CalendarJourney(){
+ const [launch,setLaunch]=useState('')
+ return <><ScheduleHub profile={{id:'demo-member',role:'member',active:true,membership_status:'approved'}} simpleMode={true}
+  onOpenAssignment={(wodId,assignmentId)=>setLaunch('assignment:'+assignmentId+':'+wodId)}
+  onOpenProgramSession={session=>setLaunch('program:'+session.id+':'+session.wod_id)}/>
+  <output aria-label="Startkontekst">{launch}</output></>
+}
 function Audit(){
  const [choice,setChoice]=useState('a')
  return <MusicProvider memberId="demo-admin"><MobileNativeControls/><div className="app-shell simple-app-shell"><main className="main simple-app-main"><section className="content-card training-content">
- {screen==='acta'?<ActaFixture/>:screen==='flow'?<FlowFixture/>:screen==='card'?<WodCard wod={wod} memberId="demo-member" onClose={()=>{}} onLaunch={()=>{}}/>:screen==='builder'?<WodBuilder/>:screen==='picker'?<WodPicker wods={[wod,{...wod,id:'audit-wod-2',name:'Introkurs 06 – Pull-up og kjerne',timer_settings:{workout_schema:{stimulus:longName}}},{...wod,id:'audit-wod-3',name:'Introkurs 05 – Clean',is_published:true}]} onChange={setChoice}/>:screen==='assign'?<PTClientWods clientId="demo-member" clientName="Demomedlem med eit langt visningsnamn"/>:screen==='pt'?<PTStudio profile={profile} initialClientId="demo-member" initialTab="plan"/>:screen==='plan'?<MyTraining simpleMode={true}/>:<label>Vel eit alternativ med eit langt namn<select aria-label="Testval" value={choice} onChange={e=>setChoice(e.target.value)}><option value="a">Første alternativ</option><option value="b">{longName}</option></select><output>{choice}</output></label>}
+ {screen==='member-calendar'?<CalendarJourney/>:screen==='training'?<Training memberId="demo-member"/>:screen==='acta'?<ActaFixture/>:screen==='flow'?<FlowFixture/>:screen==='card'?<WodCard wod={wod} memberId="demo-member" onClose={()=>{}} onLaunch={()=>{}}/>:screen==='builder'?<WodBuilder/>:screen==='picker'?<WodPicker wods={[wod,{...wod,id:'audit-wod-2',name:'Introkurs 06 – Pull-up og kjerne',timer_settings:{workout_schema:{stimulus:longName}}},{...wod,id:'audit-wod-3',name:'Introkurs 05 – Clean',is_published:true}]} onChange={setChoice}/>:screen==='assign'?<PTClientWods clientId="demo-member" clientName="Demomedlem med eit langt visningsnamn"/>:screen==='pt-workbench'?<PTStudio profile={profile} initialClientId="demo-member" initialTab="oversikt"/>:screen==='pt'?<PTStudio profile={profile} initialClientId="demo-member" initialTab="plan"/>:screen==='plan'?<MyTraining simpleMode={true}/>:<label>Vel eit alternativ med eit langt namn<select aria-label="Testval" value={choice} onChange={e=>setChoice(e.target.value)}><option value="a">Første alternativ</option><option value="b">{longName}</option></select><output>{choice}</output></label>}
  </section></main></div></MusicProvider>
 }
 createRoot(document.getElementById('root')).render(<Audit/>)

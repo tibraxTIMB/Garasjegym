@@ -1,0 +1,39 @@
+name: Gazelle Frontdienst (isolated Training journey)
+on:
+  push:
+    branches: [gazelle-operational-anatomical]
+    paths:
+      - 'v2/src/**'
+      - 'v2/scripts/frontdienst-audit.py'
+      - '.github/workflows/gazelle-frontdienst.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: gazelle-frontdienst
+  cancel-in-progress: true
+jobs:
+  journey:
+    if: github.ref == 'refs/heads/gazelle-operational-anatomical'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: pip install playwright==1.56.0 && python -m playwright install --with-deps chromium
+      - name: Actual Training component with synthetic save RPC only
+        run: |
+          npm run help:demo > /tmp/gg-frontdienst-vite.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" || true' EXIT
+          for i in $(seq 1 60); do curl -fs http://127.0.0.1:4173/ui-audit.html >/dev/null && break; sleep 1; done
+          python scripts/frontdienst-audit.py
