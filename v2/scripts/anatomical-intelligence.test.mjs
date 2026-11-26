@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {anatomyForExercise,summarizeMuscleExposure,MUSCLES} from '../src/lib/anatomicalIntelligence.js'
+import {anatomyForExercise,summarizeMuscleExposure,MUSCLES,documentedExerciseRows,muscleExerciseEvidence} from '../src/lib/anatomicalIntelligence.js'
 assert.equal(MUSCLES.length,17)
 assert.equal(anatomyForExercise(' BENKPRESS '),anatomyForExercise('bench press'))
 assert.equal(anatomyForExercise('unknown'),null)
@@ -14,3 +14,15 @@ assert.equal(result.roles.calves.primary,0)
 assert.deepEqual(result.unclassified,['unknown'])
 assert.equal(summarizeMuscleExposure([]).classifiedSets,0)
 console.log('Anatomical intelligence assertions passed')
+
+const rows=documentedExerciseRows([
+ {exercise_name:'bench press',workout_sets:[{reps:8,load_kg:50},{load_kg:50},{reps:0},{time_seconds:30}]},
+ {exercise_name:'deadlift',sets:[{reps:5}]},
+ {exercise_name:'plank',sets:[{time_seconds:20}]}
+])
+assert.equal(rows.length,4)
+assert.equal(summarizeMuscleExposure(rows).classifiedSets,4)
+assert.deepEqual([...muscleExerciseEvidence(rows).get('chest').primary],['bench press'])
+assert.deepEqual([...muscleExerciseEvidence(rows).get('spinal_erectors').stabilizing],['deadlift'])
+assert.deepEqual(documentedExerciseRows([{exercise_name:'bench press',sets:[{load_kg:50},{time_seconds:0},{reps:null}]}]),[])
+console.log('Documented exercise evidence assertions passed')
