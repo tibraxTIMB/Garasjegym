@@ -1,0 +1,11 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {warmupBatch,warmupLibraryPayload,publishWarmupBatch} from '../src/lib/warmupLibrary49.js'
+import {flowItemGroup,flowReporting} from '../src/lib/workoutFlow.js'
+import {compositeTimerConfig,validateCompositeBlocks} from '../src/lib/compositeWod.js'
+import {normalizeWodEngine} from '../src/lib/wodEngine.js'
+const names=['Bird dog','Dead bug','ITYW + rygghev','Thread the needle','Thoracic rotation','Row','Jump rope','Shoulder pass-through','Overhead Squat','Wall slides','Ankle rocks','Air squat','Glute bridge','Romanian deadlift','Scapular push-ups','Push-up','Strict press','Dead Hang','Scapular pull-ups','TRX Row','Walking lunge']
+const catalogue=names.map((name,i)=>({id:'e'+i,name,is_active:true,category:'Styrke',equipment:name==='Row'?'Romaskin':'Kroppsvekt',body_area:'Fullkropp'}))
+test('six published payloads reuse actual composite engine, warmup phases and completion-only reporting',()=>{const batch=warmupBatch(catalogue);assert.equal(batch.length,6);for(const p of batch){assert.equal(p.is_published,true);assert.equal(p.category,'warmup');const s=p.timer_settings.workout_schema;assert.equal(s.items.length,9);assert.equal(validateCompositeBlocks(s.composite_blocks,s.items),'');const engine=normalizeWodEngine(s);assert.equal(engine.blocks.length,3);for(const b of engine.blocks){assert.equal(flowReporting(b,s),'done');const t=compositeTimerConfig(b);assert.ok(Number(t.timerSettings.duration_seconds)>0)}assert.ok(s.items.every(i=>i.exercise_id&&flowItemGroup(i,s).reporting==='done'));assert.equal(p.duration_minutes,Math.ceil(s.duration_seconds/60));assert.ok(s.items.filter(i=>i.side_mode==='both').length>=3);assert.equal(s.items[1].levels.rx.loadMode,'none')}})
+test('batch is additive and disallows missing or ambiguous exercises',()=>{assert.equal(warmupBatch(catalogue,[{name:'Panzer Mobility'}]).length,5);assert.throws(()=>warmupLibraryPayload('Panzer Mobility',catalogue.filter(e=>e.name!=='Bird dog')),/Bird dog/);assert.throws(()=>warmupLibraryPayload('Panzer Mobility',[...catalogue,catalogue[0]]),/Bird dog/)})
+test('requires exact approval before any write',async()=>{await assert.rejects(publishWarmupBatch(null,null,warmupBatch(catalogue),'wrong'),/godkjenn/)})

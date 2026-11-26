@@ -2,7 +2,7 @@ name: EXPORTWERK native format audit
 on:
   push:
     branches: [exportwerk-fertigstellung]
-    paths: ['v2/src/lib/exportwerk*','v2/src/components/Exportwerk.jsx','v2/scripts/exportwerk*','.github/workflows/exportwerk-format-audit.yml']
+    paths: ['v2/src/lib/exportwerk*','v2/src/components/Exportwerk.jsx','v2/scripts/exportwerk*','v2/src/lib/warmupLibrary49.js','v2/scripts/warmup-library49.test.mjs','v2/src/lib/stacheldraht.js','v2/scripts/stacheldraht.test.mjs','.github/workflows/exportwerk-format-audit.yml']
 permissions:
   contents: read
 jobs:
@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci --prefix v2 --ignore-scripts --no-audit --no-fund
-      - run: node --test v2/scripts/exportwerk-fit.test.mjs
+      - run: node --test v2/scripts/exportwerk-fit.test.mjs v2/scripts/warmup-library49.test.mjs v2/scripts/stacheldraht.test.mjs
       - run: node --test v2/scripts/exportwerk.test.mjs
       - run: node v2/scripts/exportwerk-xlsx-fixture.mjs
       - run: pip install openpyxl==3.1.5 && python v2/scripts/exportwerk-xlsx-check.py
