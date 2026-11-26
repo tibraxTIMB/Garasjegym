@@ -32,7 +32,7 @@ jobs:
           fi
           ffmpeg -version
       - name: Regression suite
-        run: npm test
+        run: node scripts/run-release-regressions.mjs
       - name: Production compilation without live credentials
         if: success() || failure()
         run: npm run build
