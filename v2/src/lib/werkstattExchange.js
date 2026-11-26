@@ -48,6 +48,7 @@ export function planDocument(title,sessions,wods=[]){
  return {type:'garasjegym.plan',version:1,title:clean(title)||'Treningsplan',sessions:sessions.filter(s=>!s.archived_at).map(s=>({week:Number(s.week_no)||1,day:Number(s.day_no)||1,title:clean(s.title),wod:s.wod_id?names.get(s.wod_id)||clean(s.workout_snapshot?.wod_title):'',minutes:Number(s.estimated_minutes)||45,kind:s.session_kind||'training'}))}
 }
 export function parsePlanDocument(source,format,wods=[]){
+ if(String(source??'').length>MAX_EXCHANGE_BYTES)throw Error('Fila er for stor.')
  let doc
  if(format==='json'){try{doc=JSON.parse(source)}catch{throw Error('Ugyldig JSON.')}if(doc?.type!=='garasjegym.plan'||doc.version!==1)throw Error('Vel ein GarasjeGym planfil, versjon 1.')}
  else doc={type:'garasjegym.plan',version:1,title:'Importert treningsplan',sessions:parseDelimited(source)}
@@ -68,7 +69,7 @@ export function parsePlanDocument(source,format,wods=[]){
   return {sequence_no:i+1,week_no:week,day_no:day,title:title||found.name,session_kind:kind,estimated_minutes:minutes,wod_id:found?.id||null,focus_area:'',workout_snapshot:found?{id:found.id,title:found.name,wod_title:found.name,format:found.format,duration_minutes:found.duration_minutes,movements:found.movements,notes:found.notes,timer_settings:found.timer_settings}:null}
  })
  const perWeek={};for(const s of sessions)perWeek[s.week_no]=(perWeek[s.week_no]||0)+1
- if(Object.values(perWeek).some(n=>n>21))throw Error('Maks 21 økter per veke i import.')
+ if(Object.values(perWeek).some(n=>n>7))throw Error('Maks 7 økter per veke i import.')
  return {title:short(doc.title||'Importert treningsplan',160,'Plannamn'),weeks:Math.max(...sessions.map(s=>s.week_no)),sessions_per_week:Math.max(...Object.values(perWeek)),sessions}
 }
 export function planCsv(doc){return makeCsv(['week','day','title','wod','minutes','kind'],doc.sessions.map(s=>[s.week,s.day,s.title,s.wod,s.minutes,s.kind]))}
@@ -79,6 +80,7 @@ export function wodText(rows,markdown=false){return wodDocument(rows).wods.map(w
 export function wodCsv(rows){return makeCsv(['name','format','minutes','movements','notes'],wodDocument(rows).wods.map(w=>[w.name,w.format,w.duration_minutes,movementText(w.movements),w.notes]))}
 // A versioned WOD export is a structured reference, not an automatic round-trip.
 export function wodImportSource(source,format){
+ if(String(source??'').length>MAX_EXCHANGE_BYTES)throw Error('Fila er for stor.')
  if(format==='json'){
   let doc;try{doc=JSON.parse(source)}catch{throw Error('Ugyldig JSON.')}
   if(doc?.type!=='garasjegym.wods'||doc.version!==1||!Array.isArray(doc.wods)||doc.wods.length!==1)throw Error('Vel ei GarasjeGym-fil med éin WOD.')

@@ -1,7 +1,7 @@
 name: Gazelle responsive browser audit (no deploy)
 on:
   push:
-    branches: [gazelle-responsive-audit, gazelle-librarium, gazelle-librarium-polish, gazelle-plan-folders, gazelle-acta, gazelle-pt-plan, gazelle-pt-compact, gazelle-architect, gazelle-pt-flow-repair, gazelle-operational-anatomical, volksmaschine-reibungslos]
+    branches: [gazelle-responsive-audit, gazelle-librarium, gazelle-librarium-polish, gazelle-plan-folders, gazelle-acta, gazelle-pt-plan, gazelle-pt-compact, gazelle-architect, gazelle-pt-flow-repair, gazelle-operational-anatomical, volksmaschine-reibungslos, werkstatt-pc-companion]
 permissions:
   contents: read
 jobs:
