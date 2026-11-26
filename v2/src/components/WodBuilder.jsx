@@ -1,4 +1,4 @@
-import {equipmentCapacity,equipmentPlanSnapshot} from '../lib/equipmentPreparation.js'
+import {equipmentCapacity,equipmentPlanSnapshot,readEquipmentInventory,saveEquipmentInventory,applyEquipmentInventory} from '../lib/equipmentPreparation.js'
 import EquipmentPreparation from './EquipmentPreparation.jsx'
 import {samspelConfig,samspelIssue,samspelScoring,samspelWithCount,samspelWithSwitch,samspelRoundInstruction,samspelMixed,samspelWithStations,samspelStationRows,samspelStationCapacityKeys,SAMSPEL_STATION_TASKS,SAMSPEL_TASKS,SAMSPEL_METRICS} from '../lib/samspel.js'
 import {architectSections,architectDose,architectDoseIssue,hydrateArchitectLevels} from '../lib/wodArchitect.js'
@@ -229,6 +229,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const previousWizardStep=useRef(0)
  const [overviewLevel,setOverviewLevel]=useState('rx')
  const [equipmentPlan,setEquipmentPlan]=useState({})
+ const [inventoryOwner,setInventoryOwner]=useState(null),[inventoryMessage,setInventoryMessage]=useState('')
  const [samspel,setSamspel]=useState(null),[samspelHelp,setSamspelHelp]=useState(false),[showArchitectIssues,setShowArchitectIssues]=useState(false),[showArchitectMenu,setShowArchitectMenu]=useState(false)
  const [catalogueReady,setCatalogueReady]=useState(false)
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område'),[equipmentFilter,setEquipmentFilter]=useState('all'),[movementFilter,setMovementFilter]=useState('all'),[openFilter,setOpenFilter]=useState('')
@@ -290,6 +291,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   setLoading(true)
   setPublishRoleReady(false)
   const {data:{user}}=await supabase.auth.getUser()
+  setInventoryOwner(user?.id||null);setInventoryMessage('')
   if(user){
    const {data:memberProfile,error:profileError}=await supabase.from('profiles').select('role').eq('id',user.id).maybeSingle()
    setCanPublishWod(!profileError&&['admin','manager'].includes(memberProfile?.role))
@@ -678,6 +680,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   </section>}
    <nav className="gg-architect-parts" aria-label="Delar i WOD-en">{architectParts.map(p=><button type="button" key={p.id} className={'gg-arch-tone-'+p.tone+(p.id===activeArchitectPart?.id?' active':'')} aria-pressed={p.id===activeArchitectPart?.id} onClick={()=>{setActiveBlockId(p.id);setEditingSelectedKey(null);setWizardStep(3)}}><b>{String.fromCharCode(65+p.index)}</b><span>{p.title||p.format}</span><small>{p.label} · {p.time}</small></button>)}</nav>
    <div className="gg-architect-levels" role="group" aria-label="Vis doseringsnivå">{[['rx','RX'],['intermediate','Interm.'],['scaled','Scaled'],['foundation','Foundation']].map(([id,label])=><button type="button" key={id} aria-pressed={overviewLevel===id} onClick={()=>setOverviewLevel(id)}>{label}</button>)}</div>
+   {inventoryOwner&&selected.length>0&&<details className="customer-plan-details"><summary>Utstyrsinventar · denne eininga</summary><small>Personleg utstyrsliste i nettlesaren. Ikkje delt mellom einingar eller brukarar.</small><div className="gg-architect-meta"><button type="button" className="text-button" onClick={()=>{setEquipmentPlan(old=>applyEquipmentInventory(selected,old,readEquipmentInventory(inventoryOwner)));setInventoryMessage('Tilgjengeleg mengd henta frå lokal utstyrsliste. Kontroller før start.')}}>Hent mengder</button><button type="button" className="text-button" onClick={()=>setInventoryMessage(saveEquipmentInventory(inventoryOwner,selected,equipmentPlan)?'Tilgjengeleg mengd lagra lokalt.':'Kunne ikkje lagra. Kontroller mengdene og lokal lagring.')}>Lagra mengder</button></div>{inventoryMessage&&<small role="status">{inventoryMessage}</small>}</details>}
    <EquipmentPreparation items={selected} values={equipmentPlan} catalogue={exercises} tagsFor={movementTagsFor} onChange={(key,field,value)=>setEquipmentPlan(old=>({...old,[key]:{...old[key],[field]:value}}))}/>
    <details className="gg-architect-map"><summary>Sjå heile økta · {architectParts.length} delar</summary>{architectParts.map(p=><section key={p.id} className={'gg-arch-tone-'+p.tone}><button type="button" className="gg-architect-part-head" onClick={()=>{setActiveBlockId(p.id);setWizardStep(3);setEditingSelectedKey(null)}}><b>{String.fromCharCode(65+p.index)} · {p.title||p.format}</b><small>{p.label} · {p.time} · {p.reporting==='done'?'Berre utført':p.reporting==='score'?'Hovudresultat':'Settvis'}</small></button>{p.group.map(ex=><button type="button" key={ex.key} className={'gg-architect-map-row'+(issueFor(ex)?' has-issue':'')} onClick={()=>{setActiveBlockId(p.id);setDoseLevelByKey(rows=>({...rows,[ex.key]:overviewLevel}));setEditingSelectedKey(ex.key);setWizardStep(3)}}><strong>{ex.name}</strong><span>{issueFor(ex)||architectDose(ex,overviewLevel)}</span></button>)}</section>)}</details>
   </section>}
