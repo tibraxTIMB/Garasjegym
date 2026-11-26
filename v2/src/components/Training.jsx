@@ -33,7 +33,7 @@ import MuscleMap from './MuscleMap.jsx'
 import {muscleProfile} from '../lib/muscleProfile.js'
 import { canLeavePreparedWod } from '../lib/prestartExit.js'
 import { exerciseBrowseCategory } from '../lib/exerciseCategories.js'
-import { restoreWorkoutDraft, saveWorkoutDraft, clearWorkoutDraft, resumedElapsedSeconds, workoutSaveFingerprint, isRetryableWorkoutError } from '../lib/workoutDraft.js'
+import { restoreWorkoutDraft, saveWorkoutDraft, clearWorkoutDraft, resumedElapsedSeconds, workoutSaveFingerprint, isRetryableWorkoutError, claimWorkoutAction, releaseWorkoutAction } from '../lib/workoutDraft.js'
 import { canSaveDurationOnlyWorkout } from '../lib/freeSession.js'
 import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, TRAINING_AUDIO_PROFILES } from '../lib/timerCues.js'
 import { preloadSoundPack, unlockSoundPack, playPackSignal, playDirectPackSignal, stopDirectAudio, stopPackAudio, SOUND_PACK_NAMES, SOUND_PACK_VERSION, readAudioPack, setAudioPack } from '../lib/trainingAudio.js'
@@ -1277,7 +1277,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const filteredExercises = useMemo(() => {const q=query.trim().toLowerCase();return exercises.filter(e=>(!favoritesOnly||favoriteNames.includes(e.name))&&[e.name,e.category,e.equipment,exerciseBrowseCategory(e)].some(value=>String(value||'').toLowerCase().includes(q)))}, [exercises,query,favoritesOnly,favoriteNames])
 
   async function cancelManualEntry() {
-    if(!manualEntry||saving||saveLock.current)return
+    if(!manualEntry||saving||!claimWorkoutAction(saveLock))return
+    try {
     const pending=Boolean(pendingSave.current)
     if(pending&&!await flowConfirm.ask({"title":"Lagring ikkje stadfesta","message":"Avbryt vidare lagringsforsøk og forkast lokal kladd? Ei økt som allereie er motteken av databasen blir ikkje sletta.","confirmLabel":"Forkast kladd","cancelLabel":"Behald kladd","danger":true}))return
     if(!pending&&hasManualEntryChanges(draftSnapshot,localDateISO())&&!await flowConfirm.ask({"title":"Avbryta registrering?","message":"Tala i kladden blir forkasta. WOD-malen blir behalden.","confirmLabel":"Forkast","cancelLabel":"Hald fram","danger":true}))return
@@ -1292,15 +1293,20 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     setSaveToken(crypto.randomUUID());setTimerSnapshot({elapsed:0,laps:[],roundsCompleted:0,phase:'Klar',running:false})
     clearTimerSnapshot();setError('');setNotice('');setMode('retro-choose')
     window.scrollTo({top:0,behavior:'auto'})
+    } finally {releaseWorkoutAction(saveLock)}
   }
 
   async function leaveWorkout() {
     if(manualEntry){cancelManualEntry();return}
-    if (saving || saveLock.current || !await flowConfirm.ask({"title":"Forkasta økta?","message":"Ingen resultat eller PR blir registrerte. WOD-malen blir behalden.","confirmLabel":"Forkast økt","cancelLabel":"Hald fram","danger":true})) return
+    if(saving||!claimWorkoutAction(saveLock))return
+    try {
+    if (!await flowConfirm.ask({"title":"Forkasta økta?","message":"Ingen resultat eller PR blir registrerte. WOD-malen blir behalden.","confirmLabel":"Forkast økt","cancelLabel":"Hald fram","danger":true})) return
+    pendingSave.current=null;setSyncNotice('');clearWorkoutDraft(memberId)
     setFinishOpen(false); setMode('home'); setRestoredTimerSnapshot(null); setSource(null); setClassSessionId(null); setItems([])
     setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
     clearTimerSnapshot()
     onDiscard?.()
+    } finally {releaseWorkoutAction(saveLock)}
   }
 
   function startWorkout(wod = null, { autoStart = Boolean(wod), forResult = false, retrospective = false } = {}) {
@@ -1503,10 +1509,14 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       setError('Legg til minst eitt sett på kvar øving før du lagrar.'); return
     }
     if(!manualEntry&&items.some(item=>item.prescribed_sets_prefilled)&&!confirmedPlannedEmom){setError('Stadfest at du har kontrollert dei førehandsutfylte EMOM-setta, og rett eventuelle avvik før du lagrar.');resultCorrectionRef.current='confirmEmom';return}
+    if(!claimWorkoutAction(saveLock))return
+    let protectedDraft=false
+    let validated=false
+    setSaving(true)
+    try {
     if(!automatic&&finishOpen&&pendingWeightItems.length&&!await flowConfirm.ask({title:'Vekt manglar',message:pendingWeightItems.map(item=>flowItemGroup(item,flowSchema,format).title+' · '+item.exercise_name+': sett '+item.sets.map((set,index)=>entered(set.reps)&&Number(set.reps)>0&&!entered(set.load_kg)?index+1:null).filter(Boolean).join(', ')).join('\n')+'\n\nDu kan lagra utan vekt eller retta første felt.',confirmLabel:'Lagra utan vekt',cancelLabel:'Rett vekt'})){const item=pendingWeightItems[0],itemIndex=items.indexOf(item),setIndex=item.sets.findIndex(set=>entered(set.reps)&&Number(set.reps)>0&&!entered(set.load_kg));correctResultIssue({itemIndex,setIndex,part:flowItemGroup(item,flowSchema,format).title,exercise:item.exercise_name,field:'load_kg',message:'Registrer faktisk vekt, eller vel å lagra utan vekt.'});return}
-    const protectedDraft=saveWorkoutDraft(memberId,draftSnapshot)
+    protectedDraft=saveWorkoutDraft(memberId,draftSnapshot)
     setDraftProtected(protectedDraft)
-    saveLock.current=true
     // Unlock during the save gesture, not after the asynchronous database call.
     const victoryPrefs=readPRVictoryAudio()
     let victoryContext=null
@@ -1515,9 +1525,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       try{const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(AudioContextClass){if(!sharedTrainingAudioContext||sharedTrainingAudioContext.state==='closed')sharedTrainingAudioContext=new AudioContextClass();victoryContext=sharedTrainingAudioContext;unlockSoundPack(victoryContext,victoryPrefs.profile).catch(()=>{})}}catch{}
     }
     setVictoryNotice([]);setVictoryOverlay([])
-    setSaving(true); setError(''); setNotice('')
-    let validated=false
-    try {
+    setError(''); setNotice('')
       const normalizedFormat = format.toLowerCase()
       const combinationMode = source?.timer_settings?.workout_schema?.combination_mode
       const isAmrapScore = !flowCompletionOnly&&((!manualLibraryEntry&&normalizedFormat === COMPOSITE_FORMAT.toLowerCase()) || normalizedFormat === 'amrap' || (['couplet','triplet'].includes(normalizedFormat) && combinationMode === 'AMRAP'))
@@ -1646,7 +1654,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         setError(err.message || 'Kunne ikkje lagra økta. Kladden er framleis open.')
       }
     } finally {
-      saveLock.current=false;setSaving(false)
+      releaseWorkoutAction(saveLock);setSaving(false)
     }
   }
   retrySave.current=()=>saveWorkout(null,true)
