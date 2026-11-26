@@ -1,6 +1,6 @@
 # GarasjeGym – DRIFTSREGISTER / STAMMORDNUNG 49
 
-Maintained operational index. Snapshot 2026-11-26; refresh after each release. This is a public repository: no account information, user records, backups, secrets or detailed security findings belong here.
+Maintained operational index. Snapshot 2026-11-26; refresh after each release. Ancestry audit completed against 7eee80e3e775471fd51f7bb15cfaae51f4e502c4. This is a public repository: no account information, user records, backups, secrets or detailed security findings belong here.
 
 ## One production system
 - App: https://tibraxtimb.github.io/Garasjegym/
@@ -23,40 +23,40 @@ Snapshot before documentation cleanup:
 
 | Branch | Head (snapshot) | Classification |
 |---|---|---|
-| `audio-studio-ki-probe` | `667e3a5f7900` | HOLD – verify ancestry and unique changes before archive |
-| `doppeladler-bibliothekar` | `c94469f335bd` | ACTIVE CANDIDATE – do not delete |
-| `flow-result-refinement` | `7763516d02bd` | HOLD – verify ancestry and unique changes before archive |
-| `garasjegym-2.0-sturm­kopf` | `bff5abf9fc34` | PRODUCTION |
-| `gazelle-acta` | `f0d61aa1f615` | HOLD – verify ancestry and unique changes before archive |
-| `gazelle-alternative-audio` | `5e11651f4b8a` | HOLD – verify ancestry and unique changes before archive |
-| `gazelle-architect` | `4aad9392f6af` | HOLD – verify ancestry and unique changes before archive |
-| `gazelle-flow-compact` | `2b576fc80780` | HOLD – verify ancestry and unique changes before archive |
-| `gazelle-introkurs-integrity` | `54a449672081` | HOLD – verify ancestry and unique changes before archive |
-| `gazelle-librarium` | `4986faa06cc1` | HOLD – verify ancestry and unique changes before archive |
-| `gazelle-librarium-polish` | `ace1db004c41` | HOLD – verify ancestry and unique changes before archive |
-| `gazelle-operational-anatomical` | `c35d9cfc7efb` | HOLD – verify ancestry and unique changes before archive |
-| `gazelle-plan-folders` | `9e7b4cb9fa7c` | HOLD – verify ancestry and unique changes before archive |
-| `gazelle-pt-compact` | `7ca7fd8845d5` | HOLD – verify ancestry and unique changes before archive |
-| `gazelle-pt-flow-integration` | `0ab23c55715c` | HOLD – verify ancestry and unique changes before archive |
-| `gazelle-pt-flow-repair` | `083cfc9ec06b` | HOLD – verify ancestry and unique changes before archive |
-| `gazelle-pt-flow-unlock` | `82fc03999968` | HOLD – verify ancestry and unique changes before archive |
-| `gazelle-pt-plan` | `09515100d199` | HOLD – verify ancestry and unique changes before archive |
-| `gazelle-responsive-audit` | `a3fbd9336a15` | HOLD – verify ancestry and unique changes before archive |
-| `hotfix-pt-dialog-layout-20261126` | `ea8f9e81a32a` | MERGED – retain history |
-| `klarheit-default-dispatch` | `75d9c6f2dfc8` | SUPERSEDED – retain reference |
-| `klarheit-release-order` | `d37e8303acb5` | MERGED – retain history |
-| `main` | `326f73f18289` | LEGACY – default, no releases |
-| `operation-klarheit` | `41320f7f7e19` | MERGED – retain history |
-| `rollback-gazelle-20261126-3474dac` | `3474dac343ff` | ROLLBACK – retain |
-| `volksmaschine-reibungslos` | `9174a8425a4e` | HOLD – verify ancestry and unique changes before archive |
-| `werkstatt-pc-companion` | `e150643f44f8` | MERGED – retain history |
+| `audio-studio-ki-probe` | `667e3a5f7900` | DIVERGED – 6 unique commits, retain |
+| `doppeladler-bibliothekar` | `c94469f335bd` | ACTIVE AUTOMATION – ancestor, retain |
+| `flow-result-refinement` | `7763516d02bd` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `garasjegym-2.0-sturm­kopf` | `7eee80e3e775` | PRODUCTION |
+| `gazelle-acta` | `f0d61aa1f615` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `gazelle-alternative-audio` | `5e11651f4b8a` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `gazelle-architect` | `4aad9392f6af` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `gazelle-flow-compact` | `2b576fc80780` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `gazelle-introkurs-integrity` | `54a449672081` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `gazelle-librarium` | `4986faa06cc1` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `gazelle-librarium-polish` | `ace1db004c41` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `gazelle-operational-anatomical` | `c35d9cfc7efb` | DIVERGED – 40 unique commits, retain |
+| `gazelle-plan-folders` | `9e7b4cb9fa7c` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `gazelle-pt-compact` | `7ca7fd8845d5` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `gazelle-pt-flow-integration` | `0ab23c55715c` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `gazelle-pt-flow-repair` | `083cfc9ec06b` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `gazelle-pt-flow-unlock` | `82fc03999968` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `gazelle-pt-plan` | `09515100d199` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `gazelle-responsive-audit` | `a3fbd9336a15` | DIVERGED – 1 unique commits, retain |
+| `hotfix-pt-dialog-layout-20261126` | `ea8f9e81a32a` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `klarheit-default-dispatch` | `75d9c6f2dfc8` | SUPERSEDED – unique legacy history, retain |
+| `klarheit-release-order` | `d37e8303acb5` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `main` | `a3ddfa5bbac7` | LEGACY – default; unique history, retain |
+| `operation-klarheit` | `41320f7f7e19` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `rollback-gazelle-20261126-3474dac` | `3474dac343ff` | ROLLBACK – ancestor, retain |
+| `volksmaschine-reibungslos` | `9174a8425a4e` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
+| `werkstatt-pc-companion` | `e150643f44f8` | ARCHIVE CANDIDATE – verified ancestor (0 unique commits), retain until dependency check |
 
-MERGED denotes confirmed integrated PR work, not permission to delete. HOLD entries are not verified as redundant; keep them. The old PR #2 and optional default-branch dispatch PR #7 are superseded by the working KLARHEIT mechanism.
+GitHub compare verified 21 ancestors, of which 19 are archive candidates and two are reserved for active automation/rollback; five diverged branches plus production. No branches deleted; confirm workflow and automation dependencies before deletion. Diverged means unique commits, not necessarily unique current content. The old PR #2 and optional default-branch dispatch PR #7 are superseded by the working KLARHEIT mechanism.
 
 ## Current backlog
 - [EXPORTWERK 49 #11](https://github.com/tibraxTIMB/Garasjegym/issues/11) – separate candidate; do not include in prior published release.
 - DOPPELADLER – retain active candidate and existing automation scope.
-- Database maintenance: review advisor findings privately, confirm RPC authorization and RLS through tests, reconcile applied migration history against checked-in provenance, evaluate indexes from workload (never blindly drop “unused” indexes).
+- Database maintenance: [migration lineage](MIGRATION_LINEAGE.md) records 10 exact source matches and one partial composite match. Advisor checks and function metadata inspected privately; role-behavior tests remain necessary. Evaluate indexes from workload (never blindly drop “unused” indexes).
 - Infrastructure: consider renaming display labels only, after verifying actual project identity; consider branch protection only after confirming plan constraints and release-order compatibility. No change to production identity.
 - Backup: dated offline DATABUNKER, verify restore locally. No dump in public GitHub. A backup is not verified until it can be restored; document actual backup result separately.
 
