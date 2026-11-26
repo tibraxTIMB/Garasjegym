@@ -27,6 +27,7 @@ export function flowBlockForItem(item,schema={},format=''){
 }
 export function flowItemGroup(item,schema={},format=''){
  const block=flowBlockForItem(item,schema,format)
+ if(block.samspel)return {id:block.id,title:block.title||format,reporting:'done',purpose:flowPurpose(block,schema)}
  if(schema.library_category==='warmup')return {id:item.warmup_phase==='movement_rehearsal'?'warmup-build':'warmup-prep',title:item.warmup_phase==='movement_rehearsal'?'Teknikk / finn arbeidsvekt':'Felles oppvarming',reporting:'done'}
  return {id:block.id,title:block.title||format,reporting:flowReporting(block,schema),purpose:flowPurpose(block,schema)}
 }

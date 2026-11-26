@@ -245,3 +245,12 @@ test('quality and recovery parts retain their own timer, status and distance',()
  assert.equal(isIndividualPerformance({result_data:{samspel_blocks:result.rows}}),false)
  assert.equal(isIndividualPerformance({result_data:{wod_engine:{blocks:[q,r]}}}),false)
 })
+
+import {mergeCompositeSamspelResults} from '../src/lib/compositeWod.js'
+test('composite team evidence overrides clock completion without changing other parts',()=>{
+ const raw=[{id:'a',elapsed:600,completed:true,roundsCompleted:10},{id:'b',completed:true,roundsCompleted:5}]
+ const measured=[{block_id:'a',title:'Quality',elapsed:600,completed:false,distance:900,samspel:qualityRowConfig()}]
+ const merged=mergeCompositeSamspelResults(raw,measured)
+ assert.equal(merged[0].completed,false);assert.equal(merged[0].roundsCompleted,null);assert.equal(merged[0].distance,900);assert.deepEqual(merged[1],raw[1])
+ assert.equal(mergeCompositeSamspelResults([],measured)[0].id,'a')
+})

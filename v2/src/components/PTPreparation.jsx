@@ -1,3 +1,4 @@
+import {compositeSamspelConfig} from '../lib/compositeWod.js'
 import {samspelConfig,samspelRoles,samspelRoundInstruction,samspelStationLabels} from '../lib/samspel.js'
 import {preparationItems,equipmentItemsForSamspel} from '../lib/equipmentPreparation.js'
 import Lastmeister,{hasBarbellWork} from './Lastmeister.jsx'
@@ -14,7 +15,9 @@ export default function PTPreparation({session,references=[],onReview,expanded=f
  const prior=history.key===referenceKey?history:null
  const p=ptPreparation(session)
  const samspel=samspelConfig(session?.workout_snapshot?.timer_settings?.workout_schema)
- const items=equipmentItemsForSamspel(preparationItems(session?.workout_snapshot||{}),session?.workout_snapshot?.timer_settings?.workout_schema?.samspel)
+ const schema=session?.workout_snapshot?.timer_settings?.workout_schema||{}
+ const samspelParts=(schema.wod_engine?.blocks||[]).flatMap(block=>{const config=compositeSamspelConfig(block);return config?[{id:block.id,title:block.title,config}]:[]})
+ const items=equipmentItemsForSamspel(preparationItems(session?.workout_snapshot||{}),schema.samspel).concat(samspelParts.flatMap((part,i)=>equipmentItemsForSamspel([],part.config).map(x=>({...x,key:x.key+'-'+i}))))
  const {status:inventoryStatus,values:capacityValues,rows:inventoryRows}=useInventoryCapacity(items,session?.workout_snapshot?.timer_settings?.workout_schema?.equipment_plan||{})
  if(!p.format&&!p.minutes&&!p.focus&&!p.note&&!p.preparation&&!p.materials&&!items.length&&!referenceKey)return null
  return <details className="customer-plan-details" open={expanded||undefined}>
@@ -22,6 +25,7 @@ export default function PTPreparation({session,references=[],onReview,expanded=f
   <div style={{display:'grid',gap:4,padding:'8px 0'}}>
    {(p.format||p.minutes)&&<small>{[p.format,p.minutes?p.minutes+' min':null].filter(Boolean).join(' · ')}</small>}
    {samspel&&<section aria-label="Samspel-førebuing"><strong>Samspel · {samspel.participant_count||2} utøvarar</strong><div className="gg-samspel-roles">{samspelStationLabels(samspel,samspelRoles(samspel,0)).map((role,i)=><small key={i}>P{i+1} · {role}</small>)}</div><small>{samspelRoundInstruction(samspel)}</small></section>}
+   {samspelParts.map(part=><section key={part.id} aria-label={'Samspel-førebuing · '+part.title}><strong>{part.title} · {part.config.participant_count} utøvarar</strong><div className="gg-samspel-roles">{samspelStationLabels(part.config,samspelRoles(part.config,0)).map((role,i)=><small key={i}>P{i+1} · {role}</small>)}</div><small>{samspelRoundInstruction(part.config)}</small></section>)}
    {p.focus&&<div><strong>Fokus:</strong> {p.focus}</div>}
    {p.preparation&&<div><strong>Førebuing:</strong> {p.preparation}</div>}
    {p.materials&&<div><strong>Utstyr og materiell:</strong> {p.materials}</div>}

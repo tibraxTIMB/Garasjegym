@@ -259,3 +259,9 @@ export function compositeSamspelResults(blocks=[],scores={},timerResults={},manu
  }
  return {rows,issue:null}
 }
+
+export function mergeCompositeSamspelResults(blocks=[],actual=[]){
+ const byId=new Map(actual.map(row=>[row.block_id,row]))
+ const merge=(block,row)=>({...block,id:row.block_id,title:row.title,format:'Eigen økt',scoreMode:'none',samspel:row.samspel,elapsed:row.elapsed??block.elapsed??null,distance:row.distance,completed:row.completed,roundsCompleted:null,extra_reps:null})
+ return [...blocks.map(block=>byId.has(block.id)?merge(block,byId.get(block.id)):block),...actual.filter(row=>!blocks.some(b=>b.id===row.block_id)).map(row=>merge({},row))]
+}
