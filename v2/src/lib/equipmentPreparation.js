@@ -54,3 +54,24 @@ export function equipmentAlternatives(item,catalogue=[],tagsFor=()=>[]){
   return p&&p.mode===profile.mode&&prim(p)===prim(profile)&&(tagsFor(ex)||[]).some(t=>tags.includes(t))
  }).slice(0,5)
 }
+
+const inventoryKey=owner=>'garasjegym.equipment.v1.'+owner
+export function readEquipmentInventory(owner,storage){
+ if(!owner)return {}
+ try{const raw=JSON.parse((storage??globalThis.localStorage).getItem(inventoryKey(owner))||'{}')
+ return Object.fromEntries(Object.entries(raw||{}).filter(([k,v])=>k&&Number.isSafeInteger(v)&&v>=0&&v<=999))
+ }catch{return {}}
+}
+export function saveEquipmentInventory(owner,items,values,storage){
+ if(!owner)return false
+ const rows=equipmentCapacity(items,values)
+ if(rows.some(r=>r.status==='invalid'))return false
+ const next={...readEquipmentInventory(owner,storage)}
+ for(const row of rows)if(row.available!==null)next[row.key]=row.available
+ try{(storage??globalThis.localStorage).setItem(inventoryKey(owner),JSON.stringify(next));return true}catch{return false}
+}
+export function applyEquipmentInventory(items,values,inventory){
+ const next={...values}
+ for(const row of equipmentCapacity(items,values))if(Object.hasOwn(inventory,row.key)&&Number.isSafeInteger(inventory[row.key])&&inventory[row.key]>=0&&inventory[row.key]<=999)next[row.key]={...next[row.key],available:inventory[row.key]}
+ return next
+}
