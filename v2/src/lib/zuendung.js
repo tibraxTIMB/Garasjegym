@@ -45,3 +45,13 @@ export function compositePartLabel(blocks,index){
  if(b?.warmup_group)return '0.'+(blocks.slice(0,index).filter(x=>x.warmup_group===b.warmup_group).length+1)
  return String.fromCharCode(65+blocks.slice(0,index).filter(x=>!x.warmup_group).length)
 }
+
+// Only the entire, not-yet-started leading prep group can be skipped.
+// Standalone warmup WODs and already-started timers are never silently skipped.
+export function skipZuendung(blocks=[],active=0,results={}){
+ const group=blocks[0]?.warmup_group
+ if(!group||active!==0)return null
+ const next=blocks.findIndex(b=>b.warmup_group!==group)
+ if(next<1||Object.values(results).some(s=>s?.hasStarted||s?.running||Number(s?.elapsed)>0||s?.countdownDeadline||s?.phase&&s.phase!=='Klar'))return null
+ return {next,results:{...results,...Object.fromEntries(blocks.slice(0,next).map((_,i)=>[i,{elapsed:0,roundsCompleted:0,laps:[],phase:'HOPPA OVER',hasStarted:false,running:false,prep_skipped:true}]))}}
+}

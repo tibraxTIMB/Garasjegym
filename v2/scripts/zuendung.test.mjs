@@ -23,3 +23,20 @@ test('prep partner row has no required distance; missing other exercises fail sa
  assert.equal(result.issue,null);assert.equal(result.rows[0].distance,null)
  assert.throws(()=>buildZuendung('panzerbein','individual',[]),/manglar/)
 })
+
+import {skipZuendung} from '../src/lib/zuendung.js'
+test('skip only untouched leading prep, keep next main block stopped',()=>{
+ const x=buildZuendung('eisenkette','partner',catalogue,()=> 'w')
+ const all=[...x.blocks,{id:'main',format:'AMRAP'}]
+ const skipped=skipZuendung(all,0,{0:{phase:'Klar',elapsed:0}})
+ assert.equal(skipped.next,3)
+ assert.equal(Object.keys(skipped.results).length,3)
+ assert.ok(Object.values(skipped.results).every(r=>r.prep_skipped&&!r.hasStarted))
+ assert.equal(skipZuendung(x.blocks,0,{}),null)
+ assert.equal(skipZuendung(all,1,{}),null)
+ assert.equal(skipZuendung(all,0,{0:{hasStarted:true}}),null)
+ assert.equal(skipZuendung(all,0,{0:{countdownDeadline:123}}),null)
+ const result=compositeSamspelResults(all,{},skipped.results,false)
+ assert.equal(result.issue,null)
+ assert.ok(result.rows.every(r=>!r.completed&&r.samspel.participant_results.every(p=>p.quality_status==='skipped')))
+})

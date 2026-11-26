@@ -248,12 +248,12 @@ export function compositeSamspelResults(blocks=[],scores={},timerResults={},manu
   if(!block.samspel)continue
   const s=compositeSamspelConfig(block),title=block.title||'Del '+(index+1)
   if(!s)return {rows:[],issue:title+': Samspel-oppsettet er ikkje støtta.'}
-  const draft=scores['samspel:'+block.id]||{}
+  const snapshot=timerResults[index]||{}
+  const draft=snapshot.prep_skipped&&block.warmup_group?{participants:Object.fromEntries(Array.from({length:s.participant_count},(_,i)=>[i+1,{quality:'skipped'}]))}:scores['samspel:'+block.id]||{}
   const result=samspelParticipantResults(s,draft.participants||{})
   if(result.issue)return {rows:[],issue:title+' · '+result.issue,field:'samspel-block-'+block.id+'-'+result.slot+'-'+result.field}
   const issue=block.warmup_group&&String(draft.distance??'').trim()===''?null:samspelResultIssue(s,draft.distance)
   if(issue)return {rows:[],issue:title+' · '+issue,field:'samspel-block-'+block.id+'-distance'}
-  const snapshot=timerResults[index]||{}
   const started=manual||snapshot.hasStarted===true||Number(snapshot.elapsed)>0
   if(!started&&result.rows.some(r=>r.quality_status!=='skipped'))return {rows:[],issue:title+': delen vart ikkje starta. Stadfest ikkje utført eller etterregistrer økta.',field:'samspel-block-'+block.id+'-1-quality'}
   if(!started&&samspelQuality(s)&&Number(draft.distance||0)!==0)return {rows:[],issue:title+': delen vart ikkje starta. Distanse må vera 0.',field:'samspel-block-'+block.id+'-distance'}
