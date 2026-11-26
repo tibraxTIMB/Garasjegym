@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+const training=readFileSync(new URL('../src/components/Training.jsx',import.meta.url),'utf8')
+const css=readFileSync(new URL('../src/components/timer-viewport.css',import.meta.url),'utf8')
+assert.equal((training.match(/\{manualButton\}\{samspelSwapButton\}/g)||[]).length,2)
+assert.match(training,/className="gg-samspel-swap" disabled=\{swapLocked\}/)
+assert.match(training,/swapLocked=!running\|\|timerLimitReached/)
+assert.match(training,/className="gg-samspel-info"><summary>/)
+assert.match(training,/disabled=\{!samspelSwaps.length\|\|running\|\|timerLimitReached\}/)
+assert.match(training,/data-count=\{samspelState.roles.length\}/)
+assert.match(training,/<details><summary>Grunnlag<\/summary>/)
+assert.match(css,/\.gg-timer-work-actions--swap \.gg-manual-action\{flex:1 1 0;width:auto!important;min-width:0\}/)
+assert.match(css,/\.gg-samspel-swap\{[^}]*min-height:48px/)
+assert.match(css,/\.gg-live-timer--manual \.gg-live-timer__footer \.gg-timer-work-actions\{flex:1 1 60%/)
+assert.match(css,/\.gg-samspel-roles\[data-count="8"\]\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)\}/)
+assert.match(css,/@media\(orientation:portrait\) and \(max-width:380px\)/)
+console.log('12 timer layout source checks passed')
