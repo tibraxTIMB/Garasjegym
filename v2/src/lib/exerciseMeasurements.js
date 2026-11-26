@@ -45,6 +45,8 @@ export function getExerciseMeasurementFlags(exercise = {}) {
   const externalLoad = EXTERNAL_LOAD.test(equipment) || EXTERNAL_LOAD.test(name);
   // Mobility defaults to repetitions/time; retain explicitly saved measurements.
   if (isMobilityExercise(exercise) && !externalLoad && !exercise.is_complex) return {usesHeight,usesLoad:hasSavedLoad};
+  const unweightedEquipment = /^(?:kroppsvekt|matte|vegg|strikk|miniband|ingen)(?:\s*\/\s*(?:kroppsvekt|matte|vegg|strikk|miniband))*$/.test(equipment.trim());
+  if (unweightedEquipment && !externalLoad && !exercise.is_complex) return {usesHeight,usesLoad:hasSavedLoad};
   const boxOnly = usesHeight && boxEquipment && !externalLoad;
   const ordinaryLoad = LOAD_MOVEMENT.test(name) && !BODYWEIGHT_MOVEMENT.test(name)
     && (!usesHeight || /step.?up/i.test(name)) && !boxOnly;
