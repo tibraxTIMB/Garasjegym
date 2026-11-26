@@ -20,7 +20,7 @@ jobs:
           POSTGRES_DB: ordre006
         ports:
           - 5432:5432
-        options: --health-cmd pg_isready --health-interval 5s --health-timeout 3s --health-retries 10
+        options: --health-cmd "pg_isready -U postgres -d ordre006" --health-interval 5s --health-timeout 3s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - name: Apply candidates to disposable fixture and test roles
@@ -31,5 +31,5 @@ jobs:
             -f v2/supabase/preflight/ordnung006_fixture.sql \
             -f v2/supabase/preflight/ordnung006_shared_inventory_candidate.sql \
             -f v2/supabase/preflight/ordnung006_pt_result_provenance_candidate.sql \
-            -f v2/supabase/preflight/ordnung006_assignment_schedule_candidate.sql \\
+            -f v2/supabase/preflight/ordnung006_assignment_schedule_candidate.sql \
             -f v2/supabase/preflight/ordnung006_assertions.sql
