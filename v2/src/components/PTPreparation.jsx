@@ -13,7 +13,7 @@ export default function PTPreparation({session}){
    {p.focus&&<div><strong>Fokus:</strong> {p.focus}</div>}
    {p.preparation&&<div><strong>Førebuing:</strong> {p.preparation}</div>}
    {p.materials&&<div><strong>Utstyr og materiell:</strong> {p.materials}</div>}
-   <EquipmentPreparation items={items}/>
+   <EquipmentPreparation items={items} values={session?.workout_snapshot?.timer_settings?.workout_schema?.equipment_plan||{}}/>
    {p.note&&<div><strong>PT-notat:</strong> {p.note}</div>}
   </div>
  </details>
