@@ -1,0 +1,31 @@
+name: Gazelle isolated validation
+on:
+  push:
+    branches: [gazelle-operational-anatomical]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: gazelle-isolated-validation
+  cancel-in-progress: true
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/gazelle-operational-anatomical'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: v2/package-lock.json
+      - run: npm ci
+      - name: Regression suite
+        run: npm test
+      - name: Production compilation without live credentials
+        if: success() || failure()
+        run: npm run build
