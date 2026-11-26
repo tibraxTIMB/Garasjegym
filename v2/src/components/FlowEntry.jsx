@@ -1,17 +1,17 @@
 import {createContext,useContext,useEffect,useId,useRef,useState} from 'react'
 import {ArrowDown,ArrowLeft,ArrowRight,Check,Delete} from 'lucide-react'
-import {flowKeyValue,flowStepValue,flowAcceptValue} from '../lib/flowKeypad.js'
+import {flowKeyValue,flowStepValue,flowAcceptValue,flowNavigationIndex} from '../lib/flowKeypad.js'
 import './flow-entry.css'
 const FlowContext=createContext(null)
 export function FlowEntryProvider({children}){
  const [active,setActive]=useState(null)
  const registry=useRef(new WeakMap()),fresh=useRef(false),panel=useRef(null)
- function open(node){if(!node||node.disabled)return;fresh.current=true;setActive(node);requestAnimationFrame(()=>{if(node.isConnected)node.select()})}
+ function open(node){if(!node||node.disabled||!node.isConnected)return;fresh.current=true;setActive(node);requestAnimationFrame(()=>{if(node.isConnected&&document.activeElement===node)node.select()})}
  function close(){if(active===document.activeElement)active.blur();setActive(null)}
  function fields(){return Array.from(panel.current?.querySelectorAll('input[data-flow-number]')||[]).filter(el=>!el.disabled&&el.getClientRects().length>0)}
  function move(delta,sameField=false){
-  const all=fields(),group=sameField&&active?.dataset.flowField?all.filter(el=>el.dataset.flowField===active.dataset.flowField):all
-  const next=group[group.indexOf(active)+delta]
+  const all=fields(),index=flowNavigationIndex(all,active,delta,sameField)
+  const next=index===null?null:all[index]
   if(next){next.focus({preventScroll:true});open(next);next.scrollIntoView({block:'nearest',inline:'nearest'});return}
   if(!sameField&&delta>0)close()
  }
@@ -25,15 +25,15 @@ export function FlowNumberInput({type,inputMode,min,max,step,value,onChange,kind
  const key=field||props['data-result-field']||''
  meta.current={decimal,negative,time,min:min??0,max:max??Infinity,key,change:v=>onChange?.({target:{value:v}})}
  useEffect(()=>{const el=node.current;if(el&&ctx)ctx.registry.current.set(el,meta);return()=>{if(el&&ctx)ctx.registry.current.delete(el)}},[ctx?.registry])
- return <input {...props} ref={node} type="text" inputMode="none" autoComplete="off" spellCheck={false} data-flow-number="" data-flow-field={key} value={value??''} onFocus={e=>ctx?.open(e.currentTarget)} onClick={e=>{if(ctx?.active!==e.currentTarget)ctx?.open(e.currentTarget)}} onChange={e=>{const v=flowAcceptValue(e.target.value,meta.current);if(v!==null){if(ctx)ctx.fresh.current=false;onChange?.({target:{value:v}})}}} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();ctx?.move(1)}else if(e.key==='Escape'){e.preventDefault();ctx?.close()}}}/>
+ return <input {...props} ref={node} type="text" inputMode={ctx?'none':time?'text':decimal?'decimal':'numeric'} autoComplete="off" spellCheck={false} data-flow-number="" data-flow-field={key} value={value??''} onFocus={e=>ctx?.open(e.currentTarget)} onClick={e=>{if(ctx?.active!==e.currentTarget)ctx?.open(e.currentTarget)}} onChange={e=>{const v=flowAcceptValue(e.target.value,meta.current);if(v!==null){if(ctx)ctx.fresh.current=false;onChange?.({target:{value:v}})}}} onKeyDown={e=>{if(ctx&&e.key==='Enter'){e.preventDefault();ctx.move(1)}else if(ctx&&e.key==='Escape'){e.preventDefault();ctx.close()}}}/>
 }
 export function FlowKeypad(){
  const ctx=useContext(FlowContext),active=ctx?.active
  const meta=active&&ctx.registry.current.get(active)?.current
  if(!active||!meta||!active.isConnected)return null
  const label=active.getAttribute('aria-label')||active.closest('label')?.textContent?.trim()||'Resultat'
- function press(key){const v=flowKeyValue(active.value,key,{...meta,fresh:ctx.fresh.current});ctx.fresh.current=false;meta.change(v)}
- function adjust(delta){ctx.fresh.current=false;meta.change(flowStepValue(active.value,delta,meta.min,meta.max))}
+ function press(key){if(active.disabled||!active.isConnected)return;const v=flowKeyValue(active.value,key,{...meta,fresh:ctx.fresh.current});ctx.fresh.current=false;meta.change(v)}
+ function adjust(delta){if(active.disabled||!active.isConnected)return;ctx.fresh.current=false;meta.change(flowStepValue(active.value,delta,meta.min,meta.max))}
  const btn=(key,content=key,disabled=false)=><button key={key} type="button" disabled={disabled} onPointerDown={e=>e.preventDefault()} onClick={()=>press(key)}>{content}</button>
  return <aside className="gg-flow-keypad" aria-label="Garasjegym taltastatur">
   <header><strong>{label}</strong><button type="button" aria-label="Lukk taltastatur" onClick={ctx.close}><Check size={18}/> Ferdig</button></header>
