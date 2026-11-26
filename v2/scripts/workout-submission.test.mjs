@@ -23,3 +23,10 @@ assert.equal(readWorkoutSubmission('a','token-a',storage),null)
 assert.equal(restoreWorkoutDraft('a',storage).saveToken,'token-a')
 assert.equal(rememberWorkoutSubmission('a','token-a',fingerprint,{setItem(){throw Error('quota')}}),false)
 console.log('16 workout submission checks passed')
+
+const frozen={...draft,timerSnapshot:{elapsed:60,phase:'FULLFØRT',roundsCompleted:2,laps:[25,30],ghost_target:60,samspel_swaps:[20,40],remaining:0,displayTime:0,running:false}}
+const stable=workoutSaveFingerprint(frozen)
+assert.equal(workoutSaveFingerprint({...frozen,timerSnapshot:{...frozen.timerSnapshot,restored:true,savedAt:99,remaining:2,displayTime:2,samspel_roles:['AMRAP','Sykkel'],samspel_next_switch:null,currentRound:3}}),stable)
+for(const patch of [{elapsed:59},{phase:'PAUSE'},{roundsCompleted:3},{laps:[25,31]},{ghost_target:61},{samspel_swaps:[21,40]},{block_results:{a:{elapsed:60}}}])assert.notEqual(workoutSaveFingerprint({...frozen,timerSnapshot:{...frozen.timerSnapshot,...patch}}),stable)
+assert.notEqual(workoutSaveFingerprint({...frozen,participantScores:{'station-1':{erg:'120'}}}),stable)
+console.log('9 final snapshot fingerprint checks passed')
