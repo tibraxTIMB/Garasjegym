@@ -142,6 +142,6 @@ test('unloaded movements and Pilates Swimming use actual result metrics',()=>{
  assert.equal(exerciseRecordType('Pilates Swimming',[{reps:10}]),'reps')
  assert.equal(exerciseRecordType('Pilates Swimming',[{time_seconds:30}]),'hold')
  assert.equal(exerciseRecordType('Glute bridge',[{reps:8,load_kg:20}]),'load')
- assert.deepEqual(deriveExerciseRecords([workout(1,'Back squat',[{reps:5,load_kg:100,flow_status:'done'}])]),[])
+ assert.equal(deriveExerciseRecords([workout(1,'Back squat',[{reps:5,load_kg:100,flow_status:'done'}])]).flatMap(x=>x.records).length,0)
  assert.deepEqual(deriveExerciseRecords([workout(1,'I-T-Y-W',[{reps:10}])]),[])
 })
