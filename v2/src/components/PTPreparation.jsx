@@ -1,6 +1,6 @@
 import {preparationItems} from '../lib/equipmentPreparation.js'
 import EquipmentPreparation from './EquipmentPreparation.jsx'
-import {useInventoryCapacity} from './SharedInventory.jsx'
+import {useInventoryCapacity,InventoryNotes} from './SharedInventory.jsx'
 import React,{useEffect,useState} from 'react'
 import {supabase} from '../lib/supabase.js'
 import {priorPtSummary} from '../lib/ptPreparationHistory.js'
@@ -12,7 +12,7 @@ export default function PTPreparation({session,references=[],onReview,expanded=f
  const prior=history.key===referenceKey?history:null
  const p=ptPreparation(session)
  const items=preparationItems(session?.workout_snapshot||{})
- const {status:inventoryStatus,values:capacityValues}=useInventoryCapacity(items,session?.workout_snapshot?.timer_settings?.workout_schema?.equipment_plan||{})
+ const {status:inventoryStatus,values:capacityValues,rows:inventoryRows}=useInventoryCapacity(items,session?.workout_snapshot?.timer_settings?.workout_schema?.equipment_plan||{})
  if(!p.format&&!p.minutes&&!p.focus&&!p.note&&!p.preparation&&!p.materials&&!items.length&&!referenceKey)return null
  return <details className="customer-plan-details" open={expanded||undefined}>
   <summary>Førebu økta {referenceKey?'· tidlegare resultat':''}</summary>
@@ -22,7 +22,7 @@ export default function PTPreparation({session,references=[],onReview,expanded=f
    {p.preparation&&<div><strong>Førebuing:</strong> {p.preparation}</div>}
    {p.materials&&<div><strong>Utstyr og materiell:</strong> {p.materials}</div>}
    {items.length>0&&<small>{inventoryStatus==='ready'?'Tilgjengeleg utstyr: felles inventar der registrert, elles opphavleg plan.':'Tilgjengeleg utstyr: opphavleg plan; felles inventar ikkje stadfesta.'}</small>}
-   <EquipmentPreparation items={items} values={capacityValues}/>
+   <InventoryNotes items={items} rows={inventoryRows}/><EquipmentPreparation items={items} values={capacityValues}/>
    {referenceKey&&<section className="gg-prep-history"><strong>Sist gjennomførte tilsvarande WOD</strong>{prior?.status==='ready'&&prior.summary?<><small>{prior.summary.date||'Dato ikkje registrert'}</small>{prior.summary.unverified?<small>Individuell dosering kan ikkje stadfestast frå dette resultatet.</small>:prior.summary.rows.length?prior.summary.rows.map((row,i)=><div key={i}><b>{row.name}</b><small>{row.entries.join(' · ')}{row.more?' · +'+row.more+' sett':''}</small></div>):<small>Ingen individuelle sett registrerte.</small>}{onReview&&<button type="button" className="secondary-button" onClick={()=>onReview(prior.ref.kind+':'+prior.ref.id)}>Opna førre resultat</button>}</>:<small>{prior?.status==='unavailable'?'Kunne ikkje henta eit godkjent PT-resultat.':'Hentar PT-resultat …'}</small>}</section>}
    {p.note&&<div><strong>PT-notat:</strong> {p.note}</div>}
   </div>

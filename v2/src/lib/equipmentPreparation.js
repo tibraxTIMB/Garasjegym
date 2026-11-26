@@ -72,6 +72,6 @@ export function saveEquipmentInventory(owner,items,values,storage){
 }
 export function applyEquipmentInventory(items,values,inventory){
  const next={...values}
- for(const row of equipmentCapacity(items,values))if(Object.hasOwn(inventory,row.key)&&Number.isSafeInteger(inventory[row.key])&&inventory[row.key]>=0&&inventory[row.key]<=999)next[row.key]={...next[row.key],available:inventory[row.key]}
+ for(const row of equipmentCapacity(items,values))if(Object.hasOwn(inventory,row.key)&&(inventory[row.key]===null||Number.isSafeInteger(inventory[row.key])&&inventory[row.key]>=0&&inventory[row.key]<=999))next[row.key]={...next[row.key],available:inventory[row.key]}
  return next
 }

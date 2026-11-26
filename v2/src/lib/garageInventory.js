@@ -397,7 +397,7 @@ export function inventoryFromRows(rows=[]){
  for(const [group,counts] of groups){
   const keys=[group,...Object.keys(aliases).filter(k=>aliases[k]===group)]
   const sum=counts.reduce((a,b)=>a+(known(b)?b:0),0)
-  for(const key of keys){delete result[key];if(counts.every(known)&&sum<=999)result[key]=sum}
+  for(const key of keys)result[key]=counts.every(known)&&sum<=999?sum:null
  }
  return {...result}
 }
@@ -412,4 +412,12 @@ export function inventoryDraft(values){
 export function missingInitialInventory(rows=[]){
  const existing=new Set(rows.map(r=>r.equipment_key))
  return INITIAL_INVENTORY.filter(r=>!existing.has(r.equipment_key))
+}
+
+// Split composite requirements for note visibility only, never for automatic capacity.
+export function inventoryNotes(items=[],rows=[]){
+ const groups=new Set(items.flatMap(item=>String(item?.equipment||'').split('/').map(inventoryGroup)).filter(Boolean))
+ // A rack or barbell workout may encounter the unsafe rack attachments.
+ if(groups.has('stong')||groups.has('squat rack'))groups.add('racktilbehøyr')
+ return rows.filter(r=>r.inventory_kind==='item'&&r.notes&&groups.has(inventoryGroup(r.group_key))&&r.available!==0)
 }
