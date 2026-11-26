@@ -29,7 +29,9 @@ export function resumedElapsedSeconds(snapshot, now = Date.now()) {
 // Compare the exact confirmed result, not a changing clock snapshot timestamp.
 export function workoutSaveFingerprint(draft){
  const {savedAt,version,memberId,activeExerciseIndex,resultSetIndex,flowDetailed,resultSummary,...data}=draft||{}
- const {savedAt:clockSavedAt,...timerSnapshot}=data.timerSnapshot||{}
+ // Display-only clock fields can be recalculated on reload. Keep phase, elapsed,
+ // laps, round counts, planned target, swaps and block results in the fingerprint.
+ const {savedAt:clockSavedAt,restored,remaining,displayTime,currentRound,countdown,countdownDeadline,hasStarted,running,samspel_roles,samspel_next_switch,samspel_rotation,...timerSnapshot}=data.timerSnapshot||{}
  return JSON.stringify({...data,timerSnapshot})
 }
 export function isRetryableWorkoutError(error,offline=false){
