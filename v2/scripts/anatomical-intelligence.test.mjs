@@ -35,3 +35,16 @@ assert.ok(anatomyForExercise('Plank').primary.includes('abdominals'))
 assert.equal(anatomyForExercise('Ankle rocks'),null)
 assert.equal(anatomyForExercise('Band external rotation'),null)
 console.log('Catalogue variant and isometric role assertions passed')
+
+import {BODY_REGIONS,muscleMapRole} from '../src/lib/anatomyMap.js'
+const mapKeys=Object.values(BODY_REGIONS).flat().map(([muscle])=>muscle)
+assert.deepEqual([...new Set(mapKeys)].sort(),[...MUSCLES].sort())
+for(const side of Object.values(BODY_REGIONS)){
+ assert.equal(new Set(side.map(([muscle])=>muscle)).size,side.length)
+ assert.ok(side.every(([,d])=>d.startsWith('M')))
+}
+assert.equal(muscleMapRole({primary:1,secondary:2,stabilizing:3}),'primary')
+assert.equal(muscleMapRole({primary:0,secondary:2,stabilizing:3}),'secondary')
+assert.equal(muscleMapRole({stabilizing:3}),'stabilizing')
+assert.equal(muscleMapRole(undefined),'none')
+console.log('Muscle map coverage and role assertions passed')
