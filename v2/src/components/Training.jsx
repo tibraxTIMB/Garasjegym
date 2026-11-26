@@ -1676,8 +1676,9 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       setFinishOpen(false); setMode('home'); setReviewOpen(false)
       clearTimerSnapshot()
       setSaveToken(crypto.randomUUID())
-      await loadAll()
+      // Notify the parent once the save RPC is acknowledged, even if refresh fails.
       onSaved?.({victories})
+      await loadAll()
     } catch (err) {
       if(savedId){pendingSave.current=null;setSyncNotice('');setNotice('Økta er lagra. Oppdatering av oversikta feila; opna treningsloggen på nytt.');setError('');return}
       if(validated&&isRetryableWorkoutError(err,isOffline())){

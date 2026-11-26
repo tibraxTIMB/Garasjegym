@@ -74,3 +74,14 @@ test('Mi side updates only the user display name with a database guard', () => {
   assert.match(migration, /on public\.profiles for update to authenticated/)
   assert.match(migration, /pt_coaches add column public_name/)
 })
+
+test('optional after-action entry appears only after a confirmed save and is member scoped',()=>{
+ const app=src('../src/App.jsx'),training=src('../src/components/Training.jsx')
+ assert.match(app,/afterActionMember===session\.user\.id/)
+ assert.match(app,/setAfterActionMember\(session\.user\.id\)/)
+ assert.match(app,/aria-label="Etter økta"/)
+ assert.match(app,/setAfterActionMember\(null\);navigateTo\('kaffi'\)/)
+ assert.match(app,/setAfterActionMember\(null\);setScheduleTab\('booking'\)/)
+ assert.ok(training.indexOf('savedId=workoutId')<training.indexOf('onSaved?.({victories})'))
+ assert.match(training,/onSaved\?\.\(\{victories\}\)\s+await loadAll\(\)/)
+})
