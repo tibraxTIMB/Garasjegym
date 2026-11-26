@@ -1,0 +1,24 @@
+name: GarasjeGym · Production release
+
+# The actual release workflow lives on the SturmKopf production branch.
+# This default-branch entry exists solely to register workflow_dispatch.
+on:
+  workflow_dispatch:
+    inputs:
+      publish_production:
+        description: "Vel SturmKopf-produksjonsgreina. Main kan ikkje publisera."
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  reject-legacy-branch:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Refuse legacy branch publication
+        run: |
+          echo "::error::Main is legacy. Select the SturmKopf production branch in Run workflow."
+          exit 1
