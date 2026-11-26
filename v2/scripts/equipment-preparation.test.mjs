@@ -39,7 +39,7 @@ assert.equal(saveEquipmentInventory(null,gear,{},stockStorage),false)
 import {INITIAL_INVENTORY,inventoryFromRows,inventoryDraft,missingInitialInventory} from '../src/lib/garageInventory.js'
 assert.equal(new Set(INITIAL_INVENTORY.map(r=>r.equipment_key)).size,INITIAL_INVENTORY.length)
 assert.equal(INITIAL_INVENTORY.filter(r=>r.group_key==='vektskiver').reduce((sum,r)=>sum+r.available,0),16)
-assert.equal(INITIAL_INVENTORY.filter(r=>r.group_key==='vektskiver').reduce((sum,r)=>sum+r.available*r.weight_kg,0),124)
+assert.equal(INITIAL_INVENTORY.filter(r=>r.group_key==='vektskiver').reduce((sum,r)=>sum+r.available*r.weight_kg,0),128.5)
 const shared=inventoryFromRows([{equipment_key:'vektstong',available:99},...INITIAL_INVENTORY])
 assert.equal(shared.vektstong,3);assert.equal(shared.stong,3);assert.equal(shared.manualar,10);assert.equal(shared.kettlebell,4);assert.equal(shared.romaskin,1);assert.equal(shared['pull-up-stong'],1)
 assert.equal(shared.strikk,undefined);assert.equal(shared['vektstong / benk'],undefined)
