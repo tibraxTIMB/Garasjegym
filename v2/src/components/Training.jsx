@@ -1,4 +1,4 @@
-import {compositePartLabel,skipZuendung} from '../lib/zuendung.js'
+import {compositePartLabel,skipZuendung,mergeCompositeSnapshot} from '../lib/zuendung.js'
 import WarmupGuide from './WarmupGuide.jsx'
 import {needsWarmupChoice} from '../lib/warmupGuidance.js'
 import {collectResultIssues,resultIssueLabel} from '../lib/resultValidation.js'
@@ -863,7 +863,7 @@ function CompositeTimer({schema,exerciseList=[],previousLogs=[],prescriptionLeve
  const [breakHistory,setBreakHistory]=useState(()=>resumeState?.composite_breaks||[])
  const [finishPending,setFinishPending]=useState(false)
  const block=blocks[active]
- const reportBlock=useCallback(snapshot=>setResults(old=>{const prior=old[active];if(prior?.phase==='FULLFØRT'&&!['FULLFØRT','FERDIG','TIDSGRENSE'].includes(snapshot.phase))return old;return {...old,[active]:snapshot}}),[active])
+ const reportBlock=useCallback(snapshot=>setResults(old=>mergeCompositeSnapshot(old,active,snapshot)),[active])
  const advance=useCallback((autostart=false)=>{
   setInterlude(null)
   setAutoStartIndex(autostart?active+1:null)

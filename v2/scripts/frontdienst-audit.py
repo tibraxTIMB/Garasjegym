@@ -143,6 +143,8 @@ with sync_playwright() as pw:
         page.goto(URL,wait_until="domcontentloaded")
         expect(skip).to_have_count(0)
         page.wait_for_function("(k)=>JSON.parse(localStorage.getItem(k)||'{}').timerSnapshot?.active_block_index===3",arg=DRAFT,timeout=15000)
+        restored=page.evaluate("(k)=>JSON.parse(localStorage.getItem(k))",DRAFT)
+        assert all(restored["timerSnapshot"]["block_results"][str(i)]["prep_skipped"] for i in range(3))
         assert page.evaluate("(k)=>localStorage.getItem(k)",WRITES) is None
         assert not errors,errors
         print(f"FRONTDIENST ZÜNDUNG {w}x{h}: actual skip, stored status, no start or save, reload passed",flush=True)

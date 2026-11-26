@@ -55,3 +55,11 @@ export function skipZuendung(blocks=[],active=0,results={}){
  if(next<1||Object.values(results).some(s=>s?.hasStarted||s?.running||Number(s?.elapsed)>0||s?.countdownDeadline||s?.phase&&s.phase!=='Klar'))return null
  return {next,results:{...results,...Object.fromEntries(blocks.slice(0,next).map((_,i)=>[i,{elapsed:0,roundsCompleted:0,laps:[],phase:'HOPPA OVER',hasStarted:false,running:false,prep_skipped:true}]))}}
 }
+
+// A late snapshot from an unmounting prep timer must never resurrect a skipped part.
+export function mergeCompositeSnapshot(results,index,snapshot){
+ const prior=results[index]
+ if(prior?.prep_skipped)return results
+ if(prior?.phase==='FULLFØRT'&&!['FULLFØRT','FERDIG','TIDSGRENSE'].includes(snapshot.phase))return results
+ return {...results,[index]:snapshot}
+}

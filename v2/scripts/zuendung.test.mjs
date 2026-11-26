@@ -40,3 +40,13 @@ test('skip only untouched leading prep, keep next main block stopped',()=>{
  assert.equal(result.issue,null)
  assert.ok(result.rows.every(r=>!r.completed&&r.samspel.participant_results.every(p=>p.quality_status==='skipped')))
 })
+
+import {mergeCompositeSnapshot} from '../src/lib/zuendung.js'
+test('late timer snapshots cannot overwrite skipped prep',()=>{
+ const skipped=skipZuendung([{warmup_group:'w'},{warmup_group:'w'},{id:'main'}],0,{}).results
+ assert.equal(mergeCompositeSnapshot(skipped,0,{phase:'Klar',elapsed:0}),skipped)
+ assert.equal(mergeCompositeSnapshot(skipped,1,{phase:'FULLFØRT',elapsed:20}),skipped)
+ const next=mergeCompositeSnapshot(skipped,2,{phase:'Klar',hasStarted:false})
+ assert.equal(next[2].hasStarted,false)
+ assert.equal(next[0].prep_skipped,true)
+})

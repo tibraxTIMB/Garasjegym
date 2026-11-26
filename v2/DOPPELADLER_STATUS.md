@@ -66,3 +66,6 @@ edc5aade passed isolated validation, Frontdienst and production-target build; re
 
 ### Browser release gate
 b4cf2782: responsive, isolated and release build green. Frontdienst registration and Quality & Row green; new ZÜNDUNG journey failed at native select's accessible-name lookup before insertion. Added explicit unique accessible labels and updated test; end-to-end skip/reload not yet verified. No production deploy.
+
+### DA06/DA12 – 26 November 21:22 checkpoint
+3aaad8f Frontdienst log confirms registration at three sizes, Quality & Row and builder insertion reached; skip persistence failed with KeyError prep_skipped. Guard late snapshots against overwriting skipped blocks; add unit regression and verify persisted flags after reload in browser. CI pending. Full original 21 sections/17 journeys not recovered verbatim; no full acceptance claimed. No database or production changes.
