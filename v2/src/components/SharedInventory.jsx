@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState} from 'react'
 import {supabase} from '../lib/supabase.js'
 import {equipmentCapacity,applyEquipmentInventory} from '../lib/equipmentPreparation.js'
+import Lastmeister,{hasBarbellWork} from './Lastmeister.jsx'
 import {inventoryFromRows,inventoryNotes} from '../lib/garageInventory.js'
 export {inventoryFromRows} from '../lib/garageInventory.js'
 
@@ -26,7 +27,7 @@ export default function SharedInventory({items=[],values={},canEdit=false,actorI
  const rows=equipmentCapacity(items,values)
  if(!rows.length)return null
  return <details className="customer-plan-details"><summary>Felles utstyrsliste · {shared.status==='ready'?'Garasjen':shared.status==='loading'?'Hentar':'Ikkje tilgjengeleg'}</summary>
-  {shared.status==='ready'?<><small>{Object.keys(shared.inventory).length} registrerte utstyrstypar. Mengdene er generell kapasitet, ikkje reservasjon eller garanti for riktig vekt. Sjå avgrensingar i inventaret.</small><InventoryNotes items={items} rows={shared.rows}/><div className="gg-architect-meta"><button type="button" className="secondary-button" onClick={()=>onApply?.(shared.inventory)}>Hent felles mengder</button>{canEdit&&<small>Endra det felles inventaret i Administrasjon → Utstyr.</small>}</div></>:<small>Felles lista er ikkje tilgjengeleg. Lokal liste og WOD-plan er separate kjelder.</small>}
+  {shared.status==='ready'?<><small>{Object.keys(shared.inventory).length} registrerte utstyrstypar. Mengdene er generell kapasitet, ikkje reservasjon eller garanti for riktig vekt. Sjå avgrensingar i inventaret.</small><InventoryNotes items={items} rows={shared.rows}/>{hasBarbellWork(items)&&<Lastmeister rows={shared.rows}/>}<div className="gg-architect-meta"><button type="button" className="secondary-button" disabled={!onApply} onClick={()=>onApply?.(shared.inventory)}>Hent felles mengder</button>{canEdit&&<small>Endra det felles inventaret i Administrasjon → Utstyr.</small>}</div></>:<small>Felles lista er ikkje tilgjengeleg. Lokal liste og WOD-plan er separate kjelder.</small>}
   <button type="button" className="text-button" disabled={shared.status==='loading'} onClick={shared.refresh}>Oppdater status</button>
  </details>
 }

@@ -78,3 +78,10 @@ const custom=[{inventory_kind:'item',equipment_key:'bar',group_key:'stong',avail
 assert.equal(plateAllocation(custom,[load('bar',40),load('bar',30)]).status,'exact')
 assert.equal(plateAllocation(custom,[load('bar',50),load('bar',50)]).status,'shortage')
 console.log('Lastmeister allocation checks passed')
+
+// A greedy choice consumes the only 6 kg pair; search must backtrack.
+const backtrack=[{inventory_kind:'item',equipment_key:'bar',group_key:'stong',available:2,weight_kg:20},...[[6,2],[4,6],[2,2]].map(([weight_kg,available])=>({inventory_kind:'item',equipment_key:'p'+weight_kg,group_key:'vektskiver',weight_kg,available}))]
+const bt=plateAllocation(backtrack,[load('bar',44),load('bar',32)])
+assert.equal(bt.status,'exact')
+assert.deepEqual(bt.loads[0].perSide.map(p=>[p.kg,p.count]),[[4,3]])
+assert.deepEqual(bt.loads[1].perSide.map(p=>[p.kg,p.count]),[[6,1]])

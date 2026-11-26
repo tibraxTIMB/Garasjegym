@@ -1,4 +1,5 @@
 import {preparationItems} from '../lib/equipmentPreparation.js'
+import Lastmeister,{hasBarbellWork} from './Lastmeister.jsx'
 import EquipmentPreparation from './EquipmentPreparation.jsx'
 import {useInventoryCapacity,InventoryNotes} from './SharedInventory.jsx'
 import React,{useEffect,useState} from 'react'
@@ -22,7 +23,7 @@ export default function PTPreparation({session,references=[],onReview,expanded=f
    {p.preparation&&<div><strong>Førebuing:</strong> {p.preparation}</div>}
    {p.materials&&<div><strong>Utstyr og materiell:</strong> {p.materials}</div>}
    {items.length>0&&<small>{inventoryStatus==='ready'?'Tilgjengeleg utstyr: felles inventar der registrert, elles opphavleg plan.':'Tilgjengeleg utstyr: opphavleg plan; felles inventar ikkje stadfesta.'}</small>}
-   <InventoryNotes items={items} rows={inventoryRows}/><EquipmentPreparation items={items} values={capacityValues}/>
+   <InventoryNotes items={items} rows={inventoryRows}/><EquipmentPreparation items={items} values={capacityValues}/>{inventoryStatus==='ready'&&hasBarbellWork(items)&&<Lastmeister rows={inventoryRows}/>}
    {referenceKey&&<section className="gg-prep-history"><strong>Sist gjennomførte tilsvarande WOD</strong>{prior?.status==='ready'&&prior.summary?<><small>{prior.summary.date||'Dato ikkje registrert'}</small>{prior.summary.unverified?<small>Individuell dosering kan ikkje stadfestast frå dette resultatet.</small>:prior.summary.rows.length?prior.summary.rows.map((row,i)=><div key={i}><b>{row.name}</b><small>{row.entries.join(' · ')}{row.more?' · +'+row.more+' sett':''}</small></div>):<small>Ingen individuelle sett registrerte.</small>}{onReview&&<button type="button" className="secondary-button" onClick={()=>onReview(prior.ref.kind+':'+prior.ref.id)}>Opna førre resultat</button>}</>:<small>{prior?.status==='unavailable'?'Kunne ikkje henta eit godkjent PT-resultat.':'Hentar PT-resultat …'}</small>}</section>}
    {p.note&&<div><strong>PT-notat:</strong> {p.note}</div>}
   </div>
