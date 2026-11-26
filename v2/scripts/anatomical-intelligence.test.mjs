@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {anatomyForExercise,summarizeMuscleExposure,MUSCLES,documentedExerciseRows,muscleExerciseEvidence,historyAnatomyExercises,plannedAnatomyRows} from '../src/lib/anatomicalIntelligence.js'
+import {anatomyForExercise,summarizeMuscleExposure,MUSCLES,documentedExerciseRows,muscleExerciseEvidence,historyAnatomyExercises,plannedAnatomyRows,workoutAnatomyExercises} from '../src/lib/anatomicalIntelligence.js'
 assert.equal(MUSCLES.length,20)
 assert.equal(anatomyForExercise(' BENKPRESS '),anatomyForExercise('bench press'))
 assert.equal(anatomyForExercise('unknown'),null)
@@ -85,3 +85,16 @@ assert.equal(documentedExerciseRows(historyAnatomyExercises([onlySnapshot],7,tod
 assert.deepEqual(historyAnatomyExercises([{...onlySnapshot,result_data:{...onlySnapshot.result_data,samspel:{team_score:true}}}],7,today),[])
 assert.deepEqual(plannedAnatomyRows([{name:'Rest'},null,{is_rest:true,name:'Push Jerk'}]),[])
 console.log('Shared planned and historical role checks passed')
+
+const loggedErg={exercise_name:'Row',meters:1200,sets:[{reps:null,time_seconds:null}]}
+assert.equal(documentedExerciseRows([loggedErg]).length,1)
+assert.equal(documentedExerciseRows([{...loggedErg,sets:[{time_seconds:60}]}]).length,1)
+assert.deepEqual(documentedExerciseRows([{exercise_name:'Row',meters:0,sets:[]}]),[])
+assert.deepEqual(documentedExerciseRows([{exercise_name:'Back Squat',sets:[{reps:4,flow_status:'skipped'}]}]),[])
+assert.equal(documentedExerciseRows(workoutAnatomyExercises({exercises:[ex]})).length,1)
+const ergLog={workout_exercises:[{exercise_name:'Row',workout_sets:[]}],result_data:{exercise_results:[loggedErg]}}
+assert.equal(documentedExerciseRows(workoutAnatomyExercises(ergLog)).length,1)
+assert.deepEqual(documentedExerciseRows(workoutAnatomyExercises({...ergLog,result_data:{exercise_results:[{...loggedErg,exercise_name:'Bike'}]}})),[])
+assert.deepEqual(workoutAnatomyExercises({...ergLog,result_data:{...ergLog.result_data,samspel:{team_score:true}}}),[])
+assert.equal(anatomyForExercise('constructor'),null)
+console.log('Nine performed-report and measured erg evidence checks passed')
