@@ -23,16 +23,17 @@ for (const [aliases,primary,secondary,stabilizing] of entries) {
  for(const alias of aliases){const key=normalize(alias);if(profiles.has(key))throw new Error('Duplicate anatomy alias');profiles.set(key,profile)}
 }
 export function anatomyForExercise(name){return profiles.get(normalize(name))??null}
-// Counts documented completed sets only; never treats missing results as completed.
+// Role counts are descriptive, not a physiological load or recovery score.
 export function summarizeMuscleExposure(rows){
- const exposure=Object.fromEntries(MUSCLES.map(m=>[m,0])), unclassified=new Set()
+ const roles=Object.fromEntries(MUSCLES.map(m=>[m,{primary:0,secondary:0,stabilizing:0}]))
+ const unclassified=new Set()
  let classifiedSets=0,unclassifiedSets=0
  for(const row of rows??[]){
   if(row?.completed!==true)continue
   const profile=anatomyForExercise(row.exerciseName)
   if(!profile){unclassified.add(String(row.exerciseName??'Ukjend'));unclassifiedSets++;continue}
   classifiedSets++
-  for(const [role,weight] of [['primary',1],['secondary',0.5],['stabilizing',0.25]])for(const muscle of profile[role])exposure[muscle]+=weight
+  for(const role of ['primary','secondary','stabilizing'])for(const muscle of profile[role])roles[muscle][role]++
  }
- return {exposure,classifiedSets,unclassifiedSets,unclassified:[...unclassified],metric:'weighted-completed-set-exposure',reviewStatus:'provisional'}
+ return {roles,classifiedSets,unclassifiedSets,unclassified:[...unclassified],metric:'documented-sets-by-muscle-role',reviewStatus:'provisional'}
 }
