@@ -1,3 +1,4 @@
+import {isQualityOnlyExercise} from './exerciseQuality.js'
 import { isErgExercise } from './exerciseMeasurements.js'
 import {isIndividualPerformance,isUsablePerformedSet,recordedSetsWithStatus,performanceSnapshot} from './performanceEvidence.js'
 export {isIndividualPerformance} from './performanceEvidence.js'
@@ -77,7 +78,7 @@ export function deriveExerciseRecords(logs = []) {
         continue
       }
       const name = String(exercise.exercise_name || result.exercise_name || '').trim()
-      if (!name) continue
+      if (!name || isQualityOnlyExercise(name)) continue
       const side = result.side_mode || ''
       const key = `${exercise.exercise_id || name.toLowerCase()}|${side}`
       const sets = (Array.isArray(exercise.workout_sets)?recordedSetsWithStatus(exercise,result):result.sets||[]).filter(isUsablePerformedSet)

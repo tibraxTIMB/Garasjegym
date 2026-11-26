@@ -10,6 +10,8 @@ export function exerciseBrowseCategory(exercise = {}) {
   const name = String(exercise.name || '').toLowerCase()
   const equipment = String(exercise.equipment || '').toLowerCase()
   const category = String(exercise.category || '').toLowerCase()
+  // The movement's mobility purpose takes precedence over generic equipment/name heuristics.
+  if (category.includes('mobilitet')) return 'Mobilitet'
   if (/^trx\b/.test(name) || /\btrx\b/.test(equipment)) return 'TRX'
   if (/^burpee\b/.test(name) || /burpee/.test(name)) return 'Burpees'
   if (/(?:kettlebell|\bkb\b)/.test(name) || /kettlebell/.test(equipment)) return 'Kettlebell'
@@ -20,7 +22,6 @@ export function exerciseBrowseCategory(exercise = {}) {
   if (category.includes('pilates')) return 'Pilates'
   if (category.includes('yoga')) return 'Yoga'
   if (category.includes('complex')) return 'Complex'
-  if (category.includes('mobilitet')) return 'Mobilitet'
   if (category.includes('kondisjon')) return 'Kondisjon'
   if (category.includes('kjerne')) return 'Kjerne'
   if (/stong|barbell|vektstong/.test(equipment)) return 'Vektstong'
