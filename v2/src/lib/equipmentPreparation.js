@@ -1,3 +1,4 @@
+import {exerciseMuscleProfile} from './exerciseMuscleProfiles.js'
 // A preparation checklist, not an inventory count. Equipment descriptions are
 // explicit catalogue text; alternatives and sharing must be confirmed by the coach.
 export function equipmentPreparation(items=[]){
@@ -23,4 +24,33 @@ export function preparationItems(snapshot={}){
  if(Array.isArray(snapshot.movements))return snapshot.movements
  if(typeof snapshot.movements==='string')return snapshot.movements.split('\n').map(s=>s.trim()).filter(Boolean)
  return []
+}
+
+const equipmentKey=value=>String(value||'').trim().toLowerCase().replace(/\s+/g,' ')
+const count=value=>value==null||String(value).trim()===''?null:Number.isSafeInteger(Number(value))&&Number(value)>=0&&Number(value)<=999?Number(value):NaN
+// Counts are deliberately entered by the coach, never derived from exercise names.
+export function equipmentCapacity(items,values={}){
+ return equipmentPreparation(items).groups.map(group=>{
+  const key=equipmentKey(group.equipment),row=values[key]||{}
+  const required=count(row.required),available=count(row.available)
+  const status=Number.isNaN(required)||Number.isNaN(available)?'invalid':required===null||available===null?'unknown':available<required?'shortage':'ready'
+  return {...group,key,required,available,status}
+ })
+}
+export function equipmentPlanSnapshot(items,values={}){
+ return Object.fromEntries(equipmentCapacity(items,values).filter(r=>r.status!=='invalid'&&(r.required!==null||r.available!==null)).map(r=>[r.key,{required:r.required,available:r.available}]))
+}
+// Same mode, exact primary role set and overlapping explicit movement tags. These are
+// candidates for coach review, not equivalent dosage, rehab or automatic substitutions.
+export function equipmentAlternatives(item,catalogue=[],tagsFor=()=>[]){
+ if(!item||item.is_rest||item.is_complex||item.is_rehab)return []
+ const name=item.exercise_name||item.name,profile=exerciseMuscleProfile(name)
+ const tags=tagsFor({...item,name})||[]
+ if(!profile||!profile.primary.length||profile.mode==='mobility'||!tags.length)return []
+ const prim=p=>[...new Set(p.primary)].sort().join('|')
+ return catalogue.filter(ex=>{
+  if(!ex?.id||ex.id===item.id||ex.id===item.exercise_id||ex.is_rehab||ex.is_complex||ex.category!==item.category||equipmentKey(ex.name)===equipmentKey(name)||!ex.equipment||equipmentKey(ex.equipment)===equipmentKey(item.equipment))return false
+  const p=exerciseMuscleProfile(ex.name)
+  return p&&p.mode===profile.mode&&prim(p)===prim(profile)&&(tagsFor(ex)||[]).some(t=>tags.includes(t))
+ }).slice(0,5)
 }
