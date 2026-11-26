@@ -1,3 +1,5 @@
+import {ptFlowRows} from './ptFlow.js'
+
 // Calendar dates are civil dates in the garage's timezone, not UTC timestamps.
 export const GARAGE_ZONE='Europe/Oslo'
 export const DAY_LABELS=['Mån','Tys','Ons','Tor','Fre','Laur','Sun']
@@ -73,3 +75,12 @@ export function entriesForDay(entries,date){
 export function canMovePlan(session){return session?.status==='planned'&&!session.workout_log_id&&!session.archived_at&&!session.workout_snapshot?.pt_equivalent}
 
 export function canMoveDirect(assignment){return assignment?.status==='assigned'&&!assignment.workout_log_id&&!assignment.linked_session_id&&Object.hasOwn(assignment,'scheduled_date')}
+
+// Member calendar derives program access from the same full ordered plan as MyTraining.
+// Do not slice to the visible month before computing sequence locks.
+export function memberPlanCalendarEntries(program,sessions=[],today=osloDay()){
+ if(program?.status!=='active'||program.archived_at)return []
+ return calendarEntries({program,plan:ptFlowRows(program,sessions,today)})
+  .filter(e=>e.date&&e.kind==='plan')
+  .map(e=>({...e,canStart:e.row.flowState==='ready',reason:e.row.flowReason}))
+}
