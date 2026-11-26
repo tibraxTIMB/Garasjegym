@@ -26,3 +26,11 @@ insert into public.pt_wod_assignments values
 ('30000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002','20000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','completed'),
 ('30000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000002','20000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000002','completed'),
 ('30000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000002','20000000-0000-0000-0000-000000000003','10000000-0000-0000-0000-000000000003','completed');
+
+alter table public.pt_wod_assignments add column linked_session_id uuid,add column due_date date,add column updated_at timestamptz default now();
+-- Fixture-only row access: actual production policies were inspected separately.
+alter table public.pt_wod_assignments enable row level security;
+grant select,update on public.pt_wod_assignments to authenticated;
+create policy fixture_assignment_access on public.pt_wod_assignments for select to authenticated using (public.is_active_user() and (member_id=auth.uid() or public.is_admin_or_manager()));
+create policy fixture_assignment_update on public.pt_wod_assignments for update to authenticated using (public.is_active_user() and (member_id=auth.uid() or public.is_admin_or_manager())) with check (public.is_active_user() and (member_id=auth.uid() or public.is_admin_or_manager()));
+insert into public.pt_wod_assignments(id,member_id,wod_id,status) values ('30000000-0000-0000-0000-000000000004','00000000-0000-0000-0000-000000000002','20000000-0000-0000-0000-000000000004','assigned');
