@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {equipmentPreparation,preparationItems,equipmentCapacity,equipmentPlanSnapshot,equipmentAlternatives} from '../src/lib/equipmentPreparation.js'
+import {equipmentPreparation,preparationItems,equipmentCapacity,equipmentPlanSnapshot,equipmentAlternatives,readEquipmentInventory,saveEquipmentInventory,applyEquipmentInventory} from '../src/lib/equipmentPreparation.js'
 const rows=[{name:'Squat',equipment:'Vektstong'},{name:'Clean',equipment:'vektstong'},{name:'Press',equipment:'Vektstong / Manualar'},{name:'Burpee',equipment:'Kroppsvekt'},{name:'Pause',is_rest:true},{name:'Unknown'},{name:'Unknown'}]
 assert.deepEqual(equipmentPreparation(rows),{groups:[{equipment:'Vektstong',exercises:['Squat','Clean']},{equipment:'Vektstong / Manualar',exercises:['Press']}],unknown:['Unknown']})
 assert.deepEqual(equipmentPreparation([]),{groups:[],unknown:[]})
@@ -25,3 +25,13 @@ assert.deepEqual(equipmentAlternatives({...gear[0],is_complex:true},candidates,t
 assert.deepEqual(equipmentAlternatives(gear[0],candidates),[])
 assert.deepEqual(equipmentAlternatives({...gear[0],name:'Unknown'},candidates,tags),[])
 console.log('11 capacity and candidate checks passed')
+
+
+const stockMap=new Map(),stockStorage={getItem:k=>stockMap.get(k),setItem:(k,v)=>stockMap.set(k,v)}
+assert.deepEqual(readEquipmentInventory('coach',stockStorage),{})
+assert.equal(saveEquipmentInventory('coach',gear,{vektstong:{available:'2'},benk:{available:'0'}},stockStorage),true)
+assert.deepEqual(readEquipmentInventory('coach',stockStorage),{vektstong:2,benk:0})
+assert.deepEqual(readEquipmentInventory('other',stockStorage),{})
+assert.deepEqual(applyEquipmentInventory(gear,{vektstong:{required:'3'}},readEquipmentInventory('coach',stockStorage)),{vektstong:{required:'3',available:2},benk:{available:0}})
+assert.equal(saveEquipmentInventory('coach',gear,{vektstong:{available:'-1'}},stockStorage),false)
+assert.equal(saveEquipmentInventory(null,gear,{},stockStorage),false)
