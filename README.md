@@ -1,4 +1,14 @@
-# GarasjeGym – første prototype
+# GarasjeGym – historisk prototype (arkiv)
+
+**Dette er ikkje dagens GarasjeGym.** Aktiv produksjonskode ligg i [STURMKOPF GAZELLE](https://github.com/tibraxTIMB/Garasjegym/tree/garasjegym-2.0-sturm%C2%ADkopf) under `v2/`. Ikkje merge produksjonsgreina inn i main eller publiser denne prototypen.
+
+- [GarasjeGym – live](https://tibraxtimb.github.io/Garasjegym/)
+- [WERKSTATT – PC](https://tibraxtimb.github.io/Garasjegym/?office=1)
+- [Driftsregister](https://github.com/tibraxTIMB/Garasjegym/tree/garasjegym-2.0-sturm%C2%ADkopf/docs/OPERATIONS.md)
+
+---
+
+## Original dokumentasjon (historisk)
 
 Opne `index.html` i ein moderne nettlesar.
 
