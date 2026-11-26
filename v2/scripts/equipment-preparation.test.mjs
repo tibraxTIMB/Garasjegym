@@ -54,3 +54,27 @@ console.log('Detailed inventory and non-overwrite checks passed')
 assert.equal(applyEquipmentInventory([{name:'Band Pull Apart',equipment:'Strikk'}],{strikk:{available:4,required:1}},shared).strikk.available,null)
 assert.ok(inventoryNotes([{equipment:'Vektstong / benk'}],INITIAL_INVENTORY).some(r=>r.equipment_key==='item:barbell-20'))
 assert.ok(inventoryNotes([{equipment:'Vektstong'}],INITIAL_INVENTORY).some(r=>r.equipment_key==='item:safety'))
+
+import {plateAllocation} from '../src/lib/garageInventory.js'
+const load=(barKey,targetKg)=>({barKey,targetKg,compatible:true})
+const a=load('item:cf-bar-20',80),b=load('item:cf-bar-15',65)
+const allocation=plateAllocation(INITIAL_INVENTORY,[a,b])
+assert.equal(allocation.status,'exact')
+assert.deepEqual(allocation.loads.map(x=>x.totalKg),[80,65])
+for(const plate of INITIAL_INVENTORY.filter(x=>x.group_key==='vektskiver')){
+ assert.ok(allocation.loads.flatMap(x=>x.perSide).filter(x=>x.key===plate.equipment_key).reduce((n,x)=>n+2*x.count,0)<=plate.available)
+}
+assert.equal(plateAllocation(INITIAL_INVENTORY,[a,a]).status,'shortage')
+assert.equal(plateAllocation(INITIAL_INVENTORY,[{...a,compatible:false}]).status,'unknown')
+assert.equal(plateAllocation(INITIAL_INVENTORY,[load(a.barKey,19)]).status,'invalid')
+assert.equal(plateAllocation(INITIAL_INVENTORY,[load(a.barKey,20)]).status,'exact')
+const nearest=plateAllocation(INITIAL_INVENTORY,[load(a.barKey,20.25)])
+assert.equal(nearest.alternatives[0].below.totalKg,20)
+assert.equal(nearest.alternatives[0].above.totalKg,21)
+assert.equal(plateAllocation(INITIAL_INVENTORY.map(r=>r.group_key==='vektskiver'?{...r,available:1}:r),[a]).status,'shortage')
+assert.equal(plateAllocation(INITIAL_INVENTORY.map(r=>r.group_key==='vektskiver'?{...r,available:null}:r),[a]).status,'unknown')
+// Backtracking: first job can use 2x5 or 1x10 per side; second needs the 5 kg pair.
+const custom=[{inventory_kind:'item',equipment_key:'bar',group_key:'stong',available:2,weight_kg:20},{inventory_kind:'item',equipment_key:'p5',group_key:'vektskiver',available:4,weight_kg:5},{inventory_kind:'item',equipment_key:'p10',group_key:'vektskiver',available:2,weight_kg:10}]
+assert.equal(plateAllocation(custom,[load('bar',40),load('bar',30)]).status,'exact')
+assert.equal(plateAllocation(custom,[load('bar',50),load('bar',50)]).status,'shortage')
+console.log('Lastmeister allocation checks passed')
