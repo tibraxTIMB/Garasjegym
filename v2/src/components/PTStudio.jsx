@@ -2,7 +2,7 @@ import {PT_FLOW_PRESETS,getPtFlowPreset} from '../lib/ptFlowPresets.js'
 import {ptFlowRows,ptNextAction,flowStatus,FLOW_MODES,osloDate} from '../lib/ptFlow.js'
 import PTPreparation from './PTPreparation.jsx'
 import {PTWeekCalendar,PTScheduleDialog,PTMoveDialog} from './PTSchedule.jsx'
-import {dateSlot,planDate,planTime} from '../lib/ptSchedule.js'
+import {dateSlot,planDate,planTime,slotDate,canMovePlan} from '../lib/ptSchedule.js'
 import {copyProgramWeekRows,nextCoachSession} from '../lib/programReuse.js'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, ArrowRight, CalendarDays, CheckCircle2, ClipboardList, Dumbbell, Flag, MessageSquareText, Plus, RefreshCw, Target, UserRound, Users, Search, X, MoreVertical, ChevronRight } from 'lucide-react'
@@ -334,6 +334,11 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
   e.preventDefault()
   await run(async()=>{
    if(!activeProgram)throw new Error('Kunden må ha ein aktiv treningsplan.')
+   if(activeProgram.client_id!==clientId)throw Error('Vel rett kunde og plan.')
+   const week=Number(sessionDraft.week_no),day=Number(sessionDraft.day_no),expectedDate=slotDate(activeProgram,week,day)
+   if(!Number.isInteger(week)||week<1||week>Math.min(activeProgram.weeks||52,52)||!Number.isInteger(day)||day<1||day>7)throw Error('Vel ein dag innanfor planen.')
+   if(expectedDate&&sessionDraft.scheduled_date&&expectedDate!==sessionDraft.scheduled_date)throw Error('Dato og programdag samsvarar ikkje.')
+   if(activeProgram.flow_unlock_mode==='date'&&!expectedDate&&!sessionDraft.scheduled_date)throw Error('Datostyrt plan krev dato.')
    if(!sessionDraft.title.trim()&&!sessionDraft.wod_id)throw new Error('Gi økta eit namn eller vel ein WOD.')
    if(sessionDraft.session_kind==='information'&&!sessionDraft.title.trim())throw new Error('Infotimen må ha eit namn eller tema.')
    const wod=sessionDraft.session_kind==='information'?null:wods.find(w=>w.id===sessionDraft.wod_id)
@@ -344,7 +349,7 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
     : sessionDraft.session_kind==='information'
      ? {title:sessionDraft.title.trim(),format:'Informasjonstime',agenda:sessionDraft.agenda.trim(),materials:sessionDraft.materials.trim(),preparation:sessionDraft.preparation.trim(),movements:[],notes:sessionDraft.notes.trim()}
      : {title:sessionDraft.title.trim()||'Eigen økt',format:'Eigen økt',movements:[],notes:sessionDraft.notes.trim()}
-   const {error:e}=await supabase.from('pt_program_sessions').insert({program_id:activeProgram.id,sequence_no:nextSequenceNo,title:sessionDraft.title.trim()||wod?.name||'Ny økt',wod_id:wod?.id||null,scheduled_date:sessionDraft.scheduled_date||null,week_no:Number(sessionDraft.week_no)||1,day_no:Number(sessionDraft.day_no)||1,session_kind:sessionDraft.session_kind,focus_area:sessionDraft.focus_area,estimated_minutes:sessionDraft.estimated_minutes?Number(sessionDraft.estimated_minutes):null,workout_snapshot:snapshot,coach_note:sessionDraft.notes,status:'planned'})
+   const {error:e}=await supabase.from('pt_program_sessions').insert({program_id:activeProgram.id,sequence_no:nextSequenceNo,title:sessionDraft.title.trim()||wod?.name||'Ny økt',wod_id:wod?.id||null,scheduled_date:sessionDraft.scheduled_date||expectedDate||null,week_no:Number(sessionDraft.week_no)||1,day_no:Number(sessionDraft.day_no)||1,session_kind:sessionDraft.session_kind,focus_area:sessionDraft.focus_area,estimated_minutes:sessionDraft.estimated_minutes?Number(sessionDraft.estimated_minutes):null,workout_snapshot:snapshot,coach_note:sessionDraft.notes,status:'planned'})
    if(e)throw e
    setShowSession(false);setSessionDraft({title:'',wod_id:'',scheduled_date:'',week_no:'1',day_no:'1',session_kind:'training',focus_area:'',estimated_minutes:'45',notes:'',agenda:'',materials:'',preparation:''});setNotice('Økta er lagt sist i treningsrekkja.')
   })
@@ -417,19 +422,23 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
  async function restoreProgramSession(session) { await run(async()=>{const {error:e}=await supabase.rpc('restore_pt_program_session',{p_session_id:session.id});if(e)throw e;setNotice('PT-økta er gjenoppretta.')}) }
  async function copyClientWeek(week){
   if(busy||!canManageClients||!activeProgram||activeProgram.client_id!==clientId)return
-  const target=Array.from({length:52-week},(_,i)=>week+i+1).find(n=>!clientSessions.some(s=>Number(s.week_no)===n));if(!target){setError('Ingen ledig veke etter denne.');return}
-  let rows;try{rows=copyProgramWeekRows(activeProgram.id,sessions,week,target)}catch(e){setError(e.message);return}
-  if(!window.confirm('Kopiera '+rows.length+' planlagde øktelement for '+selectedMember.display_name+' frå veke '+week+' til veke '+target+'? Datoar og resultat blir ikkje kopierte.'))return
-  await run(async()=>{const {error:e}=await supabase.from('pt_program_sessions').insert(rows);if(e)throw e;setNotice('Veke '+week+' er kopiert til veke '+target+'. Kontroller datoar i planen.')})
+  const target=Array.from({length:Math.max(0,Math.min(activeProgram.weeks||52,52)-week)},(_,i)=>week+i+1).find(n=>!clientSessions.some(s=>Number(s.week_no)===n));if(!target){setError('Ingen ledig veke etter denne.');return}
+  let rows;try{rows=copyProgramWeekRows(activeProgram.id,sessions,week,target).map(row=>({...row,scheduled_date:slotDate(activeProgram,target,row.day_no)||null}))}catch(e){setError(e.message);return}
+  if(!window.confirm('Kopiera '+rows.length+' planlagde øktelement for '+selectedMember.display_name+' frå veke '+week+' til veke '+target+'? Datoane blir rekna ut for den nye veka. Resultat blir ikkje kopierte.'))return
+  await run(async()=>{const {error:e}=await supabase.from('pt_program_sessions').insert(rows);if(e)throw e;setNotice('Veke '+week+' er kopiert til veke '+target+'. Datoane er oppdaterte.')})
  }
  async function moveSessionSlot(session) {
   const draft=sessionSlotDrafts[session.id]||{week_no:String(session.week_no||1),day_no:String(session.day_no||1)}
   const week=Number(draft.week_no),day=Number(draft.day_no)
-  if(!Number.isInteger(week)||week<1||week>52||!Number.isInteger(day)||day<1||day>7)throw new Error('Veke må vere 1–52 og dag 1–7.')
+  if(!canMovePlan(session)||activeProgram?.client_id!==clientId||session.program_id!==activeProgram.id){setError('Berre planlagde økter utan resultat kan flyttast.');return}
+  if(!Number.isInteger(week)||week<1||week>Math.min(activeProgram.weeks||52,52)||!Number.isInteger(day)||day<1||day>7){setError('Vel ein dag innanfor planen.');return}
   if(week===Number(session.week_no)&&day===Number(session.day_no)){setSessionSlotDrafts(rows=>({...rows,[session.id]:undefined}));return}
   await run(async()=>{
-   const {error:e}=await supabase.rpc('move_pt_program_session',{p_session_id:session.id,p_week_no:week,p_day_no:day})
-   if(e)throw e
+   const date=slotDate(activeProgram,week,day)
+   if(!date&&activeProgram.flow_unlock_mode==='date')throw Error('Bruk kalenderen for å setja dato.')
+   const snapshot={...session.workout_snapshot};if(!date)delete snapshot.schedule_time
+   const {data,error:e}=await supabase.from('pt_program_sessions').update({week_no:week,day_no:day,scheduled_date:date||null,workout_snapshot:snapshot}).eq('id',session.id).eq('program_id',activeProgram.id).eq('status','planned').is('archived_at',null).is('workout_log_id',null).select('id').maybeSingle()
+   if(e||!data)throw e||Error('Økta er ikkje flytta.')
    setSessionSlotDrafts(rows=>({...rows,[session.id]:undefined}))
    setSessionMenu(null);setNotice('Økta er flytta til veke '+week+', dag '+day+'.')
   })
@@ -690,7 +699,7 @@ export default function PTStudio({ profile, coachMode=false, simpleMode=false, o
    {canUndo(s)&&<button type="button" onClick={()=>{setSessionMenu(null);undoManual(s)}}>Rett gjennomføring <ChevronRight size={16}/></button>}
    {ev?.assignment_id&&<button type="button" onClick={()=>{setSessionMenu(null);openResult('assignment:'+ev.assignment_id)}}>Sjå kopla resultat <ChevronRight size={16}/></button>}
    {s.workout_log_id&&done&&<button type="button" onClick={()=>{setSessionMenu(null);openResult('program:'+s.id)}}>Sjå resultat <ChevronRight size={16}/></button>}
-   {staff&&s.status==='planned'&&s.wod_id&&!s.workout_log_id&&!ev&&<button type="button" onClick={()=>openPlanEditor(s)}>Tilpass økt <ChevronRight size={16}/></button>}{!done&&<button type="button" onClick={()=>openSessionMenu(s,'move')}>Flytt økt <ChevronRight size={16}/></button>}
+   {staff&&s.status==='planned'&&s.wod_id&&!s.workout_log_id&&!ev&&<button type="button" onClick={()=>openPlanEditor(s)}>Tilpass økt <ChevronRight size={16}/></button>}{canMovePlan(s)&&<button type="button" onClick={()=>openSessionMenu(s,'move')}>Flytt økt <ChevronRight size={16}/></button>}
    {!done&&s.session_kind!=='information'&&<button type="button" onClick={()=>{setSessionMenu(null);setOpenWodPicker(s.id)}}>{s.wod_id?'Byt WOD':'Vel WOD'} <ChevronRight size={16}/></button>}
    {!done&&!['rest','information'].includes(s.session_kind)&&<button type="button" onClick={()=>openSessionMenu(s,'flow')}>Opplåsingsreglar <ChevronRight size={16}/></button>}
    {!done&&!s.workout_log_id&&<button type="button" className="pt-compact-danger" disabled={busy} onClick={()=>confirmArchive(s)}>Arkiver økt <ChevronRight size={16}/></button>}
