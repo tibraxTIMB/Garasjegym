@@ -118,3 +118,8 @@ test('Bibliothekar snapshot has full exact anatomical classification',()=>{
  assert.equal(new Set(snapshot.names.map(s=>s.toLowerCase().replace(/[^a-z0-9æøå]+/g,' ').trim())).size,snapshot.names.length);
  for(const name of snapshot.names)assert.ok(exerciseMuscleProfile(name),name);
 });
+
+test('explicit unweighted equipment does not imply compulsory kilograms',()=>{
+ for(const [name,equipment] of [['Bird dog','Matte'],['Dead bug','Matte'],['Single-leg glute bridge','Matte'],['Pallof press','Strikk'],['Single-leg balance','Kroppsvekt']])assert.equal(getExerciseMeasurementFlags({name,equipment}).usesLoad,false);
+ assert.equal(getExerciseMeasurementFlags({name:'Glute bridge',equipment:'Matte',sets:[{load_kg:10}]}).usesLoad,true);
+});
