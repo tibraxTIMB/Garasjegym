@@ -15,3 +15,15 @@ test('Production GO LIVE preflight checks every known column gap on existing tab
   assert.match(sql, /missing_required_column/)
   assert.doesNotMatch(sql, /\b(?:TRUNCATE|DROP\s+TABLE|DELETE\s+FROM|INSERT\s+INTO|UPDATE\s+public\.)\b/i)
 })
+
+test('KLARHEIT production release requires manual approval on the production branch', async () => {
+  const workflow = await readFile(new URL('../../.github/workflows/deploy-sturmkopf-pages.yml', import.meta.url), 'utf8')
+  assert.ok(workflow.includes('publish_production:'))
+  assert.ok(workflow.includes('default: false'))
+  assert.ok(workflow.includes("github.event_name == 'workflow_dispatch' && inputs.publish_production == true && github.ref == 'refs/heads/garasjegym-2.0-sturm­kopf'"))
+  assert.ok(workflow.includes('EXPECTED_SUPABASE_PROJECT_REF: izwzwvlexqxqewzijhhd'))
+  assert.ok(workflow.includes('VITE_SUPABASE_URL: https://izwzwvlexqxqewzijhhd.supabase.co'))
+  assert.ok(!workflow.includes('publish_preview'))
+  assert.ok(!workflow.includes('ONE-SHOT-PUBLISH'))
+  assert.ok(!workflow.includes('kultdmklwmilhoytrrig'))
+})
