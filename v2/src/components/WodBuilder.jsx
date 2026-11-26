@@ -1,3 +1,4 @@
+import {equipmentCapacity,equipmentPlanSnapshot} from '../lib/equipmentPreparation.js'
 import EquipmentPreparation from './EquipmentPreparation.jsx'
 import {samspelConfig,samspelIssue,samspelScoring,samspelWithCount,samspelWithSwitch,samspelRoundInstruction,samspelMixed,samspelWithStations,samspelStationRows,SAMSPEL_TASKS,SAMSPEL_METRICS} from '../lib/samspel.js'
 import {architectSections,architectDose,architectDoseIssue,hydrateArchitectLevels} from '../lib/wodArchitect.js'
@@ -227,6 +228,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const wizardTopRef=useRef(null)
  const previousWizardStep=useRef(0)
  const [overviewLevel,setOverviewLevel]=useState('rx')
+ const [equipmentPlan,setEquipmentPlan]=useState({})
  const [samspel,setSamspel]=useState(null),[samspelHelp,setSamspelHelp]=useState(false),[showArchitectIssues,setShowArchitectIssues]=useState(false),[showArchitectMenu,setShowArchitectMenu]=useState(false)
  const [catalogueReady,setCatalogueReady]=useState(false)
  const [exercises,setExercises]=useState([]),[search,setSearch]=useState(''),[category,setCategory]=useState('Alle'),[area,setArea]=useState('Alle område'),[equipmentFilter,setEquipmentFilter]=useState('all'),[movementFilter,setMovementFilter]=useState('all'),[openFilter,setOpenFilter]=useState('')
@@ -257,7 +259,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   const {data:w,error:e}=await supabase.from('wods').select('id,name,format,duration_minutes,movements,notes,is_published,timer_settings,category').eq('id',id).single()
   if(e||!w){setError('Kunne ikkje opna WOD for redigering: '+(e?.message||'WOD ikkje funnen'));setLoading(false);return}
   const schema=w.timer_settings?.workout_schema||{}
-  setSamspel(samspelConfig(schema))
+  setSamspel(samspelConfig(schema));setEquipmentPlan(schema.equipment_plan||{})
   const items=sortWodItems(getWodSchemaItems(schema))
   const engine=normalizeWodEngine(schema,{format:w.format});setParticipation(engine.participation);setCollaboration(engine.collaboration);setPartnerCount(String(engine.participant_count||3));setEditingWodId(copyMode?null:w.id);setName(copyMode&&!planContext?w.name+' (kopi)':w.name);const legacyFormat=w.format||'AMRAP';const emomMatch=/^EMOM(?: ([1-7]))?$/.exec(legacyFormat);const mappedFormat=isEmomFormat(legacyFormat)?'EMOM':legacyFormat==='Pyramid'?'Strength':legacyFormat==='Couplet / Triplet'?(schema.items?.filter(item=>!item.is_rest).length>=3?'Triplet':'Couplet'):legacyFormat==='Ladder / Death By'?(schema.ladder?.type==='Death By'?'Death By':'Ladder'):legacyFormat==='Intervall / Tabata'?(schema.interval?.work_seconds===20&&schema.interval?.rest_seconds===10?'Tabata':'Intervall'):legacyFormat;setFormat(mappedFormat);setPublishToMembers(!copyMode&&canPublishWod&&!!w.is_published);const storedLibraryCategory=schema.library_category||(w.category==='warmup'?'warmup':'standard');const normalizedLibraryCategory=storedLibraryCategory==='daily'?'standard':storedLibraryCategory;const knownLibraryCategories=['warmup','standard','benchmark','assessment','rehab','recovery','other'];setLibraryCategory(knownLibraryCategories.includes(normalizedLibraryCategory)?normalizedLibraryCategory:'custom');setCustomLibraryCategory(knownLibraryCategories.includes(normalizedLibraryCategory)?'':normalizedLibraryCategory)
   setMinutes(String(schema.duration_seconds?Math.floor(schema.duration_seconds/60):w.duration_minutes||20));setDurationSeconds(String(schema.duration_seconds?schema.duration_seconds%60:0))
@@ -343,7 +345,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const architectIssues=selected.filter(x=>issueFor(x)).map(x=>({item:x,message:issueFor(x),part:architectParts.find(p=>p.group.some(y=>y.key===x.key))}))
  const automaticScoreLabel=isComposite?'Resultat per del · etter format':isDeathBy?'Fullførte rundar før fristen':SCORE_TYPES.find(item=>item.value===automaticScoring.type)?.label||'Repetisjonar'
  function loadClassicWod(){
-  setSamspel(null)
+  setEquipmentPlan({});setSamspel(null)
   const preset=CLASSIC_WODS.find(x=>x.name===classicChoice)
   if(!preset)return
   const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'')
@@ -384,7 +386,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   if(!imported.length){setError('Ingen øvingar er kopla til biblioteket. Gå tilbake til importen og vel øvingar.');return}
   if(isFixedInterval(parsed.format)){setIntervalExerciseCount(String(imported.length));setWorkSeconds(String(parsed.fixedTiming?.workSeconds??''));setRestSeconds(String(parsed.fixedTiming?.restSeconds??''))}
   if(isEmomFormat(parsed.format)){const every=emomIntervalSeconds(parsed.format,{work_every_seconds:parsed.emomIntervalSeconds});setEmomIntervalMin(String(Math.floor(every/60)));setEmomIntervalSec(String(every%60))}
-  setSamspel(null);const importedSeconds=Math.round((Number(parsed.minutes)||0)*60);setDurationSeconds(String(importedSeconds%60));setTimeCapSeconds(String(importedSeconds%60));
+  setEquipmentPlan({});setSamspel(null);const importedSeconds=Math.round((Number(parsed.minutes)||0)*60);setDurationSeconds(String(importedSeconds%60));setTimeCapSeconds(String(importedSeconds%60));
   setCompositeBlocks(Array.isArray(parsed.blocks)&&parsed.blocks.length?parsed.blocks.map(block=>({...block,flowPurpose:flowPurpose(block)})):defaultCompositeBlocks());setActiveBlockId(parsed.blocks?.[0]?.id||'a');setName(parsed.name||'Importert WOD');setFormat(parsed.format||'Eigen økt');setMinutes(String(importedSeconds?Math.floor(importedSeconds/60):20));setTimeCap(importedSeconds?String(Math.floor(importedSeconds/60)):'');setRounds(String(parsed.rounds||1));setSelected(imported);setNotes(parsed.notes||'');setStimulus('Importert WOD – kontroller format, øvingar og dosering før lagring.');setLibraryCategory('standard');setPublishToMembers(false);setWizardStep(2);setError('');setNotice('WOD-teksten er tolka og lagd inn i byggjaren. Kontroller alle øvingar, belastningar og doseringsnivå før lagring.')
  }
  useEffect(()=>{
@@ -465,7 +467,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    setNotice('Ny rekkjefølgje er vist under og blir lagra i same rekkjefølgje.')
   }
   function randomWod(){
-  setSamspel(null)
+  setEquipmentPlan({});setSamspel(null)
   const pool=exercises.filter(x=>!x.is_rehab&&x.category!=='Rehab / fysio')
   if(!pool.length)return
   const chosen=shuffle(pool).slice(0,3+Math.floor(Math.random()*4))
@@ -475,7 +477,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   setNotice('Ny WOD er generert. Kontroller dosering og stimulus før publisering.');setError('')
  }
  function reset(){
-  setSamspel(null);setCompositeBlocks(defaultCompositeBlocks());setActiveBlockId('a');setSelected([]);setIntensity('2');setNotes('');setCustomInstructions('');setCustomUseSets(false);setCombinationMode('For Time');setStimulus('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
+  setEquipmentPlan({});setSamspel(null);setCompositeBlocks(defaultCompositeBlocks());setActiveBlockId('a');setSelected([]);setIntensity('2');setNotes('');setCustomInstructions('');setCustomUseSets(false);setCombinationMode('For Time');setStimulus('Jamn intensitet · teknisk kvalitet · kontrollert tempo')
   setName(suggestUniqueWodName());setWizardStep(0);setError('');setNotice('Økta er forkasta. Du kan byrja på nytt.')
  }
   function doseForItem(x,level=prescription){
@@ -592,6 +594,9 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    }
    const engineConfig=createWodEngineConfig({participation,collaboration,partnerCount:Number(partnerCount),scoreType:samspelScoring(samspel,automaticScoring).type,scoreFields:samspelScoring(samspel,automaticScoring).fields})
    if(samspel)schema.samspel=samspel
+   if(equipmentCapacity(selected,equipmentPlan).some(row=>row.status==='invalid')){setError('Kontroller mengd i utstyrslista. Bruk heile tal frå 0 til 999.');return}
+   const plannedEquipment=equipmentPlanSnapshot(selected,equipmentPlan)
+   if(Object.keys(plannedEquipment).length)schema.equipment_plan=plannedEquipment
    schema.wod_engine={...engineConfig,blocks:isComposite?compositeBlocksWithItems.map((block,index)=>{const timerBlock=compositeBlockForTimer({...block,items:schema.items.filter(item=>item.block_id===block.id)},index);return {...buildLegacyCompatibleBlock({format:block.format,items:timerBlock.items,durationSeconds:timerBlock.duration_seconds,engine:{...engineConfig,scoring:scoreForWodFormat(block.format,block.combinationMode||'For Time')}}),...timerBlock,scoring:scoreForWodFormat(block.format,block.combinationMode||'For Time')}}):[buildLegacyCompatibleBlock({format:savedFormat,items:schema.items,durationSeconds:schema.duration_seconds,engine:engineConfig,interval:schema.interval})]}
    const movements=selected.map((x,i)=>(i+1)+'. '+(x.is_rest?`Pause · ${Number(x.pauseSeconds)||30} sek`:buildPrescription(x))).join('\n')
    const stationDuration=schema.duration_seconds
@@ -627,7 +632,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
     savedWodId=savedWod?.id||savedWodId
    }
    setNotice(assignedClientId?(canPublishWod&&publishToMembers?'WOD er publisert og tildelt kunden.':'Privat WOD er lagra og tildelt kunden.'):editingWodId?'WOD-en er oppdatert.':canPublishWod&&publishToMembers?'WOD lagra i biblioteket og publisert for medlemmene.':'WOD lagra i det interne biblioteket som utkast.')
-   setSamspel(null);setSamspelHelp(false);setShowArchitectMenu(false);setShowArchitectIssues(false);setParticipation('individual');setCollaboration('solo');setCompositeBlocks(defaultCompositeBlocks());setActiveBlockId('a');setSelected([]);setNotes('');setLibraryCategory('standard');setCustomInstructions('');setRxNotes('');setScaledNotes('');setWizardStep(0);setName(suggestUniqueWodName());setEditingWodId(null);onSaved?.()
+   setEquipmentPlan({});setSamspel(null);setSamspelHelp(false);setShowArchitectMenu(false);setShowArchitectIssues(false);setParticipation('individual');setCollaboration('solo');setCompositeBlocks(defaultCompositeBlocks());setActiveBlockId('a');setSelected([]);setNotes('');setLibraryCategory('standard');setCustomInstructions('');setRxNotes('');setScaledNotes('');setWizardStep(0);setName(suggestUniqueWodName());setEditingWodId(null);onSaved?.()
   }catch(e){setError(e.message||'Kunne ikkje lagra WOD.')}finally{setBusy(false)}
  }
   function chooseFormat(item){
@@ -673,7 +678,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   </section>}
    <nav className="gg-architect-parts" aria-label="Delar i WOD-en">{architectParts.map(p=><button type="button" key={p.id} className={'gg-arch-tone-'+p.tone+(p.id===activeArchitectPart?.id?' active':'')} aria-pressed={p.id===activeArchitectPart?.id} onClick={()=>{setActiveBlockId(p.id);setEditingSelectedKey(null);setWizardStep(3)}}><b>{String.fromCharCode(65+p.index)}</b><span>{p.title||p.format}</span><small>{p.label} · {p.time}</small></button>)}</nav>
    <div className="gg-architect-levels" role="group" aria-label="Vis doseringsnivå">{[['rx','RX'],['intermediate','Interm.'],['scaled','Scaled'],['foundation','Foundation']].map(([id,label])=><button type="button" key={id} aria-pressed={overviewLevel===id} onClick={()=>setOverviewLevel(id)}>{label}</button>)}</div>
-   <EquipmentPreparation items={selected}/>
+   <EquipmentPreparation items={selected} values={equipmentPlan} catalogue={exercises} tagsFor={movementTagsFor} onChange={(key,field,value)=>setEquipmentPlan(old=>({...old,[key]:{...old[key],[field]:value}}))}/>
    <details className="gg-architect-map"><summary>Sjå heile økta · {architectParts.length} delar</summary>{architectParts.map(p=><section key={p.id} className={'gg-arch-tone-'+p.tone}><button type="button" className="gg-architect-part-head" onClick={()=>{setActiveBlockId(p.id);setWizardStep(3);setEditingSelectedKey(null)}}><b>{String.fromCharCode(65+p.index)} · {p.title||p.format}</b><small>{p.label} · {p.time} · {p.reporting==='done'?'Berre utført':p.reporting==='score'?'Hovudresultat':'Settvis'}</small></button>{p.group.map(ex=><button type="button" key={ex.key} className={'gg-architect-map-row'+(issueFor(ex)?' has-issue':'')} onClick={()=>{setActiveBlockId(p.id);setDoseLevelByKey(rows=>({...rows,[ex.key]:overviewLevel}));setEditingSelectedKey(ex.key);setWizardStep(3)}}><strong>{ex.name}</strong><span>{issueFor(ex)||architectDose(ex,overviewLevel)}</span></button>)}</section>)}</details>
   </section>}
   {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message">{notice}</div>}
