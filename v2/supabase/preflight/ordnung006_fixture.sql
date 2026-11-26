@@ -9,7 +9,8 @@ insert into public.profiles values
  ('00000000-0000-0000-0000-000000000001','admin',true),
  ('00000000-0000-0000-0000-000000000002','member',true),
  ('00000000-0000-0000-0000-000000000003','member',false),
- ('00000000-0000-0000-0000-000000000004','member',true);
+ ('00000000-0000-0000-0000-000000000004','member',true),
+ ('00000000-0000-0000-0000-000000000005','manager',true);
 create function public.is_active_user() returns boolean language sql stable security definer set search_path=pg_catalog,public as $$select coalesce((select active from public.profiles where id=auth.uid()),false)$$;
 create function public.is_admin_or_manager() returns boolean language sql stable security definer set search_path=pg_catalog,public as $$select coalesce((select role in ('admin','manager') from public.profiles where id=auth.uid()),false)$$;
 create function app_private.is_pt_coach_for_member(uuid) returns boolean language sql stable as $$select false$$;
