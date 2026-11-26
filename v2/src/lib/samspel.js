@@ -84,3 +84,27 @@ export function appendSamspelSwap(s,history,{elapsed,running,target}={}){
  if(rows.length&&elapsed-rows[rows.length-1]<2)return rows
  return [...rows,elapsed]
 }
+
+// Participant slots are local to this team result, not authenticated member identities.
+export function samspelParticipantRows(s,values={}){
+ const count=s?.version===2?s.participant_count:2
+ if(!samspelConfig({samspel:s})||!s.individual_scores)return []
+ return Array.from({length:count},(_,i)=>{
+  const slot=i+1, row=values[slot]||{}
+  return {slot,rounds:row.rounds??'',reps:row.reps??'',erg:row.erg??''}
+ })
+}
+export function samspelParticipantResults(s,values={}){
+ const rows=samspelParticipantRows(s,values), results=[]
+ for(const row of rows){
+  const fields=['rounds','reps','erg']
+  const entered=fields.filter(k=>String(row[k]).trim()!=='')
+  if(!entered.length)continue
+  for(const k of entered){
+   const n=Number(row[k])
+   if(!Number.isFinite(n)||n<0||k!=='erg'&&!Number.isSafeInteger(n))return {rows:[],issue:'Utøvar '+row.slot+': registrer gyldige positive tal eller null.'}
+  }
+  results.push({slot:row.slot,rounds:entered.includes('rounds')?Number(row.rounds):null,extra_reps:entered.includes('reps')?Number(row.reps):null,erg_value:entered.includes('erg')?Number(row.erg):null})
+ }
+ return {rows:results,issue:null}
+}
