@@ -8,7 +8,13 @@ export function qualityRowConfig(minutes=10){return {version:2,mode:'parallel_ro
 // Engine Swap: one erg track, remaining athletes on the shared EMOM clock.
 export function samspelEmom(s){return s?.version===2&&s.main_track==='emom'}
 export function engineSwapConfig(interval=60,duration=600){return {version:2,mode:'parallel_round_swap',main_track:'emom',task:'row',metric:'distance',participant_count:2,erg_slots:1,available_ergs:1,switch_rule:'time',switch_seconds:interval,duration_seconds:duration,individual_scores:true}}
-export function samspelMainLabel(s){return samspelQuality(s)?'Kvalitet':samspelEmom(s)?'EMOM':'AMRAP'}
+// Iron Twins: two athletes, one prescribed lift, independent measured sets.
+export function samspelStrength(s){return s?.version===2&&s.main_track==='strength'}
+export function ironTwinsConfig(){return {version:2,mode:'parallel_round_swap',main_track:'strength',participant_count:2,individual_scores:true,switch_rule:'fixed',planned_sets:3,exercise_name:''}}
+export function samspelStrengthComplete(s,rows=[]){
+ return samspelStrength(s)&&!!samspelConfig({samspel:s})&&rows.length===2&&[1,2].every(slot=>rows.filter(r=>r.slot===slot).length===1&&rows.find(r=>r.slot===slot).strength_sets?.length===s.planned_sets&&rows.find(r=>r.slot===slot).strength_sets.every(set=>set.reps>0))
+}
+export function samspelMainLabel(s){return samspelStrength(s)?'Styrke':samspelQuality(s)?'Kvalitet':samspelEmom(s)?'EMOM':'AMRAP'}
 export function samspelEmomOpportunity(s,slot,elapsed=s?.duration_seconds){
  if(!samspelEmom(s)||!samspelConfig({samspel:s})||!Number.isInteger(slot)||slot<1||slot>s.participant_count||!Number.isFinite(elapsed))return 0
  const intervals=Math.ceil(Math.max(0,Math.min(elapsed,s.duration_seconds))/s.switch_seconds)
@@ -26,6 +32,7 @@ export function samspelEmomComplete(s,rows=[],{elapsed}={}){
 export function samspelConfig(schema={}){
  const s=schema?.samspel
  if(s?.mode!=='parallel_round_swap')return null
+ if(samspelStrength(s))return s.participant_count===2&&s.switch_rule==='fixed'&&s.individual_scores===true&&Number.isInteger(s.planned_sets)&&s.planned_sets>=1&&s.planned_sets<=30&&typeof s.exercise_name==='string'&&!!s.exercise_name.trim()&&!s.station_tasks?s:null
  if(s.main_track!==undefined&&!samspelQuality(s)&&!samspelEmom(s))return null
  if(samspelEmom(s))return Number.isInteger(s.participant_count)&&s.participant_count>=2&&s.participant_count<=8&&s.switch_rule==='time'&&Number.isInteger(s.switch_seconds)&&s.switch_seconds>=5&&s.switch_seconds<=3600&&Number.isInteger(s.duration_seconds)&&s.duration_seconds<=10800&&s.duration_seconds>=s.participant_count*s.switch_seconds&&s.duration_seconds%(s.participant_count*s.switch_seconds)===0&&(s.erg_slots??1)===1&&!Array.isArray(s.station_tasks)&&s.individual_scores===true&&SAMSPEL_TASKS.some(([id])=>id===s.task)&&SAMSPEL_METRICS.some(([id])=>id===s.metric)?s:null
  if(samspelQuality(s))return s.participant_count===2&&s.task==='row'&&s.metric==='distance'&&s.switch_rule==='manual'&&(s.erg_slots??1)===1&&!Array.isArray(s.station_tasks)&&s.individual_scores===true&&Number.isInteger(s.duration_seconds)&&s.duration_seconds>=60&&s.duration_seconds<=10800?s:null
@@ -35,6 +42,11 @@ export function samspelConfig(schema={}){
 }
 export function samspelIssue(s,{format,participation,collaboration,participantCount=2,items=[]}={}){
  if(!s)return null
+ if(samspelStrength(s)){
+  if(format!=='Strength'||participation!=='partner'||collaboration!=='parallel')return 'Iron Twins krev Strength, to utøvarar og parallelt individuelt arbeid.'
+  if(items.length!==1||items[0].is_rest||items[0].is_complex||String(items[0].name||items[0].exercise_name||'').trim()!==s.exercise_name)return 'Vel éi vanleg styrkeøving til Iron Twins.'
+  return samspelConfig({samspel:s})?null:'Vel 1–30 planlagde sett.'
+ }
  if(!samspelConfig({samspel:s}))return samspelEmom(s)?'Engine Swap krev heile EMOM-intervall og ei øktlengd som går opp i komplette rotasjonar for alle utøvarane (maks 180 min).':'Ugyldig Samspel-oppsett.'
  const count=s.version===2?s.participant_count:2
  if((samspelQuality(s)?format!=='Eigen økt':samspelEmom(s)?format!=='EMOM':format!=='AMRAP')||(count===2?participation!=='partner':participation!=='team'||Number(participantCount)!==count))return samspelQuality(s)?'Quality & Row krev Eigen økt og to utøvarar.':samspelEmom(s)?'Engine Swap krev EMOM og samsvar i tal utøvarar.':'Samspel krev AMRAP og samsvar mellom tal deltakarar og gjennomføringsform.'
@@ -46,6 +58,7 @@ export function samspelIssue(s,{format,participation,collaboration,participantCo
  return null
 }
 export function samspelRoles(s,rounds=0){
+ if(samspelStrength(s))return ['Styrke','Styrke']
  const task=SAMSPEL_TASKS.find(([id])=>id===s?.task)?.[1]||'Kondisjon'
  const count=s?.version===2&&samspelConfig({samspel:s})?s.participant_count:2
  const n=Number(rounds)
@@ -55,21 +68,24 @@ export function samspelRoles(s,rounds=0){
  return Array.from({length:count},(_,i)=>{const offset=(i-index+count)%count;return offset<slots?(stations?stations[offset]?.label||'Uavklart stasjon':task):samspelMainLabel(s)})
 }
 export function samspelResultIssue(s,value){
- if(!s)return null
+ if(!s||samspelStrength(s))return null
  return value==null||String(value).trim()===''||!Number.isFinite(Number(value))||Number(value)<0?'Registrer faktisk samla '+(s.metric==='distance'?'distanse i meter':'kaloriar')+' (0 dersom ingen).':null
 }
 export function samspelScoring(s,base){
+ if(samspelStrength(s))return {type:'load',fields:['load']}
  if(samspelQuality(s))return {type:'distance',fields:['distance']}
  if(samspelEmom(s))return {type:s.metric,fields:[s.metric]}
  return s?samspelMixed(s)?{type:'rounds_reps',fields:['rounds_reps']}:{type:'multi',fields:['rounds_reps',s.metric]}:base
 }
 
 export function samspelWithCount(s,count){
+ if(samspelStrength(s))return count===2?s:null
  if(samspelQuality(s))return count===2?s:null
  if(!s||!Number.isInteger(count)||count<2||count>8)return null
  return {...s,version:2,participant_count:count}
 }
 export function samspelRoundInstruction(s){
+ if(samspelStrength(s))return 'Same øving, individuelle sett og vekter. Del utstyret etter behov og kvil mellom setta. Ingen felles løfteskår.'
  if(samspelQuality(s))return 'Éin ror medan den andre gjer kvalitetsøvingane i roleg tempo. Byt manuelt når kvalitetsarbeidet er ferdig. Byte tel ikkje som prestasjon. Avslutt ved tidsgrensa eller når begge er ferdige.'
  if(samspelEmom(s))return 'Byt rolle ved kvart nye EMOM-intervall. Éin på maskina, resten på EMOM. Registrer berre faktisk fullførte intervall per utøvar; byte er ikkje eit resultat.'
  if(samspelIsManual(s))return 'Byt rolle med eigen knapp. Registrer fullførte rundar separat.'
@@ -81,6 +97,7 @@ export function samspelIsTimed(s){
  return s?.version===2&&s.switch_rule==='time'&&!!samspelConfig({samspel:s})
 }
 export function samspelWithSwitch(s,rule,seconds=60){
+ if(samspelStrength(s))return rule==='fixed'?s:null
  if(samspelQuality(s))return rule==='manual'?s:null
  if(samspelEmom(s))return rule==='time'?s:null
  if(!s||!['round','time','manual'].includes(rule))return null
@@ -92,6 +109,7 @@ export function samspelWithSwitch(s,rule,seconds=60){
 // Driven by the existing active elapsed clock: pauses and reloads need no second timer.
 // At the workout deadline preserve the final working roles, rather than announcing an extra swap.
 export function samspelRotation(s,{rounds=0,elapsed=0,target=Infinity,manualSwaps=[]}={}){
+ if(samspelStrength(s))return {roles:['Styrke','Styrke'],nextSwitchSeconds:null,timed:false}
  if(samspelIsManual(s))return {roles:samspelRoles(s,normalizeSamspelSwaps(manualSwaps).length),nextSwitchSeconds:null,timed:false}
  if(!samspelIsTimed(s))return {roles:samspelRoles(s,rounds),nextSwitchSeconds:null,timed:false}
  const n=Number(elapsed),end=Number(target)
@@ -127,6 +145,7 @@ export function samspelParticipantRows(s,values={}){
  if(!samspelConfig({samspel:s})||!s.individual_scores)return []
  return Array.from({length:count},(_,i)=>{
   const slot=i+1, row=values[slot]||{}
+  if(samspelStrength(s))return {slot,sets:Array.from({length:s.planned_sets},(_,i)=>({set_number:i+1,reps:row['reps-'+i]??'',load_kg:row['load-'+i]??'',rir:row['rir-'+i]??''}))}
   if(samspelQuality(s))return {slot,quality:row.quality??'',erg:row.erg??''}
   if(samspelEmom(s))return {slot,intervals:row.intervals??'',erg:row.erg??''}
   return {slot,rounds:row.rounds??'',reps:row.reps??'',erg:row.erg??''}
@@ -135,6 +154,21 @@ export function samspelParticipantRows(s,values={}){
 export function samspelParticipantResults(s,values={}, {elapsed}={}){
  const rows=samspelParticipantRows(s,values), results=[]
  for(const row of rows){
+  if(samspelStrength(s)){
+   const strength_sets=[]
+   const entered=v=>v!=null&&String(v).trim()!==''
+   for(const [i,set] of row.sets.entries()){
+    if(![set.reps,set.load_kg,set.rir].some(entered))continue
+    const reps=Number(set.reps),load=Number(set.load_kg),rir=Number(set.rir)
+    const issue=(field,message)=>({rows:[],issue:'Utøvar '+row.slot+' · sett '+(i+1)+': '+message,slot:row.slot,field:field+'-'+i})
+    if(!entered(set.reps)||!Number.isSafeInteger(reps)||reps<0)return issue('reps','Oppgi faktisk reps, 0 ved mislukka forsøk.')
+    if(!entered(set.load_kg)||!Number.isFinite(load)||load<0)return issue('load','Oppgi faktisk kg (0 utan ekstern belastning).')
+    if(entered(set.rir)&&(!Number.isInteger(rir)||rir< -1||rir>10))return issue('rir','RIR må vera eit heiltal frå -1 til 10.')
+    strength_sets.push({set_number:i+1,reps,load_kg:load,rir:entered(set.rir)?rir:null})
+   }
+   if(strength_sets.length)results.push({slot:row.slot,exercise_name:s.exercise_name,strength_sets,rounds:null,extra_reps:null,erg_value:null})
+   continue
+  }
   if(samspelQuality(s)){
    if(!['done','partial','skipped'].includes(row.quality))return {rows:[],issue:'Utøvar '+row.slot+': stadfest kvalitetsarbeidet.',slot:row.slot,field:'quality'}
    if(String(row.erg).trim()!==''&&(!Number.isFinite(Number(row.erg))||Number(row.erg)<0))return {rows:[],issue:'Utøvar '+row.slot+': oppgi gyldig distanse.',slot:row.slot,field:'erg'}
@@ -164,11 +198,13 @@ export function samspelParticipantResults(s,values={}, {elapsed}={}){
 
 // Multiple identical erg stations share one metric. Mixed-machine results must not be summed.
 export function samspelErgSlots(s){
+ if(samspelStrength(s))return 0
  const count=s?.version===2?s.participant_count:2
  const slots=s?.version===2?(s.erg_slots??1):1
  return Number.isInteger(slots)&&slots>=1&&slots<count?slots:1
 }
 export function samspelCapacityIssue(s){
+ if(samspelStrength(s))return null // Existing equipment preparation owns capacity checks.
  if(s?.version!==2)return null
  if(samspelMixed(s))return samspelMixedCapacityIssue(s)
  const slots=s.erg_slots??1, available=s.available_ergs
@@ -178,6 +214,7 @@ export function samspelCapacityIssue(s){
  return null
 }
 export function samspelStationLabels(s,roles){
+ if(samspelStrength(s))return [...roles]
  if(samspelMixed(s))return [...roles]
  const task=SAMSPEL_TASKS.find(([id])=>id===s?.task)?.[1]||'Kondisjon'
  const slots=samspelErgSlots(s)
@@ -196,7 +233,7 @@ export function samspelCueStep(previous,current,{running=false,finished=false}={
  return {next,signal:running&&!finished&&Number.isSafeInteger(previous)&&next>previous?'station':null}
 }
 export function samspelSwapIndex(s,{rounds=0,elapsed=0,target=Infinity,manualSwaps=[]}={}){
- if(!s)return null
+ if(!s||samspelStrength(s))return null
  if(samspelIsManual(s))return normalizeSamspelSwaps(manualSwaps).length
  if(!samspelIsTimed(s))return Math.max(0,Math.floor(Number(rounds)||0))
  const t=Number.isFinite(elapsed)?Math.max(0,elapsed):0
@@ -231,7 +268,7 @@ export function samspelMixedCapacityIssue(s){
 }
 export function samspelWithStations(s,enabled,slots=s?.erg_slots??1){
  if(!s)return null
- if(samspelQuality(s)||samspelEmom(s))return s
+ if(samspelQuality(s)||samspelEmom(s)||samspelStrength(s))return s
  if(!enabled){const {station_tasks,station_capacity,...legacy}=s;return legacy}
  const n=Math.max(2,Math.min(Number(slots)||2,s.participant_count-1))
  if(s.participant_count<3)return s

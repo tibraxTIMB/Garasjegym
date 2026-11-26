@@ -1,4 +1,4 @@
-import {samspelConfig,samspelMixed,samspelStationRows,SAMSPEL_TASKS} from './samspel.js'
+import {samspelStrength,samspelConfig,samspelMixed,samspelStationRows,SAMSPEL_TASKS} from './samspel.js'
 import {exerciseMuscleProfile} from './exerciseMuscleProfiles.js'
 // A preparation checklist, not an inventory count. Equipment descriptions are
 // explicit catalogue text; alternatives and sharing must be confirmed by the coach.
@@ -81,7 +81,7 @@ export function applyEquipmentInventory(items,values,inventory){
 // infer quantities or alter exercise prescriptions from participant count.
 export function equipmentItemsForSamspel(items=[],samspel){
  const s=samspelConfig({samspel})
- if(!s)return items
+ if(!s||samspelStrength(s))return items
  const ergEquipment={row:'Romaskin',bike:'Sykkel',ski:'SkiErg'}
  const stations=samspelMixed(s)?samspelStationRows(s):[{task:s.task,label:SAMSPEL_TASKS.find(([id])=>id===s.task)?.[1]}]
  return [...items,...stations.map((station,i)=>({

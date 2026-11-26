@@ -201,3 +201,23 @@ assert.equal(samspelEmomComplete(engineSwap,fullEngineResult,{elapsed:599}),fals
 assert.equal(samspelEmomComplete(engineSwap,fullEngineResult.slice(0,1)),false)
 assert.equal(samspelEmomComplete(engineSwap,[fullEngineResult[0],fullEngineResult[0]]),false)
 assert.equal(samspelEmomComplete(engineSwap,[{...fullEngineResult[0],completed_intervals:4},fullEngineResult[1]]),false)
+
+import {ironTwinsConfig,samspelStrength,samspelStrengthComplete} from '../src/lib/samspel.js'
+const iron={...ironTwinsConfig(),exercise_name:'Back Squat',planned_sets:2}
+assert.equal(samspelStrength(iron),true)
+assert.equal(samspelIssue(iron,{...context,format:'Strength',items:[{name:'Back Squat'}]}),null)
+assert.ok(samspelIssue(iron,{...context,format:'Strength',items:[{name:'Back Squat'},{name:'Press'}]}))
+assert.deepEqual(samspelRoles(iron,0),['Styrke','Styrke'])
+assert.equal(samspelSwapIndex(iron,{rounds:5}),null)
+assert.equal(samspelResultIssue(iron,''),null)
+assert.deepEqual(samspelParticipantResults(iron,{}).rows,[])
+assert.ok(samspelParticipantResults(iron,{1:{'load-0':'50'}}).issue)
+assert.ok(samspelParticipantResults(iron,{1:{'reps-0':'5','load-0':'50','rir-0':'11'}}).issue)
+assert.ok(samspelParticipantResults(iron,{1:{'reps-0':'5.5','load-0':'50'}}).issue)
+const twins=samspelParticipantResults(iron,{1:{'reps-0':'5','load-0':'50','rir-0':'2','reps-1':'5','load-1':'55'},2:{'reps-0':'4','load-0':'30','reps-1':'0','load-1':'35'}})
+assert.equal(twins.issue,null)
+assert.deepEqual(twins.rows[0].strength_sets,[{set_number:1,reps:5,load_kg:50,rir:2},{set_number:2,reps:5,load_kg:55,rir:null}])
+assert.equal(twins.rows[1].strength_sets[1].reps,0)
+assert.equal(samspelStrengthComplete(iron,twins.rows),false)
+assert.equal(samspelStrengthComplete(iron,twins.rows.map(row=>({...row,strength_sets:row.strength_sets.map(set=>({...set,reps:5}))}))),true)
+console.log('Iron Twins actual independent strength results passed')
