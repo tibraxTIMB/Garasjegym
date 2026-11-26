@@ -3409,4 +3409,6 @@ export const EXERCISE_MUSCLE_PROFILES={
  }
 }
 export function normalizeExerciseMuscleName(value){return String(value||'').replace(/^\s*\d+\.\s*/,'').replace(/^\s*\d+\s*[×x]\s*/i,'').toLowerCase().replace(/[^a-z0-9æøå]+/g,' ').trim()}
-export function exerciseMuscleProfile(name){return EXERCISE_MUSCLE_PROFILES[normalizeExerciseMuscleName(name)]||null}
+// Exact reviewed synonyms only; do not infer anatomical profiles from loose substrings.
+const PROFILE_ALIASES=Object.freeze({benkpress:'bench press',rdl:'romanian deadlift',markløft:'deadlift',planke:'plank',roing:'row',romaskin:'row'})
+export function exerciseMuscleProfile(name){const key=normalizeExerciseMuscleName(name);return EXERCISE_MUSCLE_PROFILES[key]||EXERCISE_MUSCLE_PROFILES[PROFILE_ALIASES[key]]||null}
