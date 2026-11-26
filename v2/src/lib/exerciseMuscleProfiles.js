@@ -3406,6 +3406,354 @@ export const EXERCISE_MUSCLE_PROFILES={
   "primary": [],
   "secondary": [],
   "stabilizers": []
+ },
+ "i t y w": {
+  "mode": "stability",
+  "primary": [
+   "upperBack",
+   "rearDelts"
+  ],
+  "secondary": [],
+  "stabilizers": [
+   "rotatorCuff"
+  ]
+ },
+ "wall slides": {
+  "mode": "stability",
+  "primary": [
+   "upperBack"
+  ],
+  "secondary": [],
+  "stabilizers": [
+   "rotatorCuff"
+  ]
+ },
+ "scapular push ups": {
+  "mode": "stability",
+  "primary": [
+   "chest"
+  ],
+  "secondary": [],
+  "stabilizers": [
+   "rotatorCuff",
+   "abs"
+  ]
+ },
+ "scapular pull ups": {
+  "mode": "stability",
+  "primary": [
+   "lats",
+   "upperBack"
+  ],
+  "secondary": [],
+  "stabilizers": [
+   "rotatorCuff",
+   "forearms"
+  ]
+ },
+ "open book": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "90 90 hip switches": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "hip cars": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "cossack squat": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "deep squat hold": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "jefferson curl": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "shoulder cars": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "wrist circles": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "wrist flexor stretch": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "wrist extension stretch": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "adductor rock back": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "half kneeling ankle dorsiflexion": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "child s pose": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "downward dog": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "low lunge": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "hamstring stretch": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "pec doorway stretch": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "lat stretch": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "couch stretch": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "pigeon stretch": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "ityw rygghev": {
+  "mode": "stability",
+  "primary": [
+   "upperBack",
+   "lowerBack"
+  ],
+  "secondary": [
+   "rearDelts"
+  ],
+  "stabilizers": [
+   "rotatorCuff"
+  ]
+ },
+ "thread the needle": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "world s greatest stretch": {
+  "mode": "mobility",
+  "primary": [],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "banded lateral walk": {
+  "mode": "stability",
+  "primary": [
+   "abductors",
+   "glutes"
+  ],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "single leg balance": {
+  "mode": "stability",
+  "primary": [
+   "abductors"
+  ],
+  "secondary": [],
+  "stabilizers": [
+   "calves",
+   "abs"
+  ]
+ },
+ "single leg glute bridge": {
+  "mode": "strength",
+  "primary": [
+   "glutes"
+  ],
+  "secondary": [
+   "hamstrings"
+  ],
+  "stabilizers": [
+   "abs",
+   "obliques"
+  ]
+ },
+ "pallof press": {
+  "mode": "stability",
+  "primary": [
+   "obliques",
+   "abs"
+  ],
+  "secondary": [],
+  "stabilizers": []
+ },
+ "single leg rdl": {
+  "mode": "strength",
+  "primary": [
+   "glutes",
+   "hamstrings"
+  ],
+  "secondary": [],
+  "stabilizers": [
+   "abductors",
+   "lowerBack",
+   "abs"
+  ]
+ },
+ "bear crawl": {
+  "mode": "stability",
+  "primary": [
+   "frontDelts",
+   "abs"
+  ],
+  "secondary": [
+   "quads",
+   "triceps"
+  ],
+  "stabilizers": [
+   "obliques",
+   "rotatorCuff"
+  ]
+ },
+ "clean deadlift": {
+  "mode": "strength",
+  "primary": [
+   "glutes",
+   "quads",
+   "hamstrings"
+  ],
+  "secondary": [
+   "upperBack"
+  ],
+  "stabilizers": [
+   "lowerBack",
+   "abs",
+   "forearms"
+  ]
+ },
+ "hanging knees to chest": {
+  "mode": "strength",
+  "primary": [
+   "abs",
+   "hipFlexors"
+  ],
+  "secondary": [],
+  "stabilizers": [
+   "forearms",
+   "lats"
+  ]
+ },
+ "sumo deadlift high pull": {
+  "mode": "mixed",
+  "primary": [
+   "glutes",
+   "quads",
+   "upperBack"
+  ],
+  "secondary": [
+   "hamstrings",
+   "sideDelts"
+  ],
+  "stabilizers": [
+   "abs",
+   "lowerBack",
+   "forearms"
+  ]
+ },
+ "landmine press": {
+  "mode": "strength",
+  "primary": [
+   "frontDelts",
+   "triceps"
+  ],
+  "secondary": [
+   "chest"
+  ],
+  "stabilizers": [
+   "abs",
+   "obliques",
+   "rotatorCuff"
+  ]
+ },
+ "landmine row": {
+  "mode": "strength",
+  "primary": [
+   "lats",
+   "upperBack"
+  ],
+  "secondary": [
+   "biceps",
+   "rearDelts"
+  ],
+  "stabilizers": [
+   "lowerBack",
+   "abs"
+  ]
+ },
+ "landmine squat": {
+  "mode": "strength",
+  "primary": [
+   "quads",
+   "glutes"
+  ],
+  "secondary": [
+   "adductors"
+  ],
+  "stabilizers": [
+   "abs",
+   "lowerBack"
+  ]
  }
 }
 export function normalizeExerciseMuscleName(value){return String(value||'').replace(/^\s*\d+\.\s*/,'').replace(/^\s*\d+\s*[×x]\s*/i,'').toLowerCase().replace(/[^a-z0-9æøå]+/g,' ').trim()}

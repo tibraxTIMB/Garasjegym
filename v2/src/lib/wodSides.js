@@ -1,9 +1,10 @@
+import {isQualitySideExercise} from './exerciseQuality.js'
 // Side is a property of one exercise occurrence in a WOD, not of the
 // exercise catalogue. A KB snatch can be right, left or alternating.
 export const WOD_SIDE_OPTIONS = [
   {value:'',label:'Ikkje spesifisert'},
-  {value:'right',label:'Høgre arm'},
-  {value:'left',label:'Venstre arm'},
+  {value:'right',label:'Høgre side'},
+  {value:'left',label:'Venstre side'},
   {value:'both',label:'Begge sider · reps per side'},
   {value:'alternating',label:'Vekslande · reps totalt'},
 ]
@@ -30,6 +31,7 @@ export function getWodSideLabel(item, level='rx') {
 }
 
 export function isSideSelectableExercise(item) {
+  if(isQualitySideExercise(item))return true
   const name=String(item?.name || item?.exercise_name || '').toLowerCase()
   const equipment=String(item?.equipment || '').toLowerCase()
   return /(kettlebell|manual|dumbbell)/.test(equipment) &&
