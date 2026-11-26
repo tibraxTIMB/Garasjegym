@@ -6,7 +6,7 @@ export default function SimpleCustomerHome({ onPlan, onFree, onWod, onManual, on
     <div className="customer-home-intro"><h2>Kva vil du gjera?</h2></div>
     <button type="button" className="customer-plan-hero" onClick={onPlan}>
       <span className="customer-plan-hero-icon"><CalendarCheck2 size={29} /></span>
-      <span className="customer-plan-hero-copy"><strong>Min treningsplan</strong><small>Neste økt · program · PT</small></span>
+      <span className="customer-plan-hero-copy"><strong>Min treningsplan</strong><small>Programmet ditt, neste økt</small></span>
       {newPtWodCount > 0 ? <span className="customer-plan-new">{newPtWodCount} ny{newPtWodCount === 1 ? '' : 'e'}</span> : <ChevronRight size={22} />}
     </button>
     <div className="simple-home-grid customer-home-grid">
