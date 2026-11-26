@@ -292,3 +292,11 @@ assert.equal(teamChipperComplete(chipper,chipperRows.slice(1)),false)
 assert.ok(samspelParticipantResults(chipper,{...chipperInput,2:{...chipperInput[2],'chipper-0':'31'}}).issue)
 assert.equal(teamChipperComplete(chipper,samspelParticipantResults(chipper,{...chipperInput,2:{...chipperInput[2],'chipper-1':'59'}}).rows),false)
 console.log('Team Chipper contribution checks passed')
+
+import {samspelTemplateOptions,samspelTemplateChoice,samspelTemplateName} from '../src/lib/samspel.js'
+assert.equal(samspelTemplateOptions('AMRAP',{composite:true}).length,0)
+assert.equal(samspelTemplateChoice('strength',{format:'EMOM'}),null)
+assert.equal(samspelTemplateChoice('relay',{format:'AMRAP'}).collaboration,'you_go_i_go')
+assert.equal(samspelTemplateChoice('chipper',{format:'Chipper'}).collaboration,'free_split')
+assert.equal(samspelTemplateChoice('quality',{format:'AMRAP'}).format,'Eigen økt')
+assert.equal(samspelTemplateName(samspelTemplateChoice('double_emom',{format:'EMOM'}).config),'Double EMOM')

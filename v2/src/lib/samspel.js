@@ -405,3 +405,25 @@ export function samspelStationCapacityKeys(s){
  }
  return [...keys]
 }
+
+// One format-aware entry point for the builder; the existing factories remain authoritative.
+export function samspelTemplateOptions(format,{composite=false}={}){
+ if(composite)return []
+ return [
+  ...(format==='AMRAP'?[['legacy','Parallelt arbeid med rollebyte'],['relay','You Go I Go · arbeid og kvile']]:[]),
+  ...(format==='EMOM'?[['emom','Engine Swap · EMOM og maskin'],['double_emom','Double EMOM · to øvingar']]:[]),
+  ...(format==='Strength'?[['strength','Iron Twins · individuelle sett']]:[]),
+  ...(format==='Chipper'?[['chipper','Team Chipper · del repetisjonane']]:[]),
+  ['quality','Quality & Row · kvalitetsarbeid og roing'],['recovery','Active Recovery · roleg fellesøkt']
+ ]
+}
+export function samspelTemplateName(s){
+ if(!s)return ''
+ return ({relay:'You Go I Go',chipper:'Team Chipper',quality:'Quality & Row',recovery:'Active Recovery',emom:'Engine Swap',double_emom:'Double EMOM',strength:'Iron Twins'})[s.main_track]||'Parallelt arbeid med rollebyte'
+}
+export function samspelTemplateChoice(key,{format,interval=60,duration=600,composite=false}={}){
+ if(!samspelTemplateOptions(format,{composite}).some(([id])=>id===key))return null
+ const factories={legacy:()=>({version:2,mode:'parallel_round_swap',task:'row',metric:'distance',participant_count:2}),relay:youGoIGoConfig,chipper:teamChipperConfig,quality:qualityRowConfig,recovery:activeRecoveryConfig,emom:()=>engineSwapConfig(interval,duration),double_emom:()=>doubleEmomConfig(interval,duration),strength:ironTwinsConfig}
+ const config=factories[key]()
+ return {config,name:samspelTemplateName(config),format:['quality','recovery'].includes(key)?'Eigen økt':format,collaboration:key==='relay'?'you_go_i_go':key==='chipper'?'free_split':'parallel'}
+}
