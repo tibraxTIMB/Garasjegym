@@ -13,7 +13,7 @@ const shortDate=value=>value?new Date(value).toLocaleDateString('nn-NO',{day:'nu
 /** PTs can see only explicit PT WOD assignments and their own PT program sessions.
  * No workout_logs query: a customer's unrelated private training remains private.
  */
-export default function PTClientWods({clientId,clientName='',clientRank=null,mode='full',planSessions=[],wods=[],initialReview=null,onOpenFull=()=>{},onOpenReview=()=>{},onReviewClosed=()=>{}}){
+export default function PTClientWods({clientId,clientName='',clientRank=null,mode='full',planSessions=[],wods=[],initialReview=null,assignRequest=null,onOpenFull=()=>{},onOpenReview=()=>{},onReviewClosed=()=>{}}){
  const [assignments,setAssignments]=useState([])
  const [loading,setLoading]=useState(false)
  const [error,setError]=useState('')
@@ -85,12 +85,12 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
  }
  return <section className={'ptfollow ptfollow-'+mode} aria-label={'PT-tildelte WOD-ar for '+clientName}>
    <div className="ptfollow-heading">
-    <div><span className="section-kicker">WOD-OPPFØLGING</span><h3>{preview?'Tildelte WOD-ar':'WOD-ar · '+clientName}</h3>
+    <div><span className="section-kicker">WOD-TILDELINGAR</span><h3>{preview?'Tildelte WOD-ar':'WOD-ar · '+clientName}</h3>
       {!preview&&<p>Berre WOD-ar knytte til PT-tildelingar og treningsplanar. Privat treningshistorikk blir ikkje vist.</p>}
     </div>
     <div className="ptfollow-heading-actions">
      {!preview&&<button type="button" className="secondary-button" onClick={()=>setRevision(x=>x+1)} disabled={loading}><RefreshCw size={15}/> Oppdater</button>}
-     {preview?<button type="button" className="secondary-button" onClick={onOpenFull}>Sjå alle <ArrowRight size={15}/></button>:
+     {preview?<button type="button" className="secondary-button" onClick={onOpenFull}>Sjå tildelingar og resultat <ArrowRight size={15}/></button>:
       <button type="button" className="primary-button" onClick={()=>setShowAssign(value=>!value)}><Plus size={16}/>{showAssign?'Lukk tildeling':'Tildel WOD'}</button>}
     </div>
    </div>
@@ -103,21 +103,21 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
      {programWods.length>0&&<span><b>{programWods.length}</b> i PT-planar</span>}
     </div>
     <div className="ptfollow-section">
-     <h4>Ventar eller pågår</h4>
+     <h4>Klare / pågåande WOD-ar</h4>
      {shownActive.length?shownActive.map(renderAssignment):<p className="ptfollow-empty">Ingen aktive WOD-tildelingar.</p>}
     </div>
     <div className="ptfollow-section">
      <h4><CheckCircle2 size={16}/> Gjennomførte tildelingar</h4>
      {shownDone.length?shownDone.map(renderAssignment):<p className="ptfollow-empty">Ingen tildelte WOD-ar er registrerte som gjennomførte.</p>}
     </div>
-    {programWods.length>0&&<div className="ptfollow-section">
+    {!preview&&programWods.length>0&&<div className="ptfollow-section">
      <h4>WOD-ar i PT-planar</h4>
      {shownProgram.map(renderProgram)}
      <small className="ptfollow-footnote">Programstatus er separat frå direkte WOD-tildeling og privat treningslogg.</small>
     </div>}
     {preview&&<p className="ptfollow-footnote">Du ser berre PT-tilknytte WOD-ar, ikkje andre treningsøkter.</p>}
    </>}
-   {!preview&&showAssign&&createPortal(<div className="gg-pt-assign-backdrop"><section className="gg-pt-assign-sheet" role="dialog" aria-modal="true" aria-label={'Tildel WOD til '+clientName}>
+   {showAssign&&createPortal(<div className="gg-pt-assign-backdrop"><section className="gg-pt-assign-sheet" role="dialog" aria-modal="true" aria-label={'Tildel WOD til '+clientName}>
     <header className="gg-pt-assign-head"><div><h4>Tildel WOD</h4><small>Mottakar: {clientName}</small></div><button type="button" aria-label="Lukk tildeling" onClick={()=>setShowAssign(false)}><X size={20}/></button></header>
     <Suspense fallback={<p className="ptfollow-info">Opnar WOD-biblioteket …</p>}>
       <WodBuilder key={clientId} assignedClientId={clientId} onAssigned={()=>{setShowAssign(false);setRevision(x=>x+1)}}/>
