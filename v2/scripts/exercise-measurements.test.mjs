@@ -124,7 +124,7 @@ test('explicit unweighted equipment does not imply compulsory kilograms',()=>{
  assert.equal(getExerciseMeasurementFlags({name:'Glute bridge',equipment:'Matte',sets:[{load_kg:10}]}).usesLoad,true);
 });
 
-import {applyQualityStarter,isMetconCandidate} from '../src/lib/qualityPrescription.js';
+import {applyQualityStarter,isMetconCandidate,hasQualityDuration} from '../src/lib/qualityPrescription.js';
 test('reviewed quality starter uses a single editable dose, not compulsory kg',()=>{
  const item={reps:'10',workSeconds:'',sideMode:'',coachNote:'',levels:{rx:{reps:'10',loadMode:'none',durationSeconds:''},scaled:{reps:'10',loadMode:'none',durationSeconds:''}}};
  const hold=applyQualityStarter({name:'Deep squat hold'},item);
@@ -134,4 +134,11 @@ test('reviewed quality starter uses a single editable dose, not compulsory kg',(
  assert.equal(applyQualityStarter({name:'Open book',prescription_profiles:{levels:{rx:{reps:12}}}},item),item);
  assert.equal(applyQualityStarter({name:'Back squat'},item),item);assert.equal(item.reps,'10');
  assert.equal(isMetconCandidate({name:'Open book',category:'Mobilitet'}),false);assert.equal(isMetconCandidate({name:'Downward dog',category:'Yoga'}),false);assert.equal(isMetconCandidate({name:'Air squat',category:'Styrke'}),true);
+});
+
+test('timed quality doses stay editable and legitimate loaded lifts remain metcon candidates',()=>{
+ assert.equal(hasQualityDuration({name:'Pilates Swimming'}),true);
+ assert.equal(hasQualityDuration({name:'Open book'}),false);
+ assert.equal(isMetconCandidate({name:'Landmine press',category:'Styrke'}),true);
+ assert.equal(isMetconCandidate({name:'Single-leg RDL',category:'Styrke'}),true);
 });

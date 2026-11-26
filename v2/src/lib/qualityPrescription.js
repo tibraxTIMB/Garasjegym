@@ -181,8 +181,9 @@ export function applyQualityStarter(ex,item){
  const levels=Object.fromEntries(Object.entries(item.levels||{}).map(([k,v])=>[k,{...v,reps,durationSeconds}]))
  return {...item,reps,workSeconds:durationSeconds,sideMode:preset.s||item.sideMode,coachNote:preset.n||item.coachNote,levels}
 }
+export const hasQualityDuration=ex=>Boolean(starters[qualityName(ex)]?.t)
 // Random timed metcon suggestions must not silently turn quality mobility into speed work.
 export function isMetconCandidate(ex){
  const category=String(ex?.category||'').toLowerCase()
- return !!ex&&!ex.is_rest&&!ex.is_rehab&&!/rehab|pilates|yoga/.test(category)&&!isMobilityExercise(ex)&&!starters[qualityName(ex)]
+ return !!ex&&!ex.is_rest&&!ex.is_rehab&&!/rehab|pilates|yoga/.test(category)&&!isMobilityExercise(ex)&&(!starters[qualityName(ex)]||['landmine press','single leg rdl'].includes(qualityName(ex)))
 }
