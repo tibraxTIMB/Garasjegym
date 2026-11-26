@@ -82,3 +82,22 @@ test('Samspel never receives inferred individual EMOM correction sets',()=>{
  assert.match(read('../src/components/WorkoutDetail.jsx'),/Lagresultat krev eiga korrigering av utøvarbidrag/)
  assert.match(read('../src/components/WorkoutDetail.jsx'),/const report=isSamspel\?null:/)
 })
+
+import {samspelCorrectionDraft,samspelCorrectionPatch} from '../src/lib/workoutCorrections.js'
+test('team corrections preserve identity, clock and completion and refuse inconsistent plan state',()=>{
+ const original={id:'w',score_rounds:3,result_data:{completed:true,elapsed_seconds:600,samspel:{version:2,mode:'parallel_round_swap',main_track:'relay',participant_count:2,switch_rule:'manual',individual_scores:true,participant_results:[{slot:1,rounds:1,extra_reps:0},{slot:2,rounds:2,extra_reps:0}]}}}
+ const draft=samspelCorrectionDraft(original)
+ assert.equal(draft[1].rounds,'1')
+ draft[1].rounds='3'
+ const {patch}=samspelCorrectionPatch(original,draft)
+ assert.equal(patch.score_rounds,5)
+ assert.equal(patch.result_data.completed_rounds,5)
+ assert.equal(patch.result_data.elapsed_seconds,600)
+ assert.equal(original.score_rounds,3)
+ assert.equal(patch.result_data.samspel.participant_results[0].rounds,3)
+ assert.ok(samspelCorrectionPatch(original,{...draft,2:{rounds:'',reps:'0'}}).issue)
+ const recovery={result_data:{completed:true,samspel:{version:2,mode:'parallel_round_swap',main_track:'recovery',participant_count:2,switch_rule:'fixed',duration_seconds:600,individual_scores:true,participant_results:[{slot:1,quality_status:'done'},{slot:2,quality_status:'done'}]}}}
+ assert.ok(samspelCorrectionPatch(recovery,{1:{quality:'partial'},2:{quality:'done'}}).issue)
+ assert.ok(samspelCorrectionPatch(recovery,samspelCorrectionDraft(recovery)).patch)
+ assert.match(read('../src/components/WorkoutDetail.jsx'),/\.eq\('result_data',JSON\.stringify\(workout\.result_data\)\)/)
+})

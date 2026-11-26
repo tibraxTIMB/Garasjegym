@@ -7,7 +7,7 @@ import {supabase} from '../lib/supabase.js'
 import {deleteWorkoutAndLinkedRecords} from '../lib/deleteWorkout.js'
 import {workoutPRVictories} from '../lib/prVictory.js'
 import {formatWorkoutSeconds,formatWorkoutSet,optionalNumber,splitWorkoutNote,buildWorkoutReport,reportRepTotals} from '../lib/workoutDetail.js'
-import {suggestedEmomSets} from '../lib/workoutCorrections.js'
+import {suggestedEmomSets,samspelCorrectionFields,samspelCorrectionDraft,samspelCorrectionPatch} from '../lib/workoutCorrections.js'
 import {cardParts,cardDose,cardTone,formatCardTime} from '../lib/wodCard.js'
 import './workout-detail.css'
 import './wod-card.css'
@@ -55,6 +55,7 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
  const [menuOpen,setMenuOpen]=useState(false)
  const [form,setForm]=useState(()=>initialForm(workout))
  const [setDrafts,setSetDrafts]=useState({})
+ const [teamDraft,setTeamDraft]=useState({})
  const [addedSets,setAddedSets]=useState({})
  const [sourceSchema,setSourceSchema]=useState(null)
  const [sourceStatus,setSourceStatus]=useState('')
@@ -94,7 +95,7 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
  function cancelEdit(){setEditing(false);setEditMode(null);setForm(initialForm(workout));setSetDrafts(Object.fromEntries(exercises.flatMap(ex=>(ex.workout_sets||[]).map(set=>[set.id,initialSetValues(set)]))));setAddedSets({});setError('')}
  function beginEdit(nextMode){
   setError('');setNotice('');setMenuOpen(false)
-  if(nextMode==='correction'&&isSamspel){setError('Lagresultat krev eiga korrigering av utøvarbidrag. Notat kan redigerast; generelle resultatfelt blir ikkje endra.');return}
+  if(nextMode==='correction'&&isSamspel){if(!samspelCorrectionFields(workout).length){setError('Dette eldre lagoppsettet kan ikkje korrigerast her. Notat kan redigerast.');return}setTeamDraft(samspelCorrectionDraft(workout));setForm(initialForm(workout));setEditMode('team');setEditing(true);return}
   if(nextMode==='correction'&&(complexResults.length||primaryResults.length)){setError('Programmerte delresultat krev eiga resultatkorrigering. Notat kan framleis redigerast.');return}
   setForm(initialForm(workout));setEditMode(nextMode);setEditing(true)
   if(nextMode==='correction'&&workout.source_wod_id){
@@ -152,6 +153,14 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
   setError('');setNotice('');setSaving(true)
   let updatedCount=0
   try{
+   if(editMode==='team'){
+    const correction=samspelCorrectionPatch(workout,teamDraft)
+    if(correction.issue)throw new Error(correction.issue)
+    // One guarded update of the existing log row; no insert, set write or plan-status mutation.
+    const {data,error:saveError}=await supabase.from('workout_logs').update(correction.patch).eq('id',workout.id).eq('member_id',memberId).eq('result_data',JSON.stringify(workout.result_data)).select('id,title,workout_date,format,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,note,result_data').maybeSingle()
+    if(saveError||!data)throw saveError||new Error('Resultatet kan ha blitt endra. Opna økta på nytt før du prøver igjen.')
+    setEditing(false);setEditMode(null);setNotice('Utøvarbidraga er korrigerte.');await onSaved?.(data);return
+   }
    if(editMode==='correction'&&isSamspel)throw new Error('Lagresultat krev eiga korrigering av utøvarbidrag.')
    if(editMode==='correction'&&!form.title.trim())throw new Error('Økta må ha eit namn.')
    if(editMode==='correction'&&!/^\d{4}-\d{2}-\d{2}$/.test(form.workout_date))throw new Error('Vel ein gyldig dato.')
@@ -233,7 +242,7 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
     {error&&<div className="auth-error" role="alert">{error}</div>}
     {notice&&<div className="auth-message" role="status">{notice}</div>}
     {editing?<form id="workout-detail-edit-form" onSubmit={save} className="workout-detail-form">
-     <div className="workout-detail-edit-card"><h3>{editMode==='note'?'Mine notat':'Om økta'}</h3>{editMode==='correction'&&<><label>Namn<input required maxLength={120} value={form.title} onChange={e=>setForm(v=>({...v,title:e.target.value}))}/></label><label>Dato<input type="date" required value={form.workout_date} onChange={e=>setForm(v=>({...v,workout_date:e.target.value}))}/></label></>}<label>Mine notat<textarea rows={3} value={form.note} onChange={e=>setForm(v=>({...v,note:e.target.value}))} placeholder="Korleis gjekk økta?"/></label></div>
+     {editMode==='team'?<section className="workout-detail-edit-card"><h3>Korriger utøvarbidrag</h3><small>Berre faktiske bidrag. Gjennomføringsstatus, felles klokke og planlenkjer blir ikkje endra. Utøvarnummer er ikkje medlemsidentitet.</small>{Array.from(new Set(samspelCorrectionFields(workout).map(f=>f.slot))).map(slot=><details key={slot} open={slot===1||undefined}><summary>Utøvar {slot}</summary><div className="workout-detail-edit-grid">{samspelCorrectionFields(workout).filter(f=>f.slot===slot).map(f=><label key={f.key}>{f.label}{f.kind==='status'?<select value={teamDraft[slot]?.[f.key]??''} onChange={e=>setTeamDraft(prev=>({...prev,[slot]:{...prev[slot],[f.key]:e.target.value}}))}><option value="">Vel status</option><option value="done">Utført</option><option value="partial">Delvis</option><option value="skipped">Ikkje utført</option></select>:<input type="number" inputMode={f.kind==='decimal'?'decimal':'numeric'} min={f.min} max={f.max} step={f.kind==='decimal'?'any':1} value={teamDraft[slot]?.[f.key]??''} onChange={e=>setTeamDraft(prev=>({...prev,[slot]:{...prev[slot],[f.key]:e.target.value}}))} placeholder="–"/>}</label>)}</div></details>)}</section>:<div className="workout-detail-edit-card"><h3>{editMode==='note'?'Mine notat':'Om økta'}</h3>{editMode==='correction'&&<><label>Namn<input required maxLength={120} value={form.title} onChange={e=>setForm(v=>({...v,title:e.target.value}))}/></label><label>Dato<input type="date" required value={form.workout_date} onChange={e=>setForm(v=>({...v,workout_date:e.target.value}))}/></label></>}<label>Mine notat<textarea rows={3} value={form.note} onChange={e=>setForm(v=>({...v,note:e.target.value}))} placeholder="Korleis gjekk økta?"/></label></div>}
      {editMode==='correction'&&<><p className="workout-detail-correction-warning">Rett berre resultat du faktisk gjennomførte. Målbare PR-ar blir rekna om frå den oppdaterte treningsloggen når PR-senteret blir lasta på nytt. Manuellt lagra PR-notat blir ikkje endra.</p><details className="workout-detail-edit-card workout-detail-score-editor"><summary><Trophy size={17}/> Korriger resultat</summary><div className="workout-detail-edit-grid">{[
       ['score_rounds','Rundar'],['score_reps','Ekstra reps'],['score_time_seconds','Sluttid (sek)'],
       ['score_load_kg','Tungaste løft (kg)'],['score_calories','Kaloriar'],['score_distance','Avstand']
