@@ -107,3 +107,23 @@ test('unconfirmed, completion-only, partner and stale corrected complex results 
  corrected.workout_exercises[0].workout_sets[0].load_kg=30
  assert.equal(deriveExerciseRecords([corrected]).length,0)
 })
+
+test('team and completion-only records never influence personal lift metrics',()=>{
+ const personal=workout(1,'Back Squat',[{reps:5,load_kg:50}],{result_data:{}})
+ const team=workout(2,'Back Squat',[{reps:20,load_kg:100}],{result_data:{samspel:{team_score:true}}})
+ const completed=workout(3,'Back Squat',[{reps:10,load_kg:200}],{result_data:{flow_completion_only:true}})
+ assert.deepEqual(deriveExerciseRecords([personal,team,completed]),deriveExerciseRecords([personal]))
+ assert.deepEqual(deriveExerciseRecords([team,completed]),[])
+})
+test('benchmark excludes non-Samspel team results as well',()=>{
+ const base={source_wod_id:'w',format:'AMRAP',score_rounds:8,score_reps:5}
+ assert.deepEqual(deriveBenchmarkRecords([{...base,result_data:{wod_engine:{participation:'team'}}}],['w']),[])
+})
+test('combination WOD separates AMRAP and For Time and omits unknown scoring',()=>{
+ const base={source_wod_id:'w',format:'Couplet',title:'Test'}
+ const logs=[{...base,id:'a',score_rounds:4,score_reps:2,result_data:{combination_mode:'AMRAP'}},{...base,id:'b',score_time_seconds:180,result_data:{combination_mode:'For Time'}},{...base,id:'c',score_time_seconds:10,result_data:{}}]
+ const records=deriveBenchmarkRecords(logs,['w'])
+ assert.equal(records.length,2)
+ assert.equal(records.find(x=>x.key.endsWith('|amrap')).logId,'a')
+ assert.equal(records.find(x=>x.key.endsWith('|for time')).logId,'b')
+})
