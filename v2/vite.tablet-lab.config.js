@@ -5,14 +5,19 @@ import path from 'node:path'
 
 const realClient=fileURLToPath(new URL('./src/lib/supabase.js',import.meta.url))
 const labClient=fileURLToPath(new URL('./src/tabletLabSupabase.js',import.meta.url))
+const realSafehouse=fileURLToPath(new URL('./src/components/Safehouse.jsx',import.meta.url))
+const realBackup=fileURLToPath(new URL('./src/lib/safehouse.js',import.meta.url))
+const labSafehouse=fileURLToPath(new URL('./src/components/TabletLabSafehouse.jsx',import.meta.url))
 const withoutQuery=id=>id.split('?')[0]
-const forbidden=id=>withoutQuery(id)===realClient||/[\\/]node_modules[\\/]@supabase[\\/]/.test(id)
+const forbidden=id=>[realClient,realSafehouse,realBackup].includes(withoutQuery(id))||/[\\/]node_modules[\\/]@supabase[\\/]/.test(id)
 function isolatedBackend(){
  return {
   name:'tablet-lab-isolated-backend',
   enforce:'pre',
   resolveId(source,importer){
    if(source==='@supabase/supabase-js'||source.startsWith('@supabase/'))this.error('Supabase SDK is forbidden in Tablet Lab')
+   if(source===realSafehouse)return labSafehouse
+   if(importer&&source.startsWith('.')&&path.resolve(path.dirname(withoutQuery(importer)),source)===realSafehouse)return labSafehouse
    if(source===realClient)return labClient
    if(importer&&source.startsWith('.')&&path.resolve(path.dirname(withoutQuery(importer)),source)===realClient)return labClient
    return null

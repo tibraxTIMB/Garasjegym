@@ -16,7 +16,7 @@ with sync_playwright() as pw:
  page.on('pageerror',lambda e:errors.append(str(e)))
  page.on('console',lambda m:errors.append(m.type+': '+m.text) if m.type=='error' else None)
  page.goto(BASE+'/host.html')
- page.evaluate("""() => {localStorage.setItem('production-sentinel','unchanged');window.labReady=false;window.addEventListener('message',e=>{if(e.data?.channel==='gg-werkstatt-tablet-v1'&&e.data.type==='ready')window.labReady=true});const f=document.createElement('iframe');f.id='lab';f.width=800;f.height=1280;f.src='/Garasjegym/tablet-lab.html';document.body.append(f)}""")
+ page.evaluate("""() => {localStorage.setItem('production-sentinel','unchanged');window.labReady=false;window.addEventListener('message',e=>{if(e.data?.channel==='gg-werkstatt-tablet-v1'&&e.data.type==='ready')window.labReady=true});const wrapper=document.createElement('div');wrapper.style.cssText='position:relative;width:440px;height:704px;overflow:hidden';const f=document.createElement('iframe');f.id='lab';f.width=800;f.height=1280;f.style.cssText='display:block;border:0;transform:scale(.55);transform-origin:top left';f.setAttribute('sandbox','allow-scripts allow-same-origin');f.src='/Garasjegym/tablet-lab.html';wrapper.append(f);document.body.append(wrapper)}""")
  page.wait_for_function('window.labReady===true',timeout=30000)
  frame=page.frame_locator('#lab')
  frame.get_by_text('TESTLAB · ingen resultat blir lagra i produksjon',exact=True).wait_for()
@@ -35,10 +35,18 @@ with sync_playwright() as pw:
  assert frame.get_by_role('dialog').get_by_text('Ingeniørprøve AMRAP',exact=True).count()>=1
  assert child.evaluate("document.documentElement.dataset.ggDevice")=='tablet'
  assert child.evaluate("document.documentElement.dataset.ggOrientation")=='portrait'
- frame.get_by_role('button',name='Utfør WOD',exact=True).click()
- frame.get_by_role('button',name='Start',exact=True).wait_for(timeout=20000)
- frame.get_by_role('button',name='Start',exact=True).click()
- page.screenshot(path='ui-audit-results/tablet-lab-actual-timer.png')
+ try:
+  launch=frame.get_by_role('button',name='Utfør WOD',exact=True)
+  # A normal pointer click on the scaled viewport, not a forced/JS click.
+  launch.click(timeout=15000)
+  start=frame.get_by_role('button',name='Start',exact=True)
+  start.wait_for(timeout=20000)
+  start.click(timeout=15000)
+  page.screenshot(path='ui-audit-results/tablet-lab-actual-timer.png')
+ except Exception:
+  print('LAB TIMER DIAGNOSTICS',json.dumps({'body':child.locator('body').inner_text()[:6000],'errors':errors,'dataset':child.evaluate('({...document.documentElement.dataset})')},ensure_ascii=False),flush=True)
+  page.screenshot(path='ui-audit-results/tablet-lab-timer-failure.png')
+  raise
  # A fresh document tests plan preview without overwriting an active test session.
  page.evaluate("window.labReady=false;document.getElementById('lab').src='/Garasjegym/tablet-lab.html?reset=1'")
  page.wait_for_function('window.labReady===true',timeout=30000)
