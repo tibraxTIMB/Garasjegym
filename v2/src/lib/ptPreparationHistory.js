@@ -1,3 +1,4 @@
+import {isIndividualPerformance} from './performanceEvidence.js'
 // Only explicitly linked, completed PT tasks for the currently selected customer.
 // No direct workout_logs read. Never infer personal metrics from combined results.
 export function priorPtReferences({clientId,wodId,assignments=[],programs=[],sessions=[],excludeId}={}){
@@ -13,7 +14,7 @@ export function priorPtReferences({clientId,wodId,assignments=[],programs=[],ses
 export function priorPtSummary(result){
  if(!result||!result.id)return null
  const d=result.result_data||{}
- if(d.participation_verified!=='individual')return {date:result.workout_date,team:d.participation_verified==='team',unverified:true,rows:[]}
+ if(d.participation_verified!=='individual'||!isIndividualPerformance(result))return {date:result.workout_date,team:d.participation_verified==='team'||!!d.samspel||['partner','team'].includes(d.wod_engine?.participation),unverified:true,rows:[]}
  // No effort inference; show exactly saved values. Partial complexes do not supply a load reference.
  const present=v=>v!=null&&String(v).trim()!==''&&Number.isFinite(Number(v))&&Number(v)>=0
  const rows=(Array.isArray(d.exercise_results)?d.exercise_results:[]).flatMap(e=>{

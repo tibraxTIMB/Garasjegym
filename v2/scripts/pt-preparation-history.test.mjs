@@ -15,3 +15,6 @@ assert.equal(priorPtSummary({...result,result_data:{...result.result_data,partic
 assert.deepEqual(priorPtSummary({...result,result_data:{...result.result_data,participation_verified:'individual'}}).rows[0].entries,['5 reps · 30 kg'])
 assert.equal(priorPtSummary(null),null)
 console.log('PT preparation: 9 privacy, provenance and usage checks passed')
+
+assert.deepEqual(priorPtSummary({...result,result_data:{...result.result_data,participation_verified:'individual',samspel:{main_track:'quality'}}}).rows,[])
+assert.equal(priorPtSummary({...result,result_data:{...result.result_data,participation_verified:'individual',wod_engine:{participation:'partner'}}}).team,true)

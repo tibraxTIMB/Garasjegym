@@ -134,3 +134,10 @@ test('explicitly skipped and unknown-provenance results do not contribute to rec
  const unknown=workout(3,'Back Squat',[{reps:5,load_kg:300}],{result_data:{participation_verified:'unknown'}})
  assert.equal(deriveExerciseRecords([individual,skipped,unknown])[0].records.find(r=>r.key==='load').value,50)
 })
+
+import {isIndividualPerformance} from '../src/lib/performanceEvidence.js'
+test('legacy Samspel without team_score cannot become personal evidence',()=>{
+ assert.equal(isIndividualPerformance({result_data:{samspel:{version:1}}}),false)
+ assert.equal(isIndividualPerformance({result_data:{samspel:{main_track:'quality'},participation_verified:'individual'}}),false)
+ assert.equal(isIndividualPerformance({result_data:{samspel:null}}),true)
+})

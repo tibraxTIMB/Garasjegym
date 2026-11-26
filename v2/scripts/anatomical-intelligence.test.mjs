@@ -111,3 +111,5 @@ console.log('Completed complex and corrected evidence assertions passed')
 assert.deepEqual(workoutAnatomyExercises({...recent,result_data:{participation_verified:'unknown'}}),[])
 const correctedSkipped={workout_exercises:[{exercise_name:'Bench Press',workout_sets:[{reps:8}]}],result_data:{exercise_results:[{exercise_name:'Bench Press',sets:[{reps:5,flow_status:'skipped'}]}]}}
 assert.deepEqual(documentedExerciseRows(workoutAnatomyExercises(correctedSkipped)),[])
+
+assert.deepEqual(workoutAnatomyExercises({...ergLog,result_data:{...ergLog.result_data,samspel:{main_track:'quality',participant_results:[{slot:1,quality_status:'done',erg_value:500}]}}}),[])
