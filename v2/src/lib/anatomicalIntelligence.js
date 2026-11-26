@@ -35,6 +35,16 @@ export const MUSCLE_LABELS=Object.freeze(Object.fromEntries(Object.entries(keyMa
 export function documentedExerciseRows(exercises){
  return (exercises??[]).flatMap(exercise=>(exercise.workout_sets??exercise.sets??[]).filter(set=>!['partial','failed'].includes(set.complex_status)&&[set.reps,set.time_seconds].some(v=>Number.isFinite(Number(v))&&Number(v)>0)).map(()=>({exerciseName:exercise.exercise_name,completed:true})))
 }
+// Planned movement occurrences, not performed sets or estimated muscle load.
+export function plannedAnatomyRows(items=[]){
+ return items.flatMap(item=>{
+  if(item?.is_rest)return []
+  const name=typeof item==='string'?item:item?.exercise_name||item?.name
+  if(!name||/^(pause|rest)$/i.test(name))return []
+  const movements=Array.isArray(item?.complex_steps)&&item.complex_steps.length?item.complex_steps.map(s=>s.name||s.exercise_name):[name]
+  return movements.filter(Boolean).map(exerciseName=>({exerciseName,completed:true}))
+ })
+}
 export function muscleExerciseEvidence(rows){
  const groups=new Map()
  for(const row of rows??[]){
@@ -61,7 +71,8 @@ export function historyAnatomyExercises(logs,days=7,now=new Date()){
   const data=log.result_data||{},date=log.workout_date
   if(!date||date<iso(start)||date>iso(end)||log.id&&seen.has(log.id)||data.flow_completion_only||data.samspel?.team_score||data.wod_engine?.participation&&data.wod_engine.participation!=='individual')return []
   if(log.id)seen.add(log.id)
-  const recorded=log.workout_exercises||[],snapshots=data.exercise_results||[]
+  const recorded=log.workout_exercises||[],snapshots=Array.isArray(data.exercise_results)?data.exercise_results:[]
+  if(!recorded.length)return snapshots
   return recorded.map((ex,i)=>{
    const snapshot=snapshots[i]
    // For complexes, only use explicitly completed cycles; unmatched evidence is unknown.
