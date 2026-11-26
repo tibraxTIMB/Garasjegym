@@ -37,3 +37,13 @@ export function isRetryableWorkoutError(error,offline=false){
  const status=Number(error?.status||error?.statusCode||0)
  return [408,429,502,503,504].includes(status)||error?.name==='AuthRetryableFetchError'||/failed to fetch|fetch failed|networkerror|network error|load failed|connection (?:lost|reset)|request timeout/i.test(error?.message||'')
 }
+
+// Synchronous shared guard for save, retry and discard, including confirmation awaits.
+export function claimWorkoutAction(lock){
+ if(!lock||lock.current)return false
+ lock.current=true
+ return true
+}
+export function releaseWorkoutAction(lock){
+ if(lock)lock.current=false
+}
