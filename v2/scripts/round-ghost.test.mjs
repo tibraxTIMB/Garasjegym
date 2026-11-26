@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {ghostSignature,findRoundGhost,ghostPace} from '../src/lib/roundGhost.js'
+import {ghostSignature,findRoundGhost,ghostPace,ghostRecordedLoads,compareGhostRecordedLoads} from '../src/lib/roundGhost.js'
 const items=[{exercise_id:'a',levels:{rx:{reps:10,loadKg:20},scaled:{reps:5}}},{exercise_id:'b',levels:{rx:{reps:8}}}]
 const config={wodId:'w',format:'AMRAP',level:'rx',seconds:600,parts:[{format:'AMRAP',seconds:600,items}]}
 const sig=ghostSignature(config)
@@ -24,3 +24,15 @@ assert.deepEqual(ghostPace(ghost,[100,100,100,100],400),{ghostRounds:2,ownRounds
 assert.deepEqual(ghostPace(ghost,[],0),{ghostRounds:0,ownRounds:0,delta:null})
 assert.equal(ghostPace(null,[],0),null)
 console.log('18 round ghost checks passed')
+
+
+const loadSig=ghostSignature({...config,parts:[{...config.parts[0],items:items.map((item,i)=>({...item,exercise_name:'Lift '+i}))}]})
+const loadData={ghost_signature:loadSig,exercise_results:[{exercise_name:'Lift 0',sets:[{reps:10,load_kg:20}]},{exercise_name:'Lift 1',sets:[{reps:8,load_kg:0}]}]}
+assert.deepEqual(ghostRecordedLoads(loadData),[{name:'Lift 0',kg:[20]},{name:'Lift 1',kg:[0]}])
+assert.equal(compareGhostRecordedLoads(loadData,loadData).status,'same-recorded-weights')
+const heavier={...loadData,exercise_results:[{exercise_name:'Lift 0',sets:[{reps:10,load_kg:24}]},loadData.exercise_results[1]]}
+assert.equal(compareGhostRecordedLoads(loadData,heavier).status,'changed-recorded-weights')
+assert.equal(compareGhostRecordedLoads(loadData,{...loadData,ghost_signature:'different'}).status,'different-plan')
+assert.equal(compareGhostRecordedLoads(loadData,{...loadData,exercise_results:[{exercise_name:'Lift 0',sets:[{reps:10,load_kg:null}]},loadData.exercise_results[1]]}).status,'unknown')
+assert.equal(ghostRecordedLoads({...loadData,manual_entry:true}),null)
+assert.equal(ghostRecordedLoads({...loadData,exercise_results:[...loadData.exercise_results].reverse()}),null)
