@@ -36,3 +36,7 @@ assert.equal(compareGhostRecordedLoads(loadData,{...loadData,ghost_signature:'di
 assert.equal(compareGhostRecordedLoads(loadData,{...loadData,exercise_results:[{exercise_name:'Lift 0',sets:[{reps:10,load_kg:null}]},loadData.exercise_results[1]]}).status,'unknown')
 assert.equal(ghostRecordedLoads({...loadData,manual_entry:true}),null)
 assert.equal(ghostRecordedLoads({...loadData,exercise_results:[...loadData.exercise_results].reverse()}),null)
+
+assert.equal(findRoundGhost([{...log,result_data:{...log.result_data,participation_verified:'unknown'}}],sig),null)
+assert.equal(ghostRecordedLoads({...loadData,participation_verified:'team'}),null)
+assert.equal(ghostRecordedLoads({...loadData,exercise_results:[{exercise_name:'Lift 0',sets:[{reps:10,load_kg:20,flow_status:'skipped'}]},loadData.exercise_results[1]]}),null)

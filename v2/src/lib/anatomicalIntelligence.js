@@ -1,4 +1,5 @@
 import {exerciseMuscleProfile,DETAILED_MUSCLE_LABELS} from './exerciseMuscleProfiles.js'
+import {isIndividualPerformance} from './performanceEvidence.js'
 // One exercise classification catalogue; history adapts its group identifiers only.
 const keyMap=Object.freeze({"chest":"chest","frontDelts":"front_deltoids","sideDelts":"side_deltoids","rearDelts":"rear_deltoids","triceps":"triceps","biceps":"biceps","forearms":"forearms","lats":"lats","upperBack":"upper_back","lowerBack":"spinal_erectors","abs":"abdominals","obliques":"obliques","glutes":"glutes","quads":"quadriceps","hamstrings":"hamstrings","adductors":"adductors","calves":"calves","abductors":"abductors","hipFlexors":"hip_flexors","rotatorCuff":"rotator_cuff"})
 export const MUSCLES=Object.freeze(Object.values(keyMap))
@@ -95,7 +96,7 @@ export function historyAnatomyExercises(logs,days=7,now=new Date()){
 // Shared evidence selection for an individual completed report and its history.
 export function workoutAnatomyExercises(log={}){
  const data=log.result_data||{}
- if(data.flow_completion_only||data.samspel?.team_score||data.wod_engine?.participation&&data.wod_engine.participation!=='individual')return []
+ if(!isIndividualPerformance(log))return []
  const recorded=log.workout_exercises||log.exercises||[],snapshots=Array.isArray(data.exercise_results)?data.exercise_results:[]
  if(!recorded.length)return snapshots
  return [...recorded].sort((a,b)=>(a.sort_order??0)-(b.sort_order??0)).map((ex,i)=>{
@@ -109,6 +110,7 @@ export function workoutAnatomyExercises(log={}){
   const same=(a,b)=>a==null&&b==null||a!=null&&b!=null&&Number(a)===Number(b)
   const sets=actual.map((set,k)=>{
    const prev=old[(Number(set.set_number)||k+1)-1]
+   if(prev?.flow_status==='skipped')return {...set,flow_status:'skipped'}
    if(!prev||!same(set.reps,prev.reps)||!same(set.time_seconds,prev.time_seconds))return set
    return {...set,flow_status:prev.flow_status,complex_status:prev.complex_status}
   })

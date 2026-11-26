@@ -107,3 +107,7 @@ assert.equal(documentedExerciseRows(workoutAnatomyExercises(complexLog)).length,
 assert.deepEqual(documentedExerciseRows(workoutAnatomyExercises({...complexLog,workout_exercises:[{exercise_name:'Mitt kompleks',sort_order:1,workout_sets:[{set_number:1,reps:0}]}]})),[])
 assert.equal(documentedExerciseRows(workoutAnatomyExercises({workout_exercises:[{exercise_name:'Bench Press',sort_order:2,workout_sets:[{reps:5}]}],result_data:{exercise_results:[custom,{exercise_name:'Bench Press',sets:[{reps:5}]}]}})).length,1)
 console.log('Completed complex and corrected evidence assertions passed')
+
+assert.deepEqual(workoutAnatomyExercises({...recent,result_data:{participation_verified:'unknown'}}),[])
+const correctedSkipped={workout_exercises:[{exercise_name:'Bench Press',workout_sets:[{reps:8}]}],result_data:{exercise_results:[{exercise_name:'Bench Press',sets:[{reps:5,flow_status:'skipped'}]}]}}
+assert.deepEqual(documentedExerciseRows(workoutAnatomyExercises(correctedSkipped)),[])

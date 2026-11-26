@@ -1,4 +1,5 @@
 import {STANDARD_PR_LIFTS,exerciseKey} from './prDirectory.js'
+import {isIndividualPerformance,isUsablePerformedSet,recordedSetsWithStatus,performanceSnapshot} from './performanceEvidence.js'
 const names=new Map(STANDARD_PR_LIFTS.map(lift=>[exerciseKey(lift.name),lift]))
 const positive=value=>{const n=Number(String(value??'').replace(',','.'));return Number.isFinite(n)&&n>0?n:0}
 const strictKey=name=>String(name||'').trim().toLocaleLowerCase('nn-NO')
@@ -7,7 +8,7 @@ function topLoads(rows,requireReps){
  for(const item of rows||[]){
   const key=strictKey(item.exercise_name)
   if(!names.has(key)||item.is_rest||item.side_mode||item.is_complex)continue
-  const value=Math.max(0,...(item.workout_sets||item.sets||[]).filter(s=>!requireReps||Number.isInteger(Number(s.reps))&&Number(s.reps)>0).map(s=>positive(s.load_kg)))
+  const value=Math.max(0,...(item.workout_sets||item.sets||[]).filter(s=>isUsablePerformedSet(s)&&(!requireReps||Number.isInteger(Number(s.reps))&&Number(s.reps)>0)).map(s=>positive(s.load_kg)))
   if(value>0)map.set(key,Math.max(map.get(key)||0,value))
  }
  return map
@@ -15,7 +16,7 @@ function topLoads(rows,requireReps){
 export function hasVictoryCandidate(rows){return topLoads(rows,true).size>0}
 export function findPRVictories(rows,logs=[],manualRecords=[]){
  const current=topLoads(rows,true),previous=new Map()
- for(const log of logs)for(const [key,value] of topLoads(log.workout_exercises,false))previous.set(key,Math.max(previous.get(key)||0,value))
+ for(const log of logs.filter(isIndividualPerformance))for(const [key,value] of topLoads((log.workout_exercises||[]).map((ex,i)=>({...ex,workout_sets:recordedSetsWithStatus(ex,performanceSnapshot(log,ex,i))})),false))previous.set(key,Math.max(previous.get(key)||0,value))
  for(const record of manualRecords){
   const key=strictKey(record.exercise_name)
   if(names.has(key)&&record.unit==='kg')previous.set(key,Math.max(previous.get(key)||0,positive(record.result)))
@@ -39,7 +40,7 @@ async function pages(query){
 export async function checkPRVictories(client,memberId,rows){
  if(!hasVictoryCandidate(rows))return []
  const [logs,records]=await Promise.all([
-  pages(()=>client.from('workout_logs').select('id,workout_exercises(exercise_name,workout_sets(reps,load_kg))').eq('member_id',memberId)),
+  pages(()=>client.from('workout_logs').select('id,result_data,workout_exercises(exercise_name,sort_order,workout_sets(set_number,reps,load_kg))').eq('member_id',memberId)),
   pages(()=>client.from('personal_records').select('id,exercise_name,result,unit').eq('member_id',memberId).eq('unit','kg'))
  ])
  return findPRVictories(rows,logs,records)
@@ -48,10 +49,10 @@ export async function checkPRVictories(client,memberId,rows){
 // longer match, hide the historical marker rather than showing a false PR.
 export function workoutPRVictories(log){
  const saved=log?.result_data?.pr_victories
- if(!Array.isArray(saved))return []
+ if(!Array.isArray(saved)||!isIndividualPerformance(log))return []
  const sets=log.workout_exercises
  if(!Array.isArray(sets))return []
- const actual=topLoads(sets,true)
+ const actual=topLoads(sets.map((ex,i)=>({...ex,workout_sets:recordedSetsWithStatus(ex,performanceSnapshot(log,ex,i))})),true)
  return saved.filter(p=>names.has(strictKey(p.name))&&positive(p.previous_kg)>0&&positive(p.load_kg)>positive(p.previous_kg)&&actual.get(strictKey(p.name))===Number(p.load_kg))
 }
 export const PR_VICTORY_AUDIO_KEY='garasjegym.timer.pr_victory'

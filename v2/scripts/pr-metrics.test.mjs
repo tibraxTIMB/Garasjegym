@@ -127,3 +127,10 @@ test('combination WOD separates AMRAP and For Time and omits unknown scoring',()
  assert.equal(records.find(x=>x.key.endsWith('|amrap')).logId,'a')
  assert.equal(records.find(x=>x.key.endsWith('|for time')).logId,'b')
 })
+
+test('explicitly skipped and unknown-provenance results do not contribute to records',()=>{
+ const individual=workout(1,'Back Squat',[{reps:5,load_kg:50}],{result_data:{}})
+ const skipped=workout(2,'Back Squat',[{reps:5,load_kg:200}],{result_data:{exercise_results:[{exercise_name:'Back Squat',sets:[{reps:5,flow_status:'skipped'}]}]}})
+ const unknown=workout(3,'Back Squat',[{reps:5,load_kg:300}],{result_data:{participation_verified:'unknown'}})
+ assert.equal(deriveExerciseRecords([individual,skipped,unknown])[0].records.find(r=>r.key==='load').value,50)
+})

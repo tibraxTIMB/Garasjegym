@@ -12,3 +12,7 @@ assert.deepEqual(ownPreviousLogs({memberId:'a',logs},'a'),logs)
 assert.deepEqual(ownPreviousLogs(null,'a'),[])
 assert.deepEqual(ownPreviousLogs({memberId:'a',logs},''),[])
 console.log('9 previous result preparation checks passed')
+
+const contaminated=[{...logs[0],result_data:{samspel:{team_score:true}},workout_date:'2026-11-25'},{...logs[0],result_data:{participation_verified:'unknown'}},{...logs[0],result_data:{exercise_results:[{exercise_name:'Bench Press',sets:[{flow_status:'skipped'}]}]}},...logs]
+assert.deepEqual(previousExerciseResult(contaminated,item),previousExerciseResult(logs,item))
+assert.equal(previousExerciseResult([{workout_exercises:[{exercise_id:'bench',exercise_name:'Bench Press',workout_sets:[{load_kg:200}]}]}],item),null)
