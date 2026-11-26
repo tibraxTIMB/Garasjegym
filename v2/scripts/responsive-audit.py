@@ -40,10 +40,10 @@ with sync_playwright() as pw:
     for w,h in sizes:
         context=browser.new_context(viewport={"width":w,"height":h},has_touch=True,is_mobile=w<600,device_scale_factor=1,locale="nn-NO",color_scheme="dark",reduced_motion="reduce")
         context.route("**/*",lambda route:route.continue_() if route.request.url.startswith(BASE) else route.abort())
-        for screen in ["flow","card","builder","pt","pt-workbench","pt-schedule","plan","select","acta","picker","assign"]:
+        for screen in ["flow","card","builder","pt","pt-workbench","pt-schedule","plan","select","acta","picker","assign","member-calendar"]:
             page=None
             try:
-                page,errors=open_page(context,f"/ui-audit.html?scenario={'audit-pt-schedule' if screen=='pt-schedule' else 'audit-pt-plan' if screen in ('pt','pt-workbench') else 'audit-admin' if screen in ('builder','assign') else 'audit-member'}&screen={'pt' if screen=='pt-schedule' else screen}")
+                page,errors=open_page(context,f"/ui-audit.html?scenario={'audit-member-calendar' if screen=='member-calendar' else 'audit-pt-schedule' if screen=='pt-schedule' else 'audit-pt-plan' if screen in ('pt','pt-workbench') else 'audit-admin' if screen in ('builder','assign') else 'audit-member'}&screen={'pt' if screen=='pt-schedule' else screen}")
                 check(page,screen,w,h)
                 if screen=="flow":
                     field=page.get_by_role("textbox",name="Arbeidsvekt kg")
@@ -130,6 +130,31 @@ with sync_playwright() as pw:
                     bench.wait_for()
                     assert assign.count()==0
                     check(page,"pt-workbench-return",w,h)
+                if screen=="member-calendar":
+                    calendar=page.get_by_role("region",name="Min timeplan")
+                    calendar.wait_for()
+                    agenda=calendar.locator(".gg-cal-agenda")
+                    ready=agenda.locator("article").filter(has_text="Klar programøkt")
+                    locked=agenda.locator("article").filter(has_text="Låst programøkt")
+                    direct=agenda.locator("article").filter(has_text="Tildelt kalender-WOD")
+                    ready.wait_for()
+                    assert "17:15" in ready.inner_text()
+                    assert "18:30" in locked.inner_text()
+                    assert "16:30" in direct.inner_text()
+                    assert locked.get_by_role("button").count()==0
+                    assert ready.get_by_role("button",name="Start økt").is_visible()
+                    check(page,"member-calendar-ready-locked",w,h)
+                    page.evaluate("sessionStorage.setItem('gg.audit.calendar.deny','1')")
+                    ready.get_by_role("button",name="Start økt").tap()
+                    calendar.get_by_role("alert").wait_for()
+                    assert page.get_by_label("Startkontekst").inner_text()==""
+                    page.evaluate("sessionStorage.removeItem('gg.audit.calendar.deny')")
+                    ready.get_by_role("button",name="Start økt").tap()
+                    page.wait_for_function("document.querySelector('output[aria-label=Startkontekst]')?.textContent==='program:calendar-plan-1:demo-wod'")
+                    direct.get_by_role("button",name="Opne WOD").tap()
+                    assert page.get_by_label("Startkontekst").inner_text()=="assignment:calendar-assignment:demo-wod"
+                    assert page.evaluate("JSON.parse(sessionStorage.getItem('gg.audit.calendar.rpc'))")==["calendar-plan-1","calendar-plan-1"]
+                    check(page,"member-calendar-launch",w,h)
                 if screen=="pt-schedule":
                     calendar=page.get_by_role("region",name="Treningskalender")
                     calendar.wait_for()
