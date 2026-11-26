@@ -1,5 +1,6 @@
 // Samspel is orthogonal to format. A versioned, opt-in capability; legacy WODs stay unchanged.
 export const SAMSPEL_TASKS=[['row','Romaskin'],['bike','Sykkel'],['ski','SkiErg']]
+export const SAMSPEL_STATION_TASKS=[...SAMSPEL_TASKS,['strength','Styrke']]
 export const SAMSPEL_METRICS=[['distance','Meter'],['calories','Kaloriar']]
 export function samspelConfig(schema={}){
  const s=schema?.samspel
@@ -159,19 +160,24 @@ export function samspelSwapIndex(s,{rounds=0,elapsed=0,target=Infinity,manualSwa
 export function samspelMixed(s){return s?.version===2&&Array.isArray(s.station_tasks)}
 export function samspelStationRows(s){
  if(!samspelMixed(s))return []
- return s.station_tasks.map((row,i)=>({slot:i+1,task:row.task,metric:row.metric,label:(SAMSPEL_TASKS.find(([id])=>id===row.task)?.[1]||'Uavklart')+' · S'+(i+1)}))
+ return s.station_tasks.map((row,i)=>({slot:i+1,task:row.task,metric:row.metric,...(row.task==='strength'?{exercise_id:row.exercise_id,exercise_name:row.exercise_name,instruction:row.instruction,equipment:row.equipment}:{}),label:(row.task==='strength'?row.exercise_name||'Styrke':SAMSPEL_TASKS.find(([id])=>id===row.task)?.[1]||'Uavklart')+' · S'+(i+1)}))
 }
 export function samspelMixedCapacityIssue(s){
  const stations=s.station_tasks,count=s.participant_count
  if(!Array.isArray(stations)||stations.length<2||stations.length>=count||s.erg_slots!==stations.length)return 'Vel minst to stasjonar og minst éin utøvar på AMRAP.'
  const needed={}
  for(const row of stations){
-  if(!SAMSPEL_TASKS.some(([id])=>id===row?.task)||!SAMSPEL_METRICS.some(([id])=>id===row?.metric))return 'Vel maskintype og måleeining for kvar stasjon.'
-  needed[row.task]=(needed[row.task]||0)+1
+  if(row?.task==='strength'){
+   if(row.metric!=='reps'||!row.exercise_id||!String(row.exercise_name||'').trim()||!String(row.instruction||'').trim()||!String(row.equipment||'').trim())return 'Vel styrkeøving, utstyr og konkret dosering for kvar styrkestasjon.'
+   const key='strength:'+String(row.equipment).trim().toLowerCase();needed[key]=(needed[key]||0)+1
+  }else{
+   if(!SAMSPEL_TASKS.some(([id])=>id===row?.task)||!SAMSPEL_METRICS.some(([id])=>id===row?.metric))return 'Vel maskintype og måleeining for kvar stasjon.'
+   needed[row.task]=(needed[row.task]||0)+1
+  }
  }
  for(const [task,n] of Object.entries(needed)){
   const available=s.station_capacity?.[task]
-  if(!Number.isInteger(available)||available<n||available>30)return 'Oppgi minst '+n+' tilgjengelege '+SAMSPEL_TASKS.find(([id])=>id===task)[1]+'-stasjonar.'
+  if(!Number.isInteger(available)||available<n||available>30)return 'Oppgi minst '+n+' tilgjengelege '+(task.startsWith('strength:')?task.slice(9):SAMSPEL_TASKS.find(([id])=>id===task)?.[1]||task)+'-stasjonar.'
  }
  return null
 }
@@ -186,8 +192,17 @@ export function samspelStationResults(s,values={}){
  const rows=[]
  for(const station of samspelStationRows(s)){
   const raw=values['station-'+station.slot]?.erg
-  if(raw==null||String(raw).trim()===''||!Number.isFinite(Number(raw))||Number(raw)<0)return {rows:[],issue:'Registrer faktisk resultat for '+station.label+' (0 dersom ingen).',slot:station.slot}
-  rows.push({...station,value:Number(raw),unit:station.metric==='distance'?'m':'cal'})
+  if(raw==null||String(raw).trim()===''||!Number.isFinite(Number(raw))||Number(raw)<0||station.metric==='reps'&&!Number.isSafeInteger(Number(raw)))return {rows:[],issue:'Registrer faktisk resultat for '+station.label+' (0 dersom ingen).',slot:station.slot}
+  rows.push({...station,value:Number(raw),unit:station.metric==='distance'?'m':station.metric==='reps'?'reps':'cal'})
  }
  return {rows,issue:null}
+}
+
+export function samspelStationCapacityKeys(s){
+ const keys=new Map()
+ for(const row of samspelStationRows(s)){
+  if(row.task==='strength'){const eq=String(row.equipment||'').trim();if(eq)keys.set('strength:'+eq.toLowerCase(),eq)}
+  else keys.set(row.task,SAMSPEL_TASKS.find(([id])=>id===row.task)?.[1]||row.task)
+ }
+ return [...keys]
 }
