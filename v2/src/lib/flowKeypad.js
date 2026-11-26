@@ -4,9 +4,10 @@ export function flowKeyValue(value,key,{decimal=false,negative=false,time=false,
  if(key==='backspace')return fresh?'':v.slice(0,-1)
  if(key==='-')return negative?(v.startsWith('-')?v.slice(1):'-'+v):v
  if(key==='.'||key===','){if(!decimal||time)return v;return fresh?'0.':v.includes('.')?v:(v||'0')+'.'}
- if(key===':'){if(!time||fresh||!v||v.includes(':'))return v;return v+':'}
+ if(key===':'){if(!time||fresh||!v||v.endsWith(':')||v.split(':').length>=3)return v;const next=v+':';return flowAcceptValue(next,{time:true})??v}
  if(!/^[0-9]$/.test(key))return v
- return fresh?key:v==='0'?key:v+key
+ const next=fresh?key:v==='0'?key:v+key
+ return flowAcceptValue(next,{decimal,negative,time})??v
 }
 export function flowStepValue(value,delta,min=0,max=Infinity){
  if(value==null||String(value).trim()===''||!Number.isFinite(Number(value)))return String(value??'')
@@ -14,7 +15,19 @@ export function flowStepValue(value,delta,min=0,max=Infinity){
 }
 export function flowAcceptValue(value,{decimal=false,negative=false,time=false}={}){
  const v=String(value??'').replace(',','.')
- if(time)return /^\d*(?::\d{0,2})?$/.test(v)?v:null
+ if(time)return /^(?:\d{1,3}(?::\d{0,2}){0,2})?$/.test(v)&&!v.includes('::')?v:null
  const rule=decimal?(negative?/^-?\d*(?:\.\d*)?$/:/^\d*(?:\.\d*)?$/):(negative?/^-?\d*$/:/^\d*$/)
  return rule.test(v)?v:null
+}
+
+// Return null at a boundary; never wrap or jump from a stale active element.
+export function flowNavigationIndex(fields,active,delta,sameField=false){
+ const index=fields.findIndex(x=>x===active)
+ if(index<0||![-1,1].includes(delta))return null
+ const key=active?.dataset?.flowField
+ if(sameField&&!key)return null
+ for(let i=index+delta;i>=0&&i<fields.length;i+=delta){
+  if(!sameField||fields[i]?.dataset?.flowField===key)return i
+ }
+ return null
 }
