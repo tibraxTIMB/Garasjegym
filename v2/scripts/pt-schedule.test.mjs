@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {slotDate,dateSlot,weekStart,osloDay,appointmentTime,makePlanRows,makeDirectRows,calendarEntries,entriesForDay,canMovePlan,validDate} from '../src/lib/ptSchedule.js'
+import {slotDate,dateSlot,weekStart,osloDay,appointmentTime,makePlanRows,makeDirectRows,calendarEntries,entriesForDay,canMovePlan,canMoveDirect,validDate} from '../src/lib/ptSchedule.js'
 const program={id:'p',client_id:'c',status:'active',start_date:'2026-11-30',weeks:6,flow_unlock_mode:'date'}
 const wod={id:'w',name:'Test',duration_minutes:18}
 assert.equal(slotDate(program,2,3),'2026-12-09')
@@ -23,3 +23,17 @@ assert.equal(canMovePlan({status:'planned',workout_log_id:'r'}),false)
 assert.equal(canMovePlan({status:'planned'}),true)
 assert.deepEqual(calendarEntries({program,plan:[{...rows[0],id:'s'}],assignments:[{...direct[0],id:'a',wods:wod}]}).map(x=>[x.key,x.date,x.deadline??false]),[['plan:s','2026-12-09',false],['assignment:a','2026-12-09',true]])
 console.log('PT schedule: 18 checks passed')
+
+const standalone=makeDirectRows({memberId:'c',actorId:'pt',wods:[wod],scheduleDate:'2026-12-09',scheduleTime:'17:15'})
+assert.equal(standalone[0].scheduled_date,'2026-12-09')
+assert.equal(standalone[0].scheduled_time,'17:15')
+assert.equal(standalone[0].due_date,null)
+assert.equal(standalone[0].linked_session_id,null)
+assert.throws(()=>makeDirectRows({memberId:'c',actorId:'pt',wods:[wod],scheduleTime:'17:15'}))
+assert.throws(()=>makeDirectRows({memberId:'c',actorId:'pt',wods:[wod],scheduleDate:'2026-12-09',scheduleTime:'25:15'}))
+assert.throws(()=>makeDirectRows({memberId:'c',actorId:'pt',wods:[wod],scheduleDate:'2026-12-09',appointment:{id:'s',client_id:'c',status:'planned',starts_at:'2026-12-09T16:00:00Z'}}))
+assert.equal(calendarEntries({assignments:[{...standalone[0],id:'a',scheduled_time:'17:15:00',wods:wod}]} )[0].time,'17:15')
+assert.equal(canMoveDirect({status:'assigned',scheduled_date:null}),true)
+assert.equal(canMoveDirect({status:'completed',scheduled_date:'2026-12-09'}),false)
+assert.equal(canMoveDirect({status:'assigned',linked_session_id:'s',scheduled_date:null}),false)
+console.log('PT schedule: 11 standalone timing checks passed')
