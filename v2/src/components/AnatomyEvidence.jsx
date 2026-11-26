@@ -20,18 +20,21 @@ export default function AnatomyEvidence({exercises=[],scope='Registrerte øvinga
  const unit=planned?'rørsler':'registreringar'
  const result=summarizeMuscleExposure(rows)
  const evidence=muscleExerciseEvidence(rows)
+ const confirmed=rows.filter(r=>r.evidenceKind==='confirmed').length
+ const complex=rows.filter(r=>r.evidenceKind==='complex').length
  const selectedEvidence=evidence.get(selected)
  const select=muscle=>setSelected(old=>old===muscle?null:muscle)
  return <details className="engine-section" open={expanded||undefined}>
   <summary>Muskelgrupper · {scope}</summary>
-  <p>{planned?'Planlagd anatomisk involvering. Ikkje dokumentert gjennomføring.':'Basert på registrerte repetisjonar, tid eller målt kondisjonsarbeid.'} Ikkje målt belastning eller restitusjon.</p>
-  <small>{result.classifiedSets} klassifiserte {unit} · {result.unclassifiedSets} uklassifiserte {unit}</small>
+  <p>{planned?'Planlagd anatomisk involvering. Ikkje dokumentert gjennomføring.':'Basert på registrert arbeid og stadfesta øvingar.'} Ikkje målt belastning eller restitusjon.</p>
+  <small>{result.classifiedSets} klassifiserte {unit} · {result.unclassifiedSets} uklassifiserte {unit}{!planned&&confirmed>0?' · '+confirmed+' stadfesta utan måling':''}{!planned&&complex>0?' · '+complex+' kompleksrørsler':''}</small>
   <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:8,maxWidth:420,margin:'12px auto'}}>
    <BodyMap side="front" roles={result.roles} selected={selected} onSelect={select} planned={planned}/>
    <BodyMap side="back" roles={result.roles} selected={selected} onSelect={select} planned={planned}/>
   </div>
   <div style={{display:'flex',flexWrap:'wrap',gap:'6px 12px',fontSize:'0.8rem'}} aria-label="Fargeforklaring, ikkje filter">{Object.entries(colors).map(([key,color])=><span key={key}><span aria-hidden="true" style={{display:'inline-block',width:10,height:10,borderRadius:3,background:color,marginRight:5}}/>{planned&&key==='none'?'Ikkje markert':mapLabels[key]}</span>)}</div>
   <small>Skjematiske regionar. Fargen viser anatomisk rolle, ikkje intensitet. Rotatormansjett, hoftebøyarar og hofteabduktorar kan veljast i lista. Begge sider vert viste likt når side ikkje er dokumentert.</small>
+  {!planned&&<small>Tal viser registrerte rørsleførekomstar, ikkje samla reps, settvolum eller belastning.</small>}
   <label style={{display:'block',marginTop:12}}>Vel muskelgruppe <select value={selected||''} onChange={e=>setSelected(e.target.value||null)} style={{display:'block',maxWidth:'100%'}}><option value="">Alle muskelgrupper</option>{Object.entries(MUSCLE_LABELS).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
   {selected&&<section aria-live="polite"><h4>{MUSCLE_LABELS[selected]}</h4>{selectedEvidence?Object.entries(selectedEvidence).filter(([,names])=>names.size).map(([role,names])=><p key={role}><strong>{roleLabels[role]} · {result.roles[selected][role]} {unit}</strong> · {[...names].join(', ')}</p>):<p>Ingen oppføringar for denne gruppa i utvalet.</p>}</section>}
   {!selected&&(evidence.size?<details className="gg-anatomy-evidence-list"><summary>Øvingar per muskelgruppe</summary>{[...evidence].map(([muscle,roles])=><details key={muscle}>
