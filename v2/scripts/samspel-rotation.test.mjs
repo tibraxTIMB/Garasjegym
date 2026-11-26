@@ -169,3 +169,27 @@ assert.ok(samspelParticipantResults(quality,{}).issue)
 assert.deepEqual(samspelParticipantResults(quality,{1:{quality:'done',erg:'320',rounds:'99'},2:{quality:'partial'}}).rows,[{slot:1,quality_status:'done',rounds:null,extra_reps:null,erg_value:320},{slot:2,quality_status:'partial',rounds:null,extra_reps:null,erg_value:null}])
 assert.equal(samspelWithSwitch(quality,'round'),null)
 console.log('Quality & Row checks passed')
+
+import {engineSwapConfig,samspelEmom,samspelEmomOpportunity} from '../src/lib/samspel.js'
+const engineSwap=engineSwapConfig(60,600)
+assert.equal(samspelEmom(engineSwap),true)
+assert.equal(samspelIssue(engineSwap,{...context,format:'EMOM'}),null)
+assert.ok(samspelIssue(engineSwap,context))
+assert.deepEqual(samspelRoles(engineSwap,0),['Romaskin','EMOM'])
+assert.deepEqual(samspelRotation(engineSwap,{elapsed:60,target:600}).roles,['EMOM','Romaskin'])
+assert.deepEqual(samspelRotation(engineSwap,{elapsed:600,target:600}).roles,['EMOM','Romaskin'])
+assert.equal(samspelConfig({samspel:{...engineSwap,duration_seconds:540}}),null)
+assert.deepEqual(samspelScoring(engineSwap,{}),{type:'distance',fields:['distance']})
+for(let count=2;count<=8;count++){
+ const plan={...engineSwap,participant_count:count,duration_seconds:count*60*2}
+ assert.equal(samspelIssue(plan,{...context,format:'EMOM',participation:count===2?'partner':'team',participantCount:count}),null)
+ for(let slot=1;slot<=count;slot++)assert.equal(samspelEmomOpportunity(plan,slot),2*(count-1))
+}
+assert.equal(samspelEmomOpportunity(engineSwap,1,60),0)
+assert.equal(samspelEmomOpportunity(engineSwap,2,60),1)
+assert.ok(samspelParticipantResults(engineSwap,{1:{intervals:'1'}},{elapsed:60}).issue)
+assert.ok(samspelParticipantResults(engineSwap,{1:{intervals:'6'}}).issue)
+assert.ok(samspelParticipantResults(engineSwap,{1:{intervals:'1.5'}}).issue)
+assert.deepEqual(samspelParticipantResults(engineSwap,{2:{intervals:'1',erg:'0'}},{elapsed:60}).rows,[{slot:2,completed_intervals:1,rounds:null,extra_reps:null,erg_value:0}])
+assert.deepEqual(samspelParticipantResults(engineSwap,{}).rows,[])
+console.log('Engine Swap rotation and individual interval checks passed')

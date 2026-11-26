@@ -5,10 +5,22 @@ export const SAMSPEL_METRICS=[['distance','Meter'],['calories','Kaloriar']]
 // Quality & Row is a non-competitive two-person track using the existing timer.
 export function samspelQuality(s){return s?.version===2&&s.main_track==='quality'}
 export function qualityRowConfig(minutes=10){return {version:2,mode:'parallel_round_swap',main_track:'quality',task:'row',metric:'distance',participant_count:2,erg_slots:1,available_ergs:1,switch_rule:'manual',duration_seconds:Number(minutes)*60,individual_scores:true}}
+// Engine Swap: one erg track, remaining athletes on the shared EMOM clock.
+export function samspelEmom(s){return s?.version===2&&s.main_track==='emom'}
+export function engineSwapConfig(interval=60,duration=600){return {version:2,mode:'parallel_round_swap',main_track:'emom',task:'row',metric:'distance',participant_count:2,erg_slots:1,available_ergs:1,switch_rule:'time',switch_seconds:interval,duration_seconds:duration,individual_scores:true}}
+export function samspelMainLabel(s){return samspelQuality(s)?'Kvalitet':samspelEmom(s)?'EMOM':'AMRAP'}
+export function samspelEmomOpportunity(s,slot,elapsed=s?.duration_seconds){
+ if(!samspelEmom(s)||!samspelConfig({samspel:s})||!Number.isInteger(slot)||slot<1||slot>s.participant_count||!Number.isFinite(elapsed))return 0
+ const intervals=Math.ceil(Math.max(0,Math.min(elapsed,s.duration_seconds))/s.switch_seconds)
+ const offset=slot-1
+ const ergIntervals=intervals>offset?1+Math.floor((intervals-1-offset)/s.participant_count):0
+ return intervals-ergIntervals
+}
 export function samspelConfig(schema={}){
  const s=schema?.samspel
  if(s?.mode!=='parallel_round_swap')return null
- if(s.main_track!==undefined&&!samspelQuality(s))return null
+ if(s.main_track!==undefined&&!samspelQuality(s)&&!samspelEmom(s))return null
+ if(samspelEmom(s))return Number.isInteger(s.participant_count)&&s.participant_count>=2&&s.participant_count<=8&&s.switch_rule==='time'&&Number.isInteger(s.switch_seconds)&&s.switch_seconds>=5&&s.switch_seconds<=3600&&Number.isInteger(s.duration_seconds)&&s.duration_seconds<=10800&&s.duration_seconds>=s.participant_count*s.switch_seconds&&s.duration_seconds%(s.participant_count*s.switch_seconds)===0&&(s.erg_slots??1)===1&&!Array.isArray(s.station_tasks)&&s.individual_scores===true&&SAMSPEL_TASKS.some(([id])=>id===s.task)&&SAMSPEL_METRICS.some(([id])=>id===s.metric)?s:null
  if(samspelQuality(s))return s.participant_count===2&&s.task==='row'&&s.metric==='distance'&&s.switch_rule==='manual'&&(s.erg_slots??1)===1&&!Array.isArray(s.station_tasks)&&s.individual_scores===true&&Number.isInteger(s.duration_seconds)&&s.duration_seconds>=60&&s.duration_seconds<=10800?s:null
  if(s.version===1)return s
  if(s.version===2&&Number.isInteger(s.participant_count)&&s.participant_count>=2&&s.participant_count<=8&&(!s.switch_rule||s.switch_rule==='round'||s.switch_rule==='manual'||s.switch_rule==='time'&&Number.isInteger(s.switch_seconds)&&s.switch_seconds>=15&&s.switch_seconds<=600))return s
@@ -16,14 +28,14 @@ export function samspelConfig(schema={}){
 }
 export function samspelIssue(s,{format,participation,collaboration,participantCount=2,items=[]}={}){
  if(!s)return null
- if(!samspelConfig({samspel:s}))return 'Ugyldig Samspel-oppsett.'
+ if(!samspelConfig({samspel:s}))return samspelEmom(s)?'Engine Swap krev heile EMOM-intervall og ei øktlengd som går opp i komplette rotasjonar for alle utøvarane (maks 180 min).':'Ugyldig Samspel-oppsett.'
  const count=s.version===2?s.participant_count:2
- if((samspelQuality(s)?format!=='Eigen økt':format!=='AMRAP')||(count===2?participation!=='partner':participation!=='team'||Number(participantCount)!==count))return samspelQuality(s)?'Quality & Row krev Eigen økt og to utøvarar.':'Samspel krev AMRAP og samsvar mellom tal deltakarar og gjennomføringsform.'
+ if((samspelQuality(s)?format!=='Eigen økt':samspelEmom(s)?format!=='EMOM':format!=='AMRAP')||(count===2?participation!=='partner':participation!=='team'||Number(participantCount)!==count))return samspelQuality(s)?'Quality & Row krev Eigen økt og to utøvarar.':samspelEmom(s)?'Engine Swap krev EMOM og samsvar i tal utøvarar.':'Samspel krev AMRAP og samsvar mellom tal deltakarar og gjennomføringsform.'
  if(collaboration&&collaboration!=='parallel')return 'Vel parallelt arbeid under Gjennomføring, eller slå av rundebyte.'
  if(!SAMSPEL_TASKS.some(([id])=>id===s.task)||!SAMSPEL_METRICS.some(([id])=>id===s.metric))return 'Vel kondisjonsoppgåve og resultatmål.'
  const capacityIssue=samspelCapacityIssue(s)
  if(capacityIssue)return capacityIssue
- if(!items.some(x=>!x.is_rest))return samspelQuality(s)?'Legg til minst ei kvalitetsøving.':'Legg til minst ei øving i AMRAP-runda.'
+ if(!items.some(x=>!x.is_rest))return 'Legg til minst ei øving på '+samspelMainLabel(s)+'-sporet.'
  return null
 }
 export function samspelRoles(s,rounds=0){
@@ -33,7 +45,7 @@ export function samspelRoles(s,rounds=0){
  const index=(Number.isFinite(n)?Math.max(0,Math.floor(n)):0)%count
  const slots=samspelErgSlots(s)
  const stations=samspelMixed(s)?samspelStationRows(s):null
- return Array.from({length:count},(_,i)=>{const offset=(i-index+count)%count;return offset<slots?(stations?stations[offset]?.label||'Uavklart stasjon':task):samspelQuality(s)?'Kvalitet':'AMRAP'})
+ return Array.from({length:count},(_,i)=>{const offset=(i-index+count)%count;return offset<slots?(stations?stations[offset]?.label||'Uavklart stasjon':task):samspelMainLabel(s)})
 }
 export function samspelResultIssue(s,value){
  if(!s)return null
@@ -41,6 +53,7 @@ export function samspelResultIssue(s,value){
 }
 export function samspelScoring(s,base){
  if(samspelQuality(s))return {type:'distance',fields:['distance']}
+ if(samspelEmom(s))return {type:s.metric,fields:[s.metric]}
  return s?samspelMixed(s)?{type:'rounds_reps',fields:['rounds_reps']}:{type:'multi',fields:['rounds_reps',s.metric]}:base
 }
 
@@ -51,6 +64,7 @@ export function samspelWithCount(s,count){
 }
 export function samspelRoundInstruction(s){
  if(samspelQuality(s))return 'Éin ror medan den andre gjer kvalitetsøvingane i roleg tempo. Byt manuelt når kvalitetsarbeidet er ferdig. Byte tel ikkje som prestasjon. Avslutt ved tidsgrensa eller når begge er ferdige.'
+ if(samspelEmom(s))return 'Byt rolle ved kvart nye EMOM-intervall. Éin på maskina, resten på EMOM. Registrer berre faktisk fullførte intervall per utøvar; byte er ikkje eit resultat.'
  if(samspelIsManual(s))return 'Byt rolle med eigen knapp. Registrer fullførte rundar separat.'
  if(samspelIsTimed(s))return 'Byt på klokka. Registrer berre faktisk fullførte felles rundar; byte tel ikkje som runde.'
  return s?.version===2&&s.participant_count>2?'Alle på AMRAP-sporet fullfører éi runde før de byter. Éin felles runde vert registrert.':'Byt rolle når AMRAP-partnaren har fullført éi runde.'
@@ -61,6 +75,7 @@ export function samspelIsTimed(s){
 }
 export function samspelWithSwitch(s,rule,seconds=60){
  if(samspelQuality(s))return rule==='manual'?s:null
+ if(samspelEmom(s))return rule==='time'?s:null
  if(!s||!['round','time','manual'].includes(rule))return null
  const next={...s,version:2,participant_count:s.participant_count||2,switch_rule:rule}
  if(rule==='time')next.switch_seconds=Number(seconds)
@@ -106,16 +121,26 @@ export function samspelParticipantRows(s,values={}){
  return Array.from({length:count},(_,i)=>{
   const slot=i+1, row=values[slot]||{}
   if(samspelQuality(s))return {slot,quality:row.quality??'',erg:row.erg??''}
+  if(samspelEmom(s))return {slot,intervals:row.intervals??'',erg:row.erg??''}
   return {slot,rounds:row.rounds??'',reps:row.reps??'',erg:row.erg??''}
  })
 }
-export function samspelParticipantResults(s,values={}){
+export function samspelParticipantResults(s,values={}, {elapsed}={}){
  const rows=samspelParticipantRows(s,values), results=[]
  for(const row of rows){
   if(samspelQuality(s)){
    if(!['done','partial','skipped'].includes(row.quality))return {rows:[],issue:'Utøvar '+row.slot+': stadfest kvalitetsarbeidet.',slot:row.slot,field:'quality'}
    if(String(row.erg).trim()!==''&&(!Number.isFinite(Number(row.erg))||Number(row.erg)<0))return {rows:[],issue:'Utøvar '+row.slot+': oppgi gyldig distanse.',slot:row.slot,field:'erg'}
    results.push({slot:row.slot,quality_status:row.quality,rounds:null,extra_reps:null,erg_value:String(row.erg).trim()===''?null:Number(row.erg)})
+   continue
+  }
+  if(samspelEmom(s)){
+   const entered=String(row.intervals).trim()!=='',ergEntered=String(row.erg).trim()!==''
+   if(!entered&&!ergEntered)continue
+   const n=Number(row.intervals),erg=Number(row.erg)
+   if(entered&&(!Number.isSafeInteger(n)||n<0||n>samspelEmomOpportunity(s,row.slot,elapsed)))return {rows:[],issue:'Utøvar '+row.slot+': oppgi faktisk fullførte EMOM-intervall innanfor tilgjengelege intervall.',slot:row.slot,field:'intervals'}
+   if(ergEntered&&(!Number.isFinite(erg)||erg<0))return {rows:[],issue:'Utøvar '+row.slot+': oppgi gyldig maskinresultat.',slot:row.slot,field:'erg'}
+   results.push({slot:row.slot,completed_intervals:entered?n:null,rounds:null,extra_reps:null,erg_value:ergEntered?erg:null})
    continue
   }
   const fields=samspelMixed(s)?['rounds','reps']:['rounds','reps','erg']
@@ -199,7 +224,7 @@ export function samspelMixedCapacityIssue(s){
 }
 export function samspelWithStations(s,enabled,slots=s?.erg_slots??1){
  if(!s)return null
- if(samspelQuality(s))return s
+ if(samspelQuality(s)||samspelEmom(s))return s
  if(!enabled){const {station_tasks,station_capacity,...legacy}=s;return legacy}
  const n=Math.max(2,Math.min(Number(slots)||2,s.participant_count-1))
  if(s.participant_count<3)return s
