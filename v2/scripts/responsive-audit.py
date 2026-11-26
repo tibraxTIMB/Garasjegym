@@ -134,10 +134,14 @@ with sync_playwright() as pw:
                     calendar=page.get_by_role("region",name="Min timeplan")
                     calendar.wait_for()
                     agenda=calendar.locator(".gg-cal-agenda")
-                    ready=agenda.locator("article").filter(has_text="Klar programøkt")
-                    locked=agenda.locator("article").filter(has_text="Låst programøkt")
-                    direct=agenda.locator("article").filter(has_text="Tildelt kalender-WOD")
+                    # Match the exact event heading, not explanatory text in other cards.
+                    ready=agenda.locator("article").filter(has=page.locator("strong").and_(page.get_by_text("Klar programøkt",exact=True)))
+                    locked=agenda.locator("article").filter(has=page.locator("strong").and_(page.get_by_text("Låst programøkt",exact=True)))
+                    direct=agenda.locator("article").filter(has=page.locator("strong").and_(page.get_by_text("Tildelt kalender-WOD",exact=True)))
                     ready.wait_for()
+                    locked.wait_for()
+                    direct.wait_for()
+                    assert ready.count()==locked.count()==direct.count()==1
                     assert "17:15" in ready.inner_text()
                     assert "18:30" in locked.inner_text()
                     assert "16:30" in direct.inner_text()
