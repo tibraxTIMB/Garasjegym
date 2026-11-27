@@ -220,3 +220,8 @@
 .gg-sixstep-mobile button:focus-visible,.gg-compact-settings button:focus-visible{outline:2px solid #ffd18e;outline-offset:2px}
 @media (max-width:380px){.gg-sixstep-mobile .gg-sixstep-formats button{gap:4px}.gg-sixstep-mobile .gg-format-glyph svg{width:15px;height:15px}.gg-sixstep-mobile .gg-sixstep-formats button strong{font-size:.69rem}.gg-sixstep-mobile .gg-participation-choices button{flex-direction:column}}
 @media (orientation:landscape) and (min-width:600px){.gg-sixstep-mobile .gg-sixstep-formats{grid-template-columns:repeat(5,minmax(0,1fr))}.gg-sixstep-mobile .gg-sixstep-formats button{min-height:44px}}
+
+/* Keep the builder sheet above sticky tablet actions, below the native choice sheet. */
+body:has(> .gg-architect-issue-backdrop) > #root{isolation:isolate}
+.gg-architect-issue-backdrop{z-index:2147483000!important;pointer-events:auto}
+.gg-architect-issue-sheet{pointer-events:auto}
