@@ -1410,7 +1410,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     setScoreRounds(''); setScoreReps(''); setBlockScores({}); setScoreTime('')
     const schema = wod?.timer_settings?.workout_schema
     const orderedSchemaItems = sortWodItems(getWodSchemaItems(schema))
-    const clearPlannedResults=forResult||samspelPairedEmom(samspelConfig(schema))||wod?.format===COMPOSITE_FORMAT||samspelChipper(samspelConfig(schema))||samspelRelay(samspelConfig(schema))||samspelNoncompetitive(samspelConfig(schema))||samspelClockedEmom(samspelConfig(schema))||samspelStrength(samspelConfig(schema))
+    const clearPlannedResults=forResult||wod?.format===COMPOSITE_FORMAT||samspelPairedEmom(samspelConfig(schema))||samspelChipper(samspelConfig(schema))||samspelRelay(samspelConfig(schema))||samspelNoncompetitive(samspelConfig(schema))||samspelClockedEmom(samspelConfig(schema))||samspelStrength(samspelConfig(schema))
     const selectedLevel=schema?.prescription||'rx'
     if(schema?.library_category==='warmup')orderedSchemaItems.sort((a,b)=>({specific_prep:0,movement_rehearsal:1}[a.warmup_phase||'specific_prep']??0)-({specific_prep:0,movement_rehearsal:1}[b.warmup_phase||'specific_prep']??0))
     if (orderedSchemaItems.length) {
