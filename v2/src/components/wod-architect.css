@@ -80,3 +80,71 @@
  .gg-architect .gg-architect-overview{padding:8px}
  .gg-architect .gg-architect-equipment,.gg-architect .gg-architect-map{font-size:.85rem}
 }
+
+
+/* Six-step app builder: one task at a time; desktop Werkstatt keeps its inspector. */
+.gg-sixstep-mobile{--wizard-accent:#efa53b;min-width:0;padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+.gg-sixstep-mobile .gg-sixstep-header{display:grid;gap:8px;margin:0 0 8px;padding:8px 10px;background:#151f24;border-radius:10px}
+.gg-sixstep-header>div{display:flex;align-items:center;gap:8px}
+.gg-sixstep-header>div>small{margin-left:auto;font-size:.75rem;color:#b3bec4}
+.gg-sixstep-header button{cursor:pointer}
+.gg-sixstep-header>div>button{min-width:36px;min-height:36px;border:0;color:#eee;background:transparent;font-size:1.2rem}
+.gg-sixstep-header nav{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.gg-sixstep-header nav button{border:0;border-radius:8px;min-height:6px;height:6px;padding:0;background:#39464d}
+.gg-sixstep-header nav button.reached{background:#efa53b}
+.gg-sixstep-mobile .wod-builder-heading{display:none!important}
+.gg-sixstep-mobile .gg-format-wizard .gg-wizard-intro{display:none}
+.gg-sixstep-mobile .gg-format-wizard h3{font-size:1.1rem;margin:4px 0 8px}
+.gg-sixstep-mobile .gg-sixstep-formats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.gg-sixstep-formats button{display:grid;justify-items:center;align-content:center;gap:3px;min-width:0;min-height:60px;padding:6px 3px;border:1px solid #43545b;border-radius:9px;background:#19252a;color:#f5f5f5;font:inherit}
+.gg-sixstep-formats button span{font-size:1.1rem;line-height:1}
+.gg-sixstep-formats button strong{font-size:.78rem;text-align:center;overflow-wrap:anywhere}
+.gg-sixstep-formats button[aria-pressed=true]{border-color:#efa53b;color:#ffc876;background:#3c2b19}
+.gg-sixstep-mobile .gg-sixstep-next{width:100%;margin-top:8px;min-height:42px}
+.gg-sixstep-mobile .gg-architect-overview{border:0!important;background:transparent!important;padding:0!important;gap:5px!important;margin:4px 0!important}
+.gg-sixstep-mobile .gg-architect-heading,.gg-sixstep-mobile .gg-architect-levels,.gg-sixstep-mobile .gg-architect-map{display:none!important}
+.gg-sixstep-mobile .gg-architect-meta{margin:0;min-height:28px;font-size:.75rem}
+.gg-sixstep-mobile.wod-builder-step-0 .gg-architect-meta,.gg-sixstep-mobile.wod-builder-step-1 .gg-architect-parts,.gg-sixstep-mobile.wod-builder-step-1 .gg-warmup-compact,.gg-sixstep-mobile.wod-builder-step-4 .gg-architect-parts,.gg-sixstep-mobile.wod-builder-step-4 .gg-warmup-compact{display:none!important}
+.gg-sixstep-mobile:not(.wod-builder-step-5) .gg-architect-equipment{display:none!important}
+.gg-sixstep-mobile .gg-architect-parts{position:static!important;display:flex;gap:6px;max-height:none}
+.gg-sixstep-mobile .gg-part-chip{display:flex;flex:1 0 116px;max-width:200px;min-width:0}
+.gg-sixstep-mobile .gg-part-chip>button:first-child{flex:1;min-width:0;max-width:none;min-height:42px}
+.gg-sixstep-mobile .gg-part-chip>.gg-part-settings-button{flex:0 0 36px;min-width:36px;max-width:36px;padding:2px;display:grid;place-items:center;border-left:0;font-size:1rem}
+.gg-sixstep-mobile .gg-participation-section .gg-participation-choices{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:6px}
+.gg-sixstep-mobile .gg-participation-choices button{min-height:46px!important;padding:8px!important;text-align:left!important}
+.gg-sixstep-mobile .wod-auto-score{display:none}
+.gg-sixstep-mobile .wod-builder-layout{display:block;min-width:0}
+.gg-sixstep-mobile .wod-composer{padding:6px!important;background:transparent!important;border:0!important;min-width:0}
+.gg-sixstep-mobile .wod-composer>.engine-section-title{display:none}
+.gg-sixstep-mobile .wizard-format-panel{padding:4px!important;gap:6px!important}
+.gg-sixstep-mobile.wod-builder-step-1 .gg-sixstep-time-panel>summary{display:none}
+.gg-sixstep-mobile.wod-builder-step-1 .wizard-format-panel .wod-name-field,.gg-sixstep-mobile.wod-builder-step-1 .wizard-format-panel .wod-setup-format{display:none!important}
+.gg-sixstep-mobile .gg-sixstep-time-panel{padding:4px 0}
+.gg-sixstep-mobile .gg-sixstep-time-panel>summary{padding:8px;background:#202b31;border-radius:8px;font-weight:600}
+.gg-sixstep-mobile .gg-compact-time{grid-column:1/-1}
+.gg-sixstep-mobile .wod-advanced-fields>p.wod-help{font-size:.75rem;margin:3px 0}
+.gg-sixstep-mobile .wod-selected-card{min-height:44px!important;padding:5px 7px!important;gap:5px!important}
+.gg-sixstep-mobile .wod-selected-title .wod-stimulus-tag{display:none}
+.gg-sixstep-mobile .wod-order-feedback{display:none}
+.gg-sixstep-mobile .wizard-stage-intro,.gg-sixstep-mobile .wizard-dose-intro{padding:4px 0!important;margin:4px 0!important}
+.gg-sixstep-mobile .wizard-dose-summary-note{display:none}
+.gg-sixstep-mobile .wizard-stage-actions{position:static!important;inset:auto!important;transform:none!important;display:flex;flex-wrap:wrap;gap:6px;margin:8px 0!important;padding:4px 0!important;box-shadow:none!important}
+.gg-sixstep-mobile .wizard-stage-actions button{flex:1 1 90px;min-height:42px}
+.gg-sixstep-mobile .wizard-dose-stage,.gg-sixstep-mobile .wizard-final-stage{padding-bottom:6px!important}
+.gg-sixstep-mobile .gg-sixstep-extras{display:grid;gap:7px}
+.gg-sixstep-mobile .gg-extra-row,.gg-sixstep-mobile .gg-sixstep-extras>details{background:#1c282e;color:inherit;border:1px solid #3d4c54;border-radius:8px;padding:9px;text-align:left}
+.gg-sixstep-mobile .gg-extra-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:3px 8px}
+.gg-extra-row small{grid-column:1;color:#b3bec4;font-size:.75rem}
+.gg-extra-row>span{grid-column:2;grid-row:1/3}
+.gg-sixstep-extras>details>summary{font-weight:600}
+.gg-sixstep-extras>details label{display:grid;gap:4px;margin-top:6px}
+.gg-sixstep-mobile .gg-review-before .gg-wizard-intro{display:none}
+.gg-sixstep-mobile .gg-sixstep-review{padding:8px;border:1px solid #43545b;border-radius:9px;background:#182329}
+.gg-sixstep-review-meta{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.gg-sixstep-review-meta strong{color:#ffc876}
+.gg-sixstep-review p,.gg-sixstep-review h4{margin:6px 0;font-size:.85rem}
+.gg-review-exercise{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:5px;align-items:center;width:100%;min-height:36px;text-align:left;border:0;border-bottom:1px solid #37464c;background:transparent;color:inherit;padding:4px 0;font:inherit;font-size:.83rem}
+.gg-review-exercise strong{text-align:right;overflow-wrap:anywhere}
+.gg-sixstep-mobile .wizard-final-stage>.wod-publish-toggle{display:none}
+.gg-sixstep-mobile .wizard-final-stage>.wizard-stage-intro{display:none}
+@media(max-width:380px){.gg-sixstep-formats button{min-height:52px}.gg-sixstep-formats button strong{font-size:.73rem}.gg-compact-time-presets{grid-template-columns:repeat(3,minmax(0,1fr))}}
