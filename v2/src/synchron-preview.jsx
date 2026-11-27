@@ -1,6 +1,6 @@
 import React,{useMemo,useState} from 'react'
 import {createRoot} from 'react-dom/client'
-import {prepareSynchronLobby} from './lib/synchronPreparation.js'
+import {createSynchronInvitationGateway,openSynchronInvitation} from './lib/synchronInvitations.js'
 import {createSynchronGateway} from './lib/synchronTransport.js'
 import SynchronSessionPanel from './components/SynchronSessionPanel.jsx'
 import SynchronPreparation from './components/SynchronPreparation.jsx'
@@ -17,14 +17,21 @@ function fixture(state){
  return [...new Set([plan.leaderId,...plan.members])].map(actor=>({actor,adapter:{read:()=>gateway.snapshot(plan.id,actor),command:cmd=>gateway.command(plan.id,actor,cmd)}}))
 }
 function Demo(){
- const [prepared,setPrepared]=useState(null),[online,setOnline]=useState(true)
+ const [prepared,setPrepared]=useState(null),[online,setOnline]=useState(true),[opened,setOpened]=useState({}),[errors,setErrors]=useState({})
+ const creation=useMemo(()=>{let record=null;const creator=createSynchronInvitationGateway({authenticate:async key=>key,readCoachContext:async actor=>({canCoach:actor==='demo-a',eligibleMemberIds:members.map(m=>m.id)}),readWod:async id=>id===wod.id?wod:null,readCreation:async id=>record?.state.plan.id===id?record:null,createAtomic:async next=>{if(record)return false;record=next;return true}});return {creator,getRecord:()=>record}},[])
  const adapters=useMemo(()=>prepared?fixture(prepared.state):[],[prepared])
- function prepare(request){
-  if(request.wodId!==wod.id)return {issue:'Ukjend WOD.'}
-  const result=prepareSynchronLobby({...request,wod},{actorId:'demo-a',canCoach:true,eligibleMemberIds:members.map(m=>m.id)})
-  if(result.issue)return result
-  setPrepared(result);return {sessionId:result.state.plan.id}
+ async function prepare(request){
+  const result=await creation.creator.create('demo-a',request)
+  if(!result.issue&&result.sessionId){setPrepared(creation.getRecord())}
+  return result
  }
- return <main className="gg-sync-preview"><h1>SYNCHRON · utviklingstest</h1><p>Simulerte deltakarar, syntetiske kalibreringar. Ingen ekte brukarar, varsel, nettverk eller treningslogg.</p>{!prepared?<SynchronPreparation wods={[wod]} members={members} leaderId="demo-a" initialMemberId="demo-b" onPrepare={prepare}/>:<><p>{prepared.invitations.length} simulerte invitasjonar. Kunden vel Delta i økta.</p><button className="secondary-button" onClick={()=>setOnline(v=>!v)}>{online?'Simuler nettutfall for kundane':'Kople kundane til att'}</button><div className="gg-sync-preview-grid">{adapters.map(({actor,adapter})=><SynchronSessionPanel key={actor} adapter={adapter} label={actor==='demo-a'?'PT · øktleiar':members.find(m=>m.id===actor)?.display_name} online={actor==='demo-a'||online}/>)}</div></>}</main>
+ async function open(actor,adapter){
+  const invite=prepared.invitations.find(i=>i.recipientId===actor)
+  if(!invite||!online){setErrors(e=>({...e,[actor]:'Ingen tilkopling. Prøv igjen.'}));return}
+  const result=await openSynchronInvitation(invite.href,{readSnapshot:()=>adapter.read()})
+  if(result.issue)setErrors(e=>({...e,[actor]:result.issue}))
+  else {setOpened(e=>({...e,[actor]:true}));setErrors(e=>({...e,[actor]:''}))}
+ }
+ return <main className="gg-sync-preview"><h1>SYNCHRON · utviklingstest</h1><p>Simulerte deltakarar, syntetiske kalibreringar. Ingen ekte brukarar, varsel, nettverk eller treningslogg.</p>{!prepared?<SynchronPreparation wods={[wod]} members={members} leaderId="demo-a" initialMemberId="demo-b" onPrepare={prepare}/>:<><p>{prepared.invitations.length} simulerte invitasjonar. Kunden opnar varselet og stadfestar deltaking i timeren.</p><button className="secondary-button" onClick={()=>setOnline(v=>!v)}>{online?'Simuler nettutfall for kundane':'Kople kundane til att'}</button><div className="gg-sync-preview-grid">{adapters.map(({actor,adapter})=>actor==='demo-a'||opened[actor]?<SynchronSessionPanel key={actor} adapter={adapter} label={actor==='demo-a'?'PT · øktleiar':members.find(m=>m.id===actor)?.display_name} online={actor==='demo-a'||online}/>:<section key={actor} className="gg-sync-review"><strong>{members.find(m=>m.id===actor)?.display_name} · innboks</strong><p>Invitasjon frå PT · {prepared.state.plan.title}</p><button className="primary-button" disabled={!online} onClick={()=>open(actor,adapter)}>Delta i økta</button>{errors[actor]&&<p role="alert">{errors[actor]}</p>}</section>)}</div></>}</main>
 }
 if(import.meta.env.DEV)createRoot(document.getElementById('root')).render(<Demo/>)
