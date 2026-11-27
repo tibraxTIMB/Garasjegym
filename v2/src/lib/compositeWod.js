@@ -1,4 +1,4 @@
-import {samspelConfig,samspelNoncompetitive,samspelQuality,samspelEmom,samspelEmomComplete,samspelDouble,samspelClockedEmom,doubleEmomComplete,samspelStrength,samspelStrengthComplete,samspelRelay,relayTotal,samspelIssue,samspelParticipantResults,samspelResultIssue,normalizeSamspelSwaps} from './samspel.js'
+import {samspelConfig,samspelNoncompetitive,samspelQuality,samspelEmom,samspelEmomComplete,samspelDouble,samspelClockedEmom,doubleEmomComplete,samspelStrength,samspelStrengthComplete,samspelRelay,relayTotal,samspelChipper,teamChipperComplete,teamChipperProgress,samspelIssue,samspelParticipantResults,samspelResultIssue,normalizeSamspelSwaps} from './samspel.js'
 import {complexResultSummary} from './wodComplexes.js'
 // Multi-part workouts reuse the existing WOD engine and Timer for each part.
 // No separate timer is introduced. Blocks, pauses and outcomes live in the WOD schema.
@@ -61,7 +61,7 @@ export function validateCompositeBlocks(blocks,items=[]) {
   if(!Number.isFinite(minute)||minute<=0||minute>180||Math.abs(Math.round(minute*60)-minute*60)>0.001)return title+': vel inntil 180 minutt (med sekundpresisjon).'
   const exercises=items.filter(item=>(item.blockId||item.block_id)===block.id&&!item.is_rest)
   if(!exercises.length)return title+': legg til minst éi øving.'
-  if(block.samspel){const s=compositeSamspelConfig(block);if(!s)return title+': ugyldig Samspel-oppsett. Engine Swap og Double EMOM krev EMOM og heile rotasjonar; Iron Twins krev Strength og 1–30 sett; You Go I Go krev AMRAP.';const issue=samspelIssue(s,{format:samspelClockedEmom(s)?'EMOM':block.format,participation:s.participant_count===2?'partner':'team',participantCount:s.participant_count,collaboration:samspelRelay(s)?'you_go_i_go':'parallel',items:(samspelDouble(s)||samspelStrength(s))?items.filter(item=>(item.blockId||item.block_id)===block.id):exercises});if(issue)return title+': '+issue;if(block.scoreMode&&!['auto','none'].includes(block.scoreMode))return title+': bruk Samspel-resultat, ikkje eit ekstra hovudresultat.'}
+  if(block.samspel){const s=compositeSamspelConfig(block);if(!s)return title+': ugyldig Samspel-oppsett. Engine Swap og Double EMOM krev EMOM og heile rotasjonar; Iron Twins krev Strength og 1–30 sett; You Go I Go krev AMRAP; Team Chipper krev eintydige felles repetisjonsmål.';const issue=samspelIssue(s,{format:samspelClockedEmom(s)?'EMOM':block.format,participation:s.participant_count===2?'partner':'team',participantCount:s.participant_count,collaboration:samspelChipper(s)?'free_split':samspelRelay(s)?'you_go_i_go':'parallel',items:(samspelDouble(s)||samspelStrength(s)||samspelChipper(s))?items.filter(item=>(item.blockId||item.block_id)===block.id):exercises});if(issue)return title+': '+issue;if(block.scoreMode&&!['auto','none'].includes(block.scoreMode))return title+': bruk Samspel-resultat, ikkje eit ekstra hovudresultat.'}
   const every=compositeIntervalMinutes(block.format,block)
   if(every && Math.round(minute*60)%Math.round(every*60)!==0)return title+': øktlengda må gå opp i intervalla på '+Math.round(every*60)+' sekund.'
   if(block.format==='For Time'&&block.rounds!=null&&String(block.rounds).trim()!==''&&(!Number.isInteger(Number(block.rounds))||Number(block.rounds)<1||Number(block.rounds)>100))return title+': vel 1–100 rundar eller la feltet stå tomt.'
@@ -129,7 +129,7 @@ export function compositeTimerConfig(block) {
   format:current.format,
   include_final_rest:interval&&current.includeFinalRest===true,
   planned_for_time_rounds:plannedRounds,
-  wod_engine:{version:2,participation:samspel?(samspel.participant_count===2?'partner':'team'):current.participation||'individual',participant_count:samspel?.participant_count||Number(current.participant_count)||1,collaboration:samspelRelay(samspel)?'you_go_i_go':samspel?'parallel':current.collaboration||'solo',scoring:current.scoring||{type:'reps',fields:['reps']},blocks:[]},
+  wod_engine:{version:2,participation:samspel?(samspel.participant_count===2?'partner':'team'):current.participation||'individual',participant_count:samspel?.participant_count||Number(current.participant_count)||1,collaboration:samspelChipper(samspel)?'free_split':samspelRelay(samspel)?'you_go_i_go':samspel?'parallel':current.collaboration||'solo',scoring:current.scoring||{type:'reps',fields:['reps']},blocks:[]},
   duration_seconds:current.duration_seconds,
   time_cap_seconds:timedCap ? current.duration_seconds:null,
   interval:{work_every_minutes:every,work_every_seconds:every?Math.round(every*60):null,work_seconds:every?Math.round(every*60):interval?work:null,rest_seconds:interval?rest:0},
@@ -237,6 +237,10 @@ export function explicitBlockResults(blocks=[],overrides={},items=[]){
 
 // Composite Samspel parts own their clock and measured participant evidence.
 // Build explicit track names from the builder's current ordered exercise selection.
+export function compositeChipperTargets(block,items=[],repsFor=item=>item.reps){
+ if(!samspelChipper(block?.samspel))return block
+ return {...block,samspel:{...block.samspel,targets:items.filter(item=>(item.blockId||item.block_id)===block.id).map(item=>({exercise_name:String(item.name||item.exercise_name||'').trim(),target_reps:item.is_rest||item.is_complex||item.repsMode==='amrap'||item.reps_mode==='amrap'?0:Number(repsFor(item))}))}}
+}
 export function compositeIronTwinsDose(block,items=[],level='rx'){
  if(!samspelStrength(block?.samspel))return block
  const item=items.find(item=>(item.blockId||item.block_id)===block.id&&!item.is_rest)
@@ -253,6 +257,8 @@ export function compositeSamspelConfig(block){
  if(samspelClockedEmom(config)){
   if(!isEmomFormat(block.format)||block.warmup_group)return null
   config.switch_seconds=emomIntervalSeconds(block.format,{work_every_seconds:block.emomIntervalSeconds??block.interval?.work_every_seconds??config.switch_seconds,work_every_minutes:block.interval?.work_every_minutes})
+ }else if(samspelChipper(config)){
+  if(block.format!=='Chipper'||block.warmup_group||!Number.isSafeInteger(config.duration_seconds)||config.duration_seconds<=0||config.duration_seconds>10800)return null
  }else if(samspelRelay(config)){
   if(block.format!=='AMRAP'||block.warmup_group||!Number.isSafeInteger(config.duration_seconds)||config.duration_seconds<=0||config.duration_seconds>10800)return null
  }else if(samspelStrength(config)){
@@ -268,6 +274,17 @@ export function compositeSamspelResults(blocks=[],scores={},timerResults={},manu
   if(!s)return {rows:[],issue:title+': Samspel-oppsettet er ikkje støtta.'}
   const snapshot=timerResults[index]||{}
   const draft=snapshot.prep_skipped&&block.warmup_group?{participants:Object.fromEntries(Array.from({length:s.participant_count},(_,i)=>[i+1,{quality:'skipped'}]))}:scores['samspel:'+block.id]||{}
+  if(samspelChipper(s)){
+   const result=samspelParticipantResults(s,draft.participants||{})
+   if(result.issue)return {rows:[],issue:title+' · '+result.issue,field:'samspel-block-'+block.id+'-'+result.slot+'-'+result.field}
+   const progress=teamChipperProgress(s,result.rows),allDone=teamChipperComplete(s,result.rows)
+   const raw=manual?draft.timeSeconds:snapshot.elapsed
+   const elapsed=raw==null||String(raw).trim()===''?null:Number(raw)
+   if(elapsed!==null&&(!Number.isSafeInteger(elapsed)||elapsed<0||elapsed>s.duration_seconds))return {rows:[],issue:title+': oppgi gyldig medgått tid innan tidsgrensa.',field:'samspel-block-'+block.id+'-time'}
+   if(progress.some(r=>r.reps>0)&&!(elapsed>0))return {rows:[],issue:title+': registrer faktisk medgått tid for utført arbeid.',field:'samspel-block-'+block.id+'-time'}
+   rows.push({block_id:block.id,title,samspel:{...s,team_score:true,participant_results:result.rows,manual_swaps:[]},chipper_progress:progress,distance:null,calories:null,elapsed,completed:allDone&&elapsed>0})
+   continue
+  }
   if(samspelRelay(s)){
    const elapsed=manual?null:Math.max(0,Number(snapshot.elapsed)||0)
    const result=samspelParticipantResults(s,draft.participants||{})
@@ -324,6 +341,6 @@ export function compositeSamspelResults(blocks=[],scores={},timerResults={},manu
 
 export function mergeCompositeSamspelResults(blocks=[],actual=[]){
  const byId=new Map(actual.map(row=>[row.block_id,row]))
- const merge=(block,row)=>({...block,id:row.block_id,title:row.title,format:samspelRelay(row.samspel)?'AMRAP':samspelStrength(row.samspel)?'Strength':samspelClockedEmom(row.samspel)?'EMOM':'Eigen økt',scoreMode:'none',samspel:row.samspel,elapsed:row.elapsed??block.elapsed??null,distance:row.distance,...(row.calories!=null?{calories:row.calories}:{}),completed:row.completed,...(samspelRelay(row.samspel)?{relay_rounds:row.relay_rounds,laps:[]}:{}),roundsCompleted:null,extra_reps:null})
+ const merge=(block,row)=>({...block,id:row.block_id,title:row.title,format:samspelChipper(row.samspel)?'Chipper':samspelRelay(row.samspel)?'AMRAP':samspelStrength(row.samspel)?'Strength':samspelClockedEmom(row.samspel)?'EMOM':'Eigen økt',scoreMode:'none',samspel:row.samspel,elapsed:row.elapsed??block.elapsed??null,distance:row.distance,...(row.calories!=null?{calories:row.calories}:{}),completed:row.completed,...(samspelChipper(row.samspel)?{chipper_progress:row.chipper_progress,laps:[]}:{}),...(samspelRelay(row.samspel)?{relay_rounds:row.relay_rounds,laps:[]}:{}),roundsCompleted:null,extra_reps:null})
  return [...blocks.map(block=>byId.has(block.id)?merge(block,byId.get(block.id)):block),...actual.filter(row=>!blocks.some(b=>b.id===row.block_id)).map(row=>merge({},row))]
 }
