@@ -141,3 +141,7 @@ test('legacy Samspel without team_score cannot become personal evidence',()=>{
  assert.equal(isIndividualPerformance({result_data:{samspel:{main_track:'quality'},participation_verified:'individual'}}),false)
  assert.equal(isIndividualPerformance({result_data:{samspel:null}}),true)
 })
+
+test('completion-only sets cannot contribute to personal PRs',()=>{
+ assert.equal(deriveExerciseRecords([workout(1,'Back squat',[{reps:5,load_kg:100,flow_status:'done'}])]).flatMap(x=>x.records).length,0)
+})
