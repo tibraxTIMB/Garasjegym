@@ -101,3 +101,37 @@ test('team corrections preserve identity, clock and completion and refuse incons
  assert.ok(samspelCorrectionPatch(recovery,samspelCorrectionDraft(recovery)).patch)
  assert.match(read('../src/components/WorkoutDetail.jsx'),/\.eq\('result_data',JSON\.stringify\(workout\.result_data\)\)/)
 })
+
+
+import {engineSwapConfig} from '../src/lib/samspel.js'
+import {samspelCorrectionFields} from '../src/lib/workoutCorrections.js'
+test('composite Engine Swap corrections preserve clock, other parts and linked completion',()=>{
+ const config={...engineSwapConfig(60,600),metric:'calories',team_score:true,participant_results:[{slot:1,completed_intervals:5,erg_value:40},{slot:2,completed_intervals:5,erg_value:30}]}
+ const engine={block_id:'engine',title:'Del B',samspel:config,elapsed:600,completed:true,distance:null,calories:70}
+ const other={block_id:'quality',title:'Del 0',completed:true}
+ const log={id:'w',score_rounds:9,result_data:{completed:true,elapsed_seconds:900,manual_entry:false,assignment_id:'pt',samspel_blocks:[other,engine],block_summary:[{id:'quality',completed:true},{id:'engine',format:'EMOM',elapsed:600,completed:true,samspel:config,calories:70}],block_results:{1:{elapsed:600}}}}
+ const draft=samspelCorrectionDraft(log),key=JSON.stringify(['engine',1])
+ assert.equal(samspelCorrectionFields(log).length,4)
+ assert.equal(samspelCorrectionFields(log)[0].groupLabel,'Del B · Utøvar 1')
+ assert.equal(draft[key].erg,'40')
+ const changed={...draft,[key]:{...draft[key],erg:'50'}}
+ const {patch}=samspelCorrectionPatch(log,changed)
+ assert.equal(patch.result_data.samspel_blocks[1].calories,80)
+ assert.equal(patch.result_data.block_summary[1].calories,80)
+ assert.equal(patch.result_data.block_summary[1].samspel.participant_results[0].erg_value,50)
+ assert.equal(patch.result_data.samspel_blocks[0],other)
+ assert.equal(patch.result_data.block_results,log.result_data.block_results)
+ assert.equal(patch.result_data.assignment_id,'pt')
+ assert.equal(patch.result_data.elapsed_seconds,900)
+ assert.equal(patch.result_data.completed,true)
+ assert.equal(patch.score_rounds,undefined)
+ assert.equal(log.result_data.samspel_blocks[1].calories,70)
+ assert.ok(samspelCorrectionPatch(log,{...draft,[key]:{...draft[key],intervals:'4'}}).issue)
+ assert.ok(samspelCorrectionPatch(log,{...draft,[key]:{...draft[key],erg:''}}).issue)
+ assert.ok(samspelCorrectionPatch({...log,result_data:{...log.result_data,block_summary:[]}},draft).issue)
+ const partialConfig={...config,participant_results:[{slot:1,completed_intervals:0,erg_value:20},{slot:2,completed_intervals:1,erg_value:0}]}
+ const partial={...log,result_data:{...log.result_data,completed:false,samspel_blocks:[{...engine,elapsed:60,completed:false,samspel:partialConfig}],block_summary:[{id:'engine',completed:false,samspel:partialConfig,elapsed:60}]}}
+ const pd=samspelCorrectionDraft(partial),k2=JSON.stringify(['engine',2])
+ assert.ok(samspelCorrectionPatch(partial,pd).patch)
+ assert.ok(samspelCorrectionPatch(partial,{...pd,[k2]:{...pd[k2],erg:'1'}}).issue)
+})
