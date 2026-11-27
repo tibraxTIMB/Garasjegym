@@ -8,7 +8,7 @@ import './synchron-preview.css'
 const unitLabel={reps:'reps',seconds:'sek',meters:'m',calories:'cal'}
 // Controlled view: transport is supplied by the caller; no local workout/log writes.
 export default function SynchronSessionPanel({adapter,label,online=true,onSnapshot}){
- const [record,setRecord]=useState(null),[tick,setTick]=useState(()=>performance.now()),[issue,setIssue]=useState(''),[busy,setBusy]=useState(false),[actual,setActual]=useState(''),[load,setLoad]=useState(''),[review,setReview]=useState(null)
+ const [record,setRecord]=useState(null),[tick,setTick]=useState(()=>performance.now()),[issue,setIssue]=useState(''),[busy,setBusy]=useState(false),[contactLost,setContactLost]=useState(true),[actual,setActual]=useState(''),[load,setLoad]=useState(''),[review,setReview]=useState(null)
  const recordRef=useRef(null),pending=useRef(false),generation=useRef(0),readPending=useRef(false),onlineRef=useRef(online)
  onlineRef.current=online
  function publish(next){recordRef.current=next;setRecord(next);onSnapshot?.(next?.snapshot)}
@@ -19,23 +19,24 @@ export default function SynchronSessionPanel({adapter,label,online=true,onSnapsh
    readPending.current=true
    const seq=++generation.current,started=performance.now()
    try{const r=await adapter.read();if(!alive||seq!==generation.current||pending.current)return
-    if(r.issue||!r.snapshot){setIssue(r.issue||'Økta er ikkje tilgjengeleg.');return}
+    if(r.issue||!r.snapshot){setContactLost(true);setIssue(r.issue||'Økta er ikkje tilgjengeleg.');return}
     const next=acceptSynchronSnapshot(recordRef.current,r.snapshot,performance.now(),started)
-    if(next!==recordRef.current){publish(next);setIssue('')}
-   }catch{if(alive&&seq===generation.current)setIssue('Mista kontakt med økta.')}finally{readPending.current=false}
+    if(next!==recordRef.current){publish(next);setContactLost(false);setIssue('')}else{setContactLost(true);setIssue('Ugyldig eller utdaterte øktdata. Ventar på stadfesting.')}
+   }catch{if(alive&&seq===generation.current){setContactLost(true);setIssue('Mista kontakt med økta.')}}finally{readPending.current=false}
   }
   refresh()
   const poll=setInterval(refresh,900),clock=setInterval(()=>setTick(performance.now()),200)
   return()=>{alive=false;generation.current++;clearInterval(poll);clearInterval(clock)}
  },[adapter])
  const now=Math.max(tick,record?.receivedAt??0)
- const c=synchronControls(record,{now,online,busy}),s=record?.snapshot,m=s?.movements?.[c?.stage]
+ const c=synchronControls(record,{now,online:online&&!contactLost,busy}),s=record?.snapshot,m=s?.movements?.[c?.stage]
  async function act(type,fields={}){
-  if(pending.current||!onlineRef.current)return
+  if(pending.current||!onlineRef.current||contactLost)return
   pending.current=true;generation.current++;setBusy(true);setIssue('')
   try{
    const r=await submitSynchronAction(recordRef.current,type,fields,crypto.randomUUID(),{read:adapter.read,command:adapter.command,now:()=>performance.now(),online:()=>onlineRef.current})
    if(r.record)publish(r.record)
+   if(r.uncertain)setContactLost(true)
    if(r.issue)setIssue(r.issue)
    else {setReview(null);setActual('');if(type==='load')setLoad('')}
   }finally{pending.current=false;setBusy(false)}
