@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry,canCancelSynchronOpening,synchronSnapshotMatches,acceptSynchronSnapshot} from '../src/lib/synchronPresence.js'
+import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry,canCancelSynchronOpening,synchronSnapshotMatches,acceptSynchronSnapshot,synchronDiscoveryStatus,synchronRecoveryDecision} from '../src/lib/synchronPresence.js'
 const runtime={},entry={actor:'a',runtime,href:'synchron-session:one'}
 const snap=(phase,props={})=>({sessionId:'one',revision:2,serverAt:1000,leader:false,isMember:true,joined:true,view:{phase},...props})
 assert.equal(synchronPresence(null,null),null)
@@ -49,3 +49,16 @@ assert.equal(acceptSynchronSnapshot(paused,entry,{...origin,snapshot:{...later,s
 assert.equal(acceptSynchronSnapshot(later,entry,{...origin,snapshot:paused}),paused)
 for(const invalid of [{revision:-1},{revision:NaN},{serverAt:undefined},{joined:'yes'},{view:{phase:'unknown'}},{leader:false,isMember:false}])assert.equal(acceptSynchronSnapshot(running,entry,{...origin,snapshot:{...running,...invalid}}),running)
 assert.equal(acceptSynchronSnapshot(running,entry,{...origin,actor:'b',snapshot:paused}),running)
+
+const discoveryRuntime={actorId:'a',discover:async()=>({active:null})},context={actor:'a',runtime:discoveryRuntime}
+assert.equal(synchronDiscoveryStatus(null,'a',discoveryRuntime),'pending')
+assert.equal(synchronDiscoveryStatus({...context,status:'ready'},'a',discoveryRuntime),'ready')
+assert.equal(synchronDiscoveryStatus({...context,status:'ready'},'a',{...discoveryRuntime}),'pending')
+assert.equal(synchronDiscoveryStatus({...context,status:'error'},'a',discoveryRuntime),'error')
+assert.equal(synchronDiscoveryStatus(null,'a',null),'disabled')
+assert.equal(synchronDiscoveryStatus(null,'b',discoveryRuntime),'disabled')
+assert.deepEqual(synchronRecoveryDecision({active:null},context),{status:'ready',entry:null,snapshot:null})
+const recovered=synchronRecoveryDecision({active:running},context)
+assert.equal(recovered.status,'ready');assert.equal(recovered.entry.actor,'a');assert.equal(recovered.entry.runtime,discoveryRuntime);assert.equal(recovered.entry.href,'synchron-session:one');assert.equal(recovered.snapshot,running)
+for(const result of [null,{}, {active:null,issue:'offline'},{active:snap('finished')},{active:snap('ready',{joined:false})},{active:snap('running',{revision:-1})},{active:snap('running',{sessionId:'../bad'})},{active:snap('running',{leader:false,isMember:false})}])assert.equal(synchronRecoveryDecision(result,context).status,'error')
+assert.equal(synchronRecoveryDecision({active:running},{...context,actor:'b'}).status,'error')

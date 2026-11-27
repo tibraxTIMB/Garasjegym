@@ -42,3 +42,18 @@ export function acceptSynchronSnapshot(previous,entry,origin){
  }
  return next
 }
+
+// Discovery is opt-in. A stale or foreign account's check is never sufficient.
+export function synchronDiscoveryStatus(record,actor,runtime){
+ if(!actor||runtime?.actorId!==actor||typeof runtime.discover!=='function')return 'disabled'
+ if(record?.actor!==actor||record.runtime!==runtime)return 'pending'
+ return ['ready','error'].includes(record.status)?record.status:'pending'
+}
+export function synchronRecoveryDecision(result,{actor,runtime}={}){
+ const fail={status:'error',entry:null,snapshot:null}
+ if(!actor||runtime?.actorId!==actor||!result||result.issue)return fail
+ if(result.active===null)return {status:'ready',entry:null,snapshot:null}
+ const snapshot=result.active,href='synchron-session:'+snapshot?.sessionId,entry={actor,runtime,href}
+ if(!synchronSnapshotMatches(entry,{actor,runtime,href,snapshot})||snapshot.view.phase==='finished'||!snapshot.leader&&(!snapshot.isMember||!snapshot.joined))return fail
+ return {status:'ready',entry,snapshot}
+}
