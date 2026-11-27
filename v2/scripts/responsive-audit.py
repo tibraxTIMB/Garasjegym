@@ -39,7 +39,7 @@ with sync_playwright() as pw:
     browser=pw.chromium.launch(headless=True)
     # Explicit desktop companion test; synthetic catalogue, no production connection.
     for w,h in [(320,568),(390,844),(844,390),(1024,768),(1440,900),(1920,1080)]:
-        ctx=browser.new_context(viewport={'width':w,'height':h},accept_downloads=True,locale='nn-NO')
+        ctx=browser.new_context(viewport={'width':w,'height':h},accept_downloads=True,locale='nn-NO',timezone_id='Europe/Oslo')
         ctx.route('**/*',lambda route:route.continue_() if route.request.url.startswith(BASE) else route.abort())
         page=None
         try:
@@ -79,7 +79,7 @@ with sync_playwright() as pw:
             if page:page.close()
             ctx.close()
     for w,h in sizes:
-        context=browser.new_context(viewport={"width":w,"height":h},has_touch=True,is_mobile=w<600,device_scale_factor=1,locale="nn-NO",color_scheme="dark",reduced_motion="reduce")
+        context=browser.new_context(viewport={"width":w,"height":h},has_touch=True,is_mobile=w<600,device_scale_factor=1,locale="nn-NO",timezone_id="Europe/Oslo",color_scheme="dark",reduced_motion="reduce")
         context.route("**/*",lambda route:route.continue_() if route.request.url.startswith(BASE) else route.abort())
         for screen in ["flow","card","builder","pt","pt-workbench","pt-schedule","plan","select","acta","picker","assign","member-calendar"]:
             page=None
@@ -110,11 +110,23 @@ with sync_playwright() as pw:
                     check(page,"card-dose",w,h)
                 if screen=="builder":
                     page.get_by_role("button",name="Samansett økt",exact=False).first.tap()
-                    page.get_by_role("navigation",name="Delar i WOD-en").wait_for()
+                    page.get_by_role("button",name="Neste →",exact=True).tap()
+                    page.get_by_role("button",name="Vidare til øvingar",exact=True).tap()
+                    settings=page.get_by_role("dialog",name="Format og tid for øktdelen")
+                    settings.wait_for()
+                    settings.get_by_role("combobox",name="Format",exact=True).select_option("Chipper")
+                    settings.get_by_role("button",name="15",exact=True).tap()
+                    settings.get_by_role("button",name="Ferdig",exact=True).tap()
+                    settings.wait_for(state="hidden")
+                    parts=page.get_by_role("navigation",name="Delar i WOD-en")
+                    parts.wait_for()
+                    assert parts.locator(".gg-part-chip").count()==1
+                    assert "Chipper" in parts.inner_text() and "15:00" in parts.inner_text()
                     check(page,"architect-overview",w,h)
                     page.get_by_role("button",name="WOD-handlingar",exact=True).tap()
                     page.get_by_role("button",name="Endra format",exact=True).tap()
                     page.get_by_role("button",name="AMRAP",exact=False).first.tap()
+                    page.get_by_role("button",name="Neste →",exact=True).tap()
                     page.get_by_role("button",name="WOD-handlingar",exact=True).tap()
                     page.get_by_role("button",name="Samspel",exact=True).tap()
                     panel=page.get_by_role("region",name="Samspel")
