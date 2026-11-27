@@ -261,7 +261,7 @@ export default function App({synchronRuntime:injectedSynchronRuntime=undefined,t
       project:import.meta.env.VITE_SUPABASE_URL,client:supabase,
       actorId:synchronActor,profile,profileReady,authReady,tabletLab
     })
-  },[injectedSynchronRuntime,tabletLab,labMode,passwordRecovery,invitationPending,synchronActor,profile,profileReady,authReady])
+  },[injectedSynchronRuntime,tabletLab,labMode,passwordRecovery,invitationPending,synchronActor,profile?.id,profile?.active,profile?.membership_status,profileReady,authReady])
   const synchronContext=useRef(null)
   const ownedSynchron=synchronOwnedEntry(synchronEntry,synchronActor,synchronRuntime)
   const remotePresence=ownedSynchron?synchronPresence(synchronEntry,synchronSnapshot):null
