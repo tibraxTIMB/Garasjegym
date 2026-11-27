@@ -60,3 +60,9 @@ assert.equal(b.snapshot.review.canApprove,true)
 b=(await submitSynchronAction(b,'review_approve',{},'approve-b',adapter('b'))).record
 assert.equal(b.snapshot.review.approved,true)
 assert.equal(synchronControls(b,{now:ms}).canApprove,false)
+
+// Invalid mutation responses cannot be accepted as successful actions.
+for(const bad of [null,{...b.snapshot,sessionId:'other'},{...b.snapshot,revision:-1},{...b.snapshot,view:{...b.snapshot.view,phase:'invalid'}}]){
+ const r=await submitSynchronAction(a,'review_update',{movementId:'step',quality:'estimated',value:40},'bad-response',{...adapter('a'),read:async()=>({snapshot:a.snapshot}),command:async()=>({snapshot:bad})})
+ assert.ok(r.issue);assert.equal(r.uncertain,true);assert.equal(r.record.snapshot.sessionId,a.snapshot.sessionId)
+}
