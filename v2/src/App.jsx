@@ -240,7 +240,7 @@ export default function App({synchronRuntime=null}={}) {
   synchronContext.current={actor:synchronActor,runtime:synchronRuntime,localSessionOpen,active,entry:ownedSynchron?synchronEntry:null,presence:remotePresence}
   useEffect(()=>{setSynchronEntry(null);setSynchronSnapshot(null);setSynchronNotice('')},[synchronActor,synchronRuntime])
   const handleSynchronSnapshot=useCallback(snapshot=>setSynchronSnapshot(old=>{
-    if(!snapshot?.view||!snapshot.sessionId)return old
+    if(!snapshot?.view||!snapshot.sessionId||parseSynchronInvitation(synchronContext.current?.entry?.href)!==snapshot.sessionId)return old
     if(old?.sessionId===snapshot.sessionId&&old.revision>snapshot.revision)return old
     if(old?.sessionId===snapshot.sessionId&&old.revision===snapshot.revision&&old.view.phase===snapshot.view.phase&&old.joined===snapshot.joined)return old
     return snapshot
