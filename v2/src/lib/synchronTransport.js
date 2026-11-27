@@ -1,4 +1,5 @@
 import {applySynchronCommand,synchronView,synchronAssignedTime} from './synchron.js'
+import {sealSynchronResults,synchronOwnReservation} from './synchronSeal.js'
 import {initializeSynchronReview,synchronReviewProjection,applySynchronReview} from './synchronReview.js'
 
 // Server-side boundary. Host must authenticate identity and atomically persist
@@ -25,7 +26,7 @@ export function synchronClientSnapshot(state,actorId,now){
 export function synchronActionRequest(snapshot,type,fields={},id){
  if(!snapshot||typeof id!=='string'||!id)return null
  if(type==='review_update'||type==='review_approve'){
-  if(snapshot.view.phase!=='finished'||!snapshot.review)return null
+  if(snapshot.view.phase!=='finished'||!snapshot.review||snapshot.review.sealed)return null
   if(type==='review_approve')return snapshot.review.canApprove&&!snapshot.review.approved&&!Object.keys(fields).length?{id,revision:snapshot.revision,type}:null
   if(Object.keys(fields).some(k=>!['movementId','quality','value'].includes(k))||!snapshot.review.rows.some(r=>r.movementId===fields.movementId)||!['confirmed','estimated','unknown'].includes(fields.quality)||(fields.quality==='unknown'?fields.value!==null:!Number.isSafeInteger(fields.value)||fields.value<0||fields.value>100000))return null
   return {id,revision:snapshot.revision,type,...fields}
@@ -39,7 +40,7 @@ export function synchronActionRequest(snapshot,type,fields={},id){
   type==='finish'?v.canFinish:type==='load'?v.phase==='running'&&(snapshot.joined||snapshot.leader):false
  return permitted?{id,revision:snapshot.revision,type,...fields}:null
 }
-export function createSynchronGateway({authenticate,read,compareAndSwap,now,readCalibrations=async()=>[]}){
+export function createSynchronGateway({authenticate,read,compareAndSwap,now,readCalibrations=async()=>[],reservation=null}){
  if([authenticate,read,compareAndSwap,now].some(fn=>typeof fn!=='function'))throw Error('Synchron krev autentisering, lagring og serverklokke.')
  const denied=()=>({issue:'Ingen tilgang til økta.'})
  async function snapshot(sessionId,credential){
@@ -62,7 +63,22 @@ export function createSynchronGateway({authenticate,read,compareAndSwap,now,read
   }
   return {snapshot:synchronClientSnapshot(next,actorId,at)}
  }
- return {snapshot,command}
+ // Optional trusted host capability. No client supplies dates, tokens or actor IDs.
+ async function reserve(sessionId,credential,expectedRevision){
+  if(!reservation||typeof reservation.workoutDate!=='function'||typeof reservation.tokenForMember!=='function')return {issue:'Permanent lagring er ikkje aktivert.'}
+  const actorId=await authenticate(credential),state=await read(sessionId)
+  if(!actorAllowed(state,actorId)||state.plan.id!==sessionId||!state.plan.members.includes(actorId))return denied()
+  if(state.seal)return {reservation:synchronOwnReservation(state,actorId)}
+  const result=sealSynchronResults(state,{expectedRevision,at:now(),workoutDate:reservation.workoutDate(state),tokenForMember:memberId=>reservation.tokenForMember(state,memberId)})
+  if(result.issue)return {issue:result.issue}
+  if(!await compareAndSwap(sessionId,state.revision,result.state)){
+   const latest=await read(sessionId)
+   if(!actorAllowed(latest,actorId)||latest.plan.id!==sessionId)return denied()
+   return latest.seal?{reservation:synchronOwnReservation(latest,actorId)}:{issue:'Resultatet er endra. Oppdater først.'}
+  }
+  return {reservation:synchronOwnReservation(result.state,actorId)}
+ }
+ return {snapshot,command,reserve}
 }
 
 // Project a recently received snapshot using a monotonic client clock, never
