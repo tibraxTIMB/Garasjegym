@@ -17,7 +17,7 @@ export function synchronRelativeLoad(records,query){
  const newest=Math.max(...matching.map(r=>r.observedAt)),latest=matching.filter(r=>r.observedAt===newest)
  if(new Set(latest.map(r=>r.loadKg)).size!==1)return null
  const referenceKg=latest[0].loadKg,ratio=100*query.loadKg/referenceKg
- if(!Number.isFinite(ratio))return null
+ if(!Number.isFinite(ratio*10))return null
  return {version:1,kind:'external_kg_vs_tested_1rm',referenceKg,referenceAt:newest,percent:Math.round(ratio*10)/10,ageDays:Math.floor((query.before-newest)/86400000),aboveReference:ratio>100}
 }
 // Stored metadata validation; the historical ratio is frozen, never silently
@@ -25,6 +25,6 @@ export function synchronRelativeLoad(records,query){
 export function validSynchronRelativeLoad(value,loadKg){
  if(value?.version!==1||value.kind!=='external_kg_vs_tested_1rm'||!positive(loadKg)||!positive(value.referenceKg)||!Number.isSafeInteger(value.referenceAt)||value.referenceAt<0||!Number.isSafeInteger(value.ageDays)||value.ageDays<0)return null
  const ratio=100*loadKg/value.referenceKg
- if(!Number.isFinite(ratio)||value.percent!==Math.round(ratio*10)/10||value.aboveReference!==(ratio>100))return null
+ if(!Number.isFinite(ratio*10)||value.percent!==Math.round(ratio*10)/10||value.aboveReference!==(ratio>100))return null
  return {version:1,kind:value.kind,referenceKg:value.referenceKg,referenceAt:value.referenceAt,percent:value.percent,ageDays:value.ageDays,aboveReference:value.aboveReference}
 }
