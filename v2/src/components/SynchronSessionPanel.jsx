@@ -6,11 +6,11 @@ import './synchron-preview.css'
 
 const unitLabel={reps:'reps',seconds:'sek',meters:'m',calories:'cal'}
 // Controlled view: transport is supplied by the caller; no local workout/log writes.
-export default function SynchronSessionPanel({adapter,label,online=true}){
+export default function SynchronSessionPanel({adapter,label,online=true,onSnapshot}){
  const [record,setRecord]=useState(null),[tick,setTick]=useState(()=>performance.now()),[issue,setIssue]=useState(''),[busy,setBusy]=useState(false),[actual,setActual]=useState(''),[load,setLoad]=useState(''),[review,setReview]=useState(null)
  const recordRef=useRef(null),pending=useRef(false),generation=useRef(0),onlineRef=useRef(online)
  onlineRef.current=online
- function publish(next){recordRef.current=next;setRecord(next)}
+ function publish(next){recordRef.current=next;setRecord(next);onSnapshot?.(next?.snapshot)}
  useEffect(()=>{
   let alive=true
   async function refresh(){
