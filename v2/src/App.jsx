@@ -32,7 +32,7 @@ import { getMembershipGate } from './lib/membershipAccess.js'
 import { restoreWorkoutDraft } from './lib/workoutDraft.js'
 import {synchronRouteIssue} from './lib/synchronRuntime.js'
 import {createConfiguredSynchronRuntime} from './lib/synchronConfiguredRuntime.js'
-import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry,canCancelSynchronOpening,acceptSynchronSnapshot,synchronDiscoveryStatus,synchronRecoveryDecision} from './lib/synchronPresence.js'
+import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry,canCancelSynchronOpening,acceptSynchronSnapshot,synchronDiscoveryStatus,synchronRecoveryDecision,synchronLocalFallback} from './lib/synchronPresence.js'
 import {parseSynchronInvitation} from './lib/synchronPreparation.js'
 const SynchronLaunch=lazy(()=>import('./components/SynchronLaunch.jsx'))
 import { resolveSimpleMode, displayModePreference } from './lib/memberViewMode.js'
@@ -251,6 +251,7 @@ export default function App({synchronRuntime:injectedSynchronRuntime=undefined,t
   const [synchronNotice,setSynchronNotice]=useState('')
   const [synchronSnapshot,setSynchronSnapshot]=useState(null)
   const [discoveryRecord,setDiscoveryRecord]=useState(null),[discoveryAttempt,setDiscoveryAttempt]=useState(0)
+  const [localFallback,setLocalFallback]=useState(null)
   const synchronActor=session?.user?.id
   // Stable per account: changing identity or losing approval closes the live route.
   const synchronRuntime=useMemo(()=>{
@@ -269,14 +270,16 @@ export default function App({synchronRuntime:injectedSynchronRuntime=undefined,t
   const remoteLocked=!!remotePresence?.locked
   const discoveryStatus=labMode?'disabled':synchronDiscoveryStatus(discoveryRecord,synchronActor,synchronRuntime)
   const discoveryBlocked=discoveryStatus==='pending'||discoveryStatus==='error'
-  const trainingLaunchLocked=remoteLocked||discoveryBlocked
+  const localOnly=synchronLocalFallback(localFallback,synchronActor,synchronRuntime,discoveryStatus,remotePresence)
+  const localDiscoveryBlocked=discoveryBlocked&&!localOnly
+  const trainingLaunchLocked=remoteLocked||localDiscoveryBlocked
   const localSessionOpen=!!timerSnapshot.sessionOpen||!!(synchronActor&&restoreWorkoutDraft(synchronActor))
-  const officeAllowed=profileReady&&!discoveryBlocked&&werkstattEntryAllowed(profile,synchronActor,{labMode,localSessionOpen,remoteLocked})
+  const officeAllowed=profileReady&&!localDiscoveryBlocked&&werkstattEntryAllowed(profile,synchronActor,{labMode,localSessionOpen,remoteLocked})
   const officeMode=officeAllowed&&officeRequested&&!labMode
   const officeDesktop=officeMode&&deviceProfile.width>=1000
   const simpleMode=storedSimpleMode&&!officeMode
   synchronContext.current={actor:synchronActor,runtime:synchronRuntime,localSessionOpen,active,entry:ownedSynchron?synchronEntry:null,presence:remotePresence,discoveryBlocked}
-  useEffect(()=>{setSynchronEntry(null);setSynchronSnapshot(null);setSynchronNotice('');setDiscoveryRecord(null)},[synchronActor,synchronRuntime])
+  useEffect(()=>{setSynchronEntry(null);setSynchronSnapshot(null);setSynchronNotice('');setDiscoveryRecord(null);setLocalFallback(null)},[synchronActor,synchronRuntime])
   const discoveryEligible=!labMode&&profileReady&&profile?.id===synchronActor&&getMembershipGate(profile)==='approved'&&synchronRuntime?.actorId===synchronActor&&typeof synchronRuntime?.discover==='function'
   useEffect(()=>{
     if(!discoveryEligible)return
@@ -296,6 +299,7 @@ export default function App({synchronRuntime:injectedSynchronRuntime=undefined,t
     }).catch(()=>{if(live)setDiscoveryRecord({actor,runtime,status:'error'})})
     return()=>{live=false}
   },[discoveryEligible,synchronActor,synchronRuntime,discoveryAttempt])
+  function retrySynchronDiscovery(){setLocalFallback(null);setDiscoveryAttempt(x=>x+1)}
   const handleSynchronSnapshot=useCallback((snapshot,origin)=>setSynchronSnapshot(old=>acceptSynchronSnapshot(old,synchronContext.current?.entry,{...origin,snapshot})),[])
   useEffect(()=>{
     if(!trainingLaunchLocked)return
@@ -586,7 +590,7 @@ export default function App({synchronRuntime:injectedSynchronRuntime=undefined,t
   }
 
   if (!simpleModeReady) return <LoadingScreen text="Hentar medlemsinnstillingar …" />
-  if(discoveryBlocked&&!localSessionOpen)return <main className="auth-shell"><div className="auth-card"><h1>Kontrollerer fellesøkt</h1><p role={discoveryStatus==='error'?'alert':'status'}>{discoveryStatus==='error'?'Serverstatusen kunne ikkje stadfestast. Ingen ny økt blir starta før ny kontroll.':'Ser etter ei aktiv fellesøkt …'}</p>{discoveryStatus==='error'&&<button type="button" className="primary-button" onClick={()=>setDiscoveryAttempt(x=>x+1)}>Prøv igjen</button>}</div></main>
+  if(localDiscoveryBlocked&&!localSessionOpen)return <main className="auth-shell"><div className="auth-card"><h1>Kontrollerer fellesøkt</h1><p role={discoveryStatus==='error'?'alert':'status'}>{discoveryStatus==='error'?'Fellesøktstatus er ukjend. Du kan prøva igjen, eller velja vanleg lokal trening utan SYNCHRON.':'Ser etter ei aktiv fellesøkt …'}</p>{discoveryStatus==='error'&&<><button type="button" className="primary-button" onClick={retrySynchronDiscovery}>Prøv igjen</button>{!remoteLocked&&<button type="button" className="secondary-button" onClick={()=>setLocalFallback({actor:synchronActor,runtime:synchronRuntime})}>Berre lokal trening</button>}</>}</div></main>
 
   const staffNavigation=sections.filter(item=>item.id!=='pt-info')
   const memberNavigation=[sections[0],sections[1],sections[4],sections[2],{...sections[3],label:'PT-oppfølging',note:'Dine program, mål og kontakt med PT'},sections[8],sections[5],sections[6],sections[7]]
@@ -633,7 +637,7 @@ export default function App({synchronRuntime:injectedSynchronRuntime=undefined,t
             {isStaff(profile)&&<button className="icon-button" onClick={()=>setInfotainmentActive(true)} title="Opna infotainment" aria-label="Opna infotainment"><MonitorPlay size={16}/></button>}<button className="icon-button" onClick={toggleAppFullscreen} title={appFullscreen?"Avslutt fullskjerm":"Fullskjerm"} aria-label={appFullscreen?"Avslutt fullskjerm":"Fullskjerm"}>{appFullscreen?<Minimize size={16}/>:<Maximize size={16}/>}</button><button className="icon-button" onClick={() => supabase.auth.signOut()} title="Logg ut" aria-label="Logg ut"><LogOut size={16} /></button>
           </div>
         </header>
-        {discoveryBlocked&&localSessionOpen&&<section className="content-card" role="status">Fellesøktstatus er ikkje stadfesta. Du kan fullføra den lokale økta. {discoveryStatus==='error'&&<button type="button" className="text-button" onClick={()=>setDiscoveryAttempt(x=>x+1)}>Prøv igjen</button>}</section>}
+        {discoveryBlocked&&(localSessionOpen||localOnly)&&<section className="content-card" role="status">{localOnly?'Lokal trening · SYNCHRON er ikkje tilgjengeleg.':'Fellesøktstatus er ikkje stadfesta. Du kan fullføra den lokale økta.'} {discoveryStatus==='error'&&<button type="button" className="text-button" onClick={retrySynchronDiscovery}>Prøv igjen</button>}</section>}
         {synchronNotice&&<section className="content-card" role="status">{synchronNotice} <button type="button" className="text-button" onClick={()=>setSynchronNotice('')}>Lukk</button></section>}
         {active==='oversikt'&&(isStaff(profile)||isPTCoach)&&<button type="button" className="gg-pt-home-shortcut" onClick={openPTClientWorkspace}><Users size={17}/><span>PT Studio</span><small>Dagleg kundeoppfølging</small><span aria-hidden="true">›</span></button>}
         {active!=='synchron-session'&&ownedSynchron&&!localSessionOpen&&<button type="button" className="ongoing-workout-return" onClick={()=>navigateTo('synchron-session')}><span className="ongoing-workout-status">{remotePresence?.phase==='finished'?'ETTERØKTA':remoteLocked?'FELLESØKT':'INVITASJON'}</span><strong>{synchronSnapshot?.title||'Samspel Live'}</strong><span className="ongoing-workout-action">Tilbake til fellesøkta →</span></button>}

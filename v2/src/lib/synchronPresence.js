@@ -57,3 +57,10 @@ export function synchronRecoveryDecision(result,{actor,runtime}={}){
  if(!synchronSnapshotMatches(entry,{actor,runtime,href,snapshot})||snapshot.view.phase==='finished'||!snapshot.leader&&(!snapshot.isMember||!snapshot.joined))return fail
  return {status:'ready',entry,snapshot}
 }
+
+// Explicit per-account, per-runtime local-only choice after failed discovery.
+// Unknown server state is never relabelled as no active session, and a known
+// remote lock cannot be bypassed. Remote creation and join remain blocked.
+export function synchronLocalFallback(choice,actor,runtime,status,presence){
+ return !!(choice&&actor&&runtime&&choice.actor===actor&&choice.runtime===runtime&&status==='error'&&!presence?.locked)
+}

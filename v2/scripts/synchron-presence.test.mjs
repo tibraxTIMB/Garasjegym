@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry,canCancelSynchronOpening,synchronSnapshotMatches,acceptSynchronSnapshot,synchronDiscoveryStatus,synchronRecoveryDecision} from '../src/lib/synchronPresence.js'
+import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry,canCancelSynchronOpening,synchronSnapshotMatches,acceptSynchronSnapshot,synchronDiscoveryStatus,synchronRecoveryDecision,synchronLocalFallback} from '../src/lib/synchronPresence.js'
 const runtime={},entry={actor:'a',runtime,href:'synchron-session:one'}
 const snap=(phase,props={})=>({sessionId:'one',revision:2,serverAt:1000,leader:false,isMember:true,joined:true,view:{phase},...props})
 assert.equal(synchronPresence(null,null),null)
@@ -62,3 +62,11 @@ const recovered=synchronRecoveryDecision({active:running},context)
 assert.equal(recovered.status,'ready');assert.equal(recovered.entry.actor,'a');assert.equal(recovered.entry.runtime,discoveryRuntime);assert.equal(recovered.entry.href,'synchron-session:one');assert.equal(recovered.snapshot,running)
 for(const result of [null,{}, {active:null,issue:'offline'},{active:snap('finished')},{active:snap('ready',{joined:false})},{active:snap('running',{revision:-1})},{active:snap('running',{sessionId:'../bad'})},{active:snap('running',{leader:false,isMember:false})}])assert.equal(synchronRecoveryDecision(result,context).status,'error')
 assert.equal(synchronRecoveryDecision({active:running},{...context,actor:'b'}).status,'error')
+
+const choice={actor:'a',runtime:discoveryRuntime}
+assert.equal(synchronLocalFallback(choice,'a',discoveryRuntime,'error',null),true)
+for(const status of ['pending','ready','disabled'])assert.equal(synchronLocalFallback(choice,'a',discoveryRuntime,status,null),false)
+assert.equal(synchronLocalFallback(choice,'a',discoveryRuntime,'error',{locked:true}),false)
+assert.equal(synchronLocalFallback(choice,'b',discoveryRuntime,'error',null),false)
+assert.equal(synchronLocalFallback(choice,'a',{},'error',null),false)
+assert.equal(synchronLocalFallback(null,'a',discoveryRuntime,'error',null),false)

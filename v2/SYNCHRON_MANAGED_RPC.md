@@ -6,3 +6,6 @@ Acceptance: isolated PostgreSQL contract, actual production migration-owner gran
 
 ## 2026-11-27 production status
 The owner explicitly authorized activation. The isolated managed contract passed (46065487541), full native checks passed (46065493340); additive bridge applied and verified on production. Edge v2 deployed with both server capabilities enabled; v3 adds a fixed read-only service API readiness probe for valid CORS preflight. No browser access to the bridge; owner of private function is the restricted non-bypass role, public wrapper is invoker. The browser release is still gated pending live HTTP smoke and genuine member login acceptance. No production user impersonation, data fixture, custom password, or secrets in repository. Real-device and result acceptance remain pending.
+
+## Controlled client activation
+Owner authorized client publication after the live readiness and isolated contract passed. Build enables both client flags only for an explicit approved production release. If startup discovery fails, the user may explicitly choose local-only training, scoped to the current actor and runtime. The unknown remote status remains visible, no known remote lock is bypassed, and remote creation/join remain blocked until successful discovery. Real signed-in two-device acceptance is still outstanding; no production accounts impersonated.
