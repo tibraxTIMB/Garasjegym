@@ -105,6 +105,8 @@ export function ptIsAmrapPart(part) {
 }
 export function ptPartScore(part) {
  if(!part)return null
+ if(part.samspel?.main_track==='relay')return Number.isSafeInteger(part.relay_rounds)&&part.relay_rounds>=0?part.relay_rounds+' lagrundar':null
+ if(part.samspel)return null
  if(ptIsAmrapPart(part)){
   const rounds=Number(part.roundsCompleted)
   const extras=Number(part.extra_reps)
