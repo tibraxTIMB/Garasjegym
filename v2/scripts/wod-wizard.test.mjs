@@ -25,7 +25,7 @@ test('only formats requiring a timing decision get the time screen', () => {
 })
 
 test('format tap advances while multi-choice screens keep an explicit next action', () => {
-  assert.match(code, /setWizardStep\(wodFormatNeedsTime\(item\)&&item!==COMPOSITE_FORMAT\?1:3\)/)
+  assert.match(code, /setWizardStep\(wodFormatNeedsTime\(item\)&&item!==COMPOSITE_FORMAT\?1:2\)/)
   assert.match(code, /wizardStep===0&&<section className="gg-format-wizard"/)
   assert.match(code, /wizardStep===1&&<div className="wizard-stage-actions gg-time-next"/)
   assert.match(code, /\(wizardStep===2\|\|wizardStep===3\)&&!libraryOpen&&<div className="wizard-selected-stage/ )
