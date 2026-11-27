@@ -14,10 +14,10 @@ export function createPostgresSynchronHost({query,actorId,now=Date.now,resultSav
   readCoachContext:async a=>self(a)?await one("SELECT jsonb_build_object('canCoach',gg_synchron_private.coach($1::uuid),'eligibleMemberIds',coalesce((SELECT jsonb_agg(member_id) FROM public.pt_client_assignments WHERE coach_user_id=$1::uuid AND gg_synchron_private.eligible($1::uuid,member_id)),'[]'::jsonb)) AS value",[a]):{canCoach:false,eligibleMemberIds:[]},
   readWod:async(id,a)=>self(a)?await one("SELECT (SELECT to_jsonb(w) FROM public.wods w WHERE id=$1::uuid AND is_published AND NOT coalesce(is_archived,false) AND gg_synchron_private.coach($2::uuid)) AS value",[id,a]):null,
   readCreation:async id=>one("SELECT (SELECT jsonb_build_object('actorId',leader,'fingerprint',fingerprint) FROM gg_synchron_private.sessions WHERE id=$1::uuid AND leader=$2::uuid AND gg_synchron_private.coach($2::uuid)) AS value",[id,actorId]),
-  createAtomic:async r=>one("SELECT gg_synchron_private.create_atomic($1::uuid,$2::jsonb) AS value",[actorId,JSON.stringify(r)]),
+  createAtomic:async r=>one("SELECT gg_synchron_private.create_atomic($1::uuid,$2::text::jsonb) AS value",[actorId,JSON.stringify(r)]),
   read:async id=>one("SELECT (SELECT state FROM gg_synchron_private.sessions WHERE id=$1::uuid AND gg_synchron_private.authorized($2::uuid,state)) AS value",[id,actorId]),
   authorizeSession:async({actorId:a,sessionId})=>self(a)&&await one("SELECT coalesce((SELECT gg_synchron_private.authorized($2::uuid,state) FROM gg_synchron_private.sessions WHERE id=$1::uuid),false) AS value",[sessionId,a])===true,
-  compareAndSwap:async(id,revision,next,a)=>self(a)&&await one("SELECT gg_synchron_private.cas($1::uuid,$2::uuid,$3::bigint,$4::jsonb) AS value",[a,id,revision,JSON.stringify(next)])===true,
+  compareAndSwap:async(id,revision,next,a)=>self(a)&&await one("SELECT gg_synchron_private.cas($1::uuid,$2::uuid,$3::bigint,$4::text::jsonb) AS value",[a,id,revision,JSON.stringify(next)])===true,
   authorizeDiscovery:async a=>self(a)&&await one("SELECT gg_synchron_private.active_account($1::uuid) AS value",[a])===true,
   readActiveSession:async a=>{if(!self(a))throw Error('Wrong actor');return one("SELECT (SELECT session_id::text FROM gg_synchron_private.slots WHERE actor=$1::uuid) AS value",[a])}
  }
