@@ -44,14 +44,14 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.5.6
-      - name: Resolve pinned Edge dependencies and record candidate lock
-        run: deno cache --no-config --lock=/tmp/gg-synchron-deno.lock --frozen=false v2/server/edge-candidate/index.ts
+      - name: Verify frozen Edge dependencies
+        run: deno cache --no-config --lock=v2/server/edge-candidate/deno.lock --frozen v2/server/edge-candidate/index.ts
       - name: Test actual driver and client transport against disposable PostgreSQL
-        run: deno run -A --no-config --lock=/tmp/gg-synchron-deno.lock --frozen=false v2/scripts/synchron-postgres-rehearsal.mjs --driver
-      - name: Preserve reviewed dependency-lock input (no credentials)
+        run: deno run -A --no-config --lock=v2/server/edge-candidate/deno.lock --frozen v2/scripts/synchron-postgres-rehearsal.mjs --driver
+      - name: Preserve frozen dependency lock (no credentials)
         uses: actions/upload-artifact@v4
         with:
           name: synchron-edge-candidate-dependency-lock
-          path: /tmp/gg-synchron-deno.lock
+          path: v2/server/edge-candidate/deno.lock
           if-no-files-found: error
           retention-days: 7
