@@ -1,3 +1,4 @@
+import {synchronPaceProfile} from './synchronPace.js'
 // SYNCHRON / Arbeitsfluss v1: deterministic domain contract, not a transport or auth service.
 // Trusted host supplies actorId and server timestamp; never trust these from a client payload.
 // All accepted commands must eventually be committed atomically with revision and event ID.
@@ -108,21 +109,26 @@ export function applySynchronCommand(state,cmd,{actorId,at}={}){
 export function synchronAssignedTime(state,movementId,memberId){
  return state.segments.filter(s=>s.movementId===movementId&&s.memberId===memberId).reduce((sum,s)=>sum+s.assignedMs,0)/1000
 }
-// Only observed calibration at the exact variant/load and same unit is accepted.
+// Same-person, same-variant/unit observed pace; bounded load interpolation only.
 // Missing calibration produces unknown, never a generic pace.
 export function synchronEstimate(state,movementId,memberId,calibrations=[]){
  const move=state.plan.movements.find(m=>m.id===movementId)
  if(!move||!state.plan.members.includes(memberId)||!['estimate','hybrid'].includes(move.method)||move.unit==='seconds')return null
  const segments=state.segments.filter(s=>s.movementId===movementId&&s.memberId===memberId)
  if(!segments.length)return null
- let value=0
- for(const seg of segments){
-  const matches=calibrations.filter(c=>c.memberId===memberId&&c.exerciseId===move.exerciseId&&c.variant===seg.dose.variant&&c.loadKg===seg.dose.loadKg&&c.unit===move.unit&&c.source==='observed'&&Number.isFinite(c.perMinute)&&c.perMinute>0)
-  if(!matches.length)return null
-  const rates=matches.map(c=>c.perMinute).sort((a,b)=>a-b),mid=Math.floor(rates.length/2),pace=rates.length%2?rates[mid]:(rates[mid-1]+rates[mid])/2
-  value+=seg.assignedMs/60000*pace
+ let value=0,low=0,high=0,previousWorkSeconds=0,previousEnd=null,rangeAvailable=true,minSessions=null
+ const methods=new Set()
+ for(const seg of [...segments].sort((a,b)=>a.from-b.from)){
+  const duration=seg.assignedMs/1000
+  const pace=synchronPaceProfile(calibrations,{memberId,exerciseId:move.exerciseId,variant:seg.dose.variant,loadKg:seg.dose.loadKg,unit:move.unit,sessionId:state.plan.id,before:state.startAt,duration,previousWorkSeconds,restSeconds:previousEnd===null?null:Math.max(0,(seg.from-previousEnd)/1000)})
+  if(!pace)return null
+  value+=duration/60*pace.pace
+  if(pace.rangeAvailable){low+=duration/60*pace.low;high+=duration/60*pace.high}else rangeAvailable=false
+  methods.add(pace.method)
+  if(pace.sessions!==null)minSessions=minSessions===null?pace.sessions:Math.min(minSessions,pace.sessions)
+  previousWorkSeconds+=duration;previousEnd=seg.to
  }
- return Number.isFinite(value)?{value,unit:move.unit,quality:'estimated',basis:'assigned_time',prEligible:false}:null
+ return Number.isFinite(value)&&value<=100000?{value,unit:move.unit,quality:'estimated',basis:'assigned_time',prEligible:false,model:{version:1,methods:[...methods],minSessions:methods.has('legacy_exact')?null:minSessions,observedRange:rangeAvailable&&Number.isFinite(low)&&Number.isFinite(high)?{low:Math.floor(low),high:Math.ceil(high)}:null}}:null
 }
 // Preserve measured individual amounts. Allocate a confirmed total only where all unknowns have estimates.
 export function synchronAllocate(total,rows){
