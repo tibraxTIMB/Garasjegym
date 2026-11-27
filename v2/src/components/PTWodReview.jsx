@@ -1,3 +1,4 @@
+import IndividualCalibrationReview from './IndividualCalibrationReview.jsx'
 import SamspelParticipantResults from './SamspelParticipantResults.jsx'
 import AnatomyEvidence from './AnatomyEvidence.jsx'
 import {workoutAnatomyExercises} from '../lib/anatomicalIntelligence.js'
@@ -17,7 +18,7 @@ const formatExerciseSet=set=>[
 ].filter(Boolean).join(' · ')
 
 /** Only data returned by the assignment-scoped RPC is shown. Never query workout_logs directly. */
-export default function PTWodReview({assignmentId=null,programSessionId=null,clientName='',clientRank=null,wodName='',prescriptionSchema=null,onClose=()=>{}}){
+export default function PTWodReview({assignmentId=null,programSessionId=null,clientName='',clientRank=null,wodName='',prescriptionSchema=null,onClose=()=>{},onRecordCalibration=null}){
  const [result,setResult]=useState(null)
  const [feedback,setFeedback]=useState([])
  const [loading,setLoading]=useState(true)
@@ -152,6 +153,7 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
      })}
     </div>
    </details>}
+   {!teamResult&&<IndividualCalibrationReview key={assignmentId||programSessionId} result={result} assignmentId={assignmentId} programSessionId={programSessionId} onRecord={onRecordCalibration}/>}
    <div className="ptreview-next-action">
     <div><strong>PT-vurdering</strong><small>Gje {clientName} ei konkret tilbakemelding etter å ha sett resultata.</small></div>
     <button type="button" className="primary-button" aria-expanded={feedbackOpen} onClick={()=>setFeedbackOpen(x=>!x)}><MessageSquareText size={17}/>{feedbackOpen?'Lukk tilbakemelding':'Gje tilbakemelding'}</button>
