@@ -1,4 +1,4 @@
-import {samspelConfig,samspelNoncompetitive} from './samspel.js'
+import {samspelConfig,samspelNoncompetitive,samspelEmom} from './samspel.js'
 import {getWodSchemaItems,sortWodItems} from './wodOrdering.js'
 import {isEmomFormat,emomIntervalSeconds} from './wodEngine.js'
 import {COMPOSITE_FORMAT} from './compositeWod.js'
@@ -10,12 +10,12 @@ export function prepareLibraryWodPart(wod,oldBlock){
  if(wod.format===COMPOSITE_FORMAT)throw new Error('Vel ein enkelt-WOD. Ei samansett økt kan ikkje leggjast inni ei anna.')
  const schema=wod.timer_settings?.workout_schema||{}
  const samspel=samspelConfig(schema)
- if(schema.samspel&&(!samspel||!samspelNoncompetitive(samspel)))throw Error('Berre Quality & Row og Active Recovery kan brukast som Samspel-del enno.')
+ if(schema.samspel&&(!samspel||!(samspelNoncompetitive(samspel)||samspelEmom(samspel))))throw Error('Berre Quality & Row, Active Recovery og Engine Swap kan brukast som Samspel-del enno.')
  const items=sortWodItems(getWodSchemaItems(schema))
  if(!items.length)throw new Error('WOD-en manglar øvingar i det lagra oppsettet.')
  const format=isEmomFormat(wod.format)?'EMOM':wod.format
- const interval=emomIntervalSeconds(wod.format,schema.interval)
- const seconds=Math.max(60,Number(schema.duration_seconds)||Number(schema.time_cap_seconds)||Number(wod.duration_minutes)*60||1200)
+ const interval=samspelEmom(samspel)?samspel.switch_seconds:emomIntervalSeconds(wod.format,schema.interval)
+ const seconds=samspelEmom(samspel)?samspel.duration_seconds:Math.max(60,Number(schema.duration_seconds)||Number(schema.time_cap_seconds)||Number(wod.duration_minutes)*60||1200)
  const block={
   ...oldBlock,format,samspel:samspel?JSON.parse(JSON.stringify(samspel)):null,...(samspel?{scoreMode:'none'}:{}),
   flowPurpose:schema.flowPurpose||flowPurpose({title:wod.name},schema),flowReporting:schema.flowReporting||'auto',
