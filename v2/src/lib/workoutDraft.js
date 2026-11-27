@@ -71,3 +71,33 @@ export function clearWorkoutSubmission(memberId,saveToken,storage){
 export function workoutSubmissionConflict(submission,saveToken,fingerprint){
  return !!submission&&submission.saveToken===saveToken&&submission.fingerprint!==fingerprint
 }
+
+// Persist only an explicitly validated save intent, independently of the
+// server-submission receipt. An edited or different draft never auto-submits.
+const retryKey=memberId=>`garasjegym.workout-retry.v1.${memberId}`
+export function restoreWorkoutRetry(memberId,draft,storage){
+ if(!memberId||draft?.mode!=='active'||!draft.saveToken)return null
+ try{
+  const row=JSON.parse((storage??globalThis.localStorage).getItem(retryKey(memberId))||'null')
+  const fingerprint=workoutSaveFingerprint(draft)
+  return row?.memberId===memberId&&row.saveToken===draft.saveToken&&row.fingerprint===fingerprint?fingerprint:null
+ }catch{return null}
+}
+export function rememberWorkoutRetry(memberId,saveToken,fingerprint,storage){
+ if(!memberId||!saveToken||typeof fingerprint!=='string')return false
+ try{
+  const s=storage??globalThis.localStorage
+  const draft=restoreWorkoutDraft(memberId,s)
+  if(draft?.saveToken!==saveToken||workoutSaveFingerprint(draft)!==fingerprint)return false
+  s.setItem(retryKey(memberId),JSON.stringify({memberId,saveToken,fingerprint}))
+  return restoreWorkoutRetry(memberId,draft,s)===fingerprint
+ }catch{return false}
+}
+export function clearWorkoutRetry(memberId,saveToken,storage){
+ if(!memberId||!saveToken)return
+ try{
+  const s=storage??globalThis.localStorage
+  const row=JSON.parse(s.getItem(retryKey(memberId))||'null')
+  if(row?.memberId===memberId&&row.saveToken===saveToken)s.removeItem(retryKey(memberId))
+ }catch{}
+}
