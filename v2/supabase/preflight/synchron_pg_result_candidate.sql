@@ -10,7 +10,7 @@ BEGIN
  IF NOT FOUND OR s->>'phase' IS DISTINCT FROM 'finished' OR jsonb_typeof(s#>'{seal,entries}') IS DISTINCT FROM 'array'
  OR NOT (s#>'{plan,members}' ? a::text) THEN RETURN NULL; END IF;
  PERFORM gg_synchron_private.lock_permissions(s);
- IF NOT gg_synchron_private.authorized(a,s) OR NOT (s#>'{review,approved}' @> s#>'{plan,members}') THEN RETURN NULL; END IF;
+ IF NOT gg_synchron_private.authorized(a,s) OR ((s#>'{review,approved}') @> (s#>'{plan,members}')) IS DISTINCT FROM true THEN RETURN NULL; END IF;
  SELECT value,ordinality::int-1 INTO entry,n FROM jsonb_array_elements(s#>'{seal,entries}') WITH ORDINALITY AS e(value,ordinality) WHERE value->>'memberId'=a::text;
  IF NOT FOUND OR entry->>'sessionId' IS DISTINCT FROM sid::text THEN RETURN NULL; END IF;
  p:=entry->'payload'; token:=(entry->>'saveToken')::uuid;
