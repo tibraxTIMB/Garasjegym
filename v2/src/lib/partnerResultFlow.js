@@ -1,3 +1,4 @@
+import {prescribedKg} from './doseProfile.js'
 import {isEmomFormat,COLLABORATION_MODES} from './wodEngine.js'
 // Only advertise rules with an actual execution contract. Samspel has its own
 // validated role-swap setup; do not pretend metadata alone drives a timer.
@@ -31,8 +32,7 @@ export function plannedResultDose(item,level,variant='common'){
  if(positive(dose.reps)&&Number.isInteger(Number(dose.reps))&&item.reps_mode!=='amrap')values.reps=String(dose.reps)
  if(item.uses_height&&positive(dose.heightCm))values.height_cm=String(dose.heightCm)
  if(item.uses_load&&dose.loadMode==='kg'){
-  const m=dose.loadKgMen,k=dose.loadKgWomen
-  const kg=variant==='men'?m:variant==='women'?k:entered(m)&&entered(k)&&Number(m)===Number(k)?m:!entered(m)&&!entered(k)?dose.loadKg:undefined
+  const kg=prescribedKg(dose,variant)
   if(entered(kg)&&Number.isFinite(Number(kg))&&Number(kg)>=0)values.load_kg=String(kg)
  }
  return values
