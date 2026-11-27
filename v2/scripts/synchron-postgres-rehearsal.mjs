@@ -1,8 +1,7 @@
 // Test-only psql transport, fixed local fixture endpoint. Never reads DATABASE_URL.
 import assert from 'node:assert/strict'
 import {spawn} from 'node:child_process'
-import {createPostgresSynchronHost} from '../server/synchronPostgresHost.js'
-import {createSynchronHttpHandler} from '../server/synchronHttp.js'
+import {createSynchronSupabaseHandler} from '../server/synchronSupabaseAuth.js'
 import {createAuthenticatedSynchronRuntime} from '../src/lib/synchronHttpClient.js'
 const ids={a:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',b:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',c:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',d:'dddddddd-dddd-4ddd-8ddd-dddddddddddd'}
 const {a,b,c,d}=ids,w='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',sid='11111111-1111-4111-8111-111111111111',sid2='22222222-2222-4222-8222-222222222222',sid3='33333333-3333-4333-8333-333333333333'
@@ -21,9 +20,15 @@ await psql("INSERT INTO public.profiles VALUES($1,true,'approved','admin'),($2,t
 let now=0
 const request=(leader,member,id)=>({wodId:w,level:'rx',leaderParticipates:true,memberIds:[member],sessionId:id,doses:{'movement-1':{[leader]:{variant:'50cm',loadKg:null},[member]:{variant:'40cm',loadKg:null}}}})
 const origin='https://gg.fixture.invalid'
+const issuer='https://gg.fixture.invalid/auth/v1'
+const sessionIds={ [a]:'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa',[b]:'bbbbbbbb-1111-4111-8111-bbbbbbbbbbbb',[c]:'cccccccc-1111-4111-8111-cccccccccccc',[d]:'dddddddd-1111-4111-8111-dddddddddddd'}
+for(const [actor,session] of Object.entries(sessionIds))await psql('INSERT INTO auth.sessions(id,user_id) VALUES($1::uuid,$2::uuid)',[session,actor])
+const encode=value=>Buffer.from(JSON.stringify(value)).toString('base64url')
 function runtime(actor){
- const token='fixture.'+actor+'.token'
- const handler=createSynchronHttpHandler({allowedOrigins:[origin],verifyToken:async t=>t===token?actor:null,createHost:async({actorId})=>createPostgresSynchronHost({query,actorId,now:()=>now,resultSavingEnabled:true})})
+ const token=encode({alg:'fixture'})+'.'+encode({sub:actor,iss:issuer,role:'authenticated',aud:'authenticated',session_id:sessionIds[actor],exp:86400})+'.fixture'
+ // Fixture Auth service stub verifies only the exact known token. It is not a real JWT signature test.
+ const auth={getUser:async t=>t===token?{data:{user:{id:actor}}}:{error:Error('invalid')}}
+ const handler=createSynchronSupabaseHandler({enabled:true,issuer,allowedOrigins:[origin],auth,query,now:()=>now,resultSavingEnabled:true})
  return createAuthenticatedSynchronRuntime({actorId:actor,enabled:true,resultSavingEnabled:true,auth:{getSession:async()=>({data:{session:{user:{id:actor},access_token:token}}})},functions:{invoke:async(name,{body,headers})=>{assert.equal(name,'synchron-live');const r=await handler(new Request(origin,{method:'POST',headers:{...headers,origin,'content-type':'application/json'},body:JSON.stringify(body)}));return {data:await r.json(),error:r.ok?null:Error('HTTP '+r.status)}}}})
 }
 // Prove the actual request path is running without owner or RLS bypass.
@@ -45,6 +50,12 @@ for(const sql of [
 }
 const A=runtime(a),B=runtime(b),C=runtime(c)
 assert.deepEqual(await A.discover(),{active:null})
+await assert.rejects(psql('SET ROLE gg_synchron_server; SELECT * FROM auth.sessions'))
+await psql('DELETE FROM auth.sessions WHERE id=$1::uuid',[sessionIds[a]])
+assert.ok((await A.discover()).issue)
+await psql('INSERT INTO auth.sessions(id,user_id) VALUES($1::uuid,$2::uuid)',[sessionIds[a],a])
+assert.deepEqual(await A.discover(),{active:null})
+assert.equal(await psql("SET ROLE gg_synchron_server; SELECT gg_synchron_private.session_active($1::uuid,$2::uuid)",[a,sessionIds[b]]),'f')
 assert.equal((await A.create(request(a,b,sid))).sessionId,sid)
 assert.equal((await A.create(request(a,b,sid))).duplicate,true)
 assert.equal((await C.create(request(c,b,sid2))).sessionId,sid2)
