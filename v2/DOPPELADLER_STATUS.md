@@ -156,3 +156,119 @@ Added actor-scoped closed work timeline relative to actual post-countdown start 
 
 ## 2026-11-27 – GW01/GW02 Stammordnung: persistent validated workout retry
 Compared exact base 6828ef866, Gazelle b25bb36b and production 0a7a1c54. workoutDraft.js and workout-submission.test.mjs were unchanged from common base on Gazelle; imported exact production versions c24ff050, 055a0a49. Training.jsx overlap resolved only for persistent retry: restore matching previously validated fingerprint on reload, persist retry intent on offline/retryable failure, clear on edit, conflict, discard, manual reattempt, acknowledgement and terminal failure; preserve Gazelle composite/dedicated Samspel and existing result validation. Commit fce4dfef. All three changed blobs reread and verified. 36 assertions (25 prior + 11 production retry) passed before commit using isolated JS import/export adaptation and assertion shim. Source-level integration only; native npm/JSX/browser/CI and real server idempotency not verified. No live database calls or deployment. GW01 remains open: review other production-only and overlapping files, release configuration and full regression. Next scoped group: production measurement and PR guard changes; reconcile test overlap. User requested continuous active work rather than hourly automation; do not start another automation.
+
+## 2026-11-27 – GW01.02–.07 reconciliation pass
+All work explicitly on gazelle-operational-anatomical, base for this pass 70793f67, production head 0a7a1c54, common ancestor 6828ef86. No production deployment or actual DB changes.
+- GW01.02 implemented seven source/test file reconciliations: exact quality name classification, measurement flags, personal PR metrics, same-side historical reference, side selection; retained stricter Gazelle performanceEvidence.js and both branches' PR tests. Commits 245a7295,edec4add,f3d151ff,5cb8475c,85f3d5fd,dd370a47,bc16c3ee. 80 isolated JS assertions passed (18 named tests plus top-level checks), not native npm.
+- GW01.03 implemented five catalogue/dosage source, fixture and test reconciliations. Commits 3c98560f,644e917f,76909a80,ab57902e,2286b543. 355 isolated assertions across 13 tests passed, including exact snapshot names, classifications and starter doses; static catalogue snapshot is not live catalogue inspection. No SQL executed. Test adapter initially shadowed snapshot variable; fixed adapter and reran successfully.
+- GW01.04 partial: shared WOD naming, editable quality defaults and timed metcon filter integrated with Gazelle WodBuilder without replacing composite Samspel; PT schedule dialog portal and WOD picker accessibility/layout production changes imported with tests. Commits e361a602,e84a3ba7,1873f062,af70da8b,1c7cacdd,108e1538,84458db5,b2d4b9bd. 6 tests, 40950 isolated assertions (mostly randomized-name generation loop and source regex checks), not UI test. Remaining: PTStudio/Training/App overlap, production warmup import and desktop review path; verify real selection/navigation, no full build.
+- GW01.05 partial: production CSV/plan exchange, scoped own workout export and local plan-project archive helpers and two test suites copied (420a99f3,6a370c6b,b69cb322,08ac941d,d94560ba). 31 isolated assertions across 6 tests passed using mock clients, no actual data access. Stacheldraht test could not be verified in isolated JS adapter (URL API absent; javascript URL check reported invalid link instead of protocol error); that module/test not copied. FIT/XLSX, actual Werkstatt UI/role paths, tablet lab, other dependencies not yet integrated. No Garmin SDK added; dependencies/lock remain unchanged.
+- GW01.06 partial: c13c9cf8 extends canonical npm test chain by 4 groups, now 57 command groups; preserved all 16 Synchron suites via existing test:synchron. Test manifests checked; native runner not executed.
+- GW01.07 preliminary audit: local git ls-remote still fails DNS (github.com cannot resolve), so no complete local checkout, native build or browser run. Latest compare at c13c9cf8: 293 commits ahead and 58 behind production, 127 dev-changed files, 103 production-changed files. 38 overlap includes already copied exact paths; it is not a merge conflict count. 65 production-only paths still to classify/import, not all necessarily intended for dev (production release config and SQL must stay gated). CI status query returned no combined statuses and no PR-triggered workflow runs; not proof of green CI. Production head reread unchanged 0a7a1c54. No full gate passed; GW01 stays open. Next: resume GW01.04/.05 App/PTStudio/WodBuilder integration with verified three-way patches and actual native build; then remaining test and release config review. No automatic hourly work, per user instruction. Original 17 acceptance journeys still outstanding.
+
+### Remaining production-only paths at c13c9cf8 (review, not blind copy)
+- .github/production-release.json
+- .github/workflows/deploy-sturmkopf-pages.yml
+- .github/workflows/exportwerk-format-audit.yml
+- .github/workflows/stammordnung-isolated-restore.yml
+- README.md
+- docs/FERTIGSTELLUNG49.md
+- docs/MIGRATION_LINEAGE.md
+- docs/OPERATIONS.md
+- docs/ORDRE006_REHEARSAL.md
+- v2/BIBLIOTHEKAR_AUDIT_2026-11-26.md
+- v2/OPERATION_KLARHEIT.md
+- v2/OPERATION_MEISTERWERK.md
+- v2/PT_PICKER_REVISION_20261126.md
+- v2/README.md
+- v2/STURMKOPF_TUV_RELEASE_GATE.md
+- v2/VOLKSMASCHINE_REIBUNGSLOS_ORDER.md
+- v2/WERKSTATT_PC_COMPANION.md
+- v2/WERKSTATT_TABLET_LAB.md
+- v2/package-lock.json
+- v2/public/sw.js
+- v2/scripts/check-release-artifact.mjs
+- v2/scripts/check-release-order.mjs
+- v2/scripts/exportwerk-fit.test.mjs
+- v2/scripts/exportwerk-xlsx-check.py
+- v2/scripts/exportwerk-xlsx-fixture.mjs
+- v2/scripts/media-playback.test.mjs
+- v2/scripts/mobile-builder-ui.test.mjs
+- v2/scripts/production-release-readiness.test.mjs
+- v2/scripts/stacheldraht.test.mjs
+- v2/scripts/tablet-lab-browser-test.py
+- v2/scripts/warmup-library49.test.mjs
+- v2/scripts/warmup-presets49.test.mjs
+- v2/scripts/werkstatt-exchange.test.mjs
+- v2/src/components/Exportwerk.jsx
+- v2/src/components/GarminExport.jsx
+- v2/src/components/Librarium.jsx
+- v2/src/components/PlanExchange.jsx
+- v2/src/components/PlanProduction.jsx
+- v2/src/components/ProjectControl.jsx
+- v2/src/components/TabletLabDock.jsx
+- v2/src/components/TabletLabSafehouse.jsx
+- v2/src/components/Werkstatt.jsx
+- v2/src/components/WodHub.jsx
+- v2/src/components/WodImportPanel.jsx
+- v2/src/components/WodLibrary.jsx
+- v2/src/components/werkstatt.css
+- v2/src/lib/deviceLayout.js
+- v2/src/lib/exportwerkFit.js
+- v2/src/lib/exportwerkXlsx.js
+- v2/src/lib/stacheldraht.js
+- v2/src/lib/tabletLabProtocol.js
+- v2/src/lib/warmupLibrary49.js
+- v2/src/lib/warmupPresets49.js
+- v2/src/lib/werkstattProjects.js
+- v2/src/tabletLabBootstrap.js
+- v2/src/tabletLabMain.jsx
+- v2/src/tabletLabSupabase.js
+- v2/supabase/preflight/bibliothekar_catalogue_audit.sql
+- v2/supabase/preflight/bibliothekar_catalogue_candidate.sql
+- v2/supabase/preflight/ordnung006_fixture.sql
+- v2/supabase/preflight/ordnung006_installed_extra_assertions.sql
+- v2/supabase/preflight/ordnung006_installed_schema_rehearsal.sql
+- v2/tablet-lab.html
+- v2/vite.tablet-lab.config.js
+- v2/vite.video-demo.config.js
+
+### Both-side changed paths at c13c9cf8 (includes exact copies, recheck content equality before merge)
+- .github/workflows/gazelle-responsive-audit.yml
+- v2/package.json
+- v2/scripts/exercise-measurements.test.mjs
+- v2/scripts/exportwerk.test.mjs
+- v2/scripts/meisterwerk-projects.test.mjs
+- v2/scripts/member-customer-journey.test.mjs
+- v2/scripts/pr-metrics.test.mjs
+- v2/scripts/previous-result-preparation.test.mjs
+- v2/scripts/pt-picker-layout.test.mjs
+- v2/scripts/pt-role-journey.test.mjs
+- v2/scripts/responsive-audit.py
+- v2/scripts/wod-naming.test.mjs
+- v2/scripts/workout-submission.test.mjs
+- v2/src/App.jsx
+- v2/src/components/GarageInventory.jsx
+- v2/src/components/PTSchedule.jsx
+- v2/src/components/PTStudio.jsx
+- v2/src/components/Training.jsx
+- v2/src/components/WodBuilder.jsx
+- v2/src/components/WodPicker.jsx
+- v2/src/components/pt-schedule.css
+- v2/src/components/wod-picker-repair.css
+- v2/src/lib/exerciseCategories.js
+- v2/src/lib/exerciseMeasurements.js
+- v2/src/lib/exerciseMuscleProfiles.js
+- v2/src/lib/exerciseQuality.js
+- v2/src/lib/exportwerk.js
+- v2/src/lib/meisterwerkProjects.js
+- v2/src/lib/performanceEvidence.js
+- v2/src/lib/prMetrics.js
+- v2/src/lib/previousResult.js
+- v2/src/lib/qualityPrescription.js
+- v2/src/lib/werkstattExchange.js
+- v2/src/lib/wodNaming.js
+- v2/src/lib/wodSides.js
+- v2/src/lib/workoutDraft.js
+- v2/src/uiAuditMain.jsx
+- v2/supabase/catalog/bibliothekar_review_2026_11_26.json
