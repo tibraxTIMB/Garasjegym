@@ -1,6 +1,10 @@
 // Test-only psql transport, fixed local fixture endpoint. Never reads DATABASE_URL.
 import assert from 'node:assert/strict'
 import {spawn} from 'node:child_process'
+import process from 'node:process'
+import {Buffer} from 'node:buffer'
+import {createPostgresBegin} from '../server/synchronPostgresDriver.js'
+import {createSynchronRestrictedQueries} from '../server/synchronRestrictedQueries.js'
 import {createSynchronSupabaseHandler} from '../server/synchronSupabaseAuth.js'
 import {createAuthenticatedSynchronRuntime} from '../src/lib/synchronHttpClient.js'
 const ids={a:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',b:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',c:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',d:'dddddddd-dddd-4ddd-8ddd-dddddddddddd'}
@@ -15,13 +19,18 @@ function psql(sql,args=[],login='postgres'){
   child.stdin.end(sql.replace(/\$(\d+)/g,(_,i)=>":'v"+i+"'")+";\n")
  })
 }
-const query=async(sql,args)=>({rows:[JSON.parse(await psql('BEGIN; SET LOCAL ROLE gg_synchron_server; SELECT row_to_json(q) FROM ('+sql+') q; COMMIT',args,'gg_synchron_login'))]})
+const psqlQuery=async(sql,args)=>({rows:[JSON.parse(await psql('BEGIN; SET LOCAL ROLE gg_synchron_server; SELECT row_to_json(q) FROM ('+sql+') q; COMMIT',args,'gg_synchron_login'))]})
 // Verify and lock the session in the same transaction as the operation.
-const sessionQuery=async({actorId,sessionId},sql,args=[])=>{
+const psqlSessionQuery=async({actorId,sessionId},sql,args=[])=>{
  const lock='SELECT gg_synchron_private.require_active_session('+String.fromCharCode(36)+(args.length+1)+'::uuid,'+String.fromCharCode(36)+(args.length+2)+'::uuid)'
  const output=await psql('BEGIN; SET LOCAL ROLE gg_synchron_server; '+lock+'; SELECT row_to_json(q) FROM ('+sql+') q; COMMIT',[...args,actorId,sessionId],'gg_synchron_login')
  return {rows:[JSON.parse(output)]}
 }
+// The CI driver mode uses the actual pinned Postgres.js package and the
+// deployment-facing restricted transaction adapter. psql remains fixture control only.
+const driverMode=process.argv.includes('--driver')
+const driver=driverMode?(await import('npm:postgres@3.4.7')).default('postgres://gg_synchron_login:fixture-only@127.0.0.1:5432/gg_synchron_fixture',{ssl:false,prepare:false,max:4,connect_timeout:5,idle_timeout:2}):null
+const {query,sessionQuery}=driver?createSynchronRestrictedQueries({begin:createPostgresBegin(driver)}):{query:psqlQuery,sessionQuery:psqlSessionQuery}
 const read=async(sql,args)=>JSON.parse(await psql(sql,args))
 await psql("INSERT INTO public.profiles VALUES($1,true,'approved','admin'),($2,true,'approved','member'),($3,true,'approved','member'),($4,true,'approved','member'); INSERT INTO public.pt_coaches VALUES($1,true),($3,true); INSERT INTO public.pt_client_assignments VALUES($1,$2,'active'),($3,$2,'active'),($1,$4,'active'); INSERT INTO public.wods VALUES($5,'Chipper','Chipper',true,false,$6::jsonb)",[a,b,c,d,w,JSON.stringify({workout_schema:{items:[{exercise_id:'step',exercise_name:'Step-up',levels:{rx:{reps:100}}}]}})])
 let now=0
@@ -174,4 +183,5 @@ for(const role of ['anon','authenticated']){
  assert.equal(await psql("SELECT has_function_privilege($1,'gg_synchron_private.deliver_invitation()','EXECUTE')",[role]),'f')
  assert.equal(await psql("SELECT has_function_privilege($1,'gg_synchron_private.require_active_session(uuid,uuid)','EXECUTE')",[role]),'f')
 }
+if(driver)await driver.end({timeout:5})
 console.log('SYNCHRON PostgreSQL: verified HTTP identity fixture, concurrent CAS, private state, exclusivity, revocation, restart, atomic rollback sealed result receipts and atomic inbox delivery passed')
