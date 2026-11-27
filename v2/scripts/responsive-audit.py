@@ -37,6 +37,47 @@ def open_page(context,path):
     return page,errors
 with sync_playwright() as pw:
     browser=pw.chromium.launch(headless=True)
+    # Explicit desktop companion test; synthetic catalogue, no production connection.
+    for w,h in [(320,568),(390,844),(844,390),(1024,768),(1440,900),(1920,1080)]:
+        ctx=browser.new_context(viewport={'width':w,'height':h},accept_downloads=True,locale='nn-NO')
+        ctx.route('**/*',lambda route:route.continue_() if route.request.url.startswith(BASE) else route.abort())
+        page=None
+        try:
+            page,errors=open_page(ctx,'/ui-audit.html?scenario=audit-admin&screen=werkstatt')
+            page.get_by_role('heading',name='WERKSTATT',exact=True).wait_for()
+            check(page,'werkstatt-home',w,h)
+            page.get_by_role('button',name='WOD-eksport',exact=True).click()
+            page.get_by_role('button',name='Vel viste',exact=False).click()
+            page.get_by_role('button',name='CSV',exact=True).wait_for()
+            assert page.get_by_role('button',name='CSV',exact=True).is_enabled()
+            with page.expect_download() as dl:
+                page.get_by_role('button',name='CSV',exact=True).click()
+            assert dl.value.suggested_filename.endswith('.csv')
+            check(page,'werkstatt-export',w,h)
+            page.get_by_role('button',name='Planimport',exact=True).click()
+            page.get_by_role('textbox',name='Planfilinnhald').fill('week;day;title;wod;minutes;kind\n1;1;Grunnstyrke;;45;training')
+            page.get_by_role('button',name='Kontroller plan',exact=True).click()
+            page.get_by_role('button',name='Lagra ny planmal',exact=True).wait_for()
+            assert page.get_by_role('button',name='Lagra ny planmal',exact=True).is_disabled()
+            page.get_by_role('checkbox',name='Eg har kontrollert',exact=False).check()
+            assert page.get_by_role('button',name='Lagra ny planmal',exact=True).is_enabled()
+            check(page,'werkstatt-plan-review',w,h)
+            page.get_by_role('button',name='LIBRARIUM',exact=True).click()
+            page.get_by_role('heading',name='LIBRARIUM · øvingsbank').wait_for()
+            check(page,'werkstatt-librarium',w,h)
+            page.get_by_role('button',name='EXPORTWERK',exact=True).click()
+            page.get_by_role('heading',name='EXPORTWERK 49 · eigne treningsdata').wait_for()
+            check(page,'werkstatt-exportwerk',w,h)
+            page.get_by_role('button',name='Oppvarming',exact=True).click()
+            page.get_by_role('button',name='Panzer Mobility',exact=False).wait_for()
+            assert page.get_by_role('button',name='Blitz Herz',exact=False).is_visible()
+            check(page,'werkstatt-warmups',w,h)
+            assert not errors,errors
+        except Exception as error:
+            failures.append(f'werkstatt {w}x{h}: {error}')
+        finally:
+            if page:page.close()
+            ctx.close()
     for w,h in sizes:
         context=browser.new_context(viewport={"width":w,"height":h},has_touch=True,is_mobile=w<600,device_scale_factor=1,locale="nn-NO",color_scheme="dark",reduced_motion="reduce")
         context.route("**/*",lambda route:route.continue_() if route.request.url.startswith(BASE) else route.abort())
@@ -78,6 +119,7 @@ with sync_playwright() as pw:
                     page.get_by_role("button",name="Samspel",exact=True).tap()
                     panel=page.get_by_role("region",name="Samspel")
                     panel.get_by_role("combobox",name="Samarbeidsmal").select_option("legacy")
+                    panel.get_by_role("checkbox",name="Parallelt arbeid med rollebyte").check()
                     panel.get_by_label("Tal utøvarar").select_option("4")
                     panel.get_by_role("checkbox",name="Separate arbeidsstasjonar",exact=False).check()
                     stations=panel.locator("fieldset")
@@ -134,10 +176,14 @@ with sync_playwright() as pw:
                     calendar=page.get_by_role("region",name="Min timeplan")
                     calendar.wait_for()
                     agenda=calendar.locator(".gg-cal-agenda")
-                    ready=agenda.locator("article").filter(has=page.get_by_text("Klar programøkt",exact=True))
-                    locked=agenda.locator("article").filter(has=page.get_by_text("Låst programøkt",exact=True))
-                    direct=agenda.locator("article").filter(has=page.get_by_text("Tildelt kalender-WOD",exact=True))
+                    # Match the exact event heading, not explanatory text in other cards.
+                    ready=agenda.locator("article").filter(has=page.locator("strong").and_(page.get_by_text("Klar programøkt",exact=True)))
+                    locked=agenda.locator("article").filter(has=page.locator("strong").and_(page.get_by_text("Låst programøkt",exact=True)))
+                    direct=agenda.locator("article").filter(has=page.locator("strong").and_(page.get_by_text("Tildelt kalender-WOD",exact=True)))
                     ready.wait_for()
+                    locked.wait_for()
+                    direct.wait_for()
+                    assert ready.count()==locked.count()==direct.count()==1
                     assert "17:15" in ready.inner_text()
                     assert "18:30" in locked.inner_text()
                     assert "16:30" in direct.inner_text()
@@ -162,8 +208,21 @@ with sync_playwright() as pw:
                     date=today.get_by_role("button",name="Legg til økt",exact=False).get_attribute("aria-label").split()[-1]
                     today.get_by_role("button",name="Legg til økt",exact=False).tap()
                     dialog=page.get_by_role("dialog",name="Tildel WOD til",exact=False)
-                    dialog.locator(".wod-picker-option").first.tap()
-                    dialog.get_by_role("button",name="Bruk val (1)",exact=True).tap()
+                    # Actual schedule dialog with app bottom navigation present.
+                    assert dialog.evaluate("e=>e.parentElement.parentElement===document.body")
+                    rows=dialog.locator(".wod-picker-option")
+                    rows.first.wait_for()
+                    assert not rows.evaluate_all("""rows=>rows.flatMap((row,i)=>{
+                      const box=row.getBoundingClientRect(), main=row.querySelector('.wod-picker-option-main').getBoundingClientRect(), next=rows[i+1]?.getBoundingClientRect();
+                      return main.bottom>box.bottom+1||main.top<box.top-1||next&&box.bottom>next.top+1?[row.textContent]:[]
+                    })""")
+                    assert dialog.get_by_role("button",name="Bruk val (0)",exact=True).is_disabled()
+                    rows.first.tap()
+                    action=dialog.get_by_role("button",name="Bruk val (1)",exact=True)
+                    action.scroll_into_view_if_needed()
+                    assert action.evaluate("""e=>{const r=e.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;return y>=0&&y<innerHeight&&e.contains(document.elementFromPoint(x,y))}""")
+                    check(page,"pt-schedule-picker-selected",w,h)
+                    action.tap()
                     assert dialog.get_by_label("Tildelingstype").input_value()=="plan"
                     assert dialog.locator('input[type=date]').input_value()==date
                     dialog.locator('input[type=time]').fill("17:15")
