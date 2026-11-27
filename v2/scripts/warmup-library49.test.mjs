@@ -31,7 +31,7 @@ test('all six library warmups become Del 0 without modifying their source or mai
    assert.equal(compositePartLabel(all,i),'0.'+(i+1))
    assert.ok(compositeTimerConfig({...b,items:prepared.items.filter(row=>row.block_id===b.id)}).timerSettings.duration_seconds>0)
   }
-  assert.equal(compositeTimerConfig({...main,items:mainItems}).schema?.wod_engine?.collaboration??main.collaboration,'synchronized')
+  assert.equal(compositeTimerConfig({...main,items:mainItems}).timerSettings.workout_schema.wod_engine.collaboration,'synchronized')
   assert.equal(JSON.stringify(wod),before)
  }
 })
