@@ -279,3 +279,30 @@ Verification: 31 isolated export assertions across 4 tests, 146 isolated warmup 
 
 ## 2026-11-27 – GW01.07: PT entry, inventory and isolated browser regression reconciliation
 Start 867385d9, production 0a7a1c54 verified unchanged. App ordinary PT routes (home, plan, timetable, drift/admin and quick menu) now use clearPTDeepLink/preparePTEntry or openPTClientWorkspace, retaining Synchron, role and training navigation boundaries; merged member/customer and PT role source regressions and imported unchanged-base production mobile builder and media playback tests (e5a1cd39,f50aa054,57b59f27,cc370f2d,f3e93000). Nine targeted source assertions passed; full suites not run. Lastmeister remains mounted in GarageInventory; protectedMode preserves production review/confirmation, revision CAS and post-write comparison, adds fresh approved admin authorization before write (97b14676); nine source checks passed, no live writes. Imported synthetic Werkstatt fixture, PT dialog browser checks and demo dependency optimization, retaining Gazelle warmup-launch fixture and legacy Samspel selection (75bfb1ce,5cc04cdb,e3eedb0d). Existing read-only Gazelle responsive workflow now includes isolated Tablet Lab build/pointer test and native XLSX reader check, restricted to Gazelle branch (0b0870eb); no deployment permissions or credentials added. No separate workflow or hourly automation created. Native local checkout still fails DNS; broader source-suite adapter attempt hit tool-call limit, not a passing test result. Combined status and PR-filtered workflow query returned 0 statuses and 0 runs; cannot establish push CI outcome. 10 commits, 10 changed paths before ledger. GW01.07 remains open. Next: reconcile production release checks in a non-deploying validation context, review remaining docs/config/SQL without running them, obtain full native regression/build/browser/FIT/XLSX results and fix findings before GW02. No production/DB changes, no publish.
+
+## 2026-11-27 – GW01.07: release guard and isolated artifact verification
+Start 4d1215af; exact production head 0a7a1c54 unchanged. Reconciled exact production release-order validator and workflow (0d86052f,9ff2ccb8), removing obsolete preview/manual and one-shot paths in Gazelle's copy; both production build and deploy now explicitly require production ref, deploy requires explicit manual approval or exact verified release-order commit. No release order file created, no workflow dispatched, no production merge. Preserved read-only schema preflight test, added production guard regressions and four explicit candidate-denial cases (a6a78a7d): five adapted tests / 36 assertions passed, no SQL executed. Shared Tablet Lab artifact checker requires page, JS, CSP and synthetic identity; rejects known project refs, Supabase URLs and potential credentials in lab text incl source maps, does not mistake ordinary main app assets for lab files. Integrated into production artifact check without removing its existing safeguards and added isolated validation step without live credentials, plus regression group (28b14039,9d11c769,f96a8f25,f475351e,5fb1d73f). Two adapted tests / 17 assertions passed against synthetic text fixtures. Native filesystem/JSX/build and actual artifact not tested. Manifest now 63 groups. Reread verified release workflow exact production blob and new helper/manifest. Local git ls-remote retried: DNS failure; Node 22.16.0 available, no full checkout. Combined statuses / PR-filtered workflow results empty; no claim of green CI. 8 commits / 8 changed paths before ledger. Remaining production-only paths classified by path (not yet reviewed in content): 22. Do not import production release order or run any SQL; inspect remaining docs, preflight scripts and workflow configs in read-only mode. GW01.07 stays open pending native build, actual browser/FIT/XLSX/artifact checks and remaining semantic reconciliation. Next bounded task: review remaining production-only evidence and verify pending test coverage / native runner access; do not bypass acceptance. No DB calls, no production changes, no automation.
+
+### Production-only paths at 5fb1d73f (not yet content-reviewed)
+- .github/production-release.json
+- .github/workflows/exportwerk-format-audit.yml
+- .github/workflows/stammordnung-isolated-restore.yml
+- README.md
+- docs/FERTIGSTELLUNG49.md
+- docs/MIGRATION_LINEAGE.md
+- docs/OPERATIONS.md
+- docs/ORDRE006_REHEARSAL.md
+- v2/BIBLIOTHEKAR_AUDIT_2026-11-26.md
+- v2/OPERATION_KLARHEIT.md
+- v2/OPERATION_MEISTERWERK.md
+- v2/PT_PICKER_REVISION_20261126.md
+- v2/README.md
+- v2/STURMKOPF_TUV_RELEASE_GATE.md
+- v2/VOLKSMASCHINE_REIBUNGSLOS_ORDER.md
+- v2/WERKSTATT_PC_COMPANION.md
+- v2/WERKSTATT_TABLET_LAB.md
+- v2/supabase/preflight/bibliothekar_catalogue_audit.sql
+- v2/supabase/preflight/bibliothekar_catalogue_candidate.sql
+- v2/supabase/preflight/ordnung006_fixture.sql
+- v2/supabase/preflight/ordnung006_installed_extra_assertions.sql
+- v2/supabase/preflight/ordnung006_installed_schema_rehearsal.sql
