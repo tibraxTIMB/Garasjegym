@@ -563,6 +563,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  async function save(event,{previewOnly=false,approvedFingerprint=null}={}){
   event.preventDefault();if(officeSaveLock.current)return;setError('');setNotice('')
    if(samspelProblem){setError(samspelProblem);setShowArchitectIssues(true);setSamspelHelp(true);return}
+   if(samspelPairedEmom(samspel)&&selected.some(x=>quickDoseMetricFor(x)||x.repsMode==='amrap'||!(Number(doseForItem(x).reps)>0))){setError('YGIG EMOM krev faste repetisjonar per øving. Vel Engine Swap eller ein annan mal for andre mål.');setWizardStep(3);return}
    if(isTimed&&!samspel&&participation!=='individual'&&collaboration!=='synchronized'){setError('Vel YGIG EMOM, Engine Swap eller Double EMOM under Samspel, eller samstundes arbeid.');setSamspelHelp(true);return}
   if(!selected.length){setError('Legg minst ei øving til WOD-en.');return}
   if(selected.some(x=>x.prep_unlinked&&!x.id)&&!window.confirm('Nokre førebuingsøvingar manglar katalog-ID. Lagra dei som namngjevne oppvarmingsinstruksjonar utan personlege prestasjonsdata?'))return
