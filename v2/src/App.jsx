@@ -29,7 +29,7 @@ import { getAppBaseUrl } from './lib/appBaseUrl.js'
 import { getMembershipGate } from './lib/membershipAccess.js'
 import { restoreWorkoutDraft } from './lib/workoutDraft.js'
 import {synchronRouteIssue} from './lib/synchronRuntime.js'
-import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry} from './lib/synchronPresence.js'
+import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry,canCancelSynchronOpening,synchronSnapshotMatches} from './lib/synchronPresence.js'
 import {parseSynchronInvitation} from './lib/synchronPreparation.js'
 const SynchronLaunch=lazy(()=>import('./components/SynchronLaunch.jsx'))
 import { resolveSimpleMode, displayModePreference } from './lib/memberViewMode.js'
@@ -239,8 +239,8 @@ export default function App({synchronRuntime=null}={}) {
   const localSessionOpen=!!timerSnapshot.sessionOpen||!!(synchronActor&&restoreWorkoutDraft(synchronActor))
   synchronContext.current={actor:synchronActor,runtime:synchronRuntime,localSessionOpen,active,entry:ownedSynchron?synchronEntry:null,presence:remotePresence}
   useEffect(()=>{setSynchronEntry(null);setSynchronSnapshot(null);setSynchronNotice('')},[synchronActor,synchronRuntime])
-  const handleSynchronSnapshot=useCallback(snapshot=>setSynchronSnapshot(old=>{
-    if(!snapshot?.view||!snapshot.sessionId||parseSynchronInvitation(synchronContext.current?.entry?.href)!==snapshot.sessionId)return old
+  const handleSynchronSnapshot=useCallback((snapshot,origin)=>setSynchronSnapshot(old=>{
+    if(!synchronSnapshotMatches(synchronContext.current?.entry,{...origin,snapshot}))return old
     if(old?.sessionId===snapshot.sessionId&&old.revision>snapshot.revision)return old
     if(old?.sessionId===snapshot.sessionId&&old.revision===snapshot.revision&&old.view.phase===snapshot.view.phase&&old.joined===snapshot.joined)return old
     return snapshot
@@ -254,6 +254,14 @@ export default function App({synchronRuntime=null}={}) {
   useEffect(()=>{if(active==='trening')setTrainingVisited(true)},[active])
   useEffect(()=>{if(session?.user?.id&&restoreWorkoutDraft(session.user.id))setTrainingVisited(true)},[session?.user?.id])
   function navigateTo(next){next=synchronNavigation(next,synchronContext.current?.presence);if(!next||next===active)return;setNavigationStack(stack=>[...stack,active].slice(-12));setActive(next)}
+  function cancelSynchronOpening(origin){
+    const ctx=synchronContext.current
+    if(!canCancelSynchronOpening(ctx.entry,ctx.presence,origin))return
+    setSynchronEntry(null);setSynchronSnapshot(null);setSynchronNotice('')
+    // Do not use the old remote-lock redirect when explicitly leaving a
+    // read-only lookup. Keep any actual local workout untouched.
+    setNavigationStack([]);setActive('oversikt')
+  }
   function enterSynchron(href){
     const ctx=synchronContext.current,issue=synchronRouteIssue(ctx.runtime,ctx.actor,{localSessionOpen:ctx.localSessionOpen})
     if(issue||!parseSynchronInvitation(href)){setSynchronNotice(issue||'Ugyldig invitasjon.');return false}
@@ -553,7 +561,7 @@ export default function App({synchronRuntime=null}={}) {
         </section> : null}{simpleMode&&active==='oversikt'&&dailyWod&&<DailyWodStrip wod={dailyWod} date={dailyWod.scheduled_date} onOpen={id=>{setFocusWodId(id);navigateTo('wod')}}/>}
         {active==='oversikt'&&afterActionMember===session.user.id&&<section className="content-card training-content" aria-label="Etter økta"><div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}><strong role="status">Økta er lagra</strong><button type="button" className="text-button" onClick={()=>setAfterActionMember(null)}>Lukk</button></div><div className="customer-home-quick-actions"><button type="button" onClick={()=>{setAfterActionMember(null);navigateTo('mi-historikk')}}>Treningslogg</button><button type="button" onClick={()=>{setAfterActionMember(null);navigateTo('kaffi')}}><Coffee size={17}/> Kaffibar</button><button type="button" onClick={()=>{setAfterActionMember(null);setScheduleTab('booking');navigateTo('timeplan')}}>Neste gruppetime</button></div></section>}
         <Suspense fallback={<section className="content-card training-content" role="status" aria-live="polite"><div className="training-state">Lastar modul …</div></section>}>
-        {ownedSynchron&&!localSessionOpen&&<section style={{display:active==='synchron-session'?undefined:'none'}} aria-hidden={active!=='synchron-session'}><SynchronLaunch key={synchronActor+':'+synchronEntry.href} runtime={synchronRuntime} href={synchronEntry.href} onSnapshot={handleSynchronSnapshot} onBack={()=>navigateBack('oversikt')}/></section>}
+        {ownedSynchron&&!localSessionOpen&&<section style={{display:active==='synchron-session'?undefined:'none'}} aria-hidden={active!=='synchron-session'}><SynchronLaunch key={synchronActor+':'+synchronEntry.href} runtime={synchronRuntime} href={synchronEntry.href} onSnapshot={handleSynchronSnapshot} onCancelOpening={cancelSynchronOpening} onBack={()=>navigateBack('oversikt')}/></section>}
         {(trainingVisited||active==='trening')&&<section className="content-card training-content workout-entry" style={{display:active==='trening'?undefined:'none'}} aria-hidden={active!=='trening'}>
           <Training key={session.user.id} memberId={session.user.id} visible={active==='trening'} onBackground={()=>navigateRoot('oversikt')} onOpenWodLibrary={()=>{setFocusWodId(null);navigateTo('wod')}} onOpenTrainingPlan={openMyTraining} onOpenSchedule={()=>{setScheduleTab('mine');navigateTo('timeplan')}} onOpenDailyWod={id=>{setFocusWodId(id);navigateTo('wod')}} onOpenHistory={()=>navigateTo('mi-historikk')} onOpenPR={()=>navigateTo('pr-senter')} onSaved={({victories=[]}={})=>{setWorkoutRevision(value=>value+1);setAfterActionMember(session.user.id);if(!victories.length)navigateBack('oversikt')}} onDiscard={()=>navigateBack('oversikt')} onTimerSnapshot={handleTimerSnapshot} quickManualEntry={!remoteLocked&&quickManualEntry} onQuickManualEntryConsumed={()=>setQuickManualEntry(false)} launchWodId={remoteLocked?null:launchWodId} launchClassSessionId={remoteLocked?null:launchClassSessionId} launchClassResult={launchClassResult} launchAssignmentId={remoteLocked?null:launchAssignmentId} launchProgramSessionId={remoteLocked?null:launchProgramSessionId} launchProgramSessionTitle={launchProgramSessionTitle} onLaunchConsumed={() => { setLaunchWodId(null); setLaunchClassSessionId(null); setLaunchClassResult(false); setLaunchAssignmentId(null); setLaunchProgramSessionId(null); setLaunchProgramSessionTitle('') }} simpleMode={simpleMode} quickStart={!remoteLocked&&quickStart} onQuickStartConsumed={()=>setQuickStart(false)} />
         </section>}
