@@ -1,3 +1,4 @@
+import {synchronWorkTimeline} from './synchronDisposition.js'
 import {synchronObservedExposure} from './synchronAnatomy.js'
 import {synchronRelativeLoad} from './synchronStrength.js'
 import {synchronEstimate,synchronAllocate,synchronAssignedTime} from './synchron.js'
@@ -47,7 +48,7 @@ export function synchronReviewProjection(state,actorId){
   return {movementId:m.movementId,name:movement.name||movement.exerciseId,unit:m.unit,teamActual:m.teamActual,reconciled:m.reconciled,conflict:m.conflict,
    assignedSeconds:r.assignedSeconds,segments:r.segments,value:r.value,quality:r.quality,basis:r.basis,model:r.input?null:r.model??null,explicitUnknown:r.input?.quality==='unknown',prEligible:false}
  })
- return clone({revision:state.revision,rows,observedExposure:synchronObservedExposure(state,actorId),approved:state.review.approved.includes(actorId),approvedCount:state.review.approved.length,participantCount:state.plan.members.length,
+ return clone({revision:state.revision,rows,observedExposure:synchronObservedExposure(state,actorId),workTimeline:synchronWorkTimeline(state,actorId),approved:state.review.approved.includes(actorId),approvedCount:state.review.approved.length,participantCount:state.plan.members.length,
   sealed:!!state.seal,canApprove:rows.length>0&&rows.every(r=>!r.conflict&&(r.teamActual===null?r.value!==null||r.explicitUnknown:r.reconciled===true)),prEligible:false})
 }
 export function applySynchronReview(state,cmd,{actorId,at}={}){
