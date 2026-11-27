@@ -3,7 +3,7 @@ import AnatomyEvidence from './AnatomyEvidence.jsx'
 import React,{useState} from 'react'
 const units={reps:'reps',seconds:'sek',meters:'m',calories:'cal'}
 const qualities={confirmed:'Sjølvrapportert faktisk mengd',estimated:'Estimert',unknown:'Ukjend'}
-export default function SynchronResultReview({review,controls,onAction}){
+export default function SynchronResultReview({review,controls,onAction,onSave=null,saveReceipt=null,saveIssue=''}){
  const [draft,setDraft]=useState(null)
  const current=draft&&review.rows.find(r=>r.movementId===draft.id)
  const valid=draft&&draft.revision===review.revision
@@ -32,6 +32,6 @@ export default function SynchronResultReview({review,controls,onAction}){
   <small>{review.approvedCount}/{review.participantCount} godkjent · {review.sealed?'Resultatfordelinga er låst for lagring.':'Endringar krev ny godkjenning.'}</small>
   <button className="primary-button" disabled={!controls.canApprove||!!draft} onClick={()=>onAction('review_approve')}>{review.approved?'Godkjent':'Godkjenn mitt resultat'}</button>
   {!review.canApprove&&<small>Kontroller manglande mengder eller avvik i fellesresultatet først.</small>}
-  <small>Utviklingstest – ingen treningslogg blir lagra.</small>
+  {typeof onSave==='function'?<><button type="button" className="primary-button" disabled={!controls.canSave||!!draft} onClick={onSave}>{saveReceipt?'Kontroller lagring':'Lagra mitt resultat'}</button>{!controls.canSave&&review.approvedCount<review.participantCount&&<small>Alle må godkjenna før du kan lagra.</small>}{saveIssue&&<p role="alert">{saveIssue}</p>}{saveReceipt&&<p role="status">Lagring stadfesta i treningshistorikken.</p>}</>:<small>Utviklingstest – ingen treningslogg blir lagra.</small>}
  </section>
 }

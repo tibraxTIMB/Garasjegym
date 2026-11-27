@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import {createSynchronSession} from '../src/lib/synchron.js'
 import {createSynchronGateway} from '../src/lib/synchronTransport.js'
-import {acceptSynchronSnapshot,synchronControls,submitSynchronAction} from '../src/lib/synchronClient.js'
+import {acceptSynchronSnapshot,synchronControls,submitSynchronAction,submitSynchronSave} from '../src/lib/synchronClient.js'
 const plan={id:'demo',leaderId:'a',members:['a','b'],movements:[{id:'step',exerciseId:'step',unit:'reps',target:100,method:'estimate',collaboration:'relay',doses:{a:{variant:'50cm',loadKg:null},b:{variant:'40cm',loadKg:null}}}]}
 let state=createSynchronSession(plan),ms=0,online=true,sent=0
 const gateway=createSynchronGateway({authenticate:async key=>key,read:async()=>state,now:()=>ms,compareAndSwap:async(id,rev,next)=>{if(rev!==state.revision)return false;state=next;return true}})
@@ -66,3 +66,28 @@ for(const bad of [null,{...b.snapshot,sessionId:'other'},{...b.snapshot,revision
  const r=await submitSynchronAction(a,'review_update',{movementId:'step',quality:'estimated',value:40},'bad-response',{...adapter('a'),read:async()=>({snapshot:a.snapshot}),command:async()=>({snapshot:bad})})
  assert.ok(r.issue);assert.equal(r.uncertain,true);assert.equal(r.record.snapshot.sessionId,a.snapshot.sessionId)
 }
+
+const notApproved=await record('a')
+let saves=0
+const saveAdapter={...adapter('a'),saveResult:async revision=>{saves++;assert.equal(revision,ready.snapshot.revision);return {saved:true,workoutId:'log-a'}}}
+assert.equal(synchronControls(notApproved,{now:ms}).canSave,false)
+assert.ok((await submitSynchronSave(notApproved,saveAdapter)).issue)
+assert.equal(saves,0)
+a=(await submitSynchronAction(notApproved,'review_approve',{},'approve-a',adapter('a'))).record
+const ready=await record('a')
+assert.equal(synchronControls(ready,{now:ms}).canSave,true)
+assert.equal(synchronControls(ready,{now:ms,online:false}).canSave,false)
+assert.equal(synchronControls(ready,{now:ms,busy:true}).canSave,false)
+const saved=await submitSynchronSave(ready,saveAdapter)
+assert.equal(saved.receipt.workoutId,'log-a')
+assert.equal(saves,1)
+for(const response of [null,{saved:true},{saved:true,workoutId:''},{saved:false,workoutId:'fake'},{issue:'denied',saved:true,workoutId:'fake'}]){
+ const r=await submitSynchronSave(ready,{...saveAdapter,saveResult:async()=>response})
+ assert.ok(r.issue);assert.equal(r.uncertain,true);assert.equal(r.receipt,undefined)
+}
+const denied=await submitSynchronSave(ready,{...saveAdapter,read:async()=>({issue:'denied'})})
+assert.equal(denied.uncertain,true);assert.equal(saves,1)
+const changed=await submitSynchronSave(ready,{...saveAdapter,read:async()=>({snapshot:{...ready.snapshot,revision:ready.snapshot.revision+1}})})
+assert.ok(changed.issue);assert.equal(saves,1)
+const failed=await submitSynchronSave(ready,{...saveAdapter,saveResult:async()=>{throw Error('network')}})
+assert.equal(failed.uncertain,true);assert.equal(failed.receipt,undefined)

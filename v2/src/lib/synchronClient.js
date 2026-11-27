@@ -23,7 +23,8 @@ export function synchronControls(record,{now,online=true,busy=false}={}){
   canLoad:!locked&&display.phase==='running'&&snapshot.joined,
   canCalibrate:!locked&&display.phase==='finished'&&snapshot.leader&&snapshot.calibration?.sealed===false&&snapshot.calibration.rows.length>0,
   canReview:!locked&&display.phase==='finished'&&!!snapshot.review&&!snapshot.review.sealed,
-  canApprove:!locked&&display.phase==='finished'&&!!snapshot.review?.canApprove&&!snapshot.review.approved&&!snapshot.review.sealed}
+  canApprove:!locked&&display.phase==='finished'&&!!snapshot.review?.canApprove&&!snapshot.review.approved&&!snapshot.review.sealed,
+  canSave:!locked&&display.phase==='finished'&&snapshot.isMember===true&&snapshot.review?.approved===true&&snapshot.review.canApprove===true&&Number.isSafeInteger(snapshot.review.participantCount)&&snapshot.review.participantCount>=2&&snapshot.review.approvedCount===snapshot.review.participantCount}
 }
 export async function submitSynchronAction(record,type,fields,id,{read,command,now,online}){
  const controls=synchronControls(record,{now:now(),online:online()})
@@ -32,9 +33,10 @@ export async function submitSynchronAction(record,type,fields,id,{read,command,n
  let latest=record
  try{
   const start=now(),fresh=await read()
-  if(fresh.issue||!fresh.snapshot)return {record,issue:fresh.issue||'Økta er ikkje tilgjengeleg.'}
+  if(fresh.issue||!fresh.snapshot)return {record,issue:fresh.issue||'Økta er ikkje tilgjengeleg.',uncertain:true}
   latest=acceptSynchronSnapshot(record,fresh.snapshot,now(),start)
-  if(latest===record||latest.snapshot.revision!==record.snapshot.revision||latest.snapshot.view.stage!==record.snapshot.view.stage||latest.snapshot.view.phase!==record.snapshot.view.phase)return {record:latest,issue:'Økta er endra. Kontroller før nytt trykk.'}
+  if(latest===record)return {record,issue:'Øktdata kunne ikkje stadfestast.',uncertain:true}
+  if(latest.snapshot.revision!==record.snapshot.revision||latest.snapshot.view.stage!==record.snapshot.view.stage||latest.snapshot.view.phase!==record.snapshot.view.phase)return {record:latest,issue:'Økta er endra. Kontroller før nytt trykk.'}
   const current=synchronControls(latest,{now:now(),online:online()})
   if(!current?.[key])return {record:latest,issue:'Handlinga er ikkje lenger tilgjengeleg.'}
   const request=synchronActionRequest(latest.snapshot,type,fields,id)
@@ -44,4 +46,21 @@ export async function submitSynchronAction(record,type,fields,id,{read,command,n
   if(updated===latest)return {record:latest,issue:result.issue||'Handlinga er ikkje stadfesta. Oppdater økta.',uncertain:true}
   return {record:updated,issue:result.issue||null}
  }catch{return {record:latest,issue:'Mista kontakt. Kontroller økta før du prøver på nytt.',uncertain:true}}
+}
+
+// Saving is an explicit separate operation; never replay an uncertain mutation.
+export async function submitSynchronSave(record,{read,saveResult,now,online}){
+ const issue='Lagringa er ikkje stadfesta. Kontroller økta og prøv same lagring att.'
+ if(typeof saveResult!=='function'||!synchronControls(record,{now:now(),online:online()})?.canSave)return {record,issue:'Resultatet er ikkje klart for lagring.'}
+ let latest=record
+ try{
+  const started=now(),fresh=await read()
+  if(fresh?.issue||!fresh?.snapshot)return {record,issue,uncertain:true}
+  latest=acceptSynchronSnapshot(record,fresh.snapshot,now(),started)
+  if(latest===record)return {record,issue,uncertain:true}
+  if(latest.snapshot.revision!==record.snapshot.revision||!synchronControls(latest,{now:now(),online:online()})?.canSave)return {record:latest,issue:'Resultatet er endra. Kontroller før nytt trykk.'}
+  const result=await saveResult(latest.snapshot.revision)
+  if(result?.issue||result?.saved!==true||typeof result.workoutId!=='string'||!result.workoutId.trim()||result.workoutId.length>128)return {record:latest,issue,uncertain:true}
+  return {record:latest,receipt:{workoutId:result.workoutId,duplicate:result.duplicate===true}}
+ }catch{return {record:latest,issue,uncertain:true}}
 }

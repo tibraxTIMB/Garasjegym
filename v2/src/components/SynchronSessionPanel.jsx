@@ -2,13 +2,14 @@ import React,{useEffect,useRef,useState} from 'react'
 import TimerClockFace from './TimerClockFace.jsx'
 import SynchronResultReview from './SynchronResultReview.jsx'
 import SynchronCalibrationReview from './SynchronCalibrationReview.jsx'
-import {acceptSynchronSnapshot,synchronControls,submitSynchronAction} from '../lib/synchronClient.js'
+import {acceptSynchronSnapshot,synchronControls,submitSynchronAction,submitSynchronSave} from '../lib/synchronClient.js'
 import './synchron-preview.css'
 
 const unitLabel={reps:'reps',seconds:'sek',meters:'m',calories:'cal'}
 // Controlled view: transport is supplied by the caller; no local workout/log writes.
 export default function SynchronSessionPanel({adapter,label,online=true,onSnapshot}){
  const [record,setRecord]=useState(null),[tick,setTick]=useState(()=>performance.now()),[issue,setIssue]=useState(''),[busy,setBusy]=useState(false),[contactLost,setContactLost]=useState(true),[actual,setActual]=useState(''),[load,setLoad]=useState(''),[review,setReview]=useState(null)
+ const [saveReceipt,setSaveReceipt]=useState(null),[saveIssue,setSaveIssue]=useState('')
  const recordRef=useRef(null),pending=useRef(false),generation=useRef(0),readPending=useRef(false),onlineRef=useRef(online)
  onlineRef.current=online
  function publish(next){recordRef.current=next;setRecord(next);onSnapshot?.(next?.snapshot)}
@@ -39,6 +40,18 @@ export default function SynchronSessionPanel({adapter,label,online=true,onSnapsh
    if(r.uncertain)setContactLost(true)
    if(r.issue)setIssue(r.issue)
    else {setReview(null);setActual('');if(type==='load')setLoad('')}
+  }finally{pending.current=false;setBusy(false)}
+ }
+ async function saveOwn(){
+  if(pending.current||!onlineRef.current||contactLost||!c?.canSave||typeof adapter.saveResult!=='function')return
+  pending.current=true;const seq=++generation.current;setBusy(true);setSaveIssue('');setSaveReceipt(null)
+  try{
+   const result=await submitSynchronSave(recordRef.current,{read:adapter.read,saveResult:adapter.saveResult,now:()=>performance.now(),online:()=>onlineRef.current})
+   if(seq!==generation.current)return
+   if(result.record)publish(result.record)
+   if(result.uncertain)setContactLost(true)
+   if(result.issue)setSaveIssue(result.issue)
+   else if(result.receipt)setSaveReceipt(result.receipt)
   }finally{pending.current=false;setBusy(false)}
  }
  if(!s||!c||!m)return <section className="gg-synchron-panel engine-timer"><strong>{label}</strong><p role="status">{issue||'Koplar til økta …'}</p></section>
@@ -73,6 +86,6 @@ export default function SynchronSessionPanel({adapter,label,online=true,onSnapsh
   </div>}
   {reviewType&&s.leader&&<section className="gg-sync-review" aria-label="Stadfest lagresultat"><strong>{reviewType==='advance'?'Neste øving':'Avslutt økta'} · faktisk lagresultat</strong><label>{m.name} ({unitLabel[m.unit]})<input type="number" min="0" max="100000" step="1" inputMode="numeric" value={actual} onChange={e=>setActual(e.target.value)} placeholder="Faktisk mengd"/></label><div className="gg-sync-actions"><button className="primary-button" disabled={!canSubmit||c.actionsLocked||!(reviewType==='advance'?c.canAdvance:c.canFinish)} onClick={()=>act(reviewType,{actual:Number(actual),...(reviewType==='finish'&&c.stage<s.movements.length-1?{abort:true}:{})})}>Stadfest</button><button className="secondary-button" disabled={c.actionsLocked||!(reviewType==='advance'?c.canAdvance:c.canFinish)} onClick={()=>act(reviewType,{actual:null,...(reviewType==='finish'&&c.stage<s.movements.length-1?{abort:true}:{})})}>Ukjend mengd</button><button className="secondary-button" onClick={()=>setReview(null)}>Tilbake</button></div><small>Planlagt mål blir aldri automatisk registrert som utført.</small></section>}
   {c.phase==='running'&&s.isMember&&<details><summary>Endra eiga belastning</summary><label>Ny vekt (kg)<input type="number" min="0" step="any" inputMode="decimal" value={load} onChange={e=>setLoad(e.target.value)}/></label><button className="secondary-button" disabled={!c.canLoad||load.trim()===''||!Number.isFinite(Number(load))||Number(load)<0} onClick={()=>act('load',{loadKg:Number(load)})}>Stadfest ny vekt</button></details>}
-  {c.phase==='finished'&&<><section><strong>Lagresultat · ikkje lagra i treningslogg</strong>{s.movements.map(x=><p key={x.id}>{x.name}: {s.totals[x.id]?.actual??'Ikkje registrert'} {unitLabel[x.unit]}</p>)}</section>{s.review&&<SynchronResultReview review={s.review} controls={c} onAction={act}/>} {s.calibration&&<SynchronCalibrationReview calibration={s.calibration} revision={s.revision} controls={c} onAction={act}/>}</>}
+  {c.phase==='finished'&&<><section><strong>Lagresultat</strong>{s.movements.map(x=><p key={x.id}>{x.name}: {s.totals[x.id]?.actual??'Ikkje registrert'} {unitLabel[x.unit]}</p>)}</section>{s.review&&<SynchronResultReview review={s.review} controls={c} onAction={act} onSave={typeof adapter.saveResult==='function'?saveOwn:null} saveReceipt={saveReceipt} saveIssue={saveIssue}/>} {s.calibration&&<SynchronCalibrationReview calibration={s.calibration} revision={s.revision} controls={c} onAction={act}/>}</>}
  </section>
 }
