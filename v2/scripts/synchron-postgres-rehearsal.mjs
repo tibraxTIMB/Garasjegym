@@ -87,7 +87,12 @@ assert.ok((await stale.create(request(a,b,sid))).issue)
 assert.equal(revokedBetweenChecks,true)
 assert.equal(await read('SELECT count(*) FROM gg_synchron_private.sessions'),0)
 await psql('INSERT INTO auth.sessions(id,user_id) VALUES($1::uuid,$2::uuid)',[sessionIds[a],a])
-assert.equal((await A.create(request(a,b,sid))).sessionId,sid)
+// The host supplies JSON text, not a driver-native JSON object. Ensure
+// that parameter inference cannot turn serialized state into a JSON string.
+const probe=await sessionQuery({actorId:a,sessionId:sessionIds[a]},'SELECT jsonb_typeof($1::text::jsonb) AS value',[JSON.stringify({fixture:true})])
+assert.equal(probe.rows[0].value,'object')
+const created=await A.create(request(a,b,sid))
+assert.equal(created.sessionId,sid,JSON.stringify(created))
 assert.equal((await A.create(request(a,b,sid))).duplicate,true)
 assert.equal((await C.create(request(c,b,sid2))).sessionId,sid2)
 assert.equal(await read('SELECT count(*) FROM gg_synchron_private.outbox'),2)
