@@ -1,3 +1,4 @@
+import {validSynchronRelativeLoad} from './synchronStrength.js'
 import {synchronReviewProjection} from './synchronReview.js'
 import {synchronClock} from './synchron.js'
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -31,5 +32,5 @@ export function prepareSynchronLog(state,memberId,{expectedRevision,saveToken,wo
 export function synchronHistoryRows(log){
  const data=log?.result_data?.synchron_result
  if(data?.version!==1||data.approved!==true||!Array.isArray(data.rows))return []
- return data.rows.filter(r=>typeof r?.exercise_name==='string'&&units.has(r.unit)&&qualities.has(r.quality)&&finite(r.assigned_seconds)&&(r.quality==='unknown'?r.amount===null:Number.isSafeInteger(r.amount)&&r.amount>=0)).map(r=>({exercise_name:r.exercise_name,unit:r.unit,amount:r.amount,quality:r.quality,assigned_seconds:r.assigned_seconds,team_actual:Number.isSafeInteger(r.team_actual)&&r.team_actual>=0?r.team_actual:null,segments:Array.isArray(r.segments)?r.segments.filter(s=>finite(s?.seconds)&&typeof s.variant==='string'&&(s.loadKg===null||finite(s.loadKg))).map(s=>({seconds:s.seconds,variant:s.variant,loadKg:s.loadKg})):[]}))
+ return data.rows.filter(r=>typeof r?.exercise_name==='string'&&units.has(r.unit)&&qualities.has(r.quality)&&finite(r.assigned_seconds)&&(r.quality==='unknown'?r.amount===null:Number.isSafeInteger(r.amount)&&r.amount>=0)).map(r=>({exercise_name:r.exercise_name,unit:r.unit,amount:r.amount,quality:r.quality,assigned_seconds:r.assigned_seconds,team_actual:Number.isSafeInteger(r.team_actual)&&r.team_actual>=0?r.team_actual:null,segments:Array.isArray(r.segments)?r.segments.filter(s=>finite(s?.seconds)&&typeof s.variant==='string'&&(s.loadKg===null||finite(s.loadKg))).map(s=>({seconds:s.seconds,variant:s.variant,loadKg:s.loadKg,...(validSynchronRelativeLoad(s.relativeLoad,s.loadKg)?{relativeLoad:validSynchronRelativeLoad(s.relativeLoad,s.loadKg)}:{})})):[]}))
 }
