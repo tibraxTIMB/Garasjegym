@@ -360,3 +360,6 @@ At 024d66de native 65/65 and HTTP/SQLite passed. Added private PostgreSQL candid
 
 ## GW03/04 sealed result writer
 At 9f3a2d54 all five native CI procedures green (PG17 46027630463). Added private own-result writer and opt-in HTTP save operation, actual PG17 fixture coverage of approvals, concurrent retries, transaction rollback, score isolation, deletion handling and grants. New CI pending. Production unchanged; real schema verification, dedicated server role, auth, outbox delivery, device and backup gates remain open.
+
+## GW03 notification delivery
+At fb91b4cd all five native runs passed (PG17 46031701105 confirms sealed result receipts). Atomic private outbox-to-existing-PT-inbox trigger and disposable PostgreSQL verification added; real notification insert rollback and replay/read preservation included. New CI pending at commit. No phone push implied. Production unchanged; restricted production role/auth, physical devices, original acceptance journeys and actual backup/restore still outstanding.

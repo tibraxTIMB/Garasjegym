@@ -15,3 +15,15 @@ CREATE TABLE public.workout_logs(
 );
 CREATE UNIQUE INDEX workout_logs_member_save_token_uidx ON public.workout_logs(member_id,save_token) WHERE save_token IS NOT NULL;
 ALTER TABLE public.workout_logs ENABLE ROW LEVEL SECURITY;
+
+-- Existing notification-center column contract, synthetic fixture only.
+CREATE TABLE public.notifications(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),recipient_id uuid NOT NULL REFERENCES public.profiles(id),
+ title text NOT NULL,body text NOT NULL,category text NOT NULL CHECK(category IN ('general','coffee','booking','pt','community','system')),
+ href text,is_read boolean NOT NULL DEFAULT false,created_at timestamptz NOT NULL DEFAULT now(),
+ priority text NOT NULL DEFAULT 'normal' CHECK(priority IN ('low','normal','high','urgent')),
+ requires_ack boolean NOT NULL DEFAULT false,requires_action boolean NOT NULL DEFAULT false,
+ status text NOT NULL DEFAULT 'open' CHECK(status IN ('open','resolved','dismissed')),dedupe_key text
+);
+CREATE UNIQUE INDEX notifications_recipient_dedupe_idx ON public.notifications(recipient_id,dedupe_key) WHERE dedupe_key IS NOT NULL;
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
