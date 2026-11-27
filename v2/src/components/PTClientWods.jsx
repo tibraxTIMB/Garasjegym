@@ -14,7 +14,7 @@ const shortDate=value=>value?new Date(value).toLocaleDateString('nn-NO',{day:'nu
 /** PTs can see only explicit PT WOD assignments and their own PT program sessions.
  * No workout_logs query: a customer's unrelated private training remains private.
  */
-export default function PTClientWods({clientId,clientName='',clientRank=null,mode='full',planSessions=[],wods=[],initialReview=null,assignRequest=null,onAssignClosed=()=>{},onAssign=null,revisionToken=0,onOpenFull=()=>{},onOpenReview=()=>{},onReviewClosed=()=>{}}){
+export default function PTClientWods({clientId,clientName='',clientRank=null,mode='full',planSessions=[],wods=[],initialReview=null,assignRequest=null,onAssignClosed=()=>{},onAssign=null,revisionToken=0,onOpenFull=()=>{},onOpenReview=()=>{},onReviewClosed=()=>{},onRecordCalibration=null}){
  const [assignments,setAssignments]=useState([])
  const [loading,setLoading]=useState(false)
  const [error,setError]=useState('')
@@ -78,7 +78,7 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
  if(mode==='full'&&openedReview&&!loading&&(selectedAssignment||selectedProgram)){
   const a=selectedAssignment,p=selectedProgram
   return <section className="ptfollow ptfollow-fullreview" aria-label={'PT-resultat for '+clientName}>
-   <PTWodReview key={openedReview} assignmentId={a?.id||null} programSessionId={p?.id||null}
+   <PTWodReview onRecordCalibration={onRecordCalibration} key={openedReview} assignmentId={a?.id||null} programSessionId={p?.id||null}
     clientName={clientName} clientRank={clientRank}
     wodName={a?.wods?.name||p?.wodName||'Tildelt WOD'}
     prescriptionSchema={p?savedPlanPrescription(p):null}
