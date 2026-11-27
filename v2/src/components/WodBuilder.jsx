@@ -20,6 +20,7 @@ import {addWodSortOrder,getWodSchemaItems,moveWodItemByKey,sortWodItems} from '.
 import {COMPLEX_EXERCISES,formatComplexSequence} from '../lib/wodComplexes.js'
 import {fixedIntervalSummary,fixedIntervalLabel,intervalAdvice,clockLabel,isFixedInterval} from '../lib/wodFormatAdvisor.js'
 import { createWodEngineConfig, buildLegacyCompatibleBlock, normalizeWodEngine, scoreForWodFormat, PARTICIPATION_MODES, COLLABORATION_MODES, SCORE_TYPES, isEmomFormat, emomIntervalSeconds, emomDisplayLabel } from '../lib/wodEngine.js'
+import {collaborationOptions} from '../lib/partnerResultFlow.js'
 import { getFixedSlotTimerState } from '../lib/timerClock.js'
 import { wodFormatNeedsTime } from '../lib/wodTimeDial.js'
 import { applySharedReps, hasIndependentReps } from '../lib/wodReps.js'
@@ -540,6 +541,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  async function save(event,{previewOnly=false,approvedFingerprint=null}={}){
   event.preventDefault();if(officeSaveLock.current)return;setError('');setNotice('')
    if(samspelProblem){setError(samspelProblem);setShowArchitectIssues(true);setSamspelHelp(true);return}
+   if(!samspel&&participation!=='individual'&&!collaborationOptions(format,participation).some(x=>x.value===collaboration)){setError('Vel ei gjennomføringsform som passar formatet.');setWizardStep(3);return}
   if(!selected.length){setError('Legg minst ei øving til WOD-en.');return}
   if(isCoupletTriplet&&combinationMode!=='Open'&&(!Number.isInteger(Number(timeCap))||Number(timeCap)<1||Number(timeCap)>300)){setError(`${format} i ${combinationMode} krev gyldig tidsramme 1–300 minutt.`);setWizardStep(1);return}
   if(isComposite){const issue=validateCompositeBlocks(compositeBlocks,selected);if(issue){setError(issue);setWizardStep(2);return}}
@@ -699,10 +701,12 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   </section>}
    <nav className="gg-architect-parts" aria-label="Delar i WOD-en">{architectParts.map(p=><button type="button" key={p.id} className={'gg-arch-tone-'+p.tone+(p.id===activeArchitectPart?.id?' active':'')} aria-pressed={p.id===activeArchitectPart?.id} onClick={()=>{setActiveBlockId(p.id);setEditingSelectedKey(null);setWizardStep(3)}}><b>{String.fromCharCode(65+p.index)}</b><span>{p.title||p.format}</span><small>{p.label} · {p.time}</small></button>)}</nav>
    <div className="gg-architect-levels" role="group" aria-label="Vis doseringsnivå">{[['rx','RX'],['scaled','Scaled'],['foundation','Foundation']].map(([id,label])=><button type="button" key={id} aria-pressed={overviewLevel===id} onClick={()=>setOverviewLevel(id)}>{label}</button>)}</div>
+   <details className="gg-architect-extra"><summary>Utstyr og øktoversikt</summary>
    {inventoryOwner&&selected.length>0&&<details className="customer-plan-details"><summary>Utstyrsinventar · denne eininga</summary><small>Personleg utstyrsliste i nettlesaren. Ikkje delt mellom einingar eller brukarar.</small><div className="gg-architect-meta"><button type="button" className="text-button" onClick={()=>{setEquipmentPlan(old=>applyEquipmentInventory(selected,old,readEquipmentInventory(inventoryOwner)));setInventoryMessage('Tilgjengeleg mengd henta frå lokal utstyrsliste. Kontroller før start.')}}>Hent mengder</button><button type="button" className="text-button" onClick={()=>setInventoryMessage(saveEquipmentInventory(inventoryOwner,selected,equipmentPlan)?'Tilgjengeleg mengd lagra lokalt.':'Kunne ikkje lagra. Kontroller mengdene og lokal lagring.')}>Lagra mengder</button></div>{inventoryMessage&&<small role="status">{inventoryMessage}</small>}</details>}
    <SharedInventory items={selected} values={equipmentPlan} actorId={inventoryOwner} canEdit={canPublishWod} onApply={inventory=>setEquipmentPlan(old=>applyEquipmentInventory(selected,old,inventory))}/>
    <EquipmentPreparation items={selected} values={equipmentPlan} catalogue={exercises} tagsFor={movementTagsFor} onChange={(key,field,value)=>setEquipmentPlan(old=>({...old,[key]:{...old[key],[field]:value}}))}/>
    <details className="gg-architect-map"><summary>Sjå heile økta · {architectParts.length} delar</summary>{architectParts.map(p=><section key={p.id} className={'gg-arch-tone-'+p.tone}><button type="button" className="gg-architect-part-head" onClick={()=>{setActiveBlockId(p.id);setWizardStep(3);setEditingSelectedKey(null)}}><b>{String.fromCharCode(65+p.index)} · {p.title||p.format}</b><small>{p.label} · {p.time} · {p.reporting==='done'?'Berre utført':p.reporting==='score'?'Hovudresultat':'Settvis'}</small></button>{p.group.map(ex=><button type="button" key={ex.key} className={'gg-architect-map-row'+(issueFor(ex)?' has-issue':'')} onClick={()=>{setActiveBlockId(p.id);setDoseLevelByKey(rows=>({...rows,[ex.key]:overviewLevel}));setEditingSelectedKey(ex.key);setWizardStep(3)}}><strong>{ex.name}</strong><span>{issueFor(ex)||architectDose(ex,overviewLevel)}</span></button>)}</section>)}</details>
+   </details>
   </section>}
   {error&&<div className="auth-error">{error}</div>}{notice&&<div className="auth-message">{notice}</div>}
   {assignedClientId&&<div className="pt-wod-mode-switch"><button type="button" className={builderMode==='library'?'selected':''} onClick={()=>setBuilderMode('library')}>Finn WOD i biblioteket</button><button type="button" className={builderMode==='build'?'selected':''} onClick={()=>setBuilderMode('build')}>Bygg ny WOD</button></div>}
@@ -717,10 +721,11 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   {wizardStep===3&&<details className="wod-engine-setup gg-participation-section"><summary>Gjennomføring · {participation==='individual'?'Individuell':participation==='partner'?'Partner':'Lag'}</summary>
     <div className="engine-section-title"><div><h4>Gjennomføring</h4><p>Individuell er standard. Vel partner eller lag berre når utøvarane deler arbeidet.</p></div></div>
     {samspel?<div><small>Samspel · {samspel.participant_count||2} utøvarar · parallelt arbeid</small><button type="button" className="text-button" onClick={()=>setSamspelHelp(true)}>Endra Samspel</button></div>:<><div className="gg-participation-choices" role="group" aria-label="Gjennomføringsform">
-      {PARTICIPATION_MODES.map(item=><button type="button" key={item.value} aria-pressed={participation===item.value} className={participation===item.value?'selected':''} onClick={()=>{setParticipation(item.value);setCollaboration(item.value==='individual'?'solo':'free_split');setPartnerCount(item.value==='partner'?'2':'3')}}>{item.label}</button>)}
+      {PARTICIPATION_MODES.filter(item=>item.value==='individual'||collaborationOptions(format,item.value).length>0||participation===item.value).map(item=><button type="button" key={item.value} aria-pressed={participation===item.value} className={participation===item.value?'selected':''} onClick={()=>{setParticipation(item.value);setCollaboration(collaborationOptions(format,item.value)[0]?.value||'solo');setPartnerCount(item.value==='partner'?'2':'3')}}>{item.label}</button>)}
     </div></>}
     <div className="wod-engine-fields">
-      {!samspel&&participation!=='individual'&&<label>Samarbeidsform<select value={collaboration} onChange={e=>setCollaboration(e.target.value)}>{COLLABORATION_MODES.filter(x=>x.value!=='solo').map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label>}
+      {!samspel&&isEmomFormat(format)&&participation==='partner'&&['you_go_i_go','alternate'].includes(collaboration)&&<small>P1 arbeider først, P2 kviler. Neste intervall: P2 gjer same øving. Deretter neste øving. Eksplisitte intervallnummer blir følgde.</small>}
+      {!samspel&&participation!=='individual'&&<label>Samarbeidsform<select value={collaboration} onChange={e=>setCollaboration(e.target.value)}>{collaborationOptions(format,participation).map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label>}
       {!samspel&&participation==='team'&&<label>Tal utøvarar<input type="number" min="3" max="30" value={partnerCount} onChange={e=>setPartnerCount(e.target.value)}/></label>}
       <div className="wod-auto-score" role="status"><span>Scoring blir valt automatisk etter format</span><strong>{samspel?'Rundar + reps og '+(samspelMixed(samspel)?'stasjonsresultat':samspel.metric==='distance'?'meter':'kaloriar'):automaticScoreLabel}</strong></div>
     </div>

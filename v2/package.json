@@ -28,7 +28,7 @@
     "test:mobile-builder-ui": "node --test scripts/mobile-builder-ui.test.mjs scripts/mobile-native-controls.test.mjs",
     "test:member-customer-journey": "node --test scripts/member-customer-journey.test.mjs scripts/free-session.test.mjs scripts/coffee-help.test.mjs",
     "test:wod-wizard": "node --test scripts/wod-wizard.test.mjs",
-    "test:wod-engine": "node --test scripts/wod-engine.test.mjs",
+    "test:wod-engine": "node --test scripts/wod-engine.test.mjs scripts/partner-result-flow.test.mjs scripts/dose-profile.test.mjs",
     "test:death-by": "node --test scripts/death-by.test.mjs",
     "test:format-regressions": "node --test scripts/format-regressions.test.mjs",
     "test:remaining-fixes": "node --test scripts/remaining-fixes.test.mjs",

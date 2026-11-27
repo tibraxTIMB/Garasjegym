@@ -1,3 +1,4 @@
+import {prescribedKgLabel} from './doseProfile.js'
 import {muscleProfile,MUSCLE_LABELS} from './muscleProfile.js'
 import {exerciseMuscleProfile} from './exerciseMuscleProfiles.js'
 import {muscleGradeSummary,exerciseGrades} from './muscleGrades.js'
@@ -13,7 +14,7 @@ export function cardParts(wod){
  return [{id:'main',title:wod?.format||'Økt',format:wod?.format,formatLabel:wod?.format,intervalSeconds:Number(schema.interval?.work_every_seconds)||0,seconds:Number(schema.duration_seconds||wod?.timer_settings?.duration_seconds)||Number(wod?.duration_minutes||0)*60,items:all,warm:schema.library_category==='warmup',purpose:flowPurpose({title:wod?.name,flowPurpose:schema.flowPurpose},schema),reporting:flowReporting({format:wod?.format,flowReporting:schema.flowReporting},schema)}]
 }
 export function cardTone(p){if(p.warm)return 'warmup';const f=String(p.format||'').toLowerCase();if(/amrap/.test(f))return 'amrap';if(/emom|^e\d/.test(f))return 'emom';if(/strength|complex|superset|styrke/.test(f))return 'strength';if(/intervall|interval|tabata|stasjon/.test(f))return 'interval';if(/for time|chipper|couplet|triplet|ladder|death by/.test(f))return 'time';return 'neutral'}
-export function cardDose(item,level='rx',compact=false){
+export function cardDose(item,level='rx',compact=false,variant='common'){
  if(item.is_rest)return formatCardTime(item.rest_duration_seconds||item.work_seconds)
  const d=item.levels?.[level];if(item.levels&&!d)return 'Ikkje dosert på dette nivået'
  const p=[],v=d||{};const steps=item.complex_steps||[]
@@ -26,8 +27,8 @@ export function cardDose(item,level='rx',compact=false){
  if(v.calories||item.calories)p.push((v.calories||item.calories)+' cal')
  if(v.heightCm)p.push(v.heightCm+' cm')
  const val=x=>x!=null&&String(x).trim()!==''&&Number.isFinite(Number(x))
- if(v.loadMode==='kg'){const kg=[val(v.loadKgMen)?'M '+v.loadKgMen+' kg':'',val(v.loadKgWomen)?'K '+v.loadKgWomen+' kg':''].filter(Boolean);if(kg.length)p.push((item.load_per_implement?'2 × (':'')+kg.join(' / ')+(item.load_per_implement?') per manual':''));
- else if(val(v.loadKg))p.push(v.loadKg+' kg')}
+ if(v.loadMode==='kg'){const kg=prescribedKgLabel(v,variant);if(kg)p.push((item.load_per_implement?'2 × (':'')+kg+(item.load_per_implement?') per manual':''));
+ else if(variant==='common'&&val(v.loadKg))p.push(v.loadKg+' kg')}
  else if(v.loadMode==='percent'&&(val(v.percent1rm)||val(v.percentMin)&&val(v.percentMax)))p.push((val(v.percentMin)&&val(v.percentMax)?v.percentMin+'–'+v.percentMax:v.percent1rm)+' % 1RM'+(v.referenceRm?' '+v.referenceRm:''))
  else if(v.loadMode==='rir'&&(v.rirRange||val(v.rir)))p.push('RIR '+(v.rirRange||v.rir))
  else if(!d&&val(item.load_kg))p.push(item.load_kg+' kg')
