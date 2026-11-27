@@ -1,5 +1,6 @@
+import {userDoseProfile} from './lib/doseProfile.js'
 import DailyWodStrip from './components/DailyWodStrip.jsx'
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   CalendarDays,
   Activity,
@@ -25,14 +26,16 @@ import {
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from './lib/supabase.js'
 import { fetchMemberProfile, isStaff } from './lib/auth.js'
+import {startupDeadline} from './lib/startupDeadline.js'
 import { getAppBaseUrl } from './lib/appBaseUrl.js'
 import { getMembershipGate } from './lib/membershipAccess.js'
 import { restoreWorkoutDraft } from './lib/workoutDraft.js'
+import {synchronRouteIssue} from './lib/synchronRuntime.js'
+import {createConfiguredSynchronRuntime} from './lib/synchronConfiguredRuntime.js'
+import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry,canCancelSynchronOpening,acceptSynchronSnapshot,synchronDiscoveryStatus,synchronRecoveryDecision} from './lib/synchronPresence.js'
+import {parseSynchronInvitation} from './lib/synchronPreparation.js'
+const SynchronLaunch=lazy(()=>import('./components/SynchronLaunch.jsx'))
 import { resolveSimpleMode, displayModePreference } from './lib/memberViewMode.js'
-import {exchangeRole} from './lib/werkstattExchange.js'
-import {LAB_CHANNEL,LAB_WOD_ID} from './lib/tabletLabProtocol.js'
-const TabletLabDock=lazy(()=>import('./components/TabletLabDock.jsx'))
-const Werkstatt = lazy(() => import('./components/Werkstatt.jsx'))
 const Training = lazy(() => import('./components/Training.jsx'))
 
 
@@ -56,6 +59,10 @@ import { RELEASE_NAME, RELEASE_SHORT } from './lib/release.js'
 import {clearInviteLanding,isInviteLanding} from './lib/invitationFlow.js'
 import './components/invitation.css'
 import './components/werkstatt.css'
+import {werkstattEntryAllowed} from './lib/werkstattExchange.js'
+import {LAB_CHANNEL,LAB_WOD_ID} from './lib/tabletLabProtocol.js'
+const Werkstatt=lazy(()=>import('./components/Werkstatt.jsx'))
+const TabletLabDock=lazy(()=>import('./components/TabletLabDock.jsx'))
 
 const sections = [
   { id: 'oversikt', label: 'Oversikt', icon: LayoutDashboard, note: 'Dashboard og treningsstatus' },
@@ -177,12 +184,13 @@ function LoadingScreen({ text }) {
   return <main className="loading-shell" role="status"><img className="gg-loading-emblem" src={`${import.meta.env.BASE_URL}garasjegym-49-192.png`} alt="" width="104" height="104"/><strong>{text}</strong></main>
 }
 
-export default function App() {
+export default function App({synchronRuntime:injectedSynchronRuntime=undefined,tabletLab=false}={}) {
   const deviceProfile=useDeviceProfile()
   const [session, setSession] = useState(null)
   const [passwordRecovery, setPasswordRecovery] = useState(false)
   const [invitationPending,setInvitationPending]=useState(()=>isInviteLanding(window.location))
   const [authReady, setAuthReady] = useState(false)
+  const [startupError,setStartupError]=useState('')
   const [profile, setProfile] = useState(null)
   const [isPTCoach, setIsPTCoach] = useState(false)
   const [profileReady, setProfileReady] = useState(false)
@@ -194,13 +202,10 @@ export default function App() {
   const [officeLibraryWod,setOfficeLibraryWod]=useState(null)
   const [tabletOpen,setTabletOpen]=useState(false)
   const [tabletWod,setTabletWod]=useState(null)
-  const labMode=document.documentElement.dataset.ggTabletLab==='true'
   const [labPending,setLabPending]=useState('')
   const [labRevision,setLabRevision]=useState(0)
-  useEffect(()=>{if(!labMode)return;const receive=e=>setLabPending(e.detail==='plan'?'plan':'wod');window.addEventListener('gg-tablet-lab-content',receive);const queued=document.documentElement.dataset.ggLabContent;if(queued)setLabPending(queued);if(window.parent!==window)window.parent.postMessage({channel:LAB_CHANNEL,type:'ready'},location.origin);return()=>window.removeEventListener('gg-tablet-lab-content',receive)},[labMode])
-  const officeAllowed=exchangeRole(profile,isPTCoach).office
-  const officeMode=officeAllowed&&officeRequested&&!labMode
-  const officeDesktop=officeMode&&deviceProfile.width>=1000
+  const labMode=tabletLab===true&&document.documentElement.dataset.ggTabletLab==='true'
+  const priorOfficeActor=useRef(null)
   const [trainingVisited, setTrainingVisited] = useState(false)
   const [pendingWodImport, setPendingWodImport] = useState(null)
   const [navigationStack, setNavigationStack] = useState([])
@@ -223,10 +228,11 @@ export default function App() {
   const backAction=useRef(null)
   const allowNativeExit=useRef(false)
   const [workoutRevision,setWorkoutRevision]=useState(0)
+  const [afterActionMember,setAfterActionMember]=useState(null)
+  useEffect(()=>{setAfterActionMember(null)},[session?.user?.id])
   const [quickStart,setQuickStart]=useState(false)
   const [quickManualEntry,setQuickManualEntry]=useState(false)
   const [storedSimpleMode,setSimpleMode]=useState(false)
-  const simpleMode=storedSimpleMode&&!officeMode
   const [simpleModeReady,setSimpleModeReady]=useState(false)
   const [simpleModeError,setSimpleModeError]=useState('')
   const [simpleModeSaving,setSimpleModeSaving]=useState(false)
@@ -241,12 +247,102 @@ export default function App() {
   const [infotainmentActive,setInfotainmentActive]=useState(()=>{try{return sessionStorage.getItem('garasjegym:infotainment-active')==='1'}catch{return false}})
   const [timerSnapshot,setTimerSnapshot]=useState({elapsed:0,remaining:0,phase:'Klar',running:false})
   const handleTimerSnapshot=useCallback(snapshot=>setTimerSnapshot(snapshot),[])
+  const [synchronEntry,setSynchronEntry]=useState(null)
+  const [synchronNotice,setSynchronNotice]=useState('')
+  const [synchronSnapshot,setSynchronSnapshot]=useState(null)
+  const [discoveryRecord,setDiscoveryRecord]=useState(null),[discoveryAttempt,setDiscoveryAttempt]=useState(0)
+  const synchronActor=session?.user?.id
+  // Stable per account: changing identity or losing approval closes the live route.
+  const synchronRuntime=useMemo(()=>{
+    if(tabletLab||labMode||passwordRecovery||invitationPending)return null
+    if(injectedSynchronRuntime!==undefined)return injectedSynchronRuntime
+    return createConfiguredSynchronRuntime({
+      enabled:import.meta.env.VITE_GG_SYNCHRON_ENABLED,
+      resultSavingEnabled:import.meta.env.VITE_GG_SYNCHRON_RESULT_SAVING_ENABLED,
+      project:import.meta.env.VITE_SUPABASE_URL,client:supabase,
+      actorId:synchronActor,profile,profileReady,authReady,tabletLab
+    })
+  },[injectedSynchronRuntime,tabletLab,labMode,passwordRecovery,invitationPending,synchronActor,profile?.id,profile?.active,profile?.membership_status,profileReady,authReady])
+  const synchronContext=useRef(null)
+  const ownedSynchron=synchronOwnedEntry(synchronEntry,synchronActor,synchronRuntime)
+  const remotePresence=ownedSynchron?synchronPresence(synchronEntry,synchronSnapshot):null
+  const remoteLocked=!!remotePresence?.locked
+  const discoveryStatus=labMode?'disabled':synchronDiscoveryStatus(discoveryRecord,synchronActor,synchronRuntime)
+  const discoveryBlocked=discoveryStatus==='pending'||discoveryStatus==='error'
+  const trainingLaunchLocked=remoteLocked||discoveryBlocked
+  const localSessionOpen=!!timerSnapshot.sessionOpen||!!(synchronActor&&restoreWorkoutDraft(synchronActor))
+  const officeAllowed=profileReady&&!discoveryBlocked&&werkstattEntryAllowed(profile,synchronActor,{labMode,localSessionOpen,remoteLocked})
+  const officeMode=officeAllowed&&officeRequested&&!labMode
+  const officeDesktop=officeMode&&deviceProfile.width>=1000
+  const simpleMode=storedSimpleMode&&!officeMode
+  synchronContext.current={actor:synchronActor,runtime:synchronRuntime,localSessionOpen,active,entry:ownedSynchron?synchronEntry:null,presence:remotePresence,discoveryBlocked}
+  useEffect(()=>{setSynchronEntry(null);setSynchronSnapshot(null);setSynchronNotice('');setDiscoveryRecord(null)},[synchronActor,synchronRuntime])
+  const discoveryEligible=!labMode&&profileReady&&profile?.id===synchronActor&&getMembershipGate(profile)==='approved'&&synchronRuntime?.actorId===synchronActor&&typeof synchronRuntime?.discover==='function'
+  useEffect(()=>{
+    if(!discoveryEligible)return
+    let live=true
+    const actor=synchronActor,runtime=synchronRuntime
+    setDiscoveryRecord({actor,runtime,status:'pending'})
+    startupDeadline(()=>runtime.discover()).then(result=>{
+      const ctx=synchronContext.current
+      if(!live||ctx.actor!==actor||ctx.runtime!==runtime)return
+      const decision=synchronRecoveryDecision(result,{actor,runtime})
+      if(decision.status==='ready'&&decision.entry&&!ctx.entry){
+        setSynchronEntry(decision.entry);setSynchronSnapshot(decision.snapshot)
+        if(!ctx.localSessionOpen){setNavigationStack([]);setActive('synchron-session')}
+        else setSynchronNotice('Ei fellesøkt er open. Fullfør den lokale økta før du går tilbake til fellesøkta.')
+      }
+      setDiscoveryRecord({actor,runtime,status:decision.status})
+    }).catch(()=>{if(live)setDiscoveryRecord({actor,runtime,status:'error'})})
+    return()=>{live=false}
+  },[discoveryEligible,synchronActor,synchronRuntime,discoveryAttempt])
+  const handleSynchronSnapshot=useCallback((snapshot,origin)=>setSynchronSnapshot(old=>acceptSynchronSnapshot(old,synchronContext.current?.entry,{...origin,snapshot})),[])
+  useEffect(()=>{
+    if(!trainingLaunchLocked)return
+    // Discard only launch intents, never actual local workout drafts.
+    setLaunchWodId(null);setLaunchClassSessionId(null);setLaunchClassResult(false);setLaunchAssignmentId(null);setLaunchProgramSessionId(null);setLaunchProgramSessionTitle('');setQuickStart(false);setQuickManualEntry(false)
+    if(remoteLocked&&active==='trening'&&!localSessionOpen)setActive('synchron-session')
+  },[remoteLocked,trainingLaunchLocked,active,localSessionOpen])
   useEffect(()=>{if(active==='trening')setTrainingVisited(true)},[active])
   useEffect(()=>{if(session?.user?.id&&restoreWorkoutDraft(session.user.id))setTrainingVisited(true)},[session?.user?.id])
-  function navigateTo(next){if(!next||next===active)return;setNavigationStack(stack=>[...stack,active].slice(-12));setActive(next)}
+  function clearOfficeState(){setTabletOpen(false);setTabletWod(null);setOfficeRequested(false);setOfficeOpened(false);setOfficeBuilder(false);setOfficeLibraryWod(null)}
+  function openOffice(){if(!officeAllowed||labMode)return;setOfficeRequested(true);setOfficeOpened(true);const url=new URL(window.location.href);url.searchParams.set('office','1');window.history.replaceState(window.history.state,'',url);navigateRoot('office')}
+  function exitOffice(){clearOfficeState();const url=new URL(window.location.href);if(url.searchParams.has('office')){url.searchParams.delete('office');window.history.replaceState(window.history.state,'',url)}navigateRoot('oversikt')}
+  useEffect(()=>{if(priorOfficeActor.current&&priorOfficeActor.current!==synchronActor){clearOfficeState();const url=new URL(window.location.href);url.searchParams.delete('office');window.history.replaceState(window.history.state,'',url)}priorOfficeActor.current=synchronActor},[synchronActor])
+  useEffect(()=>{if(!officeMode){setTabletOpen(false);setTabletWod(null);if(active==='office')navigateRoot('oversikt');return}if(!officeOpened&&simpleModeReady){setOfficeOpened(true);navigateRoot('office')}},[officeMode,officeOpened,simpleModeReady,active])
+    useEffect(()=>{if(!labMode)return;const receive=e=>setLabPending(e.detail==='plan'?'plan':'wod');window.addEventListener('gg-tablet-lab-content',receive);const queued=document.documentElement.dataset.ggLabContent;if(queued)setLabPending(queued);if(window.parent!==window)window.parent.postMessage({channel:LAB_CHANNEL,type:'ready'},location.origin);return()=>window.removeEventListener('gg-tablet-lab-content',receive)},[labMode])
+  useEffect(()=>{if(labMode&&labPending&&simpleModeReady&&profile?.id&&!timerSnapshot.sessionOpen){setLabRevision(x=>x+1);if(labPending==='plan'){setFocusWodId(null);navigateRoot('mi-trening')}else{setFocusWodId(LAB_WOD_ID);navigateRoot('wod')}setLabPending('')}},[labMode,labPending,simpleModeReady,profile?.id,timerSnapshot.sessionOpen])
+  function previewTablet(wod){if(!officeDesktop)return;setTabletWod(wod);setTabletOpen(true)}
+  function navigateTo(next){next=synchronNavigation(next,synchronContext.current?.presence);if(!next||next===active)return;setNavigationStack(stack=>[...stack,active].slice(-12));setActive(next)}
+  function cancelSynchronOpening(origin){
+    const ctx=synchronContext.current
+    if(!canCancelSynchronOpening(ctx.entry,ctx.presence,origin))return
+    setSynchronEntry(null);setSynchronSnapshot(null);setSynchronNotice('')
+    // Do not use the old remote-lock redirect when explicitly leaving a
+    // read-only lookup. Keep any actual local workout untouched.
+    setNavigationStack([]);setActive('oversikt')
+  }
+  function enterSynchron(href){
+    const ctx=synchronContext.current,issue=synchronRouteIssue(ctx.runtime,ctx.actor,{localSessionOpen:ctx.localSessionOpen})
+    if(ctx.discoveryBlocked){setSynchronNotice('Kontrollerer aktiv fellesøkt. Prøv igjen.');return false}
+    if(issue||!parseSynchronInvitation(href)){setSynchronNotice(issue||'Ugyldig invitasjon.');return false}
+    if(synchronEntryConflict(ctx.entry,ctx.presence,href)){setSynchronNotice('Du har allereie ei fellesøkt open.');navigateTo('synchron-session');return false}
+    setSynchronNotice('');if(ctx.entry?.href!==href){setSynchronSnapshot(null);setSynchronEntry({actor:ctx.actor,href,runtime:ctx.runtime})}navigateTo('synchron-session');return true
+  }
+  async function prepareSynchron(request){
+    const ctx=synchronContext.current,issue=synchronRouteIssue(ctx.runtime,ctx.actor,{localSessionOpen:ctx.localSessionOpen})
+    if(ctx.discoveryBlocked)return {issue:'Aktiv fellesøkt er ikkje kontrollert. Prøv igjen.'}
+    if(issue||ctx.presence?.locked)return {issue:issue||'Du har allereie ei fellesøkt open.'}
+    const result=await ctx.runtime.create(request)
+    const latest=synchronContext.current
+    if(latest.actor!==ctx.actor||latest.runtime!==ctx.runtime)return {issue:'Innlogginga er endra.'}
+    if(result.sessionId&&latest.active==='pt-studio')enterSynchron('synchron-session:'+result.sessionId)
+    return result
+  }
   function handleNotificationNavigate(item){
     const href=item.href||''
     if(href.startsWith('pt-')||item.category==='pt'||href.startsWith('group-class:')||href.startsWith('booking:'))clearPTDeepLink()
+    if(href.startsWith('synchron-session:')){enterSynchron(href);return}
     if(href==='admin-maintenance'&&profile.role==='admin'){setAdminInitialTab('drift');setAdminFocusToken(value=>value+1);navigateTo('admin')}
     else if(href.startsWith('pt-service-request:')&&isStaff(profile)){
       setFocusPTServiceRequest({id:href.slice('pt-service-request:'.length),openedAt:Date.now()})
@@ -265,18 +361,12 @@ export default function App() {
     else if(item.category==='pt'){setFocusPTRequestId(null);setFocusPTPanel(null);setPTStudioWorkspace('studio');setPTStudioInitialTab(isPTCoach?'oversikt':isStaff(profile)?'pt-timar':'meldingar');navigateTo('pt-studio')}
     else if(href)navigateTo(({booking:'timeplan','/timeplan':'timeplan',pt:'timeplan','mi-trening':'mi-trening','wod-studio':'wod','wod-library':'wod'}[href]||href))
   }
-  // A normal PT entry must not reopen an unrelated earlier notification or group workspace.
+  function navigateRoot(next){setNavigationStack([]);setActive(synchronNavigation(next,synchronContext.current?.presence))}
   function clearPTDeepLink(){setFocusPTRequestId(null);setFocusPTServiceRequest(null);setFocusPTClientId(null);setFocusPTPanel(null);setFocusGroupClassId(null)}
   function preparePTEntry(tab){clearPTDeepLink();setPTStudioWorkspace('studio');setPTStudioInitialTab(tab)}
-  function openOffice(){if(!officeAllowed||labMode)return;setOfficeRequested(true);setOfficeOpened(true);navigateRoot('office')}
-  function exitOffice(){setTabletOpen(false);setTabletWod(null);setOfficeRequested(false);setOfficeOpened(false);setOfficeBuilder(false);setOfficeLibraryWod(null);const url=new URL(window.location.href);if(url.searchParams.has('office')){url.searchParams.delete('office');window.history.replaceState(window.history.state,'',url)}navigateRoot('oversikt')}
-  useEffect(()=>{if(officeMode&&!officeOpened&&simpleModeReady){setOfficeOpened(true);navigateRoot('office')}else if(!officeMode&&active==='office'){navigateRoot('oversikt')}},[officeMode,officeOpened,simpleModeReady,active])
-  useEffect(()=>{if(labMode&&labPending&&simpleModeReady&&profile?.id&&!timerSnapshot.sessionOpen){setLabRevision(x=>x+1);if(labPending==='plan'){setFocusWodId(null);navigateRoot('mi-trening')}else{setFocusWodId(LAB_WOD_ID);navigateRoot('wod')}setLabPending('')}},[labMode,labPending,simpleModeReady,profile?.id,timerSnapshot.sessionOpen])
-  function previewTablet(wod){if(!officeDesktop)return;setTabletWod(wod);setTabletOpen(true)}
-  function navigateRoot(next){setNavigationStack([]);setActive(next)}
   function handleSectionNavigate(id){setHelpTopic(null);if(id===active){if(id==='admin'&&profile.role==='admin'){setAdminInitialTab('drift');setAdminFocusToken(value=>value+1)}return}if(id==='pt-studio'){preparePTEntry(isStaff(profile)||isPTCoach?'oversikt':'tenester')}if(id==='timeplan')setScheduleTab('mine');if(id==='admin'){setAdminInitialTab(profile.role==='admin'?'drift':'oversikt');setAdminFocusToken(value=>value+1)}navigateRoot(id)}
   function openPTClientWorkspace(){preparePTEntry('oversikt');navigateTo('pt-studio')}
-  function navigateBack(fallback='oversikt'){const previous=navigationStack[navigationStack.length-1]||fallback;setNavigationStack(stack=>stack.slice(0,-1));setActive(previous)}
+  function navigateBack(fallback='oversikt'){const previous=navigationStack[navigationStack.length-1]||fallback;setNavigationStack(stack=>stack.slice(0,-1));setActive(synchronNavigation(previous,synchronContext.current?.presence))}
   backAction.current=()=>{
     if(quickMenu){setQuickMenu(false);return}
     const dialogs=[...document.querySelectorAll('[role="dialog"][aria-modal="true"],[role="alertdialog"][aria-modal="true"]')].filter(el=>el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden'&&getComputedStyle(el).display!=='none')
@@ -303,7 +393,7 @@ export default function App() {
     window.addEventListener('popstate',onPop)
     return()=>window.removeEventListener('popstate',onPop)
   },[session?.user?.id])
-  function exitFromRoot(){if(timerSnapshot.sessionOpen)return;setQuickMenu(false);allowNativeExit.current=true;window.history.back()}
+  function exitFromRoot(){if(timerSnapshot.sessionOpen||remoteLocked)return;setQuickMenu(false);allowNativeExit.current=true;window.history.back()}
   function openHelp(topic='navigation'){setHelpTopic(topic);navigateTo('mi-side')}
   function openFromHelp(target){
     setHelpTopic(null)
@@ -400,17 +490,27 @@ export default function App() {
 
   useEffect(() => {
     if (!supabase) return
+    let live=true, eventRevision=0
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (!live || event==='INITIAL_SESSION') return
+      eventRevision++
       if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true)
+      setStartupError('')
       setSession(nextSession)
       setAuthReady(true)
     })
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (error) setProfileError(error.message)
-      setSession(data?.session || null)
+    const revision=eventRevision
+    startupDeadline(()=>supabase.auth.getSession()).then(({data,error})=>{
+      if(!live||revision!==eventRevision)return
+      if(error)throw error
+      setSession(data?.session||null)
+      setStartupError('')
       setAuthReady(true)
+    }).catch(()=>{
+      if(!live||revision!==eventRevision)return
+      setStartupError('Kunne ikkje kopla til GarasjeGym. Kontroller nettet og prøv igjen.')
     })
-    return () => subscription.unsubscribe()
+    return ()=>{live=false;subscription.unsubscribe()}
   }, [])
 
   useEffect(() => {
@@ -423,11 +523,19 @@ export default function App() {
         return
       }
       setProfileReady(false)
-      const result = await fetchMemberProfile(session.user.id)
-      if (cancelled) return
-      setProfile(result.profile)
-      setProfileError(result.error?.message || '')
-      setProfileReady(true)
+      setProfile(null)
+      setProfileError('')
+      try{
+        const result=await startupDeadline(()=>fetchMemberProfile(session.user.id))
+        if(cancelled)return
+        setProfile(result.profile?.id===session.user.id?result.profile:null)
+        setProfileError(result.error?.message||(!result.profile?'Medlemsprofilen kunne ikkje hentast.':''))
+      }catch{
+        if(cancelled)return
+        setProfile(null)
+        setProfileError('Kunne ikkje kopla til medlemsdatabasen. Prøv igjen.')
+      }
+      if(!cancelled)setProfileReady(true)
     }
     loadProfile()
     return () => { cancelled = true }
@@ -436,20 +544,22 @@ export default function App() {
   if (!isSupabaseConfigured) {
     return <LoadingScreen text="Supabase er ikkje konfigurert. Legg inn VITE_SUPABASE_URL og VITE_SUPABASE_PUBLISHABLE_KEY i v2/.env.local." />
   }
+  if (startupError) return <main className="auth-shell"><div className="auth-card"><h1>Får ikkje kontakt</h1><p className="auth-intro" role="alert">{startupError}</p><button type="button" className="primary-button" onClick={()=>window.location.reload()}>Prøv igjen</button><p className="auth-footnote">Lagra treningskladdar blir ikkje sletta.</p></div></main>
   if (!authReady) return <LoadingScreen text="Koplar til GarasjeGym …" />
   if (passwordRecovery) return <AuthScreen key="recovery" recovery onRecoveryComplete={() => setPasswordRecovery(false)} />
   if (invitationPending && session) return <AuthScreen key="invitation" invitation onInvitationComplete={()=>{clearInviteLanding(window);setInvitationPending(false)}} />
   if (invitationPending && !session) return <main className="auth-shell"><div className="auth-card"><div className="eyebrow"><ShieldCheck size={14}/> INVITASJON</div><h1>Lenkja er <em>ikkje gyldig.</em></h1><p className="auth-intro">Opne invitasjonslenkja direkte frå e-posten. Dersom ho er brukt eller utgått, må du be administrator om ei ny invitasjon.</p><button type="button" className="primary-button" onClick={()=>{clearInviteLanding(window);setInvitationPending(false)}}>Til innlogging</button></div></main>
   if (!session) return <AuthScreen />
-  if (!profileReady) return <LoadingScreen text="Hentar medlemsprofil …" />
+  if (!profileReady||profile&&profile.id!==session.user.id) return <LoadingScreen text="Hentar medlemsprofil …" />
 
   if (profileError || !profile) {
     return (
       <main className="auth-shell"><div className="auth-card">
         <div className="eyebrow"><ShieldCheck size={14} /> MEDLEMSPROFIL</div>
         <h1>Profilen <em>manglar.</em></h1>
-        <p className="auth-intro">Innlogginga fungerer, men medlemsprofilen kunne ikkje hentast. {profileError}</p>
-        <button className="primary-button" onClick={() => supabase.auth.signOut()}>Logg ut</button>
+        <p className="auth-intro" role="alert">Medlemsprofilen kunne ikkje hentast. {profileError}</p>
+        <button type="button" className="primary-button" onClick={()=>window.location.reload()}>Prøv igjen</button>
+        <button className="secondary-button" onClick={() => supabase.auth.signOut()}>Logg ut</button>
       </div></main>
     )
   }
@@ -476,6 +586,7 @@ export default function App() {
   }
 
   if (!simpleModeReady) return <LoadingScreen text="Hentar medlemsinnstillingar …" />
+  if(discoveryBlocked&&!localSessionOpen)return <main className="auth-shell"><div className="auth-card"><h1>Kontrollerer fellesøkt</h1><p role={discoveryStatus==='error'?'alert':'status'}>{discoveryStatus==='error'?'Serverstatusen kunne ikkje stadfestast. Ingen ny økt blir starta før ny kontroll.':'Ser etter ei aktiv fellesøkt …'}</p>{discoveryStatus==='error'&&<button type="button" className="primary-button" onClick={()=>setDiscoveryAttempt(x=>x+1)}>Prøv igjen</button>}</div></main>
 
   const staffNavigation=sections.filter(item=>item.id!=='pt-info')
   const memberNavigation=[sections[0],sections[1],sections[4],sections[2],{...sections[3],label:'PT-oppfølging',note:'Dine program, mål og kontakt med PT'},sections[8],sections[5],sections[6],sections[7]]
@@ -522,7 +633,10 @@ export default function App() {
             {isStaff(profile)&&<button className="icon-button" onClick={()=>setInfotainmentActive(true)} title="Opna infotainment" aria-label="Opna infotainment"><MonitorPlay size={16}/></button>}<button className="icon-button" onClick={toggleAppFullscreen} title={appFullscreen?"Avslutt fullskjerm":"Fullskjerm"} aria-label={appFullscreen?"Avslutt fullskjerm":"Fullskjerm"}>{appFullscreen?<Minimize size={16}/>:<Maximize size={16}/>}</button><button className="icon-button" onClick={() => supabase.auth.signOut()} title="Logg ut" aria-label="Logg ut"><LogOut size={16} /></button>
           </div>
         </header>
+        {discoveryBlocked&&localSessionOpen&&<section className="content-card" role="status">Fellesøktstatus er ikkje stadfesta. Du kan fullføra den lokale økta. {discoveryStatus==='error'&&<button type="button" className="text-button" onClick={()=>setDiscoveryAttempt(x=>x+1)}>Prøv igjen</button>}</section>}
+        {synchronNotice&&<section className="content-card" role="status">{synchronNotice} <button type="button" className="text-button" onClick={()=>setSynchronNotice('')}>Lukk</button></section>}
         {active==='oversikt'&&(isStaff(profile)||isPTCoach)&&<button type="button" className="gg-pt-home-shortcut" onClick={openPTClientWorkspace}><Users size={17}/><span>PT Studio</span><small>Dagleg kundeoppfølging</small><span aria-hidden="true">›</span></button>}
+        {active!=='synchron-session'&&ownedSynchron&&!localSessionOpen&&<button type="button" className="ongoing-workout-return" onClick={()=>navigateTo('synchron-session')}><span className="ongoing-workout-status">{remotePresence?.phase==='finished'?'ETTERØKTA':remoteLocked?'FELLESØKT':'INVITASJON'}</span><strong>{synchronSnapshot?.title||'Samspel Live'}</strong><span className="ongoing-workout-action">Tilbake til fellesøkta →</span></button>}
         {active!=='trening'&&timerSnapshot.sessionOpen&&<button type="button" className="ongoing-workout-return" onClick={()=>navigateRoot('trening')} aria-label="Tilbake til den pågåande økta">
           <span className="ongoing-workout-status"><span aria-hidden="true" className={timerSnapshot.running?'ongoing-live-dot is-running':'ongoing-live-dot'}/>{timerSnapshot.running?'ØKT PÅGÅR':timerSnapshot.sessionPrepared?'ØKT PAUSA':'ØKT KLAR'}</span>
           <strong>{timerSnapshot.title||'Økta di'}</strong>
@@ -533,11 +647,13 @@ export default function App() {
           <h1>Hei, <em>{profile.display_name?.split(' ')[0]||'der'}.</em></h1>
           
         </section> : null}{simpleMode&&active==='oversikt'&&dailyWod&&<DailyWodStrip wod={dailyWod} date={dailyWod.scheduled_date} onOpen={id=>{setFocusWodId(id);navigateTo('wod')}}/>}
+        {active==='oversikt'&&afterActionMember===session.user.id&&<section className="content-card training-content" aria-label="Etter økta"><div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}><strong role="status">Økta er lagra</strong><button type="button" className="text-button" onClick={()=>setAfterActionMember(null)}>Lukk</button></div><div className="customer-home-quick-actions"><button type="button" onClick={()=>{setAfterActionMember(null);navigateTo('mi-historikk')}}>Treningslogg</button><button type="button" onClick={()=>{setAfterActionMember(null);navigateTo('kaffi')}}><Coffee size={17}/> Kaffibar</button><button type="button" onClick={()=>{setAfterActionMember(null);setScheduleTab('booking');navigateTo('timeplan')}}>Neste gruppetime</button></div></section>}
         <Suspense fallback={<section className="content-card training-content" role="status" aria-live="polite"><div className="training-state">Lastar modul …</div></section>}>
+        {ownedSynchron&&!localSessionOpen&&<section style={{display:active==='synchron-session'?undefined:'none'}} aria-hidden={active!=='synchron-session'}><SynchronLaunch key={synchronActor+':'+synchronEntry.href} runtime={synchronRuntime} href={synchronEntry.href} onSnapshot={handleSynchronSnapshot} onCancelOpening={cancelSynchronOpening} onBack={()=>navigateBack('oversikt')}/></section>}
         {(trainingVisited||active==='trening')&&<section className="content-card training-content workout-entry" style={{display:active==='trening'?undefined:'none'}} aria-hidden={active!=='trening'}>
-          <Training key={labMode?session.user.id+':'+labRevision:session.user.id} memberId={session.user.id} visible={active==='trening'} onBackground={()=>navigateRoot('oversikt')} onOpenWodLibrary={()=>{setFocusWodId(null);navigateTo('wod')}} onOpenTrainingPlan={openMyTraining} onOpenSchedule={()=>{setScheduleTab('mine');navigateTo('timeplan')}} onOpenDailyWod={id=>{setFocusWodId(id);navigateTo('wod')}} onOpenHistory={()=>navigateTo('mi-historikk')} onOpenPR={()=>navigateTo('pr-senter')} onSaved={({victories=[]}={})=>{setWorkoutRevision(value=>value+1);if(!victories.length)navigateBack('oversikt')}} onDiscard={()=>navigateBack('oversikt')} onTimerSnapshot={handleTimerSnapshot} quickManualEntry={quickManualEntry} onQuickManualEntryConsumed={()=>setQuickManualEntry(false)} launchWodId={launchWodId} launchClassSessionId={launchClassSessionId} launchClassResult={launchClassResult} launchAssignmentId={launchAssignmentId} launchProgramSessionId={launchProgramSessionId} launchProgramSessionTitle={launchProgramSessionTitle} onLaunchConsumed={() => { setLaunchWodId(null); setLaunchClassSessionId(null); setLaunchClassResult(false); setLaunchAssignmentId(null); setLaunchProgramSessionId(null); setLaunchProgramSessionTitle('') }} simpleMode={simpleMode} quickStart={quickStart} onQuickStartConsumed={()=>setQuickStart(false)} />
+          <Training key={labMode?session.user.id+':'+labRevision:session.user.id} memberId={session.user.id} visible={active==='trening'} onBackground={()=>navigateRoot('oversikt')} onOpenWodLibrary={()=>{setFocusWodId(null);navigateTo('wod')}} onOpenTrainingPlan={openMyTraining} onOpenSchedule={()=>{setScheduleTab('mine');navigateTo('timeplan')}} onOpenDailyWod={id=>{setFocusWodId(id);navigateTo('wod')}} onOpenHistory={()=>navigateTo('mi-historikk')} onOpenPR={()=>navigateTo('pr-senter')} onSaved={({victories=[]}={})=>{setWorkoutRevision(value=>value+1);setAfterActionMember(session.user.id);if(!victories.length)navigateBack('oversikt')}} onDiscard={()=>navigateBack('oversikt')} onTimerSnapshot={handleTimerSnapshot} quickManualEntry={!trainingLaunchLocked&&quickManualEntry} onQuickManualEntryConsumed={()=>setQuickManualEntry(false)} launchWodId={trainingLaunchLocked?null:launchWodId} launchClassSessionId={trainingLaunchLocked?null:launchClassSessionId} launchClassResult={launchClassResult} launchAssignmentId={trainingLaunchLocked?null:launchAssignmentId} launchProgramSessionId={trainingLaunchLocked?null:launchProgramSessionId} launchProgramSessionTitle={launchProgramSessionTitle} onLaunchConsumed={() => { setLaunchWodId(null); setLaunchClassSessionId(null); setLaunchClassResult(false); setLaunchAssignmentId(null); setLaunchProgramSessionId(null); setLaunchProgramSessionTitle('') }} doseVariant={labMode?'common':userDoseProfile(session.user)} simpleMode={simpleMode} quickStart={!trainingLaunchLocked&&quickStart} onQuickStartConsumed={()=>setQuickStart(false)} />
         </section>}
-        {active==='office'&&officeMode?<section className="content-card training-content"><Werkstatt onPreview={officeDesktop?previewTablet:undefined} key={profile.id} profile={profile} coachMode={isPTCoach} onExit={exitOffice} onOpenWod={()=>{setOfficeBuilder(false);setFocusWodId(null);navigateTo('wod')}} onBuildWod={()=>{setOfficeLibraryWod(null);setOfficeBuilder(true);setFocusWodId(null);navigateTo('wod')}} onLibraryWod={(id,copy=true)=>{setOfficeLibraryWod({id,copy});setFocusWodId(null);navigateTo('wod')}} onOpenPT={openPTClientWorkspace} onOpenAdmin={()=>handleSectionNavigate('admin')} onOpenCalendar={()=>handleSectionNavigate('timeplan')} onOpenImport={parsed=>{setOfficeBuilder(false);setPendingWodImport(parsed);navigateTo('wod')}}/></section>:active === 'oversikt' ? <section className="content-card training-content">{simpleMode?<SimpleCustomerHome newPtWodCount={newPtWodCount} coach={isPTCoach} onHelp={()=>openHelp("navigation")} onPlan={openMyTraining} onFree={()=>{setQuickStart(true);navigateTo('trening')}} onWod={()=>{setFocusWodId(null);navigateTo('wod')}} onManual={()=>{setQuickManualEntry(true);navigateTo('trening')}} onSchedule={()=>{setScheduleTab('booking');navigateTo('timeplan')}} onHistory={()=>navigateTo('mi-historikk')} onCoffee={()=>navigateTo('kaffi')} onContactPT={()=>{preparePTEntry(isPTCoach?'oversikt':'tenester');navigateTo('pt-studio')}} />:<Overview refreshToken={workoutRevision} profile={profile} dailyWod={dailyWod} onNavigate={navigateTo} onOpenWorkout={openWorkout} onOpenWod={(id)=>{setFocusWodId(id);navigateTo('wod')}} />}</section> : active === 'trening' ? null : active === 'timeplan' ? <section className="content-card training-content"><ScheduleHub simpleMode={simpleMode} profile={profile} onOpenProgramSession={session=>{setLaunchWodId(session.wod_id||null);setLaunchAssignmentId(null);setLaunchProgramSessionId(session.id);setLaunchProgramSessionTitle(session.title||'');setLaunchClassSessionId(null);setLaunchClassResult(false);navigateTo('trening')}} onOpenAssignment={(wodId,assignmentId)=>{setLaunchWodId(wodId);setLaunchAssignmentId(assignmentId);setLaunchProgramSessionId(null);setLaunchProgramSessionTitle('');setLaunchClassSessionId(null);setLaunchClassResult(false);navigateTo('trening')}} onContactPT={()=>{preparePTEntry("tenester");navigateTo("pt-studio")}} onOpenWod={(wodId,sessionId)=>{setFocusWodId(wodId);setLaunchClassSessionId(sessionId||null);setLaunchAssignmentId(null);navigateTo('wod')}} initialClassId={focusGroupClassId} initialTab={scheduleTab} onTabChange={setScheduleTab} focusRequestId={focusPTRequestId} onFocusConsumed={()=>setFocusPTRequestId(null)} onLogResult={(wodId,sessionId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(sessionId);setLaunchClassResult(true);navigateTo('trening')}} onLaunchWorkout={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setLaunchClassResult(false);navigateTo('trening')}} /></section> : active === 'pt-studio' ? <section className="content-card training-content"><PTStudio officeMode={officeMode} onOpenNotification={handleNotificationNavigate} focusServiceRequest={focusPTServiceRequest} profile={profile} simpleMode={simpleMode} coachMode={isPTCoach} onGroupSchedule={()=>{setScheduleTab("booking");navigateTo("timeplan")}} initialClientId={focusPTClientId} initialWorkspace={ptStudioWorkspace} initialTab={ptStudioInitialTab} focusRequestId={focusPTRequestId} focusGroupClassId={focusGroupClassId} focusPanel={focusPTPanel} onFocusPanelConsumed={()=>setFocusPTPanel(null)} onFocusRequestConsumed={()=>setFocusPTRequestId(null)} onFocusGroupClassConsumed={()=>setFocusGroupClassId(null)} onLaunchWorkout={(wodId,programSessionId,sessionTitle)=>{setLaunchWodId(wodId||null);setLaunchClassSessionId(null);setLaunchAssignmentId(null);setLaunchProgramSessionId(programSessionId||null);setLaunchProgramSessionTitle(sessionTitle||'');navigateTo('trening')}} /></section> : active === 'mi-trening' ? <section className="content-card training-content"><MyTraining key={labMode?'lab:'+labRevision:undefined} simpleMode={simpleMode} onOpenWod={(wodId,assignmentId)=>{setLaunchWodId(wodId);setLaunchAssignmentId(assignmentId||null);setLaunchProgramSessionId(null);setLaunchClassSessionId(null);navigateTo('trening')}} onLaunchProgramSession={(session,assignmentId)=>{setLaunchWodId(session.wod_id||null);setLaunchAssignmentId(assignmentId||null);setLaunchProgramSessionId(session.id);setLaunchProgramSessionTitle(session.title||'');setLaunchClassSessionId(null);navigateTo('trening')}} onContactPT={()=>{preparePTEntry(isPTCoach?'oversikt':'tenester');navigateTo('pt-studio')}} /></section> : active === 'wod' ? <section className="content-card training-content"><WodHub key={labMode?'lab:'+labRevision:undefined} officeMode={officeMode} onPreview={officeDesktop?previewTablet:undefined} initialEditRequest={officeMode?officeLibraryWod:null} onEditRequestConsumed={()=>setOfficeLibraryWod(null)} initialBuilder={officeMode&&officeBuilder} onBuilderConsumed={()=>setOfficeBuilder(false)} staff={isStaff(profile)} isAdmin={profile?.role==='admin'} initialImportedWod={pendingWodImport} onImportConsumed={()=>setPendingWodImport(null)} simpleMode={simpleMode} launchAssignmentId={launchAssignmentId} launchClassSessionId={launchClassSessionId} focusWodId={focusWodId} onFocusConsumed={()=>setFocusWodId(null)} onLaunchWod={(wodId,assignmentId,sessionId)=>{setLaunchWodId(wodId);setLaunchAssignmentId(assignmentId||null);setLaunchClassSessionId(sessionId||null);navigateTo('trening')}} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community profile={profile} /></section> : active === 'kaffi' ? <section className="content-card training-content"><CoffeeBar profile={profile} onHelp={openHelp} focusReviewId={focusCoffeeReviewId} onFocusReviewConsumed={()=>setFocusCoffeeReviewId(null)} /></section> : active === 'musikk' ? <section className="content-card training-content"><Music /></section> : active === 'mi-side' || active === 'pr-senter' || active === 'mi-historikk' ? <section className="content-card training-content"><MyPage onHelpNavigate={openFromHelp} initialHelpTopic={helpTopic} isPTCoach={isPTCoach} onProfileUpdated={display_name=>setProfile(p=>({...p,display_name}))} onMusic={()=>navigateTo('musikk')} refreshToken={workoutRevision} profile={profile} email={session.user.email} onOpenWorkout={openWorkout} onLaunchWod={(wodId,assignmentId,sessionId)=>{setLaunchWodId(wodId);setLaunchAssignmentId(assignmentId||null);setLaunchClassSessionId(sessionId||null);navigateTo('trening')}} simpleMode={simpleMode} onSimpleModeChange={changeSimpleMode} simpleModeError={simpleModeError} simpleModeSaving={simpleModeSaving} initialTab={active==='mi-side'&&helpTopic?'help':active==='pr-senter'?'records':active==='mi-historikk'?'history':'profile'} /></section> : active === 'admin' ? <section className="content-card training-content"><Admin profile={profile} onOpenWodLibrary={()=>{setFocusWodId(null);navigateTo('wod')}} onOpenPTClients={openPTClientWorkspace} onOpenPTAdmin={()=>{preparePTEntry('administrasjon');navigateTo('pt-studio')}} initialTab={adminInitialTab} focusToken={adminFocusToken} onOpenWodImport={parsed=>{setPendingWodImport(parsed);navigateTo('wod')}} /></section> : <section className="content-card">
+        {active === 'synchron-session' ? (ownedSynchron&&!localSessionOpen?null:<section className="content-card"><p>Fellesøkta er ikkje tilgjengeleg.</p><button type="button" className="secondary-button" onClick={()=>navigateBack('oversikt')}>Tilbake</button></section>) : active==='office'&&officeMode?<section className="content-card training-content"><Werkstatt onPreview={officeDesktop?previewTablet:undefined} key={profile.id} profile={profile} coachMode={isPTCoach} onExit={exitOffice} onOpenWod={()=>{setOfficeBuilder(false);setFocusWodId(null);navigateTo('wod')}} onBuildWod={()=>{setOfficeLibraryWod(null);setOfficeBuilder(true);setFocusWodId(null);navigateTo('wod')}} onLibraryWod={(id,copy=true)=>{setOfficeLibraryWod({id,copy});setFocusWodId(null);navigateTo('wod')}} onOpenPT={openPTClientWorkspace} onOpenAdmin={()=>handleSectionNavigate('admin')} onOpenCalendar={()=>handleSectionNavigate('timeplan')} onOpenImport={parsed=>{setOfficeBuilder(false);setPendingWodImport(parsed);navigateTo('wod')}}/></section>: active === 'oversikt' ? <section className="content-card training-content">{simpleMode?<SimpleCustomerHome newPtWodCount={newPtWodCount} coach={isPTCoach||isStaff(profile)} onHelp={()=>openHelp("navigation")} onPlan={openMyTraining} onFree={()=>{setQuickStart(true);navigateTo('trening')}} onWod={()=>{setFocusWodId(null);navigateTo('wod')}} onManual={()=>{setQuickManualEntry(true);navigateTo('trening')}} onSchedule={()=>{setScheduleTab('booking');navigateTo('timeplan')}} onHistory={()=>navigateTo('mi-historikk')} onCoffee={()=>navigateTo('kaffi')} onCommunity={()=>navigateTo('fellesskap')} onContactPT={()=>{preparePTEntry(isPTCoach?'oversikt':'tenester');navigateTo('pt-studio')}} />:<Overview key={session.user.id} refreshToken={workoutRevision} profile={profile} dailyWod={dailyWod} onPlan={openMyTraining} onFree={()=>{setQuickStart(true);navigateTo('trening')}} onCoffee={()=>navigateTo('kaffi')} onNavigate={navigateTo} onOpenWorkout={openWorkout} onOpenWod={(id)=>{setFocusWodId(id);navigateTo('wod')}} />}</section> : active === 'trening' ? null : active === 'timeplan' ? <section className="content-card training-content"><ScheduleHub simpleMode={simpleMode} profile={profile} onOpenProgramSession={session=>{setLaunchWodId(session.wod_id||null);setLaunchAssignmentId(null);setLaunchProgramSessionId(session.id);setLaunchProgramSessionTitle(session.title||'');setLaunchClassSessionId(null);setLaunchClassResult(false);navigateTo('trening')}} onOpenAssignment={(wodId,assignmentId)=>{setLaunchWodId(wodId);setLaunchAssignmentId(assignmentId);setLaunchProgramSessionId(null);setLaunchProgramSessionTitle('');setLaunchClassSessionId(null);setLaunchClassResult(false);navigateTo('trening')}} onContactPT={()=>{preparePTEntry("tenester");navigateTo("pt-studio")}} onOpenWod={(wodId,sessionId)=>{setFocusWodId(wodId);setLaunchClassSessionId(sessionId||null);setLaunchAssignmentId(null);navigateTo('wod')}} initialClassId={focusGroupClassId} initialTab={scheduleTab} onTabChange={setScheduleTab} focusRequestId={focusPTRequestId} onFocusConsumed={()=>setFocusPTRequestId(null)} onLogResult={(wodId,sessionId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(sessionId);setLaunchClassResult(true);navigateTo('trening')}} onLaunchWorkout={(wodId)=>{setLaunchWodId(wodId);setLaunchClassSessionId(null);setLaunchClassResult(false);navigateTo('trening')}} /></section> : active === 'pt-studio' ? <section className="content-card training-content"><PTStudio officeMode={officeMode} onRecordCalibration={synchronRuntime?.actorId===synchronActor&&typeof synchronRuntime?.recordIndividualCalibration==='function'?request=>synchronRuntime.recordIndividualCalibration(request):null} onPrepareSynchron={remoteLocked||synchronRouteIssue(synchronRuntime,synchronActor,{localSessionOpen})?null:prepareSynchron} onOpenNotification={handleNotificationNavigate} focusServiceRequest={focusPTServiceRequest} profile={profile} simpleMode={simpleMode} coachMode={isPTCoach} onGroupSchedule={()=>{setScheduleTab("booking");navigateTo("timeplan")}} initialClientId={focusPTClientId} initialWorkspace={ptStudioWorkspace} initialTab={ptStudioInitialTab} focusRequestId={focusPTRequestId} focusGroupClassId={focusGroupClassId} focusPanel={focusPTPanel} onFocusPanelConsumed={()=>setFocusPTPanel(null)} onFocusRequestConsumed={()=>setFocusPTRequestId(null)} onFocusGroupClassConsumed={()=>setFocusGroupClassId(null)} onLaunchWorkout={(wodId,programSessionId,sessionTitle)=>{setLaunchWodId(wodId||null);setLaunchClassSessionId(null);setLaunchAssignmentId(null);setLaunchProgramSessionId(programSessionId||null);setLaunchProgramSessionTitle(sessionTitle||'');navigateTo('trening')}} /></section> : active === 'mi-trening' ? <section className="content-card training-content"><MyTraining simpleMode={simpleMode} onOpenWod={(wodId,assignmentId)=>{setLaunchWodId(wodId);setLaunchAssignmentId(assignmentId||null);setLaunchProgramSessionId(null);setLaunchClassSessionId(null);navigateTo('trening')}} onLaunchProgramSession={(session,assignmentId)=>{setLaunchWodId(session.wod_id||null);setLaunchAssignmentId(assignmentId||null);setLaunchProgramSessionId(session.id);setLaunchProgramSessionTitle(session.title||'');setLaunchClassSessionId(null);navigateTo('trening')}} onContactPT={()=>{preparePTEntry(isPTCoach?'oversikt':'tenester');navigateTo('pt-studio')}} /></section> : active === 'wod' ? <section className="content-card training-content"><WodHub key={labMode?'lab:'+labRevision:undefined} doseVariant={labMode?'common':userDoseProfile(session.user)} officeMode={officeMode} onPreview={officeDesktop?previewTablet:undefined} initialEditRequest={officeMode?officeLibraryWod:null} onEditRequestConsumed={()=>setOfficeLibraryWod(null)} initialBuilder={officeMode&&officeBuilder} onBuilderConsumed={()=>setOfficeBuilder(false)} staff={isStaff(profile)} isAdmin={profile?.role==='admin'} initialImportedWod={pendingWodImport} onImportConsumed={()=>setPendingWodImport(null)} simpleMode={simpleMode} launchAssignmentId={launchAssignmentId} launchClassSessionId={launchClassSessionId} focusWodId={focusWodId} onFocusConsumed={()=>setFocusWodId(null)} onLaunchWod={(wodId,assignmentId,sessionId)=>{setLaunchWodId(wodId);setLaunchAssignmentId(assignmentId||null);setLaunchClassSessionId(sessionId||null);navigateTo('trening')}} /></section> : active === 'fellesskap' ? <section className="content-card training-content"><Community key={session.user.id} profile={profile} /></section> : active === 'kaffi' ? <section className="content-card training-content"><CoffeeBar profile={profile} onHelp={openHelp} focusReviewId={focusCoffeeReviewId} onFocusReviewConsumed={()=>setFocusCoffeeReviewId(null)} /></section> : active === 'musikk' ? <section className="content-card training-content"><Music /></section> : active === 'mi-side' || active === 'pr-senter' || active === 'mi-historikk' ? <section className="content-card training-content"><MyPage doseVariant={labMode?'common':userDoseProfile(session.user)} doseProfileDisabled={labMode} onDoseProfileUpdated={user=>setSession(previous=>previous?.user?.id===user.id?{...previous,user}:previous)} onHelpNavigate={openFromHelp} initialHelpTopic={helpTopic} isPTCoach={isPTCoach} onProfileUpdated={display_name=>setProfile(p=>({...p,display_name}))} onMusic={()=>navigateTo('musikk')} refreshToken={workoutRevision} profile={profile} email={session.user.email} onOpenWorkout={openWorkout} onLaunchWod={(wodId,assignmentId,sessionId)=>{setLaunchWodId(wodId);setLaunchAssignmentId(assignmentId||null);setLaunchClassSessionId(sessionId||null);navigateTo('trening')}} simpleMode={simpleMode} onSimpleModeChange={changeSimpleMode} simpleModeError={simpleModeError} simpleModeSaving={simpleModeSaving} initialTab={active==='mi-side'&&helpTopic?'help':active==='pr-senter'?'records':active==='mi-historikk'?'history':'profile'} /></section> : active === 'admin' ? <section className="content-card training-content"><Admin profile={profile} onOpenWodLibrary={()=>{setFocusWodId(null);navigateTo('wod')}} onOpenPTClients={openPTClientWorkspace} onOpenPTAdmin={()=>{preparePTEntry('administrasjon');navigateTo('pt-studio')}} initialTab={adminInitialTab} focusToken={adminFocusToken} onOpenWodImport={parsed=>{setPendingWodImport(parsed);navigateTo('wod')}} /></section> : <section className="content-card">
           <div className="section-icon"><Icon size={22} /></div>
           <div className="section-kicker">MODUL · {active.toUpperCase()}</div>
           <h2>{current.label}</h2>
@@ -551,15 +667,15 @@ export default function App() {
         {selectedWorkout&&<WorkoutDetail workout={selectedWorkout} memberId={session.user.id} onBack={()=>setSelectedWorkout(null)} onSaved={handleWorkoutSaved} onDeleted={()=>{setSelectedWorkout(null);setWorkoutRevision(value=>value+1)}}/>}
         <footer>GARASJEGYM · {RELEASE_NAME}</footer>
       </main>
+    {officeDesktop&&tabletOpen&&<Suspense fallback={null}><TabletLabDock wod={tabletWod} onClose={()=>setTabletOpen(false)}/></Suspense>}
       <AppMobileNavigation items={mobileNavItems} active={active} staff={!simpleMode&&isStaff(profile)} admin={profile.role==='admin'} coach={isPTCoach} onNavigate={handleSectionNavigate} onQuickMenu={()=>setQuickMenu(true)}/>
       {quickMenu&&<div className="modal-backdrop gg-quick-backdrop" onClick={()=>setQuickMenu(false)}><section className="gg-quick-menu" role="dialog" aria-modal="true" aria-label="Hurtigmeny" onClick={e=>e.stopPropagation()}><header><strong>Hurtigmeny</strong><button type="button" aria-label="Lukk" onClick={()=>setQuickMenu(false)}><X size={20}/></button></header><div className="gg-quick-items">{[
         ...(timerSnapshot.sessionOpen?[['trening','Tilbake til økta',PlayCircle]]:[]),
         ['oversikt','Heim',LayoutDashboard],['wod','WOD-bibliotek',BookOpen],['mi-trening','Min treningsplan',CalendarDays],['mi-historikk','Treningslogg',History],['pr-senter','PR-senter',Trophy],['timeplan','Timeplan',CalendarDays],
         ...((isStaff(profile)||isPTCoach)?[['pt-studio','PT-kundar',Users]]:[]),...(!simpleMode&&isStaff(profile)?[['pt-admin','PT-drift',Settings],['admin','Drift',Settings]]:[])
-      ].map(([id,label,ItemIcon])=><button type="button" key={id} onClick={()=>{setQuickMenu(false);if(id==='trening')navigateRoot(id);else if(id==='mi-trening')openMyTraining();else if(id==='pt-admin'){preparePTEntry('administrasjon');navigateTo('pt-studio')}else if(id==='pt-studio'){openPTClientWorkspace()}else handleSectionNavigate(id)}}><ItemIcon size={18}/><span>{label}</span></button>)}</div>{active==='oversikt'&&!timerSnapshot.sessionOpen&&<button type="button" className="gg-quick-exit" onClick={exitFromRoot}>Tillat å gå ut</button>}<small>Tips: hald inne Heim for å opna denne menyen.</small></section></div>}
+      ].map(([id,label,ItemIcon])=><button type="button" key={id} onClick={()=>{setQuickMenu(false);if(id==='trening')navigateRoot(id);else if(id==='mi-trening')openMyTraining();else if(id==='pt-admin'){preparePTEntry('administrasjon');navigateTo('pt-studio')}else if(id==='pt-studio'){openPTClientWorkspace()}else handleSectionNavigate(id)}}><ItemIcon size={18}/><span>{label}</span></button>)}</div>{active==='oversikt'&&!timerSnapshot.sessionOpen&&!remoteLocked&&<button type="button" className="gg-quick-exit" onClick={exitFromRoot}>Tillat å gå ut</button>}<small>Tips: hald inne Heim for å opna denne menyen.</small></section></div>}
       {infotainmentActive&&isStaff(profile)&&<Suspense fallback={<div className="training-state" role="status">Lastar infotainment …</div>}><Infotainment onExit={()=>{try{sessionStorage.removeItem('garasjegym:infotainment-active');sessionStorage.removeItem('garasjegym:infotainment-tab')}catch{}setInfotainmentActive(false)}} timerSnapshot={timerSnapshot}/></Suspense>}
     </div>
-    {officeDesktop&&tabletOpen&&<Suspense fallback={null}><TabletLabDock wod={tabletWod} onClose={()=>setTabletOpen(false)}/></Suspense>}
     </MusicProvider>
   )
 }

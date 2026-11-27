@@ -1,3 +1,4 @@
+import {samspelConfig,samspelNoncompetitive,samspelClockedEmom,samspelStrength,samspelRelay,samspelChipper} from './samspel.js'
 import {getWodSchemaItems,sortWodItems} from './wodOrdering.js'
 import {isEmomFormat,emomIntervalSeconds} from './wodEngine.js'
 import {COMPOSITE_FORMAT} from './compositeWod.js'
@@ -8,13 +9,15 @@ export function prepareLibraryWodPart(wod,oldBlock){
  if(!wod?.id||!oldBlock?.id)throw new Error('Vel ein gyldig WOD og øktdel.')
  if(wod.format===COMPOSITE_FORMAT)throw new Error('Vel ein enkelt-WOD. Ei samansett økt kan ikkje leggjast inni ei anna.')
  const schema=wod.timer_settings?.workout_schema||{}
+ const samspel=samspelConfig(schema)
+ if(schema.samspel&&(!samspel||!(samspelNoncompetitive(samspel)||samspelClockedEmom(samspel)||samspelStrength(samspel)||samspelRelay(samspel)||samspelChipper(samspel))))throw Error('Samspel-oppsettet kan ikkje brukast som øktdel.')
  const items=sortWodItems(getWodSchemaItems(schema))
  if(!items.length)throw new Error('WOD-en manglar øvingar i det lagra oppsettet.')
  const format=isEmomFormat(wod.format)?'EMOM':wod.format
- const interval=emomIntervalSeconds(wod.format,schema.interval)
- const seconds=Math.max(60,Number(schema.duration_seconds)||Number(schema.time_cap_seconds)||Number(wod.duration_minutes)*60||1200)
+ const interval=samspelClockedEmom(samspel)?samspel.switch_seconds:emomIntervalSeconds(wod.format,schema.interval)
+ const seconds=samspelClockedEmom(samspel)?samspel.duration_seconds:Math.max(60,Number(schema.duration_seconds)||Number(schema.time_cap_seconds)||Number(wod.duration_minutes)*60||1200)
  const block={
-  ...oldBlock,format,
+  ...oldBlock,format,samspel:samspel?JSON.parse(JSON.stringify(samspel)):null,...(samspel?{scoreMode:'none'}:{}),
   flowPurpose:schema.flowPurpose||flowPurpose({title:wod.name},schema),flowReporting:schema.flowReporting||'auto',
   title:oldBlock.title||wod.name,
   minutes:seconds/60,
@@ -24,6 +27,7 @@ export function prepareLibraryWodPart(wod,oldBlock){
    version:schema.version??null,duration_seconds:seconds,
    items:items.map(item=>JSON.parse(JSON.stringify(item))),
    interval:schema.interval?{...schema.interval}:null,
+   samspel:samspel?JSON.parse(JSON.stringify(samspel)):null,
    rounds:schema.rounds??null,ladder:schema.ladder?{...schema.ladder}:null
   },
   ...(isEmomFormat(format)?{emomIntervalSeconds:interval}:{}),
@@ -46,6 +50,7 @@ export function prepareLibraryWodPart(wod,oldBlock){
 
 /** A linked block only inherits a library WOD's benchmark identity while unchanged. */
 export function equivalentLibraryWodSource(part){
+ if(part?.samspel||part?.source_wod_snapshot?.samspel)return null // no personal benchmark identity for team work
  const source=part?.source_wod_snapshot
  if(!source||!part?.source_wod_id||source.id!==part.source_wod_id)return null
  const normalizedFormat=isEmomFormat(source.format)?'EMOM':source.format

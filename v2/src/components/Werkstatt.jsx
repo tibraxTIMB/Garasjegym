@@ -11,11 +11,11 @@ import PlanProduction from './PlanProduction.jsx'
 import ProjectControl from './ProjectControl.jsx'
 import {readProjects,persistProjects,checkpoint,restoreRevision,projectSnapshot} from '../lib/meisterwerkProjects.js'
 import {readPlanProject,savePlanProject,clearPlanProject} from '../lib/werkstattProjects.js'
-import {exchangeRole,MAX_EXCHANGE_BYTES,parsePlanDocument,planCsv,planDocument,planText,wodDocument,wodText,wodCsv,wodImportSource,saveExchange,printExchange} from '../lib/werkstattExchange.js'
+import {exchangeRole,werkstattEntryAllowed,MAX_EXCHANGE_BYTES,parsePlanDocument,planCsv,planDocument,planText,wodDocument,wodText,wodCsv,wodImportSource,saveExchange,printExchange} from '../lib/werkstattExchange.js'
 import './werkstatt.css'
 
 export default function Werkstatt({profile,coachMode,onOpenWod,onBuildWod,onLibraryWod,onOpenPT,onOpenAdmin,onOpenCalendar,onOpenImport,onExit,onPreview}){
- const role=exchangeRole(profile,coachMode)
+ const role={...exchangeRole(profile,coachMode),office:werkstattEntryAllowed(profile,profile?.id)}
  const [tab,setTab]=useState('home'),[wods,setWods]=useState([]),[catalog,setCatalog]=useState([]),[loaded,setLoaded]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('')
  const [query,setQuery]=useState(''),[selected,setSelected]=useState([]),[source,setSource]=useState(''),[sourceVersion,setSourceVersion]=useState(0)
  const [planSource,setPlanSource]=useState(''),[planFormat,setPlanFormat]=useState('csv'),[planTitle,setPlanTitle]=useState('Importert treningsplan'),[preview,setPreview]=useState(null),[confirmed,setConfirmed]=useState(false),[saving,setSaving]=useState(false)
@@ -66,7 +66,7 @@ export default function Werkstatt({profile,coachMode,onOpenWod,onBuildWod,onLibr
   }catch(e){setError(e.message||'Kunne ikkje lagra malen.')}finally{lock.current=false;setSaving(false)}
  }
  function exportWods(format){if(!picked.length)return;try{if(format==='pdf')printExchange('GarasjeGym · WOD',wodText(picked));else{const data=format==='json'?JSON.stringify(wodDocument(picked),null,2):format==='csv'?wodCsv(picked):wodText(picked,format==='md');saveExchange('garasjegym-wod.'+format,data,format==='json'?'application/json':format==='csv'?'text/csv;charset=utf-8':undefined)}}catch(e){setError(e.message)}}
- if(!role.office)return <section><p>Werkstatt krev godkjend PT- eller driftsrolle.</p><button type="button" onClick={onExit}>Tilbake</button></section>
+ if(!role.office)return <section><p>Werkstatt krev godkjend administrator.</p><button type="button" onClick={onExit}>Tilbake</button></section>
  const tabs=[['home','Arbeidsbord'],['library','WOD-eksport'],...(role.staff?[['catalog','LIBRARIUM']]:[]),...(role.importWod?[['exportwerk','EXPORTWERK'],['warmups','Oppvarming']]:[]),...(role.importWod?[['import','WOD-import']]:[]),...(role.planTemplate?[['project','Plan Studio'],['plan','Planimport']]:[])]
  return <div className="gg-werkstatt">
   <header className="gg-werkstatt-head"><div><span className="section-kicker">GARASJEGYM 49 · PC COMPANION</span><h2>WERKSTATT</h2><p>Programmering, planlegging og drift. Same GarasjeGym, same data.</p></div><button type="button" className="secondary-button" onClick={onExit}>Til vanleg app</button></header>

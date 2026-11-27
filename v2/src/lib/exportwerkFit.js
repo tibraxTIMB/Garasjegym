@@ -37,15 +37,17 @@ export function fitMapping(name,override){
  return {category,subtype,categoryCode:Number(a),subtypeCode:Number(b)}
 }
 const numeric=x=>x==null||x===''?null:Number(x)
+const blockedFitEvidence=ev=>ev?.individualBlocked===true||ev?.team===true||!!(ev?.participation&&ev.participation!=='individual')
 export function fitPreview(records,id,mappings={}){
  const log=records?.logs?.find(l=>l.id===id);if(!log)throw Error('Vel ei eiga økt.')
  const ev=log.fit_evidence||{}
- if(ev.team||ev.participation&&ev.participation!=='individual')throw Error('Lagresultat kan ikkje eksporterast som personleg styrkeaktivitet.')
+ if(blockedFitEvidence(ev))throw Error('Lagresultat kan ikkje eksporterast som personleg styrkeaktivitet.')
  if(ev.completionOnly)throw Error('Økta er berre markert som utført.')
  const exercises=records.exercises.filter(e=>e.workout_log_id===id).sort((a,b)=>(a.sort_order??0)-(b.sort_order??0)),byExercise=new Map(exercises.map(e=>[e.id,e]))
  const ordered=records.sets.filter(s=>byExercise.has(s.workout_exercise_id)).sort((a,b)=>exercises.indexOf(byExercise.get(a.workout_exercise_id))-exercises.indexOf(byExercise.get(b.workout_exercise_id))||(a.set_number??0)-(b.set_number??0))
  const rows=ordered.map(s=>{const ex=byExercise.get(s.workout_exercise_id),mapping=fitMapping(ex.exercise_name,mappings[ex.exercise_name]);const reps=numeric(s.reps),kg=numeric(s.load_kg);let problem=''
-  if(!Number.isInteger(reps)||reps<=0||reps>65534)problem='Ingen gyldige registrerte repetisjonar'
+  if(s.fit_usable===false)problem='Settet er ikkje dokumentert som individuell gjennomført prestasjon'
+  else if(!Number.isInteger(reps)||reps<=0||reps>65534)problem='Ingen gyldige registrerte repetisjonar'
   else if(kg!=null&&(!Number.isFinite(kg)||kg<0||kg>4095.875||Math.abs(kg*16-Math.round(kg*16))>1e-6))problem='Vekta kan ikkje representerast nøyaktig i FIT (1/16 kg)'
   else if(!mapping)problem='Vel ein nøyaktig Garmin-øving'
   return {id:s.id,exercise:ex.exercise_name,number:s.set_number,reps,kg,mapping,problem}
@@ -54,7 +56,7 @@ export function fitPreview(records,id,mappings={}){
 }
 export function encodeStrengthFit(preview,{startIso,elapsed,timer,individualConfirmed,confirmed,skipInvalid=false,timings={}}){
  if(!confirmed||!individualConfirmed)throw Error('Stadfest eiga økt og tidsdata.')
- if(!preview?.log||preview.log.fit_evidence?.team||preview.log.fit_evidence?.completionOnly)throw Error('Ikkje ein individuell målt aktivitet.')
+ if(!preview?.log||blockedFitEvidence(preview.log.fit_evidence)||preview.log.fit_evidence?.completionOnly)throw Error('Ikkje ein individuell målt aktivitet.')
  if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})$/.test(startIso))throw Error('Start må ha dato, klokkeslett og tidssone.')
  const start=new Date(startIso),duration=Number(elapsed),active=Number(timer)
  if(!Number.isFinite(start.getTime())||!Number.isInteger(duration)||duration<=0||duration>86400||!Number.isInteger(active)||active<=0||active>duration)throw Error('Kontroller start og faktisk medgått/aktiv tid i sekund.')

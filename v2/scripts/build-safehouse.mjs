@@ -16,7 +16,7 @@ export function makeZip(entries){
 }
 if(process.argv[1]===fileURLToPath(import.meta.url)){
  const folder=new URL('../public/safehouse/',import.meta.url)
- const names=['TA-BACKUP.cmd','Safehouse.ps1','LES-MEG.txt']
+ const names=['TA-BACKUP.cmd','Safehouse.ps1','KONTROLLER-BACKUP.cmd','Kontroller-Backup.ps1','LES-MEG.txt']
  writeFileSync(new URL('DATABUNKER-Windows.zip',folder),makeZip(names.map(name=>{const data=readFileSync(new URL(name,folder));return [name,name.endsWith('.ps1')?Buffer.concat([Buffer.from([0xef,0xbb,0xbf]),data]):data]})))
  console.log('DATABUNKER Windows ZIP generated.')
 }

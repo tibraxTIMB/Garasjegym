@@ -27,10 +27,11 @@ export function flowBlockForItem(item,schema={},format=''){
 }
 export function flowItemGroup(item,schema={},format=''){
  const block=flowBlockForItem(item,schema,format)
+ if(block.samspel||block.warmup_group)return {id:block.id,title:block.title||format,reporting:'done',purpose:flowPurpose(block,schema)}
  if(schema.library_category==='warmup')return {id:item.warmup_phase==='movement_rehearsal'?'warmup-build':'warmup-prep',title:item.warmup_phase==='movement_rehearsal'?'Teknikk / finn arbeidsvekt':'Felles oppvarming',reporting:'done'}
  return {id:block.id,title:block.title||format,reporting:flowReporting(block,schema),purpose:flowPurpose(block,schema)}
 }
-export function emptyFlowSet(set={}){return {...set,flow_status:'',reps:'',load_kg:'',height_cm:'',time_text:'',time_seconds:'',rir:'',complex_status:''}}
+export function emptyFlowSet(set={}){return {...set,planned_fields:[],flow_status:'',reps:'',load_kg:'',height_cm:'',time_text:'',time_seconds:'',rir:'',complex_status:''}}
 export function clearFlowItem(item){return {...item,prescribed_sets_prefilled:false,rowValue:'',workSeconds:'',sets:(item.sets||[]).map(emptyFlowSet)}}
 
 export function flowCompletionRows(scores={}){return Object.entries(scores).filter(([key,v])=>key.startsWith('flow:')&&['done','partial','skipped'].includes(v?.status)).map(([key,v])=>({id:key.slice(5),title:v.title||key.slice(5),status:v.status}))}

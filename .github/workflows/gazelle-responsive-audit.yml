@@ -20,7 +20,20 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: pip install playwright==1.56.0 && python -m playwright install --with-deps chromium
+      - name: Install Chromium and verify browser launch
+        run: |
+          pip install playwright==1.56.0
+          python -m playwright install chromium
+          python -c "from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(); b.close(); p.stop()" || {
+            # GitHub's hosted Ubuntu image normally has the libraries already.
+            # If not, disable only the unrelated Microsoft apt source that can
+            # fail apt update with HTTP 403; retain Ubuntu security sources.
+            for f in /etc/apt/sources.list.d/microsoft-prod.list /etc/apt/sources.list.d/microsoft-prod.sources; do
+              if [ -f "$f" ]; then sudo mv "$f" "$f.disabled"; fi
+            done
+            python -m playwright install --with-deps chromium
+            python -c "from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(); b.close(); p.stop()"
+          }
       - name: Check real components with isolated demo data
         run: |
           npm run help:demo > /tmp/gg-ui-audit-vite.log 2>&1 &
@@ -29,7 +42,7 @@ jobs:
           for i in $(seq 1 60); do curl -fs http://127.0.0.1:4173/ui-audit.html >/dev/null && break; sleep 1; done
           python scripts/responsive-audit.py
       - name: Test built Tablet Lab with isolated storage and backend
-        if: ${{ github.ref_name == 'werkstatt-pc-companion' || github.ref_name == 'ops/werkstatt-fertigstellung-49' || github.ref_name == 'exportwerk-fertigstellung' }}
+        if: ${{ github.ref_name == 'werkstatt-pc-companion' || github.ref_name == 'ops/werkstatt-fertigstellung-49' || github.ref_name == 'exportwerk-fertigstellung' || github.ref_name == 'gazelle-operational-anatomical' }}
         run: |
           npx vite build --config vite.tablet-lab.config.js
           mkdir -p /tmp/gg-tablet-lab-host ui-audit-results
@@ -39,7 +52,14 @@ jobs:
           PID=$!
           trap 'kill "$PID" || true' EXIT
           for i in $(seq 1 30); do curl -fs http://127.0.0.1:4182/host.html >/dev/null && break; sleep 1; done
+          curl -fs http://127.0.0.1:4182/host.html >/dev/null
           python scripts/tablet-lab-browser-test.py
+      - name: Verify XLSX structure with native reader
+        if: ${{ github.ref_name == 'gazelle-operational-anatomical' }}
+        run: |
+          node scripts/exportwerk-xlsx-fixture.mjs
+          python -m pip install openpyxl==3.1.5
+          python scripts/exportwerk-xlsx-check.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

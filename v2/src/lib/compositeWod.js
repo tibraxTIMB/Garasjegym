@@ -1,3 +1,4 @@
+import {samspelConfig,samspelNoncompetitive,samspelQuality,samspelEmom,samspelEmomComplete,samspelDouble,samspelClockedEmom,doubleEmomComplete,samspelStrength,samspelStrengthComplete,samspelRelay,relayTotal,samspelChipper,teamChipperComplete,teamChipperProgress,samspelIssue,samspelParticipantResults,samspelResultIssue,normalizeSamspelSwaps} from './samspel.js'
 import {complexResultSummary} from './wodComplexes.js'
 // Multi-part workouts reuse the existing WOD engine and Timer for each part.
 // No separate timer is introduced. Blocks, pauses and outcomes live in the WOD schema.
@@ -60,6 +61,7 @@ export function validateCompositeBlocks(blocks,items=[]) {
   if(!Number.isFinite(minute)||minute<=0||minute>180||Math.abs(Math.round(minute*60)-minute*60)>0.001)return title+': vel inntil 180 minutt (med sekundpresisjon).'
   const exercises=items.filter(item=>(item.blockId||item.block_id)===block.id&&!item.is_rest)
   if(!exercises.length)return title+': legg til minst éi øving.'
+  if(block.samspel){const s=compositeSamspelConfig(block);if(!s)return title+': ugyldig Samspel-oppsett. Engine Swap og Double EMOM krev EMOM og heile rotasjonar; Iron Twins krev Strength og 1–30 sett; You Go I Go krev AMRAP; Team Chipper krev eintydige felles repetisjonsmål.';const issue=samspelIssue(s,{format:samspelClockedEmom(s)?'EMOM':block.format,participation:s.participant_count===2?'partner':'team',participantCount:s.participant_count,collaboration:samspelChipper(s)?'free_split':samspelRelay(s)?'you_go_i_go':'parallel',items:(samspelDouble(s)||samspelStrength(s)||samspelChipper(s))?items.filter(item=>(item.blockId||item.block_id)===block.id):exercises});if(issue)return title+': '+issue;if(block.scoreMode&&!['auto','none'].includes(block.scoreMode))return title+': bruk Samspel-resultat, ikkje eit ekstra hovudresultat.'}
   const every=compositeIntervalMinutes(block.format,block)
   if(every && Math.round(minute*60)%Math.round(every*60)!==0)return title+': øktlengda må gå opp i intervalla på '+Math.round(every*60)+' sekund.'
   if(block.format==='For Time'&&block.rounds!=null&&String(block.rounds).trim()!==''&&(!Number.isInteger(Number(block.rounds))||Number(block.rounds)<1||Number(block.rounds)>100))return title+': vel 1–100 rundar eller la feltet stå tomt.'
@@ -95,9 +97,9 @@ export function compositeBlockForTimer(block,index=0){
  const duration=compositeBlockDuration(block,items.filter(x=>!x.is_rest).length||items.length)
  const slots=every?Math.floor(duration/Math.round(every*60)):0
  return {
-  ...block, title:block.title||'Del '+(index+1),
+  ...block, ...(block.samspel?{samspel:compositeSamspelConfig(block)||block.samspel}:{}), title:block.title||'Del '+(index+1),
   duration_seconds:duration,
-  items:every?items.map(item=>({...item,minute_slot:item.minute_slot||Array.from({length:slots},(_,i)=>i+1).join(',')})):items,
+  items:every&&!samspelDouble(block.samspel)?items.map(item=>({...item,minute_slot:item.minute_slot||Array.from({length:slots},(_,i)=>i+1).join(',')})):items,
  }
 }
 
@@ -119,11 +121,15 @@ export function compositeTimerConfig(block) {
  }:null
  const timedCap=current.format==='AMRAP'||deathBy||every!==null||(['Couplet','Triplet'].includes(current.format)?current.combinationMode!=='Open':COMPOSITE_FOR_TIME_FORMATS.includes(current.format))
  const plannedRounds=current.format==='For Time'&&Number.isInteger(Number(current.rounds))&&Number(current.rounds)>0?Number(current.rounds):null
+ const samspel=compositeSamspelConfig(current)
  const schema={
+  ...(samspel?{samspel}:{}),
+  prep_countdown:current.prep_countdown===true&&current.flowPurpose==='prep',
+  prep_only:['prep','build','recovery'].includes(current.flowPurpose),
   format:current.format,
   include_final_rest:interval&&current.includeFinalRest===true,
   planned_for_time_rounds:plannedRounds,
-  wod_engine:{version:2,participation:current.participation||'individual',participant_count:Number(current.participant_count)||1,collaboration:current.collaboration||'solo',scoring:current.scoring||{type:'reps',fields:['reps']},blocks:[]},
+  wod_engine:{version:2,participation:samspel?(samspel.participant_count===2?'partner':'team'):current.participation||'individual',participant_count:samspel?.participant_count||Number(current.participant_count)||1,collaboration:samspelChipper(samspel)?'free_split':samspelRelay(samspel)?'you_go_i_go':samspel?'parallel':current.collaboration||'solo',scoring:current.scoring||{type:'reps',fields:['reps']},blocks:[]},
   duration_seconds:current.duration_seconds,
   time_cap_seconds:timedCap ? current.duration_seconds:null,
   interval:{work_every_minutes:every,work_every_seconds:every?Math.round(every*60):null,work_seconds:every?Math.round(every*60):interval?work:null,rest_seconds:interval?rest:0},
@@ -189,7 +195,7 @@ export function plannedFixedEmomSets(item, blocks=[], level='rx', manualEntry=fa
  const levelReps=item?.levels?.[level]?.reps
  const reps=Number(levelReps!==''&&levelReps!=null?levelReps:item?.reps)
  const configuredSets=Array.isArray(item?.sets)&&item.sets.length?item.sets:[]
- const autoFill=!manualEntry&&scheduledSets>0&&Number.isInteger(reps)&&reps>0&&item?.reps_mode!=='amrap'&&!item?.is_rest
+ const autoFill=!block?.samspel&&!manualEntry&&scheduledSets>0&&Number.isInteger(reps)&&reps>0&&item?.reps_mode!=='amrap'&&!item?.is_rest
  const sets=autoFill?Array.from({length:Math.max(scheduledSets,configuredSets.length)},(_,i)=>configuredSets[i]||configuredSets[0]||{}):configuredSets
  return {autoFill,reps,sets}
 }
@@ -227,4 +233,114 @@ export function explicitBlockResults(blocks=[],overrides={},items=[]){
   }
   return {block_id:block.id,title:block.title||'Øktdel',type:definition.value,label:definition.label,value,unit}
  })
+}
+
+// Composite Samspel parts own their clock and measured participant evidence.
+// Build explicit track names from the builder's current ordered exercise selection.
+export function compositeChipperTargets(block,items=[],repsFor=item=>item.reps){
+ if(!samspelChipper(block?.samspel))return block
+ return {...block,samspel:{...block.samspel,targets:items.filter(item=>(item.blockId||item.block_id)===block.id).map(item=>({exercise_name:String(item.name||item.exercise_name||'').trim(),target_reps:item.is_rest||item.is_complex||item.repsMode==='amrap'||item.reps_mode==='amrap'?0:Number(repsFor(item))}))}}
+}
+export function compositeIronTwinsDose(block,items=[],level='rx'){
+ if(!samspelStrength(block?.samspel))return block
+ const item=items.find(item=>(item.blockId||item.block_id)===block.id&&!item.is_rest)
+ const count=item?.levels?.[level]?.sets??item?.levels?.rx?.sets??(Array.isArray(item?.sets)&&item.sets.length?item.sets.length:1)
+ return {...block,samspel:{...block.samspel,exercise_name:String(item?.name||item?.exercise_name||'').trim(),planned_sets:Number(count)}}
+}
+export function compositeDoubleTracks(block,items=[]){
+ if(!samspelDouble(block?.samspel))return block
+ return {...block,samspel:{...block.samspel,tracks:items.filter(item=>(item.blockId||item.block_id)===block.id).map(item=>String(item.name||item.exercise_name||'').trim())}}
+}
+export function compositeSamspelConfig(block){
+ if(!block?.samspel)return null
+ const config={...block.samspel,duration_seconds:compositeBlockDuration(block)}
+ if(samspelClockedEmom(config)){
+  if(!isEmomFormat(block.format)||block.warmup_group)return null
+  config.switch_seconds=emomIntervalSeconds(block.format,{work_every_seconds:block.emomIntervalSeconds??block.interval?.work_every_seconds??config.switch_seconds,work_every_minutes:block.interval?.work_every_minutes})
+ }else if(samspelChipper(config)){
+  if(block.format!=='Chipper'||block.warmup_group||!Number.isSafeInteger(config.duration_seconds)||config.duration_seconds<=0||config.duration_seconds>10800)return null
+ }else if(samspelRelay(config)){
+  if(block.format!=='AMRAP'||block.warmup_group||!Number.isSafeInteger(config.duration_seconds)||config.duration_seconds<=0||config.duration_seconds>10800)return null
+ }else if(samspelStrength(config)){
+  if(block.format!=='Strength'||block.warmup_group)return null
+ }else if(block.format!=='Eigen økt'||!samspelNoncompetitive(config))return null
+ return samspelConfig({samspel:config})
+}
+export function compositeSamspelResults(blocks=[],scores={},timerResults={},manual=false){
+ const rows=[]
+ for(const [index,block] of blocks.entries()){
+  if(!block.samspel)continue
+  const s=compositeSamspelConfig(block),title=block.title||'Del '+(index+1)
+  if(!s)return {rows:[],issue:title+': Samspel-oppsettet er ikkje støtta.'}
+  const snapshot=timerResults[index]||{}
+  const draft=snapshot.prep_skipped&&block.warmup_group?{participants:Object.fromEntries(Array.from({length:s.participant_count},(_,i)=>[i+1,{quality:'skipped'}]))}:scores['samspel:'+block.id]||{}
+  if(samspelChipper(s)){
+   const result=samspelParticipantResults(s,draft.participants||{})
+   if(result.issue)return {rows:[],issue:title+' · '+result.issue,field:'samspel-block-'+block.id+'-'+result.slot+'-'+result.field}
+   const progress=teamChipperProgress(s,result.rows),allDone=teamChipperComplete(s,result.rows)
+   const raw=manual?draft.timeSeconds:snapshot.elapsed
+   const elapsed=raw==null||String(raw).trim()===''?null:Number(raw)
+   if(elapsed!==null&&(!Number.isSafeInteger(elapsed)||elapsed<0||elapsed>s.duration_seconds))return {rows:[],issue:title+': oppgi gyldig medgått tid innan tidsgrensa.',field:'samspel-block-'+block.id+'-time'}
+   if(progress.some(r=>r.reps>0)&&!(elapsed>0))return {rows:[],issue:title+': registrer faktisk medgått tid for utført arbeid.',field:'samspel-block-'+block.id+'-time'}
+   rows.push({block_id:block.id,title,samspel:{...s,team_score:true,participant_results:result.rows,manual_swaps:[]},chipper_progress:progress,distance:null,calories:null,elapsed,completed:allDone&&elapsed>0})
+   continue
+  }
+  if(samspelRelay(s)){
+   const elapsed=manual?null:Math.max(0,Number(snapshot.elapsed)||0)
+   const result=samspelParticipantResults(s,draft.participants||{})
+   if(result.issue)return {rows:[],issue:title+' · '+result.issue,field:'samspel-block-'+block.id+'-'+result.slot+'-'+result.field}
+   const total=relayTotal(s,result.rows)
+   if(!Number.isSafeInteger(total)||total<0)return {rows:[],issue:title+': ugyldig samla rundetal.',field:'samspel-block-'+block.id+'-1-rounds'}
+   if(!manual&&elapsed===0&&result.rows.some(r=>r.rounds>0||r.extra_reps>0))return {rows:[],issue:title+': ingen medgått arbeidstid. Etterregistrer dersom arbeidet vart utført.',field:'samspel-block-'+block.id+'-1-rounds'}
+   rows.push({block_id:block.id,title,samspel:{...s,team_score:true,participant_results:result.rows,manual_swaps:manual?[]:normalizeSamspelSwaps(snapshot.samspel_swaps).filter(t=>t<=elapsed)},relay_rounds:total,distance:null,calories:null,elapsed,completed:manual?draft.completed===true:elapsed>=s.duration_seconds})
+   continue
+  }
+  if(samspelStrength(s)){
+   const elapsed=manual?undefined:Math.max(0,Number(snapshot.elapsed)||0)
+   const result=samspelParticipantResults(s,draft.participants||{},{elapsed})
+   if(result.issue)return {rows:[],issue:title+' · '+result.issue,field:'samspel-block-'+block.id+'-'+result.slot+'-'+result.field}
+   if(!manual&&snapshot.hasStarted!==true&&elapsed===0&&result.rows.length)return {rows:[],issue:title+': delen vart ikkje starta. Etterregistrer økta dersom arbeidet vart utført.',field:'samspel-block-'+block.id+'-'+result.rows[0].slot+'-reps-'+(result.rows[0].strength_sets[0].set_number-1)}
+   rows.push({block_id:block.id,title,samspel:{...s,team_score:true,participant_results:result.rows,manual_swaps:[]},distance:null,calories:null,elapsed:manual?null:elapsed,completed:samspelStrengthComplete(s,result.rows)})
+   continue
+  }
+  if(samspelDouble(s)){
+   const elapsed=manual?undefined:Math.max(0,Number(snapshot.elapsed)||0)
+   const result=samspelParticipantResults(s,draft.participants||{},{elapsed})
+   if(result.issue)return {rows:[],issue:title+' · '+result.issue,field:'samspel-block-'+block.id+'-'+result.slot+'-'+result.field}
+   for(const slot of [1,2]){
+    const r=result.rows.find(row=>row.slot===slot)
+    for(const [field,value] of [['trackA',r?.track_a_intervals],['trackB',r?.track_b_intervals]])if(value==null)return {rows:[],issue:title+' · Utøvar '+slot+': registrer faktisk fullførte intervall på spor '+(field==='trackA'?'A':'B')+' (0 dersom ingen).',field:'samspel-block-'+block.id+'-'+slot+'-'+field}
+   }
+   rows.push({block_id:block.id,title,samspel:{...s,team_score:true,participant_results:result.rows,manual_swaps:[]},distance:null,calories:null,elapsed:manual?null:elapsed,completed:doubleEmomComplete(s,result.rows,{elapsed})})
+   continue
+  }
+  if(samspelEmom(s)){
+   const elapsed=manual?undefined:Math.max(0,Number(snapshot.elapsed)||0)
+   const result=samspelParticipantResults(s,draft.participants||{},{elapsed})
+   if(result.issue)return {rows:[],issue:title+' · '+result.issue,field:'samspel-block-'+block.id+'-'+result.slot+'-'+result.field}
+   for(let slot=1;slot<=s.participant_count;slot++){
+    const r=result.rows.find(row=>row.slot===slot)
+    for(const [field,value] of [['intervals',r?.completed_intervals],['erg',r?.erg_value]])if(value==null)return {rows:[],issue:title+' · Utøvar '+slot+': registrer faktisk '+(field==='intervals'?'fullførte intervall':'maskinresultat')+' (0 dersom ingen).',field:'samspel-block-'+block.id+'-'+slot+'-'+field}
+   }
+   const total=result.rows.reduce((sum,row)=>sum+row.erg_value,0)
+   if(!Number.isFinite(total))return {rows:[],issue:title+': ugyldig samla maskinresultat.',field:'samspel-block-'+block.id+'-1-erg'}
+   rows.push({block_id:block.id,title,samspel:{...s,team_score:true,participant_results:result.rows,manual_swaps:[]},distance:s.metric==='distance'?total:null,calories:s.metric==='calories'?total:null,elapsed:manual?null:elapsed,completed:samspelEmomComplete(s,result.rows,{elapsed})})
+   continue
+  }
+  const result=samspelParticipantResults(s,draft.participants||{})
+  if(result.issue)return {rows:[],issue:title+' · '+result.issue,field:'samspel-block-'+block.id+'-'+result.slot+'-'+result.field}
+  const issue=block.warmup_group&&String(draft.distance??'').trim()===''?null:samspelResultIssue(s,draft.distance)
+  if(issue)return {rows:[],issue:title+' · '+issue,field:'samspel-block-'+block.id+'-distance'}
+  const started=manual||snapshot.hasStarted===true||Number(snapshot.elapsed)>0
+  if(!started&&result.rows.some(r=>r.quality_status!=='skipped'))return {rows:[],issue:title+': delen vart ikkje starta. Stadfest ikkje utført eller etterregistrer økta.',field:'samspel-block-'+block.id+'-1-quality'}
+  if(!started&&samspelQuality(s)&&Number(draft.distance||0)!==0)return {rows:[],issue:title+': delen vart ikkje starta. Distanse må vera 0.',field:'samspel-block-'+block.id+'-distance'}
+  rows.push({block_id:block.id,title,samspel:{...s,team_score:true,participant_results:result.rows,manual_swaps:manual?[]:normalizeSamspelSwaps(snapshot.samspel_swaps)},distance:samspelQuality(s)&&String(draft.distance??'').trim()!==''?Number(draft.distance):null,elapsed:manual?null:Number(snapshot.elapsed)||0,completed:result.rows.every(r=>r.quality_status==='done')})
+ }
+ return {rows,issue:null}
+}
+
+export function mergeCompositeSamspelResults(blocks=[],actual=[]){
+ const byId=new Map(actual.map(row=>[row.block_id,row]))
+ const merge=(block,row)=>({...block,id:row.block_id,title:row.title,format:samspelChipper(row.samspel)?'Chipper':samspelRelay(row.samspel)?'AMRAP':samspelStrength(row.samspel)?'Strength':samspelClockedEmom(row.samspel)?'EMOM':'Eigen økt',scoreMode:'none',samspel:row.samspel,elapsed:row.elapsed??block.elapsed??null,distance:row.distance,...(row.calories!=null?{calories:row.calories}:{}),completed:row.completed,...(samspelChipper(row.samspel)?{chipper_progress:row.chipper_progress,laps:[]}:{}),...(samspelRelay(row.samspel)?{relay_rounds:row.relay_rounds,laps:[]}:{}),roundsCompleted:null,extra_reps:null})
+ return [...blocks.map(block=>byId.has(block.id)?merge(block,byId.get(block.id)):block),...actual.filter(row=>!blocks.some(b=>b.id===row.block_id)).map(row=>merge({},row))]
 }

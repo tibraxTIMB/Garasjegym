@@ -29,7 +29,20 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: pip install playwright==1.56.0 && python -m playwright install --with-deps chromium
+      - name: Install Chromium and verify browser launch
+        run: |
+          pip install playwright==1.56.0
+          python -m playwright install chromium
+          python -c "from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(); b.close(); p.stop()" || {
+            # GitHub's hosted Ubuntu image normally has the libraries already.
+            # If not, disable only the unrelated Microsoft apt source that can
+            # fail apt update with HTTP 403; retain Ubuntu security sources.
+            for f in /etc/apt/sources.list.d/microsoft-prod.list /etc/apt/sources.list.d/microsoft-prod.sources; do
+              if [ -f "$f" ]; then sudo mv "$f" "$f.disabled"; fi
+            done
+            python -m playwright install --with-deps chromium
+            python -c "from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(); b.close(); p.stop()"
+          }
       - name: Actual Training component with synthetic save RPC only
         run: |
           npm run help:demo > /tmp/gg-frontdienst-vite.log 2>&1 &

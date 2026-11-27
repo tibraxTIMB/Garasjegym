@@ -1,13 +1,17 @@
+import SynchronDisposition from './SynchronDisposition.jsx'
+import {synchronHistoryTimeline} from '../lib/synchronDisposition.js'
+import {synchronHistoryExposure} from '../lib/synchronAnatomy.js'
 import AnatomyEvidence from './AnatomyEvidence.jsx'
 import {workoutAnatomyExercises} from '../lib/anatomicalIntelligence.js'
 import SamspelParticipantResults from './SamspelParticipantResults.jsx'
+import {synchronHistoryRows} from '../lib/synchronLog.js'
 import {useEffect,useState} from 'react'
 import {ArrowLeft,CalendarDays,Check,Clock3,Dumbbell,Edit3,LoaderCircle,MoreHorizontal,Save,Trash2,Trophy,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import {deleteWorkoutAndLinkedRecords} from '../lib/deleteWorkout.js'
 import {workoutPRVictories} from '../lib/prVictory.js'
 import {formatWorkoutSeconds,formatWorkoutSet,optionalNumber,splitWorkoutNote,buildWorkoutReport,reportRepTotals} from '../lib/workoutDetail.js'
-import {suggestedEmomSets} from '../lib/workoutCorrections.js'
+import {suggestedEmomSets,samspelCorrectionFields,samspelCorrectionDraft,samspelCorrectionPatch} from '../lib/workoutCorrections.js'
 import {cardParts,cardDose,cardTone,formatCardTime} from '../lib/wodCard.js'
 import './workout-detail.css'
 import './wod-card.css'
@@ -55,6 +59,7 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
  const [menuOpen,setMenuOpen]=useState(false)
  const [form,setForm]=useState(()=>initialForm(workout))
  const [setDrafts,setSetDrafts]=useState({})
+ const [teamDraft,setTeamDraft]=useState({})
  const [addedSets,setAddedSets]=useState({})
  const [sourceSchema,setSourceSchema]=useState(null)
  const [sourceStatus,setSourceStatus]=useState('')
@@ -70,10 +75,14 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
  },[workout.exercises])
 
  const data=workout.result_data||{}
+ const compositeSamspel=Array.isArray(data.samspel_blocks)&&data.samspel_blocks.length>0
+ const isSynchron=data.synchron_result!=null
+ const synchronRows=synchronHistoryRows(workout)
+ const isSamspel=!!data.samspel||compositeSamspel||isSynchron
  const savedParts=Array.isArray(data.report_parts)&&data.report_parts.length?data.report_parts:data.wod_engine?.blocks?.length?cardParts({format:workout.format,timer_settings:{workout_schema:{wod_engine:data.wod_engine,items:data.wod_engine.blocks.flatMap(b=>b.items||[])}}}):[]
  useEffect(()=>{let alive=true;if(savedParts.length||!workout.source_wod_id||data.wod_ids?.length>1)return;supabase.from('wods').select('id,name,format,duration_minutes,movements,timer_settings').eq('id',workout.source_wod_id).maybeSingle().then(({data:row,error})=>{if(alive&&!error&&row)setReportSource(row)}).catch(()=>{});return()=>{alive=false}},[workout.id,workout.source_wod_id,savedParts.length])
  const historical=Boolean(savedParts.length)
- const report=buildWorkoutReport(workout,historical?savedParts:reportSource?cardParts(reportSource):[])
+ const report=isSamspel?null:buildWorkoutReport(workout,historical?savedParts:reportSource?cardParts(reportSource):[])
  const note=splitWorkoutNote(workout.note)
  const exercises=workout.exercises||[]
  const resultStats=[
@@ -83,7 +92,7 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
   workout.score_load_kg!=null&&{label:'Tungaste løft',value:workout.score_load_kg+' kg'},
   workout.score_calories!=null&&{label:'Kaloriar',value:workout.score_calories},
   workout.score_distance!=null&&{label:'Avstand',value:workout.score_distance+' '+(workout.score_unit||'m')}
- ].filter(Boolean)
+ ].filter(Boolean).filter(stat=>!isSamspel||stat.label==='Sluttid')
  const splitSeconds=workout.result_data?.split_seconds||[]
  const complexResults=workout.result_data?.complex_results||[]
  const primaryResults=workout.result_data?.block_primary_results||[]
@@ -93,6 +102,8 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
  function cancelEdit(){setEditing(false);setEditMode(null);setForm(initialForm(workout));setSetDrafts(Object.fromEntries(exercises.flatMap(ex=>(ex.workout_sets||[]).map(set=>[set.id,initialSetValues(set)]))));setAddedSets({});setError('')}
  function beginEdit(nextMode){
   setError('');setNotice('');setMenuOpen(false)
+  if(nextMode==='correction'&&isSynchron){setError('SYNCHRON-resultat krev samordna korrigering av lagfordelinga. Notat kan redigerast.');return}
+  if(nextMode==='correction'&&isSamspel){if(!samspelCorrectionFields(workout).length){setError('Dette eldre lagoppsettet kan ikkje korrigerast her. Notat kan redigerast.');return}setTeamDraft(samspelCorrectionDraft(workout));setForm(initialForm(workout));setEditMode('team');setEditing(true);return}
   if(nextMode==='correction'&&(complexResults.length||primaryResults.length)){setError('Programmerte delresultat krev eiga resultatkorrigering. Notat kan framleis redigerast.');return}
   setForm(initialForm(workout));setEditMode(nextMode);setEditing(true)
   if(nextMode==='correction'&&workout.source_wod_id){
@@ -150,6 +161,16 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
   setError('');setNotice('');setSaving(true)
   let updatedCount=0
   try{
+   if(isSynchron&&editMode!=='note')throw new Error('SYNCHRON-resultat kan ikkje korrigerast i den vanlege treningsloggen.')
+   if(editMode==='team'){
+    const correction=samspelCorrectionPatch(workout,teamDraft)
+    if(correction.issue)throw new Error(correction.issue)
+    // One guarded update of the existing log row; no insert, set write or plan-status mutation.
+    const {data,error:saveError}=await supabase.from('workout_logs').update(correction.patch).eq('id',workout.id).eq('member_id',memberId).eq('result_data',JSON.stringify(workout.result_data)).select('id,title,workout_date,format,score_rounds,score_reps,score_time_seconds,score_load_kg,score_calories,score_distance,score_unit,note,result_data').maybeSingle()
+    if(saveError||!data)throw saveError||new Error('Resultatet kan ha blitt endra. Opna økta på nytt før du prøver igjen.')
+    setEditing(false);setEditMode(null);setNotice('Utøvarbidraga er korrigerte.');await onSaved?.(data);return
+   }
+   if(editMode==='correction'&&isSamspel)throw new Error('Lagresultat krev eiga korrigering av utøvarbidrag.')
    if(editMode==='correction'&&!form.title.trim())throw new Error('Økta må ha eit namn.')
    if(editMode==='correction'&&!/^\d{4}-\d{2}-\d{2}$/.test(form.workout_date))throw new Error('Vel ein gyldig dato.')
    const patch=editMode==='note'?{note:[form.note.trim(),...form.system].filter(Boolean).join('\n')}:{
@@ -230,7 +251,7 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
     {error&&<div className="auth-error" role="alert">{error}</div>}
     {notice&&<div className="auth-message" role="status">{notice}</div>}
     {editing?<form id="workout-detail-edit-form" onSubmit={save} className="workout-detail-form">
-     <div className="workout-detail-edit-card"><h3>{editMode==='note'?'Mine notat':'Om økta'}</h3>{editMode==='correction'&&<><label>Namn<input required maxLength={120} value={form.title} onChange={e=>setForm(v=>({...v,title:e.target.value}))}/></label><label>Dato<input type="date" required value={form.workout_date} onChange={e=>setForm(v=>({...v,workout_date:e.target.value}))}/></label></>}<label>Mine notat<textarea rows={3} value={form.note} onChange={e=>setForm(v=>({...v,note:e.target.value}))} placeholder="Korleis gjekk økta?"/></label></div>
+     {editMode==='team'?<section className="workout-detail-edit-card"><h3>Korriger utøvarbidrag</h3><small>Berre faktiske bidrag. Gjennomføringsstatus, felles klokke og planlenkjer blir ikkje endra. Utøvarnummer er ikkje medlemsidentitet.</small>{Array.from(new Set(samspelCorrectionFields(workout).map(f=>f.slot))).map(slot=><details key={slot} open={slot===1||slot===samspelCorrectionFields(workout)[0]?.slot||undefined}><summary>{samspelCorrectionFields(workout).find(f=>f.slot===slot)?.groupLabel||'Utøvar '+slot}</summary><div className="workout-detail-edit-grid">{samspelCorrectionFields(workout).filter(f=>f.slot===slot).map(f=><label key={f.key}>{f.label}{f.kind==='status'?<select value={teamDraft[slot]?.[f.key]??''} onChange={e=>setTeamDraft(prev=>({...prev,[slot]:{...prev[slot],[f.key]:e.target.value}}))}><option value="">Vel status</option><option value="done">Utført</option><option value="partial">Delvis</option><option value="skipped">Ikkje utført</option></select>:<input type="number" inputMode={f.kind==='decimal'?'decimal':'numeric'} min={f.min} max={f.max} step={f.kind==='decimal'?'any':1} value={teamDraft[slot]?.[f.key]??''} onChange={e=>setTeamDraft(prev=>({...prev,[slot]:{...prev[slot],[f.key]:e.target.value}}))} placeholder="–"/>}</label>)}</div></details>)}</section>:<div className="workout-detail-edit-card"><h3>{editMode==='note'?'Mine notat':'Om økta'}</h3>{editMode==='correction'&&<><label>Namn<input required maxLength={120} value={form.title} onChange={e=>setForm(v=>({...v,title:e.target.value}))}/></label><label>Dato<input type="date" required value={form.workout_date} onChange={e=>setForm(v=>({...v,workout_date:e.target.value}))}/></label></>}<label>Mine notat<textarea rows={3} value={form.note} onChange={e=>setForm(v=>({...v,note:e.target.value}))} placeholder="Korleis gjekk økta?"/></label></div>}
      {editMode==='correction'&&<><p className="workout-detail-correction-warning">Rett berre resultat du faktisk gjennomførte. Målbare PR-ar blir rekna om frå den oppdaterte treningsloggen når PR-senteret blir lasta på nytt. Manuellt lagra PR-notat blir ikkje endra.</p><details className="workout-detail-edit-card workout-detail-score-editor"><summary><Trophy size={17}/> Korriger resultat</summary><div className="workout-detail-edit-grid">{[
       ['score_rounds','Rundar'],['score_reps','Ekstra reps'],['score_time_seconds','Sluttid (sek)'],
       ['score_load_kg','Tungaste løft (kg)'],['score_calories','Kaloriar'],['score_distance','Avstand']
@@ -258,19 +279,21 @@ export default function WorkoutDetail({workout,onBack,onSaved,onDeleted,memberId
      </div></>}
     </form>:<>
      {resultStats.filter(stat=>!report||report.showOverall||!['Rundar','Ekstra reps'].includes(stat.label)).length>0&&<div className="workout-detail-stats">{resultStats.filter(stat=>!report||report.showOverall||!['Rundar','Ekstra reps'].includes(stat.label)).map(stat=><div key={stat.label}><span>{stat.label}</span><strong>{stat.value}</strong></div>)}</div>}
-     {!workout.detailLoading&&!workout.detailError&&<section className="workout-detail-timing"><h3>Muskelkart · utført økt</h3>{data.samspel?.team_score||data.wod_engine?.participation&&data.wod_engine.participation!=='individual'?<small>Felles lagresultat gir ikkje individuelt muskelkart.</small>:<AnatomyEvidence exercises={workoutAnatomyExercises(workout)} scope="Denne økta" expanded/>}</section>}{note.personal&&<section className="workout-detail-note"><h3>Notat frå økta</h3><p>{note.personal}</p></section>}
-     {workout.result_data?.samspel&&<section className="workout-detail-timing"><h3>Samspel · felles resultat</h3><p>{workout.score_rounds??'–'} rundar + {workout.score_reps??'–'} reps{!Array.isArray(workout.result_data.samspel.station_tasks)&&<> · {workout.result_data.samspel.metric==='distance'?(workout.score_distance??'–')+' m':(workout.score_calories??'–')+' cal'}</>}</p><small>Lagresultat, ikkje individuell prestasjon.</small></section>}<SamspelParticipantResults samspel={workout.result_data?.samspel}/>{report&&<ActaReport report={report} historical={historical}/>} {!report&&(workout.result_data?.flow_session_status==='done'||workout.result_data?.flow_completion?.length>0)&&<section className="workout-detail-timing"><h3>Gjennomføring</h3>{workout.result_data.flow_session_status==='done'&&<p>Økta er stadfesta utført.</p>}{(workout.result_data.flow_completion||[]).map(part=><div key={part.id}><strong>{part.title}</strong><p>{part.status==='done'?'Utført':part.status==='partial'?'Delvis utført':'Ikkje utført'}</p></div>)}</section>}{!report&&primaryResults.length>0&&<section className="workout-detail-timing"><h3>Hovudresultat per del</h3>{primaryResults.map((result,index)=><div key={result.block_id||index}><strong>{result.title}</strong><p>{result.label}: {result.type==='none'?'Ingen score':result.value==null?'Ikkje registrert':result.type==='completion'?({complete:'Gjennomført',partial:'Delvis',failed:'Ikkje gjennomført'}[result.value]||'Ikkje registrert'):result.value+' '+(result.unit||'')}</p></div>)}</section>}
-     {!report&&complexResults.length>0&&<section className="workout-detail-timing"><h3>Kompleksresultat</h3>{complexResults.map((result,i)=><div key={i}><strong>{result.name}</strong><p>Tyngste godkjende: {result.best_load_kg==null?'Ikkje registrert':result.best_load_kg+' kg'} · {result.completed} fullførte · {result.partial} delvise · {result.failed} mislukka</p></div>)}</section>}
+     {!workout.detailLoading&&!workout.detailError&&<section className="workout-detail-timing"><h3>Muskelkart · utført økt</h3>{isSynchron?<AnatomyEvidence observedSegments={synchronHistoryExposure(workout)} scope="Observerte Samspel-bolkar"/>:isSamspel||data.wod_engine?.participation&&data.wod_engine.participation!=='individual'?<small>Felles lagresultat gir ikkje individuelt muskelkart.</small>:<AnatomyEvidence exercises={workoutAnatomyExercises(workout)} scope="Denne økta" expanded/>}</section>}{note.personal&&<section className="workout-detail-note"><h3>Notat frå økta</h3><p>{note.personal}</p></section>}
+     {isSynchron&&<SynchronDisposition timeline={synchronHistoryTimeline(workout)}/>}
+     {isSynchron&&<section className="workout-detail-timing" aria-label="Samspel · mitt resultat"><h3>Samspel · mitt resultat</h3><p>{data.completed===true?'Lagets mål nådd':'Delvis / ikkje stadfesta fullført'}{Number.isFinite(data.elapsed_seconds)?' · Felles økttid '+formatWorkoutSeconds(data.elapsed_seconds):''}</p><small>Individuelt kontrollert bidrag. Estimat og sjølvrapporterte lagbidrag gir ikkje personleg rekord.</small>{synchronRows.length===0?<p>Individuelle resultatdata manglar eller har ukjent versjon.</p>:synchronRows.map((row,i)=><article key={i} className="workout-detail-edit-card"><strong>{row.exercise_name}</strong><p>{row.amount===null?'Ukjend mengd':row.amount+' '+({reps:'reps',seconds:'sek',meters:'m',calories:'cal'}[row.unit])} · {row.quality==='confirmed'?'Sjølvrapportert faktisk mengd':row.quality==='estimated'?'Estimert':'Ukjend'}</p><small>Arbeidsbolk {formatWorkoutSeconds(Math.round(row.assigned_seconds))}{row.team_actual!==null?' · Lagresultat '+row.team_actual+' '+({reps:'reps',seconds:'sek',meters:'m',calories:'cal'}[row.unit]):''}</small>{row.segments.length>0&&<details><summary>Belastning og arbeidsbolkar</summary>{row.segments.map((seg,j)=><p key={j}>{formatWorkoutSeconds(Math.round(seg.seconds))} · {seg.variant}{seg.loadKg!==null?' · '+seg.loadKg+' kg':''}{seg.relativeLoad&&<small> · {seg.relativeLoad.percent} % av dokumentert 1RM ({seg.relativeLoad.referenceKg} kg, {seg.relativeLoad.ageDays} dagar før økta)</small>}</p>)}</details>}</article>)}</section>}
+     {data.samspel&&<section className="workout-detail-timing"><h3>Samspel · lagresultat</h3><p>{data.completed===false||data.completion_status==='incomplete'?'Delvis / ikkje stadfesta':data.completed===true?'Registrert fullført':'Gjennomføringsstatus ikkje registrert'}</p>{data.samspel.main_track==='relay'&&workout.score_rounds!=null&&<p>{workout.score_rounds} fullførte lagrundar</p>}{!data.samspel.main_track&&workout.score_rounds!=null&&<p>{workout.score_rounds} rundar{workout.score_reps!=null?' + '+workout.score_reps+' reps':''}</p>}{['quality','emom',undefined].includes(data.samspel.main_track)&&!Array.isArray(data.samspel.station_tasks)&&<p>{data.samspel.metric==='distance'?workout.score_distance!=null?workout.score_distance+' m':'Distanse ikkje registrert':workout.score_calories!=null?workout.score_calories+' cal':'Kaloriar ikkje registrerte'}</p>}<small>Lagresultat, ikkje individuell prestasjon. Sjå registrerte utøvarbidrag nedanfor.</small></section>}<SamspelParticipantResults samspel={workout.result_data?.samspel}/>{compositeSamspel&&data.samspel_blocks.map(part=><section className="workout-detail-timing" key={part.block_id}><h3>{part.title} · Samspel</h3><p>{part.completed?'Registrert fullført':'Delvis / ikkje utført'}{part.distance!=null?' · '+part.distance+' m':''}{part.calories!=null?' · '+part.calories+' cal':''}{part.relay_rounds!=null?' · '+part.relay_rounds+' lagrundar':''}</p><SamspelParticipantResults samspel={part.samspel}/></section>)}{report&&<ActaReport report={report} historical={historical}/>} {!isSamspel&&!report&&(workout.result_data?.flow_session_status==='done'||workout.result_data?.flow_completion?.length>0)&&<section className="workout-detail-timing"><h3>Gjennomføring</h3>{workout.result_data.flow_session_status==='done'&&<p>Økta er stadfesta utført.</p>}{(workout.result_data.flow_completion||[]).map(part=><div key={part.id}><strong>{part.title}</strong><p>{part.status==='done'?'Utført':part.status==='partial'?'Delvis utført':'Ikkje utført'}</p></div>)}</section>}{!isSamspel&&!report&&primaryResults.length>0&&<section className="workout-detail-timing"><h3>Hovudresultat per del</h3>{primaryResults.map((result,index)=><div key={result.block_id||index}><strong>{result.title}</strong><p>{result.label}: {result.type==='none'?'Ingen score':result.value==null?'Ikkje registrert':result.type==='completion'?({complete:'Gjennomført',partial:'Delvis',failed:'Ikkje gjennomført'}[result.value]||'Ikkje registrert'):result.value+' '+(result.unit||'')}</p></div>)}</section>}
+     {!isSamspel&&!report&&complexResults.length>0&&<section className="workout-detail-timing"><h3>Kompleksresultat</h3>{complexResults.map((result,i)=><div key={i}><strong>{result.name}</strong><p>Tyngste godkjende: {result.best_load_kg==null?'Ikkje registrert':result.best_load_kg+' kg'} · {result.completed} fullførte · {result.partial} delvise · {result.failed} mislukka</p></div>)}</section>}
      {(splitSeconds.length>0||note.system.length>0)&&<section className="workout-detail-timing"><h3><Clock3 size={17}/> Timer og rundetider</h3>{note.system.filter(line=>!/^Mellomtider:/i.test(line)).map((line,index)=><p key={index}>{line}</p>)}{splitSeconds.length>0?<div className="workout-detail-splits">{splitSeconds.map((seconds,index)=><span key={index}>R{index+1} <b>{formatWorkoutSeconds(seconds)}</b></span>)}</div>:note.system.filter(line=>/^Mellomtider:/i.test(line)).map((line,index)=><p key={index}>{line}</p>)}</section>}
-     {!report&&<div className="workout-detail-exercises-head"><h3><Dumbbell size={18}/> Øvingar og sett</h3><span>{exercises.length} øvingar</span></div>}
+     {!isSamspel&&!report&&<div className="workout-detail-exercises-head"><h3><Dumbbell size={18}/> Øvingar og sett</h3><span>{exercises.length} øvingar</span></div>}
      {workout.detailLoading&&<div className="training-state"><LoaderCircle className="spin" size={17}/> Hentar øvingsdetaljane …</div>}
      {workout.detailError&&<div className="auth-error" role="alert">{workout.detailError}</div>}
-     {!report&&<div className="workout-detail-exercise-list">{exercises.map((exercise,index)=><article className="workout-detail-exercise" key={exercise.id}>
+     {!isSamspel&&!report&&<div className="workout-detail-exercise-list">{exercises.map((exercise,index)=><article className="workout-detail-exercise" key={exercise.id}>
       <div className="workout-detail-exercise-title"><span>{String(index+1).padStart(2,'0')}</span><strong>{exercise.exercise_name}</strong></div>
       {exercise.source_text&&<p>{exercise.source_text}</p>}
       <div className="workout-detail-set-list">{(exercise.workout_sets||[]).sort((a,b)=>a.set_number-b.set_number).map(set=><div key={set.id}><span>Sett {set.set_number}</span><strong>{formatWorkoutSet(set)}</strong></div>)}</div>
      </article>)}</div>}
-     {!report&&!workout.detailLoading&&!exercises.length&&<div className="empty-state">Ingen øvingsdetaljar er lagra på denne økta.</div>}
+     {!isSamspel&&!report&&!workout.detailLoading&&!exercises.length&&<div className="empty-state">Ingen øvingsdetaljar er lagra på denne økta.</div>}
     </>}
    </div>
    {!editing&&!workout.detailLoading&&!workout.detailError&&<footer className="workout-detail-delete-footer"><button type="button" disabled={deleting} onClick={deleteWorkout}><Trash2 size={17}/> {deleting?'Slettar …':'Slett feilregistrert økt'}</button><small>Fjern økta og PR-resultata frå denne gjennomføringa.</small></footer>}

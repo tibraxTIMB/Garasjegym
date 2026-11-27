@@ -53,7 +53,6 @@ test('the home and group timetable lead to a genuine PT enquiry', () => {
   assert.match(schedule, /Spør om PT/)
   assert.match(studio, /<PTInquiry profile=\{profile\}/)
   assert.match(app, /preparePTEntry\(isPTCoach\?'oversikt':'tenester'\)/)
-  assert.match(app, /function preparePTEntry\(tab\)\{clearPTDeepLink\(\);setPTStudioWorkspace\('studio'\);setPTStudioInitialTab\(tab\)\}/)
 })
 
 test('PT enquiries work without published services and have an honest status and cancellation', () => {
@@ -75,3 +74,38 @@ test('Mi side updates only the user display name with a database guard', () => {
   assert.match(migration, /on public\.profiles for update to authenticated/)
   assert.match(migration, /pt_coaches add column public_name/)
 })
+
+test('optional after-action entry appears only after a confirmed save and is member scoped',()=>{
+ const app=src('../src/App.jsx'),training=src('../src/components/Training.jsx')
+ assert.match(app,/afterActionMember===session\.user\.id/)
+ assert.match(app,/setAfterActionMember\(session\.user\.id\)/)
+ assert.match(app,/aria-label="Etter økta"/)
+ assert.match(app,/setAfterActionMember\(null\);navigateTo\('kaffi'\)/)
+ assert.match(app,/setAfterActionMember\(null\);setScheduleTab\('booking'\)/)
+ assert.ok(training.indexOf('savedId=workoutId')<training.indexOf('onSaved?.({victories})'))
+ assert.match(training,/onSaved\?\.\(\{victories\}\)\s+await loadAll\(\)/)
+})
+
+test('Mission Control preserves personal training routes for staff without duplicate coach entry',()=>{
+ const app=src('../src/App.jsx'),home=src('../src/components/SimpleCustomerHome.jsx'),overview=src('../src/components/Overview.jsx')
+ assert.match(app,/coach=\{isPTCoach\|\|isStaff\(profile\)\}/)
+ assert.match(app,/<Overview key=\{session\.user\.id\}[^\n]+onPlan=\{openMyTraining\}/)
+ assert.match(overview,/Min treningsplan/)
+ assert.match(overview,/onFree\|\|/)
+ assert.match(overview,/Kaffibar/)
+ assert.doesNotMatch(home,/\{coach&&<button/)
+})
+
+test('Kameradschaft reuses existing social and booking systems with explicit publish',()=>{
+ const app=src('../src/App.jsx'),community=src('../src/components/Community.jsx'),booking=src('../src/components/Booking.jsx')
+ assert.match(app,/onCommunity=\{\(\)=>navigateTo\('fellesskap'\)\}/)
+ assert.match(community,/Finn treningspartnar/)
+ assert.match(community,/publishing\.current=true/)
+ assert.match(community,/user\.id!==profile\.id/)
+ assert.match(booking,/startOpenGym/)
+ assert.match(booking,/setPublishOnCreate\(false\);setQuickOpenGym\(true\)/)
+ assert.match(booking,/createLock\.current=true/)
+ assert.match(booking,/supabase\.from\('classes'\)\.insert/)
+})
+
+test('ordinary PT entries from home, plan and timetable clear old client focus',()=>{const app=src('../src/App.jsx');assert.match(app,/function preparePTEntry\(tab\)\{clearPTDeepLink\(\);setPTStudioWorkspace\('studio'\);setPTStudioInitialTab\(tab\)\}/);assert.equal((app.match(/onContactPT=\{\(\)=>\{preparePTEntry\(/g)||[]).length,3);assert.doesNotMatch(app,/onContactPT=\{\(\)=>\{setPTStudioInitialTab/);assert.match(app,/onOpenPTAdmin=\{\(\)=>\{preparePTEntry\('administrasjon'\)/)})

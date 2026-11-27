@@ -154,3 +154,215 @@ assert.ok(samspelIssue({...strength,station_capacity:{bike:1}},multiContext))
 assert.ok(samspelIssue({...strength,station_tasks:[{...strength.station_tasks[0],instruction:''},strength.station_tasks[1]]},multiContext))
 assert.ok(samspelStationResults(strength,{'station-1':{erg:'1.5'},'station-2':{erg:'2'}}).issue)
 assert.deepEqual(samspelStationResults(strength,{'station-1':{erg:'20'},'station-2':{erg:'2'}}).rows.map(x=>[x.value,x.unit]),[[20,'reps'],[2,'cal']])
+
+import {qualityRowConfig,samspelQuality} from '../src/lib/samspel.js'
+const quality=qualityRowConfig(10)
+assert.equal(samspelQuality(quality),true)
+assert.equal(samspelConfig({samspel:quality}),quality)
+assert.equal(samspelIssue(quality,{...context,format:'Eigen økt'}),null)
+assert.ok(samspelIssue(quality,context))
+assert.equal(samspelConfig({samspel:{...quality,duration_seconds:0}}),null)
+assert.deepEqual(samspelRoles(quality,0),['Romaskin','Kvalitet'])
+assert.deepEqual(samspelRotation(quality,{manualSwaps:[120],elapsed:120,target:600}).roles,['Kvalitet','Romaskin'])
+assert.deepEqual(samspelScoring(quality,{}),{type:'distance',fields:['distance']})
+assert.ok(samspelParticipantResults(quality,{}).issue)
+assert.deepEqual(samspelParticipantResults(quality,{1:{quality:'done',erg:'320',rounds:'99'},2:{quality:'partial'}}).rows,[{slot:1,quality_status:'done',rounds:null,extra_reps:null,erg_value:320},{slot:2,quality_status:'partial',rounds:null,extra_reps:null,erg_value:null}])
+assert.equal(samspelWithSwitch(quality,'round'),null)
+console.log('Quality & Row checks passed')
+
+import {engineSwapConfig,samspelEmom,samspelEmomOpportunity} from '../src/lib/samspel.js'
+const engineSwap=engineSwapConfig(60,600)
+assert.equal(samspelEmom(engineSwap),true)
+assert.equal(samspelIssue(engineSwap,{...context,format:'EMOM'}),null)
+assert.ok(samspelIssue(engineSwap,context))
+assert.deepEqual(samspelRoles(engineSwap,0),['Romaskin','EMOM'])
+assert.deepEqual(samspelRotation(engineSwap,{elapsed:60,target:600}).roles,['EMOM','Romaskin'])
+assert.deepEqual(samspelRotation(engineSwap,{elapsed:600,target:600}).roles,['EMOM','Romaskin'])
+assert.equal(samspelConfig({samspel:{...engineSwap,duration_seconds:540}}),null)
+assert.deepEqual(samspelScoring(engineSwap,{}),{type:'distance',fields:['distance']})
+for(let count=2;count<=8;count++){
+ const plan={...engineSwap,participant_count:count,duration_seconds:count*60*2}
+ assert.equal(samspelIssue(plan,{...context,format:'EMOM',participation:count===2?'partner':'team',participantCount:count}),null)
+ for(let slot=1;slot<=count;slot++)assert.equal(samspelEmomOpportunity(plan,slot),2*(count-1))
+}
+assert.equal(samspelEmomOpportunity(engineSwap,1,60),0)
+assert.equal(samspelEmomOpportunity(engineSwap,2,60),1)
+assert.ok(samspelParticipantResults(engineSwap,{1:{intervals:'1'}},{elapsed:60}).issue)
+assert.ok(samspelParticipantResults(engineSwap,{1:{intervals:'6'}}).issue)
+assert.ok(samspelParticipantResults(engineSwap,{1:{intervals:'1.5'}}).issue)
+assert.deepEqual(samspelParticipantResults(engineSwap,{2:{intervals:'1',erg:'0'}},{elapsed:60}).rows,[{slot:2,completed_intervals:1,rounds:null,extra_reps:null,erg_value:0}])
+assert.deepEqual(samspelParticipantResults(engineSwap,{}).rows,[])
+console.log('Engine Swap rotation and individual interval checks passed')
+
+import {samspelEmomComplete} from '../src/lib/samspel.js'
+const fullEngineResult=samspelParticipantResults(engineSwap,{1:{intervals:'5'},2:{intervals:'5'}}).rows
+assert.equal(samspelEmomComplete(engineSwap,fullEngineResult,{elapsed:600}),true)
+assert.equal(samspelEmomComplete(engineSwap,fullEngineResult,{elapsed:599}),false)
+assert.equal(samspelEmomComplete(engineSwap,fullEngineResult.slice(0,1)),false)
+assert.equal(samspelEmomComplete(engineSwap,[fullEngineResult[0],fullEngineResult[0]]),false)
+assert.equal(samspelEmomComplete(engineSwap,[{...fullEngineResult[0],completed_intervals:4},fullEngineResult[1]]),false)
+
+import {ironTwinsConfig,samspelStrength,samspelStrengthComplete} from '../src/lib/samspel.js'
+const iron={...ironTwinsConfig(),exercise_name:'Back Squat',planned_sets:2}
+assert.equal(samspelStrength(iron),true)
+assert.equal(samspelIssue(iron,{...context,format:'Strength',items:[{name:'Back Squat'}]}),null)
+assert.ok(samspelIssue(iron,{...context,format:'Strength',items:[{name:'Back Squat'},{name:'Press'}]}))
+assert.deepEqual(samspelRoles(iron,0),['Styrke','Styrke'])
+assert.equal(samspelSwapIndex(iron,{rounds:5}),null)
+assert.equal(samspelResultIssue(iron,''),null)
+assert.deepEqual(samspelParticipantResults(iron,{}).rows,[])
+assert.ok(samspelParticipantResults(iron,{1:{'load-0':'50'}}).issue)
+assert.ok(samspelParticipantResults(iron,{1:{'reps-0':'5','load-0':'50','rir-0':'11'}}).issue)
+assert.ok(samspelParticipantResults(iron,{1:{'reps-0':'5.5','load-0':'50'}}).issue)
+const twins=samspelParticipantResults(iron,{1:{'reps-0':'5','load-0':'50','rir-0':'2','reps-1':'5','load-1':'55'},2:{'reps-0':'4','load-0':'30','reps-1':'0','load-1':'35'}})
+assert.equal(twins.issue,null)
+assert.deepEqual(twins.rows[0].strength_sets,[{set_number:1,reps:5,load_kg:50,rir:2},{set_number:2,reps:5,load_kg:55,rir:null}])
+assert.equal(twins.rows[1].strength_sets[1].reps,0)
+assert.equal(samspelStrengthComplete(iron,twins.rows),false)
+assert.equal(samspelStrengthComplete(iron,twins.rows.map(row=>({...row,strength_sets:row.strength_sets.map(set=>({...set,reps:5}))}))),true)
+console.log('Iron Twins actual independent strength results passed')
+
+import {doubleEmomConfig,doubleEmomOpportunity,doubleEmomComplete} from '../src/lib/samspel.js'
+const double={...doubleEmomConfig(60,600),tracks:['Push-up','Air squat']}
+const doubleContext={...context,format:'EMOM',items:[{name:'Push-up'},{name:'Air squat'}]}
+assert.equal(samspelIssue(double,doubleContext),null)
+assert.ok(samspelIssue(double,{...doubleContext,items:[{name:'Push-up',minuteSlot:'1'},{name:'Air squat'}]}))
+assert.deepEqual(samspelRoles(double,0),['A · Push-up','B · Air squat'])
+assert.deepEqual(samspelRotation(double,{elapsed:60,target:600}).roles,['B · Air squat','A · Push-up'])
+assert.deepEqual(doubleEmomOpportunity(double,1,60),[1,0])
+assert.deepEqual(doubleEmomOpportunity(double,2,60),[0,1])
+assert.deepEqual(doubleEmomOpportunity(double,1),[5,5])
+assert.ok(samspelParticipantResults(double,{1:{trackB:'1'}},{elapsed:60}).issue)
+const doubleResult=samspelParticipantResults(double,{1:{trackA:'5',trackB:'5'},2:{trackA:'5',trackB:'5'}})
+assert.equal(doubleResult.issue,null)
+assert.equal(doubleEmomComplete(double,doubleResult.rows,{elapsed:600}),true)
+assert.equal(doubleEmomComplete(double,doubleResult.rows,{elapsed:599}),false)
+assert.equal(doubleEmomComplete(double,doubleResult.rows.slice(1)),false)
+const fixedDouble={...double,switch_rule:'fixed'}
+assert.deepEqual(samspelRotation(fixedDouble,{elapsed:180,target:600}).roles,['A · Push-up','B · Air squat'])
+assert.deepEqual(doubleEmomOpportunity(fixedDouble,1),[10,0])
+assert.deepEqual(doubleEmomOpportunity(fixedDouble,2),[0,10])
+assert.ok(samspelParticipantResults(fixedDouble,{1:{trackB:'1'}}).issue)
+assert.equal(doubleEmomComplete(fixedDouble,samspelParticipantResults(fixedDouble,{1:{trackA:'10'},2:{trackB:'10'}}).rows),true)
+console.log('Double EMOM checks passed')
+
+import {activeRecoveryConfig,samspelRecovery} from '../src/lib/samspel.js'
+const recovery=activeRecoveryConfig(10,4)
+const recoveryContext={...context,format:'Eigen økt',participation:'team',participantCount:4}
+assert.equal(samspelRecovery(recovery),true)
+assert.equal(samspelIssue(recovery,recoveryContext),null)
+assert.ok(samspelIssue(recovery,{...recoveryContext,participantCount:3}))
+assert.equal(samspelConfig({samspel:activeRecoveryConfig(0,4)}),null)
+assert.deepEqual(samspelRotation(recovery,{elapsed:300,target:600}).roles,Array(4).fill('Rolig arbeid'))
+assert.equal(samspelResultIssue(recovery,''),null)
+assert.ok(samspelParticipantResults(recovery,{}).issue)
+const recoveryResult=samspelParticipantResults(recovery,{1:{quality:'done',erg:'999'},2:{quality:'partial'},3:{quality:'skipped'},4:{quality:'done'}})
+assert.equal(recoveryResult.issue,null)
+assert.equal(recoveryResult.rows[0].erg_value,null)
+assert.deepEqual(recoveryResult.rows.map(r=>r.quality_status),['done','partial','skipped','done'])
+console.log('Active Recovery individual completion checks passed')
+
+import {youGoIGoConfig,relayTotal} from '../src/lib/samspel.js'
+const relay=youGoIGoConfig()
+assert.equal(samspelIssue(relay,{...context,collaboration:'you_go_i_go'}),null)
+assert.deepEqual(samspelRoles(relay,0),['Arbeid','Kvile'])
+assert.deepEqual(samspelRotation(relay,{manualSwaps:[10],elapsed:10,target:60}).roles,['Kvile','Arbeid'])
+assert.ok(samspelParticipantResults(relay,{}).issue)
+assert.ok(samspelParticipantResults(relay,{1:{rounds:'1',reps:'-1'}}).issue)
+const relayRows=samspelParticipantResults(relay,{1:{rounds:'2',reps:'3'},2:{rounds:'4',reps:'5'}}).rows
+assert.equal(relayTotal(relay,relayRows),6)
+assert.equal(relayTotal(relay,relayRows.slice(0,1)),null)
+assert.equal(relayRows[0].extra_reps,3)
+assert.equal(samspelErgSlots(relay),0)
+assert.equal(samspelResultIssue(relay,''),null)
+console.log('You Go I Go independent results passed')
+
+import {teamChipperConfig,teamChipperProgress,teamChipperComplete} from '../src/lib/samspel.js'
+const chipper={...teamChipperConfig(),targets:[{exercise_name:'Push-up',target_reps:50},{exercise_name:'Air squat',target_reps:100}]}
+const chipperCtx={...context,format:'Chipper',collaboration:'free_split',items:[{name:'Push-up'},{name:'Air squat'}]}
+assert.equal(samspelIssue(chipper,chipperCtx),null)
+assert.equal(samspelErgSlots(chipper),0)
+assert.equal(samspelResultIssue(chipper,''),null)
+assert.ok(samspelParticipantResults(chipper,{}).issue)
+const chipperInput={1:{'chipper-0':'20','chipper-1':'40'},2:{'chipper-0':'30','chipper-1':'60'}}
+const chipperRows=samspelParticipantResults(chipper,chipperInput).rows
+assert.equal(teamChipperComplete(chipper,chipperRows),true)
+assert.deepEqual(teamChipperProgress(chipper,chipperRows).map(x=>x.reps),[50,100])
+assert.equal(teamChipperComplete(chipper,chipperRows.slice(1)),false)
+assert.ok(samspelParticipantResults(chipper,{...chipperInput,2:{...chipperInput[2],'chipper-0':'31'}}).issue)
+assert.equal(teamChipperComplete(chipper,samspelParticipantResults(chipper,{...chipperInput,2:{...chipperInput[2],'chipper-1':'59'}}).rows),false)
+console.log('Team Chipper contribution checks passed')
+
+import {samspelTemplateOptions,samspelTemplateChoice,samspelTemplateName} from '../src/lib/samspel.js'
+assert.equal(samspelTemplateOptions('AMRAP',{composite:true}).length,0)
+assert.equal(samspelTemplateChoice('strength',{format:'EMOM'}),null)
+assert.equal(samspelTemplateChoice('relay',{format:'AMRAP'}).collaboration,'you_go_i_go')
+assert.equal(samspelTemplateChoice('chipper',{format:'Chipper'}).collaboration,'free_split')
+assert.equal(samspelTemplateChoice('quality',{format:'AMRAP'}).format,'Eigen økt')
+assert.equal(samspelTemplateName(samspelTemplateChoice('double_emom',{format:'EMOM'}).config),'Double EMOM')
+
+import {samspelDedicatedResults} from '../src/lib/samspel.js'
+for(const template of [quality,engineSwap,iron,double,recovery,relay,chipper])assert.equal(samspelDedicatedResults(template),true)
+assert.equal(samspelDedicatedResults(null),false)
+assert.equal(samspelDedicatedResults({version:2,mode:'parallel_round_swap',participant_count:2,task:'row',metric:'distance'}),false)
+
+
+import {samspelErgOpportunity} from '../src/lib/samspel.js'
+for(let count=2;count<=8;count++){
+ const plan={...engineSwap,participant_count:count,duration_seconds:count*60*2}
+ for(let slot=1;slot<=count;slot++){
+  const before=(slot-1)*60
+  assert.equal(samspelErgOpportunity(plan,slot,before),0)
+  assert.equal(samspelErgOpportunity(plan,slot,before+1),1)
+  assert.equal(samspelErgOpportunity(plan,slot),2)
+  assert.equal(samspelParticipantResults(plan,{[slot]:{erg:'1'}},{elapsed:before}).field,'erg')
+  assert.equal(samspelParticipantResults(plan,{[slot]:{erg:'0'}},{elapsed:before}).issue,null)
+  assert.equal(samspelParticipantResults(plan,{[slot]:{erg:'1'}},{elapsed:before+1}).issue,null)
+  assert.equal(samspelParticipantResults(plan,{[slot]:{erg:'1'}}).issue,null)
+ }
+}
+assert.equal(samspelParticipantResults({...engineSwap,metric:'calories'},{2:{erg:'1'}},{elapsed:60}).field,'erg')
+assert.equal(samspelParticipantResults(engineSwap,{1:{erg:'1'}},{elapsed:0}).field,'erg')
+
+import {samspelPairedEmom,pairedEmomConfig,pairedEmomComplete} from '../src/lib/samspel.js'
+import {partnerEmomSlot,pairedEmomOpportunity,pairedEmomScheduleIssue,synchronTransportFormatSupported} from '../src/lib/synchronSchedule.js'
+const front={...pairedEmomConfig(60,1080),tracks:['Bench press','Dips','Third movement']}
+assert.equal(samspelPairedEmom(front),true)
+assert.equal(samspelTemplateChoice('paired_emom',{format:'EMOM'}).collaboration,'you_go_i_go')
+assert.equal(samspelTemplateChoice('paired_emom',{format:'AMRAP'}),null)
+assert.equal(samspelDedicatedResults(front),true)
+assert.equal(samspelIssue(front,{format:'EMOM',participation:'partner',collaboration:'you_go_i_go',items:front.tracks.map(name=>({name}))}),null)
+assert.ok(pairedEmomScheduleIssue({durationSeconds:1020,intervalSeconds:60,exerciseCount:3}))
+assert.deepEqual(Array.from({length:6},(_,i)=>partnerEmomSlot(i+1,3)).map(row=>[row.exerciseIndex,row.worker]),[[0,1],[0,2],[1,1],[1,2],[2,1],[2,2]])
+for(const slot of [1,2])for(let i=0;i<3;i++)assert.equal(pairedEmomOpportunity(front,i,slot),3)
+assert.equal(pairedEmomOpportunity(front,0,2,59),0)
+assert.equal(pairedEmomOpportunity(front,0,2,61),1)
+assert.deepEqual(samspelRotation(front,{elapsed:60,target:1080}).roles,['Kvile','Arbeid · Bench press'])
+assert.deepEqual(samspelRotation(front,{elapsed:120,target:1080}).roles,['Arbeid · Dips','Kvile'])
+assert.equal(samspelRotation(front,{elapsed:1080,target:1080}).nextSwitchSeconds,null)
+const pairedInput={1:{'paired-0':'3','paired-1':'3','paired-2':'3','paired-reps-0':'18','paired-kg-0':'30'},2:{'paired-0':'3','paired-1':'3','paired-2':'3','paired-reps-0':'18','paired-kg-0':'20'}}
+const pairedActual=samspelParticipantResults(front,pairedInput,{elapsed:1080})
+assert.equal(pairedActual.issue,null)
+assert.equal(pairedEmomComplete(front,pairedActual.rows,{elapsed:1080}),true)
+assert.equal(pairedEmomComplete(front,pairedActual.rows,{elapsed:1079}),false)
+assert.equal(pairedActual.rows[0].paired_load_kg[0],30)
+assert.equal(pairedActual.rows[1].paired_load_kg[0],20)
+assert.ok(samspelParticipantResults(front,pairedInput,{elapsed:60}).issue)
+assert.deepEqual(samspelParticipantResults(front,{},{}).rows,[])
+assert.equal(synchronTransportFormatSupported('Chipper'),true)
+assert.equal(synchronTransportFormatSupported('EMOM'),false)
+console.log('YGIG EMOM uses canonical Samspel clock and separate measured participant results')
+
+const mixedPaired=samspelParticipantResults(front,{1:{level:'rx','paired-0':'3','paired-reps-0':'18'},2:{level:'foundation','paired-0':'2','paired-reps-0':'4'}},{elapsed:1080})
+assert.equal(mixedPaired.issue,null)
+assert.deepEqual(mixedPaired.rows.map(r=>r.prescription_level),['rx','foundation'])
+assert.ok(samspelParticipantResults(front,{1:{level:'invented','paired-0':'1'}},{elapsed:1080}).issue)
+
+import {pairedEmomClock} from '../src/lib/synchronSchedule.js'
+assert.deepEqual(pairedEmomClock(front,0).current,{exerciseIndex:0,worker:1,resting:2})
+assert.equal(pairedEmomClock(front,60).current.worker,2)
+assert.equal(pairedEmomClock(front,120).current.exerciseIndex,1)
+assert.equal(pairedEmomClock(front,1080).finished,true)
+assert.equal(pairedEmomClock(front,1080).next,null)
+assert.equal(pairedEmomClock(front,1080).remaining,0)
+assert.equal(pairedEmomClock(front,2000).elapsed,1080)

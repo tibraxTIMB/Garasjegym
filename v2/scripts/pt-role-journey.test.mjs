@@ -195,7 +195,7 @@ test('new PT follow-up scopes WOD status to the selected client without private 
  assert.match(followup,/statusLabel\(row\.status\)/)
  assert.match(followup,/completedStatus\(session\.status\)\?'Gjennomført'/)
  assert.match(followup,/assignedClientId=\{clientId\}/)
- assert.match(studio,/PTClientWods clientId=\{clientId\}/)
+ assert.match(studio,/PTClientWods key=\{clientId\} clientId=\{clientId\}/)
  assert.match(studio,/\['wodar','WOD-ar \/ resultat'\]/)
  assert.match(studio,/PTScheduleDialog key=\{assignRequest.id\} clientId=\{clientId\}/)
  assert.match(studio,/assignRequest\?\.clientId===clientId/)

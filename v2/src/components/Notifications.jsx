@@ -12,7 +12,7 @@ const priorityMeta={
  normal:{label:'Vanleg',tone:'normal',icon:Info},
  low:{label:'Info',tone:'low',icon:Info}
 }
-const hrefLabel=href=>href?.startsWith('coffee-review:')?'Sjå produktvurdering':href?.startsWith('pt-service-request:')?'Handsama PT-førespurnad':href?.startsWith('pt-request:')?'Opna PT-førespurnad':href?.startsWith('pt-checkin:')?'Opna statussjekk':href==='pt-intake-start'?'Svar på oppstartskartlegging':href?.startsWith('pt-intake:')?'Opna PT-kartlegging':href?.startsWith('pt-client:')?'Opna PT-oppfølging':href?.startsWith('group-class:')?'Opna gruppetime':href?.startsWith('booking:')?'Opna booking':href==='admin-maintenance'?'Opna vedlikehald':href==='pt-studio'?'Opna PT-oppfølging':href==='pt-info'?'Opna PT-meldingar':href==='pt'?'Opna PT Studio':href==='mi-trening'?'Opna Mi trening':href==='booking'||href==='/timeplan'?'Opna timeplan':href==='kaffi'?'Opna kaffibar':'Opna'
+const hrefLabel=href=>href?.startsWith('synchron-session:')?'Delta i økta':href?.startsWith('coffee-review:')?'Sjå produktvurdering':href?.startsWith('pt-service-request:')?'Handsama PT-førespurnad':href?.startsWith('pt-request:')?'Opna PT-førespurnad':href?.startsWith('pt-checkin:')?'Opna statussjekk':href==='pt-intake-start'?'Svar på oppstartskartlegging':href?.startsWith('pt-intake:')?'Opna PT-kartlegging':href?.startsWith('pt-client:')?'Opna PT-oppfølging':href?.startsWith('group-class:')?'Opna gruppetime':href?.startsWith('booking:')?'Opna booking':href==='admin-maintenance'?'Opna vedlikehald':href==='pt-studio'?'Opna PT-oppfølging':href==='pt-info'?'Opna PT-meldingar':href==='pt'?'Opna PT Studio':href==='mi-trening'?'Opna Mi trening':href==='booking'||href==='/timeplan'?'Opna timeplan':href==='kaffi'?'Opna kaffibar':'Opna'
 const isExpired=item=>item.expires_at&&new Date(item.expires_at)<new Date()
 
 export default function Notifications({onNavigate=()=>{},compact=false,hideWhenEmpty=false,context='oversikt',isAdmin=false,staff=false}){
@@ -180,7 +180,7 @@ export default function Notifications({onNavigate=()=>{},compact=false,hideWhenE
     {!compact&&<div className="notification-actions-v2">
      {(item.href||item.requires_action)&&<button type="button" className="notification-open-action" disabled={busy===item.id} onClick={()=>openItem(item)}>{hrefLabel(item.href)} <ArrowUpRight size={13}/></button>}
      {!item.virtualMaintenance&&item.requires_ack&&!item.acknowledged_at&&<button type="button" className="notification-ack-action" disabled={busy===item.id} onClick={()=>acknowledge(item)}><ClipboardCheck size={13}/> Stadfest lest</button>}
-     {!item.virtualMaintenance&&!item.virtualPTLead&&!item.href?.startsWith('pt-service-request:')&&item.href!=='pt-intake-start'&&item.requires_action&&pending&&<button type="button" className="notification-done-action" disabled={busy===item.id} onClick={()=>resolve(item)}><Check size={13}/> Marker løyst</button>}
+     {!item.virtualMaintenance&&!item.virtualPTLead&&!item.href?.startsWith('synchron-session:')&&!item.href?.startsWith('pt-service-request:')&&item.href!=='pt-intake-start'&&item.requires_action&&pending&&<button type="button" className="notification-done-action" disabled={busy===item.id} onClick={()=>resolve(item)}><Check size={13}/> Marker løyst</button>}
      {!item.virtualMaintenance&&!item.requires_action&&!item.requires_ack&&pending&&<button type="button" className="notification-dismiss-action" disabled={busy===item.id} onClick={()=>archive(item)}><Archive size={13}/> Skjul</button>}
     </div>}
    </div>

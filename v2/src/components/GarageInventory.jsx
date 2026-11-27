@@ -1,12 +1,13 @@
 import {useEffect,useRef,useState} from 'react'
 import {supabase} from '../lib/supabase.js'
 import {INVENTORY_GROUPS,INITIAL_INVENTORY,inventoryDraft,missingInitialInventory} from '../lib/garageInventory.js'
+import Lastmeister from './Lastmeister.jsx'
 import './garage-inventory.css'
 const blank=()=>({equipment_label:'',group_key:'anna',available:'1',weight_kg:'',notes:''})
 export default function GarageInventory({profile,protectedMode=false}){
  const [rows,setRows]=useState([]),[status,setStatus]=useState('loading'),[message,setMessage]=useState(''),[error,setError]=useState(''),[search,setSearch]=useState(''),[group,setGroup]=useState(''),[draft,setDraft]=useState(null),[editing,setEditing]=useState(null),[busy,setBusy]=useState(false),[importing,setImporting]=useState(false)
  const lock=useRef(false),request=useRef(0)
- const canEdit=profile?.active&&['admin','manager'].includes(profile.role)
+ const canEdit=profile?.active&&['admin','manager'].includes(profile.role)&&(!protectedMode||(profile.role==='admin'&&profile.membership_status==='approved'))
  async function load(){
   const token=++request.current;setStatus('loading')
   try{
@@ -25,6 +26,7 @@ export default function GarageInventory({profile,protectedMode=false}){
   try{
    const {data:{user},error:e}=await supabase.auth.getUser()
    if(e||user?.id!==profile.id)throw Error('Logg inn på nytt.')
+   if(protectedMode){const {data:current,error:profileError}=await supabase.from('profiles').select('id,role,active,membership_status').eq('id',user.id).single();if(profileError||current?.id!==user.id||current.role!=='admin'||current.active!==true||current.membership_status!=='approved')throw Error('Werkstatt-tilgangen er endra.')}
    await action(user.id);await load()
   }catch(e){setError(e.message||'Kunne ikkje lagra utstyret.')}
   finally{lock.current=false;setBusy(false)}
@@ -53,6 +55,7 @@ export default function GarageInventory({profile,protectedMode=false}){
   {status==='unavailable'&&<div role="alert"><p>Felles inventar er ikkje tilgjengeleg enno. Ingen data er endra.</p><button type="button" onClick={load}>Prøv igjen</button></div>}
   {error&&<p className="auth-error" role="alert">{error}</p>}{message&&<p role="status">{message}</p>}
   {status==='ready'&&<>
+   <Lastmeister rows={detailed}/>
    {canEdit&&missing.length>0&&!draft&&<div className="gg-inventory-import"><strong>Startinventar GG49</strong><small>{missing.length} av {INITIAL_INVENTORY.length} oppføringar manglar. Eksisterande utstyr blir ikkje overskrive.</small>{importing?<><p>Legg inn dei manglande oppføringane?</p><button type="button" disabled={busy} onClick={importInitial}>Stadfest import</button><button type="button" disabled={busy} onClick={()=>setImporting(false)}>Avbryt</button></>:<button type="button" className="secondary-button" onClick={()=>setImporting(true)}>Importer startlista</button>}</div>}
    {draft&&<form className="gg-inventory-form" onSubmit={save}><h4>{editing?'Endra utstyr':'Nytt utstyr'}</h4><label>Namn<input required maxLength={160} value={draft.equipment_label} onChange={e=>setDraft({...draft,equipment_label:e.target.value})}/></label><label>Utstyrstype<select value={draft.group_key} onChange={e=>setDraft({...draft,group_key:e.target.value})}>{INVENTORY_GROUPS.map(g=><option key={g}>{g}</option>)}</select></label><div className="gg-inventory-fields"><label>Tal (blank = ukjend)<input type="number" min="0" max="999" step="1" inputMode="numeric" value={draft.available} onChange={e=>setDraft({...draft,available:e.target.value})}/></label><label>Vekt per eining, kg<input inputMode="decimal" value={draft.weight_kg} onChange={e=>setDraft({...draft,weight_kg:e.target.value})}/></label></div><label>Merknad / avgrensing<textarea maxLength={1000} rows={3} value={draft.notes} onChange={e=>setDraft({...draft,notes:e.target.value})}/></label><small>Set tal til 0 når utstyret ikkje er tilgjengeleg. Historiske WOD-ar blir ikkje endra.</small><div className="gg-inventory-fields"><button type="submit" className="primary-button" disabled={busy}>Lagre utstyr</button><button type="button" className="secondary-button" disabled={busy} onClick={()=>{setDraft(null);setEditing(null)}}>Avbryt</button></div></form>}
    <div className="gg-inventory-fields"><label>Søk<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Namn, vekt eller merknad"/></label><label>Utstyrstype<select value={group} onChange={e=>setGroup(e.target.value)}><option value="">Alle typar</option>{INVENTORY_GROUPS.map(g=><option key={g}>{g}</option>)}</select></label></div>

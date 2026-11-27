@@ -48,3 +48,9 @@ Prosjektinnstillingar, Edge Function-secrets, Auth-provideroppsett og Storage-fi
 maa sikrast separat. Skriptet stoppar dersom Storage-objekt finst ved kontroll.
 Ta vare paa loeyndomar i privat passordhandterar; aldri i GitHub.
 https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore
+
+KONTROLL AV EKSISTERANDE BACKUP (ingen databasekontakt)
+Dobbeltklikk KONTROLLER-BACKUP.cmd og vel ei datert DATABUNKER ZIP-fil.
+Verktøyet les alle arkivfiler lokalt og samanliknar SHA256-kontrollsummane.
+Ingen passord, opplasting, utpakking eller databaseendring. OK tyder at filene
+stemmer med manifestet, ikkje at arkivet er autentisk eller at restore fungerer.

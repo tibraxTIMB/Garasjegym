@@ -3,6 +3,7 @@ import {createPortal} from 'react-dom'
 import {ArrowRight,CheckCircle2,ClipboardList,Dumbbell,Plus,RefreshCw,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import PTWodReview from './PTWodReview.jsx'
+import {savedPlanPrescription,planWodDisplayName} from '../lib/ptPreparationHistory.js'
 import './pt-client-followup.css'
 
 const WodBuilder=lazy(()=>import('./WodBuilder.jsx'))
@@ -13,7 +14,7 @@ const shortDate=value=>value?new Date(value).toLocaleDateString('nn-NO',{day:'nu
 /** PTs can see only explicit PT WOD assignments and their own PT program sessions.
  * No workout_logs query: a customer's unrelated private training remains private.
  */
-export default function PTClientWods({clientId,clientName='',clientRank=null,mode='full',planSessions=[],wods=[],initialReview=null,assignRequest=null,onAssignClosed=()=>{},onAssign=null,revisionToken=0,onOpenFull=()=>{},onOpenReview=()=>{},onReviewClosed=()=>{}}){
+export default function PTClientWods({clientId,clientName='',clientRank=null,mode='full',planSessions=[],wods=[],initialReview=null,assignRequest=null,onAssignClosed=()=>{},onAssign=null,revisionToken=0,onOpenFull=()=>{},onOpenReview=()=>{},onReviewClosed=()=>{},onRecordCalibration=null}){
  const [assignments,setAssignments]=useState([])
  const [loading,setLoading]=useState(false)
  const [error,setError]=useState('')
@@ -44,7 +45,7 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
  const activeAssignments=useMemo(()=>assignments.filter(row=>!completedStatus(row.status)&&row.status!=='cancelled'),[assignments])
  const doneAssignments=useMemo(()=>assignments.filter(row=>completedStatus(row.status)),[assignments])
  const programWods=useMemo(()=>planSessions.filter(row=>row.wod_id&&!row.archived_at).map(session=>({
-   ...session,wodName:wods.find(w=>w.id===session.wod_id)?.name||session.title||'Program-WOD'
+   ...session,wodName:planWodDisplayName(session,wods.find(w=>w.id===session.wod_id))
  })),[planSessions,wods])
  const preview=mode==='overview'
  const shownActive=preview?activeAssignments.slice(0,3):activeAssignments
@@ -64,7 +65,7 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
  const renderProgram=session=><article className="ptfollow-wod-row" key={session.id}>
    <div className="ptfollow-wod-icon"><ClipboardList size={17}/></div>
    <div className="ptfollow-wod-main"><strong>{session.wodName}</strong>
-    <small>{[session.title&&session.title!==session.wodName?session.title:null,session.scheduled_date?'Planlagt '+shortDate(session.scheduled_date):null].filter(Boolean).join(' · ')||'WOD i PT-treningsplan'}</small>
+    <small>{[session.title&&session.title!==session.wodName?session.title:null,session.scheduled_date?'Planlagt '+shortDate(session.scheduled_date)+(session.workout_snapshot?.schedule_time?' kl. '+String(session.workout_snapshot.schedule_time).slice(0,5):''):'Dato ikkje fastsett',session.completed_at?'Fullført '+shortDate(session.completed_at):null].filter(Boolean).join(' · ')||'WOD i PT-treningsplan'}</small>
    </div>
    <div className="ptfollow-wod-actions">
     <span className={'ptfollow-status '+(completedStatus(session.status)?'is-done':'')}>{completedStatus(session.status)?'Gjennomført':'I treningsplan'}</span>
@@ -77,10 +78,10 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
  if(mode==='full'&&openedReview&&!loading&&(selectedAssignment||selectedProgram)){
   const a=selectedAssignment,p=selectedProgram
   return <section className="ptfollow ptfollow-fullreview" aria-label={'PT-resultat for '+clientName}>
-   <PTWodReview key={openedReview} assignmentId={a?.id||null} programSessionId={p?.id||null}
+   <PTWodReview onRecordCalibration={onRecordCalibration} key={openedReview} assignmentId={a?.id||null} programSessionId={p?.id||null}
     clientName={clientName} clientRank={clientRank}
     wodName={a?.wods?.name||p?.wodName||'Tildelt WOD'}
-    prescriptionSchema={a?.wods?.timer_settings?.workout_schema||wods.find(w=>w.id===p?.wod_id)?.timer_settings?.workout_schema||null}
+    prescriptionSchema={p?savedPlanPrescription(p):null}
     onClose={()=>{setOpenedReview(null);onReviewClosed()}}/>
   </section>
  }

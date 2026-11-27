@@ -1,3 +1,4 @@
+import {isIndividualPerformance} from './performanceEvidence.js'
 // Only explicitly linked, completed PT tasks for the currently selected customer.
 // No direct workout_logs read. Never infer personal metrics from combined results.
 export function priorPtReferences({clientId,wodId,assignments=[],programs=[],sessions=[],excludeId}={}){
@@ -13,7 +14,7 @@ export function priorPtReferences({clientId,wodId,assignments=[],programs=[],ses
 export function priorPtSummary(result){
  if(!result||!result.id)return null
  const d=result.result_data||{}
- if(d.participation_verified!=='individual')return {date:result.workout_date,team:d.participation_verified==='team',unverified:true,rows:[]}
+ if(d.participation_verified!=='individual'||!isIndividualPerformance(result))return {date:result.workout_date,team:d.participation_verified==='team'||!!d.samspel||['partner','team'].includes(d.wod_engine?.participation),unverified:true,rows:[]}
  // No effort inference; show exactly saved values. Partial complexes do not supply a load reference.
  const present=v=>v!=null&&String(v).trim()!==''&&Number.isFinite(Number(v))&&Number(v)>=0
  const rows=(Array.isArray(d.exercise_results)?d.exercise_results:[]).flatMap(e=>{
@@ -31,4 +32,16 @@ export function clientWodUsage({clientId,programs=[],sessions=[],assignments=[]}
  for(const s of sessions)if(ids.has(s.program_id)&&!s.archived_at)add(s.wod_id,s.status==='completed'?'completed':'planned')
  for(const a of assignments)if(a.member_id===clientId&&a.status!=='cancelled')add(a.wod_id,a.status==='completed'?'completed':'assigned')
  return usage
+}
+
+ // The plan's own snapshot is the only historical prescription source here.
+export function savedPlanPrescription(session){
+ const snapshot=session?.workout_snapshot
+ if(!snapshot||snapshot.id&&session.wod_id&&snapshot.id!==session.wod_id)return null
+ const schema=snapshot.timer_settings?.workout_schema
+ return schema&&typeof schema==='object'&&Array.isArray(schema.items)?schema:null
+}
+export function planWodDisplayName(session,liveWod){
+ const snapshot=session?.workout_snapshot
+ return String(snapshot?.wod_title||snapshot?.title||session?.title||liveWod?.name||'Program-WOD')
 }

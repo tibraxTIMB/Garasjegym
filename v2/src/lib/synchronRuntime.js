@@ -1,0 +1,92 @@
+import {createIndividualCalibrationGateway,individualCalibrationRequestIssue} from './individualCalibration.js'
+import {createSynchronInvitationGateway,openSynchronInvitation,synchronCreationIssue} from './synchronInvitations.js'
+import {createSynchronGateway} from './synchronTransport.js'
+import {parseSynchronInvitation} from './synchronPreparation.js'
+const validSession=id=>typeof id==='string'&&parseSynchronInvitation('synchron-session:'+id)===id
+const object=x=>!!x&&typeof x==='object'&&!Array.isArray(x)
+const only=(x,keys)=>Object.keys(x).every(k=>keys.includes(k))
+const unavailable=()=>({issue:'Fellesøkta er ikkje tilgjengeleg.'})
+const activeSnapshot=s=>validSession(s?.sessionId)&&Number.isSafeInteger(s.revision)&&s.revision>=0&&Number.isFinite(s.serverAt)&&s.serverAt>=0&&typeof s.leader==='boolean'&&typeof s.isMember==='boolean'&&typeof s.joined==='boolean'&&(s.leader||s.isMember&&s.joined)&&['ready','countdown','running','paused'].includes(s.view?.phase)
+// Framework-neutral trusted server dispatcher. Caller extracts credential from
+// verified request context, not from JSON. No real persistence adapter is supplied.
+export function createSynchronDispatcher(host){
+ const creation=createSynchronInvitationGateway(host),live=typeof host?.authorizeSession==='function'?createSynchronGateway(host):null,calibrate=createIndividualCalibrationGateway(host)
+ return async function dispatch(credential,body){
+  if(!object(body)||typeof body.op!=='string')return unavailable()
+  try{
+   if(body.op==='create'&&only(body,['op','request']))return live?await creation.create(credential,body.request):unavailable()
+   if(body.op==='individual_calibration'&&only(body,['op','request']))return calibrate?await calibrate(credential,body.request):unavailable()
+   if(body.op==='discover'&&only(body,['op'])){
+    if(!live||typeof host.authorizeDiscovery!=='function'||typeof host.readActiveSession!=='function')return unavailable()
+    const actorId=await host.authenticate(credential)
+    if(typeof actorId!=='string'||!actorId||await host.authorizeDiscovery(actorId)!==true)return unavailable()
+    // Null is an authoritative absence; undefined, conflicting reservations or failure are not.
+    const sessionId=await host.readActiveSession(actorId)
+    if(await host.authorizeDiscovery(actorId)!==true)return unavailable()
+    if(sessionId===null)return {active:null}
+    if(!validSession(sessionId))return unavailable()
+    const response=await live.snapshot(sessionId,credential)
+    if(response.issue||!activeSnapshot(response.snapshot)||response.snapshot.sessionId!==sessionId)return unavailable()
+    if(await host.authorizeDiscovery(actorId)!==true)return unavailable()
+    return {active:response.snapshot}
+   }
+   if(!live||!validSession(body.sessionId))return unavailable()
+   if(body.op==='snapshot'&&only(body,['op','sessionId']))return await live.snapshot(body.sessionId,credential)
+   if(body.op==='command'&&only(body,['op','sessionId','command'])&&object(body.command))return await live.command(body.sessionId,credential,body.command)
+   if(body.op==='save_result'&&only(body,['op','sessionId','revision'])&&Number.isSafeInteger(body.revision)&&body.revision>=0&&typeof host.persistOwnResult==='function'){
+    const actorId=await host.authenticate(credential)
+    if(typeof actorId!=='string'||!actorId)return unavailable()
+    const reserved=await live.reserve(body.sessionId,credential,body.revision)
+    if(reserved.issue||!reserved.reservation||reserved.reservation.memberId!==actorId)return {issue:reserved.issue||'Resultatet er ikkje klart for lagring.'}
+    const result=await host.persistOwnResult(body.sessionId,actorId)
+    return result?.saved===true&&validSession(result.workoutId)?{saved:true,workoutId:result.workoutId,duplicate:result.duplicate===true}:unavailable()
+   }
+   // Reservation stays server-side; client cannot retrieve raw persistence payloads.
+   return unavailable()
+  }catch{return unavailable()}
+ }
+}
+// Host injects invoke (e.g. authenticated HTTPS call using current session).
+// No credentials, service keys or client-supplied actor appear in request body.
+export function createSynchronRuntime({actorId,invoke,individualCalibrationEnabled=false,discoveryEnabled=false,resultSavingEnabled=false}={}){
+ if(typeof actorId!=='string'||!actorId||typeof invoke!=='function')return null
+ async function call(body){
+  const result=await invoke(body)
+  return object(result)?result:unavailable()
+ }
+ async function readSnapshot(sessionId){
+  if(!validSession(sessionId))return unavailable()
+  const r=await call({op:'snapshot',sessionId})
+  return r.snapshot?.sessionId===sessionId?r:unavailable()
+ }
+ async function create(request){
+  const issue=synchronCreationIssue(request);if(issue)return {issue}
+  const result=await call({op:'create',request})
+  return result.sessionId===request.sessionId?{sessionId:result.sessionId,duplicate:result.duplicate===true}:result.issue?{issue:result.issue}:unavailable()
+ }
+ function adapter(sessionId){
+  if(!validSession(sessionId))return null
+  return {read:()=>readSnapshot(sessionId),...(resultSavingEnabled===true?{saveResult:async revision=>{
+   if(!Number.isSafeInteger(revision)||revision<0)return unavailable()
+   try{const r=await call({op:'save_result',sessionId,revision});return r.saved===true&&validSession(r.workoutId)?{saved:true,workoutId:r.workoutId,duplicate:r.duplicate===true}:unavailable()}catch{return unavailable()}
+  }}:{}),command:async command=>{
+   const r=await call({op:'command',sessionId,command})
+   return r.snapshot&&r.snapshot.sessionId!==sessionId?unavailable():r
+  }}
+ }
+ async function recordIndividualCalibration(request){
+  const issue=individualCalibrationRequestIssue(request);if(issue)return {issue}
+  const result=await call({op:'individual_calibration',request})
+  return result.accepted===true?{accepted:true,duplicate:result.duplicate===true}:result.issue?{issue:result.issue}:unavailable()
+ }
+ async function discover(){
+  try{const result=await call({op:'discover'});if(result.issue)return {issue:result.issue};if(result.active===null)return {active:null};return activeSnapshot(result.active)?{active:result.active}:unavailable()}catch{return unavailable()}
+ }
+ return {actorId,create,readSnapshot,adapter,...(discoveryEnabled===true?{discover}:{}),...(individualCalibrationEnabled===true?{recordIndividualCalibration}:{}),open:href=>openSynchronInvitation(href,{readSnapshot})}
+}
+// UI gate only, not authorization. Existing local timer must not be replaced.
+export function synchronRouteIssue(runtime,memberId,{localSessionOpen=false}={}){
+ if(localSessionOpen)return 'Avslutt eller lagra den lokale økta før du opnar Samspel.'
+ if(!runtime||runtime.actorId!==memberId||typeof runtime.open!=='function'||typeof runtime.adapter!=='function'||typeof runtime.create!=='function')return 'Samspel Live er ikkje aktivert.'
+ return null
+}

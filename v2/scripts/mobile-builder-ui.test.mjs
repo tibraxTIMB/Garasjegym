@@ -272,7 +272,7 @@ test('WOD minikort open full prescriptions and preserve existing actions', () =>
   assert.match(library, /onLaunchWod\?\.\(id\)/)
   assert.match(card, /\['rx','RX'\]/)
   assert.match(card, /\['scaled','Scaled'\]/)
-  assert.match(card, /cardDose\(item,level,false\)/)
+  assert.match(card, /cardDose\(item,level,false,doseVariant\)/)
   assert.match(card, /className="gg-wod-start" onClick=\{onLaunch\}/)
   assert.match(library, /onEdit=\{isAdmin\?/)
   assert.match(library, /className="wod-card-action-panel wod-card-use-panel"/)

@@ -39,6 +39,11 @@ with sync_playwright() as pw:
   launch=frame.get_by_role('button',name='Utfør WOD',exact=True)
   # A normal pointer click on the scaled viewport, not a forced/JS click.
   launch.click(timeout=15000)
+  # ZÜNDUNG presents the optional warmup guide before the actual timer.
+  # Exercise the real user choice instead of bypassing the preparation screen.
+  preparation=frame.get_by_role('region',name='Førebu hovudøkta')
+  preparation.wait_for(timeout=20000)
+  preparation.get_by_role('button',name='Start hovudøkta',exact=True).click(timeout=15000)
   start=frame.get_by_role('button',name='Start no',exact=True)
   start.wait_for(timeout=20000)
   start.click(timeout=15000)

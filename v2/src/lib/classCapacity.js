@@ -16,3 +16,13 @@ export function validateClassCapacity(capacity, activeBookings = 0) {
   }
   return { ok: true, value }
 }
+
+// Open Gym uses the ordinary class record and booking rules; this merely
+// prepares an editable future date, never publishes or books automatically.
+export function openGymDraft(now=new Date()){
+ const ms=new Date(now).getTime()
+ if(!Number.isFinite(ms))throw Error('Ugyldig tidspunkt.')
+ const start=new Date(Math.ceil((ms+15*60000)/ (15*60000))*(15*60000))
+ const local=new Date(start.getTime()-start.getTimezoneOffset()*60000).toISOString().slice(0,16)
+ return {title:'Open Gym',type:'Open Gym',startsAt:local,duration:'60',capacity:'4'}
+}

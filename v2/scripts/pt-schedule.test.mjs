@@ -47,3 +47,11 @@ const linkedEntries=calendarEntries({assignments:[{...direct[0],id:'a3',linked_s
 const linkedAssignment=linkedEntries.find(e=>e.kind==='assignment')
 assert.deepEqual([linkedAssignment.date,linkedAssignment.time,linkedAssignment.dueDate],['2026-12-08','17:30','2026-12-09'])
 assert.equal(calendarEntries({assignments:[{...direct[0],id:'a4'}]})[0].deadline,true)
+
+import {resolvePlanSlot} from '../src/lib/ptSchedule.js'
+assert.deepEqual(resolvePlanSlot(program,{week:2,day:3,time:'17:15'}),{week:2,day:3,date:'2026-12-09',time:'17:15'})
+assert.throws(()=>resolvePlanSlot(program,{week:2,day:3,date:'2026-12-08'}))
+assert.throws(()=>resolvePlanSlot(program,{week:7,day:1}))
+assert.throws(()=>resolvePlanSlot(program,{week:1,day:1,time:'25:00'}))
+assert.throws(()=>resolvePlanSlot({...program,start_date:null},{week:1,day:1,time:'17:00'}))
+assert.deepEqual(resolvePlanSlot({...program,start_date:null,flow_unlock_mode:'open'},{week:1,day:1}),{week:1,day:1,date:'',time:''})

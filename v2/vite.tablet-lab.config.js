@@ -8,20 +8,25 @@ const labClient=fileURLToPath(new URL('./src/tabletLabSupabase.js',import.meta.u
 const realSafehouse=fileURLToPath(new URL('./src/components/Safehouse.jsx',import.meta.url))
 const realBackup=fileURLToPath(new URL('./src/lib/safehouse.js',import.meta.url))
 const labSafehouse=fileURLToPath(new URL('./src/components/TabletLabSafehouse.jsx',import.meta.url))
+const realSynchron=fileURLToPath(new URL('./src/lib/synchronConfiguredRuntime.js',import.meta.url))
+const realSynchronHttp=fileURLToPath(new URL('./src/lib/synchronHttpClient.js',import.meta.url))
+const labSynchron='\0tablet-lab-no-live-synchron'
 const withoutQuery=id=>id.split('?')[0]
-const forbidden=id=>[realClient,realSafehouse,realBackup].includes(withoutQuery(id))||/[\\/]node_modules[\\/]@supabase[\\/]/.test(id)
+const forbidden=id=>[realClient,realSafehouse,realBackup,realSynchron,realSynchronHttp].includes(withoutQuery(id))||/[\\/]node_modules[\\/]@supabase[\\/]/.test(id)
 function isolatedBackend(){
  return {
   name:'tablet-lab-isolated-backend',
   enforce:'pre',
   resolveId(source,importer){
    if(source==='@supabase/supabase-js'||source.startsWith('@supabase/'))this.error('Supabase SDK is forbidden in Tablet Lab')
+   if(source===realSynchron||importer&&source.startsWith('.')&&path.resolve(path.dirname(withoutQuery(importer)),source)===realSynchron)return labSynchron
    if(source===realSafehouse)return labSafehouse
    if(importer&&source.startsWith('.')&&path.resolve(path.dirname(withoutQuery(importer)),source)===realSafehouse)return labSafehouse
    if(source===realClient)return labClient
    if(importer&&source.startsWith('.')&&path.resolve(path.dirname(withoutQuery(importer)),source)===realClient)return labClient
    return null
   },
+  load(id){if(id===labSynchron)return 'export function createConfiguredSynchronRuntime(){return null}'},
   moduleParsed(info){if(forbidden(info.id))this.error('Production database module is forbidden in Tablet Lab: '+info.id)},
   generateBundle(_,bundle){
    for(const output of Object.values(bundle))if(output.type==='chunk'){
@@ -38,7 +43,9 @@ export default defineConfig({
  define:{
   'import.meta.env.VITE_SUPABASE_URL':'undefined',
   'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY':'undefined',
-  'import.meta.env.VITE_SUPABASE_ANON_KEY':'undefined'
+  'import.meta.env.VITE_SUPABASE_ANON_KEY':'undefined',
+  'import.meta.env.VITE_GG_SYNCHRON_ENABLED':'undefined',
+  'import.meta.env.VITE_GG_SYNCHRON_RESULT_SAVING_ENABLED':'undefined'
  },
  plugins:[isolatedBackend(),react()],
  build:{outDir:'dist',emptyOutDir:false,assetsDir:'tablet-lab-assets',rollupOptions:{input:fileURLToPath(new URL('./tablet-lab.html',import.meta.url))}}

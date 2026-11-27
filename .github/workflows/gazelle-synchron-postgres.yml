@@ -1,0 +1,80 @@
+name: SYNCHRON isolated PostgreSQL 17 contract
+on:
+  push:
+    branches: [gazelle-operational-anatomical]
+    paths:
+      - 'v2/server/synchron*'
+      - 'v2/src/lib/synchron*'
+      - 'v2/src/components/Synchron*'
+      - 'v2/scripts/synchron-postgres*'
+      - 'v2/scripts/package-synchron-edge.mjs'
+      - 'v2/scripts/synchron-configured-runtime.test.mjs'
+      - 'v2/scripts/safehouse-offline-verifier.mjs'
+      - 'v2/public/safehouse/Kontroller-Backup.ps1'
+      - 'v2/scripts/synchron-supabase-auth.test.mjs'
+      - 'v2/scripts/synchron-restricted-queries.test.mjs'
+      - 'v2/scripts/synchron-edge-candidate.test.mjs'
+      - 'v2/server/edge-candidate/**'
+      - 'v2/package.json'
+      - 'v2/supabase/preflight/synchron_pg*'
+      - '.github/workflows/gazelle-synchron-postgres.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rehearsal:
+    if: github.ref == 'refs/heads/gazelle-operational-anatomical'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: fixture-only
+          POSTGRES_DB: gg_synchron_fixture
+        ports:
+          - 5432:5432
+        options: --health-cmd "pg_isready -U postgres -d gg_synchron_fixture" --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Load synthetic schema and candidate private persistence
+        env:
+          PGPASSWORD: fixture-only
+        run: |
+          psql -X -h 127.0.0.1 -U postgres -d gg_synchron_fixture -v ON_ERROR_STOP=1 -f v2/supabase/preflight/synchron_pg_fixture.sql -f v2/supabase/preflight/synchron_pg_candidate.sql -f v2/supabase/preflight/synchron_pg_result_candidate.sql -f v2/supabase/preflight/synchron_pg_notification_candidate.sql -f v2/supabase/preflight/synchron_pg_role_candidate.sql -f v2/supabase/preflight/synchron_pg_auth_candidate.sql -f v2/supabase/preflight/synchron_pg_login_fixture.sql
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.5.6
+      - name: Verify frozen Edge dependencies
+        run: deno cache --no-config --lock=v2/server/edge-candidate/deno.lock --frozen v2/server/edge-candidate/index.ts
+      - name: Test actual driver and client transport against disposable PostgreSQL
+        run: deno run -A --no-config --lock=v2/server/edge-candidate/deno.lock --frozen v2/scripts/synchron-postgres-rehearsal.mjs --driver
+      - name: Verify offline DATABUNKER checksum tool on synthetic ZIPs
+        run: node v2/scripts/safehouse-offline-verifier.mjs
+      - name: Verify synthetic SYNCHRON dump and isolated restore
+        env:
+          PGPASSWORD: fixture-only
+          FIXTURE_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          bash v2/scripts/synchron-postgres-restore.sh
+      - name: Package and resolve candidate Edge module graph
+        run: |
+          node v2/scripts/package-synchron-edge.mjs /tmp/gg-synchron-review
+          deno cache --no-config --lock=/tmp/gg-synchron-review/functions/synchron-live/deno.lock --frozen /tmp/gg-synchron-review/functions/synchron-live/index.ts
+      - name: Preserve review-only server package
+        uses: actions/upload-artifact@v4
+        with:
+          name: synchron-live-review-package
+          path: /tmp/gg-synchron-review
+          if-no-files-found: error
+          retention-days: 7
+      - name: Preserve frozen dependency lock (no credentials)
+        uses: actions/upload-artifact@v4
+        with:
+          name: synchron-edge-candidate-dependency-lock
+          path: v2/server/edge-candidate/deno.lock
+          if-no-files-found: error
+          retention-days: 7

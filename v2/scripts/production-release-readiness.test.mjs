@@ -45,3 +45,13 @@ test('release workflow gates deployment on verified order and successful real br
  assert.ok(workflow.includes('environment:\n      name: github-pages'))
  assert.ok(workflow.includes('fetch-depth: 0'))
 })
+
+test('ordinary candidate commits cannot authorize production publication',()=>{
+ const before='a'.repeat(40),head='b'.repeat(40),ref='refs/heads/gazelle-operational-anatomical';
+ const order={version:1,intent:'PUBLISH_PRODUCTION',target:before};
+ const base={event:{ref,before,after:head,forced:false,deleted:false,created:false},ref,head,parents:[before],paths:['v2/src/App.jsx'],order};
+ assert.equal(validateReleaseOrder(base),false);
+ assert.throws(()=>validateReleaseOrder({...base,paths:[RELEASE_FILE]}));
+ assert.throws(()=>validateReleaseOrder({...base,ref:PRODUCTION_REF,paths:[RELEASE_FILE]}));
+ assert.throws(()=>validateReleaseOrder({...base,event:{...base.event,ref:PRODUCTION_REF},paths:[RELEASE_FILE]}));
+})

@@ -1,0 +1,147 @@
+import {synchronPaceProfile} from './synchronPace.js'
+// SYNCHRON / Arbeitsfluss v1: deterministic domain contract, not a transport or auth service.
+// Trusted host supplies actorId and server timestamp; never trust these from a client payload.
+// All accepted commands must eventually be committed atomically with revision and event ID.
+const units=new Set(['reps','seconds','meters','calories'])
+const methods=new Set(['direct','clock','estimate','machine','hybrid'])
+const idOk=v=>typeof v==='string'&&v.trim().length>0&&v.length<=128&&!['__proto__','constructor','prototype'].includes(v)
+const nonnegative=v=>Number.isFinite(v)&&v>=0
+const whole=v=>Number.isSafeInteger(v)&&v>=0
+const copy=v=>JSON.parse(JSON.stringify(v))
+export function synchronPlanIssue(plan){
+ if(!idOk(plan?.id)||!idOk(plan.leaderId)||!Array.isArray(plan.members)||plan.members.length<2||plan.members.length>8||!plan.members.every(idOk)||new Set(plan.members).size!==plan.members.length)return 'Ugyldig økt eller deltakarar.'
+ if(!Array.isArray(plan.movements)||!plan.movements.length||plan.movements.length>30||new Set(plan.movements.map(m=>m?.id)).size!==plan.movements.length)return 'Vel 1–30 unike øvingar.'
+ for(const m of plan.movements){
+  if(!idOk(m?.id)||!idOk(m.exerciseId)||!units.has(m.unit)||!whole(m.target)||m.target<=0||m.target>100000||!methods.has(m.method)||m.collaboration!=='relay')return 'Ugyldig arbeidsmål eller registreringsmetode.'
+  if(m.method==='clock'&&m.unit!=='seconds'||m.method==='machine'&&!['meters','calories'].includes(m.unit)||m.unit==='seconds'&&m.method==='estimate')return 'Registreringsmetoden samsvarar ikkje med måleeininga.'
+  for(const member of plan.members){
+   const dose=m.doses&&Object.hasOwn(m.doses,member)?m.doses[member]:null
+   if(!dose||!idOk(dose.variant)||!Object.hasOwn(dose,'loadKg')||dose.loadKg!==null&&!nonnegative(dose.loadKg))return 'Vel individuell øvingsvariant og eventuell belastning.'
+  }
+ }
+ return null
+}
+export function createSynchronSession(plan){
+ const issue=synchronPlanIssue(plan);if(issue)throw Error(issue)
+ return {version:1,plan:copy(plan),revision:0,phase:'ready',currentDoses:plan.movements.map(m=>copy(m.doses)),joined:[],stage:0,active:null,resumeMember:null,startAt:null,lastAt:null,pausedAt:null,pausedMs:0,segments:[],open:null,totals:{},events:[]}
+}
+export function synchronClock(state,now){
+ const end=state.phase==='finished'?state.lastAt:state.phase==='paused'?state.pausedAt:now
+ return state.startAt===null?0:Math.max(0,Math.floor((end-state.startAt-state.pausedMs)/1000))
+}
+function open(s,member,at){
+ s.active=member
+ s.open={movementId:s.plan.movements[s.stage].id,memberId:member,from:at,dose:copy(s.currentDoses[s.stage][member])}
+}
+function close(s,at){
+ if(s.open&&at>s.open.from)s.segments.push({...s.open,to:at,assignedMs:at-s.open.from})
+ s.open=null;s.active=null
+}
+// Read-only projection for the existing Timer. No independent client start authority.
+export function synchronView(state,actorId,now){
+ if(actorId!==state.plan.leaderId&&!state.plan.members.includes(actorId))return null
+ const leader=actorId===state.plan.leaderId,joined=state.joined.includes(actorId)
+ const ready=state.phase==='countdown'&&now>=state.startAt
+ const phase=ready?'running':state.phase
+ const active=ready?state.resumeMember:state.active
+ return {phase,active,stage:state.stage,elapsed:synchronClock(state,now),countdown:phase==='countdown'?Math.max(0,Math.ceil((state.startAt-now)/1000)):0,
+  canStart:leader&&phase==='ready'&&state.joined.length===state.plan.members.length,
+  canTakeover:joined&&phase==='running'&&active!==actorId&&(!active||now-(ready?state.startAt:state.open?.from??now)>=5000),
+  canPause:leader&&phase==='running',canResume:leader&&phase==='paused',
+  canAdvance:leader&&phase==='running'&&state.stage<state.plan.movements.length-1,
+  canFinish:leader&&['running','paused'].includes(phase)}
+}
+export function applySynchronCommand(state,cmd,{actorId,at}={}){
+ const fail=issue=>({state,issue})
+ if(!idOk(cmd?.id)||!idOk(actorId)||!whole(at))return fail('Ugyldig hending.')
+ const leader=actorId===state.plan.leaderId,member=state.plan.members.includes(actorId)
+ if(!leader&&!member)return fail('Ingen tilgang til økta.')
+ const previous=state.events.find(e=>e.id===cmd.id)
+ if(previous){
+  const memberId=cmd.type==='start'?cmd.memberId:leader&&cmd.memberId?cmd.memberId:actorId
+  const same=previous.actorId===actorId&&previous.type===cmd.type&&(!['start','takeover','load'].includes(cmd.type)||previous.memberId===memberId)&&(cmd.type!=='load'||previous.loadKg===cmd.loadKg)&&(!['advance','finish'].includes(cmd.type)||previous.actual===cmd.actual&&previous.abort===(cmd.abort===true))
+  return same?{state,duplicate:true}:fail('Hendings-ID er alt brukt.')
+ }
+ if(cmd.revision!==state.revision||state.lastAt!==null&&at<state.lastAt)return fail('Økta er endra. Synkroniser først.')
+ const s=copy(state),move=s.plan.movements[s.stage]
+ if(cmd.type==='join'){
+  if(!member||s.phase==='finished'||s.joined.includes(actorId))return fail('Kan ikkje kopla til.')
+  s.joined.push(actorId)
+ }else if(cmd.type==='start'){
+  if(!leader||s.phase!=='ready'||s.joined.length!==s.plan.members.length||!s.joined.includes(cmd.memberId))return fail('Berre øktleiar kan starta når alle er klare.')
+  s.phase='countdown';s.startAt=at+10000;s.resumeMember=cmd.memberId
+ }else {
+  // Materialize countdown on the first accepted command after its deadline.
+  if(s.phase==='countdown'&&at>=s.startAt){s.phase='running';open(s,s.resumeMember,s.startAt);s.resumeMember=null}
+  if(cmd.type==='takeover'){
+   const next=leader&&cmd.memberId?cmd.memberId:actorId
+   if(s.phase!=='running'||!s.joined.includes(next)||next===s.active||!leader&&next!==actorId)return fail('Byte er ikkje tilgjengeleg.')
+   if(s.open&&at-s.open.from<5000)return fail('Vent før nytt byte.')
+   close(s,at);open(s,next,at)
+  }else if(cmd.type==='idle'){
+   if(s.phase!=='running'||!s.active||!leader&&actorId!==s.active)return fail('Kan ikkje stoppa arbeidsbolken.')
+   close(s,at)
+  }else if(cmd.type==='pause'){
+   if(!leader||s.phase!=='running')return fail('Berre øktleiar kan pausa.')
+   s.resumeMember=s.active;close(s,at);s.phase='paused';s.pausedAt=at
+  }else if(cmd.type==='resume'){
+   if(!leader||s.phase!=='paused')return fail('Berre øktleiar kan fortsetja.')
+   s.pausedMs+=at-s.pausedAt;s.pausedAt=null;s.phase='running';if(s.resumeMember)open(s,s.resumeMember,at);s.resumeMember=null
+  }else if(cmd.type==='load'){
+   const target=leader&&cmd.memberId?cmd.memberId:actorId
+   if(s.phase!=='running'||!s.joined.includes(target)||!leader&&target!==actorId||cmd.loadKg!==null&&!nonnegative(cmd.loadKg))return fail('Ugyldig belastningsendring.')
+   const wasActive=s.active===target;if(wasActive)close(s,at)
+   s.currentDoses[s.stage][target].loadKg=cmd.loadKg;if(wasActive)open(s,target,at)
+  }else if(cmd.type==='advance'||cmd.type==='finish'){
+   if(!leader||!['running','paused'].includes(s.phase)||cmd.type==='advance'&&s.stage===s.plan.movements.length-1||cmd.type==='finish'&&s.stage<s.plan.movements.length-1&&cmd.abort!==true)return fail('Øktleiar må stadfesta øvingsbyte eller avslutning.')
+   if(cmd.actual!==null&&(!whole(cmd.actual)||cmd.actual>100000))return fail('Stadfest faktisk samla mengd, eller vel ukjent.')
+   if(s.phase==='paused'){s.pausedMs+=at-s.pausedAt;s.pausedAt=null}
+   close(s,at);s.totals[move.id]={actual:cmd.actual,unit:move.unit,confirmedBy:actorId}
+   s.resumeMember=null
+   if(cmd.type==='finish')s.phase='finished'
+   else {s.stage++;s.phase='running'}
+  }else return fail('Ukjend handling.')
+ }
+ s.lastAt=at;s.revision++;s.events.push({id:cmd.id,actorId,type:cmd.type,at,revision:s.revision,...(cmd.type==='start'||cmd.type==='takeover'?{memberId:cmd.type==='start'?cmd.memberId:leader&&cmd.memberId?cmd.memberId:actorId}:{}),...(cmd.type==='load'?{memberId:leader&&cmd.memberId?cmd.memberId:actorId,loadKg:cmd.loadKg}:{}),...(['advance','finish'].includes(cmd.type)?{actual:cmd.actual,abort:cmd.abort===true}:{})})
+ return {state:s,issue:null}
+}
+// Assigned time is not actual movement time. No rep/PR inference from clock alone.
+export function synchronAssignedTime(state,movementId,memberId){
+ return state.segments.filter(s=>s.movementId===movementId&&s.memberId===memberId).reduce((sum,s)=>sum+s.assignedMs,0)/1000
+}
+// Same-person, same-variant/unit observed pace; bounded load interpolation only.
+// Missing calibration produces unknown, never a generic pace.
+export function synchronEstimate(state,movementId,memberId,calibrations=[]){
+ const move=state.plan.movements.find(m=>m.id===movementId)
+ if(!move||!state.plan.members.includes(memberId)||!['estimate','hybrid'].includes(move.method)||move.unit==='seconds')return null
+ const segments=state.segments.filter(s=>s.movementId===movementId&&s.memberId===memberId)
+ if(!segments.length)return null
+ let value=0,low=0,high=0,previousWorkSeconds=0,previousEnd=null,rangeAvailable=true,minSessions=null
+ const methods=new Set()
+ for(const seg of [...segments].sort((a,b)=>a.from-b.from)){
+  const duration=seg.assignedMs/1000
+  const pace=synchronPaceProfile(calibrations,{memberId,exerciseId:move.exerciseId,variant:seg.dose.variant,loadKg:seg.dose.loadKg,unit:move.unit,sessionId:state.plan.id,before:state.startAt,duration,previousWorkSeconds,restSeconds:previousEnd===null?null:Math.max(0,(seg.from-previousEnd)/1000)})
+  if(!pace)return null
+  value+=duration/60*pace.pace
+  if(pace.rangeAvailable){low+=duration/60*pace.low;high+=duration/60*pace.high}else rangeAvailable=false
+  methods.add(pace.method)
+  if(pace.sessions!==null)minSessions=minSessions===null?pace.sessions:Math.min(minSessions,pace.sessions)
+  previousWorkSeconds+=duration;previousEnd=seg.to
+ }
+ return Number.isFinite(value)&&value<=100000?{value,unit:move.unit,quality:'estimated',basis:'assigned_time',prEligible:false,model:{version:1,methods:[...methods],minSessions:methods.has('legacy_exact')?null:minSessions,observedRange:rangeAvailable&&Number.isFinite(low)&&Number.isFinite(high)?{low:Math.floor(low),high:Math.ceil(high)}:null}}:null
+}
+// Preserve measured individual amounts. Allocate a confirmed total only where all unknowns have estimates.
+export function synchronAllocate(total,rows){
+ if(!whole(total)||total>100000||!Array.isArray(rows)||!rows.length||rows.length>8||new Set(rows.map(r=>r.memberId)).size!==rows.length||rows.some(r=>!idOk(r.memberId)))return null
+ const fixed=rows.filter(r=>r.actual!==null&&r.actual!==undefined),unknown=rows.filter(r=>r.actual===null||r.actual===undefined)
+ if(fixed.some(r=>!whole(r.actual)))return null
+ const remaining=total-fixed.reduce((sum,r)=>sum+r.actual,0)
+ if(remaining<0||!unknown.length&&remaining!==0||unknown.some(r=>!nonnegative(r.estimate)))return null
+ const weight=unknown.reduce((sum,r)=>sum+r.estimate,0)
+ if(!Number.isFinite(weight)||remaining>0&&weight<=0)return null
+ const allocations=unknown.map((r,i)=>{const raw=weight?remaining*r.estimate/weight:0;return {memberId:r.memberId,i,value:Math.floor(raw),fraction:raw-Math.floor(raw)}})
+ let rest=remaining-allocations.reduce((sum,r)=>sum+r.value,0)
+ for(const row of [...allocations].sort((a,b)=>b.fraction-a.fraction||a.i-b.i)){if(rest>0){row.value++;rest--}}
+ if(rest!==0)return null
+ return rows.map(r=>r.actual!=null?{memberId:r.memberId,value:r.actual,quality:'confirmed'}:{memberId:r.memberId,value:allocations.find(a=>a.memberId===r.memberId).value,quality:'estimated',prEligible:false})
+}

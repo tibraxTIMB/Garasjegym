@@ -54,3 +54,97 @@ console.log('Detailed inventory and non-overwrite checks passed')
 assert.equal(applyEquipmentInventory([{name:'Band Pull Apart',equipment:'Strikk'}],{strikk:{available:4,required:1}},shared).strikk.available,null)
 assert.ok(inventoryNotes([{equipment:'Vektstong / benk'}],INITIAL_INVENTORY).some(r=>r.equipment_key==='item:barbell-20'))
 assert.ok(inventoryNotes([{equipment:'Vektstong'}],INITIAL_INVENTORY).some(r=>r.equipment_key==='item:safety'))
+
+import {plateAllocation} from '../src/lib/garageInventory.js'
+const load=(barKey,targetKg)=>({barKey,targetKg,compatible:true})
+const a=load('item:cf-bar-20',80),b=load('item:cf-bar-15',65)
+const allocation=plateAllocation(INITIAL_INVENTORY,[a,b])
+assert.equal(allocation.status,'exact')
+assert.deepEqual(allocation.loads.map(x=>x.totalKg),[80,65])
+for(const plate of INITIAL_INVENTORY.filter(x=>x.group_key==='vektskiver')){
+ assert.ok(allocation.loads.flatMap(x=>x.perSide).filter(x=>x.key===plate.equipment_key).reduce((n,x)=>n+2*x.count,0)<=plate.available)
+}
+assert.equal(plateAllocation(INITIAL_INVENTORY,[a,a]).status,'shortage')
+assert.equal(plateAllocation(INITIAL_INVENTORY,[{...a,compatible:false}]).status,'unknown')
+assert.equal(plateAllocation(INITIAL_INVENTORY,[load(a.barKey,19)]).status,'invalid')
+assert.equal(plateAllocation(INITIAL_INVENTORY,[load(a.barKey,20)]).status,'exact')
+const nearest=plateAllocation(INITIAL_INVENTORY,[load(a.barKey,20.25)])
+assert.equal(nearest.alternatives[0].below.totalKg,20)
+assert.equal(nearest.alternatives[0].above.totalKg,21)
+assert.equal(plateAllocation(INITIAL_INVENTORY.map(r=>r.group_key==='vektskiver'?{...r,available:1}:r),[a]).status,'shortage')
+assert.equal(plateAllocation(INITIAL_INVENTORY.map(r=>r.group_key==='vektskiver'?{...r,available:null}:r),[a]).status,'unknown')
+// Backtracking: first job can use 2x5 or 1x10 per side; second needs the 5 kg pair.
+const custom=[{inventory_kind:'item',equipment_key:'bar',group_key:'stong',available:2,weight_kg:20},{inventory_kind:'item',equipment_key:'p5',group_key:'vektskiver',available:4,weight_kg:5},{inventory_kind:'item',equipment_key:'p10',group_key:'vektskiver',available:2,weight_kg:10}]
+assert.equal(plateAllocation(custom,[load('bar',40),load('bar',30)]).status,'exact')
+assert.equal(plateAllocation(custom,[load('bar',50),load('bar',50)]).status,'shortage')
+console.log('Lastmeister allocation checks passed')
+
+// A greedy choice consumes the only 6 kg pair; search must backtrack.
+const backtrack=[{inventory_kind:'item',equipment_key:'bar',group_key:'stong',available:2,weight_kg:20},...[[6,2],[4,6],[2,2]].map(([weight_kg,available])=>({inventory_kind:'item',equipment_key:'p'+weight_kg,group_key:'vektskiver',weight_kg,available}))]
+const bt=plateAllocation(backtrack,[load('bar',44),load('bar',32)])
+assert.equal(bt.status,'exact')
+assert.deepEqual(bt.loads[0].perSide.map(p=>[p.kg,p.count]),[[4,3]])
+assert.deepEqual(bt.loads[1].perSide.map(p=>[p.kg,p.count]),[[6,1]])
+
+import {equipmentItemsForSamspel} from '../src/lib/equipmentPreparation.js'
+const main=[{name:'Air squat',equipment:'Kroppsvekt'}]
+const rotating={version:2,mode:'parallel_round_swap',participant_count:2,task:'row',metric:'distance'}
+assert.equal(equipmentItemsForSamspel(main,null),main)
+assert.equal(equipmentItemsForSamspel(main,{...rotating,participant_count:1}),main)
+const parallel=equipmentItemsForSamspel(main,rotating)
+assert.deepEqual(equipmentPreparation(parallel).groups.map(x=>x.equipment),['Romaskin'])
+assert.equal(equipmentCapacity(parallel,{})[0].status,'unknown')
+assert.equal(equipmentCapacity(parallel,{romaskin:{required:1,available:0}})[0].status,'shortage')
+const mixed={...rotating,participant_count:3,erg_slots:2,station_tasks:[{task:'row',metric:'distance'},{task:'strength',metric:'reps',exercise_id:'p',exercise_name:'Press',instruction:'5 reps',equipment:'Vektstong'}]}
+const mixedItems=equipmentItemsForSamspel(main,mixed)
+assert.deepEqual(equipmentPreparation(mixedItems).groups.map(x=>x.equipment),['Romaskin','Vektstong'])
+assert.equal(main.length,1)
+assert.equal(equipmentAlternatives(mixedItems[2],candidates,tags).length,0)
+
+import {prescribedBarbellLoads} from '../src/lib/garageInventory.js'
+const doseItem={name:'Squat',equipment:'Vektstong',levels:{rx:{loadMode:'kg',loadKgMen:'80',loadKgWomen:'65'},scaled:{loadMode:'rir',loadKgMen:'50'}}}
+assert.deepEqual(prescribedBarbellLoads([doseItem]).map(x=>x.kg),[80,65])
+assert.deepEqual(prescribedBarbellLoads([doseItem],'scaled'),[])
+assert.deepEqual(prescribedBarbellLoads([{...doseItem,equipment:'Vektstong / Manualar'}]),[])
+assert.deepEqual(prescribedBarbellLoads([{...doseItem,levels:{rx:{loadMode:'kg',loadKgMen:'',loadKgWomen:'0'}}}]),[])
+assert.deepEqual(prescribedBarbellLoads([{...doseItem,is_rest:true}]),[])
+assert.deepEqual(prescribedBarbellLoads([{...doseItem,levels:{rx:{load_mode:'kg',load_kg:40}}}]).map(x=>x.kg),[40])
+
+
+import {doubleEmomStationCapacity} from '../src/lib/garageInventory.js'
+const doublePart={id:'d',title:'Del B',samspel:{main_track:'double_emom'}}
+const doubleItems=[{blockId:'d',name:'Row',equipment:'Romaskin'},{blockId:'d',name:'Row sprint',equipment:'roing'}]
+const doubleStock=doubleEmomStationCapacity([doublePart],doubleItems,{romaskin:1})[0]
+assert.deepEqual(doubleStock.rows,[{key:'romaskin',required:2,available:1,status:'shortage'}])
+assert.equal(doubleStock.validTrackCount,true)
+assert.equal(doubleEmomStationCapacity([doublePart],doubleItems,{romaskin:2})[0].rows[0].status,'minimum_met')
+assert.equal(doubleEmomStationCapacity([doublePart],doubleItems,{romaskin:null})[0].rows[0].status,'unknown')
+const serial=doubleEmomStationCapacity([doublePart,{...doublePart,id:'e'}],[...doubleItems,...doubleItems.map(x=>({...x,blockId:'e'}))],{romaskin:2})
+assert.equal(serial.length,2)
+assert.equal(serial[1].rows[0].required,2)
+const ambiguous=doubleEmomStationCapacity([doublePart],[{blockId:'d',name:'Press',equipment:'Vektstong / Benk'},{blockId:'d',name:'Push-up',equipment:'Kroppsvekt'}],{})[0]
+assert.deepEqual(ambiguous.unknown,['Press'])
+assert.deepEqual(ambiguous.rows,[])
+assert.equal(doubleEmomStationCapacity([doublePart],doubleItems.slice(0,1),{})[0].validTrackCount,false)
+assert.deepEqual(doubleEmomStationCapacity([{id:'d',samspel:{main_track:'emom'}}],doubleItems,{}),[])
+assert.equal(doubleEmomStationCapacity([doublePart],[{block_id:'d',name:'Press',equipment:'Barbell'},{block_id:'d',name:'Squat',equipment:'Vektstong'}],{stong:1})[0].rows[0].status,'shortage')
+
+
+import {ironTwinsPlateAllocation} from '../src/lib/garageInventory.js'
+const ironStock=[{inventory_kind:'item',equipment_key:'bar',group_key:'stong',available:1,weight_kg:20},{inventory_kind:'item',equipment_key:'p10',group_key:'vektskiver',available:2,weight_kg:10}]
+const ironRequests=[{barKey:'bar',targetKg:40,compatible:true},{barKey:'bar',targetKg:40,compatible:true}]
+assert.equal(ironTwinsPlateAllocation(ironStock,ironRequests,'').status,'unknown')
+assert.equal(ironTwinsPlateAllocation(ironStock,ironRequests.slice(0,1),'sequential').status,'invalid')
+assert.equal(ironTwinsPlateAllocation(ironStock,ironRequests,'simultaneous').status,'shortage')
+const ironSequential=ironTwinsPlateAllocation(ironStock,ironRequests,'sequential')
+assert.equal(ironSequential.status,'exact')
+assert.equal(ironSequential.sequential,true)
+assert.deepEqual(ironSequential.loads.map(load=>load.totalKg),[40,40])
+const ironTwoBars=ironStock.map(r=>r.equipment_key==='bar'?{...r,available:2}:r)
+assert.equal(ironTwinsPlateAllocation(ironTwoBars,ironRequests,'simultaneous').status,'shortage')
+const ironEnough=ironTwoBars.map(r=>r.equipment_key==='p10'?{...r,available:4}:r)
+assert.equal(ironTwinsPlateAllocation(ironEnough,ironRequests,'simultaneous').status,'exact')
+assert.equal(ironTwinsPlateAllocation(ironStock,[ironRequests[0],{...ironRequests[1],compatible:false}],'sequential').status,'unknown')
+assert.equal(ironTwinsPlateAllocation(ironStock,[ironRequests[0],{...ironRequests[1],targetKg:10}],'sequential').status,'invalid')
+assert.equal(ironTwinsPlateAllocation(ironStock,[ironRequests[0],{...ironRequests[1],targetKg:60}],'sequential').status,'shortage')
+assert.equal(ironStock[1].available,2)

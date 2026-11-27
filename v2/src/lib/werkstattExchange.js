@@ -9,6 +9,10 @@ export function exchangeRole(profile,coach=false){
  const staff=approved&&['admin','manager'].includes(profile.role)
  return {office:approved&&(staff||coach),staff,importWod:staff&&profile.role==='admin',planTemplate:staff}
 }
+// Administrative PC entry is narrower than the shared planning/export permissions.
+export function werkstattEntryAllowed(profile,actor,{labMode=false,localSessionOpen=false,remoteLocked=false}={}){
+ return !!actor&&profile?.id===actor&&profile.role==='admin'&&profile.active===true&&profile.membership_status==='approved'&&!labMode&&!localSessionOpen&&!remoteLocked
+}
 export function csvCell(value){
  const s=String(value??'')
  // Prefix spreadsheet formula triggers without changing ordinary numeric strings.

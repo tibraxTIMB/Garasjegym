@@ -135,6 +135,17 @@ test('explicitly skipped and unknown-provenance results do not contribute to rec
  assert.equal(deriveExerciseRecords([individual,skipped,unknown])[0].records.find(r=>r.key==='load').value,50)
 })
 
+import {isIndividualPerformance} from '../src/lib/performanceEvidence.js'
+test('legacy Samspel without team_score cannot become personal evidence',()=>{
+ assert.equal(isIndividualPerformance({result_data:{samspel:{version:1}}}),false)
+ assert.equal(isIndividualPerformance({result_data:{samspel:{main_track:'quality'},participation_verified:'individual'}}),false)
+ assert.equal(isIndividualPerformance({result_data:{samspel:null}}),true)
+})
+
+test('completion-only sets cannot contribute to personal PRs',()=>{
+ assert.equal(deriveExerciseRecords([workout(1,'Back squat',[{reps:5,load_kg:100,flow_status:'done'}])]).flatMap(x=>x.records).length,0)
+})
+
 test('unloaded movements and Pilates Swimming use actual result metrics',()=>{
  assert.equal(exerciseRecordType('Air squat',[{reps:20}]),'reps')
  assert.equal(exerciseRecordType('Pallof press',[{reps:10}]),'reps')

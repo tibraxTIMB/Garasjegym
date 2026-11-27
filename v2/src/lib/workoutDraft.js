@@ -76,7 +76,7 @@ export function workoutSubmissionConflict(submission,saveToken,fingerprint){
 // server-submission receipt. An edited or different draft never auto-submits.
 const retryKey=memberId=>`garasjegym.workout-retry.v1.${memberId}`
 export function restoreWorkoutRetry(memberId,draft,storage){
- if(!memberId||draft?.mode!=='active'||!draft.saveToken)return null
+ if(!memberId||draft?.version!==1||draft?.memberId!==memberId||draft?.mode!=='active'||!draft.saveToken)return null
  try{
   const row=JSON.parse((storage??globalThis.localStorage).getItem(retryKey(memberId))||'null')
   const fingerprint=workoutSaveFingerprint(draft)

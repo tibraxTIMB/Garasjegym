@@ -14,5 +14,5 @@ window.addEventListener('message',event=>{
  try{if(isLabMessage(event.data,'wod')){setLabWod(labWod(event.data.wod));document.documentElement.dataset.ggLabContent='wod';window.dispatchEvent(new CustomEvent('gg-tablet-lab-content',{detail:'wod'}))}else if(isLabMessage(event.data,'plan')){setLabPlan(event.data.plan);document.documentElement.dataset.ggLabContent='plan';window.dispatchEvent(new CustomEvent('gg-tablet-lab-content',{detail:'plan'}))}}
  catch(error){window.parent.postMessage({channel:LAB_CHANNEL,type:'error',message:error.message},origin)}
 })
-createRoot(document.getElementById('root')).render(<><div className="gg-lab-banner" role="status">TESTLAB · ingen resultat blir lagra i produksjon</div><MobileNativeControls/><App/></>)
+createRoot(document.getElementById('root')).render(<><div className="gg-lab-banner" role="status">TESTLAB · ingen resultat blir lagra i produksjon</div><MobileNativeControls/><App tabletLab/></>)
 
