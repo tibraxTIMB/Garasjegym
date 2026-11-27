@@ -87,3 +87,32 @@ export function equivalentLibraryWodSource(part){
  }
  return source.id
 }
+
+
+/** Copy a saved warmup as one leading logical Del 0, with its original timer blocks. */
+export function prepareLibraryWarmup(wod,makeId=()=>crypto.randomUUID()){
+ const schema=wod?.timer_settings?.workout_schema||{}
+ if(!wod?.id||wod.is_archived||!(wod.category==='warmup'||schema.library_category==='warmup'))throw Error('Vel ein lagra WOD i kategorien Oppvarming.')
+ const items=sortWodItems(getWodSchemaItems(schema))
+ if(!items.length)throw Error('Oppvarminga manglar lagra øvingar.')
+ const group=makeId()
+ const sourceBlocks=wod.format===COMPOSITE_FORMAT?schema.composite_blocks:null
+ const source=Array.isArray(sourceBlocks)&&sourceBlocks.length?sourceBlocks:null
+ if(wod.format===COMPOSITE_FORMAT&&!source)throw Error('Oppvarminga manglar lagra øktdelar.')
+ const entries=source?source.map(block=>({block,items:items.filter(item=>(item.block_id||item.blockId)===block.id)})):[prepareLibraryWodPart(wod,{id:makeId(),title:wod.name,transitionMode:'manual',transitionSeconds:0})]
+ if(entries.some(entry=>!entry.items.some(item=>!item.is_rest))||entries.reduce((n,entry)=>n+entry.items.length,0)!==items.length)throw Error('Kontroller øvingskoplingane i den lagra oppvarminga.')
+ const blocks=[],rows=[]
+ for(const entry of entries){
+  const original=entry.block
+  if(original.samspel&&!samspelNoncompetitive(original.samspel))throw Error('Denne oppvarminga har konkurransebasert Samspel. Vel ei anna oppvarming.')
+  const id=makeId()
+  const block={...original,id,format:isEmomFormat(original.format)?'EMOM':original.format,...(isEmomFormat(original.format)?{emomIntervalSeconds:emomIntervalSeconds(original.format,{work_every_seconds:original.emomIntervalSeconds,work_every_minutes:original.interval?.work_every_minutes})}:{}),flowPurpose:'prep',flowReporting:'done',scoreMode:'none',warmup_group:group,warmup_source_wod_id:wod.id,warmup_source_wod_name:wod.name}
+  delete block.items
+  delete block.source_wod_snapshot // never inherit benchmark identity from a prep block
+  delete block.source_wod_id
+  delete block.source_wod_name
+  blocks.push(block)
+  for(const item of entry.items)rows.push({...JSON.parse(JSON.stringify(item)),block_id:id,warmup_phase:item.warmup_phase||'specific_prep'})
+ }
+ return {blocks,items:rows}
+}
