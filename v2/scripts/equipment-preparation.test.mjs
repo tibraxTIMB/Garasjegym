@@ -128,3 +128,23 @@ assert.deepEqual(ambiguous.rows,[])
 assert.equal(doubleEmomStationCapacity([doublePart],doubleItems.slice(0,1),{})[0].validTrackCount,false)
 assert.deepEqual(doubleEmomStationCapacity([{id:'d',samspel:{main_track:'emom'}}],doubleItems,{}),[])
 assert.equal(doubleEmomStationCapacity([doublePart],[{block_id:'d',name:'Press',equipment:'Barbell'},{block_id:'d',name:'Squat',equipment:'Vektstong'}],{stong:1})[0].rows[0].status,'shortage')
+
+
+import {ironTwinsPlateAllocation} from '../src/lib/garageInventory.js'
+const ironStock=[{inventory_kind:'item',equipment_key:'bar',group_key:'stong',available:1,weight_kg:20},{inventory_kind:'item',equipment_key:'p10',group_key:'vektskiver',available:2,weight_kg:10}]
+const ironRequests=[{barKey:'bar',targetKg:40,compatible:true},{barKey:'bar',targetKg:40,compatible:true}]
+assert.equal(ironTwinsPlateAllocation(ironStock,ironRequests,'').status,'unknown')
+assert.equal(ironTwinsPlateAllocation(ironStock,ironRequests.slice(0,1),'sequential').status,'invalid')
+assert.equal(ironTwinsPlateAllocation(ironStock,ironRequests,'simultaneous').status,'shortage')
+const ironSequential=ironTwinsPlateAllocation(ironStock,ironRequests,'sequential')
+assert.equal(ironSequential.status,'exact')
+assert.equal(ironSequential.sequential,true)
+assert.deepEqual(ironSequential.loads.map(load=>load.totalKg),[40,40])
+const ironTwoBars=ironStock.map(r=>r.equipment_key==='bar'?{...r,available:2}:r)
+assert.equal(ironTwinsPlateAllocation(ironTwoBars,ironRequests,'simultaneous').status,'shortage')
+const ironEnough=ironTwoBars.map(r=>r.equipment_key==='p10'?{...r,available:4}:r)
+assert.equal(ironTwinsPlateAllocation(ironEnough,ironRequests,'simultaneous').status,'exact')
+assert.equal(ironTwinsPlateAllocation(ironStock,[ironRequests[0],{...ironRequests[1],compatible:false}],'sequential').status,'unknown')
+assert.equal(ironTwinsPlateAllocation(ironStock,[ironRequests[0],{...ironRequests[1],targetKg:10}],'sequential').status,'invalid')
+assert.equal(ironTwinsPlateAllocation(ironStock,[ironRequests[0],{...ironRequests[1],targetKg:60}],'sequential').status,'shortage')
+assert.equal(ironStock[1].available,2)
