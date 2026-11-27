@@ -145,6 +145,6 @@
 .gg-sixstep-review p,.gg-sixstep-review h4{margin:6px 0;font-size:.85rem}
 .gg-review-exercise{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:5px;align-items:center;width:100%;min-height:36px;text-align:left;border:0;border-bottom:1px solid #37464c;background:transparent;color:inherit;padding:4px 0;font:inherit;font-size:.83rem}
 .gg-review-exercise strong{text-align:right;overflow-wrap:anywhere}
-.gg-sixstep-mobile .wizard-final-stage>.wod-publish-toggle{display:none}
+.gg-sixstep-mobile .wizard-final-stage>.gg-publish-choice-inline{display:none}
 .gg-sixstep-mobile .wizard-final-stage>.wizard-stage-intro{display:none}
 @media(max-width:380px){.gg-sixstep-formats button{min-height:52px}.gg-sixstep-formats button strong{font-size:.73rem}.gg-compact-time-presets{grid-template-columns:repeat(3,minmax(0,1fr))}}
