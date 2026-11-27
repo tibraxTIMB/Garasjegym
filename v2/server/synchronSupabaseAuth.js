@@ -2,6 +2,7 @@
 // decoded claim is trusted. The restricted query adapter never uses a browser role.
 import {createSynchronHttpHandler} from './synchronHttp.js'
 import {createPostgresSynchronHost} from './synchronPostgresHost.js'
+import {createSynchronRestrictedQueries} from './synchronRestrictedQueries.js'
 
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const jwt=/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
@@ -50,4 +51,11 @@ export function createSynchronSupabaseHandler({auth,query,sessionQuery,issuer,al
   }
   return createPostgresSynchronHost({query:boundQuery,actorId,now,resultSavingEnabled})
  }})
+}
+
+// Deployment-facing factory. Disabled by default; no raw owner query fallback.
+export function createSynchronRestrictedHandler({begin,enabled=false,...config}={}){
+ if(enabled!==true)return null
+ const queries=createSynchronRestrictedQueries({begin})
+ return createSynchronSupabaseHandler({...config,...queries,enabled:true})
 }
