@@ -45,10 +45,11 @@ BEGIN
  RETURN result;
 END $bridge$;
 REVOKE ALL ON FUNCTION gg_synchron_private.edge_query(jsonb) FROM PUBLIC,anon,authenticated,service_role;
+GRANT EXECUTE ON FUNCTION gg_synchron_private.edge_query(jsonb) TO service_role;
 -- Temporary ownership transfer only; preserve any pre-existing SET grant.
 DO $owner$
 DECLARE added_set boolean := NOT pg_has_role(current_user,'gg_synchron_server','SET');
-DECLARE added_create boolean := NOT has_schema_privilege('gg_synchron_server','gg_synchron_private','CREATE');
+added_create boolean := NOT has_schema_privilege('gg_synchron_server','gg_synchron_private','CREATE');
 BEGIN
  IF added_set THEN
   EXECUTE format('GRANT gg_synchron_server TO %I WITH SET TRUE, INHERIT FALSE GRANTED BY %I',current_user,current_user);
@@ -63,7 +64,6 @@ END $owner$;
 -- This public entry is SECURITY INVOKER. Only the existing server secret
 -- may call it; browser roles cannot access either the wrapper or private schema.
 GRANT USAGE ON SCHEMA gg_synchron_private TO service_role;
-GRANT EXECUTE ON FUNCTION gg_synchron_private.edge_query(jsonb) TO service_role;
 CREATE FUNCTION public.gg_synchron_edge_query(p_request jsonb) RETURNS jsonb
 LANGUAGE sql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $wrapper$
  SELECT gg_synchron_private.edge_query(p_request)
