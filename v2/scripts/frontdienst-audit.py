@@ -166,8 +166,16 @@ with sync_playwright() as pw:
     page.on("pageerror",lambda error:errors.append(str(error)))
     page.clock.install()
     page.goto(URL+"&launch=paired",wait_until="domcontentloaded")
-    dose=page.locator(".gg-current-doses")
-    expect(dose).to_be_visible(timeout=15000)
+    try:
+        page.get_by_role("button",name="Start hovudøkta",exact=True).click(timeout=15000)
+        expect(page.locator(".engine-timer")).to_be_visible(timeout=15000)
+        if not page.locator(".gg-live-timer").is_visible():
+            page.get_by_role("button",name="Stor klokke",exact=True).click()
+        dose=page.locator(".gg-live-timer .gg-current-doses")
+        expect(dose).to_be_visible(timeout=15000)
+    except Exception:
+        print("YGIG timer setup diagnostic:", page.locator("body").inner_text()[:3000], "page errors:",errors,flush=True)
+        raise
     expect(dose).to_contain_text("6 reps")
     page.get_by_role("group",name="Startdosering P2").get_by_role("button",name="Scaled",exact=True).click()
     expect(dose).to_contain_text("P1 · RX")
