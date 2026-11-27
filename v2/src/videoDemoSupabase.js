@@ -1,6 +1,6 @@
 // Video recording only. Resolved through vite.video-demo.config.js and never
 // imported by the production app. No requests to Supabase are made here.
-import {qualityRowConfig} from './lib/samspel.js'
+import {qualityRowConfig,pairedEmomConfig} from './lib/samspel.js'
 import {buildZuendung} from './lib/zuendung.js'
 import {compositeBlockForTimer,compositeTotalSeconds} from './lib/compositeWod.js'
 import catalogueManifest from '../supabase/catalog/exercise_catalogue_manifest_sturmKopf_feuer_1_1.json'
@@ -33,6 +33,8 @@ const demoWods = [{
   ]}},
 }]
 
+const auditPairedItems=['Bench press','Dips','Air Squat'].map((exercise_name,i)=>({exercise_name,equipment:i===0?'Barbell':'Kroppsvekt',reps:6,levels:{rx:{reps:6,loadMode:i===0?'kg':'bodyweight',loadKgMen:i===0?30:undefined,loadKgWomen:i===0?20:undefined},scaled:{reps:4,loadMode:'bodyweight'},foundation:{reps:2,loadMode:'bodyweight'}}}))
+const auditPairedWod={id:'audit-paired',name:'Audit YGIG EMOM',format:'EMOM',duration_minutes:18,movements:'Bench press, Dips, Air Squat',notes:'Isolert test',category:'main',is_published:true,is_archived:false,created_by:'demo-admin',created_at:now.toISOString(),timer_settings:{workout_schema:{format:'EMOM',duration_seconds:1080,interval:{work_every_seconds:60},prescription:'rx',samspel:{...pairedEmomConfig(60,1080),tracks:auditPairedItems.map(x=>x.exercise_name)},items:auditPairedItems,wod_engine:{version:2,participation:'partner',collaboration:'you_go_i_go',participant_count:2}}}}
 const auditQualityWod={id:'audit-quality',name:'Audit Quality & Row',format:'Eigen økt',duration_minutes:10,movements:'Bird dog',notes:'Isolert test',category:'flow_prep',is_published:true,is_archived:false,created_by:'demo-admin',created_at:now.toISOString(),timer_settings:{workout_schema:{format:'Eigen økt',duration_seconds:600,library_category:'flow_prep',flowReporting:'done',flowPurpose:'prep',samspel:qualityRowConfig(),items:[{exercise_name:'Bird dog',equipment:'Kroppsvekt',reps:6,levels:{rx:{reps:6,loadMode:'none'}}}],wod_engine:{participation:'partner',collaboration:'parallel',participant_count:2}}}}
 const auditCatalogue=catalogueManifest.exercises.map((e,i)=>({...e,id:'audit-ex-'+i,is_active:true}))
 function auditWarmupWod(){
@@ -50,7 +52,7 @@ function rowsFor(table) {
     case 'pt_coaches': return [{id:'coach-demo',user_id:'demo-coach',public_name:'Garasje PT (døme)',bio:'Hjelp med teknikk, styrke og treningsglede.',specialties:['Styrke','Kom i gang'],is_active:true}]
     case 'pt_services': return [{id:'service-demo',title:'Uforpliktande prat',description:'Finn ut om PT passar for deg.',duration_label:'Etter avtale',price_label:'0 kr i denne demoen',is_active:true}]
     case 'pt_service_requests': return requests
-    case 'wods': return scenario()==='audit-frontdienst'?[...demoWods,auditQualityWod,auditWarmupWod()]:scenario()==='audit-folders'?[...demoWods,{...demoWods[0],id:'folder-wod-1',name:'Z – Første økt'},{...demoWods[0],id:'folder-wod-2',name:'A – Andre økt'}]:demoWods
+    case 'wods': return scenario()==='audit-frontdienst'?[...demoWods,auditQualityWod,auditPairedWod,auditWarmupWod()]:scenario()==='audit-folders'?[...demoWods,{...demoWods[0],id:'folder-wod-1',name:'Z – Første økt'},{...demoWods[0],id:'folder-wod-2',name:'A – Andre økt'}]:demoWods
     case 'wod_favorites': case 'wod_daily_schedules': case 'exercise_favorites': return []
     case 'classes': return [{id:'demo-class',title:'Garasjesirkel (døme)',type:'Gruppetime',starts_at:future,duration_minutes:45,capacity:6,published:true,cancelled_at:null,description:'Ei fellesøkt med roing, styrke og mobilitet.',workout_text:'45 min trening',wod_ids:[]}]
     case 'class_bookings': return bookings
