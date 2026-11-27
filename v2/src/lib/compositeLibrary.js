@@ -103,10 +103,10 @@ export function prepareLibraryWarmup(wod,makeId=()=>crypto.randomUUID()){
  if(entries.some(entry=>!entry.items.some(item=>!item.is_rest))||entries.reduce((n,entry)=>n+entry.items.length,0)!==items.length)throw Error('Kontroller øvingskoplingane i den lagra oppvarminga.')
  const blocks=[],rows=[]
  for(const entry of entries){
-  const original=entry.block
+  const original=JSON.parse(JSON.stringify(entry.block))
   if(original.samspel&&!samspelNoncompetitive(original.samspel))throw Error('Denne oppvarminga har konkurransebasert Samspel. Vel ei anna oppvarming.')
   const id=makeId()
-  const block={...original,id,format:isEmomFormat(original.format)?'EMOM':original.format,...(isEmomFormat(original.format)?{emomIntervalSeconds:emomIntervalSeconds(original.format,{work_every_seconds:original.emomIntervalSeconds,work_every_minutes:original.interval?.work_every_minutes})}:{}),flowPurpose:'prep',flowReporting:'done',scoreMode:'none',warmup_group:group,warmup_source_wod_id:wod.id,warmup_source_wod_name:wod.name}
+  const block={...original,id,format:isEmomFormat(original.format)?'EMOM':original.format,...(isEmomFormat(original.format)?{emomIntervalSeconds:emomIntervalSeconds(original.format,{work_every_seconds:original.emomIntervalSeconds,work_every_minutes:original.interval?.work_every_minutes})}:{}),flowPurpose:original.flowPurpose==='build'?'build':'prep',flowReporting:'done',scoreMode:'none',warmup_group:group,warmup_source_wod_id:wod.id,warmup_source_wod_name:wod.name}
   delete block.items
   delete block.source_wod_snapshot // never inherit benchmark identity from a prep block
   delete block.source_wod_id
