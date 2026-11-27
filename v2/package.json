@@ -69,7 +69,7 @@
     "test:equipment-preparation": "node scripts/equipment-preparation.test.mjs",
     "test:pt-schedule": "node scripts/pt-schedule.test.mjs",
     "test:pt-preparation-history": "node scripts/pt-preparation-history.test.mjs",
-    "test:synchron": "node --test scripts/synchron.test.mjs scripts/synchron-transport.test.mjs scripts/synchron-client.test.mjs scripts/synchron-review.test.mjs scripts/synchron-log.test.mjs scripts/synchron-seal.test.mjs scripts/synchron-preparation.test.mjs scripts/synchron-invitations.test.mjs scripts/synchron-runtime.test.mjs scripts/synchron-presence.test.mjs scripts/synchron-pace.test.mjs scripts/synchron-calibration.test.mjs scripts/individual-calibration.test.mjs scripts/synchron-strength.test.mjs scripts/synchron-anatomy.test.mjs scripts/synchron-disposition.test.mjs scripts/synchron-persistence.test.mjs scripts/synchron-http.test.mjs",
+    "test:synchron": "node --test scripts/synchron.test.mjs scripts/synchron-transport.test.mjs scripts/synchron-client.test.mjs scripts/synchron-review.test.mjs scripts/synchron-log.test.mjs scripts/synchron-seal.test.mjs scripts/synchron-preparation.test.mjs scripts/synchron-invitations.test.mjs scripts/synchron-runtime.test.mjs scripts/synchron-presence.test.mjs scripts/synchron-pace.test.mjs scripts/synchron-calibration.test.mjs scripts/individual-calibration.test.mjs scripts/synchron-strength.test.mjs scripts/synchron-anatomy.test.mjs scripts/synchron-disposition.test.mjs scripts/synchron-persistence.test.mjs scripts/synchron-http.test.mjs scripts/synchron-supabase-auth.test.mjs",
     "test:werkstatt": "node --test scripts/werkstatt-exchange.test.mjs"
   },
   "dependencies": {
