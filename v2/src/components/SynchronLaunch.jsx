@@ -1,23 +1,24 @@
-import React,{useEffect,useMemo,useState} from 'react'
+import React,{useCallback,useEffect,useMemo,useState} from 'react'
 import SynchronSessionPanel from './SynchronSessionPanel.jsx'
 // Bound to one authenticated runtime and one invitation by the App route key.
 // Opening is read-only; the participant must explicitly join in the panel.
-export default function SynchronLaunch({runtime,href,onBack,onSnapshot}){
+export default function SynchronLaunch({runtime,href,onBack,onSnapshot,onCancelOpening}){
  const [result,setResult]=useState(null),[attempt,setAttempt]=useState(0),[online,setOnline]=useState(()=>navigator.onLine)
  useEffect(()=>{
   const update=()=>setOnline(navigator.onLine)
   window.addEventListener('online',update);window.addEventListener('offline',update)
   return()=>{window.removeEventListener('online',update);window.removeEventListener('offline',update)}
  },[])
+ const publish=useCallback(snapshot=>onSnapshot?.(snapshot,{actor:runtime.actorId,runtime,href}),[onSnapshot,runtime,href])
  useEffect(()=>{
   let live=true
   setResult(null)
-  runtime.open(href).then(r=>{if(live){setResult(r);if(r.snapshot)onSnapshot?.(r.snapshot)}}).catch(()=>{if(live)setResult({issue:'Kunne ikkje opna fellesøkta.'})})
+  runtime.open(href).then(r=>{if(live){setResult(r);if(r.snapshot)publish(r.snapshot)}}).catch(()=>{if(live)setResult({issue:'Kunne ikkje opna fellesøkta.'})})
   return()=>{live=false}
- },[runtime,href,attempt,onSnapshot])
+ },[runtime,href,attempt,publish])
  const adapter=useMemo(()=>result?.sessionId?runtime.adapter(result.sessionId):null,[runtime,result])
  return <section className="content-card training-content">
-  <button type="button" className="secondary-button" onClick={onBack}>Tilbake</button>
-  {!result?<p role="status">Kontrollerer tilgang til fellesøkta …</p>:result.issue||!adapter?<><p role="alert">{result.issue||'Fellesøkta er ikkje tilgjengeleg.'}</p><button type="button" className="secondary-button" onClick={()=>setAttempt(v=>v+1)}>Prøv igjen</button></>:<SynchronSessionPanel key={result.sessionId} adapter={adapter} onSnapshot={onSnapshot} label={result.snapshot.leader?'PT · øktleiar':'Mi fellesøkt'} online={online}/>}
+  {result?.snapshot?<button type="button" className="secondary-button" onClick={onBack}>Tilbake</button>:<button type="button" className="secondary-button" onClick={()=>onCancelOpening?.({actor:runtime.actorId,runtime,href})}>Avbryt opning</button>}
+  {!result?<p role="status">Kontrollerer tilgang til fellesøkta …</p>:result.issue||!adapter?<><p role="alert">{result.issue||'Fellesøkta er ikkje tilgjengeleg.'}</p><button type="button" className="secondary-button" onClick={()=>setAttempt(v=>v+1)}>Prøv igjen</button></>:<SynchronSessionPanel key={result.sessionId} adapter={adapter} onSnapshot={publish} label={result.snapshot.leader?'PT · øktleiar':'Mi fellesøkt'} online={online}/>}
  </section>
 }
