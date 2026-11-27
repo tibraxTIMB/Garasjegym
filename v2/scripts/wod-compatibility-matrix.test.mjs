@@ -69,7 +69,9 @@ test('SAMSPEL template eligibility, validation, and scoring at every format boun
    assert.equal(samspelIssue(cfg,ctx),null,format+' '+id)
    assert.ok(samspelIssue(cfg,{...ctx,participation:'individual'}),id)
    assert.ok(samspelIssue(cfg,{...ctx,format:'Invalid'}),id)
-   assert.ok(samspelScoring(cfg,scoreForWodFormat(choice.format)).fields.length)
+   const scoring=samspelScoring(cfg,scoreForWodFormat(choice.format))
+   if(id==='recovery')assert.deepEqual(scoring.fields,[]) // completion only, no competitive metric
+   else assert.ok(scoring.fields.length)
    if(id!=='legacy')assert.equal(samspelDedicatedResults(cfg),true)
    checked++
   }
