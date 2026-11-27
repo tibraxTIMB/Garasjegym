@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import {createSynchronSession,applySynchronCommand,synchronClock} from '../src/lib/synchron.js'
+import {createSynchronGateway} from '../src/lib/synchronTransport.js'
 import {initializeSynchronReview,synchronReviewProjection,applySynchronReview} from '../src/lib/synchronReview.js'
 const plan={id:'four',leaderId:'pt',members:['a','b'],movements:[['step','reps',100,'estimate'],['hang','seconds',180,'clock'],['wall','reps',150,'estimate'],['row','meters',2000,'hybrid'],['cal','calories',60,'machine']].map(([id,unit,target,method])=>({id,exerciseId:id,unit,target,method,collaboration:'relay',doses:{a:{variant:'standard',loadKg:9},b:{variant:'scaled',loadKg:4}}}))}
 let s=createSynchronSession(plan),n=0
@@ -40,3 +41,20 @@ assert.equal(a().rows[0].quality,'estimated')
 update('a','review_update',{movementId:'cal',quality:'confirmed',value:0},true)
 update('pt','review_approve',{},true)
 assert.equal(initializeSynchronReview(s,[]),s)
+
+// Gateway integration with authenticated participants and atomically frozen proposals.
+let saved=s,clockNow=600000
+const gateway=createSynchronGateway({authenticate:async key=>key,read:async()=>saved,now:()=>clockNow,compareAndSwap:async(id,rev,next)=>{if(rev!==saved.revision)return false;saved=next;return true}})
+const snapshot=(await gateway.snapshot('four','a')).snapshot
+assert.equal(snapshot.review.rows.length,4)
+assert.equal(snapshot.review.rows[0].value,50)
+assert.equal((await gateway.snapshot('four','pt')).snapshot.review,null)
+assert.ok((await gateway.snapshot('four','outsider')).issue)
+const cmd={id:'gateway-review',type:'review_update',revision:saved.revision,movementId:'step',quality:'confirmed',value:52}
+assert.ok((await gateway.command('four','a',{...cmd,memberId:'b'})).issue)
+const updated=await gateway.command('four','a',cmd)
+assert.equal(updated.snapshot.review.rows[0].value,52)
+assert.equal((await gateway.snapshot('four','b')).snapshot.review.rows[0].value,48)
+assert.equal((await gateway.command('four','a',cmd)).duplicate,true)
+assert.ok((await gateway.command('four','a',{...cmd,value:53})).issue)
+assert.ok((await gateway.command('four','b',{id:'oldrev',type:'review_approve',revision:cmd.revision})).issue)
