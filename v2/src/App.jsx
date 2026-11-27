@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from './lib/supabase.js'
 import { fetchMemberProfile, isStaff } from './lib/auth.js'
+import {startupDeadline} from './lib/startupDeadline.js'
 import { getAppBaseUrl } from './lib/appBaseUrl.js'
 import { getMembershipGate } from './lib/membershipAccess.js'
 import { restoreWorkoutDraft } from './lib/workoutDraft.js'
@@ -187,6 +188,7 @@ export default function App({synchronRuntime=null,tabletLab=false}={}) {
   const [passwordRecovery, setPasswordRecovery] = useState(false)
   const [invitationPending,setInvitationPending]=useState(()=>isInviteLanding(window.location))
   const [authReady, setAuthReady] = useState(false)
+  const [startupError,setStartupError]=useState('')
   const [profile, setProfile] = useState(null)
   const [isPTCoach, setIsPTCoach] = useState(false)
   const [profileReady, setProfileReady] = useState(false)
@@ -450,17 +452,27 @@ export default function App({synchronRuntime=null,tabletLab=false}={}) {
 
   useEffect(() => {
     if (!supabase) return
+    let live=true, eventRevision=0
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (!live || event==='INITIAL_SESSION') return
+      eventRevision++
       if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true)
+      setStartupError('')
       setSession(nextSession)
       setAuthReady(true)
     })
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (error) setProfileError(error.message)
-      setSession(data?.session || null)
+    const revision=eventRevision
+    startupDeadline(()=>supabase.auth.getSession()).then(({data,error})=>{
+      if(!live||revision!==eventRevision)return
+      if(error)throw error
+      setSession(data?.session||null)
+      setStartupError('')
       setAuthReady(true)
+    }).catch(()=>{
+      if(!live||revision!==eventRevision)return
+      setStartupError('Kunne ikkje kopla til GarasjeGym. Kontroller nettet og prøv igjen.')
     })
-    return () => subscription.unsubscribe()
+    return ()=>{live=false;subscription.unsubscribe()}
   }, [])
 
   useEffect(() => {
@@ -473,11 +485,19 @@ export default function App({synchronRuntime=null,tabletLab=false}={}) {
         return
       }
       setProfileReady(false)
-      const result = await fetchMemberProfile(session.user.id)
-      if (cancelled) return
-      setProfile(result.profile)
-      setProfileError(result.error?.message || '')
-      setProfileReady(true)
+      setProfile(null)
+      setProfileError('')
+      try{
+        const result=await startupDeadline(()=>fetchMemberProfile(session.user.id))
+        if(cancelled)return
+        setProfile(result.profile?.id===session.user.id?result.profile:null)
+        setProfileError(result.error?.message||(!result.profile?'Medlemsprofilen kunne ikkje hentast.':''))
+      }catch{
+        if(cancelled)return
+        setProfile(null)
+        setProfileError('Kunne ikkje kopla til medlemsdatabasen. Prøv igjen.')
+      }
+      if(!cancelled)setProfileReady(true)
     }
     loadProfile()
     return () => { cancelled = true }
@@ -486,20 +506,22 @@ export default function App({synchronRuntime=null,tabletLab=false}={}) {
   if (!isSupabaseConfigured) {
     return <LoadingScreen text="Supabase er ikkje konfigurert. Legg inn VITE_SUPABASE_URL og VITE_SUPABASE_PUBLISHABLE_KEY i v2/.env.local." />
   }
+  if (startupError) return <main className="auth-shell"><div className="auth-card"><h1>Får ikkje kontakt</h1><p className="auth-intro" role="alert">{startupError}</p><button type="button" className="primary-button" onClick={()=>window.location.reload()}>Prøv igjen</button><p className="auth-footnote">Lagra treningskladdar blir ikkje sletta.</p></div></main>
   if (!authReady) return <LoadingScreen text="Koplar til GarasjeGym …" />
   if (passwordRecovery) return <AuthScreen key="recovery" recovery onRecoveryComplete={() => setPasswordRecovery(false)} />
   if (invitationPending && session) return <AuthScreen key="invitation" invitation onInvitationComplete={()=>{clearInviteLanding(window);setInvitationPending(false)}} />
   if (invitationPending && !session) return <main className="auth-shell"><div className="auth-card"><div className="eyebrow"><ShieldCheck size={14}/> INVITASJON</div><h1>Lenkja er <em>ikkje gyldig.</em></h1><p className="auth-intro">Opne invitasjonslenkja direkte frå e-posten. Dersom ho er brukt eller utgått, må du be administrator om ei ny invitasjon.</p><button type="button" className="primary-button" onClick={()=>{clearInviteLanding(window);setInvitationPending(false)}}>Til innlogging</button></div></main>
   if (!session) return <AuthScreen />
-  if (!profileReady) return <LoadingScreen text="Hentar medlemsprofil …" />
+  if (!profileReady||profile&&profile.id!==session.user.id) return <LoadingScreen text="Hentar medlemsprofil …" />
 
   if (profileError || !profile) {
     return (
       <main className="auth-shell"><div className="auth-card">
         <div className="eyebrow"><ShieldCheck size={14} /> MEDLEMSPROFIL</div>
         <h1>Profilen <em>manglar.</em></h1>
-        <p className="auth-intro">Innlogginga fungerer, men medlemsprofilen kunne ikkje hentast. {profileError}</p>
-        <button className="primary-button" onClick={() => supabase.auth.signOut()}>Logg ut</button>
+        <p className="auth-intro" role="alert">Medlemsprofilen kunne ikkje hentast. {profileError}</p>
+        <button type="button" className="primary-button" onClick={()=>window.location.reload()}>Prøv igjen</button>
+        <button className="secondary-button" onClick={() => supabase.auth.signOut()}>Logg ut</button>
       </div></main>
     )
   }
