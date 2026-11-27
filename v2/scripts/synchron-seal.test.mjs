@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {createSynchronSession,applySynchronCommand} from '../src/lib/synchron.js'
 import {initializeSynchronReview,applySynchronReview} from '../src/lib/synchronReview.js'
 import {sealSynchronResults,synchronOwnReservation,recordSynchronReceipt} from '../src/lib/synchronSeal.js'
+import {synchronControls} from '../src/lib/synchronClient.js'
 import {createSynchronGateway,synchronActionRequest} from '../src/lib/synchronTransport.js'
 const plan={id:'four',leaderId:'pt',members:['a','b'],movements:[{id:'step',exerciseId:'step',unit:'reps',target:100,method:'direct',collaboration:'relay',doses:{a:{variant:'50cm',loadKg:null},b:{variant:'40cm',loadKg:null}}}]}
 let s=createSynchronSession(plan),n=0
@@ -52,3 +53,7 @@ assert.equal(snapshot.review.sealed,true)
 assert.equal(snapshot.seal,undefined)
 assert.equal(JSON.stringify(snapshot).includes(tokens.a),false)
 assert.equal(synchronActionRequest(snapshot,'review_update',{movementId:'step',quality:'estimated',value:60},'change'),null)
+
+const controls=synchronControls({snapshot,receivedAt:0},{now:0})
+assert.equal(controls.canReview,false)
+assert.equal(controls.canApprove,false)
