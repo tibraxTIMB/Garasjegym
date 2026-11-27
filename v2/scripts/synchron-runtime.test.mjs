@@ -2,8 +2,9 @@ import assert from 'node:assert/strict'
 import {createSynchronDispatcher,createSynchronRuntime,synchronRouteIssue} from '../src/lib/synchronRuntime.js'
 const wod={id:'wod',name:'Four Fronts',format:'Chipper',is_published:true,timer_settings:{workout_schema:{items:[{exercise_id:'step',exercise_name:'Box step-ups',levels:{rx:{reps:100}}}]}}}
 const request={wodId:'wod',level:'rx',memberIds:['b'],leaderParticipates:true,sessionId:'12345678-1234-4234-8234-123456789012',doses:{'movement-1':{a:{variant:'50cm',loadKg:null},b:{variant:'40cm',loadKg:null}}}}
-let record=null,stored=null,t=0
-const host={authenticate:async credential=>({'auth-a':'a','auth-b':'b'}[credential]??null),readCoachContext:async actor=>({canCoach:actor==='a',eligibleMemberIds:['b']}),readWod:async id=>id==='wod'?wod:null,readCreation:async()=>record,createAtomic:async next=>{if(record)return false;record=next;stored=next.state;return true},read:async id=>stored?.plan.id===id?stored:null,compareAndSwap:async(id,rev,next)=>{if(stored?.revision!==rev||stored.plan.id!==id)return false;stored=next;return true},now:()=>t}
+let record=null,stored=null,t=0,revoked=false
+const accessChecks=[]
+const host={authorizeSession:async input=>{accessChecks.push(input);return input.actorId==='a'||input.actorId==='b'&&!revoked},authenticate:async credential=>({'auth-a':'a','auth-b':'b'}[credential]??null),readCoachContext:async actor=>({canCoach:actor==='a',eligibleMemberIds:['b']}),readWod:async id=>id==='wod'?wod:null,readCreation:async()=>record,createAtomic:async next=>{if(record)return false;record=next;stored=next.state;return true},read:async id=>stored?.plan.id===id?stored:null,compareAndSwap:async(id,rev,next)=>{if(stored?.revision!==rev||stored.plan.id!==id)return false;stored=next;return true},now:()=>t}
 const dispatch=createSynchronDispatcher(host)
 const runtime=(actor,credential)=>createSynchronRuntime({actorId:actor,invoke:body=>dispatch(credential,body)})
 const a=runtime('a','auth-a'),b=runtime('b','auth-b'),x=runtime('x','bad')
@@ -37,3 +38,18 @@ assert.ok((await createSynchronRuntime({actorId:'a',invoke:async()=>({sessionId:
 assert.ok((await dispatch('auth-a',{op:'snapshot',sessionId:'missing'})).issue)
 assert.ok((await dispatch('auth-a',null)).issue)
 assert.ok((await dispatch('auth-a',{op:'unknown',sessionId:request.sessionId})).issue)
+
+// Fresh access is checked on every read and command, even for a joined member.
+revoked=true
+const rev=stored.revision
+assert.ok((await bd.read()).issue)
+assert.ok((await bd.command({type:'idle',id:'revoked',revision:rev})).issue)
+assert.equal(stored.revision,rev)
+assert.ok((await ad.read()).snapshot)
+assert.ok(accessChecks.some(x=>x.actorId==='b'&&x.operation==='command'))
+assert.ok(accessChecks.some(x=>x.actorId==='b'&&x.operation==='snapshot'))
+const incomplete=createSynchronDispatcher({...host,authorizeSession:undefined})
+assert.ok((await incomplete('auth-a',{op:'snapshot',sessionId:request.sessionId})).issue)
+assert.ok((await incomplete('auth-a',{op:'create',request})).issue)
+const deniedHost=createSynchronDispatcher({...host,authorizeSession:async()=>({allowed:true})})
+assert.ok((await deniedHost('auth-a',{op:'snapshot',sessionId:request.sessionId})).issue)
