@@ -40,3 +40,14 @@ test('warmup picker rejects non-warmups and archived entries',()=>{
  assert.throws(()=>prepareLibraryWarmup({...p,is_archived:true}),/Oppvarming/)
  assert.throws(()=>prepareLibraryWarmup({id:'main',category:'main'}),/Oppvarming/)
 })
+
+import {architectSections,logicalArchitectParts,logicalPartLabel,nextMainPartLabel} from '../src/lib/wodArchitect.js'
+test('Del 0 is one editable part and never renumbers Del A or Del B',()=>{
+ for(const [i,payload] of warmupBatch(catalogue).entries()){
+  let n=0;const prep=prepareLibraryWarmup({...payload,id:'saved-'+i},()=> 'prep-'+(++n));
+  const main=[{id:'a',format:'Chipper',minutes:15,participation:'partner',participant_count:2,collaboration:'synchronized'},{id:'b',format:'AMRAP',minutes:5}];
+  const blocks=[...prep.blocks,...main];const items=[...prep.items.map(x=>({...x,blockId:x.block_id,name:x.exercise_name})),...Array.from({length:6},(_,j)=>({blockId:'a',name:'Øving '+j,key:'a'+j})),{blockId:'b',name:'Air squat'}];
+  const original=JSON.stringify({blocks,items});const logical=logicalArchitectParts(architectSections(blocks,items,{composite:true}),blocks);
+  assert.deepEqual(logical.map(p=>p.partLabel),['0','A','B']);assert.deepEqual(logical.map(p=>p.group.length),[9,6,1]);assert.equal(logical[0].blockIds.length,3);assert.equal(logical[1].collaboration,'synchronized');assert.equal(nextMainPartLabel(blocks),'C');assert.equal(logicalPartLabel(blocks,4),'B');assert.equal(JSON.stringify({blocks,items}),original);
+ }
+})
