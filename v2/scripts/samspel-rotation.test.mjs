@@ -305,3 +305,21 @@ import {samspelDedicatedResults} from '../src/lib/samspel.js'
 for(const template of [quality,engineSwap,iron,double,recovery,relay,chipper])assert.equal(samspelDedicatedResults(template),true)
 assert.equal(samspelDedicatedResults(null),false)
 assert.equal(samspelDedicatedResults({version:2,mode:'parallel_round_swap',participant_count:2,task:'row',metric:'distance'}),false)
+
+
+import {samspelErgOpportunity} from '../src/lib/samspel.js'
+for(let count=2;count<=8;count++){
+ const plan={...engineSwap,participant_count:count,duration_seconds:count*60*2}
+ for(let slot=1;slot<=count;slot++){
+  const before=(slot-1)*60
+  assert.equal(samspelErgOpportunity(plan,slot,before),0)
+  assert.equal(samspelErgOpportunity(plan,slot,before+1),1)
+  assert.equal(samspelErgOpportunity(plan,slot),2)
+  assert.equal(samspelParticipantResults(plan,{[slot]:{erg:'1'}},{elapsed:before}).field,'erg')
+  assert.equal(samspelParticipantResults(plan,{[slot]:{erg:'0'}},{elapsed:before}).issue,null)
+  assert.equal(samspelParticipantResults(plan,{[slot]:{erg:'1'}},{elapsed:before+1}).issue,null)
+  assert.equal(samspelParticipantResults(plan,{[slot]:{erg:'1'}}).issue,null)
+ }
+}
+assert.equal(samspelParticipantResults({...engineSwap,metric:'calories'},{2:{erg:'1'}},{elapsed:60}).field,'erg')
+assert.equal(samspelParticipantResults(engineSwap,{1:{erg:'1'}},{elapsed:0}).field,'erg')
