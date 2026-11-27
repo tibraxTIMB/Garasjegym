@@ -27,12 +27,16 @@ with sync_playwright() as pw:
   except Exception:
    print('PICKER DIAGNOSTICS',errors,page.locator('body').inner_text()[:4000],flush=True)
    raise
-  first=picker.locator('.wod-exercise-card').filter(has_text=re.compile(r'\bAir squat\b',re.I)).first
-  first.locator('.wod-add-button').click()
-  first.locator('.wod-add-button').click()
+  picker.get_by_placeholder("Søk øving, kroppsdel eller utstyr …").fill('Air Squat')
+  try:
+   picker.get_by_role('button',name='Legg til Air Squat i WOD',exact=True).click(timeout=10000)
+   picker.get_by_role('button',name='Legg til Air Squat på nytt. Vald 1 gonger.',exact=True).click(timeout=10000)
+  except Exception:
+   print('CATALOGUE DIAGNOSTICS',errors,picker.inner_text()[:5000],flush=True)
+   raise
   picker.get_by_role('button',name='Ferdig · 2 valde',exact=True).click()
   grid=page.get_by_role('region',name='Snøggdosering')
-  grid.wait_for()
+  grid.wait_for(timeout=10000)
   rows=grid.locator('.gg-compact-dose-row')
   assert rows.count()==2
   rows.first.get_by_role('button',name='Reps',exact=False).click()
@@ -49,7 +53,11 @@ with sync_playwright() as pw:
   pad.get_by_role('button',name='Lukk tastatur').click()
   page.get_by_role('button',name='Lagringsval',exact=True).last.click()
   page.locator('.wizard-publish-stage button[type=submit]').click()
-  page.wait_for_function("document.querySelector('[data-testid=builder-payload]').textContent.length>0")
+  try:
+   page.wait_for_function("document.querySelector('[data-testid=builder-payload]').textContent.length>0",timeout=10000)
+  except Exception:
+   print('SAVE DIAGNOSTICS',errors,page.locator('body').inner_text()[:5000],flush=True)
+   raise
   payload=json.loads(page.get_by_test_id('builder-payload').text_content())
   s=payload['timer_settings']['workout_schema'];assert payload['format']=='Chipper'
   assert s['time_cap_seconds'] is None
