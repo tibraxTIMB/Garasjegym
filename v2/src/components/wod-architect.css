@@ -48,3 +48,35 @@
 .gg-architect .gg-architect-overview .gg-architect-levels button{min-height:38px!important;background:#162126!important;border:1px solid #3a4b52!important;border-radius:8px!important;color:#dce4e7!important;font-size:12px!important;padding:4px 6px!important}.gg-architect .gg-architect-overview .gg-architect-levels button[aria-pressed=true]{background:#3a2f20!important;border-color:#eab25e!important;color:#f6c879!important}.gg-architect .gg-architect-parts button:only-child{display:flex;max-width:none;align-items:center;gap:8px;min-height:40px;flex:1 1 auto}.gg-architect .gg-architect-parts button:only-child small{margin-left:auto}.gg-architect-equipment{font-size:12px;min-width:0;grid-column:1/-1}.gg-architect-equipment>summary,.gg-architect-map>summary{font-size:12px;padding:6px 2px;cursor:pointer;color:#c1cdd1}.gg-current-doses{display:grid;gap:6px}.gg-current-doses>div{display:grid;gap:3px}.gg-current-doses small{font-size:clamp(14px,4vw,24px);color:#e9bf82;font-weight:650}.gg-result-plan-actions{display:flex;gap:6px;flex-wrap:wrap}.gg-result-plan-actions button{min-height:34px;padding:5px 8px;font-size:12px}.gg-paired-result-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.gg-paired-result-row label{min-width:0;font-size:12px}.gg-paired-result-row input{min-width:0;width:100%}
 
 .gg-paired-dose-setup{display:grid;gap:4px;margin:4px 0}.gg-paired-dose-setup>div{display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:5px}.gg-paired-dose-setup .gg-flow-level-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}.gg-paired-dose-setup button{min-height:32px;padding:3px!important;font-size:11px!important}.gg-current-doses .gg-paired-active-level{font-size:12px;color:#a8b7bf}
+
+
+/* Compact WOD programming controls. Existing timer and desktop components stay intact. */
+.gg-compact-time{display:grid;gap:6px;min-width:0}
+.gg-compact-time>label,.gg-compact-settings>label{display:grid;grid-template-columns:minmax(0,1fr) minmax(72px,112px);align-items:center;gap:8px;margin:0}
+.gg-compact-settings>label:has(select){grid-template-columns:minmax(0,1fr);gap:3px}
+.gg-compact-time input,.gg-compact-settings input,.gg-compact-settings select{min-width:0;min-height:40px;width:100%;box-sizing:border-box}
+.gg-compact-time-presets{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.gg-compact-time-presets button,.gg-warmup-choice button{min-height:40px;padding:5px 6px;border:1px solid var(--border,#526168);border-radius:7px;background:#202c32;color:#f3f5f5;font:inherit}
+.gg-compact-time-presets button[aria-pressed=true]{background:#efa53b;color:#1b1b1b;border-color:#efa53b;font-weight:700}
+.gg-warmup-compact{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 0}
+.gg-warmup-compact .text-button{display:inline-flex;align-items:center;gap:6px}
+.gg-compact-settings{display:grid;gap:8px;width:min(100%,440px);max-height:calc(100dvh - 32px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box}
+.gg-compact-settings header{position:sticky;top:0;z-index:1;background:inherit}
+.gg-warmup-choice{border-bottom:1px solid var(--border,#526168);padding:3px 0}
+.gg-warmup-choice>div{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:5px}
+.gg-warmup-choice>div>button:first-child{text-align:left}
+.gg-warmup-choice ul{margin:5px 0;padding-left:20px;font-size:.85rem}
+.gg-quick-intervals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.gg-quick-intervals label{min-width:0}
+@media(max-width:600px){
+ .gg-architect .gg-featured-formats{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .gg-architect .gg-featured-formats button{min-height:44px;padding:7px;gap:4px}
+ .gg-architect .gg-featured-formats button small{display:none}
+ .gg-architect .gg-featured-formats .gg-format-icon{font-size:1rem}
+ .gg-architect .gg-time-intro p{display:none}
+ .gg-architect .wod-setup-format{padding:4px 0}
+ .gg-architect .gg-wizard-intro{margin-block:4px;padding:6px}
+ .gg-architect .gg-participation-section{padding:6px}
+ .gg-architect .gg-architect-overview{padding:8px}
+ .gg-architect .gg-architect-equipment,.gg-architect .gg-architect-map{font-size:.85rem}
+}
