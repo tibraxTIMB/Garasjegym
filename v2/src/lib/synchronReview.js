@@ -1,9 +1,10 @@
+import {synchronRelativeLoad} from './synchronStrength.js'
 import {synchronEstimate,synchronAllocate,synchronAssignedTime} from './synchron.js'
 const whole=n=>Number.isSafeInteger(n)&&n>=0&&n<=100000
 const clone=x=>JSON.parse(JSON.stringify(x))
 // Frozen proposals are created once on finish, from trusted calibration records.
 // Assigned time is not proof of effective motion, including static holds.
-export function initializeSynchronReview(state,calibrations=[]){
+export function initializeSynchronReview(state,calibrations=[],strengthReferences=[]){
  if(state.phase!=='finished'||state.review)return state
  const movements=state.plan.movements.filter(m=>Object.hasOwn(state.totals,m.id)).map(m=>{
   const rows=state.plan.members.map(memberId=>{
@@ -11,7 +12,7 @@ export function initializeSynchronReview(state,calibrations=[]){
    const assignedSeconds=synchronAssignedTime(state,m.id,memberId)
    const proposal=synchronEstimate(state,m.id,memberId,calibrations)
    const estimate=m.unit==='seconds'&&m.method==='clock'&&segments.length?assignedSeconds:proposal?.value??null
-   return {memberId,assignedSeconds,segments:segments.map(s=>({seconds:s.assignedMs/1000,variant:s.dose.variant,loadKg:s.dose.loadKg})),estimate:Number.isFinite(estimate)&&estimate>=0?estimate:null,model:proposal?.model??null,input:null}
+   return {memberId,assignedSeconds,segments:segments.map(s=>({seconds:s.assignedMs/1000,variant:s.dose.variant,loadKg:s.dose.loadKg,relativeLoad:synchronRelativeLoad(strengthReferences,{memberId,exerciseId:m.exerciseId,variant:s.dose.variant,loadKg:s.dose.loadKg,before:state.startAt})})),estimate:Number.isFinite(estimate)&&estimate>=0?estimate:null,model:proposal?.model??null,input:null}
   })
   return {movementId:m.id,unit:m.unit,teamActual:state.totals[m.id].actual,rows}
  })
