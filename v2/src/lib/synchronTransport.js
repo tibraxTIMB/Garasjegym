@@ -45,16 +45,22 @@ export function synchronActionRequest(snapshot,type,fields={},id){
   type==='finish'?v.canFinish:type==='load'?v.phase==='running'&&(snapshot.joined||snapshot.leader):false
  return permitted?{id,revision:snapshot.revision,type,...fields}:null
 }
-export function createSynchronGateway({authenticate,read,compareAndSwap,now,readCalibrations=async()=>[],readStrengthReferences=async()=>[],reservation=null}){
+export function createSynchronGateway({authenticate,read,compareAndSwap,now,readCalibrations=async()=>[],readStrengthReferences=async()=>[],reservation=null,authorizeSession=null}){
  if([authenticate,read,compareAndSwap,now].some(fn=>typeof fn!=='function'))throw Error('Synchron krev autentisering, lagring og serverklokke.')
  const denied=()=>({issue:'Ingen tilgang til økta.'})
+ // A trusted dispatcher must supply fresh authorization. Null is retained only
+ // for isolated domain tests that deliberately model a pre-authorized host.
+ async function allowedNow(state,actorId,sessionId,operation){
+  if(!actorAllowed(state,actorId)||state.plan.id!==sessionId)return false
+  return authorizeSession===null||typeof authorizeSession==='function'&&await authorizeSession({actorId,sessionId,operation,revision:state.revision})===true
+ }
  async function snapshot(sessionId,credential){
   const actorId=await authenticate(credential),s=await read(sessionId)
-  return actorAllowed(s,actorId)&&s.plan.id===sessionId?{snapshot:synchronClientSnapshot(s,actorId,now())}:denied()
+  return await allowedNow(s,actorId,sessionId,'snapshot')?{snapshot:synchronClientSnapshot(s,actorId,now())}:denied()
  }
  async function command(sessionId,credential,cmd){
   const actorId=await authenticate(credential),state=await read(sessionId)
-  if(!actorAllowed(state,actorId)||state.plan.id!==sessionId)return denied()
+  if(!await allowedNow(state,actorId,sessionId,'command'))return denied()
   const calibrating=cmd?.type==='calibration_record'
   const reviewing=['review_update','review_approve'].includes(cmd?.type)
   if(!cmd||typeof cmd!=='object'||Array.isArray(cmd)||(calibrating?Object.keys(cmd).some(k=>!['id','revision','type','segmentIndex','amount','attested'].includes(k)):reviewing?Object.keys(cmd).some(k=>!reviewKeys.has(k))||cmd.type==='review_approve'&&Object.keys(cmd).some(k=>!['id','revision','type'].includes(k)):!allowed.has(cmd.type)||Object.keys(cmd).some(k=>!keys.has(k))||state.plan.leaderId!==actorId&&Object.hasOwn(cmd,'memberId')))return {issue:'Ugyldig handling.'}
@@ -68,26 +74,31 @@ export function createSynchronGateway({authenticate,read,compareAndSwap,now,read
    try{strengthReferences=await readStrengthReferences(next.plan)}catch{}
    next=initializeSynchronReview(next,await readCalibrations(next.plan),strengthReferences)
   }
-  if(!await compareAndSwap(sessionId,state.revision,next)){
+  if(!await allowedNow(state,actorId,sessionId,'command'))return denied()
+  // A production CAS must also check current actor permission atomically with the write.
+  if(!await compareAndSwap(sessionId,state.revision,next,actorId)){
    const latest=await read(sessionId)
-   if(!actorAllowed(latest,actorId)||latest.plan.id!==sessionId)return denied()
+   if(!await allowedNow(latest,actorId,sessionId,'snapshot'))return denied()
    return {issue:'Økta er endra. Synkroniser først.',snapshot:synchronClientSnapshot(latest,actorId,now())}
   }
+  if(!await allowedNow(next,actorId,sessionId,'snapshot'))return denied()
   return {snapshot:synchronClientSnapshot(next,actorId,at)}
  }
  // Optional trusted host capability. No client supplies dates, tokens or actor IDs.
  async function reserve(sessionId,credential,expectedRevision){
   if(!reservation||typeof reservation.workoutDate!=='function'||typeof reservation.tokenForMember!=='function')return {issue:'Permanent lagring er ikkje aktivert.'}
   const actorId=await authenticate(credential),state=await read(sessionId)
-  if(!actorAllowed(state,actorId)||state.plan.id!==sessionId||!state.plan.members.includes(actorId))return denied()
+  if(!await allowedNow(state,actorId,sessionId,'reserve')||!state.plan.members.includes(actorId))return denied()
   if(state.seal)return {reservation:synchronOwnReservation(state,actorId)}
   const result=sealSynchronResults(state,{expectedRevision,at:now(),workoutDate:reservation.workoutDate(state),tokenForMember:memberId=>reservation.tokenForMember(state,memberId)})
   if(result.issue)return {issue:result.issue}
-  if(!await compareAndSwap(sessionId,state.revision,result.state)){
+  if(!await allowedNow(state,actorId,sessionId,'reserve'))return denied()
+  if(!await compareAndSwap(sessionId,state.revision,result.state,actorId)){
    const latest=await read(sessionId)
-   if(!actorAllowed(latest,actorId)||latest.plan.id!==sessionId)return denied()
+   if(!await allowedNow(latest,actorId,sessionId,'snapshot'))return denied()
    return latest.seal?{reservation:synchronOwnReservation(latest,actorId)}:{issue:'Resultatet er endra. Oppdater først.'}
   }
+  if(!await allowedNow(result.state,actorId,sessionId,'reserve'))return denied()
   return {reservation:synchronOwnReservation(result.state,actorId)}
  }
  return {snapshot,command,reserve}
