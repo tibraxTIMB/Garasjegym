@@ -117,3 +117,27 @@ test('an explicit reset to RX resumes automatic inheritance', () => {
   assert.equal(applySharedReps(levels,'15').scaled.reps,'15')
   assert.equal(applySharedReps({},'5').rx.reps,'5')
 })
+
+
+test('mobile wizard follows the six-step design without replacing the legacy engine',()=>{
+ assert.match(code,/const MOBILE_WOD_STEPS=\[0,1,2,3,5,4\]/)
+ assert.match(code,/chooseFormat\(item,false\)/)
+ assert.match(code,/if\(mobileFlow\)\{setMobileTimeOpen\(false\);setWizardStep\(1\);return\}/)
+ assert.match(code,/goToStep\(mobileFlow\?5:4\)/)
+ assert.match(code,/mobileFlow&&wizardStep===5&&<section className="gg-sixstep-extras"/)
+ assert.match(code,/mobileFlow\?<section className="gg-sixstep-review"/)
+ assert.match(code,/prepareLibraryWarmup\(wod\)/)
+ assert.match(code,/const freshCompositeDraft=\(\)=>\[newDraftPart\(\)\]/)
+ assert.match(code,/save\(e,\{publishOverride:false\}\)/)
+ assert.match(code,/save\(e,\{publishOverride:true\}\)/)
+ assert.match(code,/is_published:canPublishWod&&shouldPublish/)
+ assert.match(code,/validateCompositeBlocks\(compositeBlocksWithItems,selected\)/)
+ assert.match(code,/compositeBlockForTimer\(/)
+ assert.match(code,/setParticipation\(item.value\)/)
+})
+test('mobile visual controls are scoped separately from Werkstatt',()=>{
+ const mobileCss=readFileSync(new URL('../src/components/wod-architect.css',import.meta.url),'utf8')
+ assert.match(mobileCss,/\.gg-sixstep-mobile \.gg-sixstep-formats\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/)
+ assert.match(mobileCss,/\.gg-sixstep-mobile \.wizard-stage-actions\{position:static!important/)
+ assert.match(code,/officeMode\?' gg-desktop-wod-production':' gg-sixstep-mobile'/)
+})
