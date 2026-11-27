@@ -648,3 +648,8 @@
  .gg-timer-work-actions--swap .gg-manual-action{font-size:14px}
  .gg-samspel-swap strong{font-size:12px}
 }
+
+.gg-partner-timer-cue{display:flex;gap:8px;justify-content:space-between;align-items:center;border:1px solid #58736d;border-radius:8px;padding:6px 9px;margin:3px 0;background:#18332d;color:#d7f6e8;min-width:0;flex-wrap:wrap}.gg-partner-timer-cue strong{font-size:clamp(14px,3.5vw,22px)!important}.gg-partner-timer-cue small{font-size:13px;color:#b8c8c5}
+.gg-flow-grid-name .gg-result-dose-hint{font-size:12px;line-height:1.25;color:#c6d2d5;display:block;overflow-wrap:anywhere}
+.gg-flow-level-buttons{grid-template-columns:repeat(3,minmax(0,1fr))!important}.gg-flow-level-buttons button{min-width:0!important;white-space:nowrap!important;font-size:clamp(11px,3vw,15px)!important;padding:6px 2px!important}
+.gg-flow-grid-tools{gap:5px!important;flex-wrap:wrap}.gg-flow-grid-tools button{font-size:12px!important;min-height:36px!important;padding:4px 8px!important}
