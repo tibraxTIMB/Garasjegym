@@ -1,3 +1,4 @@
+import { checkTabletLabDirectory } from './check-tablet-lab-artifact.mjs'
 import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 
@@ -29,6 +30,7 @@ const textFiles = files.filter(file => /\.(html|js|css|webmanifest|json|svg|txt)
 const contents = await Promise.all(textFiles.map(file => readFile(file, 'utf8')))
 const bundle = contents.join('\n')
 const failures = []
+failures.push(...await checkTabletLabDirectory(dist))
 
 if (!bundle.includes(expectedProject)) failures.push(`Expected Supabase project reference is missing: ${expectedProject}`)
 for (const projectRef of knownProjectRefs) {
