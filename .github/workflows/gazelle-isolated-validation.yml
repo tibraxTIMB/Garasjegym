@@ -36,3 +36,5 @@ jobs:
       - name: Production compilation without live credentials
         if: success() || failure()
         run: npm run build
+      - name: Check built Tablet Lab isolation (no live credentials)
+        run: node scripts/check-tablet-lab-artifact.mjs
