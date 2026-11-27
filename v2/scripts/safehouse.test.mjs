@@ -32,3 +32,15 @@ test('one dated ZIP receipt can be read locally without opening database payload
  assert.equal((await receiptFromBackupZip(new Blob([makeZip(entries)]))).code_commit,current.code_commit)
  await assert.rejects(receiptFromBackupZip(new Blob([makeZip(entries.slice(1))])))
 })
+
+test('installed SYNCHRON schema data and roles are checked before creating a backup receipt',()=>{
+ const ps=readFileSync(new URL('../public/safehouse/Safehouse.ps1',import.meta.url),'utf8')
+ assert.match(ps,/--roles-only','--no-role-passwords/)
+ assert.match(ps,/gg_synchron_private/)
+ assert.match(ps,/'sessions','slots','outbox'/)
+ assert.match(ps,/TABLE DATA gg_synchron_private/)
+ assert.match(ps,/Missing SYNCHRON role definition/)
+ assert.ok(ps.indexOf('Missing SYNCHRON table data')<ps.indexOf('DATABUNKER-receipt.json'))
+ assert.match(ps,/synchron_tables_checked/)
+ assert.match(ps,/synchron_roles_checked/)
+})
