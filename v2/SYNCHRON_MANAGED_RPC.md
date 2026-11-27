@@ -1,0 +1,5 @@
+# SYNCHRON managed RPC candidate
+
+Owner approved exploring activation without additional credentials. This separate candidate uses existing Supabase-provided server credentials (server-only service-role access) solely for a fixed RPC. The inner private function must execute as the restricted gg_synchron_server role, not the broad service role; the exposed wrapper is SECURITY INVOKER and inaccessible to anon/authenticated. No SQL supplied by browsers is passed through. Each bound operation checks and locks the verified Auth session. The original domain, CAS, invitation and result logic are unchanged.
+
+Acceptance: isolated PostgreSQL contract, actual production migration-owner grant/revoke semantics, owner/ACL/RLS checks, Supabase advisors, PostgREST service-only access and real authenticated requests, device test. No production RPC migration, deployment or client flag change until reviewed. The managed entry remains disabled. A privileged default service key is used by the Edge runtime only; never expose it or grant the browser the RPC. Do not use the default owner database URL. Existing dedicated login remains disabled. No backup dependency.

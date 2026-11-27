@@ -4,6 +4,7 @@ import {spawn} from 'node:child_process'
 import process from 'node:process'
 import {Buffer} from 'node:buffer'
 import {createPostgresBegin} from '../server/synchronPostgresDriver.js'
+import {createSynchronManagedQueries} from '../server/synchronManagedQueries.js'
 import {createSynchronRestrictedQueries} from '../server/synchronRestrictedQueries.js'
 import {createSynchronSupabaseHandler} from '../server/synchronSupabaseAuth.js'
 import {createAuthenticatedSynchronRuntime} from '../src/lib/synchronHttpClient.js'
@@ -28,9 +29,14 @@ const psqlSessionQuery=async({actorId,sessionId},sql,args=[])=>{
 }
 // The CI driver mode uses the actual pinned Postgres.js package and the
 // deployment-facing restricted transaction adapter. psql remains fixture control only.
+const managedMode=process.argv.includes('--managed')
 const driverMode=process.argv.includes('--driver')
 const driver=driverMode?(await import('npm:postgres@3.4.7')).default('postgres://gg_synchron_login:fixture-only@127.0.0.1:5432/gg_synchron_fixture',{ssl:false,prepare:false,max:4,connect_timeout:5,idle_timeout:2}):null
-const {query,sessionQuery}=driver?createSynchronRestrictedQueries({begin:createPostgresBegin(driver)}):{query:psqlQuery,sessionQuery:psqlSessionQuery}
+const managed=managedMode?createSynchronManagedQueries({rpc:async(name,args)=>{
+ assert.equal(name,'gg_synchron_edge_query')
+ try{const result=JSON.parse(await psql("BEGIN; SET LOCAL ROLE service_role; SELECT jsonb_build_object('value',public.gg_synchron_edge_query($1::jsonb)); COMMIT",[JSON.stringify(args.p_request)]));return {data:result.value,error:null}}catch(error){return {data:null,error}}
+}}):null
+const {query,sessionQuery}=managed??(driver?createSynchronRestrictedQueries({begin:createPostgresBegin(driver)}):{query:psqlQuery,sessionQuery:psqlSessionQuery})
 const read=async(sql,args)=>JSON.parse(await psql(sql,args))
 await psql("INSERT INTO public.profiles VALUES($1,true,'approved','admin'),($2,true,'approved','member'),($3,true,'approved','member'),($4,true,'approved','member'); INSERT INTO public.pt_coaches VALUES($1,true),($3,true); INSERT INTO public.pt_client_assignments VALUES($1,$2,'active'),($3,$2,'active'),($1,$4,'active'); INSERT INTO public.wods VALUES($5,'Chipper','Chipper',true,false,$6::jsonb)",[a,b,c,d,w,JSON.stringify({workout_schema:{items:[{exercise_id:'step',exercise_name:'Step-up',levels:{rx:{reps:100}}}]}})])
 let now=0
@@ -89,8 +95,17 @@ assert.equal(await read('SELECT count(*) FROM gg_synchron_private.sessions'),0)
 await psql('INSERT INTO auth.sessions(id,user_id) VALUES($1::uuid,$2::uuid)',[sessionIds[a],a])
 // The host supplies JSON text, not a driver-native JSON object. Ensure
 // that parameter inference cannot turn serialized state into a JSON string.
-const probe=await sessionQuery({actorId:a,sessionId:sessionIds[a]},'SELECT jsonb_typeof($1::text::jsonb) AS value',[JSON.stringify({fixture:true})])
-assert.equal(probe.rows[0].value,'object')
+if(!managedMode){const probe=await sessionQuery({actorId:a,sessionId:sessionIds[a]},'SELECT jsonb_typeof($1::text::jsonb) AS value',[JSON.stringify({fixture:true})]);assert.equal(probe.rows[0].value,'object')}
+else{
+ await assert.rejects(sessionQuery({actorId:a,sessionId:sessionIds[a]},'SELECT 1',[]))
+ await assert.rejects(sessionQuery({actorId:a,sessionId:sessionIds[a]},'SELECT gg_synchron_private.active_account($1::uuid) AS value',[b]))
+ for(const role of ['anon','authenticated']){
+  assert.equal(await psql("SELECT has_function_privilege($1,'public.gg_synchron_edge_query(jsonb)','EXECUTE')",[role]),'f')
+  await assert.rejects(psql('SET ROLE '+role+'; SELECT public.gg_synchron_edge_query($1::jsonb)',['{}']))
+ }
+ assert.equal(await psql("SELECT p.prosecdef AND r.rolname='gg_synchron_server' AND NOT r.rolbypassrls FROM pg_proc p JOIN pg_roles r ON r.oid=p.proowner WHERE p.oid='gg_synchron_private.edge_query(jsonb)'::regprocedure"),'t')
+ assert.equal(await psql("SELECT prosecdef FROM pg_proc WHERE oid='public.gg_synchron_edge_query(jsonb)'::regprocedure"),'f')
+}
 const created=await A.create(request(a,b,sid))
 assert.equal(created.sessionId,sid,JSON.stringify(created))
 assert.equal((await A.create(request(a,b,sid))).duplicate,true)
