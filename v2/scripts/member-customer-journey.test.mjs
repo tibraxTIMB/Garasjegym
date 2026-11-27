@@ -52,7 +52,7 @@ test('the home and group timetable lead to a genuine PT enquiry', () => {
   assert.match(home, /<strong>Gruppetimar<\/strong>/)
   assert.match(schedule, /Spør om PT/)
   assert.match(studio, /<PTInquiry profile=\{profile\}/)
-  assert.match(app, /setPTStudioInitialTab\(isPTCoach\?'oversikt':'tenester'\)/)
+  assert.match(app, /preparePTEntry\(isPTCoach\?'oversikt':'tenester'\)/)
 })
 
 test('PT enquiries work without published services and have an honest status and cancellation', () => {
@@ -107,3 +107,5 @@ test('Kameradschaft reuses existing social and booking systems with explicit pub
  assert.match(booking,/createLock\.current=true/)
  assert.match(booking,/supabase\.from\('classes'\)\.insert/)
 })
+
+test('ordinary PT entries from home, plan and timetable clear old client focus',()=>{const app=src('../src/App.jsx');assert.match(app,/function preparePTEntry\(tab\)\{clearPTDeepLink\(\);setPTStudioWorkspace\('studio'\);setPTStudioInitialTab\(tab\)\}/);assert.equal((app.match(/onContactPT=\{\(\)=>\{preparePTEntry\(/g)||[]).length,3);assert.doesNotMatch(app,/onContactPT=\{\(\)=>\{setPTStudioInitialTab/);assert.match(app,/onOpenPTAdmin=\{\(\)=>\{preparePTEntry\('administrasjon'\)/)})
