@@ -53,5 +53,28 @@ export function createSynchronManagedEdge({env,createClient,enabled=false,result
  const auth=createClient(api,publishable,options).auth
  const server=createClient(api,secret,options)
  const queries=createSynchronManagedQueries({rpc:server.rpc.bind(server)})
- return createSynchronSupabaseHandler({...queries,auth,issuer:api+'/auth/v1',allowedOrigins:['https://tibraxtimb.github.io'],enabled:true,resultSavingEnabled})
+ const handler=createSynchronSupabaseHandler({...queries,auth,issuer:api+'/auth/v1',allowedOrigins:['https://tibraxtimb.github.io'],enabled:true,resultSavingEnabled})
+ // A fixed, read-only probe of the real service-role RPC on valid CORS preflight.
+ // No caller data, real user identity or credentials are used. Cache only briefly.
+ let probe=null,probeAt=0
+ const ready=()=>{
+  const now=Date.now()
+  if(probe&&now-probeAt<30000)return probe
+  probeAt=now
+  probe=(async()=>{
+   let timeout
+   try{
+    const result=await Promise.race([queries.query(sessionSql,['00000000-0000-4000-8000-000000000000','00000000-0000-4000-8000-000000000001']),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('probe timeout')),4000)})])
+    return result?.rows?.length===1&&result.rows[0].value===false
+   }catch{return false}finally{clearTimeout(timeout)}
+  })()
+  return probe
+ }
+ return async request=>{
+  const response=await handler(request)
+  if(request.method==='OPTIONS'&&response.status===204){
+   if(!await ready())return unavailable()
+  }
+  return response
+ }
 }
