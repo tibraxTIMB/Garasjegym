@@ -1,0 +1,39 @@
+import assert from 'node:assert/strict'
+import {createSynchronDispatcher,createSynchronRuntime,synchronRouteIssue} from '../src/lib/synchronRuntime.js'
+const wod={id:'wod',name:'Four Fronts',format:'Chipper',is_published:true,timer_settings:{workout_schema:{items:[{exercise_id:'step',exercise_name:'Box step-ups',levels:{rx:{reps:100}}}]}}}
+const request={wodId:'wod',level:'rx',memberIds:['b'],leaderParticipates:true,sessionId:'12345678-1234-4234-8234-123456789012',doses:{'movement-1':{a:{variant:'50cm',loadKg:null},b:{variant:'40cm',loadKg:null}}}}
+let record=null,stored=null,t=0
+const host={authenticate:async credential=>({'auth-a':'a','auth-b':'b'}[credential]??null),readCoachContext:async actor=>({canCoach:actor==='a',eligibleMemberIds:['b']}),readWod:async id=>id==='wod'?wod:null,readCreation:async()=>record,createAtomic:async next=>{if(record)return false;record=next;stored=next.state;return true},read:async id=>stored?.plan.id===id?stored:null,compareAndSwap:async(id,rev,next)=>{if(stored?.revision!==rev||stored.plan.id!==id)return false;stored=next;return true},now:()=>t}
+const dispatch=createSynchronDispatcher(host)
+const runtime=(actor,credential)=>createSynchronRuntime({actorId:actor,invoke:body=>dispatch(credential,body)})
+const a=runtime('a','auth-a'),b=runtime('b','auth-b'),x=runtime('x','bad')
+assert.equal(createSynchronRuntime({actorId:'a'}),null)
+assert.equal(synchronRouteIssue(a,'a'),null)
+assert.ok(synchronRouteIssue(a,'b'))
+assert.ok(synchronRouteIssue(a,'a',{localSessionOpen:true}))
+assert.ok(synchronRouteIssue(null,'a'))
+assert.ok((await b.create(request)).issue)
+assert.ok((await dispatch('auth-b',{op:'create',request,actorId:'a'})).issue)
+assert.equal(stored,null)
+assert.equal((await a.create(request)).sessionId,request.sessionId)
+assert.equal((await a.create(request)).duplicate,true)
+assert.ok((await x.open(record.invitations[0].href)).issue)
+assert.equal((await b.open(record.invitations[0].href)).snapshot.joined,false)
+const ad=a.adapter(request.sessionId),bd=b.adapter(request.sessionId)
+assert.equal(a.adapter('../foo'),null)
+assert.equal((await bd.read()).snapshot.view.canStart,false)
+assert.ok((await bd.command({type:'start',id:'bad',revision:0,memberId:'b'})).issue)
+assert.ok((await dispatch('auth-b',{op:'snapshot',sessionId:request.sessionId,credential:'auth-a'})).issue)
+assert.ok((await dispatch('auth-a',{op:'reserve',sessionId:request.sessionId})).issue)
+assert.equal((await ad.command({type:'join',id:'j1',revision:0})).snapshot.joined,true)
+assert.equal((await bd.command({type:'join',id:'j2',revision:1})).snapshot.joined,true)
+assert.equal((await ad.command({type:'start',id:'start',revision:2,memberId:'a'})).snapshot.view.countdown,10)
+t=15000
+assert.equal((await bd.read()).snapshot.view.canTakeover,true)
+assert.equal((await bd.command({type:'takeover',id:'swap',revision:3})).snapshot.view.active,2)
+assert.equal((await ad.read()).snapshot.view.active,2)
+assert.ok((await createSynchronRuntime({actorId:'a',invoke:async()=>({snapshot:{sessionId:'wrong'}})}).readSnapshot(request.sessionId)).issue)
+assert.ok((await createSynchronRuntime({actorId:'a',invoke:async()=>({sessionId:'wrong'})}).create(request)).issue)
+assert.ok((await dispatch('auth-a',{op:'snapshot',sessionId:'missing'})).issue)
+assert.ok((await dispatch('auth-a',null)).issue)
+assert.ok((await dispatch('auth-a',{op:'unknown',sessionId:request.sessionId})).issue)
