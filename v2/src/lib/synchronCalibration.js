@@ -52,7 +52,8 @@ export function synchronCalibrationExport(state){
  for(const m of state.review.movements){
   const rows=state.calibration.filter(x=>state.segments[x.segmentIndex]?.movementId===m.movementId)
   const sum=rows.reduce((n,x)=>n+x.row.amount,0)
-  if(m.teamActual!==null&&sum>m.teamActual)invalid.add(m.movementId)
+  const allSegments=state.segments.filter(s=>s.movementId===m.movementId)
+  if(m.teamActual!==null&&(sum>m.teamActual||rows.length>0&&rows.length===allSegments.length&&sum!==m.teamActual))invalid.add(m.movementId)
   for(const r of m.rows){
    const own=rows.filter(x=>x.row.memberId===r.memberId)
    const count=own.reduce((n,x)=>n+x.row.amount,0)
