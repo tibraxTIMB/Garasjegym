@@ -54,3 +54,13 @@ Dobbeltklikk KONTROLLER-BACKUP.cmd og vel ei datert DATABUNKER ZIP-fil.
 Verktøyet les alle arkivfiler lokalt og samanliknar SHA256-kontrollsummane.
 Ingen passord, opplasting, utpakking eller databaseendring. OK tyder at filene
 stemmer med manifestet, ikkje at arkivet er autentisk eller at restore fungerer.
+
+SYNCHRON: Naar privat schema er installert, vert det fullstendige arkivet
+kontrollert for schema, alle private tabelldata (sessions, slots, outbox og
+framtidige tabellar) og dei installerte SYNCHRON-rollene. Dette omfattar
+fellesokter, status og invitasjonar. Edge Function-kode ligg i app-source.zip;
+serverloyndomar og databasepassord maa framleis takast vare paa separat i
+privat passordhandterar og setjast opp paa nytt ved gjenoppretting.
+Gjenopprett i isolert miljo med SYNCHRON deaktivert. Ikkje gjenoppta gamle
+aktive okter automatisk. Kontroller roller, tilgang, loggkvitteringar og
+serverfunksjon foer ny aktivering. Backup er ikkje eit aktiveringskrav.
