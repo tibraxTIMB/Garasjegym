@@ -22,7 +22,7 @@ export function synchronPlanIssue(plan){
 }
 export function createSynchronSession(plan){
  const issue=synchronPlanIssue(plan);if(issue)throw Error(issue)
- return {version:1,plan:copy(plan),revision:0,phase:'ready',joined:[],stage:0,active:null,resumeMember:null,startAt:null,lastAt:null,pausedAt:null,pausedMs:0,segments:[],open:null,totals:{},events:[]}
+ return {version:1,plan:copy(plan),revision:0,phase:'ready',currentDoses:plan.movements.map(m=>copy(m.doses)),joined:[],stage:0,active:null,resumeMember:null,startAt:null,lastAt:null,pausedAt:null,pausedMs:0,segments:[],open:null,totals:{},events:[]}
 }
 export function synchronClock(state,now){
  const end=state.phase==='finished'?state.lastAt:state.phase==='paused'?state.pausedAt:now
@@ -30,7 +30,7 @@ export function synchronClock(state,now){
 }
 function open(s,member,at){
  s.active=member
- s.open={movementId:s.plan.movements[s.stage].id,memberId:member,from:at,dose:copy(s.plan.movements[s.stage].doses[member])}
+ s.open={movementId:s.plan.movements[s.stage].id,memberId:member,from:at,dose:copy(s.currentDoses[s.stage][member])}
 }
 function close(s,at){
  if(s.open&&at>s.open.from)s.segments.push({...s.open,to:at,assignedMs:at-s.open.from})
@@ -45,7 +45,7 @@ export function synchronView(state,actorId,now){
  const active=ready?state.resumeMember:state.active
  return {phase,active,stage:state.stage,elapsed:synchronClock(state,now),countdown:phase==='countdown'?Math.max(0,Math.ceil((state.startAt-now)/1000)):0,
   canStart:leader&&phase==='ready'&&state.joined.length===state.plan.members.length,
-  canTakeover:joined&&phase==='running'&&active!==actorId,
+  canTakeover:joined&&phase==='running'&&active!==actorId&&(!active||now-(ready?state.startAt:state.open?.from??now)>=5000),
   canPause:leader&&phase==='running',canResume:leader&&phase==='paused',
   canAdvance:leader&&phase==='running'&&state.stage<state.plan.movements.length-1,
   canFinish:leader&&['running','paused'].includes(phase)}
@@ -86,7 +86,7 @@ export function applySynchronCommand(state,cmd,{actorId,at}={}){
    const target=leader&&cmd.memberId?cmd.memberId:actorId
    if(s.phase!=='running'||!s.joined.includes(target)||!leader&&target!==actorId||cmd.loadKg!==null&&!nonnegative(cmd.loadKg))return fail('Ugyldig belastningsendring.')
    const wasActive=s.active===target;if(wasActive)close(s,at)
-   move.doses[target].loadKg=cmd.loadKg;if(wasActive)open(s,target,at)
+   s.currentDoses[s.stage][target].loadKg=cmd.loadKg;if(wasActive)open(s,target,at)
   }else if(cmd.type==='advance'||cmd.type==='finish'){
    if(!leader||!['running','paused'].includes(s.phase)||cmd.type==='advance'&&s.stage===s.plan.movements.length-1||cmd.type==='finish'&&s.stage<s.plan.movements.length-1&&cmd.abort!==true)return fail('Øktleiar må stadfesta øvingsbyte eller avslutning.')
    if(cmd.actual!==null&&(!whole(cmd.actual)||cmd.actual>100000))return fail('Stadfest faktisk samla mengd, eller vel ukjent.')
@@ -97,7 +97,7 @@ export function applySynchronCommand(state,cmd,{actorId,at}={}){
    else {s.stage++;s.phase='running'}
   }else return fail('Ukjend handling.')
  }
- s.lastAt=at;s.revision++;s.events.push({id:cmd.id,actorId,type:cmd.type,at,revision:s.revision})
+ s.lastAt=at;s.revision++;s.events.push({id:cmd.id,actorId,type:cmd.type,at,revision:s.revision,...(cmd.type==='start'||cmd.type==='takeover'?{memberId:cmd.type==='start'?cmd.memberId:leader&&cmd.memberId?cmd.memberId:actorId}:{}),...(cmd.type==='load'?{memberId:leader&&cmd.memberId?cmd.memberId:actorId,loadKg:cmd.loadKg}:{}),...(['advance','finish'].includes(cmd.type)?{actual:cmd.actual,abort:cmd.abort===true}:{})})
  return {state:s,issue:null}
 }
 // Assigned time is not actual movement time. No rep/PR inference from clock alone.
