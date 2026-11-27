@@ -3,7 +3,7 @@
 // All accepted commands must eventually be committed atomically with revision and event ID.
 const units=new Set(['reps','seconds','meters','calories'])
 const methods=new Set(['direct','clock','estimate','machine','hybrid'])
-const idOk=v=>typeof v==='string'&&v.trim().length>0&&v.length<=128
+const idOk=v=>typeof v==='string'&&v.trim().length>0&&v.length<=128&&!['__proto__','constructor','prototype'].includes(v)
 const nonnegative=v=>Number.isFinite(v)&&v>=0
 const whole=v=>Number.isSafeInteger(v)&&v>=0
 const copy=v=>JSON.parse(JSON.stringify(v))
@@ -14,7 +14,7 @@ export function synchronPlanIssue(plan){
   if(!idOk(m?.id)||!idOk(m.exerciseId)||!units.has(m.unit)||!whole(m.target)||m.target<=0||m.target>100000||!methods.has(m.method)||m.collaboration!=='relay')return 'Ugyldig arbeidsmål eller registreringsmetode.'
   if(m.method==='clock'&&m.unit!=='seconds'||m.method==='machine'&&!['meters','calories'].includes(m.unit)||m.unit==='seconds'&&m.method==='estimate')return 'Registreringsmetoden samsvarar ikkje med måleeininga.'
   for(const member of plan.members){
-   const dose=m.doses?.[member]
+   const dose=m.doses&&Object.hasOwn(m.doses,member)?m.doses[member]:null
    if(!dose||!idOk(dose.variant)||!Object.hasOwn(dose,'loadKg')||dose.loadKg!==null&&!nonnegative(dose.loadKg))return 'Vel individuell øvingsvariant og eventuell belastning.'
   }
  }
@@ -53,11 +53,15 @@ export function synchronView(state,actorId,now){
 export function applySynchronCommand(state,cmd,{actorId,at}={}){
  const fail=issue=>({state,issue})
  if(!idOk(cmd?.id)||!idOk(actorId)||!whole(at))return fail('Ugyldig hending.')
- const previous=state.events.find(e=>e.id===cmd.id)
- if(previous)return previous.actorId===actorId&&previous.type===cmd.type?{state,duplicate:true}:fail('Hendings-ID er alt brukt.')
- if(cmd.revision!==state.revision||state.lastAt!==null&&at<state.lastAt)return fail('Økta er endra. Synkroniser først.')
  const leader=actorId===state.plan.leaderId,member=state.plan.members.includes(actorId)
  if(!leader&&!member)return fail('Ingen tilgang til økta.')
+ const previous=state.events.find(e=>e.id===cmd.id)
+ if(previous){
+  const memberId=cmd.type==='start'?cmd.memberId:leader&&cmd.memberId?cmd.memberId:actorId
+  const same=previous.actorId===actorId&&previous.type===cmd.type&&(!['start','takeover','load'].includes(cmd.type)||previous.memberId===memberId)&&(cmd.type!=='load'||previous.loadKg===cmd.loadKg)&&(!['advance','finish'].includes(cmd.type)||previous.actual===cmd.actual&&previous.abort===(cmd.abort===true))
+  return same?{state,duplicate:true}:fail('Hendings-ID er alt brukt.')
+ }
+ if(cmd.revision!==state.revision||state.lastAt!==null&&at<state.lastAt)return fail('Økta er endra. Synkroniser først.')
  const s=copy(state),move=s.plan.movements[s.stage]
  if(cmd.type==='join'){
   if(!member||s.phase==='finished'||s.joined.includes(actorId))return fail('Kan ikkje kopla til.')
