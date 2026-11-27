@@ -1,4 +1,4 @@
-import {samspelConfig,samspelNoncompetitive,samspelClockedEmom,samspelStrength,samspelRelay} from './samspel.js'
+import {samspelConfig,samspelNoncompetitive,samspelClockedEmom,samspelStrength,samspelRelay,samspelChipper} from './samspel.js'
 import {getWodSchemaItems,sortWodItems} from './wodOrdering.js'
 import {isEmomFormat,emomIntervalSeconds} from './wodEngine.js'
 import {COMPOSITE_FORMAT} from './compositeWod.js'
@@ -10,7 +10,7 @@ export function prepareLibraryWodPart(wod,oldBlock){
  if(wod.format===COMPOSITE_FORMAT)throw new Error('Vel ein enkelt-WOD. Ei samansett økt kan ikkje leggjast inni ei anna.')
  const schema=wod.timer_settings?.workout_schema||{}
  const samspel=samspelConfig(schema)
- if(schema.samspel&&(!samspel||!(samspelNoncompetitive(samspel)||samspelClockedEmom(samspel)||samspelStrength(samspel)||samspelRelay(samspel))))throw Error('Berre Quality & Row, Active Recovery, Engine Swap, Double EMOM, Iron Twins og You Go I Go kan brukast som Samspel-del enno.')
+ if(schema.samspel&&(!samspel||!(samspelNoncompetitive(samspel)||samspelClockedEmom(samspel)||samspelStrength(samspel)||samspelRelay(samspel)||samspelChipper(samspel))))throw Error('Samspel-oppsettet kan ikkje brukast som øktdel.')
  const items=sortWodItems(getWodSchemaItems(schema))
  if(!items.length)throw new Error('WOD-en manglar øvingar i det lagra oppsettet.')
  const format=isEmomFormat(wod.format)?'EMOM':wod.format
