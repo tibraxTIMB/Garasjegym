@@ -19,7 +19,7 @@ export function prepareSynchronLog(state,memberId,{expectedRevision,saveToken,wo
  const review=synchronReviewProjection(state,memberId)
  if(!review?.approved||!review.canApprove)return fail('Resultatet er ikkje ferdig kontrollert.')
  const elapsed=synchronClock(state,state.lastAt)
- const rows=review.rows.map(r=>({movement_id:r.movementId,exercise_name:r.name,unit:r.unit,amount:r.value,quality:r.quality,basis:r.basis,assigned_seconds:r.assignedSeconds,segments:r.segments,team_actual:r.teamActual,reconciled:r.reconciled,pr_eligible:false}))
+ const rows=review.rows.map(r=>({movement_id:r.movementId,exercise_name:r.name,unit:r.unit,amount:r.value,quality:r.quality,basis:r.basis,estimate_model:r.model??null,assigned_seconds:r.assignedSeconds,segments:r.segments,team_actual:r.teamActual,reconciled:r.reconciled,pr_eligible:false}))
  const completed=state.plan.movements.every(m=>state.totals[m.id]?.actual>=m.target)&&state.events.at(-1)?.type!=='abort'&&!state.events.some(e=>e.type==='finish'&&e.abort===true)
  const result_data={version:3,format:'Chipper',participation_verified:'team',completed,completion_status:completed?'completed':'incomplete',elapsed_seconds:elapsed,synchron_result:{version:1,session_id:state.plan.id,review_revision:state.revision,approved:true,pr_eligible:false,rows}}
  // Do not write estimated reps, holds, loads or machine quantities into the
