@@ -338,3 +338,46 @@ test('composite Double EMOM uses two explicit tracks and measured individual int
   if(rule==='time')assert.equal(compositeSamspelConfig({...part,minutes:9}),null)
  }
 })
+
+
+import {ironTwinsConfig} from '../src/lib/samspel.js'
+import {compositeIronTwinsDose} from '../src/lib/compositeWod.js'
+test('composite Iron Twins preserves measured sets per athlete and does not infer personal PR',()=>{
+ const item={block_id:'iron',exercise_name:'Bench press',levels:{rx:{sets:3},scaled:{sets:2}}}
+ const next={id:'next',format:'Eigen økt',minutes:3,title:'Nedtrapping'}
+ const items=[item,{block_id:'next',exercise_name:'Stretch'}]
+ const raw={id:'iron',format:'Strength',minutes:12,title:'Iron Twins',scoreMode:'none',samspel:ironTwinsConfig(),items:[item]}
+ const part=compositeIronTwinsDose(raw,items,'rx')
+ assert.equal(part.samspel.exercise_name,'Bench press')
+ assert.equal(part.samspel.planned_sets,3)
+ assert.equal(compositeIronTwinsDose(raw,items,'scaled').samspel.planned_sets,2)
+ assert.equal(validateCompositeBlocks([part,next],items),'')
+ assert.ok(validateCompositeBlocks([part,next],[...items,{block_id:'iron',is_rest:true,exercise_name:'Pause'}]))
+ assert.ok(validateCompositeBlocks([part,next],[...items,{block_id:'iron',exercise_name:'Squat'}]))
+ assert.equal(compositeSamspelConfig({...part,format:'AMRAP'}),null)
+ assert.equal(compositeSamspelConfig({...part,samspel:{...part.samspel,planned_sets:31}}),null)
+ assert.equal(compositeTimerConfig(part).timerSettings.workout_schema.samspel.planned_sets,3)
+ assert.equal(compositeTimerConfig(part).timerSettings.workout_schema.wod_engine.participant_count,2)
+ assert.equal(compositeTimerConfig(part).timerSettings.workout_schema.structure,'strength')
+ const actual=(kg)=>Object.fromEntries(Array.from({length:3},(_,i)=>[['reps-'+i,'5'],['load-'+i,String(kg)],['rir-'+i,'2']]).flat())
+ const participants={1:actual(50),2:actual(40)}
+ const score={'samspel:iron':{participants}}
+ const full=compositeSamspelResults([part,next],score,{0:{elapsed:300,hasStarted:true}})
+ assert.equal(full.issue,null);assert.equal(full.rows[0].completed,true)
+ assert.equal(full.rows[0].samspel.participant_results[0].strength_sets[0].load_kg,50)
+ assert.equal(full.rows[0].samspel.participant_results[1].strength_sets[0].load_kg,40)
+ assert.equal(full.rows[0].samspel.participant_results[1].strength_sets[0].rir,2)
+ assert.equal(isIndividualPerformance({result_data:{samspel_blocks:full.rows}}),false)
+ assert.ok(compositeSamspelResults([part,next],score,{}).issue)
+ assert.equal(compositeSamspelResults([part,next],score,{},true).rows[0].elapsed,null)
+ assert.equal(compositeSamspelResults([part,next],{},{}).rows[0].completed,false)
+ const partial={'samspel:iron':{participants:{1:{'reps-0':'0','load-0':'50'},2:{'reps-0':'5','load-0':'40'}}}}
+ assert.equal(compositeSamspelResults([part,next],partial,{0:{elapsed:120}}).rows[0].completed,false)
+ const invalid={'samspel:iron':{participants:{1:{'reps-0':'5','load-0':'50','rir-0':'11'}}}}
+ assert.equal(compositeSamspelResults([part,next],invalid,{0:{elapsed:120}}).field,'samspel-block-iron-1-rir-0')
+ const merged=mergeCompositeSamspelResults([{id:'iron',format:'Strength'},next],full.rows)
+ assert.equal(merged[0].format,'Strength');assert.deepEqual(merged[1],next)
+ const imported=prepareLibraryWodPart({id:'w',name:'Iron',format:'Strength',timer_settings:{workout_schema:{samspel:part.samspel,items:[item],duration_seconds:720}}},{id:'iron'})
+ assert.equal(imported.block.samspel.planned_sets,3)
+ assert.equal(equivalentLibraryWodSource(imported.block),null)
+})
