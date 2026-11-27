@@ -12,6 +12,7 @@ const validDate=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.is
 export function prepareSynchronLog(state,memberId,{expectedRevision,saveToken,workoutDate}={}){
  const fail=issue=>({issue})
  if(state?.phase!=='finished'||!state.review||!state.plan.members.includes(memberId))return fail('Ingen tilgang til resultatet.')
+ if(state.seal)return fail('Bruk den reserverte lagringspakken.')
  if(state.revision!==expectedRevision)return fail('Resultatet er endra. Oppdater først.')
  if(!state.plan.members.every(id=>state.review.approved.includes(id)))return fail('Alle deltakarane må godkjenna fordelinga først.')
  if(!uuid.test(saveToken||'')||!validDate(workoutDate))return fail('Lagring krev gyldig dato og reservert lagringstoken.')
