@@ -106,6 +106,53 @@ with sync_playwright() as pw:
     assert not errors,errors
     print("FRONTDIENST Quality & Row: validation, draft reload, partial result and single team payload passed",flush=True)
     ctx.close()
+    # Real YGIG result UI: separate participant data and no manufactured PRs.
+    ctx=browser.new_context(viewport={"width":390,"height":844},has_touch=True)
+    ctx.route("**/*",lambda route:route.continue_() if route.request.url.startswith(BASE+"/") else route.abort())
+    page=ctx.new_page()
+    errors=[]
+    page.on("pageerror",lambda error:errors.append(str(error)))
+    page.goto(URL,wait_until="domcontentloaded")
+    page.get_by_role("button",name="Etterregistrering",exact=False).click(timeout=15000)
+    page.get_by_role("button",name="WOD frå biblioteket",exact=False).click()
+    page.get_by_role("button",name="Audit YGIG EMOM",exact=False).click()
+    save=page.get_by_role("button",name="Lagre økt",exact=True)
+    expect(save).to_be_visible(timeout=15000)
+    section=page.get_by_role("region",name="YGIG EMOM – individuelle bidrag")
+    expect(section).to_be_visible()
+    expect(section.get_by_text("Bench press · 3 moglege intervall",exact=True).first).to_be_visible()
+    section.get_by_role("button",name="Hent plan · 6 reps/intervall",exact=True).first.click()
+    expect(page.locator('[data-result-field="samspel-1-paired-0"]')).to_have_value("3")
+    expect(page.locator('[data-result-field="samspel-1-paired-reps-0"]')).to_have_value("18")
+    page.locator('[data-result-field="samspel-1-paired-reps-0"]').fill("16")
+    keypad=page.get_by_role("complementary",name="Garasjegym taltastatur")
+    if keypad.is_visible():
+        keypad.get_by_role("button",name="Lukk taltastatur").click()
+    section.get_by_role("button",name="Hent plan · 6 reps/intervall",exact=True).first.click()
+    expect(page.locator('[data-result-field="samspel-1-paired-reps-0"]')).to_have_value("16")
+    section.get_by_text("Utøvar 2",exact=True).click()
+    page.locator('[data-result-field="samspel-2-paired-0"]').fill("2")
+    page.locator('[data-result-field="samspel-2-paired-reps-0"]').fill("12")
+    if keypad.is_visible():
+        keypad.get_by_role("button",name="Lukk taltastatur").click()
+    page.wait_for_function("(k)=>JSON.parse(localStorage.getItem(k)||'{}').participantScores?.['2']?.['paired-reps-0']==='12'",arg=DRAFT)
+    page.reload(wait_until="domcontentloaded")
+    expect(save).to_be_visible(timeout=15000)
+    draft=page.evaluate("(k)=>JSON.parse(localStorage.getItem(k))",DRAFT)
+    assert draft["participantScores"]["1"]["paired-reps-0"]=="16"
+    assert draft["participantScores"]["2"]["paired-reps-0"]=="12"
+    save.click()
+    page.wait_for_function("(k)=>JSON.parse(localStorage.getItem(k)||'[]').length===1",arg=WRITES,timeout=20000)
+    payload=page.evaluate("(k)=>JSON.parse(localStorage.getItem(k))[0].payload",WRITES)
+    rows=payload["result_data"]["samspel"]["participant_results"]
+    assert [row["paired_reps"][0] for row in rows]==[16,12],rows
+    assert [row["paired_intervals"][0] for row in rows]==[3,2],rows
+    assert payload["result_data"]["completed"] is False
+    assert not payload["result_data"].get("pr_victories")
+    assert payload["score_rounds"] is None and payload["score_reps"] is None
+    assert not errors,errors
+    print("FRONTDIENST YGIG EMOM: plan fill, manual correction, separate results, reload and partial save passed",flush=True)
+    ctx.close()
     # Exercise-library-backed builder and grouped Del 0: actual UI, no live writes.
     ctx=browser.new_context(viewport={"width":390,"height":844},has_touch=True)
     ctx.route("**/*",lambda route:route.continue_() if route.request.url.startswith(BASE+"/") else route.abort())
