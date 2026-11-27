@@ -422,3 +422,48 @@ test('composite relay counts actual rounds, not swaps, and separates incomplete 
   assert.equal(equivalentLibraryWodSource(imported.block),null)
  }
 })
+
+
+import {teamChipperConfig} from '../src/lib/samspel.js'
+import {compositeChipperTargets} from '../src/lib/compositeWod.js'
+test('composite Team Chipper preserves shared targets, measured contributions and cap',()=>{
+ const items=[{block_id:'chip',exercise_name:'Push-up',reps:40},{block_id:'chip',exercise_name:'Air squat',reps:60}]
+ const next={id:'next',format:'Eigen økt',minutes:3}
+ const all=[...items,{block_id:'next',exercise_name:'Stretch'}]
+ for(let count=2;count<=8;count++){
+  const raw={id:'chip',format:'Chipper',title:'Team Chipper',minutes:10,scoreMode:'none',samspel:{...teamChipperConfig(),participant_count:count},items}
+  const part=compositeChipperTargets(raw,all)
+  assert.deepEqual(part.samspel.targets,[{exercise_name:'Push-up',target_reps:40},{exercise_name:'Air squat',target_reps:60}])
+  assert.equal(validateCompositeBlocks([part,next],all),'')
+  assert.ok(validateCompositeBlocks([part,next],[...all,{block_id:'chip',is_rest:true,exercise_name:'Pause'}]))
+  assert.equal(compositeSamspelConfig({...part,format:'AMRAP'}),null)
+  assert.equal(compositeSamspelConfig(compositeChipperTargets(raw,[{...items[0],repsMode:'amrap'},items[1]])),null)
+  const timer=compositeTimerConfig(part).timerSettings.workout_schema
+  assert.equal(timer.wod_engine.collaboration,'free_split')
+  assert.equal(timer.wod_engine.participant_count,count)
+  assert.equal(timer.time_cap_seconds,600)
+  const participants=Object.fromEntries(Array.from({length:count},(_,i)=>[i+1,{'chipper-0':i<2?'20':'0','chipper-1':i<2?'30':'0'}]))
+  const score={'samspel:chip':{participants}}
+  const full=compositeSamspelResults([part,next],score,{0:{elapsed:200}})
+  assert.equal(full.issue,null);assert.equal(full.rows[0].completed,true)
+  assert.equal(full.rows[0].elapsed,200)
+  assert.equal(full.rows[0].chipper_progress[1].reps,60)
+  const partial={...participants,1:{...participants[1],'chipper-0':'19'}}
+  const early=compositeSamspelResults([part,next],{'samspel:chip':{participants:partial}},{0:{elapsed:600}})
+  assert.equal(early.rows[0].completed,false)
+  assert.equal(early.rows[0].chipper_progress[0].remaining,1)
+  assert.ok(compositeSamspelResults([part,next],score,{}).issue)
+  assert.ok(compositeSamspelResults([part,next],score,{0:{elapsed:601}}).issue)
+  assert.ok(compositeSamspelResults([part,next],score,{},true).issue)
+  assert.equal(compositeSamspelResults([part,next],{'samspel:chip':{participants,timeSeconds:'300'}},{},true).rows[0].completed,true)
+  assert.ok(compositeSamspelResults([part,next],{'samspel:chip':{participants:{...participants,1:{...participants[1],'chipper-0':'21'}}}},{0:{elapsed:200}}).issue)
+  assert.ok(compositeSamspelResults([part,next],{'samspel:chip':{participants:{...participants,1:{...participants[1],'chipper-0':''}}}},{0:{elapsed:200}}).issue)
+  assert.equal(isIndividualPerformance({result_data:{samspel_blocks:full.rows}}),false)
+  const merged=mergeCompositeSamspelResults([{id:'chip',format:'Chipper',roundsCompleted:5},next],full.rows)
+  assert.equal(merged[0].format,'Chipper');assert.equal(merged[0].roundsCompleted,null);assert.deepEqual(merged[1],next)
+  assert.equal(merged[0].chipper_progress[0].complete,true)
+  const imported=prepareLibraryWodPart({id:'w',name:'Chipper',format:'Chipper',timer_settings:{workout_schema:{samspel:part.samspel,items,duration_seconds:600}}},{id:'chip'})
+  assert.deepEqual(imported.block.samspel.targets,part.samspel.targets)
+  assert.equal(equivalentLibraryWodSource(imported.block),null)
+ }
+})
