@@ -15,7 +15,7 @@ function psql(sql,args=[]){
   child.stdin.end(sql.replace(/\$(\d+)/g,(_,i)=>":'v"+i+"'")+";\n")
  })
 }
-const query=async(sql,args)=>({rows:[JSON.parse(await psql('SELECT row_to_json(q) FROM ('+sql+') q',args))]})
+const query=async(sql,args)=>({rows:[JSON.parse(await psql('SET ROLE gg_synchron_server; SELECT row_to_json(q) FROM ('+sql+') q',args))]})
 const read=async(sql,args)=>JSON.parse(await psql(sql,args))
 await psql("INSERT INTO public.profiles VALUES($1,true,'approved','admin'),($2,true,'approved','member'),($3,true,'approved','member'),($4,true,'approved','member'); INSERT INTO public.pt_coaches VALUES($1,true),($3,true); INSERT INTO public.pt_client_assignments VALUES($1,$2,'active'),($3,$2,'active'),($1,$4,'active'); INSERT INTO public.wods VALUES($5,'Chipper','Chipper',true,false,$6::jsonb)",[a,b,c,d,w,JSON.stringify({workout_schema:{items:[{exercise_id:'step',exercise_name:'Step-up',levels:{rx:{reps:100}}}]}})])
 let now=0
@@ -25,6 +25,23 @@ function runtime(actor){
  const token='fixture.'+actor+'.token'
  const handler=createSynchronHttpHandler({allowedOrigins:[origin],verifyToken:async t=>t===token?actor:null,createHost:async({actorId})=>createPostgresSynchronHost({query,actorId,now:()=>now,resultSavingEnabled:true})})
  return createAuthenticatedSynchronRuntime({actorId:actor,enabled:true,resultSavingEnabled:true,auth:{getSession:async()=>({data:{session:{user:{id:actor},access_token:token}}})},functions:{invoke:async(name,{body,headers})=>{assert.equal(name,'synchron-live');const r=await handler(new Request(origin,{method:'POST',headers:{...headers,origin,'content-type':'application/json'},body:JSON.stringify(body)}));return {data:await r.json(),error:r.ok?null:Error('HTTP '+r.status)}}}})
+}
+// Prove the actual request path is running without owner or RLS bypass.
+assert.equal(await psql("SET ROLE gg_synchron_server; SELECT current_user"),'gg_synchron_server')
+assert.equal(await psql("SELECT rolcanlogin OR rolsuper OR rolbypassrls FROM pg_roles WHERE rolname='gg_synchron_server'"),'f')
+for(const role of ['anon','authenticated']){
+ assert.equal(await psql("SELECT pg_has_role($1,'gg_synchron_server','MEMBER')",[role]),'f')
+}
+for(const sql of [
+ "UPDATE public.profiles SET id=id",
+ "UPDATE public.pt_coaches SET user_id=user_id",
+ "UPDATE public.pt_client_assignments SET member_id=member_id",
+ "UPDATE public.wods SET id=id",
+ "DELETE FROM public.profiles",
+ "INSERT INTO public.notifications(recipient_id,title,category) VALUES($1::uuid,'unsealed','pt')",
+ "INSERT INTO public.workout_logs(member_id,save_token,title,workout_date,format,rounds,note,result_data) VALUES($1::uuid,gen_random_uuid(),'unsealed',CURRENT_DATE,'Chipper',1,'','{}')"
+]){
+ await assert.rejects(psql('SET ROLE gg_synchron_server; '+sql,sql.includes('$1')?[a]:[]))
 }
 const A=runtime(a),B=runtime(b),C=runtime(c)
 assert.deepEqual(await A.discover(),{active:null})
@@ -88,6 +105,9 @@ assert.equal(result.synchron_result.rows[0].amount,40)
 assert.equal(result.synchron_result.rows[0].quality,'estimated')
 assert.equal(await read('SELECT count(*) FROM public.workout_logs WHERE score_reps IS NOT NULL OR score_load_kg IS NOT NULL OR score_time_seconds IS NOT NULL'),0)
 assert.equal((await runtime(a).adapter(sid).saveResult(9)).duplicate,true)
+await assert.rejects(psql('SET ROLE gg_synchron_server; UPDATE public.workout_logs SET id=id'))
+await assert.rejects(psql('SET ROLE gg_synchron_server; DELETE FROM public.workout_logs'))
+await assert.rejects(psql('SET ROLE gg_synchron_server; SELECT * FROM public.notifications'))
 const snapshot=(await ad.read()).snapshot
 assert.equal(Object.hasOwn(snapshot,'seal'),false)
 assert.ok(!JSON.stringify(snapshot).includes('saveToken'))
