@@ -1,3 +1,4 @@
+import {isQualityOnlyExercise,qualityName} from './exerciseQuality.js'
 import { isErgExercise } from './exerciseMeasurements.js'
 import {isIndividualPerformance,isUsablePerformedSet,recordedSetsWithStatus,performanceSnapshot} from './performanceEvidence.js'
 export {isIndividualPerformance} from './performanceEvidence.js'
@@ -14,9 +15,12 @@ export function exerciseRecordType(name, sets = [], result = {}) {
   const text = String(name || '').toLowerCase()
   if (/box\s*(jump|step|over)|burpee\s*box/.test(text)) return 'height'
   if (/plank|hold|(?:^|\s)(?:dead|active|flexed.arm) hang\b|wall sit|l.?sit/.test(text)) return 'hold'
+  // Pilates Swimming is a floor movement, not a distance swim.
+  if (qualityName(name)==='pilates swimming') return sets.some(set=>positive(set.time_seconds))?'hold':'reps'
   if (isErgExercise({name}) || /rowerg|ski.?erg|assault bike|bikeerg|romaskin|løping|running|run\b|sykkel|swim|svømm|\bcrawl\b/.test(text)) return 'endurance'
   if (sets.some(set => positive(set.load_kg))) return 'load'
   if (/^trx\b/.test(text)) return 'reps'
+  if (['air squat','pallof press','single leg glute bridge','glute bridge','banded lateral walk','bodyweight squat'].includes(qualityName(name))) return 'reps'
   if (/kettlebell|dumbbell|manual|barbell|markløft|deadlift|squat|snatch|clean|jerk|press|curl|thruster|carry|swing|lunges?/.test(text)) return 'load'
   if (positive(result.meters) || ['m','km','cal'].includes(result.row_unit)) return 'endurance'
   if (sets.some(set => positive(set.height_cm))) return 'height'
@@ -69,6 +73,7 @@ export function deriveExerciseRecords(logs = []) {
         // the number of cycles or join separated steps into a fictitious RM set.
         const movements=new Map()
         for(const step of steps){
+          if(isQualityOnlyExercise(step.name))continue
           const key=step.exercise_id+'|'+side
           if(!movements.has(key))movements.set(key,{name:step.name.trim(),sets:[]})
           movements.get(key).sets.push(...confirmed.map(set=>({...set,reps:Number(step.reps)})))
@@ -77,7 +82,7 @@ export function deriveExerciseRecords(logs = []) {
         continue
       }
       const name = String(exercise.exercise_name || result.exercise_name || '').trim()
-      if (!name) continue
+      if (!name || isQualityOnlyExercise(name)) continue
       const side = result.side_mode || ''
       const key = `${exercise.exercise_id || name.toLowerCase()}|${side}`
       const sets = (Array.isArray(exercise.workout_sets)?recordedSetsWithStatus(exercise,result):result.sets||[]).filter(isUsablePerformedSet)
