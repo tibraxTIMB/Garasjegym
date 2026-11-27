@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import {createSynchronSession} from '../src/lib/synchron.js'
-import {createSynchronGateway,synchronActionRequest} from '../src/lib/synchronTransport.js'
+import {createSynchronGateway,synchronActionRequest,synchronDisplay} from '../src/lib/synchronTransport.js'
 const plan={id:'four',title:'Four Fronts',leaderId:'a',members:['a','b'],movements:[{id:'m',exerciseId:'step',unit:'reps',target:100,method:'estimate',collaboration:'relay',doses:{a:{variant:'high',loadKg:9},b:{variant:'low',loadKg:4}}}]}
 let state=createSynchronSession(plan),time=0
 const duplicateState=x=>JSON.parse(JSON.stringify(x))
@@ -61,3 +61,20 @@ assert.equal(state.revision,6)
 assert.equal(state.events.filter(e=>e.type==='finish').length,1)
 assert.ok((await gateway.command('four','other',req('finish',5,'finish',{actual:80}))).issue)
 assert.ok((await cmd('key-a','finish',5,'finish',{actual:100})).issue)
+
+const d=(s,now,online=true)=>synchronDisplay(s,{receivedAt:100,now,online})
+assert.equal(d(bs,1100).elapsed,6)
+assert.equal(d(bs,1100).canTakeover,true)
+assert.equal(d(bs,6100).elapsed,11)
+assert.equal(d(bs,6100).canTakeover,false)
+assert.equal(d(bs,6100).stale,true)
+assert.equal(d(bs,1100,false).actionsLocked,true)
+assert.equal(d(bs,1100,false).canTakeover,false)
+assert.equal(d(bs,99),null)
+const before={...bs,view:{...bs.view,phase:'countdown',countdown:2,elapsed:0,canTakeover:false}}
+assert.equal(d(before,1100).countdown,1)
+assert.equal(d(before,2100).waitingForStart,true)
+assert.equal(d(before,2100).canTakeover,false)
+assert.equal(d(before,2100).elapsed,0)
+assert.equal(d(finished.snapshot,4100).elapsed,finished.snapshot.view.elapsed)
+assert.equal(d(finished.snapshot,4100).canFinish,false)
