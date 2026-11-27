@@ -357,3 +357,6 @@ At 2b3640f9: isolated native 65/65 regression groups passed (run 46025661501, du
 
 ## GW03 PostgreSQL contract implementation
 At 024d66de native 65/65 and HTTP/SQLite passed. Added private PostgreSQL candidate, actual host adapter and disposable PostgreSQL 17 HTTP integration/concurrency/authorization rehearsal, with permission row locking and atomic outbox. Native PostgreSQL evidence pending. No production mutation or publication. See server gate for remaining explicit restrictions.
+
+## GW03/04 sealed result writer
+At 9f3a2d54 all five native CI procedures green (PG17 46027630463). Added private own-result writer and opt-in HTTP save operation, actual PG17 fixture coverage of approvals, concurrent retries, transaction rollback, score isolation, deletion handling and grants. New CI pending. Production unchanged; real schema verification, dedicated server role, auth, outbox delivery, device and backup gates remain open.

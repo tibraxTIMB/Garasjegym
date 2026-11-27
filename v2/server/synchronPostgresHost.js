@@ -1,11 +1,15 @@
 // Trusted server-only candidate adapter. Query must use parameterized SQL with
 // a private connection, never the browser/Data API. Only verified actor ID.
-export function createPostgresSynchronHost({query,actorId,now=Date.now}={}){
+export function createPostgresSynchronHost({query,actorId,now=Date.now,resultSavingEnabled=false}={}){
  if(typeof query!=='function'||typeof actorId!=='string'||!actorId)throw Error('Trusted PostgreSQL host required')
  const one=async(sql,args=[])=>{const r=await query(sql,args);if(!Array.isArray(r?.rows)||r.rows.length!==1)throw Error('Unexpected PostgreSQL response');return r.rows[0].value}
  const self=a=>a===actorId
  return {
   now,
+  ...(resultSavingEnabled===true?{
+   reservation:{workoutDate:state=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Oslo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(state.startAt));const value=key=>parts.find(p=>p.type===key)?.value;return value('year')+'-'+value('month')+'-'+value('day')},tokenForMember:()=>crypto.randomUUID()},
+   persistOwnResult:async(id,a)=>self(a)?one('SELECT gg_synchron_private.save_own_result($1::uuid,$2::uuid) AS value',[a,id]):null
+  }:{}),
   // HTTP handler supplies independently verified authenticate.
   readCoachContext:async a=>self(a)?await one("SELECT jsonb_build_object('canCoach',gg_synchron_private.coach($1::uuid),'eligibleMemberIds',coalesce((SELECT jsonb_agg(member_id) FROM public.pt_client_assignments WHERE coach_user_id=$1::uuid AND gg_synchron_private.eligible($1::uuid,member_id)),'[]'::jsonb)) AS value",[a]):{canCoach:false,eligibleMemberIds:[]},
   readWod:async(id,a)=>self(a)?await one("SELECT (SELECT to_jsonb(w) FROM public.wods w WHERE id=$1::uuid AND is_published AND NOT coalesce(is_archived,false) AND gg_synchron_private.coach($2::uuid)) AS value",[id,a]):null,

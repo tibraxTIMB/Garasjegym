@@ -33,6 +33,14 @@ export function createSynchronDispatcher(host){
    if(!live||!validSession(body.sessionId))return unavailable()
    if(body.op==='snapshot'&&only(body,['op','sessionId']))return await live.snapshot(body.sessionId,credential)
    if(body.op==='command'&&only(body,['op','sessionId','command'])&&object(body.command))return await live.command(body.sessionId,credential,body.command)
+   if(body.op==='save_result'&&only(body,['op','sessionId','revision'])&&Number.isSafeInteger(body.revision)&&body.revision>=0&&typeof host.persistOwnResult==='function'){
+    const actorId=await host.authenticate(credential)
+    if(typeof actorId!=='string'||!actorId)return unavailable()
+    const reserved=await live.reserve(body.sessionId,credential,body.revision)
+    if(reserved.issue||!reserved.reservation||reserved.reservation.memberId!==actorId)return {issue:reserved.issue||'Resultatet er ikkje klart for lagring.'}
+    const result=await host.persistOwnResult(body.sessionId,actorId)
+    return result?.saved===true&&validSession(result.workoutId)?{saved:true,workoutId:result.workoutId,duplicate:result.duplicate===true}:unavailable()
+   }
    // Reservation stays server-side; client cannot retrieve raw persistence payloads.
    return unavailable()
   }catch{return unavailable()}
@@ -40,7 +48,7 @@ export function createSynchronDispatcher(host){
 }
 // Host injects invoke (e.g. authenticated HTTPS call using current session).
 // No credentials, service keys or client-supplied actor appear in request body.
-export function createSynchronRuntime({actorId,invoke,individualCalibrationEnabled=false,discoveryEnabled=false}={}){
+export function createSynchronRuntime({actorId,invoke,individualCalibrationEnabled=false,discoveryEnabled=false,resultSavingEnabled=false}={}){
  if(typeof actorId!=='string'||!actorId||typeof invoke!=='function')return null
  async function call(body){
   const result=await invoke(body)
@@ -58,7 +66,10 @@ export function createSynchronRuntime({actorId,invoke,individualCalibrationEnabl
  }
  function adapter(sessionId){
   if(!validSession(sessionId))return null
-  return {read:()=>readSnapshot(sessionId),command:async command=>{
+  return {read:()=>readSnapshot(sessionId),...(resultSavingEnabled===true?{saveResult:async revision=>{
+   if(!Number.isSafeInteger(revision)||revision<0)return unavailable()
+   try{const r=await call({op:'save_result',sessionId,revision});return r.saved===true&&validSession(r.workoutId)?{saved:true,workoutId:r.workoutId,duplicate:r.duplicate===true}:unavailable()}catch{return unavailable()}
+  }}:{}),command:async command=>{
    const r=await call({op:'command',sessionId,command})
    return r.snapshot&&r.snapshot.sessionId!==sessionId?unavailable():r
   }}

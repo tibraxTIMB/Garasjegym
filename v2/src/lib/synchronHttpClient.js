@@ -3,7 +3,7 @@
 import {createSynchronRuntime} from './synchronRuntime.js'
 import {startupDeadline} from './startupDeadline.js'
 const unavailable=()=>({issue:'Fellesøkta er ikkje stadfesta. Kontroller tilkoplinga før nytt forsøk.'})
-export function createAuthenticatedSynchronRuntime({actorId,auth,functions,enabled=false,individualCalibrationEnabled=false}={}){
+export function createAuthenticatedSynchronRuntime({actorId,auth,functions,enabled=false,individualCalibrationEnabled=false,resultSavingEnabled=false}={}){
  if(enabled!==true||typeof actorId!=='string'||!actorId||typeof auth?.getSession!=='function'||typeof functions?.invoke!=='function')return null
  async function sessionToken(){
   const result=await startupDeadline(()=>auth.getSession()),session=result?.data?.session
@@ -20,5 +20,5 @@ export function createAuthenticatedSynchronRuntime({actorId,auth,functions,enabl
    return result.data
   }catch{return unavailable()}
  }
- return createSynchronRuntime({actorId,invoke,discoveryEnabled:true,individualCalibrationEnabled})
+ return createSynchronRuntime({actorId,invoke,discoveryEnabled:true,individualCalibrationEnabled,resultSavingEnabled})
 }

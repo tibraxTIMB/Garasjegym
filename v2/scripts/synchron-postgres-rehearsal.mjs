@@ -23,8 +23,8 @@ const request=(leader,member,id)=>({wodId:w,level:'rx',leaderParticipates:true,m
 const origin='https://gg.fixture.invalid'
 function runtime(actor){
  const token='fixture.'+actor+'.token'
- const handler=createSynchronHttpHandler({allowedOrigins:[origin],verifyToken:async t=>t===token?actor:null,createHost:async({actorId})=>createPostgresSynchronHost({query,actorId,now:()=>now})})
- return createAuthenticatedSynchronRuntime({actorId:actor,enabled:true,auth:{getSession:async()=>({data:{session:{user:{id:actor},access_token:token}}})},functions:{invoke:async(name,{body,headers})=>{assert.equal(name,'synchron-live');const r=await handler(new Request(origin,{method:'POST',headers:{...headers,origin,'content-type':'application/json'},body:JSON.stringify(body)}));return {data:await r.json(),error:r.ok?null:Error('HTTP '+r.status)}}}})
+ const handler=createSynchronHttpHandler({allowedOrigins:[origin],verifyToken:async t=>t===token?actor:null,createHost:async({actorId})=>createPostgresSynchronHost({query,actorId,now:()=>now,resultSavingEnabled:true})})
+ return createAuthenticatedSynchronRuntime({actorId:actor,enabled:true,resultSavingEnabled:true,auth:{getSession:async()=>({data:{session:{user:{id:actor},access_token:token}}})},functions:{invoke:async(name,{body,headers})=>{assert.equal(name,'synchron-live');const r=await handler(new Request(origin,{method:'POST',headers:{...headers,origin,'content-type':'application/json'},body:JSON.stringify(body)}));return {data:await r.json(),error:r.ok?null:Error('HTTP '+r.status)}}}})
 }
 const A=runtime(a),B=runtime(b),C=runtime(c)
 assert.deepEqual(await A.discover(),{active:null})
@@ -53,6 +53,38 @@ assert.equal((await bd.command({id:'swap',revision:3,type:'takeover'})).duplicat
 now=22000
 assert.ok(!(await ad.command({id:'finish',revision:4,type:'finish',actual:100})).issue)
 assert.deepEqual(await B.discover(),{active:null})
+// Real database result writer: no synthetic measured sets, no client-supplied payload.
+assert.ok((await ad.saveResult(5)).issue)
+assert.ok((await C.adapter(sid).saveResult(5)).issue)
+now=23000
+assert.ok(!(await ad.command({type:'review_update',id:'review-a',revision:5,movementId:'movement-1',quality:'confirmed',value:60})).issue)
+assert.ok(!(await bd.command({type:'review_update',id:'review-b',revision:6,movementId:'movement-1',quality:'estimated',value:40})).issue)
+assert.ok(!(await ad.command({type:'review_approve',id:'approve-a',revision:7})).issue)
+assert.ok((await ad.saveResult(8)).issue)
+assert.ok(!(await bd.command({type:'review_approve',id:'approve-b',revision:8})).issue)
+await psql("CREATE FUNCTION public.fail_fixture_receipt() RETURNS trigger LANGUAGE plpgsql AS $ BEGIN IF EXISTS(SELECT 1 FROM jsonb_array_elements(NEW.state#>'{seal,entries}') e WHERE e->'receipt'<>'null'::jsonb) THEN RAISE EXCEPTION 'fixture receipt rollback'; END IF; RETURN NEW; END $; CREATE TRIGGER fixture_receipt_failure BEFORE UPDATE ON gg_synchron_private.sessions FOR EACH ROW EXECUTE FUNCTION public.fail_fixture_receipt()")
+assert.ok((await ad.saveResult(9)).issue)
+assert.equal(await read('SELECT count(*) FROM public.workout_logs'),0)
+assert.equal((await ad.read()).snapshot.review.sealed,true)
+await psql('DROP TRIGGER fixture_receipt_failure ON gg_synchron_private.sessions')
+const saved=await Promise.all([ad.saveResult(9),bd.saveResult(9),ad.saveResult(9)])
+assert.ok(saved.every(r=>r.saved===true))
+assert.equal(saved[0].workoutId,saved[2].workoutId)
+assert.notEqual(saved[0].workoutId,saved[1].workoutId)
+assert.equal(await read('SELECT count(*) FROM public.workout_logs'),2)
+const result=await read("SELECT result_data FROM public.workout_logs WHERE member_id=$1::uuid",[b])
+assert.equal(result.participation_verified,'team')
+assert.equal(result.synchron_result.pr_eligible,false)
+assert.equal(result.synchron_result.rows[0].amount,40)
+assert.equal(result.synchron_result.rows[0].quality,'estimated')
+assert.equal(await read('SELECT count(*) FROM public.workout_logs WHERE score_reps IS NOT NULL OR score_load_kg IS NOT NULL OR score_time_seconds IS NOT NULL'),0)
+assert.equal((await runtime(a).adapter(sid).saveResult(9)).duplicate,true)
+const snapshot=(await ad.read()).snapshot
+assert.equal(Object.hasOwn(snapshot,'seal'),false)
+assert.ok(!JSON.stringify(snapshot).includes('saveToken'))
+await psql('DELETE FROM public.workout_logs WHERE member_id=$1::uuid',[a])
+assert.ok((await ad.saveResult(9)).issue)
+assert.equal(await read('SELECT count(*) FROM public.workout_logs'),1)
 assert.ok(!(await B.adapter(sid2).command({id:'join-other-now',revision:0,type:'join'})).issue)
 // Force failure after session/slot insert; transaction must roll back both.
 await psql("CREATE FUNCTION public.fail_fixture_outbox() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'fixture rollback'; END $$; CREATE TRIGGER fixture_outbox_failure BEFORE INSERT ON gg_synchron_private.outbox FOR EACH ROW EXECUTE FUNCTION public.fail_fixture_outbox()")
@@ -64,5 +96,6 @@ for(const role of ['anon','authenticated']){
  assert.equal(await psql("SELECT has_schema_privilege($1,'gg_synchron_private','USAGE')",[role]),'f')
  assert.equal(await psql("SELECT has_table_privilege($1,'gg_synchron_private.sessions','SELECT')",[role]),'f')
  assert.equal(await psql("SELECT has_function_privilege($1,'gg_synchron_private.cas(uuid,uuid,bigint,jsonb)','EXECUTE')",[role]),'f')
+ assert.equal(await psql("SELECT has_function_privilege($1,'gg_synchron_private.save_own_result(uuid,uuid)','EXECUTE')",[role]),'f')
 }
-console.log('SYNCHRON PostgreSQL: verified HTTP identity fixture, concurrent CAS, private state, exclusivity, revocation, restart and atomic rollback passed')
+console.log('SYNCHRON PostgreSQL: verified HTTP identity fixture, concurrent CAS, private state, exclusivity, revocation, restart, atomic rollback and sealed result receipts passed')
