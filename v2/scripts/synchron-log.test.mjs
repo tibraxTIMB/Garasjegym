@@ -44,3 +44,8 @@ review('review_approve','a');review('review_approve','b')
 assert.equal(prepareSynchronLog(s,'a',opts()).payload.result_data.synchron_result.rows[0].quality,'confirmed')
 assert.equal(prepareSynchronLog(s,'b',opts()).payload.result_data.synchron_result.rows[0].amount,45)
 assert.equal(isIndividualPerformance(prepareSynchronLog(s,'a',opts()).payload),false)
+
+// Legacy calibration remains explicitly marked; no invented sample count.
+assert.equal(a.payload.result_data.synchron_result.rows[0].estimate_model.methods[0],'legacy_exact')
+assert.equal(a.payload.result_data.synchron_result.rows[0].estimate_model.minSessions,null)
+assert.equal(a.payload.result_data.synchron_result.rows[0].estimate_model.observedRange,null)
