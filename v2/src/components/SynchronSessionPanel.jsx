@@ -1,6 +1,7 @@
 import React,{useEffect,useRef,useState} from 'react'
 import TimerClockFace from './TimerClockFace.jsx'
 import SynchronResultReview from './SynchronResultReview.jsx'
+import SynchronCalibrationReview from './SynchronCalibrationReview.jsx'
 import {acceptSynchronSnapshot,synchronControls,submitSynchronAction} from '../lib/synchronClient.js'
 import './synchron-preview.css'
 
@@ -71,6 +72,6 @@ export default function SynchronSessionPanel({adapter,label,online=true,onSnapsh
   </div>}
   {reviewType&&s.leader&&<section className="gg-sync-review" aria-label="Stadfest lagresultat"><strong>{reviewType==='advance'?'Neste øving':'Avslutt økta'} · faktisk lagresultat</strong><label>{m.name} ({unitLabel[m.unit]})<input type="number" min="0" max="100000" step="1" inputMode="numeric" value={actual} onChange={e=>setActual(e.target.value)} placeholder="Faktisk mengd"/></label><div className="gg-sync-actions"><button className="primary-button" disabled={!canSubmit||c.actionsLocked||!(reviewType==='advance'?c.canAdvance:c.canFinish)} onClick={()=>act(reviewType,{actual:Number(actual),...(reviewType==='finish'&&c.stage<s.movements.length-1?{abort:true}:{})})}>Stadfest</button><button className="secondary-button" disabled={c.actionsLocked||!(reviewType==='advance'?c.canAdvance:c.canFinish)} onClick={()=>act(reviewType,{actual:null,...(reviewType==='finish'&&c.stage<s.movements.length-1?{abort:true}:{})})}>Ukjend mengd</button><button className="secondary-button" onClick={()=>setReview(null)}>Tilbake</button></div><small>Planlagt mål blir aldri automatisk registrert som utført.</small></section>}
   {c.phase==='running'&&s.isMember&&<details><summary>Endra eiga belastning</summary><label>Ny vekt (kg)<input type="number" min="0" step="any" inputMode="decimal" value={load} onChange={e=>setLoad(e.target.value)}/></label><button className="secondary-button" disabled={!c.canLoad||load.trim()===''||!Number.isFinite(Number(load))||Number(load)<0} onClick={()=>act('load',{loadKg:Number(load)})}>Stadfest ny vekt</button></details>}
-  {c.phase==='finished'&&<><section><strong>Lagresultat · ikkje lagra i treningslogg</strong>{s.movements.map(x=><p key={x.id}>{x.name}: {s.totals[x.id]?.actual??'Ikkje registrert'} {unitLabel[x.unit]}</p>)}</section>{s.review&&<SynchronResultReview review={s.review} controls={c} onAction={act}/>}</>}
+  {c.phase==='finished'&&<><section><strong>Lagresultat · ikkje lagra i treningslogg</strong>{s.movements.map(x=><p key={x.id}>{x.name}: {s.totals[x.id]?.actual??'Ikkje registrert'} {unitLabel[x.unit]}</p>)}</section>{s.review&&<SynchronResultReview review={s.review} controls={c} onAction={act}/>} {s.calibration&&<SynchronCalibrationReview calibration={s.calibration} revision={s.revision} controls={c} onAction={act}/>}</>}
  </section>
 }
