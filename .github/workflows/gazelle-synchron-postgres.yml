@@ -7,6 +7,8 @@ on:
       - 'v2/src/lib/synchron*'
       - 'v2/src/components/Synchron*'
       - 'v2/scripts/synchron-postgres*'
+      - 'v2/scripts/package-synchron-edge.mjs'
+      - 'v2/scripts/synchron-configured-runtime.test.mjs'
       - 'v2/scripts/safehouse-offline-verifier.mjs'
       - 'v2/public/safehouse/Kontroller-Backup.ps1'
       - 'v2/scripts/synchron-supabase-auth.test.mjs'
@@ -58,6 +60,17 @@ jobs:
           FIXTURE_CONTAINER: ${{ job.services.postgres.id }}
         run: |
           bash v2/scripts/synchron-postgres-restore.sh
+      - name: Package and resolve candidate Edge module graph
+        run: |
+          node v2/scripts/package-synchron-edge.mjs /tmp/gg-synchron-review
+          deno cache --no-config --lock=/tmp/gg-synchron-review/functions/synchron-live/deno.lock --frozen /tmp/gg-synchron-review/functions/synchron-live/index.ts
+      - name: Preserve review-only server package
+        uses: actions/upload-artifact@v4
+        with:
+          name: synchron-live-review-package
+          path: /tmp/gg-synchron-review
+          if-no-files-found: error
+          retention-days: 7
       - name: Preserve frozen dependency lock (no credentials)
         uses: actions/upload-artifact@v4
         with:
