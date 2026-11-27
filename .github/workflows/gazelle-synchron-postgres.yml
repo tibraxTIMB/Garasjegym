@@ -1,0 +1,38 @@
+name: SYNCHRON isolated PostgreSQL 17 contract
+on:
+  push:
+    branches: [gazelle-operational-anatomical]
+    paths:
+      - 'v2/server/synchron*'
+      - 'v2/scripts/synchron-postgres*'
+      - 'v2/supabase/preflight/synchron_pg*'
+      - '.github/workflows/gazelle-synchron-postgres.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rehearsal:
+    if: github.ref == 'refs/heads/gazelle-operational-anatomical'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: fixture-only
+          POSTGRES_DB: gg_synchron_fixture
+        ports:
+          - 5432:5432
+        options: --health-cmd "pg_isready -U postgres -d gg_synchron_fixture" --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Load synthetic schema and candidate private persistence
+        env:
+          PGPASSWORD: fixture-only
+        run: |
+          psql -X -h 127.0.0.1 -U postgres -d gg_synchron_fixture -v ON_ERROR_STOP=1 -f v2/supabase/preflight/synchron_pg_fixture.sql -f v2/supabase/preflight/synchron_pg_candidate.sql
+      - name: Test actual server and client transport against disposable PostgreSQL
+        run: node v2/scripts/synchron-postgres-rehearsal.mjs
