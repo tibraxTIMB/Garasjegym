@@ -46,11 +46,22 @@ export function applySynchronCalibration(state,cmd,{actorId,at}={}){
 // Server-only export candidate after seal. Never reads estimated review amounts
 // as observations. Quarantine an entire movement if independent counts conflict
 // with the team total or an individual confirmed result.
-export function synchronCalibrationExport(state){
- if(state?.phase!=='finished'||!state.seal||!Array.isArray(state.calibration))return []
- const invalid=new Set()
+export function synchronConsistentObservations(state){
+ if(state?.phase!=='finished'||!state.review||!state.plan.members.every(id=>state.review.approved.includes(id))||!Array.isArray(state.calibration))return []
+ const invalid=new Set(),seen=new Set(),entries=[]
+ for(const x of state.calibration){
+  const s=state.segments[x?.segmentIndex]
+  if(!s)continue
+  if(seen.has(x.segmentIndex)){invalid.add(s.movementId);continue}
+  seen.add(x.segmentIndex)
+  const m=state.plan.movements.find(m=>m.id===s.movementId),r=x.row
+  const expected=observation(state,x.segmentIndex,r?.amount,m?.unit==='reps'?'counted':'machine',r?.observedAt)
+  const event=[...state.events].reverse().find(e=>e.type==='calibration_record'&&e.segmentIndex===x.segmentIndex)
+  if(!expected||!r||Object.keys(expected).some(k=>r[k]!==expected[k])||x.observerId!==state.plan.leaderId||s.memberId===x.observerId||!event||event.actorId!==x.observerId||event.attested!==true||event.amount!==r.amount||event.at!==r.observedAt){invalid.add(s.movementId);continue}
+  entries.push(x)
+ }
  for(const m of state.review.movements){
-  const rows=state.calibration.filter(x=>state.segments[x.segmentIndex]?.movementId===m.movementId)
+  const rows=entries.filter(x=>state.segments[x.segmentIndex]?.movementId===m.movementId)
   const sum=rows.reduce((n,x)=>n+x.row.amount,0)
   const allSegments=state.segments.filter(s=>s.movementId===m.movementId)
   if(m.teamActual!==null&&(sum>m.teamActual||rows.length>0&&rows.length===allSegments.length&&sum!==m.teamActual))invalid.add(m.movementId)
@@ -61,5 +72,9 @@ export function synchronCalibrationExport(state){
    if(r.input?.quality==='confirmed'&&(count>r.input.value||own.length>0&&own.length===segments.length&&count!==r.input.value))invalid.add(m.movementId)
   }
  }
- return copy(state.calibration.filter(x=>!invalid.has(state.segments[x.segmentIndex]?.movementId)&&x.observerId===state.plan.leaderId&&x.row.memberId!==x.observerId&&!synchronObservationIssue(x.row)).map(x=>x.row))
+ return copy(entries.filter(x=>!invalid.has(state.segments[x.segmentIndex]?.movementId)))
+}
+
+export function synchronCalibrationExport(state){
+ return state?.seal?synchronConsistentObservations(state).map(x=>x.row):[]
 }
