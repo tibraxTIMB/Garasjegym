@@ -167,3 +167,39 @@ test('composite Double EMOM corrections keep separate tracks and historical cloc
   }
  }
 })
+
+
+import {ironTwinsConfig} from '../src/lib/samspel.js'
+test('composite Iron Twins corrections retain separate sets and historical evidence',()=>{
+ const config={...ironTwinsConfig(),exercise_name:'Bench press',planned_sets:2,duration_seconds:720,team_score:true,participant_results:[{slot:1,exercise_name:'Bench press',strength_sets:[{set_number:1,reps:5,load_kg:50,rir:2},{set_number:2,reps:5,load_kg:55,rir:null}]},{slot:2,exercise_name:'Bench press',strength_sets:[{set_number:1,reps:5,load_kg:40,rir:3}]}]}
+ const part={block_id:'iron',title:'Del B',samspel:config,elapsed:300,completed:false,distance:null,calories:null}
+ const other={block_id:'quality',completed:true}
+ const log={score_load_kg:null,result_data:{completed:false,elapsed_seconds:400,assignment_id:'pt',samspel_blocks:[other,part],block_summary:[{id:'quality',completed:true},{id:'iron',format:'Strength',elapsed:300,completed:false,samspel:config}],block_results:{1:{elapsed:300}}}}
+ const draft=samspelCorrectionDraft(log),key=JSON.stringify(['iron',1]),key2=JSON.stringify(['iron',2])
+ assert.equal(samspelCorrectionFields(log).length,12)
+ assert.equal(draft[key]['load-0'],'50')
+ assert.equal(draft[key]['rir-1'],'')
+ const changed={...draft,[key]:{...draft[key],'load-0':'52.5','rir-0':'1'}}
+ const {patch}=samspelCorrectionPatch(log,changed)
+ assert.equal(patch.result_data.samspel_blocks[1].samspel.participant_results[0].strength_sets[0].load_kg,52.5)
+ assert.equal(patch.result_data.block_summary[1].samspel.participant_results[0].strength_sets[0].rir,1)
+ assert.equal(patch.result_data.samspel_blocks[1].samspel.participant_results[1].strength_sets.length,1)
+ assert.equal(patch.result_data.samspel_blocks[0],other)
+ assert.equal(patch.result_data.block_results,log.result_data.block_results)
+ assert.equal(patch.result_data.assignment_id,'pt')
+ assert.equal(patch.result_data.completed,false)
+ assert.equal(patch.score_load_kg,undefined)
+ assert.equal(config.participant_results[0].strength_sets[0].load_kg,50)
+ assert.ok(samspelCorrectionPatch(log,{...draft,[key]:{...draft[key],'rir-0':'11'}}).issue)
+ assert.ok(samspelCorrectionPatch(log,{...draft,[key2]:{...draft[key2],'reps-1':'5','load-1':'40'}}).issue)
+ assert.ok(samspelCorrectionPatch(log,{...draft,[key]:{...draft[key],'load-0':''}}).issue)
+ for(const altered of [{elapsed:301},{samspel:{...config,exercise_name:'Squat'}},{samspel:{...config,planned_sets:3}}]){
+  const conflict={...log,result_data:{...log.result_data,block_summary:[log.result_data.block_summary[0],{...log.result_data.block_summary[1],...altered}]}}
+  assert.equal(samspelCorrectionFields(conflict).length,0)
+  assert.ok(samspelCorrectionPatch(conflict,draft).issue)
+ }
+ const zero={...log,result_data:{...log.result_data,samspel_blocks:[{...part,elapsed:0}],block_summary:[{id:'iron',completed:false,elapsed:0,samspel:config}]}}
+ assert.ok(samspelCorrectionPatch(zero,samspelCorrectionDraft(zero)).issue)
+ const manual={...zero,result_data:{...zero.result_data,manual_entry:true}}
+ assert.ok(samspelCorrectionPatch(manual,samspelCorrectionDraft(manual)).patch)
+})
