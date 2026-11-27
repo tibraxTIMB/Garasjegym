@@ -109,3 +109,22 @@ assert.deepEqual(prescribedBarbellLoads([{...doseItem,equipment:'Vektstong / Man
 assert.deepEqual(prescribedBarbellLoads([{...doseItem,levels:{rx:{loadMode:'kg',loadKgMen:'',loadKgWomen:'0'}}}]),[])
 assert.deepEqual(prescribedBarbellLoads([{...doseItem,is_rest:true}]),[])
 assert.deepEqual(prescribedBarbellLoads([{...doseItem,levels:{rx:{load_mode:'kg',load_kg:40}}}]).map(x=>x.kg),[40])
+
+
+import {doubleEmomStationCapacity} from '../src/lib/garageInventory.js'
+const doublePart={id:'d',title:'Del B',samspel:{main_track:'double_emom'}}
+const doubleItems=[{blockId:'d',name:'Row',equipment:'Romaskin'},{blockId:'d',name:'Row sprint',equipment:'roing'}]
+const doubleStock=doubleEmomStationCapacity([doublePart],doubleItems,{romaskin:1})[0]
+assert.deepEqual(doubleStock.rows,[{key:'romaskin',required:2,available:1,status:'shortage'}])
+assert.equal(doubleStock.validTrackCount,true)
+assert.equal(doubleEmomStationCapacity([doublePart],doubleItems,{romaskin:2})[0].rows[0].status,'minimum_met')
+assert.equal(doubleEmomStationCapacity([doublePart],doubleItems,{romaskin:null})[0].rows[0].status,'unknown')
+const serial=doubleEmomStationCapacity([doublePart,{...doublePart,id:'e'}],[...doubleItems,...doubleItems.map(x=>({...x,blockId:'e'}))],{romaskin:2})
+assert.equal(serial.length,2)
+assert.equal(serial[1].rows[0].required,2)
+const ambiguous=doubleEmomStationCapacity([doublePart],[{blockId:'d',name:'Press',equipment:'Vektstong / Benk'},{blockId:'d',name:'Push-up',equipment:'Kroppsvekt'}],{})[0]
+assert.deepEqual(ambiguous.unknown,['Press'])
+assert.deepEqual(ambiguous.rows,[])
+assert.equal(doubleEmomStationCapacity([doublePart],doubleItems.slice(0,1),{})[0].validTrackCount,false)
+assert.deepEqual(doubleEmomStationCapacity([{id:'d',samspel:{main_track:'emom'}}],doubleItems,{}),[])
+assert.equal(doubleEmomStationCapacity([doublePart],[{block_id:'d',name:'Press',equipment:'Barbell'},{block_id:'d',name:'Squat',equipment:'Vektstong'}],{stong:1})[0].rows[0].status,'shortage')
