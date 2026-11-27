@@ -119,7 +119,8 @@ with sync_playwright() as pw:
                     page.get_by_role("button",name="Samspel",exact=True).tap()
                     panel=page.get_by_role("region",name="Samspel")
                     panel.get_by_role("combobox",name="Samarbeidsmal").select_option("legacy")
-                    panel.get_by_role("checkbox",name="Parallelt arbeid med rollebyte").check()
+                    panel.get_by_role("button",name="Fjern Samspel").wait_for()
+                    assert panel.get_by_label("Byteregel").input_value()=="round"
                     panel.get_by_label("Tal utøvarar").select_option("4")
                     panel.get_by_role("checkbox",name="Separate arbeidsstasjonar",exact=False).check()
                     stations=panel.locator("fieldset")
