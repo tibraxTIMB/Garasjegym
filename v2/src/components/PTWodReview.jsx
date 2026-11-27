@@ -104,7 +104,7 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
    </div>
    {teamResult&&<p className="ptreview-insight is-note">Lagøkt · utøvarplassane er ikkje knytte til medlemsidentitet. Bruk resultata som samtalegrunnlag, ikkje som personleg progresjon.</p>}
    <SamspelParticipantResults samspel={result.result_data?.samspel}/>
-   {(Array.isArray(result.result_data?.samspel_blocks)?result.result_data.samspel_blocks:[]).map(part=><section key={part.block_id}><strong>{part.title} · Samspel</strong><small>{part.completed?'Registrert fullført':'Delvis / ikkje utført'}{part.distance!=null?' · '+part.distance+' m':''}</small><SamspelParticipantResults samspel={part.samspel}/></section>)}
+   {(Array.isArray(result.result_data?.samspel_blocks)?result.result_data.samspel_blocks:[]).map(part=><section key={part.block_id}><strong>{part.title} · Samspel</strong><small>{part.completed?'Registrert fullført':'Delvis / ikkje utført'}{part.distance!=null?' · '+part.distance+' m':''}{part.calories!=null?' · '+part.calories+' cal':''}</small><SamspelParticipantResults samspel={part.samspel}/></section>)}
    {result.result_data?.time_cap_reached&&<p className="ptreview-insight is-review">Tidsgrensa vart nådd. For Time-resultat må vurderast ut frå faktisk gjennomført arbeid, ikkje som automatisk fullføring.</p>}
    {blockResults.length>0&&<section className="ptreview-blocks" aria-label="Resultat per øktdel">
     <h4>Korleis gjekk dei ulike delane?</h4>
