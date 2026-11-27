@@ -148,3 +148,17 @@
 .gg-sixstep-mobile .wizard-final-stage>.gg-publish-choice-inline{display:none}
 .gg-sixstep-mobile .wizard-final-stage>.wizard-stage-intro{display:none}
 @media(max-width:380px){.gg-sixstep-formats button{min-height:52px}.gg-sixstep-formats button strong{font-size:.73rem}.gg-compact-time-presets{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+
+/* Portalled exercise list keeps its full search/filter and accessible controls. */
+.gg-sixstep-library .wod-exercise-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:4px!important}
+.gg-sixstep-library .wod-exercise-card{display:grid!important;grid-template-columns:minmax(0,1fr) 42px!important;align-items:center!important;min-height:48px!important;padding:5px 7px!important;gap:5px!important}
+.gg-sixstep-library .wod-exercise-card-top .wod-stimulus-tag,.gg-sixstep-library .wod-exercise-info>small{display:none}
+.gg-sixstep-library .wod-exercise-info{display:flex;flex-wrap:wrap;align-items:center;gap:3px 8px;min-width:0}
+.gg-sixstep-library .wod-exercise-info>strong{flex-basis:100%;font-size:.9rem;line-height:1.2}
+.gg-sixstep-library .wod-equipment-icons{display:flex;flex-wrap:wrap;gap:4px;font-size:.75rem}
+.gg-sixstep-library .gg-picker-exercise-info summary{font-size:.75rem}
+.gg-sixstep-library .gg-picker-exercise-info[open]{flex-basis:100%}
+.gg-sixstep-library .wod-add-button{display:grid!important;place-items:center!important;font-size:0!important;min-width:40px!important;width:40px!important;min-height:40px!important;padding:4px!important}
+.gg-sixstep-library .wod-add-button svg{width:18px;height:18px}
+.gg-sixstep-library .wod-picked-count{font-size:.7rem}
