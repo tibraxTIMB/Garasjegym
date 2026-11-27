@@ -8,7 +8,7 @@ export function isIndividualPerformance(log){
  return true
 }
 export function isUsablePerformedSet(set){
- return !!set&&!['skipped','done'].includes(set.flow_status)&&!['partial','failed'].includes(set.complex_status)
+ return !!set&&[null,undefined,''].includes(set.flow_status)&&[null,undefined,'','complete'].includes(set.complex_status)
 }
 // Match metadata to the actual stored set identity; do not use old prescribed
 // numbers as the recorded result. A correction does not undo explicit skipping.
@@ -18,7 +18,10 @@ export function recordedSetsWithStatus(exercise,snapshot){
  const old=matching&&Array.isArray(snapshot?.sets)?snapshot.sets:[]
  return rows.map((set,i)=>{
   const prev=old[(Number(set.set_number)||i+1)-1]
-  return prev?{...set,flow_status:prev.flow_status??set.flow_status,complex_status:prev.complex_status??set.complex_status}:set
+  // A negative or unrecognized marker in either source cannot be erased by a conflicting positive marker.
+  if(!prev)return set
+  if(!isUsablePerformedSet(set))return set
+  return {...set,flow_status:prev.flow_status??set.flow_status,complex_status:prev.complex_status??set.complex_status}
  })
 }
 export function performanceSnapshot(log,exercise,index){
