@@ -27,22 +27,23 @@ export function suggestedEmomSets(workout,schema,exercise,index){
 
 // Corrections are limited to the existing team-result row. Never silently change
 // completion/linked plan state, elapsed clock, or personal exercise records.
-// Composite corrections are deliberately limited to Engine Swap with a complete
-// historical part snapshot. Other Samspel parts remain unchanged.
-function correctableEngineParts(data={}){
+// Composite corrections use the saved part configuration, not the current WOD.
+// Only supported clocked Samspel parts with historical evidence are editable.
+function correctableClockedParts(data={}){
  if(data.samspel||!Array.isArray(data.samspel_blocks)||!Array.isArray(data.block_summary))return []
  const ids=data.samspel_blocks.map(p=>p?.block_id)
  if(ids.some(id=>typeof id!=='string'||!id)||new Set(ids).size!==ids.length)return []
  return data.samspel_blocks.filter(part=>{
   const config=samspelConfig({samspel:part.samspel})
   const matches=data.block_summary.filter(b=>b.id===part.block_id)
-  return config?.main_track==='emom'&&typeof part.completed==='boolean'&&matches.length===1&&matches[0].completed===part.completed&&matches[0].samspel?.main_track==='emom'&&(data.manual_entry===true||Number.isFinite(part.elapsed)&&part.elapsed>=0)
+  const summary=matches[0],stored=summary?.samspel
+  return ['emom','double_emom'].includes(config?.main_track)&&typeof part.completed==='boolean'&&matches.length===1&&summary.completed===part.completed&&stored?.main_track===config.main_track&&stored.participant_count===config.participant_count&&stored.duration_seconds===config.duration_seconds&&stored.switch_seconds===config.switch_seconds&&stored.switch_rule===config.switch_rule&&(config.main_track==='emom'?stored.task===config.task&&stored.metric===config.metric:JSON.stringify(stored.tracks)===JSON.stringify(config.tracks))&&(data.manual_entry===true||Number.isFinite(part.elapsed)&&part.elapsed>=0&&summary.elapsed===part.elapsed)
  })
 }
 export function samspelCorrectionFields(workout){
  const data=workout?.result_data||{}
  if(!data.samspel&&Array.isArray(data.samspel_blocks)){
-  return correctableEngineParts(data).flatMap(part=>samspelCorrectionFields({result_data:{samspel:part.samspel}}).map(f=>({...f,slot:JSON.stringify([part.block_id,f.slot]),groupLabel:(part.title||'Øktdel')+' · Utøvar '+f.slot})))
+  return correctableClockedParts(data).flatMap(part=>samspelCorrectionFields({result_data:{samspel:part.samspel}}).map(f=>({...f,slot:JSON.stringify([part.block_id,f.slot]),groupLabel:(part.title||'Øktdel')+' · Utøvar '+f.slot})))
  }
  const s=samspelConfig({samspel:workout?.result_data?.samspel})
  if(!s||!['quality','recovery','emom','double_emom','strength','relay','chipper'].includes(s.main_track))return []
@@ -68,9 +69,9 @@ export function samspelCorrectionDraft(workout){
  for(const f of samspelCorrectionFields(workout))(draft[f.slot]??={})[f.key]=String(f.value)
  return draft
 }
-function compositeEngineCorrectionPatch(data,draft){
- const parts=correctableEngineParts(data)
- if(!parts.length)return {issue:'Ingen Engine Swap-del med verifisert lagra oppsett og gjennomføringsstatus kan korrigerast.'}
+function compositeClockedCorrectionPatch(data,draft){
+ const parts=correctableClockedParts(data)
+ if(!parts.length)return {issue:'Ingen Engine Swap- eller Double EMOM-del med samsvarande lagra oppsett og gjennomføringsstatus kan korrigerast.'}
  const updated=new Map()
  for(const part of parts){
   const config=part.samspel
@@ -87,7 +88,7 @@ function compositeEngineCorrectionPatch(data,draft){
  })}}}
 }
 export function samspelCorrectionPatch(workout,draft){
- if(!workout?.result_data?.samspel&&Array.isArray(workout?.result_data?.samspel_blocks))return compositeEngineCorrectionPatch(workout.result_data,draft)
+ if(!workout?.result_data?.samspel&&Array.isArray(workout?.result_data?.samspel_blocks))return compositeClockedCorrectionPatch(workout.result_data,draft)
  const data=workout?.result_data||{},s=samspelConfig({samspel:data.samspel})
  if(!s||!samspelCorrectionFields(workout).length)return {issue:'Dette lagoppsettet kan ikkje korrigerast her enno.'}
  const elapsed=data.manual_entry?undefined:typeof data.elapsed_seconds==='number'?data.elapsed_seconds:undefined
