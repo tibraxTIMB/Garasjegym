@@ -522,3 +522,24 @@ export function prescribedBarbellLoads(items=[],level='rx'){
  }
  return options
 }
+
+// Explicit single-user stations: minimum concurrent capacity for a Double EMOM.
+// Serial parts are evaluated separately. Unknown or compound equipment is not split.
+export function doubleEmomStationCapacity(blocks=[],items=[],inventory={}){
+ const exclusive=new Set(['romaskin','benk','dips','landmine','trx','plyoboks','squat rack','stong','ez-stong','hoppetau','matte','ab mat'])
+ return blocks.filter(b=>b?.samspel?.main_track==='double_emom').map(block=>{
+  const tracks=items.filter(item=>(item.blockId||item.block_id)===block.id&&!item.is_rest)
+  const needs=new Map(),unknown=[]
+  for(const item of tracks){
+   const name=item.name||item.exercise_name||'Ukjend øving',key=inventoryGroup(item.equipment)
+   if(['ingen','kroppsvekt','bodyweight'].includes(key))continue
+   if(!exclusive.has(key)){unknown.push(name);continue}
+   needs.set(key,(needs.get(key)||0)+1)
+  }
+  const rows=[...needs].map(([key,required])=>{
+   const available=Number.isSafeInteger(inventory[key])&&inventory[key]>=0?inventory[key]:null
+   return {key,required,available,status:available===null?'unknown':available<required?'shortage':'minimum_met'}
+  })
+  return {id:block.id,title:block.title||'Double EMOM',rows,unknown,validTrackCount:tracks.length===2}
+ })
+}
