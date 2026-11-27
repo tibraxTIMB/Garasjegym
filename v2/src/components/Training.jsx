@@ -1417,7 +1417,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           sets: item.sets || [],
         }).usesLoad,
         sets: setsForResult.length ? setsForResult.map(set => ({
-          reps: customComplex||retrospective||loadedEngine.participation!=='individual'?'':(fillFixedEmom||fillStandaloneEmom) ? String(plannedReps) : clearPlannedResults ? '' : set.reps == null ? '' : String(set.reps),
+          reps: customComplex||retrospective?'':loadedEngine.participation!=='individual'?'':(fillFixedEmom||fillStandaloneEmom) ? String(plannedReps) : clearPlannedResults ? '' : set.reps == null ? '' : String(set.reps),
           load_kg: clearPlannedResults||loadedEngine.participation!=='individual' ? '' : customComplex ? '' : set.load_kg == null ? '' : String(set.load_kg),
           time_text: clearPlannedResults ? '' : set.tempo || '',
           time_seconds: '',
