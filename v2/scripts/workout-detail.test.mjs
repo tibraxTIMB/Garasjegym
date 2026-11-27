@@ -237,3 +237,33 @@ test('composite relay correction preserves time, swaps and independent extra rep
   assert.equal(samspelCorrectionPatch(manual,samspelCorrectionDraft(manual)).patch.result_data.samspel_blocks[0].completed,true)
  }
 })
+
+import {teamChipperConfig,teamChipperProgress} from '../src/lib/samspel.js'
+test('composite Chipper corrections preserve clock and reconcile both progress snapshots',()=>{
+ for(let count=2;count<=8;count++){
+ const config={...teamChipperConfig(),participant_count:count,duration_seconds:600,targets:[{exercise_name:'Squat',target_reps:40}],participant_results:Array.from({length:count},(_,i)=>({slot:i+1,chipper_reps:[i<2?20:0]}))}
+ const progress=teamChipperProgress(config,config.participant_results)
+ const part={block_id:'chip',title:'Chipper',samspel:config,elapsed:200,completed:true,chipper_progress:progress}
+ const summary={...part,id:'chip',format:'Chipper'}
+ const log={score_rounds:9,result_data:{assignment_id:'pt',samspel_blocks:[part],block_summary:[summary]}}
+ const draft=samspelCorrectionDraft(log),a=JSON.stringify(['chip',1]),b=JSON.stringify(['chip',2])
+ assert.equal(samspelCorrectionFields(log).length,count)
+ const changed={...draft,[a]:{'chipper-0':'21'},[b]:{'chipper-0':'19'}}
+ for(const manual of [false,true]){
+ const {patch}=samspelCorrectionPatch({...log,result_data:{...log.result_data,manual_entry:manual}},changed)
+ assert.equal(patch.result_data.samspel_blocks[0].samspel.participant_results[0].chipper_reps[0],21)
+ assert.equal(patch.result_data.block_summary[0].chipper_progress[0].reps,40)
+ assert.equal(patch.result_data.samspel_blocks[0].elapsed,200)
+ assert.equal(patch.result_data.assignment_id,'pt')
+ assert.equal(patch.score_rounds,undefined)
+ }
+ assert.ok(samspelCorrectionPatch(log,{...draft,[a]:{'chipper-0':'19'}}).issue)
+ assert.ok(samspelCorrectionPatch(log,{...draft,[a]:{'chipper-0':'21'}}).issue)
+ assert.ok(samspelCorrectionPatch(log,{...draft,[a]:{'chipper-0':''}}).issue)
+ for(const altered of [{elapsed:201},{chipper_progress:[]},{samspel:{...config,targets:[{exercise_name:'Squat',target_reps:41}]}}]){
+ const conflict={...log,result_data:{...log.result_data,block_summary:[{...summary,...altered}]}}
+ assert.equal(samspelCorrectionFields(conflict).length,0)
+ assert.ok(samspelCorrectionPatch(conflict,draft).issue)
+ }
+ }
+})
