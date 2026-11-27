@@ -22,11 +22,11 @@ export function synchronPlanIssue(plan){
 }
 export function createSynchronSession(plan){
  const issue=synchronPlanIssue(plan);if(issue)throw Error(issue)
- return {version:1,plan:copy(plan),revision:0,phase:'ready',joined:[],stage:0,active:null,resumeMember:null,startAt:null,lastAt:null,segments:[],open:null,totals:{},events:[]}
+ return {version:1,plan:copy(plan),revision:0,phase:'ready',joined:[],stage:0,active:null,resumeMember:null,startAt:null,lastAt:null,pausedAt:null,pausedMs:0,segments:[],open:null,totals:{},events:[]}
 }
 export function synchronClock(state,now){
- const end=state.phase==='finished'?state.lastAt:now
- return state.startAt===null?0:Math.max(0,Math.floor((Math.max(state.startAt,end)-state.startAt)/1000))
+ const end=state.phase==='finished'?state.lastAt:state.phase==='paused'?state.pausedAt:now
+ return state.startAt===null?0:Math.max(0,Math.floor((end-state.startAt-state.pausedMs)/1000))
 }
 function open(s,member,at){
  s.active=member
@@ -35,6 +35,20 @@ function open(s,member,at){
 function close(s,at){
  if(s.open&&at>s.open.from)s.segments.push({...s.open,to:at,assignedMs:at-s.open.from})
  s.open=null;s.active=null
+}
+// Read-only projection for the existing Timer. No independent client start authority.
+export function synchronView(state,actorId,now){
+ if(actorId!==state.plan.leaderId&&!state.plan.members.includes(actorId))return null
+ const leader=actorId===state.plan.leaderId,joined=state.joined.includes(actorId)
+ const ready=state.phase==='countdown'&&now>=state.startAt
+ const phase=ready?'running':state.phase
+ const active=ready?state.resumeMember:state.active
+ return {phase,active,stage:state.stage,elapsed:synchronClock(state,now),countdown:phase==='countdown'?Math.max(0,Math.ceil((state.startAt-now)/1000)):0,
+  canStart:leader&&phase==='ready'&&state.joined.length===state.plan.members.length,
+  canTakeover:joined&&phase==='running'&&active!==actorId,
+  canPause:leader&&phase==='running',canResume:leader&&phase==='paused',
+  canAdvance:leader&&phase==='running'&&state.stage<state.plan.movements.length-1,
+  canFinish:leader&&['running','paused'].includes(phase)}
 }
 export function applySynchronCommand(state,cmd,{actorId,at}={}){
  const fail=issue=>({state,issue})
@@ -57,17 +71,17 @@ export function applySynchronCommand(state,cmd,{actorId,at}={}){
   if(cmd.type==='takeover'){
    const next=leader&&cmd.memberId?cmd.memberId:actorId
    if(s.phase!=='running'||!s.joined.includes(next)||next===s.active||!leader&&next!==actorId)return fail('Byte er ikkje tilgjengeleg.')
-   if(s.open&&at-s.open.from<2000)return fail('Vent før nytt byte.')
+   if(s.open&&at-s.open.from<5000)return fail('Vent før nytt byte.')
    close(s,at);open(s,next,at)
   }else if(cmd.type==='idle'){
    if(s.phase!=='running'||!s.active||!leader&&actorId!==s.active)return fail('Kan ikkje stoppa arbeidsbolken.')
    close(s,at)
   }else if(cmd.type==='pause'){
    if(!leader||s.phase!=='running')return fail('Berre øktleiar kan pausa.')
-   s.resumeMember=s.active;close(s,at);s.phase='paused'
+   s.resumeMember=s.active;close(s,at);s.phase='paused';s.pausedAt=at
   }else if(cmd.type==='resume'){
    if(!leader||s.phase!=='paused')return fail('Berre øktleiar kan fortsetja.')
-   s.phase='running';if(s.resumeMember)open(s,s.resumeMember,at);s.resumeMember=null
+   s.pausedMs+=at-s.pausedAt;s.pausedAt=null;s.phase='running';if(s.resumeMember)open(s,s.resumeMember,at);s.resumeMember=null
   }else if(cmd.type==='load'){
    const target=leader&&cmd.memberId?cmd.memberId:actorId
    if(s.phase!=='running'||!s.joined.includes(target)||!leader&&target!==actorId||cmd.loadKg!==null&&!nonnegative(cmd.loadKg))return fail('Ugyldig belastningsendring.')
@@ -76,6 +90,7 @@ export function applySynchronCommand(state,cmd,{actorId,at}={}){
   }else if(cmd.type==='advance'||cmd.type==='finish'){
    if(!leader||!['running','paused'].includes(s.phase)||cmd.type==='advance'&&s.stage===s.plan.movements.length-1||cmd.type==='finish'&&s.stage<s.plan.movements.length-1&&cmd.abort!==true)return fail('Øktleiar må stadfesta øvingsbyte eller avslutning.')
    if(cmd.actual!==null&&(!whole(cmd.actual)||cmd.actual>100000))return fail('Stadfest faktisk samla mengd, eller vel ukjent.')
+   if(s.phase==='paused'){s.pausedMs+=at-s.pausedAt;s.pausedAt=null}
    close(s,at);s.totals[move.id]={actual:cmd.actual,unit:move.unit,confirmedBy:actorId}
    s.resumeMember=null
    if(cmd.type==='finish')s.phase='finished'
