@@ -1,5 +1,5 @@
 import DailyWodStrip from './components/DailyWodStrip.jsx'
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   CalendarDays,
   Activity,
@@ -30,6 +30,7 @@ import { getAppBaseUrl } from './lib/appBaseUrl.js'
 import { getMembershipGate } from './lib/membershipAccess.js'
 import { restoreWorkoutDraft } from './lib/workoutDraft.js'
 import {synchronRouteIssue} from './lib/synchronRuntime.js'
+import {createConfiguredSynchronRuntime} from './lib/synchronConfiguredRuntime.js'
 import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry,canCancelSynchronOpening,acceptSynchronSnapshot,synchronDiscoveryStatus,synchronRecoveryDecision} from './lib/synchronPresence.js'
 import {parseSynchronInvitation} from './lib/synchronPreparation.js'
 const SynchronLaunch=lazy(()=>import('./components/SynchronLaunch.jsx'))
@@ -182,7 +183,7 @@ function LoadingScreen({ text }) {
   return <main className="loading-shell" role="status"><img className="gg-loading-emblem" src={`${import.meta.env.BASE_URL}garasjegym-49-192.png`} alt="" width="104" height="104"/><strong>{text}</strong></main>
 }
 
-export default function App({synchronRuntime=null,tabletLab=false}={}) {
+export default function App({synchronRuntime:injectedSynchronRuntime=undefined,tabletLab=false}={}) {
   const deviceProfile=useDeviceProfile()
   const [session, setSession] = useState(null)
   const [passwordRecovery, setPasswordRecovery] = useState(false)
@@ -250,6 +251,17 @@ export default function App({synchronRuntime=null,tabletLab=false}={}) {
   const [synchronSnapshot,setSynchronSnapshot]=useState(null)
   const [discoveryRecord,setDiscoveryRecord]=useState(null),[discoveryAttempt,setDiscoveryAttempt]=useState(0)
   const synchronActor=session?.user?.id
+  // Stable per account: changing identity or losing approval closes the live route.
+  const synchronRuntime=useMemo(()=>{
+    if(tabletLab||labMode||passwordRecovery||invitationPending)return null
+    if(injectedSynchronRuntime!==undefined)return injectedSynchronRuntime
+    return createConfiguredSynchronRuntime({
+      enabled:import.meta.env.VITE_GG_SYNCHRON_ENABLED,
+      resultSavingEnabled:import.meta.env.VITE_GG_SYNCHRON_RESULT_SAVING_ENABLED,
+      project:import.meta.env.VITE_SUPABASE_URL,client:supabase,
+      actorId:synchronActor,profile,profileReady,authReady,tabletLab
+    })
+  },[injectedSynchronRuntime,tabletLab,labMode,passwordRecovery,invitationPending,synchronActor,profile,profileReady,authReady])
   const synchronContext=useRef(null)
   const ownedSynchron=synchronOwnedEntry(synchronEntry,synchronActor,synchronRuntime)
   const remotePresence=ownedSynchron?synchronPresence(synchronEntry,synchronSnapshot):null
