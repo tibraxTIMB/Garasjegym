@@ -203,3 +203,37 @@ test('composite Iron Twins corrections retain separate sets and historical evide
  const manual={...zero,result_data:{...zero.result_data,manual_entry:true}}
  assert.ok(samspelCorrectionPatch(manual,samspelCorrectionDraft(manual)).patch)
 })
+
+
+import {youGoIGoConfig} from '../src/lib/samspel.js'
+test('composite relay correction preserves time, swaps and independent extra reps',()=>{
+ for(let count=2;count<=8;count++){
+  const config={...youGoIGoConfig(),participant_count:count,duration_seconds:600,team_score:true,manual_swaps:[20,60],participant_results:Array.from({length:count},(_,i)=>({slot:i+1,rounds:2,extra_reps:i}))}
+  const part={block_id:'relay',title:'Del B',samspel:config,elapsed:200,completed:false,relay_rounds:count*2,distance:null,calories:null}
+  const other={block_id:'quality',completed:true}
+  const log={score_rounds:9,result_data:{completed:false,elapsed_seconds:300,assignment_id:'pt',samspel_blocks:[other,part],block_summary:[{id:'quality',completed:true},{id:'relay',format:'AMRAP',elapsed:200,completed:false,samspel:config,relay_rounds:count*2,roundsCompleted:null,extra_reps:null}],block_results:{1:{elapsed:200,samspel_swaps:[20,60]}}}}
+  const draft=samspelCorrectionDraft(log),key=JSON.stringify(['relay',1])
+  assert.equal(samspelCorrectionFields(log).length,count*2)
+  assert.equal(draft[key].rounds,'2')
+  const changed={...draft,[key]:{rounds:'3',reps:'7'}}
+  const {patch}=samspelCorrectionPatch(log,changed)
+  assert.equal(patch.result_data.samspel_blocks[1].relay_rounds,count*2+1)
+  assert.equal(patch.result_data.block_summary[1].relay_rounds,count*2+1)
+  assert.equal(patch.result_data.samspel_blocks[1].samspel.participant_results[0].extra_reps,7)
+  assert.equal(patch.result_data.samspel_blocks[1].samspel.manual_swaps,config.manual_swaps)
+  assert.equal(patch.result_data.samspel_blocks[0],other)
+  assert.equal(patch.result_data.block_results,log.result_data.block_results)
+  assert.equal(patch.result_data.assignment_id,'pt')
+  assert.equal(patch.result_data.completed,false)
+  assert.equal(patch.score_rounds,undefined)
+  assert.equal(patch.result_data.block_summary[1].extra_reps,null)
+  assert.equal(part.relay_rounds,count*2)
+  assert.ok(samspelCorrectionPatch(log,{...draft,[key]:{rounds:'',reps:'0'}}).issue)
+  assert.ok(samspelCorrectionPatch(log,{...draft,[key]:{rounds:'9007199254740991',reps:'0'}}).issue)
+  const conflict={...log,result_data:{...log.result_data,block_summary:[log.result_data.block_summary[0],{...log.result_data.block_summary[1],relay_rounds:99}]}}
+  assert.equal(samspelCorrectionFields(conflict).length,0)
+  assert.ok(samspelCorrectionPatch(conflict,draft).issue)
+  const manual={...log,result_data:{...log.result_data,manual_entry:true,samspel_blocks:[{...part,completed:true,elapsed:null}],block_summary:[{id:'relay',completed:true,elapsed:null,samspel:config,relay_rounds:count*2}]}}
+  assert.equal(samspelCorrectionPatch(manual,samspelCorrectionDraft(manual)).patch.result_data.samspel_blocks[0].completed,true)
+ }
+})
