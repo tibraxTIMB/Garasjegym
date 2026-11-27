@@ -5,20 +5,21 @@ import {createSynchronSupabaseHandler} from '../server/synchronSupabaseAuth.js'
 import {createAuthenticatedSynchronRuntime} from '../src/lib/synchronHttpClient.js'
 const ids={a:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',b:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',c:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',d:'dddddddd-dddd-4ddd-8ddd-dddddddddddd'}
 const {a,b,c,d}=ids,w='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',sid='11111111-1111-4111-8111-111111111111',sid2='22222222-2222-4222-8222-222222222222',sid3='33333333-3333-4333-8333-333333333333'
-function psql(sql,args=[]){
+function psql(sql,args=[],login='postgres'){
+ if(!['postgres','gg_synchron_login'].includes(login))throw Error('Invalid fixture login')
  return new Promise((resolve,reject)=>{
   // psql quoted variable substitution on stdin, not string-interpolated SQL values.
   const vars=args.flatMap((v,i)=>['-v','v'+(i+1)+'='+String(v)])
-  const child=spawn('psql',['-X','-qAt','-h','127.0.0.1','-p','5432','-U','postgres','-d','gg_synchron_fixture','-v','ON_ERROR_STOP=1',...vars],{env:{...process.env,PGPASSWORD:'fixture-only',PGOPTIONS:''},stdio:['pipe','pipe','pipe']})
+  const child=spawn('psql',['-X','-qAt','-h','127.0.0.1','-p','5432','-U',login,'-d','gg_synchron_fixture','-v','ON_ERROR_STOP=1',...vars],{env:{...process.env,PGPASSWORD:'fixture-only',PGOPTIONS:''},stdio:['pipe','pipe','pipe']})
   let out='',err='';child.stdout.on('data',v=>out+=v);child.stderr.on('data',v=>err+=v);child.on('error',reject);child.on('close',code=>code===0?resolve(out.trim()):reject(Error(err||'psql '+code)))
   child.stdin.end(sql.replace(/\$(\d+)/g,(_,i)=>":'v"+i+"'")+";\n")
  })
 }
-const query=async(sql,args)=>({rows:[JSON.parse(await psql('SET ROLE gg_synchron_server; SELECT row_to_json(q) FROM ('+sql+') q',args))]})
+const query=async(sql,args)=>({rows:[JSON.parse(await psql('BEGIN; SET LOCAL ROLE gg_synchron_server; SELECT row_to_json(q) FROM ('+sql+') q; COMMIT',args,'gg_synchron_login'))]})
 // Verify and lock the session in the same transaction as the operation.
 const sessionQuery=async({actorId,sessionId},sql,args=[])=>{
  const lock='SELECT gg_synchron_private.require_active_session('+String.fromCharCode(36)+(args.length+1)+'::uuid,'+String.fromCharCode(36)+(args.length+2)+'::uuid)'
- const output=await psql('BEGIN; SET LOCAL ROLE gg_synchron_server; '+lock+'; SELECT row_to_json(q) FROM ('+sql+') q; COMMIT',[...args,actorId,sessionId])
+ const output=await psql('BEGIN; SET LOCAL ROLE gg_synchron_server; '+lock+'; SELECT row_to_json(q) FROM ('+sql+') q; COMMIT',[...args,actorId,sessionId],'gg_synchron_login')
  return {rows:[JSON.parse(output)]}
 }
 const read=async(sql,args)=>JSON.parse(await psql(sql,args))
@@ -38,6 +39,11 @@ function runtime(actor,{boundQuery=sessionQuery}={}){
  return createAuthenticatedSynchronRuntime({actorId:actor,enabled:true,resultSavingEnabled:true,auth:{getSession:async()=>({data:{session:{user:{id:actor},access_token:token}}})},functions:{invoke:async(name,{body,headers})=>{assert.equal(name,'synchron-live');const r=await handler(new Request(origin,{method:'POST',headers:{...headers,origin,'content-type':'application/json'},body:JSON.stringify(body)}));return {data:await r.json(),error:r.ok?null:Error('HTTP '+r.status)}}}})
 }
 // Prove the actual request path is running without owner or RLS bypass.
+assert.equal(await psql("SELECT session_user||':'||current_user",[],'gg_synchron_login'),'gg_synchron_login:gg_synchron_login')
+assert.equal(await psql("BEGIN; SET LOCAL ROLE gg_synchron_server; SELECT session_user||':'||current_user; COMMIT",[],'gg_synchron_login'),'gg_synchron_login:gg_synchron_server')
+assert.equal(await psql("SELECT rolsuper OR rolbypassrls OR rolcreaterole OR rolcreatedb OR rolinherit FROM pg_roles WHERE rolname='gg_synchron_login'"),'f')
+await assert.rejects(psql('SELECT * FROM gg_synchron_private.sessions',[],'gg_synchron_login'))
+await assert.rejects(psql('SET ROLE postgres',[],'gg_synchron_login'))
 assert.equal(await psql("SET ROLE gg_synchron_server; SELECT current_user"),'gg_synchron_server')
 assert.equal(await psql("SELECT rolcanlogin OR rolsuper OR rolbypassrls FROM pg_roles WHERE rolname='gg_synchron_server'"),'f')
 for(const role of ['anon','authenticated']){
