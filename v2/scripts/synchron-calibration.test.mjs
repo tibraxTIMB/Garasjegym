@@ -47,3 +47,6 @@ assert.ok(applySynchronCalibration(state,cmd(),{actorId:'a',at:240000}).issue)
 const conflicting=JSON.parse(JSON.stringify(state));conflicting.review.movements[0].rows[1].input.value=38
 assert.equal(synchronCalibrationExport(conflicting).length,1)
 assert.equal(synchronCoachCalibration(state,'a').sealed,true)
+
+const mismatched=JSON.parse(JSON.stringify(state));mismatched.review.movements[1].teamActual=1100;mismatched.review.movements[1].rows[1].input={quality:'estimated',value:1000}
+assert.equal(synchronCalibrationExport(mismatched).length,2)
