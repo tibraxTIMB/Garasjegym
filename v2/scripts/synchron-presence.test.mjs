@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry} from '../src/lib/synchronPresence.js'
+import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry,canCancelSynchronOpening,synchronSnapshotMatches} from '../src/lib/synchronPresence.js'
 const runtime={},entry={actor:'a',runtime,href:'synchron-session:one'}
 const snap=(phase,props={})=>({sessionId:'one',leader:false,isMember:true,joined:true,view:{phase},...props})
 assert.equal(synchronPresence(null,null),null)
@@ -26,3 +26,17 @@ assert.equal(synchronOwnedEntry(entry,'b',runtime),false)
 assert.equal(synchronOwnedEntry(entry,'a',{}),false)
 assert.equal(synchronOwnedEntry(entry,null,runtime),false)
 assert.equal(synchronNavigation('trening',null),'trening')
+
+const origin={actor:'a',runtime,href:entry.href}
+assert.equal(canCancelSynchronOpening(entry,synchronPresence(entry,null),origin),true)
+for(const phase of ['ready','countdown','running','paused','finished'])assert.equal(canCancelSynchronOpening(entry,synchronPresence(entry,snap(phase)),origin),false)
+assert.equal(canCancelSynchronOpening(entry,synchronPresence(entry,null),{...origin,actor:'b'}),false)
+assert.equal(canCancelSynchronOpening(entry,synchronPresence(entry,null),{...origin,runtime:{}}),false)
+assert.equal(canCancelSynchronOpening(entry,synchronPresence(entry,null),{...origin,href:'synchron-session:two'}),false)
+assert.equal(canCancelSynchronOpening(null,null,origin),false)
+assert.equal(synchronSnapshotMatches(entry,{...origin,snapshot:snap('running')}),true)
+assert.equal(synchronSnapshotMatches(entry,{...origin,snapshot:snap('running',{sessionId:'two'})}),false)
+assert.equal(synchronSnapshotMatches(entry,{...origin,actor:'b',snapshot:snap('running')}),false)
+assert.equal(synchronSnapshotMatches(entry,{...origin,runtime:{},snapshot:snap('running')}),false)
+assert.equal(synchronSnapshotMatches(entry,{...origin,href:'synchron-session:two',snapshot:snap('running')}),false)
+assert.equal(synchronSnapshotMatches(entry,{...origin,snapshot:null}),false)
