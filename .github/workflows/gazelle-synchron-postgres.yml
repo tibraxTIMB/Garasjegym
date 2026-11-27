@@ -35,6 +35,6 @@ jobs:
         env:
           PGPASSWORD: fixture-only
         run: |
-          psql -X -h 127.0.0.1 -U postgres -d gg_synchron_fixture -v ON_ERROR_STOP=1 -f v2/supabase/preflight/synchron_pg_fixture.sql -f v2/supabase/preflight/synchron_pg_candidate.sql -f v2/supabase/preflight/synchron_pg_result_candidate.sql -f v2/supabase/preflight/synchron_pg_notification_candidate.sql
+          psql -X -h 127.0.0.1 -U postgres -d gg_synchron_fixture -v ON_ERROR_STOP=1 -f v2/supabase/preflight/synchron_pg_fixture.sql -f v2/supabase/preflight/synchron_pg_candidate.sql -f v2/supabase/preflight/synchron_pg_result_candidate.sql -f v2/supabase/preflight/synchron_pg_notification_candidate.sql -f v2/supabase/preflight/synchron_pg_role_candidate.sql
       - name: Test actual server and client transport against disposable PostgreSQL
         run: node v2/scripts/synchron-postgres-rehearsal.mjs
