@@ -1,4 +1,4 @@
-import {samspelConfig,samspelNoncompetitive,samspelQuality,samspelEmom,samspelEmomComplete,samspelDouble,samspelClockedEmom,doubleEmomComplete,samspelIssue,samspelParticipantResults,samspelResultIssue,normalizeSamspelSwaps} from './samspel.js'
+import {samspelConfig,samspelNoncompetitive,samspelQuality,samspelEmom,samspelEmomComplete,samspelDouble,samspelClockedEmom,doubleEmomComplete,samspelStrength,samspelStrengthComplete,samspelIssue,samspelParticipantResults,samspelResultIssue,normalizeSamspelSwaps} from './samspel.js'
 import {complexResultSummary} from './wodComplexes.js'
 // Multi-part workouts reuse the existing WOD engine and Timer for each part.
 // No separate timer is introduced. Blocks, pauses and outcomes live in the WOD schema.
@@ -61,7 +61,7 @@ export function validateCompositeBlocks(blocks,items=[]) {
   if(!Number.isFinite(minute)||minute<=0||minute>180||Math.abs(Math.round(minute*60)-minute*60)>0.001)return title+': vel inntil 180 minutt (med sekundpresisjon).'
   const exercises=items.filter(item=>(item.blockId||item.block_id)===block.id&&!item.is_rest)
   if(!exercises.length)return title+': legg til minst éi øving.'
-  if(block.samspel){const s=compositeSamspelConfig(block);if(!s)return title+': ugyldig Samspel-oppsett. Engine Swap og Double EMOM krev EMOM og heile rotasjonar.';const issue=samspelIssue(s,{format:samspelClockedEmom(s)?'EMOM':block.format,participation:s.participant_count===2?'partner':'team',participantCount:s.participant_count,collaboration:'parallel',items:samspelDouble(s)?items.filter(item=>(item.blockId||item.block_id)===block.id):exercises});if(issue)return title+': '+issue;if(block.scoreMode&&!['auto','none'].includes(block.scoreMode))return title+': bruk Samspel-resultat, ikkje eit ekstra hovudresultat.'}
+  if(block.samspel){const s=compositeSamspelConfig(block);if(!s)return title+': ugyldig Samspel-oppsett. Engine Swap og Double EMOM krev EMOM og heile rotasjonar; Iron Twins krev Strength og 1–30 sett.';const issue=samspelIssue(s,{format:samspelClockedEmom(s)?'EMOM':block.format,participation:s.participant_count===2?'partner':'team',participantCount:s.participant_count,collaboration:'parallel',items:(samspelDouble(s)||samspelStrength(s))?items.filter(item=>(item.blockId||item.block_id)===block.id):exercises});if(issue)return title+': '+issue;if(block.scoreMode&&!['auto','none'].includes(block.scoreMode))return title+': bruk Samspel-resultat, ikkje eit ekstra hovudresultat.'}
   const every=compositeIntervalMinutes(block.format,block)
   if(every && Math.round(minute*60)%Math.round(every*60)!==0)return title+': øktlengda må gå opp i intervalla på '+Math.round(every*60)+' sekund.'
   if(block.format==='For Time'&&block.rounds!=null&&String(block.rounds).trim()!==''&&(!Number.isInteger(Number(block.rounds))||Number(block.rounds)<1||Number(block.rounds)>100))return title+': vel 1–100 rundar eller la feltet stå tomt.'
@@ -237,6 +237,12 @@ export function explicitBlockResults(blocks=[],overrides={},items=[]){
 
 // Composite Samspel parts own their clock and measured participant evidence.
 // Build explicit track names from the builder's current ordered exercise selection.
+export function compositeIronTwinsDose(block,items=[],level='rx'){
+ if(!samspelStrength(block?.samspel))return block
+ const item=items.find(item=>(item.blockId||item.block_id)===block.id&&!item.is_rest)
+ const count=item?.levels?.[level]?.sets??item?.levels?.rx?.sets??(Array.isArray(item?.sets)&&item.sets.length?item.sets.length:1)
+ return {...block,samspel:{...block.samspel,exercise_name:String(item?.name||item?.exercise_name||'').trim(),planned_sets:Number(count)}}
+}
 export function compositeDoubleTracks(block,items=[]){
  if(!samspelDouble(block?.samspel))return block
  return {...block,samspel:{...block.samspel,tracks:items.filter(item=>(item.blockId||item.block_id)===block.id).map(item=>String(item.name||item.exercise_name||'').trim())}}
@@ -247,6 +253,8 @@ export function compositeSamspelConfig(block){
  if(samspelClockedEmom(config)){
   if(!isEmomFormat(block.format)||block.warmup_group)return null
   config.switch_seconds=emomIntervalSeconds(block.format,{work_every_seconds:block.emomIntervalSeconds??block.interval?.work_every_seconds??config.switch_seconds,work_every_minutes:block.interval?.work_every_minutes})
+ }else if(samspelStrength(config)){
+  if(block.format!=='Strength'||block.warmup_group)return null
  }else if(block.format!=='Eigen økt'||!samspelNoncompetitive(config))return null
  return samspelConfig({samspel:config})
 }
@@ -258,6 +266,14 @@ export function compositeSamspelResults(blocks=[],scores={},timerResults={},manu
   if(!s)return {rows:[],issue:title+': Samspel-oppsettet er ikkje støtta.'}
   const snapshot=timerResults[index]||{}
   const draft=snapshot.prep_skipped&&block.warmup_group?{participants:Object.fromEntries(Array.from({length:s.participant_count},(_,i)=>[i+1,{quality:'skipped'}]))}:scores['samspel:'+block.id]||{}
+  if(samspelStrength(s)){
+   const elapsed=manual?undefined:Math.max(0,Number(snapshot.elapsed)||0)
+   const result=samspelParticipantResults(s,draft.participants||{},{elapsed})
+   if(result.issue)return {rows:[],issue:title+' · '+result.issue,field:'samspel-block-'+block.id+'-'+result.slot+'-'+result.field}
+   if(!manual&&snapshot.hasStarted!==true&&elapsed===0&&result.rows.length)return {rows:[],issue:title+': delen vart ikkje starta. Etterregistrer økta dersom arbeidet vart utført.',field:'samspel-block-'+block.id+'-'+result.rows[0].slot+'-reps-'+(result.rows[0].strength_sets[0].set_number-1)}
+   rows.push({block_id:block.id,title,samspel:{...s,team_score:true,participant_results:result.rows,manual_swaps:[]},distance:null,calories:null,elapsed:manual?null:elapsed,completed:samspelStrengthComplete(s,result.rows)})
+   continue
+  }
   if(samspelDouble(s)){
    const elapsed=manual?undefined:Math.max(0,Number(snapshot.elapsed)||0)
    const result=samspelParticipantResults(s,draft.participants||{},{elapsed})
@@ -296,6 +312,6 @@ export function compositeSamspelResults(blocks=[],scores={},timerResults={},manu
 
 export function mergeCompositeSamspelResults(blocks=[],actual=[]){
  const byId=new Map(actual.map(row=>[row.block_id,row]))
- const merge=(block,row)=>({...block,id:row.block_id,title:row.title,format:samspelClockedEmom(row.samspel)?'EMOM':'Eigen økt',scoreMode:'none',samspel:row.samspel,elapsed:row.elapsed??block.elapsed??null,distance:row.distance,...(row.calories!=null?{calories:row.calories}:{}),completed:row.completed,roundsCompleted:null,extra_reps:null})
+ const merge=(block,row)=>({...block,id:row.block_id,title:row.title,format:samspelStrength(row.samspel)?'Strength':samspelClockedEmom(row.samspel)?'EMOM':'Eigen økt',scoreMode:'none',samspel:row.samspel,elapsed:row.elapsed??block.elapsed??null,distance:row.distance,...(row.calories!=null?{calories:row.calories}:{}),completed:row.completed,roundsCompleted:null,extra_reps:null})
  return [...blocks.map(block=>byId.has(block.id)?merge(block,byId.get(block.id)):block),...actual.filter(row=>!blocks.some(b=>b.id===row.block_id)).map(row=>merge({},row))]
 }
