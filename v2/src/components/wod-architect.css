@@ -162,3 +162,7 @@
 .gg-sixstep-library .wod-add-button{display:grid!important;place-items:center!important;font-size:0!important;min-width:40px!important;width:40px!important;min-height:40px!important;padding:4px!important}
 .gg-sixstep-library .wod-add-button svg{width:18px;height:18px}
 .gg-sixstep-library .wod-picked-count{font-size:.7rem}
+
+/* Existing WOD / PT plan editing must retain the current name at entry. */
+.gg-sixstep-mobile.gg-sixstep-edit.wod-builder-step-0 .gg-architect-heading{display:grid!important;grid-template-columns:minmax(0,1fr)}
+.gg-sixstep-mobile.gg-sixstep-edit.wod-builder-step-0 .gg-architect-heading>button{display:none!important}
