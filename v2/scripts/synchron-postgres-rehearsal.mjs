@@ -97,8 +97,8 @@ await psql('INSERT INTO auth.sessions(id,user_id) VALUES($1::uuid,$2::uuid)',[se
 // that parameter inference cannot turn serialized state into a JSON string.
 if(!managedMode){const probe=await sessionQuery({actorId:a,sessionId:sessionIds[a]},'SELECT jsonb_typeof($1::text::jsonb) AS value',[JSON.stringify({fixture:true})]);assert.equal(probe.rows[0].value,'object')}
 else{
- await assert.rejects(sessionQuery({actorId:a,sessionId:sessionIds[a]},'SELECT 1',[]))
- await assert.rejects(sessionQuery({actorId:a,sessionId:sessionIds[a]},'SELECT gg_synchron_private.active_account($1::uuid) AS value',[b]))
+ assert.throws(()=>sessionQuery({actorId:a,sessionId:sessionIds[a]},'SELECT 1',[]))
+ assert.throws(()=>sessionQuery({actorId:a,sessionId:sessionIds[a]},'SELECT gg_synchron_private.active_account($1::uuid) AS value',[b]))
  for(const role of ['anon','authenticated']){
   assert.equal(await psql("SELECT has_function_privilege($1,'public.gg_synchron_edge_query(jsonb)','EXECUTE')",[role]),'f')
   await assert.rejects(psql('SET ROLE '+role+'; SELECT public.gg_synchron_edge_query($1::jsonb)',['{}']))
