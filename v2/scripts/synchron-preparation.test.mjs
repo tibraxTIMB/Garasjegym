@@ -27,3 +27,5 @@ for(const patch of [{memberIds:['b','b']},{memberIds:['outsider']},{memberIds:['
 assert.ok(prepareSynchronLobby(args,{...ctx,canCoach:false}).issue)
 assert.ok(prepareSynchronLobby(args,{...ctx,eligibleMemberIds:[]}).issue)
 for(const x of ['https://example.com','synchron-session:','synchron-session:../abc','synchron-session:__proto__'])assert.equal(parseSynchronInvitation(x),null)
+
+assert.ok(synchronWodTargets({...wod,timer_settings:{workout_schema:{...wod.timer_settings.workout_schema,time_cap_seconds:1200}}}).issue)
