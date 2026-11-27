@@ -1,4 +1,5 @@
 import {collectResultIssues,resultIssueLabel} from '../lib/resultValidation.js'
+import {ACTIVE_WOD_LEVELS,resultPlan,fillResultPlan,editPlannedSet,refreshResultPlan,isPartnerEmom,partnerEmomSlot,partnerEmomCount,partnerExecutionIssue,emomExerciseIndices} from '../lib/compactWorkout.js'
 import {flowItemGroup,flowBlockForItem,clearFlowItem,emptyFlowSet,flowCompletionRows,flowReporting,hasMeasuredFlowSet} from '../lib/workoutFlow.js'
 import {blockScoreDefinition,explicitBlockResults} from '../lib/compositeWod.js'
 import {retrospectiveBlocks,retrospectiveScoreKind,retrospectiveBlockResults,hasManualEntryChanges} from '../lib/retrospectiveWod.js'
@@ -253,7 +254,9 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const savedDuration = Number(schema?.duration_seconds) || 0
   const capDuration = Number(schema?.time_cap_seconds) || (Number(schema?.time_cap_minutes) || 0) * 60
   const isEMOM = isEmomFormat(format)
-  const emomCycle = Math.max(5,Math.min(3600,Math.round(Number(emomEveryOverride)>0?Number(emomEveryOverride)*60:emomIntervalSeconds(format,schema?.interval))))
+  const clockEngine=normalizeWodEngine(schema||{},{format})
+  const partnerEmom=isPartnerEmom(format,clockEngine)&&!samspel
+  const emomCycle = Math.max(5,Math.min(3600,Math.round(!partnerEmom&&Number(emomEveryOverride)>0?Number(emomEveryOverride)*60:emomIntervalSeconds(format,schema?.interval))))
   const effectiveEmomWorkSeconds = Math.max(1,Math.min(emomCycle,Number(workSeconds)||emomCycle))
   const effectiveEmomRestSeconds = Math.max(0,Math.min(emomCycle-effectiveEmomWorkSeconds,Number(restSeconds)||0))
   const emomPhaseElapsed = elapsed % emomCycle
@@ -297,13 +300,12 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const intervalExerciseIndex = fixedSlotState.currentSlotIndex % intervalExerciseCount
   const currentIntervalExercise = exerciseList[intervalExerciseIndex]?.exercise_name || exerciseList[intervalExerciseIndex]?.name || activeExercise
   const currentEmomRound = Math.min(Math.max(1,Math.ceil(target/emomCycle)),Math.floor(elapsed/emomCycle)+1)
-  const hasExplicitEmomSlots = exerciseList.some(item=>String(item.minute_slot??item.minuteSlot??'').trim()!=='')
-  const currentEmomExercises = exerciseList.filter(item=>String(item.minute_slot??item.minuteSlot??'').split(/[,\s;\/]+/).some(slot=>Number(slot)===currentEmomRound))
-  const currentEmomExercise = currentEmomExercises.length
-    ? currentEmomExercises.map(item=>item.is_rest?'Pause':item.exercise_name||item.name||'Øving').join(' + ')
-    : hasExplicitEmomSlots ? 'Ingen øving for denne runden'
-    : exerciseList.length>1 ? (exerciseList[(currentEmomRound-1)%exerciseList.length]?.exercise_name||exerciseList[(currentEmomRound-1)%exerciseList.length]?.name||activeExercise)
-    : activeExercise
+  const partnerIssue=partnerExecutionIssue({format,participation:clockEngine.participation,collaboration:clockEngine.collaboration,combinationMode:schema?.combination_mode,items:exerciseList,durationSeconds:target,intervalSeconds:emomCycle,samspel})
+  const partnerTurn=partnerEmom&&!partnerIssue?partnerEmomSlot(currentEmomRound,exerciseList.length):null
+  const currentEmomIndices=emomExerciseIndices(exerciseList,currentEmomRound,{partner:!!partnerTurn})
+  const nextEmomIndices=currentEmomRound<Math.ceil(target/emomCycle)?emomExerciseIndices(exerciseList,currentEmomRound+1,{partner:!!partnerTurn}):[]
+  const currentEmomExercise=currentEmomIndices.map(index=>exerciseList[index]).map(item=>item.is_rest?'Pause':item.exercise_name||item.name||'Øving').join(' + ')||'Ingen øving for dette intervallet'
+  const nextEmomExercise=nextEmomIndices.map(index=>exerciseList[index]).map(item=>item.is_rest?'Pause':item.exercise_name||item.name||'Øving').join(' + ')
   const stationTotal = fixedSlotState.totalSeconds
   const timerLimitReached = (
     (isCountdown || isEMOM || isStationCircuit || hasTimeCap) && elapsed >= (isStationCircuit ? stationTotal : target)
@@ -558,7 +560,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
     }
   }
   const beginWorkout = (withCountdown = false) => {
-    if (hasStarted || running || countdownDeadline !== null) return
+    if (hasStarted || running || countdownDeadline !== null || partnerIssue) return
     const audioContext=ensureAudioContext() // Unlock and prepare the actual WAV samples from the user gesture.
     if(audioContext)unlockSoundPack(audioContext,audioPrefs.current.audioProfile).catch(e=>setAudioDiagnostic('Lydfeil: '+e.message))
     if (withCountdown) {
@@ -578,7 +580,7 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const visibleStationIndex = Math.min(stationCount - 1, fixedSlotState.currentSlotIndex % stationCount)
   const currentStationName = stationList[visibleStationIndex]?.exercise_name || stationList[visibleStationIndex]?.name || `Stasjon ${visibleStationIndex + 1}`
   const stageExerciseName = isStationCircuit ? currentStationName : isTimedInterval ? currentIntervalExercise : isEMOM ? currentEmomExercise : activeExercise || exerciseList[0]?.exercise_name || exerciseList[0]?.name || ''
-  const stageNextExercise = isStationCircuit ? stationList[(visibleStationIndex + 1) % stationCount]?.exercise_name : isTimedInterval ? exerciseList[(intervalExerciseIndex + 1) % intervalExerciseCount]?.exercise_name : nextExercise
+  const stageNextExercise = isEMOM ? nextEmomExercise : isStationCircuit ? stationList[(visibleStationIndex + 1) % stationCount]?.exercise_name : isTimedInterval ? exerciseList[(intervalExerciseIndex + 1) % intervalExerciseCount]?.exercise_name : nextExercise
   const stageTimeLabel = isDeathBy ? 'INTERVALL ATT' : isCountdown ? 'TID ATT' : isStationCircuit ? (inWorkPhase ? 'ARBEID ATT' : 'BYTE ATT') : isTimedInterval ? (inWorkPhase ? 'ARBEID ATT' : 'KVILE ATT') : isEMOM ? (isEmomWorkPhase ? 'ARBEID ATT' : isEmomRestPhase ? 'KVILE ATT' : 'NESTE START') : 'MEDGÅTT TID'
   const stageIsComplete = phase === 'FERDIG' || phase === 'TIDSGRENSE'
   const stageLapLabel = (isAmrap||isLadder||plannedForTimeRounds) ? 'RUNDETIDER' : 'MELLOMTIDER'
@@ -606,6 +608,10 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       savedLevel?.durationSeconds ? `${savedLevel.durationSeconds} sek` : '',
       savedLevel?.distanceMeters ? `${savedLevel.distanceMeters} m` : '',
       savedLevel?.calories ? `${savedLevel.calories} cal` : '',
+      savedLevel?.loadMode==='kg' ? [...new Set([savedLevel.loadKgMen==null||savedLevel.loadKgMen===''?'':`M ${savedLevel.loadKgMen} kg`,savedLevel.loadKgWomen==null||savedLevel.loadKgWomen===''?'':`K ${savedLevel.loadKgWomen} kg`].filter(Boolean))].join(' / ') : '',
+      savedLevel?.loadMode==='bodyweight'?'Kroppsvekt':'',
+      savedLevel?.loadMode==='percent'&&savedLevel.percent1rm?`${savedLevel.percent1rm} % 1RM`:'',
+      savedLevel?.loadMode==='rir'&&savedLevel.rir!==''&&savedLevel.rir!=null?`RIR ${savedLevel.rir}`:'',
       side && side!=='per side' ? side : '',
     ]
     return {
@@ -619,6 +625,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
       steps:Array.isArray(item.complex_steps)?item.complex_steps:[],
     }
   })
+  const activeStageRows=isEMOM?currentEmomIndices.map(index=>stageRows[index]).filter(Boolean):isStationCircuit?[stageRows[visibleStationIndex]].filter(Boolean):isTimedInterval?[stageRows[intervalExerciseIndex]].filter(Boolean):[stageRows.find(row=>row.name===stageExerciseName)].filter(Boolean)
+  const partnerClockLabel=partnerTurn?`P${partnerTurn.worker} ARBEIDER · P${partnerTurn.resting} KVILER`:!samspel&&clockEngine.participation!=='individual'?(clockEngine.collaboration==='synchronized'?'ALLE ARBEIDER SAMSTUNDES':clockEngine.collaboration==='free_split'?'DEL ARBEIDET · FELLES KLOKKE':''):null
   const canExitBeforeStart=Boolean(onCancelBeforeStart)&&!hasStarted&&!running&&elapsed===0&&!laps.length
   const cancelBeforeStart=()=>{
     if(!canExitBeforeStart||(countdownDeadline!==null&&countdownDeadline<=Date.now()))return
@@ -692,9 +700,9 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
           {isDeathBy&&<div className="gg-live-timer__rounds"><span>{deathByStatus.failed?`STOPPA I RUNDE ${deathByStatus.failedRound}`:`RUNDE ${deathByStatus.round} · ${deathByStatus.intervalSeconds} SEKUND`}</span><strong>{deathByStatus.targetReps} reps</strong><small>{deathByCompletedRounds} rundar (førebels){deathByStatus.roundConfirmed?' · Klar for neste intervall':' · Neste runde startar automatisk'}</small></div>}
           {(isTimedInterval||isStationCircuit||isEMOM)&&<div className="gg-live-timer__rounds"><span>{isStationCircuit?'STASJON · RUNDE':isEMOM?'INTERVALL':'RUNDE'}</span><strong>{isStationCircuit?`${visibleStationIndex+1}/${stationCount} · ${Math.min(currentRound,Number(rounds)||1)}/${rounds}`:isEMOM?currentEmomRound:`${roundsShown}/${rounds}`}</strong></div>}
           {showPulse&&<HeartRateTrainingPanel compact/>}
-          <div className="gg-live-timer__exercise">{samspelDisplay}{ghostDisplay}<div className="gg-live-timer__exercise-title"><span>{!stageRows.length&&onEditWorkout?'FRI TRENING':isAmrap?'WOD-ØVINGAR':isStationCircuit?'STASJONAR':isEMOM||isDeathBy?'DENNE RUNDA':'AKTUELL ØVING'}</span><button type="button" onClick={()=>setStagePanel('wod')}>Alle øvingar ({stageRows.length})</button></div>
-            {!stageRows.length&&onEditWorkout?<button type="button" className="gg-live-timer__empty-add" onClick={onEditWorkout}><Plus size={17}/> Legg til øvingar eller WOD</button>:isAmrap?<ol>{stageRows.map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span>{item.dose&&<small>{item.dose}</small>}</li>)}</ol>:<strong>{stageExerciseName||'Sjå øvingslista'}</strong>}
-            {!isAmrap&&stageNextExercise&&stageNextExercise!==stageExerciseName&&<small className="gg-live-timer__next">Neste: {stageNextExercise}</small>}
+          <div className="gg-live-timer__exercise">{samspelDisplay}{ghostDisplay}{partnerIssue&&<small className="auth-error" role="alert">{partnerIssue} Gå tilbake og rett WOD-en før start.</small>}{partnerClockLabel&&<strong className="gg-partner-clock-role">{partnerClockLabel}</strong>}<div className="gg-live-timer__exercise-title"><span>{!stageRows.length&&onEditWorkout?'FRI TRENING':isAmrap?'WOD-ØVINGAR':isStationCircuit?'STASJONAR':isEMOM||isDeathBy?'DENNE RUNDA':'AKTUELL ØVING'}</span><button type="button" onClick={()=>setStagePanel('wod')}>Alle øvingar ({stageRows.length})</button></div>
+            {!stageRows.length&&onEditWorkout?<button type="button" className="gg-live-timer__empty-add" onClick={onEditWorkout}><Plus size={17}/> Legg til øvingar eller WOD</button>:isAmrap?<ol>{stageRows.map((item,index)=><li key={`${item.id}-${index}`}><span>{index+1}. {item.name}</span>{item.dose&&<small>{item.dose}</small>}</li>)}</ol>:activeStageRows.length?<div className="gg-current-doses">{activeStageRows.map((item,index)=><div key={item.id+'-'+index}><strong>{item.name}</strong>{item.dose&&<small>{item.dose}</small>}</div>)}</div>:<strong>{stageExerciseName||'Sjå øvingslista'}</strong>}
+            {!isAmrap&&stageNextExercise&&(partnerTurn||stageNextExercise!==stageExerciseName)&&<small className="gg-live-timer__next">Neste: {partnerTurn?'P'+partnerTurn.resting+' · ':''}{stageNextExercise}</small>}
           </div>
         </div>
       </div>
@@ -1048,6 +1056,28 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const entered=value=>value!==null&&value!==undefined&&String(value).trim()!==''
   const missingLoad=item=>!item?.is_rest&&item?.uses_load?(item.sets||[]).filter(set=>entered(set.reps)&&Number(set.reps)>0&&!entered(set.load_kg)).length:0
   const pendingWeightItems=items.filter(item=>missingLoad(item)>0)
+  const ownPartnerEmom=isPartnerEmom(format,normalizeWodEngine(flowSchema,{format}))&&!samspelConfig(flowSchema)
+  const ownRole=Number(participantScores['ygig-self']?.role)||0
+  function chooseResultLevel(level){
+    if(level===wodLevel)return
+    setWodLevel(level);setReviewedResults({});setConfirmedPlannedEmom(false)
+    setItems(rows=>rows.map(item=>item.prescription_levels?{...refreshResultPlan(item,level),prescription_label:doseLabel({levels:item.prescription_levels},level)}:item))
+  }
+  function planCount(item){
+    if(manualEntry||!isEmomFormat(format))return Infinity
+    const slots=Math.max(0,Math.floor(Number(timerSnapshot.roundsCompleted)||0))
+    const index=items.findIndex(row=>row.key===item.key)
+    if(ownPartnerEmom)return ownRole?partnerEmomCount({slots,exerciseIndex:index,exerciseCount:items.length,worker:ownRole}):0
+    let count=0
+    for(let slot=1;slot<=slots;slot++)if(emomExerciseIndices(items,slot).includes(index))count++
+    return count
+  }
+  function useResultPlan(item,choice=null){
+    const count=planCount(item)
+    if(count<=0||isErgExercise(item))return
+    setReviewedResults(old=>({...old,[item.key]:false}));setConfirmedPlannedEmom(false)
+    setItems(rows=>rows.map(row=>row.key===item.key?fillResultPlan(row,wodLevel,choice,{count}):row))
+  }
   const reviewedCount=items.filter(item=>reviewedResults[item.key]||item.is_rest).length
   const resultReviews=items.map(item=>exerciseResultReview(item,Boolean(reviewedResults[item.key]),confirmedPlannedEmom,flowRecorded.find(part=>part.id===flowItemGroup(item,flowSchema,format).id)?.status))
   const unregisteredCount=resultReviews.filter(r=>['missing','partial','unconfirmed'].includes(r.status)).length
@@ -1363,6 +1393,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     const orderedSchemaItems = sortWodItems(getWodSchemaItems(schema))
     const clearPlannedResults=forResult||wod?.format===COMPOSITE_FORMAT
     const selectedLevel=schema?.prescription||'rx'
+    const launchPartnerEmom=isPartnerEmom(wod?.format,normalizeWodEngine(schema||{},{format:wod?.format}))&&!samspelConfig(schema)
     if(schema?.library_category==='warmup')orderedSchemaItems.sort((a,b)=>({specific_prep:0,movement_rehearsal:1}[a.warmup_phase||'specific_prep']??0)-({specific_prep:0,movement_rehearsal:1}[b.warmup_phase||'specific_prep']??0))
     if (orderedSchemaItems.length) {
       setItems(orderedSchemaItems.map((item,itemIndex) => {
@@ -1370,8 +1401,9 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         const {autoFill:fillFixedEmom,reps:prescribedReps,sets:preparedSets}=plannedFixedEmomSets(item,schema?.composite_blocks,selectedLevel,forResult&&!customComplex&&!retrospective)
         const standaloneReps=Number(item.levels?.[selectedLevel]?.reps ?? item.reps)
         const standaloneSlots=(!forResult||customComplex||retrospective)&&isEmomFormat(wod?.format)&&wod?.format!==COMPOSITE_FORMAT?emomPrescribedSetCount({format:wod.format,interval:schema?.interval,durationSeconds:schema?.duration_seconds,minuteSlot:item.minute_slot,exerciseIndex:itemIndex,exerciseCount:orderedSchemaItems.length}):0
-        const fillStandaloneEmom=standaloneSlots>0&&Number.isInteger(standaloneReps)&&standaloneReps>0&&!item.is_rest&&item.reps_mode!=='amrap'
-        const setsForResult=fillStandaloneEmom?Array.from({length:standaloneSlots},(_,i)=>preparedSets[i]||preparedSets[0]||{}):preparedSets
+        const scheduledSlots=launchPartnerEmom&&standaloneSlots>0?partnerEmomCount({slots:Math.floor(Number(schema?.duration_seconds)/emomIntervalSeconds(wod.format,schema?.interval)),exerciseIndex:itemIndex,exerciseCount:orderedSchemaItems.length,worker:1}):standaloneSlots
+        const fillStandaloneEmom=scheduledSlots>0&&Number.isInteger(standaloneReps)&&standaloneReps>0&&!item.is_rest&&item.reps_mode!=='amrap'
+        const setsForResult=fillStandaloneEmom?Array.from({length:scheduledSlots},(_,i)=>preparedSets[i]||preparedSets[0]||{}):preparedSets
         const plannedReps=fillStandaloneEmom?standaloneReps:prescribedReps
         return ({
         ...emptyExercise(),
@@ -1390,7 +1422,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
         prescription_levels: item.levels || null,
         side_mode: item.side_mode || null,
         prescription_label: doseLabel(item,selectedLevel),
-        prescribed_sets_prefilled:!retrospective&&!customComplex&&(fillFixedEmom||fillStandaloneEmom),
+        prescribed_sets_prefilled:!launchPartnerEmom&&!retrospective&&!customComplex&&(fillFixedEmom||fillStandaloneEmom),
         description: item.description || item.instructions || exercises.find(exercise=>exercise.id===item.exercise_id)?.description || '',
         rowValue:'',rowUnit:wodRowUnit(item,selectedLevel),workSeconds:'',
         equipment: item.equipment || exercises.find(exercise => exercise.id === item.exercise_id)?.equipment || '',
@@ -1409,7 +1441,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
           sets: item.sets || [],
         }).usesLoad,
         sets: setsForResult.length ? setsForResult.map(set => ({
-          reps: customComplex||retrospective?'':(fillFixedEmom||fillStandaloneEmom) ? String(Number(set.reps)>0?set.reps:plannedReps) : clearPlannedResults ? '' : set.reps == null ? '' : String(set.reps),
+          reps: customComplex||retrospective||launchPartnerEmom?'':(fillFixedEmom||fillStandaloneEmom) ? String(plannedReps) : clearPlannedResults ? '' : set.reps == null ? '' : String(set.reps),
+          planned_fields:!launchPartnerEmom&&!customComplex&&!retrospective&&(fillFixedEmom||fillStandaloneEmom)?['reps']:[],
           load_kg: clearPlannedResults ? '' : customComplex ? '' : set.load_kg == null ? '' : String(set.load_kg),
           time_text: clearPlannedResults ? '' : set.tempo || '',
           time_seconds: '',
@@ -1498,7 +1531,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   }
   function updateSet(key, index, patch) {
     setReviewedResults(old=>({...old,[key]:false}));setConfirmedPlannedEmom(false)
-    setItems(current => current.map(item => item.key === key ? { ...item, sets: item.sets.map((s, i) => i === index ? { ...s, flow_status:'', ...patch } : s) } : item))
+    setItems(current => current.map(item => item.key === key ? { ...item, sets: item.sets.map((s, i) => i === index ? editPlannedSet(s,patch) : s) } : item))
   }
   function addSet(key) {
     setReviewedResults(old=>({...old,[key]:false}));setConfirmedPlannedEmom(false)
@@ -1534,7 +1567,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     if (items.some(item => !Array.isArray(item.sets) || item.sets.length === 0)) {
       setError('Legg til minst eitt sett på kvar øving før du lagrar.'); return
     }
-    if(!manualEntry&&items.some(item=>item.prescribed_sets_prefilled)&&!confirmedPlannedEmom){setError('Stadfest at du har kontrollert dei førehandsutfylte EMOM-setta, og rett eventuelle avvik før du lagrar.');resultCorrectionRef.current='confirmEmom';return}
+    if(!manualEntry&&items.some(item=>item.prescribed_sets_prefilled)&&!confirmedPlannedEmom){setError('Stadfest at du har kontrollert dei førehandsutfylte tala før lagring.');resultCorrectionRef.current='confirmEmom';return}
     if(!claimWorkoutAction(saveLock))return
     let protectedDraft=false
     let validated=false
@@ -1711,7 +1744,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     {mode === 'active' ? <form className="engine-form gg-training-session" onSubmit={saveWorkout} noValidate={finishOpen}>
       <div className="training-heading"><div><div className="section-kicker">{manualEntry?'RESULTAT · ETTERREGISTRERING':'TRENING · AKTIV ØKT'}</div><h3>{source?.name||'Fri trening'}</h3></div><button type="button" className="workout-return-types" disabled={saving} onClick={manualEntry?cancelManualEntry:returnToWorkoutTypes}>{manualEntry?'Avbryt':'← Vel økttype'}</button></div>
       {source&&activeWodEngine.participation!=='individual'&&<section className="wod-execution-partner"><div><strong>{formatParticipation(activeWodEngine)}</strong><span>{({free_split:'Del arbeidet fritt',you_go_i_go:'You go – I go',alternate:'Annankvar / vekselvis',synchronized:'Synkroniserte repetisjonar',parallel:'Parallelt arbeid'})[activeWodEngine.collaboration]||'Felles gjennomføring'}</span></div><small>Resultat blir lagra med partner-/teamoppsettet frå WOD-kortet. Scoring: {(activeWodEngine.scoring?.fields||[]).join(' + ')}</small></section>}
-      {source?.timer_settings?.workout_schema?.items?.some(item=>item.levels)&&<section className="wod-execution-level"><strong>Vel doseringsnivå</strong><div className="hub-tabs" role="group" aria-label="Doseringsnivå">{[{id:'rx',label:'RX'},...(source.timer_settings.workout_schema.items.some(item=>item.levels?.intermediate)?[{id:'intermediate',label:'Intermediate'}]:[]),{id:'scaled',label:'Scaled'},{id:'foundation',label:'Foundation'}].map(level=><button type="button" key={level.id} className={wodLevel===level.id?'selected':''} aria-pressed={wodLevel===level.id} disabled={Boolean(timerSnapshot.hasStarted)} onClick={()=>{setWodLevel(level.id);setConfirmedPlannedEmom(false);setItems(rows=>rows.map(item=>{const levels=item.prescription_levels;if(!levels)return item;const dose=levels[level.id]||levels.rx||{};const n=Number(dose.reps);return {...item,prescription_label:doseLabel({levels},level.id),sets:item.prescribed_sets_prefilled&&Number.isInteger(n)&&n>0?item.sets.map(set=>({...set,reps:String(n)})):item.sets}}))}}>{level.label}</button>)}</div></section>}
+      {source?.timer_settings?.workout_schema?.items?.some(item=>item.levels)&&<section className="wod-execution-level"><strong>Vel doseringsnivå</strong><div className="hub-tabs" role="group" aria-label="Doseringsnivå">{ACTIVE_WOD_LEVELS.map(level=><button type="button" key={level.id} className={wodLevel===level.id?'selected':''} aria-pressed={wodLevel===level.id} disabled={Boolean(timerSnapshot.hasStarted)} onClick={()=>{chooseResultLevel(level.id)}}>{level.label}</button>)}</div></section>}
       <div className="training-session-workspace">
       {!source&&freeEditorOpen&&<section className="free-session-editor-head"><div><span className="section-kicker">FRI TRENING · {timerSnapshot.running?'KLOKKA GÅR':timerSnapshot.hasStarted?'KLOKKA ER PAUSA':'KLAR TIL START'}</span><strong>Legg til øvingar eller WOD-ar</strong><small>Legg til øvingar når du vil. Medgått tid: {clock(timerSnapshot.elapsed)}</small></div><button type="button" className="primary-button" onClick={()=>setFreeEditorOpen(false)}><Play size={16}/> Tilbake til klokka</button></section>}
       {(!sessionPrepared||source||manualEntry||freeEditorOpen)&&<>
@@ -1766,7 +1799,8 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
            <div ref={resultBodyRef} className="gg-result-body" onTouchStart={e=>{if(e.target.closest('input,select,textarea,button'))return;const t=e.touches[0];resultTouch.current={x:t.clientX,y:t.clientY}}} onTouchEnd={e=>{const start=resultTouch.current,t=e.changedTouches[0];resultTouch.current=null;if(!start||!t)return;const dx=t.clientX-start.x,dy=t.clientY-start.y;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.7)moveResult(dx<0?1:-1)}}>
           {resultSummary&&showResultIssues&&resultIssues.length>0&&<section className="gg-result-issues" aria-label="Felt som må rettast">{resultIssues.map((issue,index)=><button type="button" key={index} className="secondary-button" onClick={()=>correctResultIssue(issue)}><span><strong>{resultIssueLabel(issue)}</strong><small>{issue.message}</small></span><span>Rett <ChevronRight size={16}/></span></button>)}</section>}
           {sessionSamspel&&<section className="gg-samspel-result" aria-label="Felles Samspel-resultat"><strong>Felles resultat · arbeidsstasjonar</strong>{samspelMixed(sessionSamspel)?<><small>Registrer utførte reps eller avlesing per stasjon. Ikkje summer ulike stasjonar.</small>{samspelStationRows(sessionSamspel).map(row=><label key={row.slot}>{row.label} · {row.metric==='distance'?'meter':row.metric==='reps'?'reps':'kaloriar'}<FlowNumberInput field="station-result" data-result-field={'samspel-station-'+row.slot} type="number" min="0" step={row.metric==='reps'?'1':'0.1'} value={participantScores['station-'+row.slot]?.erg??''} onChange={e=>updateParticipantScore('station-'+row.slot,'erg',e.target.value)} placeholder="–"/></label>)}</>:<><label>{sessionSamspel.metric==='distance'?'Samla distanse (m)':'Samla kaloriar'}<FlowNumberInput type="number" min="0" step="1" inputMode="numeric" data-result-field={sessionSamspel.metric==='distance'?'scoreDistance':'scoreCalories'} value={sessionSamspel.metric==='distance'?scoreDistance:scoreCalories} onChange={e=>{if(sessionSamspel.metric==='distance'){setScoreDistance(e.target.value);setScoreUnit('m')}else setScoreCalories(e.target.value)}} placeholder={samspelErgSlots(sessionSamspel)>1?'Summer alle maskinene':'Les av maskina'}/></label><small>Samla for heile laget.{samspelErgSlots(sessionSamspel)>1?' Summer berre avlesingane frå dei '+samspelErgSlots(sessionSamspel)+' like maskinene.':''} Rundar og ekstra reps blir registrerte separat. {samspelRoundInstruction(sessionSamspel)}</small></>}{sessionSamspel.individual_scores&&<details open={resultSummary||undefined}><summary>Resultat per utøvar (valfritt)</summary><small>Plassnummer frå timeren. Tomt felt betyr ikkje registrert. Ingen individuelle PR-ar vert oppretta.</small>{samspelParticipantRows(sessionSamspel,participantScores).map(row=><fieldset key={row.slot} disabled={saving} style={{minWidth:0,margin:'8px 0',padding:8}}><legend>Utøvar {row.slot}</legend><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(85px,1fr))',gap:6}}>{[['rounds','Rundar'],['reps','Ekstra reps'],['erg',sessionSamspel.metric==='distance'?'Meter':'Kaloriar']].filter(([field])=>field!=='erg'||!samspelMixed(sessionSamspel)).map(([field,label])=><label key={field}>{label}<FlowNumberInput field={'samspel-'+field} data-result-field={'samspel-'+row.slot+'-'+field} aria-label={'Utøvar '+row.slot+' · '+label} type="number" min="0" step={field==='erg'?'0.1':'1'} inputMode={field==='erg'?'decimal':'numeric'} value={row[field]} onChange={e=>updateParticipantScore(row.slot,field,e.target.value)} placeholder="–"/></label>)}</div></fieldset>)}</details>}</section>}
-          {source&&<div className="gg-flow-level"><div className="gg-flow-level-buttons" role="group" aria-label="Faktisk doseringsnivå">{[{id:'rx',label:'RX'},...(items.some(item=>item.prescription_levels?.intermediate)?[{id:'intermediate',label:'Intermediate'}]:[]),{id:'scaled',label:'Scaled'},{id:'foundation',label:'Foundation'}].map(level=><button type="button" key={level.id} className={wodLevel===level.id?'selected':''} aria-pressed={wodLevel===level.id} onClick={()=>{setWodLevel(level.id);setItems(rows=>rows.map(item=>item.prescription_levels?{...item,prescription_label:doseLabel({levels:item.prescription_levels},level.id)}:item))}}>{level.label}</button>)}</div></div>}
+          {source&&<div className="gg-flow-level"><div className="gg-flow-level-buttons" role="group" aria-label="Faktisk doseringsnivå">{ACTIVE_WOD_LEVELS.map(level=><button type="button" key={level.id} className={wodLevel===level.id?'selected':''} aria-pressed={wodLevel===level.id} onClick={()=>chooseResultLevel(level.id)}>{level.label}</button>)}</div>{wodLevel==='intermediate'&&<small>Eldre dosering · vel RX, Scaled eller Foundation ved behov.</small>}</div>}
+          {ownPartnerEmom&&!resultSummary&&<div className="gg-result-partner-role"><small>Registrer berre det du sjølv gjorde.</small><div role="group" aria-label="Mi rolle">{[1,2].map(role=><button type="button" key={role} className={'secondary-button'+(ownRole===role?' selected':'')} aria-pressed={ownRole===role} onClick={()=>{updateParticipantScore('ygig-self','role',role);setReviewedResults({});setConfirmedPlannedEmom(false)}}>Eg var P{role}</button>)}</div></div>}
           {!resultSummary&&resultItem?<section className="workout-result-entry">
             <details className="gg-result-jump" hidden={flowGrid||flowCompact}><summary>Alle øvingar · {reviewedCount} av {items.length} gjennomgått <ChevronDown size={16}/></summary>
               <div className="workout-result-tabs" role="tablist" aria-label="Vel øving for resultat">{items.map((item,index)=><button type="button" key={item.key} role="tab" aria-selected={activeExerciseIndex===index} className={activeExerciseIndex===index?'selected':''} title={item.exercise_name||'Øving '+(index+1)} onClick={()=>selectResult(index)}>{index+1}. {item.exercise_name||'Øving'} {reviewedResults[item.key]?'✓':''}</button>)}</div>
@@ -1774,14 +1808,15 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
             {flowGrid?<div className="gg-flow-grid" aria-label="Alle sett i denne delen">
  
  {resultGroupIndices.map(index=>{const item=items[index],complex=item.is_complex&&item.complex_family==='custom',hold=exerciseRecordType(item.exercise_name,item.sets)==='hold',columns=[...(complex?[]:!hold?[['reps','Reps','numeric','1']]:[['time_seconds','Sek','numeric','1']]),...(item.uses_load?[['load_kg','kg','decimal','any']]:[]),...(item.uses_height?[['height_cm','cm','numeric','1']]:[])];return <article key={item.key} className="gg-flow-grid-exercise" data-flow-item={index}>
-  <div className="gg-flow-grid-name">{(resultGroupIndices.length>1||!String(resultGroup.title).includes(item.exercise_name))&&<strong>{item.exercise_name}</strong>}{item.prescription_label&&<details className="gg-flow-info"><summary>Planlagt · {item.sets.length} {isEmomFormat(resultBlock?.format)?'intervall':'sett'}</summary><small>{item.prescription_label}</small></details>}</div>
+  <div className="gg-flow-grid-name">{(resultGroupIndices.length>1||!String(resultGroup.title).includes(item.exercise_name))&&<strong>{item.exercise_name}</strong>}{item.prescription_label&&<details className="gg-flow-info"><summary>{item.sets.length} {isEmomFormat(resultBlock?.format)?'intervall':'sett'} · plan</summary><small>{item.prescription_label}</small></details>}</div>
   {item.is_rest?<small>Pause · inga registrering nødvendig</small>:isErgExercise(item)?<div className="gg-flow-grid-erg"><label>Resultat<FlowNumberInput field="rowValue" data-result-field="rowValue" type="number" inputMode="decimal" min="0" step="any" value={item.rowValue??''} onChange={e=>updateExercise(item.key,{rowValue:e.target.value})} placeholder="–"/></label><GarageSelect label="Eining" value={item.rowUnit||'m'} options={RESULT_UNITS} onChange={value=>updateExercise(item.key,{rowUnit:value})}/></div>:<>
+  {(()=>{const plan=resultPlan(item,wodLevel),count=planCount(item);if(!plan||count<=0||complex)return null;return <div className="gg-result-plan-actions"><button type="button" className="text-button" onClick={()=>useResultPlan(item)}>Hent plan</button>{plan.loads.filter(load=>load.id!=='common').map(load=><button type="button" className="text-button" key={load.id} onClick={()=>useResultPlan(item,load.id)}>{load.label}</button>)}</div>})()}
   <div className={"gg-flow-grid-table"+(complex?" gg-flow-complex-table":"")} style={{'--result-columns':columns.length}}>
     <div className="gg-flow-grid-row gg-flow-grid-labels"><span>{isEmomFormat(resultBlock?.format)?'Nr.':'Sett'}</span>{columns.map(([field,label])=><span key={field}>{label}</span>)}<span>{complex?'Gjennomføring':'Utført'}</span></div>
     {item.sets.map((set,setIndex)=><div className="gg-flow-grid-row" key={setIndex} data-flow-set={setIndex}><strong>{setIndex+1}</strong>{columns.map(([field,label,keyboard,step])=>{const issue=resultIssues.find(i=>i.itemIndex===index&&i.setIndex===setIndex&&i.field===field);return <FlowNumberInput key={field} field={field} data-result-field={field} type="number" inputMode={keyboard} min={field==='height_cm'?1:0} step={step} aria-label={item.exercise_name+' · sett '+(setIndex+1)+' · '+label} aria-invalid={Boolean(issue)} value={set[field]??''} disabled={set.flow_status==='done'} onChange={e=>updateSet(item.key,setIndex,{[field]:e.target.value})} placeholder="–" />})}{complex?<div className="gg-flow-complex-status" role="group" aria-label={item.exercise_name+' · sett '+(setIndex+1)+' gjennomføring'}>{[{id:'complete',label:'Fullført',symbol:'✓'},{id:'partial',label:'Delvis',symbol:'−'},{id:'failed',label:'Mislukka',symbol:'×'}].map(s=><button type="button" key={s.id} data-status={s.id} data-result-field="complex_status" aria-label={s.label+' · sett '+(setIndex+1)} title={s.label} aria-pressed={set.complex_status===s.id} onClick={()=>changeComplexStatus(item,setIndex,s.id)}>{s.symbol}</button>)}</div>:<button type="button" className={'gg-flow-grid-done'+(set.flow_status==='done'?' is-done':'')} aria-label={item.exercise_name+' sett '+(setIndex+1)+' berre utført'} aria-pressed={set.flow_status==='done'} onClick={()=>markGridSet(item,setIndex)}><CheckCircle2 size={20}/></button>}</div>)}
   </div>
   {complex&&<small className="gg-flow-complex-caption">✓ Fullført · − Delvis · × Mislukka{complexResultSummary(item).best_load_kg!=null?' · Beste '+complexResultSummary(item).best_load_kg+' kg':''}</small>}
-   <div className="gg-flow-grid-tools">{item.uses_load&&item.sets.length>1&&<button type="button" className="secondary-button" disabled={!entered(item.sets[0]?.load_kg)||!item.sets.slice(1).some(set=>!entered(set.load_kg)&&set.flow_status!=='done')} onClick={()=>copyGridWeight(item)}>Same kg i tomme felt</button>}<button type="button" className="secondary-button" onClick={()=>addSet(item.key)}><Plus size={15}/> Sett</button><button type="button" className="text-button" onClick={()=>{setActiveExerciseIndex(index);setResultSetIndex(0);setFlowDetailed(true)}}>Meir info</button></div>
+   <div className="gg-flow-grid-tools">{item.uses_load&&item.sets.length>1&&<button type="button" className="secondary-button" disabled={!entered(item.sets[0]?.load_kg)||!item.sets.slice(1).some(set=>!entered(set.load_kg)&&set.flow_status!=='done')} onClick={()=>copyGridWeight(item)}>Kopier kg</button>}<button type="button" className="secondary-button" onClick={()=>addSet(item.key)}><Plus size={15}/> Sett</button><button type="button" className="text-button" onClick={()=>{setActiveExerciseIndex(index);setResultSetIndex(0);setFlowDetailed(true)}}>Meir info</button></div>
   </>}
  </article>})}
  <small className="gg-flow-grid-hint">{resultGroupIndices.some(index=>!(items[index].is_complex&&items[index].complex_family==='custom'))?'Haka betyr berre utført, utan måleresultat.':'Tomme sett blir ikkje registrerte.'}</small>
@@ -1840,7 +1875,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
             </div>
             <label className="engine-note">Notat<textarea value={note} onChange={e=>setNote(e.target.value)} rows="2" placeholder="Kommentar eller dagsform …"/></label>
           </section>
-          {items.some(item=>item.prescribed_sets_prefilled)&&!manualEntry&&<label className="workout-confirm-prescribed gg-result-confirm"><input type="checkbox" data-result-field="confirmEmom" checked={confirmedPlannedEmom} onChange={e=>{setConfirmedPlannedEmom(e.target.checked);setError('')}}/><span>Eg har kontrollert dei planlagde EMOM-setta og repetisjonane, retta avvik og lagt inn faktiske vekter der eg vil registrera dei.</span></label>}
+          {items.some(item=>item.prescribed_sets_prefilled)&&!manualEntry&&<label className="workout-confirm-prescribed gg-result-confirm"><input type="checkbox" data-result-field="confirmEmom" checked={confirmedPlannedEmom} onChange={e=>{setConfirmedPlannedEmom(e.target.checked);setError('')}}/><span>Eg har kontrollert dei førehandsutfylte tala og retta avvik.</span></label>}
           </>}
           </div>
           <FlowKeypad/>
