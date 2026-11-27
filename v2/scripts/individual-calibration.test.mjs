@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {createSynchronRuntime,createSynchronDispatcher} from '../src/lib/synchronRuntime.js'
 import {individualCalibrationRequestIssue,prepareIndividualCalibration,createIndividualCalibrationGateway} from '../src/lib/individualCalibration.js'
 import {synchronPaceProfile} from '../src/lib/synchronPace.js'
 const req={requestId:'12345678-1234-4234-8234-123456789012',assignmentId:'assignment-1',programSessionId:null,exerciseIndex:0,exerciseName:'Box step-ups',variant:'40 cm',loadKg:null,unit:'reps',amount:24,seconds:60,attested:true}
@@ -39,3 +40,12 @@ assert.ok((await gateway('pt',{...req,amount:25})).issue)
 allowed=false
 assert.ok((await gateway('pt',req)).issue)
 assert.equal(stored.row.amount,24)
+
+const serverHost={authenticate:async x=>x,readCoachContext:async actor=>({canCoach:actor==='pt',eligibleMemberIds:['b']}),readSharedCalibrationResult:async()=>shared,saveCalibrationAtomic:async()=>({accepted:true}),now:()=>3000,readWod:async()=>null,readCreation:async()=>null,createAtomic:async()=>false,read:async()=>null,compareAndSwap:async()=>false}
+const dispatch=createSynchronDispatcher(serverHost)
+const runtime=createSynchronRuntime({actorId:'pt',invoke:body=>dispatch('pt',body),individualCalibrationEnabled:true})
+assert.equal((await runtime.recordIndividualCalibration(req)).accepted,true)
+assert.equal(createSynchronRuntime({actorId:'pt',invoke:body=>dispatch('pt',body)}).recordIndividualCalibration,undefined)
+assert.ok((await dispatch('b',{op:'individual_calibration',request:req})).issue)
+assert.ok((await dispatch('b',{op:'individual_calibration',request:req,actorId:'pt'})).issue)
+assert.ok((await createSynchronDispatcher({...serverHost,saveCalibrationAtomic:undefined})('pt',{op:'individual_calibration',request:req})).issue)
