@@ -3,7 +3,7 @@ import {synchronDisplay,synchronActionRequest} from './synchronTransport.js'
 // Client adapter only: read/command must be bound to the authenticated session.
 // Do not turn a stale click into a different action on a newer movement.
 export function acceptSynchronSnapshot(previous,next,receivedAt,startedAt=receivedAt){
- if(!next?.view||typeof next.sessionId!=='string'||!Number.isSafeInteger(next.revision)||next.revision<0||!Number.isFinite(next.serverAt)||!Number.isFinite(receivedAt)||!Number.isFinite(startedAt)||startedAt>receivedAt)return previous
+ if(!next?.view||!['ready','countdown','running','paused','finished'].includes(next.view.phase)||typeof next.sessionId!=='string'||!Number.isSafeInteger(next.revision)||next.revision<0||!Number.isFinite(next.serverAt)||!Number.isFinite(receivedAt)||!Number.isFinite(startedAt)||startedAt>receivedAt)return previous
  if(previous&&(next.sessionId!==previous.snapshot.sessionId||next.revision<previous.snapshot.revision||next.serverAt<previous.snapshot.serverAt||next.participantSlot!==previous.snapshot.participantSlot||next.leader!==previous.snapshot.leader))return previous
  // Conservatively count the entire request latency as snapshot age for actions.
  return {snapshot:next,receivedAt:startedAt}
@@ -41,6 +41,7 @@ export async function submitSynchronAction(record,type,fields,id,{read,command,n
   if(!request)return {record:latest,issue:'Handlinga er ikkje tillaten.'}
   const sent=now(),result=await command(request)
   const updated=acceptSynchronSnapshot(latest,result.snapshot,now(),sent)
-  return {record:updated,issue:result.issue||(!result.snapshot?'Handlinga er ikkje stadfesta. Oppdater økta.':null)}
+  if(updated===latest)return {record:latest,issue:result.issue||'Handlinga er ikkje stadfesta. Oppdater økta.',uncertain:true}
+  return {record:updated,issue:result.issue||null}
  }catch{return {record:latest,issue:'Mista kontakt. Kontroller økta før du prøver på nytt.',uncertain:true}}
 }
