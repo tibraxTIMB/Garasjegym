@@ -4,11 +4,10 @@ import {INVENTORY_GROUPS,INITIAL_INVENTORY,inventoryDraft,missingInitialInventor
 import Lastmeister from './Lastmeister.jsx'
 import './garage-inventory.css'
 const blank=()=>({equipment_label:'',group_key:'anna',available:'1',weight_kg:'',notes:''})
-
-export default function GarageInventory({profile}){
+export default function GarageInventory({profile,protectedMode=false}){
  const [rows,setRows]=useState([]),[status,setStatus]=useState('loading'),[message,setMessage]=useState(''),[error,setError]=useState(''),[search,setSearch]=useState(''),[group,setGroup]=useState(''),[draft,setDraft]=useState(null),[editing,setEditing]=useState(null),[busy,setBusy]=useState(false),[importing,setImporting]=useState(false)
  const lock=useRef(false),request=useRef(0)
- const canEdit=profile?.active&&['admin','manager'].includes(profile.role)
+ const canEdit=profile?.active&&['admin','manager'].includes(profile.role)&&(!protectedMode||(profile.role==='admin'&&profile.membership_status==='approved'))
  async function load(){
   const token=++request.current;setStatus('loading')
   try{
@@ -27,22 +26,25 @@ export default function GarageInventory({profile}){
   try{
    const {data:{user},error:e}=await supabase.auth.getUser()
    if(e||user?.id!==profile.id)throw Error('Logg inn på nytt.')
+   if(protectedMode){const {data:current,error:profileError}=await supabase.from('profiles').select('id,role,active,membership_status').eq('id',user.id).single();if(profileError||current?.id!==user.id||current.role!=='admin'||current.active!==true||current.membership_status!=='approved')throw Error('Werkstatt-tilgangen er endra.')}
    await action(user.id);await load()
   }catch(e){setError(e.message||'Kunne ikkje lagra utstyret.')}
   finally{lock.current=false;setBusy(false)}
  }
  const start=row=>{setEditing(row||null);setDraft(row?{equipment_label:row.equipment_label,group_key:row.group_key,available:row.available??'',weight_kg:row.weight_kg??'',notes:row.notes||''}:blank());setError('');setImporting(false)}
- const save=e=>{e.preventDefault();write(async actor=>{
-  const payload={...inventoryDraft(draft),updated_by:actor,updated_at:new Date().toISOString()}
+ const save=e=>{e.preventDefault();let checked;try{checked=inventoryDraft(draft)}catch(e){setError(e.message);return}if(protectedMode){const before=editing?Object.fromEntries(Object.keys(checked).map(k=>[k,editing[k]])):null;if(!window.confirm('STACHELDRAHT · Erstprüfung\n'+JSON.stringify({før:before,etter:checked},null,2)))return;if(!window.confirm('Freigabe · send denne utstyrsendringa til appen?'))return}write(async actor=>{
+  const payload={...checked,updated_by:actor,updated_at:new Date().toISOString()}
   let query
-  if(editing){query=supabase.from('garage_equipment_inventory').update(payload).eq('equipment_key',editing.equipment_key).eq('updated_at',editing.updated_at).select('equipment_key').maybeSingle()}
-  else{query=supabase.from('garage_equipment_inventory').insert({...payload,equipment_key:'item:'+crypto.randomUUID()}).select('equipment_key').single()}
+  if(editing){query=supabase.from('garage_equipment_inventory').update(payload).eq('equipment_key',editing.equipment_key).eq('updated_at',editing.updated_at).select('equipment_key,equipment_label,inventory_kind,group_key,available,weight_kg,notes').maybeSingle()}
+  else{query=supabase.from('garage_equipment_inventory').insert({...payload,equipment_key:'item:'+crypto.randomUUID()}).select('equipment_key,equipment_label,inventory_kind,group_key,available,weight_kg,notes').single()}
   const {data,error:e}=await query;if(e||!data?.equipment_key)throw e||Error('Lagringa vart ikkje stadfesta. Oppdater lista.')
+  if(protectedMode&&Object.entries(checked).some(([k,v])=>data[k]!==v))throw Error('Etterkontrollen av utstyret avvik. Oppdater før nytt forsøk.')
   setDraft(null);setEditing(null);setMessage('Utstyr lagra.')
  })}
  const importInitial=()=>write(async actor=>{
   const payload=missing.map(row=>({...row,updated_by:actor}))
   if(!payload.length){setImporting(false);return}
+  if(protectedMode&&!window.confirm('STACHELDRAHT · Freigabe: importer berre desse manglande utstyrslinjene?\n'+payload.map(r=>r.equipment_label+' · '+(r.available??'ukjend')).join('\n')))return
   const {error:e}=await supabase.from('garage_equipment_inventory').upsert(payload,{onConflict:'equipment_key',ignoreDuplicates:true})
   if(e)throw e
   setImporting(false);setMessage('Startlista er importert. Eksisterande oppføringar er ikkje overskrivne.')
