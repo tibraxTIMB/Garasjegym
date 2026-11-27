@@ -48,6 +48,12 @@ jobs:
         run: deno cache --no-config --lock=v2/server/edge-candidate/deno.lock --frozen v2/server/edge-candidate/index.ts
       - name: Test actual driver and client transport against disposable PostgreSQL
         run: deno run -A --no-config --lock=v2/server/edge-candidate/deno.lock --frozen v2/scripts/synchron-postgres-rehearsal.mjs --driver
+      - name: Verify synthetic SYNCHRON dump and isolated restore
+        env:
+          PGPASSWORD: fixture-only
+          FIXTURE_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          bash v2/scripts/synchron-postgres-restore.sh
       - name: Preserve frozen dependency lock (no credentials)
         uses: actions/upload-artifact@v4
         with:
