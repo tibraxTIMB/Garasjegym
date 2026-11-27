@@ -29,7 +29,7 @@ import { getAppBaseUrl } from './lib/appBaseUrl.js'
 import { getMembershipGate } from './lib/membershipAccess.js'
 import { restoreWorkoutDraft } from './lib/workoutDraft.js'
 import {synchronRouteIssue} from './lib/synchronRuntime.js'
-import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry,canCancelSynchronOpening,synchronSnapshotMatches} from './lib/synchronPresence.js'
+import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry,canCancelSynchronOpening,acceptSynchronSnapshot} from './lib/synchronPresence.js'
 import {parseSynchronInvitation} from './lib/synchronPreparation.js'
 const SynchronLaunch=lazy(()=>import('./components/SynchronLaunch.jsx'))
 import { resolveSimpleMode, displayModePreference } from './lib/memberViewMode.js'
@@ -258,12 +258,7 @@ export default function App({synchronRuntime=null,tabletLab=false}={}) {
   const simpleMode=storedSimpleMode&&!officeMode
   synchronContext.current={actor:synchronActor,runtime:synchronRuntime,localSessionOpen,active,entry:ownedSynchron?synchronEntry:null,presence:remotePresence}
   useEffect(()=>{setSynchronEntry(null);setSynchronSnapshot(null);setSynchronNotice('')},[synchronActor,synchronRuntime])
-  const handleSynchronSnapshot=useCallback((snapshot,origin)=>setSynchronSnapshot(old=>{
-    if(!synchronSnapshotMatches(synchronContext.current?.entry,{...origin,snapshot}))return old
-    if(old?.sessionId===snapshot.sessionId&&old.revision>snapshot.revision)return old
-    if(old?.sessionId===snapshot.sessionId&&old.revision===snapshot.revision&&old.view.phase===snapshot.view.phase&&old.joined===snapshot.joined)return old
-    return snapshot
-  }),[])
+  const handleSynchronSnapshot=useCallback((snapshot,origin)=>setSynchronSnapshot(old=>acceptSynchronSnapshot(old,synchronContext.current?.entry,{...origin,snapshot})),[])
   useEffect(()=>{
     if(!remoteLocked)return
     // Discard only launch intents, never actual local workout drafts.
