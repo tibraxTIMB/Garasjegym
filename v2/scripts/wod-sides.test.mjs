@@ -32,7 +32,12 @@ test('timer does not cut off later WOD movements in portrait or landscape',()=>{
  assert.doesNotMatch(timer,/stageRows\.slice\(0,stageExercisePreviewLimit\)/)
  assert.doesNotMatch(styles,/gg-live-timer__exercise li:nth-child\(n\+4\)/)
  assert.match(styles,/\.gg-live-timer__context\s*\{[^}]*overflow-y:\s*auto/s)
- assert.match(timer,/getWodSideLabel\(item,prescriptionLevel\)/)
+ assert.match(timer,/const activePrescription=pairedSlot&&ACTIVE_WOD_LEVELS\.some/)
+ assert.match(timer,/getWodSideLabel\(item,activePrescription\)/)
+ const item={exercise_name:'Kettlebell Snatch',levels:{rx:{instruction:'Høgre'},scaled:{instruction:'Venstre'},foundation:{instruction:'vekslande'}}}
+ assert.equal(getWodSideLabel(item,'rx'),'Høgre')
+ assert.equal(getWodSideLabel(item,'scaled'),'Venstre')
+ assert.equal(getWodSideLabel(item,'foundation'),'vekslande')
 })
 
 test('standalone WOD card reveals every exercise and side',()=>{
