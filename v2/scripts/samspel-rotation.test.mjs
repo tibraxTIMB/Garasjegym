@@ -323,3 +323,32 @@ for(let count=2;count<=8;count++){
 }
 assert.equal(samspelParticipantResults({...engineSwap,metric:'calories'},{2:{erg:'1'}},{elapsed:60}).field,'erg')
 assert.equal(samspelParticipantResults(engineSwap,{1:{erg:'1'}},{elapsed:0}).field,'erg')
+
+import {samspelPairedEmom,pairedEmomConfig,pairedEmomComplete} from '../src/lib/samspel.js'
+import {partnerEmomSlot,pairedEmomOpportunity,pairedEmomScheduleIssue,synchronTransportFormatSupported} from '../src/lib/synchronSchedule.js'
+const front={...pairedEmomConfig(60,1080),tracks:['Bench press','Dips','Third movement']}
+assert.equal(samspelPairedEmom(front),true)
+assert.equal(samspelTemplateChoice('paired_emom',{format:'EMOM'}).collaboration,'you_go_i_go')
+assert.equal(samspelTemplateChoice('paired_emom',{format:'AMRAP'}),null)
+assert.equal(samspelDedicatedResults(front),true)
+assert.equal(samspelIssue(front,{format:'EMOM',participation:'partner',collaboration:'you_go_i_go',items:front.tracks.map(name=>({name}))}),null)
+assert.ok(pairedEmomScheduleIssue({durationSeconds:1020,intervalSeconds:60,exerciseCount:3}))
+assert.deepEqual(Array.from({length:6},(_,i)=>partnerEmomSlot(i+1,3)).map(row=>[row.exerciseIndex,row.worker]),[[0,1],[0,2],[1,1],[1,2],[2,1],[2,2]])
+for(const slot of [1,2])for(let i=0;i<3;i++)assert.equal(pairedEmomOpportunity(front,i,slot),3)
+assert.equal(pairedEmomOpportunity(front,0,2,59),0)
+assert.equal(pairedEmomOpportunity(front,0,2,61),1)
+assert.deepEqual(samspelRotation(front,{elapsed:60,target:1080}).roles,['Kvile','Arbeid · Bench press'])
+assert.deepEqual(samspelRotation(front,{elapsed:120,target:1080}).roles,['Arbeid · Dips','Kvile'])
+assert.equal(samspelRotation(front,{elapsed:1080,target:1080}).nextSwitchSeconds,null)
+const pairedInput={1:{'paired-0':'3','paired-1':'3','paired-2':'3','paired-reps-0':'18','paired-kg-0':'30'},2:{'paired-0':'3','paired-1':'3','paired-2':'3','paired-reps-0':'18','paired-kg-0':'20'}}
+const pairedActual=samspelParticipantResults(front,pairedInput,{elapsed:1080})
+assert.equal(pairedActual.issue,null)
+assert.equal(pairedEmomComplete(front,pairedActual.rows,{elapsed:1080}),true)
+assert.equal(pairedEmomComplete(front,pairedActual.rows,{elapsed:1079}),false)
+assert.equal(pairedActual.rows[0].paired_load_kg[0],30)
+assert.equal(pairedActual.rows[1].paired_load_kg[0],20)
+assert.ok(samspelParticipantResults(front,pairedInput,{elapsed:60}).issue)
+assert.deepEqual(samspelParticipantResults(front,{},{}).rows,[])
+assert.equal(synchronTransportFormatSupported('Chipper'),true)
+assert.equal(synchronTransportFormatSupported('EMOM'),false)
+console.log('YGIG EMOM uses canonical Samspel clock and separate measured participant results')
