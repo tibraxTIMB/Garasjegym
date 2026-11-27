@@ -9,6 +9,8 @@ on:
       - 'v2/scripts/synchron-postgres*'
       - 'v2/scripts/synchron-supabase-auth.test.mjs'
       - 'v2/scripts/synchron-restricted-queries.test.mjs'
+      - 'v2/scripts/synchron-edge-candidate.test.mjs'
+      - 'v2/server/edge-candidate/**'
       - 'v2/package.json'
       - 'v2/supabase/preflight/synchron_pg*'
       - '.github/workflows/gazelle-synchron-postgres.yml'
@@ -39,5 +41,17 @@ jobs:
           PGPASSWORD: fixture-only
         run: |
           psql -X -h 127.0.0.1 -U postgres -d gg_synchron_fixture -v ON_ERROR_STOP=1 -f v2/supabase/preflight/synchron_pg_fixture.sql -f v2/supabase/preflight/synchron_pg_candidate.sql -f v2/supabase/preflight/synchron_pg_result_candidate.sql -f v2/supabase/preflight/synchron_pg_notification_candidate.sql -f v2/supabase/preflight/synchron_pg_role_candidate.sql -f v2/supabase/preflight/synchron_pg_auth_candidate.sql -f v2/supabase/preflight/synchron_pg_login_fixture.sql
-      - name: Test actual server and client transport against disposable PostgreSQL
-        run: node v2/scripts/synchron-postgres-rehearsal.mjs
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.5.6
+      - name: Resolve pinned Edge dependencies and record candidate lock
+        run: deno cache --no-config --lock=/tmp/gg-synchron-deno.lock --frozen=false v2/server/edge-candidate/index.ts
+      - name: Test actual driver and client transport against disposable PostgreSQL
+        run: deno run -A --no-config --lock=/tmp/gg-synchron-deno.lock --frozen=false v2/scripts/synchron-postgres-rehearsal.mjs --driver
+      - name: Preserve reviewed dependency-lock input (no credentials)
+        uses: actions/upload-artifact@v4
+        with:
+          name: synchron-edge-candidate-dependency-lock
+          path: /tmp/gg-synchron-deno.lock
+          if-no-files-found: error
+          retention-days: 7
