@@ -135,3 +135,35 @@ test('composite Engine Swap corrections preserve clock, other parts and linked c
  assert.ok(samspelCorrectionPatch(partial,pd).patch)
  assert.ok(samspelCorrectionPatch(partial,{...pd,[k2]:{...pd[k2],erg:'1'}}).issue)
 })
+
+
+import {doubleEmomConfig} from '../src/lib/samspel.js'
+test('composite Double EMOM corrections keep separate tracks and historical clock',()=>{
+ for(const rule of ['fixed','time']){
+  const config={...doubleEmomConfig(60,600),switch_rule:rule,tracks:['Push-up','Air squat'],team_score:true,participant_results:[{slot:1,track_a_intervals:1,track_b_intervals:0},{slot:2,track_a_intervals:0,track_b_intervals:1}]}
+  const part={block_id:'double',title:'Del B',samspel:config,elapsed:60,completed:false,distance:null,calories:null}
+  const other={block_id:'quality',completed:true}
+  const log={score_rounds:7,result_data:{completed:false,elapsed_seconds:300,manual_entry:false,assignment_id:'pt',samspel_blocks:[other,part],block_summary:[{id:'quality',completed:true},{id:'double',elapsed:60,completed:false,samspel:config}],block_results:{1:{elapsed:60}}}}
+  const draft=samspelCorrectionDraft(log),key=JSON.stringify(['double',1])
+  assert.equal(samspelCorrectionFields(log).length,4)
+  assert.equal(samspelCorrectionFields(log)[0].label,'Spor A · Push-up')
+  assert.equal(draft[key].trackA,'1')
+  const changed={...draft,[key]:{...draft[key],trackA:'0'}}
+  const {patch}=samspelCorrectionPatch(log,changed)
+  assert.equal(patch.result_data.samspel_blocks[1].samspel.participant_results[0].track_a_intervals,0)
+  assert.equal(patch.result_data.block_summary[1].samspel.participant_results[0].track_a_intervals,0)
+  assert.equal(patch.result_data.samspel_blocks[0],other)
+  assert.equal(patch.result_data.block_results,log.result_data.block_results)
+  assert.equal(patch.result_data.assignment_id,'pt')
+  assert.equal(patch.result_data.completed,false)
+  assert.equal(patch.score_rounds,undefined)
+  assert.equal(config.participant_results[0].track_a_intervals,1)
+  assert.ok(samspelCorrectionPatch(log,{...draft,[key]:{...draft[key],trackB:'1'}}).issue)
+  assert.ok(samspelCorrectionPatch(log,{...draft,[key]:{...draft[key],trackA:''}}).issue)
+  for(const altered of [{elapsed:120},{samspel:{...config,tracks:['Air squat','Push-up']}},{samspel:{...config,switch_rule:rule==='fixed'?'time':'fixed'}}]){
+   const conflict={...log,result_data:{...log.result_data,block_summary:[log.result_data.block_summary[0],{...log.result_data.block_summary[1],...altered}]}}
+   assert.equal(samspelCorrectionFields(conflict).length,0)
+   assert.ok(samspelCorrectionPatch(conflict,draft).issue)
+  }
+ }
+})
