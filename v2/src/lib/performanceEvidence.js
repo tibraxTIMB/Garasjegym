@@ -3,7 +3,7 @@
 // serve as individual evidence. This does not authorize access to another user.
 export function isIndividualPerformance(log){
  const data=log?.result_data||{}
- if(data.samspel_blocks?.length||data.wod_engine?.blocks?.some?.(block=>!!block.samspel)||data.flow_completion_only===true||(data.samspel!=null&&data.samspel!==false)||data.wod_engine?.participation&&data.wod_engine.participation!=='individual')return false
+ if(data.synchron_result!=null||data.samspel_blocks?.length||data.wod_engine?.blocks?.some?.(block=>!!block.samspel)||data.flow_completion_only===true||(data.samspel!=null&&data.samspel!==false)||data.wod_engine?.participation&&data.wod_engine.participation!=='individual')return false
  if(data.participation_verified!=null&&data.participation_verified!=='individual')return false
  return true
 }
