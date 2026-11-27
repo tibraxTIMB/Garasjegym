@@ -70,3 +70,12 @@ test('Samspel team score never becomes an individual benchmark record',()=>{
  const log={id:'team',source_wod_id:'w',format:'AMRAP',score_rounds:7,score_reps:3,result_data:{samspel:{...parallel,team_score:true}}}
  assert.deepEqual(deriveBenchmarkRecords([log],['w']),[])
 })
+
+
+test('common legacy load is visible in the three-level editor without changing separate prescriptions',()=>{
+ const levels=hydrateArchitectLevels({load_mode:'kg',load_kg:30,levels:{scaled:{loadMode:'kg',loadKgMen:'20',loadKgWomen:'15'},foundation:{loadMode:'kg',loadKg:'10'},intermediate:{loadMode:'kg',loadKg:'25'}}},{rx:{loadMode:'none',loadKgMen:'',loadKgWomen:''}})
+ assert.equal(levels.rx.loadKgMen,'30');assert.equal(levels.rx.loadKgWomen,'30')
+ assert.equal(levels.scaled.loadKgMen,'20');assert.equal(levels.scaled.loadKgWomen,'15')
+ assert.equal(levels.foundation.loadKgMen,'10');assert.equal(levels.foundation.loadKgWomen,'10')
+ assert.deepEqual(levels.intermediate,{loadMode:'kg',loadKg:'25'})
+})
