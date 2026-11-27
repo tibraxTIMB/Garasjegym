@@ -33,3 +33,9 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pt_coaches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pt_client_assignments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wods ENABLE ROW LEVEL SECURITY;
+
+-- Synthetic Auth session contract only; no real Auth data or service keys.
+CREATE SCHEMA auth;
+CREATE TABLE auth.sessions(id uuid PRIMARY KEY,user_id uuid NOT NULL,not_after timestamptz);
+ALTER TABLE auth.sessions ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON SCHEMA auth FROM PUBLIC,anon,authenticated;
