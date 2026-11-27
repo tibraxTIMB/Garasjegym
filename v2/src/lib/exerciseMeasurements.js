@@ -1,3 +1,4 @@
+import {isMobilityExercise} from './exerciseQuality.js'
 const HEIGHT_MOVEMENT = /box\s*(?:jump|step.?up|step.?over)|burpee\s*box|box\s*over/i;
 const BODYWEIGHT_MOVEMENT = /air squat|burpee|double under|single under|toes-to-bar|pull-up|push-up|handstand push-up/i;
 const LOAD_MOVEMENT = /squat|deadlift|press|curl|row|clean|snatch|jerk|thrust|pulldown|leg press|swing|lunge|carry|wall ball|step.?up|muscle-up/i;
@@ -42,6 +43,10 @@ export function getExerciseMeasurementFlags(exercise = {}) {
     || (boxEquipment && /step.?up|step.?over/i.test(name))
     || hasSavedHeight;
   const externalLoad = EXTERNAL_LOAD.test(equipment) || EXTERNAL_LOAD.test(name);
+  // Mobility defaults to repetitions/time; retain explicitly saved measurements.
+  if (isMobilityExercise(exercise) && !externalLoad && !exercise.is_complex) return {usesHeight,usesLoad:hasSavedLoad};
+  const unweightedEquipment = /^(?:kroppsvekt|matte|vegg|strikk|miniband|ingen)(?:\s*\/\s*(?:kroppsvekt|matte|vegg|strikk|miniband))*$/.test(equipment.trim());
+  if (unweightedEquipment && !externalLoad && !exercise.is_complex) return {usesHeight,usesLoad:hasSavedLoad};
   const boxOnly = usesHeight && boxEquipment && !externalLoad;
   const ordinaryLoad = LOAD_MOVEMENT.test(name) && !BODYWEIGHT_MOVEMENT.test(name)
     && (!usesHeight || /step.?up/i.test(name)) && !boxOnly;
