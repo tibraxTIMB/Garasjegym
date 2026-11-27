@@ -261,8 +261,8 @@ function Timer({ format, minutes, seconds = 0, activeExercise = '', nextExercise
   const isEMOM = isEmomFormat(format)
   const pairedEmom=samspelPairedEmom(samspel)
   const emomCycle = Math.max(5,Math.min(3600,Math.round((pairedEmom||samspelClockedEmom(samspel))?samspel.switch_seconds:Number(emomEveryOverride)>0?Number(emomEveryOverride)*60:emomIntervalSeconds(format,schema?.interval))))
-  const effectiveEmomWorkSeconds = Math.max(1,Math.min(emomCycle,Number(workSeconds)||emomCycle))
-  const effectiveEmomRestSeconds = Math.max(0,Math.min(emomCycle-effectiveEmomWorkSeconds,Number(restSeconds)||0))
+  const effectiveEmomWorkSeconds = pairedEmom?emomCycle:Math.max(1,Math.min(emomCycle,Number(workSeconds)||emomCycle))
+  const effectiveEmomRestSeconds = pairedEmom?0:Math.max(0,Math.min(emomCycle-effectiveEmomWorkSeconds,Number(restSeconds)||0))
   const emomPhaseElapsed = elapsed % emomCycle
   const isEmomWorkPhase = emomPhaseElapsed < effectiveEmomWorkSeconds
   const emomPhaseAfterWork = Math.max(0,emomPhaseElapsed-effectiveEmomWorkSeconds)
