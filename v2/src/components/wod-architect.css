@@ -166,3 +166,20 @@
 /* Existing WOD / PT plan editing must retain the current name at entry. */
 .gg-sixstep-mobile.gg-sixstep-edit.wod-builder-step-0 .gg-architect-heading{display:grid!important;grid-template-columns:minmax(0,1fr)}
 .gg-sixstep-mobile.gg-sixstep-edit.wod-builder-step-0 .gg-architect-heading>button{display:none!important}
+
+/* One visible part list, no horizontal carousel or separate Del 0 editor. */
+.gg-sixstep-mobile .gg-logical-parts{display:grid;grid-template-columns:minmax(0,1fr);overflow:visible;max-height:none;gap:4px}
+.gg-sixstep-mobile.gg-logical-composite.wod-builder-step-1 .gg-logical-parts{display:grid!important}
+.gg-sixstep-mobile.gg-logical-composite.wod-builder-step-1 .gg-warmup-compact{display:flex!important}
+.gg-sixstep-mobile .gg-logical-parts .gg-part-chip{width:100%;max-width:none;min-width:0;flex:unset}
+.gg-sixstep-mobile .gg-logical-parts .gg-part-chip>button:first-child{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:5px;align-items:center;text-align:left;padding:5px 8px;min-height:40px}
+.gg-sixstep-mobile .gg-logical-parts .gg-part-chip>button:first-child span{min-width:0;overflow-wrap:anywhere;white-space:normal}
+.gg-sixstep-mobile .gg-logical-parts .gg-part-chip>button:first-child small{font-size:.7rem;white-space:normal;text-align:right}
+.gg-sixstep-mobile .gg-logical-parts .gg-part-chip>.gg-part-settings-button{min-width:32px;max-width:32px;flex-basis:32px}
+.gg-direct-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.gg-direct-choices button{min-width:0;min-height:42px;border:1px solid #43545b;background:#19252a;color:inherit;border-radius:8px;padding:5px;overflow-wrap:anywhere;font-size:.8rem}
+.gg-direct-choices button[aria-pressed=true]{border-color:#efa53b;color:#ffc876;background:#3c2b19}
+.gg-sixstep-mobile .gg-sixstep-formats button{min-height:44px;padding:3px;gap:2px}
+.gg-sixstep-mobile .gg-sixstep-formats button span{font-size:.9rem}
+.gg-sixstep-mobile .gg-sixstep-formats button strong{font-size:.72rem}
+.gg-sixstep-mobile .gg-composite-editor>.engine-section-title,.gg-sixstep-mobile .gg-composite-editor>p.wod-help{display:none}
