@@ -4,7 +4,7 @@ import {isEmomFormat,COLLABORATION_MODES} from './wodEngine.js'
 export function collaborationOptions(format,participation){
  if(participation==='individual')return COLLABORATION_MODES.filter(x=>x.value==='solo')
  if(isEmomFormat(format))return COLLABORATION_MODES.filter(x=>participation==='partner'?['you_go_i_go','alternate','synchronized'].includes(x.value):x.value==='synchronized')
- if(['AMRAP','For Time','Chipper','Couplet','Triplet'].includes(format))return COLLABORATION_MODES.filter(x=>['free_split','you_go_i_go','synchronized'].includes(x.value))
+ if(['AMRAP','For Time','Chipper','Couplet','Triplet'].includes(format))return COLLABORATION_MODES.filter(x=>['free_split','synchronized'].includes(x.value))
  return []
 }
 export function emomPartnerInstruction(engine,round){
@@ -40,4 +40,10 @@ export function plannedResultDose(item,level,variant='common'){
 export function fillPlannedResult(item,level,variant='common'){
  const dose=plannedResultDose(item,level,variant)
  return {...item,sets:(item.sets||[]).map(set=>set.flow_status==='done'?set:{...set,...Object.fromEntries(Object.entries(dose).filter(([key])=>!entered(set[key])))})}
+}
+
+export function emomScheduledCount(items,index,rounds,engine){
+ let count=0
+ for(let round=1;round<=Math.min(7200,Math.max(0,Math.floor(Number(rounds)||0)));round++)if(emomActiveIndices(items,round,engine).includes(index))count++
+ return count
 }
