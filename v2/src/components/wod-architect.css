@@ -183,3 +183,40 @@
 .gg-sixstep-mobile .gg-sixstep-formats button span{font-size:.9rem}
 .gg-sixstep-mobile .gg-sixstep-formats button strong{font-size:.72rem}
 .gg-sixstep-mobile .gg-composite-editor>.engine-section-title,.gg-sixstep-mobile .gg-composite-editor>p.wod-help{display:none}
+
+/* GG49 artist pass — engraved typography, flat hierarchy, amber selection. */
+.gg-sixstep-mobile{--gg-artist-ink:#e8edf0;--gg-artist-muted:#a9b7bf;--gg-artist-accent:#f0b45e;--gg-artist-line:#3b4b52}
+.gg-sixstep-mobile .gg-sixstep-header{border:0!important;border-bottom:1px solid var(--gg-artist-line)!important;padding:5px 0 7px!important;background:transparent!important;border-radius:0!important;gap:3px}
+.gg-sixstep-mobile .gg-sixstep-header>div>strong{font-size:1rem;font-weight:750;letter-spacing:.025em}
+.gg-sixstep-mobile .gg-sixstep-header nav{gap:3px}
+.gg-sixstep-mobile .gg-sixstep-header nav button{display:grid;gap:4px;align-content:start;justify-items:stretch;height:auto;min-height:30px;padding:4px 0 2px;border:0;background:transparent!important;font-size:clamp(9px,2.4vw,11px);color:var(--gg-artist-muted);line-height:1.1;white-space:nowrap}
+.gg-sixstep-mobile .gg-sixstep-header .gg-step-mark{height:3px;border-radius:2px;background:#405159}
+.gg-sixstep-mobile .gg-sixstep-header .reached .gg-step-mark{background:#9e7943}
+.gg-sixstep-mobile .gg-sixstep-header button[aria-current=step] .gg-step-mark{background:var(--gg-artist-accent)}
+.gg-sixstep-mobile .gg-sixstep-header button[aria-current=step]{font-weight:750;color:var(--gg-artist-accent)}
+.gg-sixstep-mobile .gg-sixstep-header nav button:disabled{opacity:.78}
+.gg-sixstep-mobile .gg-sixstep-formats{gap:5px}
+.gg-sixstep-mobile .gg-sixstep-formats button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;border:1px solid #384b54;background:#18262c;border-radius:8px;padding:5px 4px;text-align:left}
+.gg-sixstep-mobile .gg-sixstep-formats .gg-format-glyph{display:flex;color:#a7bfc8;flex:0 0 auto}
+.gg-sixstep-mobile .gg-sixstep-formats button strong{font-size:.75rem;line-height:1.12;text-align:left;font-weight:650;min-width:0}
+.gg-sixstep-mobile .gg-sixstep-formats button[aria-pressed=true]{background:#332b20;border-color:#f0b45e;color:#ffd18e;box-shadow:inset 2px 0 0 #f0b45e}
+.gg-sixstep-mobile .gg-sixstep-formats button[aria-pressed=true] .gg-format-glyph{color:#f0b45e}
+.gg-sixstep-mobile .gg-logical-parts{background:none;padding:0}
+.gg-sixstep-mobile .gg-logical-parts .gg-part-chip{border-bottom:1px solid #34454d;gap:3px;align-items:stretch}
+.gg-sixstep-mobile .gg-logical-parts .gg-part-chip>button:first-child{border:0;border-left:2px solid var(--arch-tone,#849da8);border-radius:4px 0 0 4px;background:transparent;color:var(--gg-artist-ink);min-height:44px;padding:4px 5px}
+.gg-sixstep-mobile .gg-logical-parts .gg-part-chip>button:first-child.active{background:#26343b;box-shadow:inset 2px 0 0 var(--arch-tone,#849da8)}
+.gg-sixstep-mobile .gg-logical-parts b{font-size:1.13rem;font-variant-numeric:tabular-nums;font-weight:800;line-height:1}
+.gg-sixstep-mobile .gg-logical-parts span{font-size:.82rem}
+.gg-sixstep-mobile .gg-logical-parts small{font-variant-numeric:tabular-nums;color:#b7c5cd}
+.gg-sixstep-mobile .gg-logical-parts .gg-part-settings-button{border:0;background:transparent;color:#b7c5cd;min-width:40px;max-width:40px;flex-basis:40px;min-height:44px}
+.gg-sixstep-mobile .gg-logical-parts .gg-part-settings-button:hover{background:#26343b;color:#f0b45e}
+.gg-sixstep-mobile .gg-add-main-part{justify-self:start;display:inline-flex;align-items:center;gap:5px;min-height:40px;color:#f0b45e}
+.gg-sixstep-mobile .gg-participation-section .gg-participation-choices{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px}
+.gg-sixstep-mobile .gg-participation-choices button{display:flex;align-items:center;justify-content:center;gap:4px;font-size:.78rem;line-height:1.12;text-align:center!important;padding:4px!important;min-width:0}
+.gg-sixstep-mobile .gg-participation-choices button span{display:flex;flex:0 0 auto}
+.gg-compact-settings .gg-warmup-choice>div>button:first-child{display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;background:#202d34;padding:7px 9px;text-align:left;min-height:44px}
+.gg-compact-settings .gg-warmup-choice small{font-size:.7rem;color:#b7c5cd;white-space:normal;text-align:right;font-variant-numeric:tabular-nums}
+.gg-direct-choices button[aria-pressed=true]{box-shadow:inset 0 -2px 0 #f0b45e}
+.gg-sixstep-mobile button:focus-visible,.gg-compact-settings button:focus-visible{outline:2px solid #ffd18e;outline-offset:2px}
+@media (max-width:380px){.gg-sixstep-mobile .gg-sixstep-formats button{gap:4px}.gg-sixstep-mobile .gg-format-glyph svg{width:15px;height:15px}.gg-sixstep-mobile .gg-sixstep-formats button strong{font-size:.69rem}.gg-sixstep-mobile .gg-participation-choices button{flex-direction:column}}
+@media (orientation:landscape) and (min-width:600px){.gg-sixstep-mobile .gg-sixstep-formats{grid-template-columns:repeat(5,minmax(0,1fr))}.gg-sixstep-mobile .gg-sixstep-formats button{min-height:44px}}
