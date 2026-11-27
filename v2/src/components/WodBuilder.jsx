@@ -1,3 +1,6 @@
+import {applyQualityStarter,isMetconCandidate,hasQualityDuration} from '../lib/qualityPrescription.js'
+import { isMobilityExercise } from '../lib/exerciseQuality.js'
+import {randomWodName,uniqueWodName} from '../lib/wodNaming.js'
 import {ZUENDUNG_PRESETS,buildZuendung,compositePartLabel} from '../lib/zuendung.js'
 import WarmupGuide from './WarmupGuide.jsx'
 import {equipmentItemsForSamspel,equipmentCapacity,equipmentPlanSnapshot,readEquipmentInventory,saveEquipmentInventory,applyEquipmentInventory} from '../lib/equipmentPreparation.js'
@@ -122,20 +125,11 @@ const CLASSIC_WODS=[
  {name:'Randy',group:'Hero WODs',format:'For Time',minutes:15,items:[['Power snatch','75']],notes:'75 power snatches for time. RX-vekt: 75/55 lb.'},
  {name:'Badger',group:'Hero WODs',format:'For Time',minutes:35,rounds:3,items:[['Squat clean','30'],['Pull-up','30'],['Run','800 m']],notes:'3 rundar: 30 squat cleans, 30 pull-ups, 800 m løp. RX clean: 95/65 lb.'}
 ]
-const nameAdjectives=['Brutale','Wilde','Geile','Scharfe','Eiserne','Explosive','Böse','Dreckige','Donnernde','Panzerstarke','Stählerne','Brachiale','Knallharte','Furchtlose','Massive','Giftige','Hungrige','Brennende','Wuchtige','Legendäre','Gnadenlose','Kraftvolle','Kompromisslose','Jernharde','Svart','Rasande','Dieseldrevne','Elektriske','Høyspent','Ubøyelege','Stålsette','Infernalske']
-const nameNouns=['Panzer','Granate','Berserker','Keule','Kampfsau','Eber','Bär','Wolf','Gorilla','Mammut','Kobra','Hammer','Amboss','Donnerfaust','Stahlkoloss','Kraftpaket','Schlachtschiff','Sprengkopf','Dampfwalze','Kommandant','Knochenbrecher','Rammbock','Stahlfaust','Kampfhamster','Muskelmonster','Stålkjeven','Jernvilje','Betongbass','Dieselherz','Eisenwolf','Panzerpuls','Inferno 808','Hardhaus.exe','Tungt Vær','Svart Stål','Nattoget','Turbohelvete','Stålnakke','Betongbryter']
-const nameNumbers=['1942','1939','69']
-const randomWodName=()=>{
- const base=nameAdjectives[Math.floor(Math.random()*nameAdjectives.length)]+' '+nameNouns[Math.floor(Math.random()*nameNouns.length)]
- if(Math.random()>=0.22)return base
- const n=nameNumbers[Math.floor(Math.random()*nameNumbers.length)]
- return Math.random()<0.5?n+' '+base:base+' '+n
-}
 const shuffle=items=>[...items].sort(()=>Math.random()-.5)
 const newSet=()=>({reps:'8',loadMode:'none',loadKg:'',percent1rm:'',restSeconds:'120',tempo:''})
 const makeLevels=(reps='10',profile={})=>{const levels={};for(const level of ['rx','scaled','foundation']){const p=profile?.levels?.[level]||{};const hasKg=p.men_kg!=null||p.women_kg!=null;levels[level]={sets:'',reps,loadMode:hasKg?'kg':'none',loadKg:'',loadKgMen:p.men_kg==null?'':String(p.men_kg),loadKgWomen:p.women_kg==null?'':String(p.women_kg),percent1rm:'',tempo:'',instruction:'',variant:'',rir:'',rirRange:'',heightCm:'',durationSeconds:'',distanceMeters:'',calories:''}}return levels}
-const blankItem=ex=>({key:crypto.randomUUID(),...ex,sideMode:/\balternating\b/i.test(ex.name||'')?'alternating':'',reps:ex.is_complex?'5':ex.equipment==='Romaskin'?'':'10',repsMode:'fixed',rowValue:ex.equipment==='Romaskin'?'500':'',rowUnit:'m',loadMode:'none',loadKg:'',percent1rm:'',rir:'',rpe:'',meters:ex.equipment==='Romaskin'?'500':'',calories:'',workSeconds:'',restSeconds:'',tempo:'',coachNote:'',sets:[newSet()],minuteSlot:'',group:'A',levels:makeLevels(ex.is_complex?'5':ex.equipment==='Romaskin'?'500':'10',ex.prescription_profiles||{})})
-const doseFieldsFor=ex=>{const n=(ex.name||'').toLowerCase(),eq=(ex.equipment||'').toLowerCase();const height=/box jump|box step.?up|box step.?over|burpee box/.test(n);const time=/plank|stretch|hold|hundred|balance|dead hang|active hang|flexed.arm hang|wall sit/.test(n);const erg=/(?:^|\s)rowerg|bike erg|ski erg|romaskin/.test(n)||/bikeerg|ski.?erg|romaskin/.test(eq);const distance=erg||/carry|walk|run|crawl/.test(n);const calories=erg;const bodyOnly=/air squat|burpee|double under|single under|toes-to-bar|pull-up|push-up|handstand push-up/.test(n)||/^trx\b/.test(n)||time||/ab wheel|rollout/.test(n);const externalLoad=/manual|dumbbell|barbell|vektstong|kettlebell|medisinball|medicine.?ball|landmine|weight vest|vektvest/.test(eq);const load=!!ex.is_complex||externalLoad||((!height||/step.?up/.test(n))&&!bodyOnly&&(/squat|deadlift|press|curl|row|clean|snatch|jerk|thrust|pulldown|leg press|swing|lunge|carry|wall ball|step.?up/.test(n)||externalLoad));return{height,time,distance,calories,load,tempo:load&&!erg}};
+const blankItem=ex=>{const item=({key:crypto.randomUUID(),...ex,sideMode:/\balternating\b/i.test(ex.name||'')?'alternating':'',reps:ex.is_complex?'5':ex.equipment==='Romaskin'?'':'10',repsMode:'fixed',rowValue:ex.equipment==='Romaskin'?'500':'',rowUnit:'m',loadMode:'none',loadKg:'',percent1rm:'',rir:'',rpe:'',meters:ex.equipment==='Romaskin'?'500':'',calories:'',workSeconds:'',restSeconds:'',tempo:'',coachNote:'',sets:[newSet()],minuteSlot:'',group:'A',levels:makeLevels(ex.is_complex?'5':ex.equipment==='Romaskin'?'500':'10',ex.prescription_profiles||{})});return applyQualityStarter(ex,item)}
+const doseFieldsFor=ex=>{if(isMobilityExercise(ex)&&!ex.is_complex&&!/manual|dumbbell|barbell|vektstong|kettlebell|medisinball|landmine/.test((ex.equipment||'').toLowerCase()))return {height:false,time:true,distance:false,calories:false,load:false,tempo:false};const n=(ex.name||'').toLowerCase(),eq=(ex.equipment||'').toLowerCase();const height=/box jump|box step.?up|box step.?over|burpee box/.test(n);const time=hasQualityDuration(ex)||/plank|stretch|hold|hundred|balance|dead hang|active hang|flexed.arm hang|wall sit/.test(n);const erg=/(?:^|\s)rowerg|bike erg|ski erg|romaskin/.test(n)||/bikeerg|ski.?erg|romaskin/.test(eq);const distance=erg||/carry|walk|run|crawl/.test(n);const calories=erg;const bodyOnly=/^(?:kroppsvekt|matte|vegg|strikk|miniband|ingen)(?:\s*\/\s*(?:kroppsvekt|matte|vegg|strikk|miniband))*$/.test(eq.trim())||/air squat|burpee|double under|single under|toes-to-bar|pull-up|push-up|handstand push-up/.test(n)||/^trx\b/.test(n)||time||/ab wheel|rollout/.test(n);const externalLoad=/manual|dumbbell|barbell|vektstong|kettlebell|medisinball|medicine.?ball|landmine|weight vest|vektvest/.test(eq);const load=!!ex.is_complex||externalLoad||((!height||/step.?up/.test(n))&&!bodyOnly&&(/squat|deadlift|press|curl|row|clean|snatch|jerk|thrust|pulldown|leg press|swing|lunge|carry|wall ball|step.?up/.test(n)||externalLoad));return{height,time,distance,calories,load,tempo:load&&!erg}};
 const fmtLoad=x=>x.loadMode==='kg'&&x.loadKg?x.loadKg+' kg':x.loadMode==='percent'&&x.percent1rm?x.percent1rm+' % 1RM':x.loadMode==='bodyweight'?'Kroppsvekt':''
 
 const movementTagsFor=ex=>{const n=(ex.name||'').toLowerCase(),b=(ex.body_area||'').toLowerCase(),t=[];if(/deadlift|swing|hinge|romanian deadlift|clean|snatch|good morning/.test(n))t.push('hinge');if(/squat|thruster|lunge|wall ball|step.?up|box jump/.test(n))t.push('squat');if(/press|push.?up|dip|jerk|handstand/.test(n))t.push('push');if(/pull.?up|row|chin.?up|rope climb/.test(n))t.push('pull');if(/sit.?up|toes.?to.?bar|plank|hollow|crunch|dead bug/.test(n)||/mage|kjerne/.test(b))t.push('core');if(/run|rower|romaskin|bike|ski erg|burpee|crawl|double.?under/.test(n))t.push('conditioning');if(/overhead|snatch|jerk|handstand/.test(n))t.push('overhead');const own=[...new Set(t)];return ex.is_complex?[...new Set([...own,...(ex.complex_steps||[]).flatMap(step=>movementTagsFor({name:step.name}))])]:own}
@@ -446,7 +440,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    }catch(e){setError(e.message||'Kunne ikkje henta WOD frå biblioteket.')}
   }
   function addPause(){setError('');setSelected(rows=>[...rows,{...blankItem({id:null,name:'Pause',category:'Pause',body_area:'Heile kroppen',equipment:'Ingen',description:'Planlagd pause mellom øvingar.',is_rest:true}),is_rest:true,pauseSeconds:'30',reps:'',blockId:activeBlockId}]);setLibraryOpen(false)}
- function suggestUniqueWodName(){const existing=new Set(libraryWods.map(w=>(w.name||'').trim().toLowerCase()));for(let i=0;i<60;i++){const candidate=randomWodName();if(!existing.has(candidate.toLowerCase())&&candidate.toLowerCase()!==name.trim().toLowerCase())return candidate}return randomWodName()+' '+String(Date.now()).slice(-4)}
+ function suggestUniqueWodName(){return uniqueWodName(libraryWods,name)}
  function combineSelectedComplex(){
   const picked=selected.filter(item=>Object.hasOwn(complexSelection,item.key))
   try{
@@ -493,7 +487,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   }
   function randomWod(){
   setEquipmentPlan({});setSamspel(null)
-  const pool=exercises.filter(x=>!x.is_rehab&&x.category!=='Rehab / fysio')
+  const pool=exercises.filter(isMetconCandidate)
   if(!pool.length)return
   const chosen=shuffle(pool).slice(0,3+Math.floor(Math.random()*4))
   setSelected(chosen.map(blankItem));setFormat(['AMRAP','E1MOM','For Time','Chipper','Intervall'][Math.floor(Math.random()*5)])
