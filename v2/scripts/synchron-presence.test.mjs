@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
-import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry,canCancelSynchronOpening,synchronSnapshotMatches} from '../src/lib/synchronPresence.js'
+import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry,canCancelSynchronOpening,synchronSnapshotMatches,acceptSynchronSnapshot} from '../src/lib/synchronPresence.js'
 const runtime={},entry={actor:'a',runtime,href:'synchron-session:one'}
-const snap=(phase,props={})=>({sessionId:'one',leader:false,isMember:true,joined:true,view:{phase},...props})
+const snap=(phase,props={})=>({sessionId:'one',revision:2,serverAt:1000,leader:false,isMember:true,joined:true,view:{phase},...props})
 assert.equal(synchronPresence(null,null),null)
 assert.equal(synchronPresence({href:'bad'},null),null)
 assert.equal(synchronPresence(entry,null).locked,true)
@@ -40,3 +40,12 @@ assert.equal(synchronSnapshotMatches(entry,{...origin,actor:'b',snapshot:snap('r
 assert.equal(synchronSnapshotMatches(entry,{...origin,runtime:{},snapshot:snap('running')}),false)
 assert.equal(synchronSnapshotMatches(entry,{...origin,href:'synchron-session:two',snapshot:snap('running')}),false)
 assert.equal(synchronSnapshotMatches(entry,{...origin,snapshot:null}),false)
+
+const running=snap('running'),later=snap('running',{serverAt:2000}),paused=snap('paused',{revision:3,serverAt:3000})
+assert.equal(acceptSynchronSnapshot(null,entry,{...origin,snapshot:running}),running)
+assert.equal(acceptSynchronSnapshot(later,entry,{...origin,snapshot:running}),later)
+assert.equal(acceptSynchronSnapshot(running,entry,{...origin,snapshot:later}),later)
+assert.equal(acceptSynchronSnapshot(paused,entry,{...origin,snapshot:{...later,serverAt:4000}}),paused)
+assert.equal(acceptSynchronSnapshot(later,entry,{...origin,snapshot:paused}),paused)
+for(const invalid of [{revision:-1},{revision:NaN},{serverAt:undefined},{joined:'yes'},{view:{phase:'unknown'}},{leader:false,isMember:false}])assert.equal(acceptSynchronSnapshot(running,entry,{...origin,snapshot:{...running,...invalid}}),running)
+assert.equal(acceptSynchronSnapshot(running,entry,{...origin,actor:'b',snapshot:paused}),running)
