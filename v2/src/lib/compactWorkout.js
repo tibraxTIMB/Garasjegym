@@ -1,4 +1,4 @@
-import {isEmomFormat,emomIntervalSeconds} from './wodEngine.js'
+import {isEmomFormat} from './wodEngine.js'
 export const ACTIVE_WOD_LEVELS=Object.freeze([{id:'rx',label:'RX'},{id:'scaled',label:'Scaled'},{id:'foundation',label:'Foundation'}])
 const entered=v=>v!=null&&String(v).trim()!==''
 const positive=v=>entered(v)&&Number.isFinite(Number(v))&&Number(v)>0
@@ -48,6 +48,7 @@ export function refreshResultPlan(item,level){
  // A level change affects suggested values only, never manually entered values.
  const plan=resultPlan(item,level)
  return {...item,sets:(item.sets||[]).map(set=>{
+  if(set.flow_status==='done')return set
   const patch={}
   for(const field of set.planned_fields||[])patch[field]=plan?.values[field]??(field==='load_kg'?plan?.loads.find(x=>x.id==='common')?.value??'':'')
   return {...set,...patch}
@@ -89,3 +90,5 @@ export function emomExerciseIndices(items,slot,{partner=false}={}){
  const explicit=items.some(item=>String(item.minute_slot??item.minuteSlot??'').trim())
  return explicit?items.flatMap((item,index)=>String(item.minute_slot??item.minuteSlot??'').split(/[,;\s/]+/).some(n=>Number(n)===slot)?[index]:[]):[(slot-1)%items.length]
 }
+
+export function clearUnfinishedPlan(item,count){return {...item,sets:(item.sets||[]).map((set,index)=>{if(index<count||!set.planned_fields?.length)return set;return {...set,...Object.fromEntries(set.planned_fields.map(field=>[field,''])),planned_fields:[]}})}}
