@@ -254,7 +254,7 @@ export default function App({synchronRuntime=null,tabletLab=false}={}) {
   const ownedSynchron=synchronOwnedEntry(synchronEntry,synchronActor,synchronRuntime)
   const remotePresence=ownedSynchron?synchronPresence(synchronEntry,synchronSnapshot):null
   const remoteLocked=!!remotePresence?.locked
-  const discoveryStatus=synchronDiscoveryStatus(discoveryRecord,synchronActor,synchronRuntime)
+  const discoveryStatus=labMode?'disabled':synchronDiscoveryStatus(discoveryRecord,synchronActor,synchronRuntime)
   const discoveryBlocked=discoveryStatus==='pending'||discoveryStatus==='error'
   const trainingLaunchLocked=remoteLocked||discoveryBlocked
   const localSessionOpen=!!timerSnapshot.sessionOpen||!!(synchronActor&&restoreWorkoutDraft(synchronActor))

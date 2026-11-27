@@ -6,7 +6,8 @@ import {DatabaseSync} from 'node:sqlite'
 import {mkdtempSync,rmSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
-import {createSynchronDispatcher,createSynchronRuntime} from '../src/lib/synchronRuntime.js'
+import {createSynchronHttpHandler} from '../server/synchronHttp.js'
+import {createAuthenticatedSynchronRuntime} from '../src/lib/synchronHttpClient.js'
 
 const sid1='12345678-1234-4234-8234-123456789012',sid2='22345678-1234-4234-8234-123456789012'
 const sid3='32345678-1234-4234-8234-123456789012'
@@ -71,7 +72,17 @@ function openFixture(file,clock){
  }
  return {db,host,one,run,all,state,slot,failNextCreation(){failCreation=true},beforeNextCas(fn){beforeCas=fn}}
 }
-function runtime(f,actor){const dispatch=createSynchronDispatcher(f.host);return createSynchronRuntime({actorId:actor,invoke:body=>dispatch('fixture-'+actor,body),discoveryEnabled:true})}
+function runtime(f,actor){
+ const token='fixture.'+actor+'.token',origin='https://gg.fixture.invalid'
+ const handler=createSynchronHttpHandler({allowedOrigins:[origin],verifyToken:async value=>value===token?f.host.authenticate('fixture-'+actor):null,createHost:async()=>f.host})
+ const auth={getSession:async()=>({data:{session:{user:{id:actor},access_token:token}},error:null})}
+ const functions={invoke:async(name,{body,headers})=>{
+  assert.equal(name,'synchron-live')
+  const response=await handler(new Request(origin+'/functions/v1/synchron-live',{method:'POST',headers:{...headers,origin,'content-type':'application/json'},body:JSON.stringify(body)}))
+  return response.ok?{data:await response.json(),error:null}:{data:null,error:Error('HTTP '+response.status)}
+ }}
+ return createAuthenticatedSynchronRuntime({actorId:actor,auth,functions,enabled:true})
+}
 
 test('durable isolated session/outbox, atomic permission and exclusive slots',async()=>{
  const dir=mkdtempSync(join(tmpdir(),'gg-synchron-')),file=join(dir,'fixture.sqlite'),clock={at:0}
