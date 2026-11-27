@@ -29,3 +29,12 @@ test('exact level and explicit load selection fill only empty measured fields',(
  assert.deepEqual(item.sets[0],{reps:'5',load_kg:''})
  assert.deepEqual(plannedResultDose({...item,reps_mode:'amrap'},'rx'),{})
 })
+
+import {changePlannedResultLevel,editPlannedResultSet} from '../src/lib/partnerResultFlow.js'
+test('level changes update only untouched explicitly suggested values; user edit even to same number is preserved',()=>{
+ const item={prescription_levels:{rx:{reps:10},scaled:{reps:6},foundation:{}},sets:[{reps:'10',planned_suggestion:{reps:'10'}},editPlannedResultSet({reps:'10',planned_suggestion:{reps:'10'}},{reps:'10'}),{reps:'8'},{reps:'',flow_status:'done'}]}
+ const scaled=changePlannedResultLevel(item,'scaled')
+ assert.deepEqual(scaled.sets.map(s=>s.reps),['6','10','8',''])
+ assert.deepEqual(changePlannedResultLevel(scaled,'foundation').sets.map(s=>s.reps),['','10','8',''])
+ assert.deepEqual(item.sets.map(s=>s.reps),['10','10','8',''])
+})
