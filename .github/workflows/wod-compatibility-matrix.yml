@@ -1,0 +1,35 @@
+name: WOD compatibility matrix and real builder (isolated)
+on:
+  push:
+    branches: [fix/wod-compact-dose-20261127]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Cross-format compatibility and negative cases
+        run: node --test scripts/wod-compatibility-matrix.test.mjs
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+      - name: Actual Chipper builder with isolated catalogue and plan save
+        run: |
+          npm run help:demo > /tmp/gg-wod-contract-vite.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" || true' EXIT
+          for i in $(seq 1 60); do curl -fs http://127.0.0.1:4173/ui-audit.html >/dev/null && break; sleep 1; done
+          python scripts/wod-compact-browser-test.py
