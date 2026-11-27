@@ -46,3 +46,17 @@ const before=sent
 const unsure=await submitSynchronAction(b,'idle',{},'uncertain',{...adapter('b'),command:async()=>{throw Error('network')}})
 assert.equal(unsure.uncertain,true)
 assert.equal(sent,before)
+
+ms=30000;a=await record('a')
+a=(await submitSynchronAction(a,'finish',{actual:80},'finish',adapter('a'))).record
+assert.equal(a.snapshot.view.phase,'finished')
+assert.equal(synchronControls(a,{now:ms}).canReview,true)
+assert.equal(synchronControls(a,{now:ms}).canApprove,false)
+a=(await submitSynchronAction(a,'review_update',{movementId:'step',quality:'estimated',value:40},'review-a',adapter('a'))).record
+assert.equal(a.snapshot.review.rows[0].value,40)
+b=await record('b')
+b=(await submitSynchronAction(b,'review_update',{movementId:'step',quality:'confirmed',value:40},'review-b',adapter('b'))).record
+assert.equal(b.snapshot.review.canApprove,true)
+b=(await submitSynchronAction(b,'review_approve',{},'approve-b',adapter('b'))).record
+assert.equal(b.snapshot.review.approved,true)
+assert.equal(synchronControls(b,{now:ms}).canApprove,false)
