@@ -49,3 +49,29 @@ Brukaren har godkjent vidare prosess, ferdigstilling og automatisk neste arbeids
 
 ### AUTO VIDARE
 Hald éin aktiv Autobygg-prosess; opprett neste konkrete arbeidspakke i statusdokumentet når førre er verifisert, utan nytt brukarspørsmål for godkjende kodeendringar. Kvar køyring: les mandat/status, sjekk aktuelle refs og eventuell anna pågåande skriving; vel neste avgrensa, testbare steg i tidlegaste opne GW-fase; implementer, test, commit og verifiser, logg evidens og neste steg. Ingen status-only loop dersom trygg konkret framdrift er mogleg. Ved blokkering: gjer trygg, uavhengig deloppgåve innanfor mandatet, merk blokkerte portar, ikkje erklær bestått eller hopp over dei. Stopp før eksterne kostnader, databaseendring, reelle databaseskrivingar, produksjonsmerge eller publisering. Ingen nye autonomt oppretta overlappande automasjonar. Endeleg godkjenning krev dei faktiske 17 originale forløpa og praktisk test; ikkje dikt dei opp.
+
+
+## Recovered acceptance checklist – 2026-11-27
+Conversation history contains a previous assistant's summary of the 17 journeys in point 18 of the original order (2026-11-26 16:44 UTC). This is a recovered checklist, not a verified verbatim original. The user subsequently required the 17 journeys from the main order (2026-11-26 17:13 UTC). Do not mark practical acceptance from CI alone or substitute documentation for implementation.
+
+| ID | Recovered journey | Practical acceptance evidence required |
+|---|---|---|
+| A01 | Today's assigned workout | Member opens dated assignment, trains, saves, sees assignment status. |
+| A02 | Self-selected workout | Member finds and completes own choice without PT intervention. |
+| A03 | PT customer planning, assignment, follow-up | PT plans for one authorized customer, assigns and reviews actual result. |
+| A04 | Convert quality WOD to Quality & Row | Preserve movement and intended quality; verify both participants' timing and row output. |
+| A05 | Samspel beyond AMRAP | Verify appropriate work, switch and pause for a supported non-AMRAP format. |
+| A06 | Two participants with different strength tracks | Both individual doses/results remain separate, no incorrect PR. |
+| A07 | Conflict-free equipment and plates | Concurrent equipment demand and actual plate distribution agree; invalid setup blocked. |
+| A08 | Composite WOD | Multiple parts, transitions, pauses, partial completion and save. |
+| A09 | Manual external workout | Enter actual exercises, sets and weights in ordinary log. |
+| A10 | Correct erroneous result | Correct saved result; derived records reflect verified actual data. |
+| A11 | History, PR and anatomy updates | Correct individual evidence; estimated/team results not promoted to personal PR. |
+| A12 | Plan progression linkage | Dated plan, assignment and completed result stay linked; no duplicate progress. |
+| A13 | Network outage without loss or duplicates | Disconnect/reload/rejoin, preserve local draft, reconcile authoritative result once. |
+| A14 | Save workout and optional social activity | Save works with or without optional social posting. |
+| A15 | Owner creates spontaneous gathering | Owner creates gathering, members see relevant invitation and status. |
+| A16 | Existing data and functionality preserved | Verified private backup and restore, compare ordinary workflows before/after. |
+| A17 | Mobile/tablet | Actual phone and tablet user journeys, readability, input, touch, portrait/landscape. |
+
+These evidence descriptions are operational acceptance criteria derived from the recovered summary, not additional user-approved feature scope. Exact original full wording remains unverified. No row is marked accepted by this checklist alone.
