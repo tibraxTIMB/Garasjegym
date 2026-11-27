@@ -1,3 +1,4 @@
+import AnatomyEvidence from './AnatomyEvidence.jsx'
 import React,{useState} from 'react'
 const units={reps:'reps',seconds:'sek',meters:'m',calories:'cal'}
 const qualities={confirmed:'Sjølvrapportert faktisk mengd',estimated:'Estimert',unknown:'Ukjend'}
@@ -25,6 +26,7 @@ export default function SynchronResultReview({review,controls,onAction}){
    <button className="secondary-button" disabled={!controls.canReview} onClick={()=>{onAction('review_update',{movementId:current.movementId,value:null,quality:'unknown'});setDraft(null)}}>Eg veit ikkje mengda</button></>}
    <button className="secondary-button" onClick={()=>setDraft(null)}>Lukk</button>
   </section>}
+  {review.observedExposure?.length>0?<AnatomyEvidence observedSegments={review.observedExposure} scope="Observerte Samspel-bolkar"/>:<small>Individuelt muskelkart frå uavhengige observasjonar blir tilgjengeleg når alle har godkjent og det finst samsvarande observasjonar.</small>}
   <small>{review.approvedCount}/{review.participantCount} godkjent · {review.sealed?'Resultatfordelinga er låst for lagring.':'Endringar krev ny godkjenning.'}</small>
   <button className="primary-button" disabled={!controls.canApprove||!!draft} onClick={()=>onAction('review_approve')}>{review.approved?'Godkjent':'Godkjenn mitt resultat'}</button>
   {!review.canApprove&&<small>Kontroller manglande mengder eller avvik i fellesresultatet først.</small>}
