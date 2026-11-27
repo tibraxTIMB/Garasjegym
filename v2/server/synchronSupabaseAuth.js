@@ -29,14 +29,25 @@ export function createSynchronIdentityVerifier({auth,sessionActive,issuer,now=Da
   }catch{return null}
  }
 }
-export function createSynchronSupabaseHandler({auth,query,issuer,allowedOrigins,enabled=false,resultSavingEnabled=false,now=Date.now}={}){
+export function createSynchronSupabaseHandler({auth,query,sessionQuery,issuer,allowedOrigins,enabled=false,resultSavingEnabled=false,now=Date.now}={}){
  // No handler is mounted by default. Deployment and role/session lookup require
  // an independently verified configuration; never use the owner connection.
  if(enabled!==true)return null
- if(typeof query!=='function'||!Array.isArray(allowedOrigins)||!allowedOrigins.length)throw Error('Trusted restricted PostgreSQL configuration required')
+ if(typeof query!=='function'||typeof sessionQuery!=='function'||!Array.isArray(allowedOrigins)||!allowedOrigins.length)throw Error('Trusted restricted PostgreSQL configuration required')
  const verifyToken=createSynchronIdentityVerifier({auth,issuer,now,sessionActive:async({actorId,sessionId})=>{
   const result=await query('SELECT gg_synchron_private.session_active($1::uuid,$2::uuid) AS value',[actorId,sessionId])
   return Array.isArray(result?.rows)&&result.rows.length===1&&result.rows[0].value===true
  }})
- return createSynchronHttpHandler({verifyToken,allowedOrigins,createHost:async({actorId})=>createPostgresSynchronHost({query,actorId,now,resultSavingEnabled})})
+ return createSynchronHttpHandler({verifyToken,allowedOrigins,createHost:async({actorId,token})=>{
+  // createHost is called only after verifyToken accepts this exact bearer.
+  const claims=claimsAfterVerification(token)
+  if(!claims||claims.sub!==actorId||!uuid.test(claims.session_id))return null
+  const boundQuery=async(sql,args)=>{
+   if(claims.exp<=Math.floor(now()/1000))throw Error('Session unavailable')
+   // sessionQuery must lock and verify this Auth session in the very same
+   // database transaction as the parameterized operation. No fallback.
+   return sessionQuery({actorId,sessionId:claims.session_id},sql,args)
+  }
+  return createPostgresSynchronHost({query:boundQuery,actorId,now,resultSavingEnabled})
+ }})
 }
