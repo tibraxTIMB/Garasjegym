@@ -14,7 +14,7 @@ export function synchronClientSnapshot(state,actorId,now){
  const movements=state.plan.movements.map(m=>({id:m.id,exerciseId:m.exerciseId,name:m.name||m.exerciseId,unit:m.unit,target:m.target,method:m.method}))
  return clone({sessionId:state.plan.id,revision:state.revision,serverAt:now,title:state.plan.title||'Samspel',leader,isMember,
   participantSlot:isMember?state.plan.members.indexOf(actorId)+1:null,joined:state.joined.includes(actorId),joinedCount:state.joined.length,participantCount:state.plan.members.length,
-  view:{...view,active:view.active===null?null:state.plan.members.indexOf(view.active)+1},movements,ownDose:isMember?state.currentDoses[state.stage][actorId]:null,
+  view:{...view,active:view.active===null?null:state.plan.members.indexOf(view.active)+1},movements,ownDose:isMember?{variant:state.currentDoses[state.stage][actorId].variant,loadKg:state.currentDoses[state.stage][actorId].loadKg}:null,
   ownAssignedSeconds:isMember?synchronAssignedTime(state,stage.id,actorId)+ownOpen/1000:null,
   totals:Object.fromEntries(Object.entries(state.totals).map(([id,t])=>[id,{unit:t.unit,actual:t.actual}])),
   ...(leader?{participants:state.plan.members.map((id,i)=>({id,slot:i+1,joined:state.joined.includes(id)}))}:{})})
@@ -51,4 +51,21 @@ export function createSynchronGateway({authenticate,read,compareAndSwap,now}){
   return {snapshot:synchronClientSnapshot(result.state,actorId,at)}
  }
  return {snapshot,command}
+}
+
+// Project a recently received snapshot using a monotonic client clock, never
+// the device's wall clock. A displayed countdown can expire without granting
+// any new action; fresh server state is required at the boundary.
+export function synchronDisplay(snapshot,{receivedAt,now,online=true,maxAgeMs=5000}={}){
+ if(!snapshot?.view||!Number.isFinite(receivedAt)||!Number.isFinite(now)||now<receivedAt||!Number.isFinite(maxAgeMs)||maxAgeMs<=0)return null
+ const age=now-receivedAt,seconds=Math.floor(age/1000),view=snapshot.view
+ const stale=!online||age>maxAgeMs
+ const countdown=view.phase==='countdown'?Math.max(0,view.countdown-seconds):0
+ const waitingForStart=view.phase==='countdown'&&countdown===0
+ const elapsed=view.phase==='running'?view.elapsed+seconds:waitingForStart?Math.max(0,seconds-view.countdown):view.elapsed
+ const locked=stale||waitingForStart
+ return {...view,countdown,elapsed,stale,waitingForStart,actionsLocked:locked,
+  canStart:!locked&&view.canStart,canTakeover:!locked&&view.canTakeover,
+  canPause:!locked&&view.canPause,canResume:!locked&&view.canResume,
+  canAdvance:!locked&&view.canAdvance,canFinish:!locked&&view.canFinish}
 }
