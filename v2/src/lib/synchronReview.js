@@ -49,7 +49,7 @@ export function synchronReviewProjection(state,actorId){
 }
 export function applySynchronReview(state,cmd,{actorId,at}={}){
  const fail=issue=>({state,issue})
- if(!state.review||state.phase!=='finished'||!state.plan.members.includes(actorId)||typeof cmd?.id!=='string'||!cmd.id.trim()||cmd.id.length>128||!Number.isSafeInteger(at)||at<state.lastAt)return fail('Ingen tilgang til resultatet.')
+ if(!state.review||state.phase!=='finished'||!state.plan.members.includes(actorId)||typeof cmd?.id!=='string'||!cmd.id.trim()||cmd.id.length>128||!Number.isSafeInteger(at)||at<Math.max(state.lastAt,state.events.at(-1)?.at??0))return fail('Ingen tilgang til resultatet.')
  const old=state.events.find(e=>e.id===cmd.id)
  if(old)return old.actorId===actorId&&old.type===cmd.type&&old.movementId===cmd.movementId&&old.quality===cmd.quality&&old.value===cmd.value?{state,duplicate:true}:fail('Hendings-ID er alt brukt.')
  if(cmd.revision!==state.revision)return fail('Resultatet er endra. Oppdater først.')
