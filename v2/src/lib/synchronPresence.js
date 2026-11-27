@@ -27,5 +27,18 @@ export function canCancelSynchronOpening(entry,presence,{actor,runtime,href}={})
  return synchronOwnedEntry(entry,actor,runtime)&&entry.href===href&&presence?.phase==='pending'&&presence.sessionId===parseSynchronInvitation(href)
 }
 export function synchronSnapshotMatches(entry,{actor,runtime,href,snapshot}={}){
- return synchronOwnedEntry(entry,actor,runtime)&&entry.href===href&&!!snapshot?.view&&snapshot.sessionId===parseSynchronInvitation(href)
+ return synchronOwnedEntry(entry,actor,runtime)&&entry.href===href&&!!snapshot?.view&&snapshot.sessionId===parseSynchronInvitation(href)&&Number.isSafeInteger(snapshot.revision)&&snapshot.revision>=0&&Number.isFinite(snapshot.serverAt)&&snapshot.serverAt>=0&&['ready','countdown','running','paused','finished'].includes(snapshot.view.phase)&&typeof snapshot.leader==='boolean'&&typeof snapshot.isMember==='boolean'&&typeof snapshot.joined==='boolean'&&(snapshot.leader||snapshot.isMember)
+}
+
+// Ignore delayed/out-of-order responses, including clock-only projections at
+// the same authoritative revision. A later server timestamp cannot override a
+// newer revision. This is a local guard, not cross-device session discovery.
+export function acceptSynchronSnapshot(previous,entry,origin){
+ if(!synchronSnapshotMatches(entry,origin))return previous
+ const next=origin.snapshot
+ if(previous?.sessionId===next.sessionId){
+  if(previous.revision>next.revision)return previous
+  if(previous.revision===next.revision&&previous.serverAt>=next.serverAt)return previous
+ }
+ return next
 }
