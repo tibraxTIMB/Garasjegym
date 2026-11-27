@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict'
+import {synchronPresence,synchronNavigation,synchronEntryConflict,synchronOwnedEntry} from '../src/lib/synchronPresence.js'
+const runtime={},entry={actor:'a',runtime,href:'synchron-session:one'}
+const snap=(phase,props={})=>({sessionId:'one',leader:false,isMember:true,joined:true,view:{phase},...props})
+assert.equal(synchronPresence(null,null),null)
+assert.equal(synchronPresence({href:'bad'},null),null)
+assert.equal(synchronPresence(entry,null).locked,true)
+assert.equal(synchronPresence(entry,snap('finished',{sessionId:'wrong'})).locked,true)
+assert.equal(synchronPresence(entry,snap('ready',{joined:false})).locked,false)
+assert.equal(synchronPresence(entry,snap('ready',{leader:true,joined:false})).locked,true)
+for(const phase of ['ready','countdown','running','paused']){
+ const presence=synchronPresence(entry,snap(phase))
+ assert.equal(presence.locked,true)
+ assert.equal(synchronNavigation('trening',presence),'synchron-session')
+ assert.equal(synchronNavigation('oversikt',presence),'oversikt')
+ assert.equal(synchronEntryConflict(entry,presence,'synchron-session:two'),true)
+ assert.equal(synchronEntryConflict(entry,presence,entry.href),false)
+}
+assert.equal(synchronPresence(entry,snap('finished')).locked,false)
+assert.equal(synchronNavigation('trening',synchronPresence(entry,snap('finished'))),'trening')
+assert.equal(synchronEntryConflict(entry,synchronPresence(entry,snap('finished')),'synchron-session:two'),false)
+assert.equal(synchronPresence(entry,snap('other')).locked,true)
+assert.equal(synchronPresence(entry,snap('running',{isMember:false,leader:false})).locked,true)
+assert.equal(synchronOwnedEntry(entry,'a',runtime),true)
+assert.equal(synchronOwnedEntry(entry,'b',runtime),false)
+assert.equal(synchronOwnedEntry(entry,'a',{}),false)
+assert.equal(synchronOwnedEntry(entry,null,runtime),false)
+assert.equal(synchronNavigation('trening',null),'trening')
