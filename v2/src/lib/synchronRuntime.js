@@ -6,6 +6,7 @@ const validSession=id=>typeof id==='string'&&parseSynchronInvitation('synchron-s
 const object=x=>!!x&&typeof x==='object'&&!Array.isArray(x)
 const only=(x,keys)=>Object.keys(x).every(k=>keys.includes(k))
 const unavailable=()=>({issue:'Fellesøkta er ikkje tilgjengeleg.'})
+const activeSnapshot=s=>validSession(s?.sessionId)&&Number.isSafeInteger(s.revision)&&s.revision>=0&&Number.isFinite(s.serverAt)&&s.serverAt>=0&&typeof s.leader==='boolean'&&typeof s.isMember==='boolean'&&typeof s.joined==='boolean'&&(s.leader||s.isMember&&s.joined)&&['ready','countdown','running','paused'].includes(s.view?.phase)
 // Framework-neutral trusted server dispatcher. Caller extracts credential from
 // verified request context, not from JSON. No real persistence adapter is supplied.
 export function createSynchronDispatcher(host){
@@ -15,6 +16,20 @@ export function createSynchronDispatcher(host){
   try{
    if(body.op==='create'&&only(body,['op','request']))return live?await creation.create(credential,body.request):unavailable()
    if(body.op==='individual_calibration'&&only(body,['op','request']))return calibrate?await calibrate(credential,body.request):unavailable()
+   if(body.op==='discover'&&only(body,['op'])){
+    if(!live||typeof host.authorizeDiscovery!=='function'||typeof host.readActiveSession!=='function')return unavailable()
+    const actorId=await host.authenticate(credential)
+    if(typeof actorId!=='string'||!actorId||await host.authorizeDiscovery(actorId)!==true)return unavailable()
+    // Null is an authoritative absence; undefined, conflicting reservations or failure are not.
+    const sessionId=await host.readActiveSession(actorId)
+    if(await host.authorizeDiscovery(actorId)!==true)return unavailable()
+    if(sessionId===null)return {active:null}
+    if(!validSession(sessionId))return unavailable()
+    const response=await live.snapshot(sessionId,credential)
+    if(response.issue||!activeSnapshot(response.snapshot)||response.snapshot.sessionId!==sessionId)return unavailable()
+    if(await host.authorizeDiscovery(actorId)!==true)return unavailable()
+    return {active:response.snapshot}
+   }
    if(!live||!validSession(body.sessionId))return unavailable()
    if(body.op==='snapshot'&&only(body,['op','sessionId']))return await live.snapshot(body.sessionId,credential)
    if(body.op==='command'&&only(body,['op','sessionId','command'])&&object(body.command))return await live.command(body.sessionId,credential,body.command)
@@ -25,7 +40,7 @@ export function createSynchronDispatcher(host){
 }
 // Host injects invoke (e.g. authenticated HTTPS call using current session).
 // No credentials, service keys or client-supplied actor appear in request body.
-export function createSynchronRuntime({actorId,invoke,individualCalibrationEnabled=false}={}){
+export function createSynchronRuntime({actorId,invoke,individualCalibrationEnabled=false,discoveryEnabled=false}={}){
  if(typeof actorId!=='string'||!actorId||typeof invoke!=='function')return null
  async function call(body){
   const result=await invoke(body)
@@ -53,7 +68,10 @@ export function createSynchronRuntime({actorId,invoke,individualCalibrationEnabl
   const result=await call({op:'individual_calibration',request})
   return result.accepted===true?{accepted:true,duplicate:result.duplicate===true}:result.issue?{issue:result.issue}:unavailable()
  }
- return {actorId,create,readSnapshot,adapter,...(individualCalibrationEnabled===true?{recordIndividualCalibration}:{}),open:href=>openSynchronInvitation(href,{readSnapshot})}
+ async function discover(){
+  try{const result=await call({op:'discover'});if(result.issue)return {issue:result.issue};if(result.active===null)return {active:null};return activeSnapshot(result.active)?{active:result.active}:unavailable()}catch{return unavailable()}
+ }
+ return {actorId,create,readSnapshot,adapter,...(discoveryEnabled===true?{discover}:{}),...(individualCalibrationEnabled===true?{recordIndividualCalibration}:{}),open:href=>openSynchronInvitation(href,{readSnapshot})}
 }
 // UI gate only, not authorization. Existing local timer must not be replaced.
 export function synchronRouteIssue(runtime,memberId,{localSessionOpen=false}={}){

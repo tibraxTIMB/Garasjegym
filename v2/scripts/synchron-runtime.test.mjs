@@ -53,3 +53,28 @@ assert.ok((await incomplete('auth-a',{op:'snapshot',sessionId:request.sessionId}
 assert.ok((await incomplete('auth-a',{op:'create',request})).issue)
 const deniedHost=createSynchronDispatcher({...host,authorizeSession:async()=>({allowed:true})})
 assert.ok((await deniedHost('auth-a',{op:'snapshot',sessionId:request.sessionId})).issue)
+
+// Server-side discovery is explicit, scoped and fail-closed. No session ID is supplied by the browser.
+const discoveryHost={...host,authorizeDiscovery:async actor=>actor==='a'||actor==='b'&&!revoked,readActiveSession:async actor=>stored&&(stored.plan.leaderId===actor||stored.joined.includes(actor))?stored.plan.id:null}
+const discoverDispatch=createSynchronDispatcher(discoveryHost)
+const discoveryRuntime=(actor,credential,invoke=body=>discoverDispatch(credential,body))=>createSynchronRuntime({actorId:actor,invoke,discoveryEnabled:true})
+assert.equal(a.discover,undefined)
+assert.ok((await discoveryRuntime('b','auth-b').discover()).issue)
+assert.ok((await discoveryRuntime('x','bad').discover()).issue)
+assert.equal((await discoveryRuntime('a','auth-a').discover()).active.sessionId,request.sessionId)
+revoked=false
+assert.equal((await discoveryRuntime('b','auth-b').discover()).active.participantSlot,2)
+assert.ok((await discoverDispatch('auth-b',{op:'discover',actorId:'a'})).issue)
+assert.ok((await discoverDispatch('auth-b',{op:'discover',sessionId:request.sessionId})).issue)
+assert.ok((await dispatch('auth-a',{op:'discover'})).issue)
+for(const value of [undefined,'wrong-id',[],{sessionId:request.sessionId}])assert.ok((await createSynchronDispatcher({...discoveryHost,readActiveSession:async()=>value})('auth-a',{op:'discover'})).issue)
+assert.deepEqual(await createSynchronDispatcher({...discoveryHost,readActiveSession:async()=>null})('auth-a',{op:'discover'}),{active:null})
+assert.ok((await createSynchronDispatcher({...discoveryHost,readActiveSession:async()=>{throw Error('network')}})('auth-a',{op:'discover'})).issue)
+assert.ok((await createSynchronDispatcher({...discoveryHost,authorizeDiscovery:async()=>false})('auth-a',{op:'discover'})).issue)
+assert.ok((await discoveryRuntime('a','auth-a',async()=>({active:undefined})).discover()).issue)
+assert.ok((await discoveryRuntime('a','auth-a',async()=>({active:{sessionId:request.sessionId,view:{phase:'finished'}}})).discover()).issue)
+assert.ok((await discoveryRuntime('a','auth-a',async()=>{throw Error('network')}).discover()).issue)
+assert.deepEqual(await discoveryRuntime('a','auth-a',async()=>({active:null})).discover(),{active:null})
+const beforeDiscovery=stored
+assert.equal((await discoveryRuntime('a','auth-a').discover()).active.revision,stored.revision)
+assert.equal(stored,beforeDiscovery)
