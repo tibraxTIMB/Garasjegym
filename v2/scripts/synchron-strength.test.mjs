@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import {synchronStrengthReferenceIssue,synchronRelativeLoad,validSynchronRelativeLoad} from '../src/lib/synchronStrength.js'
+import {synchronHistoryRows} from '../src/lib/synchronLog.js'
 import {createSynchronSession,applySynchronCommand} from '../src/lib/synchron.js'
 import {createSynchronGateway} from '../src/lib/synchronTransport.js'
 import {initializeSynchronReview,synchronReviewProjection} from '../src/lib/synchronReview.js'
@@ -46,3 +47,9 @@ stored=running
 const fallback=createSynchronGateway({...host,readStrengthReferences:async()=>{throw Error('offline')}})
 assert.equal((await fallback.command(plan.id,'pt',{id:'finish',type:'finish',revision:stored.revision,actual:20})).snapshot.view.phase,'finished')
 assert.equal((await fallback.snapshot(plan.id,'a')).snapshot.review.rows[0].segments[0].relativeLoad,null)
+
+const history={result_data:{synchron_result:{version:1,approved:true,rows:[{exercise_name:'Deadlift',unit:'reps',amount:10,quality:'estimated',assigned_seconds:30,team_actual:20,segments:[{seconds:30,variant:'standard',loadKg:60,relativeLoad:relative},{seconds:30,variant:'standard',loadKg:80,relativeLoad:relative}]}]}}}
+const projected=synchronHistoryRows(history)[0]
+assert.deepEqual(projected.segments[0].relativeLoad,relative)
+assert.equal(projected.segments[1].relativeLoad,undefined)
+assert.equal(synchronRelativeLoad([{...ref,loadKg:1}],{...q,loadKg:Number.MAX_VALUE}),null)
