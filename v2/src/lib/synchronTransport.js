@@ -1,3 +1,4 @@
+import {synchronCoachCalibration,applySynchronCalibration} from './synchronCalibration.js'
 import {applySynchronCommand,synchronView,synchronAssignedTime} from './synchron.js'
 import {sealSynchronResults,synchronOwnReservation} from './synchronSeal.js'
 import {initializeSynchronReview,synchronReviewProjection,applySynchronReview} from './synchronReview.js'
@@ -21,10 +22,14 @@ export function synchronClientSnapshot(state,actorId,now){
   ownAssignedSeconds:isMember?synchronAssignedTime(state,stage.id,actorId)+ownOpen/1000:null,
   review:synchronReviewProjection(state,actorId),
   totals:Object.fromEntries(Object.entries(state.totals).map(([id,t])=>[id,{unit:t.unit,actual:t.actual}])),
-  ...(leader?{participants:state.plan.members.map((id,i)=>({id,slot:i+1,joined:state.joined.includes(id)}))}:{})})
+  ...(leader?{calibration:synchronCoachCalibration(state,actorId),participants:state.plan.members.map((id,i)=>({id,slot:i+1,joined:state.joined.includes(id)}))}:{})})
 }
 export function synchronActionRequest(snapshot,type,fields={},id){
  if(!snapshot||typeof id!=='string'||!id)return null
+ if(type==='calibration_record'){
+  if(!snapshot.leader||snapshot.calibration?.sealed!==false||Object.keys(fields).some(k=>!['segmentIndex','amount','attested'].includes(k))||!snapshot.calibration.rows.some(r=>r.segmentIndex===fields.segmentIndex)||fields.attested!==true||!Number.isSafeInteger(fields.amount)||fields.amount<0||fields.amount>100000)return null
+  return {id,revision:snapshot.revision,type,...fields}
+ }
  if(type==='review_update'||type==='review_approve'){
   if(snapshot.view.phase!=='finished'||!snapshot.review||snapshot.review.sealed)return null
   if(type==='review_approve')return snapshot.review.canApprove&&!snapshot.review.approved&&!Object.keys(fields).length?{id,revision:snapshot.revision,type}:null
@@ -50,9 +55,10 @@ export function createSynchronGateway({authenticate,read,compareAndSwap,now,read
  async function command(sessionId,credential,cmd){
   const actorId=await authenticate(credential),state=await read(sessionId)
   if(!actorAllowed(state,actorId)||state.plan.id!==sessionId)return denied()
+  const calibrating=cmd?.type==='calibration_record'
   const reviewing=['review_update','review_approve'].includes(cmd?.type)
-  if(!cmd||typeof cmd!=='object'||Array.isArray(cmd)||(reviewing?Object.keys(cmd).some(k=>!reviewKeys.has(k))||cmd.type==='review_approve'&&Object.keys(cmd).some(k=>!['id','revision','type'].includes(k)):!allowed.has(cmd.type)||Object.keys(cmd).some(k=>!keys.has(k))||state.plan.leaderId!==actorId&&Object.hasOwn(cmd,'memberId')))return {issue:'Ugyldig handling.'}
-  const at=now(),result=reviewing?applySynchronReview(state,cmd,{actorId,at}):applySynchronCommand(state,cmd,{actorId,at})
+  if(!cmd||typeof cmd!=='object'||Array.isArray(cmd)||(calibrating?Object.keys(cmd).some(k=>!['id','revision','type','segmentIndex','amount','attested'].includes(k)):reviewing?Object.keys(cmd).some(k=>!reviewKeys.has(k))||cmd.type==='review_approve'&&Object.keys(cmd).some(k=>!['id','revision','type'].includes(k)):!allowed.has(cmd.type)||Object.keys(cmd).some(k=>!keys.has(k))||state.plan.leaderId!==actorId&&Object.hasOwn(cmd,'memberId')))return {issue:'Ugyldig handling.'}
+  const at=now(),result=calibrating?applySynchronCalibration(state,cmd,{actorId,at}):reviewing?applySynchronReview(state,cmd,{actorId,at}):applySynchronCommand(state,cmd,{actorId,at})
   if(result.issue)return {issue:result.issue,snapshot:synchronClientSnapshot(state,actorId,at)}
   if(result.duplicate)return {duplicate:true,snapshot:synchronClientSnapshot(state,actorId,at)}
   const next=result.state.phase==='finished'&&!result.state.review?initializeSynchronReview(result.state,await readCalibrations(result.state.plan)):result.state
