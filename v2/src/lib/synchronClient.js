@@ -21,8 +21,8 @@ export function synchronControls(record,{now,online=true,busy=false}={}){
   canPause:!locked&&display.canPause,canResume:!locked&&display.canResume,
   canAdvance:!locked&&display.canAdvance,canFinish:!locked&&display.canFinish,
   canLoad:!locked&&display.phase==='running'&&snapshot.joined,
-  canReview:!locked&&display.phase==='finished'&&!!snapshot.review,
-  canApprove:!locked&&display.phase==='finished'&&!!snapshot.review?.canApprove&&!snapshot.review.approved}
+  canReview:!locked&&display.phase==='finished'&&!!snapshot.review&&!snapshot.review.sealed,
+  canApprove:!locked&&display.phase==='finished'&&!!snapshot.review?.canApprove&&!snapshot.review.approved&&!snapshot.review.sealed}
 }
 export async function submitSynchronAction(record,type,fields,id,{read,command,now,online}){
  const controls=synchronControls(record,{now:now(),online:online()})
