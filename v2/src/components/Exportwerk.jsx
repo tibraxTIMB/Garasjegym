@@ -1,0 +1,19 @@
+import {useEffect,useRef,useState} from 'react'
+import {supabase} from '../lib/supabase.js'
+import {ownWorkoutExport,exportAllowed} from '../lib/exportwerk.js'
+import {lazy,Suspense} from 'react'
+import {workoutXlsx} from '../lib/exportwerkXlsx.js'
+import {saveExchange} from '../lib/werkstattExchange.js'
+const GarminExport=lazy(()=>import('./GarminExport.jsx'))
+export default function Exportwerk({profile}){
+ const today=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Oslo'})
+ const [from,setFrom]=useState('2026-01-01'),[to,setTo]=useState(today),[preview,setPreview]=useState(null),[approved,setApproved]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('')
+ const request=useRef(0),lock=useRef(false)
+ useEffect(()=>()=>{request.current++},[])
+ if(!exportAllowed(profile))return null
+ function invalidate(){request.current++;setPreview(null);setApproved(false);setError('')}
+ async function load(){if(lock.current)return;lock.current=true;const seq=++request.current;setBusy(true);setPreview(null);setApproved(false);setError('');try{const data=await ownWorkoutExport(supabase,profile,from,to);if(seq===request.current)setPreview({data,from,to})}catch(e){if(seq===request.current)setError(e.message||'Eksporten feila.')}finally{lock.current=false;setBusy(false)}}
+ async function authorize(){const {data,error}=await supabase.auth.getUser();if(error||data?.user?.id!==profile.id)throw Error('Innlogginga er endra.');const p=await supabase.from('profiles').select('id,role,active,membership_status').eq('id',profile.id).single();if(p.error||p.data?.id!==profile.id||!exportAllowed(p.data))throw Error('Tilgangen er endra.')}
+ async function download(kind){if(!preview||!approved||busy)return;setBusy(true);try{await authorize();if(kind==='xlsx'){saveExchange('garasjegym-analyse-'+preview.from+'-'+preview.to+'.xlsx',workoutXlsx(preview.data,preview.from,preview.to),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}else saveExchange('garasjegym-'+kind+'-'+preview.from+'-'+preview.to+'.csv',kind==='okter'?preview.data.workouts:preview.data.setRows,'text/csv;charset=utf-8')}catch(e){setError(e.message);setApproved(false)}finally{setBusy(false)}}
+ return <section className="gg-werkstatt-panel"><h3>EXPORTWERK 49 · eigne treningsdata</h3><p>CSV til Excel: faktiske loggar og registrerte sett. Ingen data frå andre medlemmar. Excel: sju ark, dato- og øvingsfilter, formlar og diagram. FIT for individuelle styrkeøkter med kontrollerte øvingskodar; CSV er ikkje Garmin Connect-import.</p><div className="gg-werkstatt-toolbar"><label>Frå<input type="date" value={from} disabled={busy} onChange={e=>{invalidate();setFrom(e.target.value)}}/></label><label>Til<input type="date" value={to} disabled={busy} onChange={e=>{invalidate();setTo(e.target.value)}}/></label><button type="button" className="primary-button" disabled={busy} onClick={load}>{busy?'Kontrollerer …':'1 · Hent og kontroller'}</button></div>{error&&<p role="alert">{error}</p>}{preview&&<><p>{preview.data.logs} økter · {preview.data.exercises} øvingar · {preview.data.sets} registrerte sett. Tomme felt er ikkje estimerte.</p><label><input type="checkbox" checked={approved} disabled={busy} onChange={e=>setApproved(e.target.checked)}/> 2 · Eg har kontrollert utvalet og vil lasta ned mine eigne treningsdata.</label><div className="gg-werkstatt-toolbar"><button type="button" disabled={!approved||busy} onClick={()=>download('xlsx')}>Last ned Excel (.xlsx)</button><button type="button" disabled={!approved||busy} onClick={()=>download('okter')}>Last ned økter (CSV)</button><button type="button" disabled={!approved||busy} onClick={()=>download('sett')}>Last ned sett (CSV)</button></div><Suspense fallback={<p>Lastar FIT-verktøy …</p>}><GarminExport key={preview.from+':'+preview.to} data={preview.data} approved={approved} busy={busy} onAuthorize={authorize}/></Suspense></>}</section>
+}
