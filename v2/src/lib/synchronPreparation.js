@@ -9,6 +9,7 @@ export function synchronWodTargets(wod,level='rx'){
  const schema=wod?.timer_settings?.workout_schema
  const blocks=schema?.wod_engine?.blocks
  if(wod?.format!=='Chipper'||!schema||blocks?.length>1||schema.composite_blocks?.length>1)return fail('Vel ein strukturert Chipper med éin del.')
+ if([schema.time_cap_seconds,schema.time_cap_minutes,blocks?.[0]?.time_cap_seconds].some(v=>Number(v)>0))return fail('Chipper med tidsgrense er ikkje støtta i SYNCHRON enno.')
  const items=blocks?.[0]?.items?.length?blocks[0].items:schema.items
  if(!Array.isArray(items)||!items.length||items.length>30)return fail('WOD-en manglar strukturerte øvingar.')
  const rows=[]
