@@ -1,4 +1,4 @@
-import {samspelConfig,samspelParticipantResults,samspelStrengthComplete,doubleEmomComplete,samspelEmomComplete,teamChipperComplete,relayTotal} from './samspel.js'
+import {samspelConfig,samspelParticipantResults,samspelStrengthComplete,doubleEmomComplete,samspelEmomComplete,teamChipperComplete,teamChipperProgress,relayTotal} from './samspel.js'
 import {isIndividualPerformance} from './performanceEvidence.js'
 import {sortWodItems,getWodSchemaItems} from './wodOrdering.js'
 import {isEmomFormat,emomPrescribedSetCount} from './wodEngine.js'
@@ -37,7 +37,7 @@ function correctableCompositeParts(data={}){
   const config=samspelConfig({samspel:part.samspel})
   const matches=data.block_summary.filter(b=>b.id===part.block_id)
   const summary=matches[0],stored=summary?.samspel
-  return ['emom','double_emom','strength','relay'].includes(config?.main_track)&&typeof part.completed==='boolean'&&matches.length===1&&summary.completed===part.completed&&stored?.main_track===config.main_track&&stored.participant_count===config.participant_count&&stored.duration_seconds===config.duration_seconds&&stored.switch_seconds===config.switch_seconds&&stored.switch_rule===config.switch_rule&&(config.main_track==='emom'?stored.task===config.task&&stored.metric===config.metric:config.main_track==='strength'?stored.exercise_name===config.exercise_name&&stored.planned_sets===config.planned_sets:config.main_track==='relay'?Number.isSafeInteger(config.duration_seconds)&&config.duration_seconds>0&&Number.isSafeInteger(part.relay_rounds)&&part.relay_rounds>=0&&summary.relay_rounds===part.relay_rounds&&relayTotal(config,config.participant_results)===part.relay_rounds&&JSON.stringify(stored.manual_swaps||[])===JSON.stringify(config.manual_swaps||[]):JSON.stringify(stored.tracks)===JSON.stringify(config.tracks))&&(data.manual_entry===true||Number.isFinite(part.elapsed)&&part.elapsed>=0&&summary.elapsed===part.elapsed)
+  return ['emom','double_emom','strength','relay','chipper'].includes(config?.main_track)&&typeof part.completed==='boolean'&&matches.length===1&&summary.completed===part.completed&&stored?.main_track===config.main_track&&stored.participant_count===config.participant_count&&stored.duration_seconds===config.duration_seconds&&stored.switch_seconds===config.switch_seconds&&stored.switch_rule===config.switch_rule&&(config.main_track==='emom'?stored.task===config.task&&stored.metric===config.metric:config.main_track==='strength'?stored.exercise_name===config.exercise_name&&stored.planned_sets===config.planned_sets:config.main_track==='chipper'?JSON.stringify(stored.targets)===JSON.stringify(config.targets)&&Number.isSafeInteger(config.duration_seconds)&&config.duration_seconds>0&&Number.isSafeInteger(part.elapsed)&&part.elapsed>=0&&part.elapsed<=config.duration_seconds&&summary.elapsed===part.elapsed&&JSON.stringify(part.chipper_progress)===JSON.stringify(teamChipperProgress(config,config.participant_results))&&JSON.stringify(summary.chipper_progress)===JSON.stringify(part.chipper_progress)&&JSON.stringify(stored.participant_results)===JSON.stringify(config.participant_results)&&part.completed===(teamChipperComplete(config,config.participant_results)&&part.elapsed>0):config.main_track==='relay'?Number.isSafeInteger(config.duration_seconds)&&config.duration_seconds>0&&Number.isSafeInteger(part.relay_rounds)&&part.relay_rounds>=0&&summary.relay_rounds===part.relay_rounds&&relayTotal(config,config.participant_results)===part.relay_rounds&&JSON.stringify(stored.manual_swaps||[])===JSON.stringify(config.manual_swaps||[]):JSON.stringify(stored.tracks)===JSON.stringify(config.tracks))&&(data.manual_entry===true||Number.isFinite(part.elapsed)&&part.elapsed>=0&&summary.elapsed===part.elapsed)
  })
 }
 export function samspelCorrectionFields(workout){
@@ -71,20 +71,20 @@ export function samspelCorrectionDraft(workout){
 }
 function compositeCorrectionPatch(data,draft){
  const parts=correctableCompositeParts(data)
- if(!parts.length)return {issue:'Ingen støtta Engine Swap-, Double EMOM-, Iron Twins- eller You Go I Go-del med samsvarande lagra oppsett og gjennomføringsstatus kan korrigerast.'}
+ if(!parts.length)return {issue:'Ingen støtta Engine Swap-, Double EMOM-, Iron Twins- You Go I Go- eller Team Chipper-del med samsvarande lagra oppsett og gjennomføringsstatus kan korrigerast.'}
  const updated=new Map()
  for(const part of parts){
   const config=part.samspel
   const participants=Object.fromEntries(Array.from({length:config.participant_count},(_,i)=>[i+1,draft?.[JSON.stringify([part.block_id,i+1])]||{}]))
-  const result=compositeSamspelResults([{id:part.block_id,title:part.title,format:config.main_track==='relay'?'AMRAP':config.main_track==='strength'?'Strength':'EMOM',duration_seconds:config.duration_seconds,emomIntervalSeconds:config.switch_seconds,samspel:config}],{['samspel:'+part.block_id]:{participants,completed:part.completed}},{0:{elapsed:part.elapsed,samspel_swaps:config.manual_swaps}},data.manual_entry===true)
+  const result=compositeSamspelResults([{id:part.block_id,title:part.title,format:config.main_track==='chipper'?'Chipper':config.main_track==='relay'?'AMRAP':config.main_track==='strength'?'Strength':'EMOM',duration_seconds:config.duration_seconds,emomIntervalSeconds:config.switch_seconds,samspel:config}],{['samspel:'+part.block_id]:{participants,completed:part.completed,timeSeconds:part.elapsed}},{0:{elapsed:part.elapsed,samspel_swaps:config.manual_swaps}},data.manual_entry===true)
   if(result.issue)return {issue:result.issue}
   const actual=result.rows[0]
   if(!actual||actual.completed!==part.completed)return {issue:(part.title||'Øktdel')+': korrigeringa ville endra gjennomføringsstatus. PT- og planlenkjer må rettast samordna.'}
-  updated.set(part.block_id,{...part,samspel:{...part.samspel,participant_results:actual.samspel.participant_results},distance:actual.distance,calories:actual.calories,...(config.main_track==='relay'?{relay_rounds:actual.relay_rounds}:{})})
+  updated.set(part.block_id,{...part,samspel:{...part.samspel,participant_results:actual.samspel.participant_results},distance:actual.distance,calories:actual.calories,...(config.main_track==='relay'?{relay_rounds:actual.relay_rounds}:{}),...(config.main_track==='chipper'?{chipper_progress:actual.chipper_progress}:{})})
  }
  return {patch:{result_data:{...data,samspel_blocks:data.samspel_blocks.map(part=>updated.get(part.block_id)||part),block_summary:data.block_summary.map(block=>{
   const part=updated.get(block.id)
-  return part?{...block,samspel:{...block.samspel,participant_results:part.samspel.participant_results},distance:part.distance,calories:part.calories,...(part.samspel.main_track==='relay'?{relay_rounds:part.relay_rounds}:{})}:block
+  return part?{...block,samspel:{...block.samspel,participant_results:part.samspel.participant_results},distance:part.distance,calories:part.calories,...(part.samspel.main_track==='relay'?{relay_rounds:part.relay_rounds}:{}),...(part.samspel.main_track==='chipper'?{chipper_progress:part.chipper_progress}:{})}:block
  })}}}
 }
 export function samspelCorrectionPatch(workout,draft){
