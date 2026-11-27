@@ -274,7 +274,7 @@ export default function App({synchronRuntime:injectedSynchronRuntime=undefined,t
   const localDiscoveryBlocked=discoveryBlocked&&!localOnly
   const trainingLaunchLocked=remoteLocked||localDiscoveryBlocked
   const localSessionOpen=!!timerSnapshot.sessionOpen||!!(synchronActor&&restoreWorkoutDraft(synchronActor))
-  const officeAllowed=profileReady&&!localDiscoveryBlocked&&werkstattEntryAllowed(profile,synchronActor,{labMode,localSessionOpen,remoteLocked})
+  const officeAllowed=profileReady&&!discoveryBlocked&&werkstattEntryAllowed(profile,synchronActor,{labMode,localSessionOpen,remoteLocked})
   const officeMode=officeAllowed&&officeRequested&&!labMode
   const officeDesktop=officeMode&&deviceProfile.width>=1000
   const simpleMode=storedSimpleMode&&!officeMode
