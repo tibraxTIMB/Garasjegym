@@ -54,12 +54,17 @@ export function doubleEmomComplete(s,rows=[],{elapsed}={}){
  return [1,2].every(slot=>{const r=rows.filter(r=>r.slot===slot),[a,b]=doubleEmomOpportunity(s,slot);return r.length===1&&(a===0?r[0].track_a_intervals==null||r[0].track_a_intervals===0:r[0].track_a_intervals===a)&&(b===0?r[0].track_b_intervals==null||r[0].track_b_intervals===0:r[0].track_b_intervals===b)})
 }
 export function samspelMainLabel(s){return samspelStrength(s)?'Styrke':samspelQuality(s)?'Kvalitet':samspelEmom(s)?'EMOM':'AMRAP'}
-export function samspelEmomOpportunity(s,slot,elapsed=s?.duration_seconds){
+// Count actual machine-role opportunities on the same clock as the EMOM.
+export function samspelErgOpportunity(s,slot,elapsed=s?.duration_seconds){
  if(!samspelEmom(s)||!samspelConfig({samspel:s})||!Number.isInteger(slot)||slot<1||slot>s.participant_count||!Number.isFinite(elapsed))return 0
  const intervals=Math.ceil(Math.max(0,Math.min(elapsed,s.duration_seconds))/s.switch_seconds)
  const offset=slot-1
- const ergIntervals=intervals>offset?1+Math.floor((intervals-1-offset)/s.participant_count):0
- return intervals-ergIntervals
+ return intervals>offset?1+Math.floor((intervals-1-offset)/s.participant_count):0
+}
+export function samspelEmomOpportunity(s,slot,elapsed=s?.duration_seconds){
+ if(!samspelEmom(s)||!samspelConfig({samspel:s})||!Number.isInteger(slot)||slot<1||slot>s.participant_count||!Number.isFinite(elapsed))return 0
+ const intervals=Math.ceil(Math.max(0,Math.min(elapsed,s.duration_seconds))/s.switch_seconds)
+ return intervals-samspelErgOpportunity(s,slot,elapsed)
 }
 // Full team completion requires all individual interval counts, not merely
 // an expired clock. Missing or partial evidence remains incomplete.
@@ -290,6 +295,7 @@ export function samspelParticipantResults(s,values={}, {elapsed}={}){
    const n=Number(row.intervals),erg=Number(row.erg)
    if(entered&&(!Number.isSafeInteger(n)||n<0||n>samspelEmomOpportunity(s,row.slot,elapsed)))return {rows:[],issue:'Utøvar '+row.slot+': oppgi faktisk fullførte EMOM-intervall innanfor tilgjengelege intervall.',slot:row.slot,field:'intervals'}
    if(ergEntered&&(!Number.isFinite(erg)||erg<0))return {rows:[],issue:'Utøvar '+row.slot+': oppgi gyldig maskinresultat.',slot:row.slot,field:'erg'}
+   if(ergEntered&&erg>0&&samspelErgOpportunity(s,row.slot,elapsed)===0)return {rows:[],issue:'Utøvar '+row.slot+': maskinresultat må vera 0 når utøvaren ikkje har hatt maskinrolla.',slot:row.slot,field:'erg'}
    results.push({slot:row.slot,completed_intervals:entered?n:null,rounds:null,extra_reps:null,erg_value:ergEntered?erg:null})
    continue
   }
