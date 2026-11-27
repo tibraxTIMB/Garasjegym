@@ -1,5 +1,5 @@
 """Actual mobile WOD builder -> catalogue -> keypad -> saved plan payload. Synthetic only."""
-import json
+import json,re
 from playwright.sync_api import sync_playwright
 BASE='http://127.0.0.1:4173'
 with sync_playwright() as pw:
@@ -22,8 +22,12 @@ with sync_playwright() as pw:
   page.get_by_role('button',name='Vidare til øvingar',exact=True).click()
   page.get_by_role('button',name='Legg til øving',exact=True).first.click()
   picker=page.get_by_role('region',name='Vel øvingar til WOD')
-  picker.wait_for()
-  first=picker.locator('.wod-exercise-card').filter(has_text='Air Squat').first
+  try:
+   picker.wait_for(timeout=10000)
+  except Exception:
+   print('PICKER DIAGNOSTICS',errors,page.locator('body').inner_text()[:4000],flush=True)
+   raise
+  first=picker.locator('.wod-exercise-card').filter(has_text=re.compile(r'\bAir squat\b',re.I)).first
   first.locator('.wod-add-button').click()
   first.locator('.wod-add-button').click()
   picker.get_by_role('button',name='Ferdig · 2 valde',exact=True).click()

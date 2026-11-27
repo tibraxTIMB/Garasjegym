@@ -90,3 +90,13 @@ test('SYNCHRON admits only executable single-block Chipper and rejects ambiguity
   assert.ok(synchronWodTargets({format:'Chipper',timer_settings:{workout_schema:{items:[{...item('x'),...patch}]}}}).issue)
  }
 })
+
+import {readFileSync} from 'node:fs'
+test('equipment plan collection cannot shadow the callable catalogue equipment label helper',()=>{
+ const code=readFileSync(new URL('../src/components/WodBuilder.jsx',import.meta.url),'utf8')
+ assert.match(code,/const equipmentItems=value=>/)
+ assert.match(code,/const plannedEquipmentItems=equipmentItemsForSamspel/)
+ assert.doesNotMatch(code,/const equipmentItems=equipmentItemsForSamspel/)
+ assert.match(code,/equipmentItems\(ex\.equipment\)\.map/)
+ assert.match(code,/equipmentPlanSnapshot\(plannedEquipmentItems,equipmentPlan\)/)
+})
