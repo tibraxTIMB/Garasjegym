@@ -41,16 +41,26 @@ test('dosage and review both reorder by stable exercise occurrence keys', () => 
   assert.match(code, /WodReviewOrder selected=\{selected\} onMove=\{moveByKey\}/)
 })
 
-test('RX is the simple default, and intermediate/scaled live in an expandable area', () => {
-  assert.match(code, /RX · hovuddosering/)
-  assert.match(code, /<details className="gg-secondary-dosage"/)
-  assert.match(code, /renderDose\('intermediate'\)/)
-  assert.match(code, /renderDose\('scaled'\)/)
-  assert.match(code, /\[50,60,75\]\.map\(n=>/)
-  assert.match(code, /updateLevel\(exercise\.key,level,patch\)/)
-  assert.match(code, /loadMode:'kg',loadKgMen/)
-  assert.match(code, /loadMode:'kg',loadKgWomen/)
-  assert.match(training, /id:'intermediate',label:'Intermediate'/)
+test('edit starts at format and retains stored order; no time format continues to exercises', () => {
+  assert.match(code, /setScaledNotes\(schema\.scaled_notes\|\|''\);setWizardStep\(0\)/)
+  assert.match(code, /sortWodItems\(getWodSchemaItems\(schema\)\)/)
+  assert.match(code, /if\(editWodId\)setWizardStep\(wodFormatNeedsTime\(item\)&&item!==COMPOSITE_FORMAT\?1:2\)/)
+  assert.match(code, /onClick=\{\(\)=>chooseFormat\(format\)\}>Behald/)
+})
+
+test('RX, Scaled and Foundation are directly editable; legacy intermediate is not overwritten', () => {
+  const quick = code.slice(code.indexOf('function QuickDoseLevels'), code.indexOf('function WodReviewOrder'))
+  assert.match(quick, /renderDose\('rx'\)/)
+  assert.match(quick, /renderDose\('scaled'\)/)
+  assert.match(quick, /renderDose\('foundation'\)/)
+  assert.doesNotMatch(quick, /Intermediate|renderDose\('intermediate'\)/)
+  assert.match(quick, /loadMode:'kg',loadKgMen/)
+  assert.match(quick, /loadMode:'kg',loadKgWomen/)
+  assert.match(quick, /<option value="percent">% av 1RM<\/option>/)
+  assert.match(quick, /<option value="rir">RIR<\/option>/)
+  assert.match(quick, /\[50,60,75\]\.map\(n=>/)
+  assert.match(quick, /updateLevel\(exercise\.key,level,patch\)/)
+  assert.match(code, /levels:\{\.\.\.levels,scaled:\{\.\.\.rx,repsOverride:false\},foundation:\{\.\.\.rx,repsOverride:false\}\}/)
 })
 
 test('the dial has no preset buttons, and five progress stages fit in one row', () => {

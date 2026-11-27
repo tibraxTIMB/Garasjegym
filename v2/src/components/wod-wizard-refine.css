@@ -103,7 +103,7 @@
 .gg-level-row>strong { color:#fff;font-size:14px;padding-top:9px; }
 .gg-level-fields,.gg-quick-rowing { display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;min-width:0; }
 .gg-level-fields label,.gg-quick-rowing label { display:grid;gap:5px;min-width:0;font-size:12px;color:#d8e4e9;font-weight:750; }
-.gg-level-fields input,.gg-quick-rowing input,.gg-quick-rowing select { width:100%;min-width:0;min-height:44px;padding:8px 10px;box-sizing:border-box;border-radius:9px;border:1px solid #5d737e;background:#0c181e;color:#fff;font-size:16px; }
+.gg-level-fields input,.gg-level-fields select,.gg-quick-rowing input,.gg-quick-rowing select { width:100%;min-width:0;min-height:44px;padding:8px 10px;box-sizing:border-box;border-radius:9px;border:1px solid #5d737e;background:#0c181e;color:#fff;font-size:16px; }
 .gg-reps-picker { grid-column:1/-1;display:grid;gap:7px;width:min(100%,350px);min-width:0; }
 .gg-reps-label { font-size:13px;font-weight:800;color:#e9f0f3; }
 .gg-reps-controls { display:grid;grid-template-columns:47px minmax(0,1fr) 47px;gap:7px; }
