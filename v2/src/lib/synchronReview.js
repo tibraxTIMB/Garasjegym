@@ -9,8 +9,9 @@ export function initializeSynchronReview(state,calibrations=[]){
   const rows=state.plan.members.map(memberId=>{
    const segments=state.segments.filter(s=>s.movementId===m.id&&s.memberId===memberId)
    const assignedSeconds=synchronAssignedTime(state,m.id,memberId)
-   const estimate=m.unit==='seconds'&&m.method==='clock'&&segments.length?assignedSeconds:synchronEstimate(state,m.id,memberId,calibrations)?.value??null
-   return {memberId,assignedSeconds,segments:segments.map(s=>({seconds:s.assignedMs/1000,variant:s.dose.variant,loadKg:s.dose.loadKg})),estimate:Number.isFinite(estimate)&&estimate>=0?estimate:null,input:null}
+   const proposal=synchronEstimate(state,m.id,memberId,calibrations)
+   const estimate=m.unit==='seconds'&&m.method==='clock'&&segments.length?assignedSeconds:proposal?.value??null
+   return {memberId,assignedSeconds,segments:segments.map(s=>({seconds:s.assignedMs/1000,variant:s.dose.variant,loadKg:s.dose.loadKg})),estimate:Number.isFinite(estimate)&&estimate>=0?estimate:null,model:proposal?.model??null,input:null}
   })
   return {movementId:m.id,unit:m.unit,teamActual:state.totals[m.id].actual,rows}
  })
@@ -42,7 +43,7 @@ export function synchronReviewProjection(state,actorId){
   const r=m.rows.find(r=>r.memberId===actorId)
   const movement=state.plan.movements.find(x=>x.id===m.movementId)
   return {movementId:m.movementId,name:movement.name||movement.exerciseId,unit:m.unit,teamActual:m.teamActual,reconciled:m.reconciled,conflict:m.conflict,
-   assignedSeconds:r.assignedSeconds,segments:r.segments,value:r.value,quality:r.quality,basis:r.basis,explicitUnknown:r.input?.quality==='unknown',prEligible:false}
+   assignedSeconds:r.assignedSeconds,segments:r.segments,value:r.value,quality:r.quality,basis:r.basis,model:r.input?null:r.model??null,explicitUnknown:r.input?.quality==='unknown',prEligible:false}
  })
  return clone({revision:state.revision,rows,approved:state.review.approved.includes(actorId),approvedCount:state.review.approved.length,participantCount:state.plan.members.length,
   sealed:!!state.seal,canApprove:rows.length>0&&rows.every(r=>!r.conflict&&(r.teamActual===null?r.value!==null||r.explicitUnknown:r.reconciled===true)),prEligible:false})
