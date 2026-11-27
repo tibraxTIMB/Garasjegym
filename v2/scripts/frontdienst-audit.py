@@ -158,6 +158,37 @@ with sync_playwright() as pw:
     assert not errors,errors
     print("FRONTDIENST YGIG EMOM: plan fill, manual correction, separate results, reload and partial save passed",flush=True)
     ctx.close()
+    # Actual shared timer: authoritative elapsed drives roles and individual doses.
+    ctx=browser.new_context(viewport={"width":390,"height":844},has_touch=True)
+    ctx.route("**/*",lambda route:route.continue_() if route.request.url.startswith(BASE+"/") else route.abort())
+    page=ctx.new_page()
+    errors=[]
+    page.on("pageerror",lambda error:errors.append(str(error)))
+    page.clock.install()
+    page.goto(URL+"&launch=paired",wait_until="domcontentloaded")
+    dose=page.locator(".gg-current-doses")
+    expect(dose).to_be_visible(timeout=15000)
+    expect(dose).to_contain_text("6 reps")
+    page.get_by_role("group",name="Startdosering P2").get_by_role("button",name="Scaled",exact=True).click()
+    expect(dose).to_contain_text("P1 · RX")
+    page.get_by_role("button",name="Start no",exact=True).first.click()
+    page.wait_for_function("(k)=>JSON.parse(localStorage.getItem(k)||'{}').timerSnapshot?.running===true",arg=DRAFT)
+    page.clock.fast_forward(61000)
+    expect(dose).to_contain_text("P2 · Scaled",timeout=10000)
+    expect(dose).to_contain_text("4 reps")
+    expect(dose).to_contain_text("Bench press")
+    page.get_by_role("button",name="Pause",exact=True).first.click()
+    page.clock.fast_forward(70000)
+    expect(dose).to_contain_text("P2 · Scaled")
+    page.get_by_role("button",name="Hald fram",exact=True).first.click()
+    page.clock.fast_forward(61000)
+    expect(dose).to_contain_text("P1 · RX")
+    expect(dose).to_contain_text("Dips")
+    expect(dose).to_contain_text("6 reps")
+    assert page.evaluate("(k)=>localStorage.getItem(k)",WRITES) is None
+    assert not errors,errors
+    print("FRONTDIENST YGIG TIMER: P1/P2 dosage, clocked rotation and paused role passed",flush=True)
+    ctx.close()
     # Exercise-library-backed builder and grouped Del 0: actual UI, no live writes.
     ctx=browser.new_context(viewport={"width":390,"height":844},has_touch=True)
     ctx.route("**/*",lambda route:route.continue_() if route.request.url.startswith(BASE+"/") else route.abort())

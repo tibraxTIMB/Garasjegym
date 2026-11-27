@@ -1,4 +1,4 @@
-import {partnerEmomSlot,pairedEmomOpportunity,pairedEmomScheduleIssue} from './synchronSchedule.js'
+import {partnerEmomSlot,pairedEmomOpportunity,pairedEmomScheduleIssue,pairedEmomClock} from './synchronSchedule.js'
 // Samspel is orthogonal to format. A versioned, opt-in capability; legacy WODs stay unchanged.
 export const SAMSPEL_TASKS=[['row','Romaskin'],['bike','Sykkel'],['ski','SkiErg']]
 export const SAMSPEL_STATION_TASKS=[...SAMSPEL_TASKS,['strength','Styrke']]
@@ -210,6 +210,7 @@ export function samspelWithSwitch(s,rule,seconds=60){
 // Driven by the existing active elapsed clock: pauses and reloads need no second timer.
 // At the workout deadline preserve the final working roles, rather than announcing an extra swap.
 export function samspelRotation(s,{rounds=0,elapsed=0,target=Infinity,manualSwaps=[]}={}){
+ if(samspelPairedEmom(s)){const frame=pairedEmomClock(s,elapsed);return frame?{roles:samspelRoles(s,frame.interval-1),nextSwitchSeconds:frame.nextSwitchSeconds,timed:true}:{roles:[],nextSwitchSeconds:null,timed:false}}
  if(samspelChipper(s)||samspelRecovery(s))return {roles:samspelRoles(s,0),nextSwitchSeconds:null,timed:false}
  if(samspelDouble(s)&&s.switch_rule==='fixed')return {roles:samspelRoles(s,0),nextSwitchSeconds:null,timed:false}
  if(samspelStrength(s))return {roles:['Styrke','Styrke'],nextSwitchSeconds:null,timed:false}

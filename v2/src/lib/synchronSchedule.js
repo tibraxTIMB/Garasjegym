@@ -29,3 +29,15 @@ export function pairedEmomOpportunity(s,exerciseIndex,worker,elapsed=s?.duration
  const slots=Math.ceil(Math.min(s.duration_seconds,Math.max(0,elapsed))/s.switch_seconds)
  return partnerEmomCount({slots,exerciseIndex,exerciseCount:s.tracks.length,worker})
 }
+
+// Deterministic shared-clock view. A transport supplies authoritative active elapsed
+// seconds; the local timer supplies its pause-adjusted elapsed. Never infer results.
+export function pairedEmomClock(s,elapsed=0){
+ if(!s||pairedEmomScheduleIssue({durationSeconds:s.duration_seconds,intervalSeconds:s.switch_seconds,exerciseCount:s.tracks?.length})||!Number.isFinite(elapsed))return null
+ const active=Math.min(s.duration_seconds,Math.max(0,elapsed)),total=s.duration_seconds/s.switch_seconds
+ const finished=active===s.duration_seconds
+ const interval=Math.min(total,Math.floor(active/s.switch_seconds)+1)
+ const current=partnerEmomSlot(interval,s.tracks.length)
+ const next=interval<total?partnerEmomSlot(interval+1,s.tracks.length):null
+ return {interval,total,elapsed:active,finished,current,next,remaining:Math.max(0,interval*s.switch_seconds-active),nextSwitchSeconds:finished||!next?null:Math.ceil(interval*s.switch_seconds-active)}
+}

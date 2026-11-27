@@ -357,3 +357,12 @@ const mixedPaired=samspelParticipantResults(front,{1:{level:'rx','paired-0':'3',
 assert.equal(mixedPaired.issue,null)
 assert.deepEqual(mixedPaired.rows.map(r=>r.prescription_level),['rx','foundation'])
 assert.ok(samspelParticipantResults(front,{1:{level:'invented','paired-0':'1'}},{elapsed:1080}).issue)
+
+import {pairedEmomClock} from '../src/lib/synchronSchedule.js'
+assert.deepEqual(pairedEmomClock(front,0).current,{exerciseIndex:0,worker:1,resting:2})
+assert.equal(pairedEmomClock(front,60).current.worker,2)
+assert.equal(pairedEmomClock(front,120).current.exerciseIndex,1)
+assert.equal(pairedEmomClock(front,1080).finished,true)
+assert.equal(pairedEmomClock(front,1080).next,null)
+assert.equal(pairedEmomClock(front,1080).remaining,0)
+assert.equal(pairedEmomClock(front,2000).elapsed,1080)
