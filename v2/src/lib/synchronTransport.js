@@ -45,7 +45,7 @@ export function synchronActionRequest(snapshot,type,fields={},id){
   type==='finish'?v.canFinish:type==='load'?v.phase==='running'&&(snapshot.joined||snapshot.leader):false
  return permitted?{id,revision:snapshot.revision,type,...fields}:null
 }
-export function createSynchronGateway({authenticate,read,compareAndSwap,now,readCalibrations=async()=>[],reservation=null}){
+export function createSynchronGateway({authenticate,read,compareAndSwap,now,readCalibrations=async()=>[],readStrengthReferences=async()=>[],reservation=null}){
  if([authenticate,read,compareAndSwap,now].some(fn=>typeof fn!=='function'))throw Error('Synchron krev autentisering, lagring og serverklokke.')
  const denied=()=>({issue:'Ingen tilgang til økta.'})
  async function snapshot(sessionId,credential){
@@ -61,7 +61,13 @@ export function createSynchronGateway({authenticate,read,compareAndSwap,now,read
   const at=now(),result=calibrating?applySynchronCalibration(state,cmd,{actorId,at}):reviewing?applySynchronReview(state,cmd,{actorId,at}):applySynchronCommand(state,cmd,{actorId,at})
   if(result.issue)return {issue:result.issue,snapshot:synchronClientSnapshot(state,actorId,at)}
   if(result.duplicate)return {duplicate:true,snapshot:synchronClientSnapshot(state,actorId,at)}
-  const next=result.state.phase==='finished'&&!result.state.review?initializeSynchronReview(result.state,await readCalibrations(result.state.plan)):result.state
+  let next=result.state
+  if(next.phase==='finished'&&!next.review){
+   // Optional descriptive reference must not prevent finishing on read failure.
+   let strengthReferences=[]
+   try{strengthReferences=await readStrengthReferences(next.plan)}catch{}
+   next=initializeSynchronReview(next,await readCalibrations(next.plan),strengthReferences)
+  }
   if(!await compareAndSwap(sessionId,state.revision,next)){
    const latest=await read(sessionId)
    if(!actorAllowed(latest,actorId)||latest.plan.id!==sessionId)return denied()
