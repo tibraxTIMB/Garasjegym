@@ -1,7 +1,7 @@
 name: Gazelle responsive browser audit (no deploy)
 on:
   push:
-    branches: [gazelle-responsive-audit, gazelle-librarium, gazelle-librarium-polish, gazelle-plan-folders, gazelle-acta, gazelle-pt-plan, gazelle-pt-compact, gazelle-architect, gazelle-pt-flow-repair, gazelle-operational-anatomical]
+    branches: [gazelle-responsive-audit, gazelle-librarium, gazelle-librarium-polish, gazelle-plan-folders, gazelle-acta, gazelle-pt-plan, gazelle-pt-compact, gazelle-architect, gazelle-pt-flow-repair, gazelle-operational-anatomical, volksmaschine-reibungslos, hotfix-pt-dialog-layout-20261126, werkstatt-pc-companion, 'ops/werkstatt-fertigstellung-49', exportwerk-fertigstellung]
 permissions:
   contents: read
 jobs:
@@ -42,7 +42,7 @@ jobs:
           for i in $(seq 1 60); do curl -fs http://127.0.0.1:4173/ui-audit.html >/dev/null && break; sleep 1; done
           python scripts/responsive-audit.py
       - name: Test built Tablet Lab with isolated storage and backend
-        if: ${{ github.ref_name == 'gazelle-operational-anatomical' }}
+        if: ${{ github.ref_name == 'werkstatt-pc-companion' || github.ref_name == 'ops/werkstatt-fertigstellung-49' || github.ref_name == 'exportwerk-fertigstellung' || github.ref_name == 'gazelle-operational-anatomical' }}
         run: |
           npx vite build --config vite.tablet-lab.config.js
           mkdir -p /tmp/gg-tablet-lab-host ui-audit-results

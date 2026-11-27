@@ -315,3 +315,36 @@ Candidate code at e68768f5f47a020d0357e80e1ca5849d6167e19b; production 0a7a1c549
 
 ## 2026-11-27 – urgent production recovery / candidate startup hardening
 Production binding izwzwvlexqxqewzijhhd confirmed from KLARHEIT/deploy workflow, observed INACTIVE; restore initially denied by free two-project limit. Owner authorized safe recovery. Legacy kultdmklwmilhoytrrig (last sign-in 2026-11-16 UTC) paused, restore accepted for exact production project; last observation legacy INACTIVE, production COMING_UP. No KontorKaffe changes, no deletion or schema/row mutation. Production head 0a7a1c54 unchanged. Candidate only: bounded 10-second auth/profile UI waits, explicit retry reload preserving storage, current-user profile check, auth event generation guard. Four commits c4dc50b1,e9460b81,d2c42415,c548622a; 11 adapted helper assertions passed, native/browser and auth event regression not yet verified. Test chain expanded; no publication. Production restore health and read-only data counts pending. GW01–09 acceptance remains open; do not conflate outage recovery with release of candidate.
+
+## 2026-11-27 – GW01/GW08: actual CI evidence and controlled reconciliation
+At 744b1445, direct GitHub Actions API retrieved push runs 46019776213/217/219: native release regression 64/65 groups passed, PT role suite 22/23 (line 198 prop order), native Vite build completed in isolated validation, responsive audit 371 snapshots/7 failures at obsolete Samspel checkbox after selecting legacy template. Commit 42489d31 reorders existing PTClientWods props without changing behavior and replaces obsolete second checkbox interaction with wait for actual selected template and verifies round switching; all remaining station checks retained. No tests disabled. Recheck new CI on exact new SHA.
+Exact recursive Git tree comparison with common ancestor 6828ef86: 54 identical changes, 27 both-changed paths, 22 production-only paths. Compared production added lines against base and candidate for five main components and all other 22 divergent paths. Retained candidate changes (admin-only office, Samspel, runtime/after-action, persistent retry, stricter performance/FIT, lab guards, viewport geometry and corresponding tests), not a blind merge. Package manifest includes every production test command and unchanged production script definitions other than combined test chain. Restored production responsive audit branch list and historical Tablet Lab conditions plus Gazelle XLSX step. Production-only files retained by exact original blob SHA/mode, including historical docs/preflight fixtures and old release-order file unchanged from production to prevent deletion on later merge. This is inherited historical release metadata, not a new publish order; deploy guard requires production ref and explicit authorization; branch-specific historical workflows do not run on Gazelle; no SQL executed. Merge commit has Gazelle first parent and exact production second parent, updates only Gazelle via expected-SHA lease. Production untouched; backup branch remains 744b1445. This removes historical divergence only, not acceptance. Full semantic verification, native CI after merge, real server transport, backup/restore and device checks remain required. No force push or publication.
+
+### Reviewed both-changed paths
+- .github/workflows/gazelle-responsive-audit.yml
+- v2/package.json
+- v2/scripts/check-release-artifact.mjs
+- v2/scripts/exportwerk-fit.test.mjs
+- v2/scripts/exportwerk.test.mjs
+- v2/scripts/member-customer-journey.test.mjs
+- v2/scripts/pr-metrics.test.mjs
+- v2/scripts/production-release-readiness.test.mjs
+- v2/scripts/pt-role-journey.test.mjs
+- v2/scripts/responsive-audit.py
+- v2/scripts/werkstatt-exchange.test.mjs
+- v2/scripts/workout-submission.test.mjs
+- v2/src/App.jsx
+- v2/src/components/GarageInventory.jsx
+- v2/src/components/PTStudio.jsx
+- v2/src/components/TabletLabDock.jsx
+- v2/src/components/Training.jsx
+- v2/src/components/Werkstatt.jsx
+- v2/src/components/WodBuilder.jsx
+- v2/src/lib/exportwerk.js
+- v2/src/lib/exportwerkFit.js
+- v2/src/lib/performanceEvidence.js
+- v2/src/lib/tabletLabProtocol.js
+- v2/src/lib/werkstattExchange.js
+- v2/src/lib/workoutDraft.js
+- v2/src/tabletLabMain.jsx
+- v2/src/uiAuditMain.jsx
