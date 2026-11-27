@@ -62,7 +62,7 @@ assert.ok(!(await bd.command({type:'review_update',id:'review-b',revision:6,move
 assert.ok(!(await ad.command({type:'review_approve',id:'approve-a',revision:7})).issue)
 assert.ok((await ad.saveResult(8)).issue)
 assert.ok(!(await bd.command({type:'review_approve',id:'approve-b',revision:8})).issue)
-await psql("CREATE FUNCTION public.fail_fixture_receipt() RETURNS trigger LANGUAGE plpgsql AS $ BEGIN IF EXISTS(SELECT 1 FROM jsonb_array_elements(NEW.state#>'{seal,entries}') e WHERE e->'receipt'<>'null'::jsonb) THEN RAISE EXCEPTION 'fixture receipt rollback'; END IF; RETURN NEW; END $; CREATE TRIGGER fixture_receipt_failure BEFORE UPDATE ON gg_synchron_private.sessions FOR EACH ROW EXECUTE FUNCTION public.fail_fixture_receipt()")
+await psql("CREATE FUNCTION public.fail_fixture_receipt() RETURNS trigger LANGUAGE plpgsql AS $fixture$ BEGIN IF EXISTS(SELECT 1 FROM jsonb_array_elements(NEW.state#>'{seal,entries}') e WHERE e->'receipt'<>'null'::jsonb) THEN RAISE EXCEPTION 'fixture receipt rollback'; END IF; RETURN NEW; END $fixture$; CREATE TRIGGER fixture_receipt_failure BEFORE UPDATE ON gg_synchron_private.sessions FOR EACH ROW EXECUTE FUNCTION public.fail_fixture_receipt()")
 assert.ok((await ad.saveResult(9)).issue)
 assert.equal(await read('SELECT count(*) FROM public.workout_logs'),0)
 assert.equal((await ad.read()).snapshot.review.sealed,true)

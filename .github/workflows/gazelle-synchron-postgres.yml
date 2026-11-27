@@ -4,6 +4,8 @@ on:
     branches: [gazelle-operational-anatomical]
     paths:
       - 'v2/server/synchron*'
+      - 'v2/src/lib/synchron*'
+      - 'v2/src/components/Synchron*'
       - 'v2/scripts/synchron-postgres*'
       - 'v2/supabase/preflight/synchron_pg*'
       - '.github/workflows/gazelle-synchron-postgres.yml'
