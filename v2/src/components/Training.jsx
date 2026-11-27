@@ -37,7 +37,7 @@ import MuscleMap from './MuscleMap.jsx'
 import {muscleProfile} from '../lib/muscleProfile.js'
 import { canLeavePreparedWod } from '../lib/prestartExit.js'
 import { exerciseBrowseCategory } from '../lib/exerciseCategories.js'
-import { restoreWorkoutDraft, saveWorkoutDraft, clearWorkoutDraft, resumedElapsedSeconds, workoutSaveFingerprint, isRetryableWorkoutError, claimWorkoutAction, releaseWorkoutAction, readWorkoutSubmission, rememberWorkoutSubmission, clearWorkoutSubmission, workoutSubmissionConflict } from '../lib/workoutDraft.js'
+import { restoreWorkoutDraft, saveWorkoutDraft, clearWorkoutDraft, resumedElapsedSeconds, workoutSaveFingerprint, isRetryableWorkoutError, claimWorkoutAction, releaseWorkoutAction, readWorkoutSubmission, rememberWorkoutSubmission, clearWorkoutSubmission, workoutSubmissionConflict, restoreWorkoutRetry, rememberWorkoutRetry, clearWorkoutRetry } from '../lib/workoutDraft.js'
 import { canSaveDurationOnlyWorkout } from '../lib/freeSession.js'
 import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, TRAINING_AUDIO_PROFILES } from '../lib/timerCues.js'
 import { preloadSoundPack, unlockSoundPack, playPackSignal, playDirectPackSignal, stopDirectAudio, stopPackAudio, SOUND_PACK_NAMES, SOUND_PACK_VERSION, readAudioPack, setAudioPack } from '../lib/trainingAudio.js'
@@ -963,9 +963,9 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
   const savedDraft = useRef(restoreWorkoutDraft(memberId)).current
   const [offlineLibrary]=useState(()=>readOfflineLibrary(memberId))
   const [offline,setOffline]=useState(()=>isOffline())
-  const [syncNotice,setSyncNotice]=useState(()=>readWorkoutSubmission(memberId,savedDraft?.saveToken)?'Førre lagring er ikkje stadfesta. Kontroller treningsloggen eller prøv same resultat på nytt.':'')
+  const [syncNotice,setSyncNotice]=useState(()=>restoreWorkoutRetry(memberId,savedDraft)?'Validert resultat er sikra lokalt. Prøver å lagra når nettet er tilbake.':readWorkoutSubmission(memberId,savedDraft?.saveToken)?'Førre lagring er ikkje stadfesta. Kontroller treningsloggen eller prøv same resultat på nytt.':'')
   const [draftProtected,setDraftProtected]=useState(true)
-  const pendingSave=useRef(null)
+  const pendingSave=useRef(restoreWorkoutRetry(memberId,savedDraft))
   const submissionRef=useRef(readWorkoutSubmission(memberId,savedDraft?.saveToken))
   const saveLock=useRef(false)
   const retrySave=useRef(null)
@@ -1118,10 +1118,10 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       activeExerciseIndex, resultSetIndex,flowDetailed,timerSnapshot, finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom,
   }
   useEffect(() => {
-    if (mode !== 'active') { pendingSave.current=null;setSyncNotice('');clearWorkoutDraft(memberId); return }
+    if (mode !== 'active') { pendingSave.current=null;clearWorkoutRetry(memberId,saveToken);setSyncNotice('');clearWorkoutDraft(memberId); return }
     setDraftProtected(saveWorkoutDraft(memberId,draftSnapshot))
     if(pendingSave.current&&pendingSave.current!==workoutSaveFingerprint(draftSnapshot)){
-      pendingSave.current=null;setSyncNotice('Resultatet er endra. Trykk Lagre økt på nytt når du er klar.')
+      pendingSave.current=null;clearWorkoutRetry(memberId,saveToken);setSyncNotice('Resultatet er endra. Trykk Lagre økt på nytt når du er klar.')
     }
   }, [memberId,mode,manualEntry,manualLibraryEntry,manualLocation,sessionPrepared,manualCompleted,source,wodLevel,classSessionId,launchLinkContext,title,workoutDate,manualWodIds,format,duration,durationSeconds,note,items,scoreRounds,scoreReps,blockScores,scoreTime,scoreLoad,scoreCalories,scoreDistance,scoreUnit,saveToken,participantDraft,activeExerciseIndex,resultSetIndex,flowDetailed,timerSnapshot,finishOpen,resultSummary,reviewedResults,confirmedPlannedEmom])
   useEffect(()=>{
@@ -1316,7 +1316,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     const pending=Boolean(pendingSave.current||submissionRef.current?.saveToken===saveToken||readWorkoutSubmission(memberId,saveToken))
     if(pending&&!await flowConfirm.ask({"title":"Lagring ikkje stadfesta","message":"Avbryt vidare lagringsforsøk og forkast lokal kladd? Ei økt som allereie er motteken av databasen blir ikkje sletta.","confirmLabel":"Forkast kladd","cancelLabel":"Behald kladd","danger":true}))return
     if(!pending&&hasManualEntryChanges(draftSnapshot,localDateISO())&&!await flowConfirm.ask({"title":"Avbryta registrering?","message":"Tala i kladden blir forkasta. WOD-malen blir behalden.","confirmLabel":"Forkast","cancelLabel":"Hald fram","danger":true}))return
-    pendingSave.current=null;setSyncNotice('')
+    pendingSave.current=null;clearWorkoutRetry(memberId,saveToken);setSyncNotice('')
     clearWorkoutSubmission(memberId,saveToken);submissionRef.current=null;clearWorkoutDraft(memberId)
     stopPackAudio(sharedTrainingAudioContext);stopDirectAudio()
     setFinishOpen(false);setResultSummary(false);setReviewedResults({});setReviewOpen(false)
@@ -1336,7 +1336,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     try {
     const uncertain=Boolean(submissionRef.current?.saveToken===saveToken||readWorkoutSubmission(memberId,saveToken))
     if (!await flowConfirm.ask({"title":uncertain?'Lagring ikkje stadfesta':'Forkasta økta?',"message":uncertain?'Kontroller treningsloggen. Forkasting fjernar berre lokal kladd; ei økt som serveren allereie har motteke blir ikkje sletta.':'Ingen resultat eller PR blir registrerte. WOD-malen blir behalden.',"confirmLabel":"Forkast økt","cancelLabel":"Hald fram","danger":true})) return
-    pendingSave.current=null;setSyncNotice('');clearWorkoutSubmission(memberId,saveToken);submissionRef.current=null;clearWorkoutDraft(memberId)
+    pendingSave.current=null;clearWorkoutRetry(memberId,saveToken);setSyncNotice('');clearWorkoutSubmission(memberId,saveToken);submissionRef.current=null;clearWorkoutDraft(memberId)
     setFinishOpen(false); setMode('home'); setRestoredTimerSnapshot(null); setSource(null); setClassSessionId(null); setItems([])
     setTimerSnapshot({ elapsed: 0, laps: [], roundsCompleted: 0, phase: 'Klar', running: false })
     clearTimerSnapshot()
@@ -1528,12 +1528,12 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
     const fingerprint=workoutSaveFingerprint(draftSnapshot)
     const submitted=submissionRef.current?.saveToken===saveToken?submissionRef.current:readWorkoutSubmission(memberId,saveToken)
     if(workoutSubmissionConflict(submitted,saveToken,fingerprint)){
-      pendingSave.current=null
+      pendingSave.current=null;clearWorkoutRetry(memberId,saveToken)
       setSyncNotice('Førre lagring er ikkje stadfesta. Kontroller treningsloggen før du forkastar kladden eller gjenopprettar dei innsende tala. Eit endra resultat kan ikkje sendast med same lagringstoken.')
       return
     }
     if(automatic&&(!pendingSave.current||pendingSave.current!==fingerprint||isOffline()))return
-    if(!automatic){pendingSave.current=null;setSyncNotice('')}
+    if(!automatic){pendingSave.current=null;clearWorkoutRetry(memberId,saveToken);setSyncNotice('')}
     if(finishOpen&&!resultSummary&&!dedicatedSamspel){nextResult();return}
     const compositeTeamResult=compositeSamspelResults(format===COMPOSITE_FORMAT?activeWodEngine.blocks:[],blockScores,timerSnapshot.block_results||{},manualEntry)
     if(compositeTeamResult.issue){resultCorrectionRef.current=compositeTeamResult.field||null;setError(compositeTeamResult.issue);setResultSummary(true);return}
@@ -1663,7 +1663,9 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       validated=true
       if(isOffline()){
         pendingSave.current=fingerprint
-        setSyncNotice(protectedDraft?'Resultatet er sikra på eininga. Ventar på nett for automatisk lagring.':'Lokal lagring feila. Hald appen open; prøver igjen når nettet kjem tilbake.')
+        const retryProtected=protectedDraft&&rememberWorkoutRetry(memberId,saveToken,fingerprint)
+        if(!retryProtected)setDraftProtected(false)
+        setSyncNotice(retryProtected?'Resultatet er sikra på eininga. Ventar på nett for automatisk lagring.':'Lokal lagring feila. Hald appen open; prøver igjen når nettet kjem tilbake.')
         return
       }
       const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -1687,7 +1689,7 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       savedId=workoutId
       validated=false // Server acknowledged the write; refresh failures must not retry it.
       clearWorkoutSubmission(memberId,saveToken);submissionRef.current=null;clearWorkoutDraft(memberId)
-      pendingSave.current=null;setSyncNotice('')
+      pendingSave.current=null;clearWorkoutRetry(memberId,saveToken);setSyncNotice('')
       const programSyncMessage = ''
       // PRs are derived from saved workout sets on Mi side. Older independent
       // personal_records remain visible in the archive but aren't duplicated.
@@ -1701,12 +1703,14 @@ export default function Training({ memberId = '', launchWodId = null, launchClas
       onSaved?.({victories})
       await loadAll()
     } catch (err) {
-      if(savedId){pendingSave.current=null;setSyncNotice('');setNotice('Økta er lagra. Oppdatering av oversikta feila; opna treningsloggen på nytt.');setError('');return}
+      if(savedId){pendingSave.current=null;clearWorkoutRetry(memberId,saveToken);setSyncNotice('');setNotice('Økta er lagra. Oppdatering av oversikta feila; opna treningsloggen på nytt.');setError('');return}
       if(validated&&isRetryableWorkoutError(err,isOffline())){
         pendingSave.current=fingerprint
-        setSyncNotice(protectedDraft?'Resultatet er sikra på eininga. Prøver lagring igjen når sambandet er tilbake.':'Lokal lagring feila. Hald appen open medan me prøver igjen.')
+        const retryProtected=protectedDraft&&rememberWorkoutRetry(memberId,saveToken,fingerprint)
+        if(!retryProtected)setDraftProtected(false)
+        setSyncNotice(retryProtected?'Resultatet er sikra på eininga. Prøver lagring igjen når sambandet er tilbake.':'Lokal lagring feila. Hald appen open medan me prøver igjen.')
       }else{
-        pendingSave.current=null
+        pendingSave.current=null;clearWorkoutRetry(memberId,saveToken)
         setSyncNotice(submissionRef.current?.saveToken===saveToken?'Lagring ikkje stadfesta. Kontroller treningsloggen før du endrar eller forkastar resultatet.':'')
         setError(err.message || 'Kunne ikkje lagra økta. Kladden er framleis open.')
       }
