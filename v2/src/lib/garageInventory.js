@@ -543,3 +543,14 @@ export function doubleEmomStationCapacity(blocks=[],items=[],inventory={}){
   return {id:block.id,title:block.title||'Double EMOM',rows,unknown,validTrackCount:tracks.length===2}
  })
 }
+
+// Iron Twins: use the same allocation engine, with explicit timing of equipment use.
+export function ironTwinsPlateAllocation(rows,requests,mode){
+ if(!['simultaneous','sequential'].includes(mode))return {status:'unknown',reason:'Vel om stengene skal vera klare samstundes eller riggast om mellom setta.'}
+ if(!Array.isArray(requests)||requests.length!==2)return {status:'invalid',reason:'Oppgi éi stong og målvekt for kvar av dei to utøvarane.'}
+ if(mode==='simultaneous')return plateAllocation(rows,requests)
+ const individual=requests.map(request=>plateAllocation(rows,[request]))
+ if(individual.every(result=>result.status==='exact'))return {status:'exact',loads:individual.map(result=>result.loads[0]),sequential:true}
+ const status=individual.some(result=>result.status==='invalid')?'invalid':individual.some(result=>result.status==='shortage')?'shortage':'unknown'
+ return {status,reason:'Ikkje begge oppsetta kan stadfestast kvar for seg.',individual,sequential:true}
+}
