@@ -20,3 +20,12 @@ export function synchronEntryConflict(entry,presence,href){
 export function synchronOwnedEntry(entry,actor,runtime){
  return !!(entry&&actor&&runtime&&entry.actor===actor&&entry.runtime===runtime)
 }
+
+// Cancelling an initial, read-only invitation lookup is safe locally. Never
+// release a known live session on a failed refresh or a stale callback.
+export function canCancelSynchronOpening(entry,presence,{actor,runtime,href}={}){
+ return synchronOwnedEntry(entry,actor,runtime)&&entry.href===href&&presence?.phase==='pending'&&presence.sessionId===parseSynchronInvitation(href)
+}
+export function synchronSnapshotMatches(entry,{actor,runtime,href,snapshot}={}){
+ return synchronOwnedEntry(entry,actor,runtime)&&entry.href===href&&!!snapshot?.view&&snapshot.sessionId===parseSynchronInvitation(href)
+}
