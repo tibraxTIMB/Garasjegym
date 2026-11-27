@@ -47,3 +47,25 @@ export function emomScheduledCount(items,index,rounds,engine){
  for(let round=1;round<=Math.min(7200,Math.max(0,Math.floor(Number(rounds)||0)));round++)if(emomActiveIndices(items,round,engine).includes(index))count++
  return count
 }
+
+// Only the explicitly tagged, unchanged suggestions are replaceable.
+// Existing saved drafts without this provenance are never guessed or rewritten.
+export function changePlannedResultLevel(item,level){
+ const dose=plannedResultDose(item,level)
+ return {...item,sets:(item.sets||[]).map(set=>{
+  if(set.flow_status==='done'||!set.planned_suggestion)return set
+  const next={...set,planned_suggestion:{}}
+  for(const [field,previous] of Object.entries(set.planned_suggestion)){
+   if(!['reps','load_kg','height_cm'].includes(field)||String(set[field]??'')!==String(previous))continue
+   next[field]=dose[field]??''
+   if(dose[field]!==undefined)next.planned_suggestion[field]=dose[field]
+  }
+  return next
+ })}
+}
+export function editPlannedResultSet(set,patch){
+ const planned_suggestion={...(set.planned_suggestion||{})}
+ for(const key of Object.keys(patch))delete planned_suggestion[key]
+ if(patch.flow_status==='done')for(const key of Object.keys(planned_suggestion))delete planned_suggestion[key]
+ return {...set,flow_status:'',...patch,planned_suggestion}
+}
