@@ -8,19 +8,20 @@ const unitLabel={reps:'reps',seconds:'sek',meters:'m',calories:'cal'}
 // Controlled view: transport is supplied by the caller; no local workout/log writes.
 export default function SynchronSessionPanel({adapter,label,online=true,onSnapshot}){
  const [record,setRecord]=useState(null),[tick,setTick]=useState(()=>performance.now()),[issue,setIssue]=useState(''),[busy,setBusy]=useState(false),[actual,setActual]=useState(''),[load,setLoad]=useState(''),[review,setReview]=useState(null)
- const recordRef=useRef(null),pending=useRef(false),generation=useRef(0),onlineRef=useRef(online)
+ const recordRef=useRef(null),pending=useRef(false),generation=useRef(0),readPending=useRef(false),onlineRef=useRef(online)
  onlineRef.current=online
  function publish(next){recordRef.current=next;setRecord(next);onSnapshot?.(next?.snapshot)}
  useEffect(()=>{
   let alive=true
   async function refresh(){
-   if(!onlineRef.current||pending.current)return
+   if(!onlineRef.current||pending.current||readPending.current)return
+   readPending.current=true
    const seq=++generation.current,started=performance.now()
    try{const r=await adapter.read();if(!alive||seq!==generation.current||pending.current)return
     if(r.issue||!r.snapshot){setIssue(r.issue||'Økta er ikkje tilgjengeleg.');return}
     const next=acceptSynchronSnapshot(recordRef.current,r.snapshot,performance.now(),started)
-    if(next!==recordRef.current)publish(next)
-   }catch{if(alive)setIssue('Mista kontakt med økta.')}
+    if(next!==recordRef.current){publish(next);setIssue('')}
+   }catch{if(alive&&seq===generation.current)setIssue('Mista kontakt med økta.')}finally{readPending.current=false}
   }
   refresh()
   const poll=setInterval(refresh,900),clock=setInterval(()=>setTick(performance.now()),200)
