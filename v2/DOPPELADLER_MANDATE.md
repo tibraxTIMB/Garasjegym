@@ -19,3 +19,6 @@ DA04/DA06/DA07: utvid samansette WOD-ar med éin av dei fem Samspel-malane som b
 
 ## Akseptanse
 Ingen av dei tolv pakkane blir automatisk godkjende av denne fila. Bruk DOPPELADDER_STATUS.md som løpande evidenslogg. Full originaltekst, dei 17 forløpa og praktisk brukartesting står att som akseptansegrunnlag.
+
+## Utvida arbeidsordre – SYNCHRON LEISTUNGSWERK (2026-11-27)
+Brukaren godkjende bygging etter simulert teamrevisjon. SL01 Lobby/invitasjon; SL02 autoritativ felles klokke og roller; SL03 arbeidsbolkar, byte, kvile; SL04 blanda arbeidsmål per øving; SL05 individuelle observerte kalibreringar; SL06 belastningsavhengige estimat og avstemming mot faktisk lagresultat; SL07 Lastmeister og endra belastning per bolk; SL08 Etterøkta og individuell godkjenning; SL09 PT/gruppetime/anatomi/PR/Ghost; SL10 fleirbrukar-, nettutfalls- og personverntest. Første pakke er avgrensa til deterministisk domenelogikk for vekselvis arbeid, ikkje ny timer eller ny mal. Estimat er ikkje måling eller PR. Ingen databaseendringar eller produksjonspublisering under eksisterande mandat; servertransport, atomisk autorisasjon og eventuell datamodell krev eiga trygg avklaring. Dei opphavlege DA-akseptansekrava står framleis ved lag.
