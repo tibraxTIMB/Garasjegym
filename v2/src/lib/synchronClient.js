@@ -21,12 +21,13 @@ export function synchronControls(record,{now,online=true,busy=false}={}){
   canPause:!locked&&display.canPause,canResume:!locked&&display.canResume,
   canAdvance:!locked&&display.canAdvance,canFinish:!locked&&display.canFinish,
   canLoad:!locked&&display.phase==='running'&&snapshot.joined,
+  canCalibrate:!locked&&display.phase==='finished'&&snapshot.leader&&snapshot.calibration?.sealed===false&&snapshot.calibration.rows.length>0,
   canReview:!locked&&display.phase==='finished'&&!!snapshot.review&&!snapshot.review.sealed,
   canApprove:!locked&&display.phase==='finished'&&!!snapshot.review?.canApprove&&!snapshot.review.approved&&!snapshot.review.sealed}
 }
 export async function submitSynchronAction(record,type,fields,id,{read,command,now,online}){
  const controls=synchronControls(record,{now:now(),online:online()})
- const key=({join:'canJoin',start:'canStart',takeover:'canTakeover',idle:'canIdle',pause:'canPause',resume:'canResume',advance:'canAdvance',finish:'canFinish',load:'canLoad',review_update:'canReview',review_approve:'canApprove'})[type]
+ const key=({join:'canJoin',start:'canStart',takeover:'canTakeover',idle:'canIdle',pause:'canPause',resume:'canResume',advance:'canAdvance',finish:'canFinish',load:'canLoad',calibration_record:'canCalibrate',review_update:'canReview',review_approve:'canApprove'})[type]
  if(!controls||!key||!controls[key])return {record,issue:'Handlinga er låst. Synkroniser først.'}
  let latest=record
  try{
