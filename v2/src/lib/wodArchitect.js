@@ -42,5 +42,12 @@ export function architectDoseIssue(item,{metric,format='',timed=false,level='rx'
 export function hydrateArchitectLevels(item,defaults){
  const stored=item.levels||{},set=Array.isArray(item.sets)?item.sets[0]:null
  const old={...defaults.rx,reps:String(item.reps??set?.reps??''),sets:Array.isArray(item.sets)&&item.sets.length?String(item.sets.length):'',loadMode:set?.load_mode||item.load_mode||'none',loadKg:String(set?.load_kg??item.load_kg??''),percent1rm:String(set?.percent_1rm??item.percent_1rm??''),rir:String(set?.rir??item.rir??''),durationSeconds:String(item.work_seconds??''),distanceMeters:String(item.meters??''),calories:String(item.calories??'')}
- return {...defaults,...stored,rx:{...old,...stored.rx}}
+ const result={...defaults,...stored,rx:{...old,...stored.rx}}
+ // Old WODs may store one common kg value instead of the two visible weight fields.
+ for(const level of ['rx','scaled','foundation']){
+  const dose=result[level]
+  if(!dose||dose.loadMode!=='kg'||dose.loadKg==null||dose.loadKg===''||dose.loadKgMen||dose.loadKgWomen)continue
+  result[level]={...dose,loadKgMen:String(dose.loadKg),loadKgWomen:String(dose.loadKg)}
+ }
+ return result
 }
