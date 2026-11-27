@@ -27,3 +27,9 @@ CREATE TABLE public.notifications(
 );
 CREATE UNIQUE INDEX notifications_recipient_dedupe_idx ON public.notifications(recipient_id,dedupe_key) WHERE dedupe_key IS NOT NULL;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+
+-- Match the production RLS boundary for the restricted server-role rehearsal.
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.pt_coaches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.pt_client_assignments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.wods ENABLE ROW LEVEL SECURITY;
