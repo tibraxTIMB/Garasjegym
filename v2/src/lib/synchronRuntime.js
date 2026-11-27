@@ -9,13 +9,13 @@ const unavailable=()=>({issue:'Fellesøkta er ikkje tilgjengeleg.'})
 // Framework-neutral trusted server dispatcher. Caller extracts credential from
 // verified request context, not from JSON. No real persistence adapter is supplied.
 export function createSynchronDispatcher(host){
- const creation=createSynchronInvitationGateway(host),live=createSynchronGateway(host),calibrate=createIndividualCalibrationGateway(host)
+ const creation=createSynchronInvitationGateway(host),live=typeof host?.authorizeSession==='function'?createSynchronGateway(host):null,calibrate=createIndividualCalibrationGateway(host)
  return async function dispatch(credential,body){
   if(!object(body)||typeof body.op!=='string')return unavailable()
   try{
-   if(body.op==='create'&&only(body,['op','request']))return await creation.create(credential,body.request)
+   if(body.op==='create'&&only(body,['op','request']))return live?await creation.create(credential,body.request):unavailable()
    if(body.op==='individual_calibration'&&only(body,['op','request']))return calibrate?await calibrate(credential,body.request):unavailable()
-   if(!validSession(body.sessionId))return unavailable()
+   if(!live||!validSession(body.sessionId))return unavailable()
    if(body.op==='snapshot'&&only(body,['op','sessionId']))return await live.snapshot(body.sessionId,credential)
    if(body.op==='command'&&only(body,['op','sessionId','command'])&&object(body.command))return await live.command(body.sessionId,credential,body.command)
    // Reservation stays server-side; client cannot retrieve raw persistence payloads.
