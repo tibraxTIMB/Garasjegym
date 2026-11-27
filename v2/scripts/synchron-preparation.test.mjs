@@ -29,3 +29,26 @@ assert.ok(prepareSynchronLobby(args,{...ctx,eligibleMemberIds:[]}).issue)
 for(const x of ['https://example.com','synchron-session:','synchron-session:../abc','synchron-session:__proto__'])assert.equal(parseSynchronInvitation(x),null)
 
 assert.ok(synchronWodTargets({...wod,timer_settings:{workout_schema:{...wod.timer_settings.workout_schema,time_cap_seconds:1200}}}).issue)
+
+import {prepareSynchronPairedPlan} from '../src/lib/synchronPreparation.js'
+import {synchronPlanIssue} from '../src/lib/synchron.js'
+const pairedItems=['Bench press','Dips','Air squat'].map((exercise_name,i)=>({exercise_id:'exercise-'+i,exercise_name,levels:{rx:{reps:6,loadMode:'kg'},scaled:{reps:4,loadMode:'bodyweight'},foundation:{reps:2,loadMode:'bodyweight'}}}))
+const pairedSchema={format:'EMOM',duration_seconds:1080,interval:{work_every_seconds:60},items:pairedItems,samspel:{version:2,mode:'parallel_round_swap',main_track:'paired_emom',participant_count:2,individual_scores:true,switch_rule:'time',switch_seconds:60,duration_seconds:1080,tracks:pairedItems.map(x=>x.exercise_name)},wod_engine:{participation:'partner',collaboration:'you_go_i_go',participant_count:2}}
+const pairedWod={id:'paired-wod',name:'Front Kommandant',format:'EMOM',is_published:true,timer_settings:{workout_schema:pairedSchema}}
+const pairedDoses=Object.fromEntries(pairedItems.map((_,i)=>['movement-'+(i+1),{pt:{variant:'Standard',loadKg:30},b:{variant:'Tilpassa',loadKg:null}}]))
+const pairedArgs={wod:pairedWod,memberIds:['b'],leaderParticipates:true,sessionId:'paired-session',levelsByMember:{pt:'rx',b:'scaled'},doses:pairedDoses}
+const paired=prepareSynchronPairedPlan(pairedArgs,ctx)
+assert.equal(paired.issue,undefined)
+assert.deepEqual(paired.plan.members,['pt','b'])
+assert.equal(paired.plan.mode,'paired_emom')
+assert.equal(paired.plan.movements[0].doses.pt.plannedReps,18)
+assert.equal(paired.plan.movements[0].doses.b.plannedReps,12)
+assert.equal(paired.plan.movements[0].doses.b.plannedIntervals,3)
+assert.equal(paired.plan.movements[0].doses.b.loadKg,null)
+assert.ok(synchronPlanIssue(paired.plan)) // Never interpreted as Chipper.
+assert.ok(prepareSynchronLobby(pairedArgs,ctx).issue) // Transport remains closed.
+for(const patch of [{memberIds:['outsider']},{memberIds:['b','c']},{leaderParticipates:false},{levelsByMember:{pt:'rx',b:'intermediate'}},{doses:{}},{wod:{...pairedWod,is_published:false}}])assert.ok(prepareSynchronPairedPlan({...pairedArgs,...patch},ctx).issue)
+assert.ok(prepareSynchronPairedPlan(pairedArgs,{...ctx,canCoach:false}).issue)
+const changePaired=patch=>({...pairedWod,timer_settings:{workout_schema:{...pairedSchema,...patch}}})
+for(const patch of [{duration_seconds:1020},{interval:{work_every_seconds:30}},{items:[{...pairedItems[0],minute_slot:'1'},...pairedItems.slice(1)]},{items:[{...pairedItems[0],levels:{rx:{reps:6},scaled:{reps:4,durationSeconds:30}}},...pairedItems.slice(1)]},{samspel:{...pairedSchema.samspel,tracks:['Dips','Bench press','Air squat']}}])assert.ok(prepareSynchronPairedPlan({...pairedArgs,wod:changePaired(patch)},ctx).issue)
+console.log('SYNCHRON paired-plan preflight: trusted WOD, two approved participants, separate fixed doses and Chipper rejection passed')

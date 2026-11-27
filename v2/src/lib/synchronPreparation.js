@@ -1,4 +1,4 @@
-import {synchronTransportFormatSupported} from './synchronSchedule.js'
+import {synchronTransportFormatSupported,pairedEmomScheduleIssue,pairedEmomOpportunity} from './synchronSchedule.js'
 import {synchronPlanIssue,createSynchronSession} from './synchron.js'
 const idOk=x=>typeof x==='string'&&x.trim()!==''&&x.length<=128&&!['__proto__','constructor','prototype'].includes(x)
 const amount=x=>(typeof x==='number'||typeof x==='string')&&String(x).trim()!==''&&Number.isSafeInteger(Number(x))&&Number(x)>0&&Number(x)<=100000?Number(x):null
@@ -47,4 +47,39 @@ export function parseSynchronInvitation(href){
  if(typeof href!=='string'||!href.startsWith('synchron-session:'))return null
  const id=href.slice('synchron-session:'.length)
  return /^[A-Za-z0-9_-]{1,128}$/.test(id)&&idOk(id)?id:null
+}
+
+// Server-side paired-EMOM preflight, deliberately NOT a lobby or a session.
+// Caller must supply independently authenticated permissions, current WOD and roster.
+// Distinct collaboration type prevents use in the Chipper reducer and result seal.
+export function prepareSynchronPairedPlan({wod,memberIds,leaderParticipates=false,levelsByMember,doses,sessionId},{actorId,canCoach,eligibleMemberIds}={}){
+ const fail=issue=>({issue})
+ if(!canCoach||!idOk(actorId)||!parseSynchronInvitation('synchron-session:'+sessionId)||!Array.isArray(eligibleMemberIds)||!Array.isArray(memberIds)||memberIds.includes(actorId)||new Set(memberIds).size!==memberIds.length||memberIds.some(id=>!idOk(id)||!eligibleMemberIds.includes(id)))return fail('Vel berre godkjende kundar du har tilgang til.')
+ const members=leaderParticipates?[actorId,...memberIds]:memberIds.slice()
+ if(members.length!==2)return fail('YGIG EMOM krev akkurat to utøvarar.')
+ if(!idOk(wod?.id)||wod.is_archived===true||wod.is_published!==true||wod.format!=='EMOM')return fail('Vel ein publisert YGIG EMOM.')
+ const schema=wod.timer_settings?.workout_schema,config=schema?.samspel,engine=schema?.wod_engine,blocks=engine?.blocks
+ if(!schema||schema.format!=='EMOM'||config?.version!==2||config.mode!=='parallel_round_swap'||config.main_track!=='paired_emom'||config.participant_count!==2||config.individual_scores!==true||config.switch_rule!=='time'||config.station_tasks||engine?.participation!=='partner'||engine.collaboration!=='you_go_i_go'||engine.participant_count!==2||blocks?.length>1||schema.composite_blocks?.length>1)return fail('Vel ein strukturert, sjølvstendig YGIG EMOM.')
+ const items=schema.items
+ if(!Array.isArray(items)||!Array.isArray(config.tracks)||config.tracks.length!==items.length||pairedEmomScheduleIssue({durationSeconds:config.duration_seconds,intervalSeconds:config.switch_seconds,exerciseCount:items.length}))return fail('Ugyldig intervallrekkje.')
+ if(schema.duration_seconds!==config.duration_seconds||schema.interval?.work_every_seconds!==config.switch_seconds||[schema.time_cap_seconds,schema.time_cap_minutes].some(v=>Number(v)>0)||blocks?.[0]&&(blocks[0].format!=='EMOM'||blocks[0].duration_seconds!==config.duration_seconds||JSON.stringify(blocks[0].items)!==JSON.stringify(items)))return fail('Tidsramme eller øvingsrekkje samsvarar ikkje med WOD-en.')
+ const levels=['rx','scaled','foundation']
+ if(!levelsByMember||members.some(id=>!Object.hasOwn(levelsByMember,id)||!levels.includes(levelsByMember[id])))return fail('Vel doseringsnivå for kvar utøvar.')
+ const schedule={duration_seconds:config.duration_seconds,switch_seconds:config.switch_seconds,tracks:config.tracks.slice()}
+ const movements=[]
+ for(const [i,item] of items.entries()){
+  if(!item||!idOk(item.exercise_id)||!idOk(item.exercise_name)||item.exercise_name!==config.tracks[i]||item.is_rest||item.is_complex||item.reps_mode==='amrap'||String(item.minute_slot??item.minuteSlot??'').trim()||item.side_mode&&item.side_mode!=='none'||item.sideMode&&item.sideMode!=='none'||Array.isArray(item.sets)&&item.sets.length>1)return fail('Øving '+(i+1)+' krev eintydige faste repetisjonar.')
+  const id='movement-'+(i+1),individual={}
+  for(const [index,member] of members.entries()){
+   const level=levelsByMember[member],dose=item.levels?.[level],given=doses?.[id]?.[member]
+   const reps=amount(dose?.reps)
+   if(!reps||[dose?.durationSeconds,dose?.distanceMeters,dose?.calories,dose?.heightCm].some(v=>v!=null&&String(v).trim()!==''&&Number(v)!==0)||dose?.sets!=null&&String(dose.sets).trim()!==''&&amount(dose.sets)!==1)return fail('Manglar eintydig repsdosering på valt nivå for '+item.exercise_name+'.')
+   if(!given||!idOk(given.variant)||!Object.hasOwn(given,'loadKg')||given.loadKg!==null&&(!Number.isFinite(given.loadKg)||given.loadKg<0)||dose.loadMode==='kg'&&given.loadKg===null)return fail('Vel individuell variant og eventuell arbeidsvekt for '+item.exercise_name+'.')
+   const intervals=pairedEmomOpportunity(schedule,i,index+1)
+   if(!Number.isSafeInteger(reps*intervals)||reps*intervals>100000)return fail('Planlagt repetisjonsmengd er for stor.')
+   individual[member]={level,variant:given.variant,loadKg:given.loadKg,repsPerInterval:reps,plannedIntervals:intervals,plannedReps:reps*intervals}
+  }
+  movements.push({id,exerciseId:item.exercise_id,name:item.exercise_name,unit:'reps',collaboration:'paired_emom',doses:individual})
+ }
+ return {plan:{version:1,mode:'paired_emom',id:sessionId,title:wod.name||'YGIG EMOM',sourceWodId:wod.id,leaderId:actorId,members,schedule,movements}}
 }
