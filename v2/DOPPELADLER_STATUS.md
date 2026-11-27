@@ -348,3 +348,6 @@ Exact recursive Git tree comparison with common ancestor 6828ef86: 54 identical 
 - v2/src/lib/workoutDraft.js
 - v2/src/tabletLabMain.jsx
 - v2/src/uiAuditMain.jsx
+
+## 2026-11-27 – GW03/GW06/GW08 isolated persistence and Tablet Lab
+At e78d92eb, four native checks passed; both responsive runs 46022182333 and 46022696391 show 378 snapshots / 0 responsive failures, then Tablet Lab timer failed because ZÜNDUNG preparation was presented (actual diagnostics in job 140586088191). 6e9c171b updates browser journey to click actual Start hovudøkta before Start no. New isolated durable persistence fixture runs in canonical test:synchron, no real DB or application runtime change. Native execution pending at commit; do not claim passing until CI evidence. Real authenticated production host, migrations, device tests and verified backup remain blocked. Production unchanged.
