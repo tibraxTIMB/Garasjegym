@@ -22,3 +22,30 @@ Ingen av dei tolv pakkane blir automatisk godkjende av denne fila. Bruk DOPPELAD
 
 ## Utvida arbeidsordre – SYNCHRON LEISTUNGSWERK (2026-11-27)
 Brukaren godkjende bygging etter simulert teamrevisjon. SL01 Lobby/invitasjon; SL02 autoritativ felles klokke og roller; SL03 arbeidsbolkar, byte, kvile; SL04 blanda arbeidsmål per øving; SL05 individuelle observerte kalibreringar; SL06 belastningsavhengige estimat og avstemming mot faktisk lagresultat; SL07 Lastmeister og endra belastning per bolk; SL08 Etterøkta og individuell godkjenning; SL09 PT/gruppetime/anatomi/PR/Ghost; SL10 fleirbrukar-, nettutfalls- og personverntest. Første pakke er avgrensa til deterministisk domenelogikk for vekselvis arbeid, ikkje ny timer eller ny mal. Estimat er ikkje måling eller PR. Ingen databaseendringar eller produksjonspublisering under eksisterande mandat; servertransport, atomisk autorisasjon og eventuell datamodell krev eiga trygg avklaring. Dei opphavlege DA-akseptansekrava står framleis ved lag.
+
+## OPERASJON GESAMTWERK – godkjend 2026-11-27
+
+Brukaren har godkjent vidare prosess, ferdigstilling og automatisk neste arbeidspakke. Denne ordren prioriterer samordning og akseptanse framfor nye funksjonar; alle eksisterande DOPPELADLER/SYNCHRON-krav og tryggleiksrammer står ved lag.
+
+| Fase | Prioritet | Akseptanse før overgang |
+|---|---|---|
+| GW01 Stammordnung | P0 | Frys og samanlikn faktiske greinhovud og felles stamcommit; kartlegg begge endringssetta; samordne produksjonsrettingar inn i berre Gazelle, med trevegsvurdering, verna release-config og komplett regresjon; ingen blind merge eller force push. |
+| GW02 Stacheldraht | P0 | Gjenopptaking, aktiv økt, nettutfall, rolle-/tilgangskontroll og idempotent resultat; skil test av kontrakt frå reell persistens. |
+| GW03 Synchron | P0 | Same økt på PT og kunde, korrekt autoritativ klokke, invitasjon, roller og arbeid/byte; ekte transport og isolert persistens krev eiga godkjenning. |
+| GW04 Leistungswerk | P1 | Individuell godkjenning, faktisk/estimert skilje, historikk, PT, PR/Ghost/anatomi utan feilklassifisering. |
+| GW05 Meisterwerk | P1 | Samansett WOD, Samspel, øvingar, Lastmeister, tildeling og datert plan; produksjonsrettingar verna. |
+| GW06 Werkstatt | P1 | Administrativ PC-flate, mobil/brett-test og eksisterande Garmin/eksport; same innlogging, rett rolle og ingen parallelle system. |
+| GW07 Frontdienst | P2 | Reelle brukarvegar, lesbarheit, skjermflate, input og responsiv navigasjon; mobil og nettbrett. |
+| GW08 TÜV | P2 | Native build, alle relevante CI/regresjonar, browser- og praktiske fleirbrukartestar, eksisterande data verna, opphavlege 17 forløp verifiserte. |
+| GW09 Freigabe | Port | Dokumenter releasekandidat, backup/restore og rollback; stopp før merge til produksjon, migrasjon eller publisering utan uttrykkeleg godkjenning. |
+
+### GW01 startgrunnlag – 2026-11-27
+- Repository: tibraxTIMB/Garasjegym. Arbeidsgrein: gazelle-operational-anatomical, start f487494bde57b8250b1bec0db4575118070bbe4c.
+- Produksjonsgrein (eksakt GitHub-namn med U+00AD): garasjegym-2.0-sturm­kopf, start 0a7a1c549255e8d3542828ff2655f854b44cc5ca. Felles stamcommit 6828ef86627f323ffcbb92fea4f9ce80842ad1f8.
+- GitHub compare i begge retningar: 260 utviklingscommits, 58 produksjonscommits, 102 utviklingsfiler og 103 produksjonsfiler, 13 overlapp. Dette er filoverlapp, ikkje bevis for 13 mergekonfliktar.
+- Overlapp: .github/workflows/gazelle-responsive-audit.yml; v2/package.json; v2/scripts/member-customer-journey.test.mjs; v2/scripts/pr-metrics.test.mjs; v2/scripts/pt-role-journey.test.mjs; v2/scripts/responsive-audit.py; v2/src/App.jsx; v2/src/components/GarageInventory.jsx; v2/src/components/PTStudio.jsx; v2/src/components/Training.jsx; v2/src/components/WodBuilder.jsx; v2/src/lib/performanceEvidence.js; v2/src/uiAuditMain.jsx.
+- Særleg vern: produksjon sin Werkstatt/Exportwerk, service worker, release-manifest og publiseringsport. Ikkje kopier produksjonspubliseringskonfig ukritisk. Ingen endringar i produksjonsgrein, main, andre prosjekt eller database.
+- Lokal git ls-remote feila med DNS; ikkje påstå lokal checkout, merge eller native test. GitHub connector kan lesa og skriva eksplisitt til Gazelle. For store eller binære endringar: krev trygg Git-arbeidsflate eller dokumentert tapsfri Git tree-metode; aldri kopier delvis eller gjett innhald. Hent base/dev/prod på eksakte SHA ved trevegsrevisjon. Verifiser gjeldande greinhead før skriving; bruk konfliktvern og atomiske commits når mogleg.
+
+### AUTO VIDARE
+Hald éin aktiv Autobygg-prosess; opprett neste konkrete arbeidspakke i statusdokumentet når førre er verifisert, utan nytt brukarspørsmål for godkjende kodeendringar. Kvar køyring: les mandat/status, sjekk aktuelle refs og eventuell anna pågåande skriving; vel neste avgrensa, testbare steg i tidlegaste opne GW-fase; implementer, test, commit og verifiser, logg evidens og neste steg. Ingen status-only loop dersom trygg konkret framdrift er mogleg. Ved blokkering: gjer trygg, uavhengig deloppgåve innanfor mandatet, merk blokkerte portar, ikkje erklær bestått eller hopp over dei. Stopp før eksterne kostnader, databaseendring, reelle databaseskrivingar, produksjonsmerge eller publisering. Ingen nye autonomt oppretta overlappande automasjonar. Endeleg godkjenning krev dei faktiske 17 originale forløpa og praktisk test; ikkje dikt dei opp.
