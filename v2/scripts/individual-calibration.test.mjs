@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import {individualCalibrationRequestIssue,prepareIndividualCalibration,createIndividualCalibrationGateway} from '../src/lib/individualCalibration.js'
 import {synchronPaceProfile} from '../src/lib/synchronPace.js'
-const req={requestId:'12345678-1234-4234-8234-123456789012',assignmentId:'assignment-1',programSessionId:null,exerciseIndex:0,variant:'40 cm',loadKg:null,unit:'reps',amount:24,seconds:60,attested:true}
+const req={requestId:'12345678-1234-4234-8234-123456789012',assignmentId:'assignment-1',programSessionId:null,exerciseIndex:0,exerciseName:'Box step-ups',variant:'40 cm',loadKg:null,unit:'reps',amount:24,seconds:60,attested:true}
 const shared={memberId:'b',workoutId:'workout-1',finishedAt:1000,evidenceRevision:'revision-1',result:{result_data:{participation_verified:'individual',exercise_results:[{exercise_name:'Box step-ups',sets:[{reps:100,time_seconds:999}]}]}},exercises:[{index:0,exerciseId:'step',exerciseName:'Box step-ups',allowedUnits:['reps']}]}
 const ctx={actorId:'pt',at:2000}
 assert.equal(individualCalibrationRequestIssue(req),null)
@@ -24,14 +24,17 @@ assert.ok(prepareIndividualCalibration({...shared,exercises:[...shared.exercises
 assert.ok(prepareIndividualCalibration({...shared,exercises:[{...shared.exercises[0],exerciseName:'Wrong'}]},req,ctx).issue)
 assert.ok(prepareIndividualCalibration(shared,req,{...ctx,at:999}).issue)
 assert.equal(prepareIndividualCalibration(shared,{...req,assignmentId:null,programSessionId:'intro-1'},ctx).candidate.reference.programSessionId,'intro-1')
-let stored=null,calls=0,allowed=true
-const gateway=createIndividualCalibrationGateway({authenticate:async x=>x,readCoachContext:async actor=>({canCoach:actor==='pt'&&allowed,eligibleMemberIds:['b']}),readSharedCalibrationResult:async (actor,ref)=>ref.assignmentId==='assignment-1'?shared:null,now:()=>2000,saveCalibrationAtomic:async c=>{calls++;if(stored)return {accepted:JSON.stringify(stored)===JSON.stringify(c),duplicate:true};stored=c;return {accepted:true}}})
+let stored=null,calls=0,allowed=true,clock=2000
+const gateway=createIndividualCalibrationGateway({authenticate:async x=>x,readCoachContext:async actor=>({canCoach:actor==='pt'&&allowed,eligibleMemberIds:['b']}),readSharedCalibrationResult:async (actor,ref)=>ref.assignmentId==='assignment-1'?shared:null,now:()=>clock,saveCalibrationAtomic:async c=>{calls++;if(stored)return {accepted:stored.requestId===c.requestId&&stored.fingerprint===c.fingerprint,duplicate:true};stored=c;return {accepted:true}}})
 assert.equal(createIndividualCalibrationGateway({}),null)
 assert.ok((await gateway('b',req)).issue)
 assert.ok((await gateway('pt',{...req,assignmentId:'unknown'})).issue)
 assert.equal(calls,0)
 assert.equal((await gateway('pt',req)).accepted,true)
+clock=3000
 assert.equal((await gateway('pt',req)).duplicate,true)
+assert.equal(stored.row.observedAt,2000)
+assert.ok(prepareIndividualCalibration(shared,{...req,exerciseName:'Other'},ctx).issue)
 assert.ok((await gateway('pt',{...req,amount:25})).issue)
 allowed=false
 assert.ok((await gateway('pt',req)).issue)
