@@ -297,3 +297,44 @@ test('composite Engine Swap uses existing timer and actual participant results',
   assert.equal(equivalentLibraryWodSource(imported.block),null)
  }
 })
+
+
+import {doubleEmomConfig} from '../src/lib/samspel.js'
+import {compositeDoubleTracks} from '../src/lib/compositeWod.js'
+test('composite Double EMOM uses two explicit tracks and measured individual intervals',()=>{
+ const items=[{block_id:'double',exercise_name:'Push-up'},{block_id:'double',exercise_name:'Air squat'}]
+ const next={id:'next',title:'Nedtrapping',format:'Eigen økt',minutes:3}
+ const all=[...items,{block_id:'next',exercise_name:'Stretch'}]
+ for(const rule of ['fixed','time']){
+  const raw={id:'double',title:'Double EMOM',format:'EMOM',minutes:10,emomIntervalSeconds:60,scoreMode:'none',samspel:{...doubleEmomConfig(60,600),switch_rule:rule},items}
+  const part=compositeDoubleTracks(raw,all)
+  assert.deepEqual(part.samspel.tracks,['Push-up','Air squat'])
+  assert.equal(validateCompositeBlocks([part,next],all),'')
+  assert.ok(validateCompositeBlocks([part,next],[...all,{block_id:'double',is_rest:true,exercise_name:'Pause'}]))
+  assert.ok(validateCompositeBlocks([part,next],[{...items[0],minute_slot:'1'},items[1],all[2]]))
+  assert.equal(compositeSamspelConfig({...part,format:'AMRAP'}),null)
+  assert.equal(compositeTimerConfig(part).timerSettings.workout_schema.samspel.switch_rule,rule)
+  assert.equal(compositeTimerConfig(part).timerSettings.workout_schema.wod_engine.participant_count,2)
+  assert.equal(compositeTimerConfig(part).timerSettings.workout_schema.items[0].minute_slot,undefined)
+  assert.equal(plannedFixedEmomSets({...items[0],reps:5},[part],'rx',false).autoFill,false)
+  const participants=rule==='fixed'?{1:{trackA:'10',trackB:'0'},2:{trackA:'0',trackB:'10'}}:{1:{trackA:'5',trackB:'5'},2:{trackA:'5',trackB:'5'}}
+  const score={'samspel:double':{participants}}
+  const full=compositeSamspelResults([part,next],score,{0:{elapsed:600}})
+  assert.equal(full.issue,null);assert.equal(full.rows[0].completed,true)
+  assert.equal(full.rows[0].distance,null);assert.equal(full.rows[0].calories,null)
+  assert.equal(compositeSamspelResults([part,next],score,{},true).rows[0].completed,true)
+  assert.ok(compositeSamspelResults([part,next],score,{0:{elapsed:0}}).issue)
+  assert.ok(compositeSamspelResults([part,next],{}, {},true).issue)
+  const partial={1:{trackA:'1',trackB:'0'},2:{trackA:'0',trackB:'1'}}
+  const early=compositeSamspelResults([part,next],{'samspel:double':{participants:partial}},{0:{elapsed:60}})
+  assert.equal(early.issue,null);assert.equal(early.rows[0].completed,false)
+  assert.equal(compositeSamspelResults([part,next],{'samspel:double':{participants:{...partial,1:{trackA:'1',trackB:'1'}}}},{0:{elapsed:60}}).field,'samspel-block-double-1-trackB')
+  assert.equal(isIndividualPerformance({result_data:{samspel_blocks:full.rows}}),false)
+  const merged=mergeCompositeSamspelResults([{id:'double',format:'EMOM',roundsCompleted:10},next],full.rows)
+  assert.equal(merged[0].format,'EMOM');assert.equal(merged[0].roundsCompleted,null);assert.deepEqual(merged[1],next)
+  const imported=prepareLibraryWodPart({id:'w',name:'Double',format:'EMOM',timer_settings:{workout_schema:{samspel:part.samspel,items}}},{id:'double'})
+  assert.equal(imported.block.minutes,10);assert.deepEqual(imported.block.samspel.tracks,part.samspel.tracks)
+  assert.equal(equivalentLibraryWodSource(imported.block),null)
+  if(rule==='time')assert.equal(compositeSamspelConfig({...part,minutes:9}),null)
+ }
+})
