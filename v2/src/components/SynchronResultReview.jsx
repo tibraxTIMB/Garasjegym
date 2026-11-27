@@ -24,7 +24,7 @@ export default function SynchronResultReview({review,controls,onAction}){
    <button className="secondary-button" disabled={!controls.canReview} onClick={()=>{onAction('review_update',{movementId:current.movementId,value:null,quality:'unknown'});setDraft(null)}}>Eg veit ikkje mengda</button></>}
    <button className="secondary-button" onClick={()=>setDraft(null)}>Lukk</button>
   </section>}
-  <small>{review.approvedCount}/{review.participantCount} godkjent · endringar krev ny godkjenning.</small>
+  <small>{review.approvedCount}/{review.participantCount} godkjent · {review.sealed?'Resultatfordelinga er låst for lagring.':'Endringar krev ny godkjenning.'}</small>
   <button className="primary-button" disabled={!controls.canApprove||!!draft} onClick={()=>onAction('review_approve')}>{review.approved?'Godkjent':'Godkjenn mitt resultat'}</button>
   {!review.canApprove&&<small>Kontroller manglande mengder eller avvik i fellesresultatet først.</small>}
   <small>Utviklingstest – ingen treningslogg blir lagra.</small>
