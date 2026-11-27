@@ -24,4 +24,5 @@ test('revoked session, unavailable Auth, anonymous account, and malformed result
 test('handler is disabled by default and requires explicit origin and DB configuration',()=>{
  assert.equal(createSynchronSupabaseHandler(),null)
  assert.throws(()=>createSynchronSupabaseHandler({enabled:true,issuer,allowedOrigins:[]}))
+ assert.throws(()=>createSynchronSupabaseHandler({enabled:true,issuer,allowedOrigins:['https://gg.fixture.invalid'],query:async()=>({rows:[]})}))
 })
