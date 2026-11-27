@@ -151,6 +151,8 @@ jobs:
           VITE_SUPABASE_URL: https://izwzwvlexqxqewzijhhd.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_jZyaYhD8_jZgpgutKF7lRg_EcJ0EGSQ
           VITE_OWNER_BOOTSTRAP_SIGNUP: 'false'
+          VITE_GG_SYNCHRON_ENABLED: ${{ (steps.release_gate.outputs.approved == 'true' || (github.event_name == 'workflow_dispatch' && inputs.publish_production == true)) && 'true' || 'false' }}
+          VITE_GG_SYNCHRON_RESULT_SAVING_ENABLED: ${{ (steps.release_gate.outputs.approved == 'true' || (github.event_name == 'workflow_dispatch' && inputs.publish_production == true)) && 'true' || 'false' }}
           VITE_HELP_VIDEO_REV: ${{ github.sha }}
           VITE_SPOTIFY_CLIENT_ID: ${{ vars.VITE_SPOTIFY_CLIENT_ID }}
         run: npm run build

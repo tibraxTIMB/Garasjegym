@@ -1,0 +1,24 @@
+name: SYNCHRON live read-only smoke
+on:
+  push:
+    branches: [fix/synchron-managed-rpc-20261127]
+    paths:
+      - '.github/workflows/synchron-live-smoke.yml'
+      - 'v2/scripts/synchron-live-smoke.mjs'
+      - 'v2/server/synchronManagedQueries.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify fixed readiness behavior
+        run: node --test v2/scripts/synchron-managed-readiness.test.mjs
+      - name: Check live Edge and RPC denial without secrets
+        run: node v2/scripts/synchron-live-smoke.mjs

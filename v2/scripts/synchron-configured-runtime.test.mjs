@@ -24,11 +24,15 @@ test('approved explicit configuration uses existing fixed authenticated endpoint
  assert.equal(typeof createConfiguredSynchronRuntime({...config,resultSavingEnabled:'true'}).adapter(sessionId).saveResult,'function')
  assert.equal(runtime.recordIndividualCalibration,undefined)
 })
-test('App runtime is memoized and ordinary release workflow does not enable it',()=>{
+test('App runtime is memoized; only an approved production release enables it',()=>{
  const app=readFileSync(new URL('../src/App.jsx',import.meta.url),'utf8')
  const release=readFileSync(new URL('../../.github/workflows/deploy-sturmkopf-pages.yml',import.meta.url),'utf8')
  assert.match(app,/const synchronRuntime=useMemo/)
  assert.match(app,/tabletLab\|\|labMode\|\|passwordRecovery\|\|invitationPending/)
  assert.match(app,/VITE_GG_SYNCHRON_ENABLED/)
- assert.doesNotMatch(release,/VITE_GG_SYNCHRON_ENABLED:\s*['"]?true/)
+ assert.match(release,/VITE_GG_SYNCHRON_ENABLED:.*steps\.release_gate\.outputs\.approved/)
+ assert.match(release,/VITE_GG_SYNCHRON_RESULT_SAVING_ENABLED:.*steps\.release_gate\.outputs\.approved/)
+ assert.match(app,/const localDiscoveryBlocked=discoveryBlocked&&!localOnly/)
+ assert.match(app,/const trainingLaunchLocked=remoteLocked\|\|localDiscoveryBlocked/)
+ assert.match(app,/if\(ctx\.discoveryBlocked\)/)
 })
