@@ -1,3 +1,4 @@
+import {isIndividualPerformance,isUsablePerformedSet,recordedSetsWithStatus,performanceSnapshot} from './performanceEvidence.js'
 import {makeCsv} from './werkstattExchange.js'
 export const exportAllowed=p=>p?.role==='admin'&&p.active===true&&p.membership_status==='approved'
 const dateOk=s=>/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(Date.parse(s+'T12:00:00Z'))&&new Date(s+'T12:00:00Z').toISOString().slice(0,10)===s
@@ -31,9 +32,12 @@ export function makeWorkoutExport(logs,exercises,sets){
  if(exercises.some(e=>!lm.has(e.workout_log_id))||sets.some(s=>!em.has(s.workout_exercise_id)))throw Error('Ufullstendig øktkopling.')
  const setMap=new Map();for(const s of sets){const list=setMap.get(s.workout_exercise_id)||[];list.push(s);setMap.set(s.workout_exercise_id,list)}
  const lr=[...logs].sort((a,b)=>String(a.workout_date).localeCompare(String(b.workout_date))||a.id.localeCompare(b.id))
+ const fitSetEvidence=new Map()
+ const grouped=new Map();for(const ex of exercises){const group=grouped.get(ex.workout_log_id)||[];group.push(ex);grouped.set(ex.workout_log_id,group)}
+ for(const [logId,group] of grouped){const log=lm.get(logId);group.sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));for(const [index,ex] of group.entries()){const stored=[...(setMap.get(ex.id)||[])].sort((a,b)=>(a.set_number??0)-(b.set_number??0));const checked=recordedSetsWithStatus({...ex,workout_sets:stored},performanceSnapshot(log,ex,index));for(const set of checked)fitSetEvidence.set(set.id,isIndividualPerformance(log)&&isUsablePerformedSet(set))}}
  const sr=[]
  for(const e of [...exercises].sort((a,b)=>a.workout_log_id.localeCompare(b.workout_log_id)||(a.sort_order??0)-(b.sort_order??0))){const l=lm.get(e.workout_log_id);const rows=(setMap.get(e.id)||[]).sort((a,b)=>(a.set_number??0)-(b.set_number??0));for(const s of rows.length?rows:[null])sr.push([l.id,l.workout_date,l.title,e.exercise_name,e.sort_order,s?.set_number,s?.reps,s?.load_kg,s?.height_cm,s?.time_seconds,s?'registrert sett':'ingen registrerte sett'])}
- return {logs:lr.length,exercises:exercises.length,sets:sets.length,records:{logs:lr.map(({result_data,...row})=>({...row,fit_evidence:{participation:result_data?.wod_engine?.participation||null,team:result_data?.samspel?.team_score===true,completionOnly:result_data?.flow_completion_only===true,manual:result_data?.manual_entry===true,elapsed:result_data?.manual_entry?null:result_data?.elapsed_seconds??null}})),exercises,sets},
+ return {logs:lr.length,exercises:exercises.length,sets:sets.length,records:{logs:lr.map(({result_data,...row})=>({...row,fit_evidence:{participation:result_data?.wod_engine?.participation||null,team:result_data?.samspel?.team_score===true,individualBlocked:!isIndividualPerformance({result_data}),completionOnly:result_data?.flow_completion_only===true,manual:result_data?.manual_entry===true,elapsed:result_data?.manual_entry?null:result_data?.elapsed_seconds??null}})),exercises,sets:sets.map(s=>({...s,fit_usable:fitSetEvidence.get(s.id)===true}))},
  workouts:makeCsv(['økt_id','dato','namn','format','rundar','reps','resultattid_sekund','resultatvekt_kg','kaloriar','distanse','resultateining'],lr.map(l=>[l.id,l.workout_date,l.title,l.format,l.score_rounds,l.score_reps,l.score_time_seconds,l.score_load_kg,l.score_calories,l.score_distance,l.score_unit])),
  setRows:makeCsv(['økt_id','dato','økt','øving','øving_rekkjefølgje','sett','reps','kg','høgd_cm','tid_sekund','datastatus'],sr)}
 }
