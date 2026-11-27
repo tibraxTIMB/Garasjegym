@@ -8,6 +8,7 @@ on:
       - 'v2/src/components/Synchron*'
       - 'v2/scripts/synchron-postgres*'
       - 'v2/scripts/synchron-supabase-auth.test.mjs'
+      - 'v2/scripts/synchron-restricted-queries.test.mjs'
       - 'v2/package.json'
       - 'v2/supabase/preflight/synchron_pg*'
       - '.github/workflows/gazelle-synchron-postgres.yml'
