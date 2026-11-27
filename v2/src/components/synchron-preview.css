@@ -1,0 +1,13 @@
+.gg-synchron-panel{min-width:0;box-sizing:border-box;display:grid;gap:12px;align-content:start;padding:16px;overflow-wrap:anywhere;--timer-clock-size:clamp(52px,10vw,92px)}
+.gg-synchron-panel .timer-center{min-width:0;display:grid;gap:8px;justify-items:center;text-align:center}
+.gg-synchron-panel .timer-main-clock{font-size:var(--timer-clock-size);line-height:1.05}
+.gg-sync-status,.gg-sync-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}
+.gg-sync-actions button{min-height:48px;flex:1 1 130px;white-space:normal}
+.gg-sync-takeover{min-height:72px!important;flex-basis:100%!important;font-size:1.25rem}
+.gg-synchron-panel button:disabled{opacity:.45;cursor:not-allowed}
+.gg-sync-review{display:grid;gap:8px;border:1px solid currentColor;padding:12px;border-radius:10px}
+.gg-synchron-panel label{display:grid;gap:5px;min-width:0}
+.gg-synchron-panel input{width:100%;min-width:0;box-sizing:border-box}
+.gg-sync-preview{max-width:1080px;margin:auto;padding:16px;display:grid;gap:16px}
+.gg-sync-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(max-width:700px){.gg-sync-preview-grid{grid-template-columns:minmax(0,1fr)}}
