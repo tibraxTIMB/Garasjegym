@@ -23,7 +23,14 @@ export function synchronClientSnapshot(state,actorId,now){
   ...(leader?{participants:state.plan.members.map((id,i)=>({id,slot:i+1,joined:state.joined.includes(id)}))}:{})})
 }
 export function synchronActionRequest(snapshot,type,fields={},id){
- if(!snapshot||!allowed.has(type)||typeof id!=='string'||!id||Object.keys(fields).some(k=>!['memberId','loadKg','actual','abort'].includes(k)))return null
+ if(!snapshot||typeof id!=='string'||!id)return null
+ if(type==='review_update'||type==='review_approve'){
+  if(snapshot.view.phase!=='finished'||!snapshot.review)return null
+  if(type==='review_approve')return snapshot.review.canApprove&&!snapshot.review.approved&&!Object.keys(fields).length?{id,revision:snapshot.revision,type}:null
+  if(Object.keys(fields).some(k=>!['movementId','quality','value'].includes(k))||!snapshot.review.rows.some(r=>r.movementId===fields.movementId)||!['confirmed','estimated','unknown'].includes(fields.quality)||(fields.quality==='unknown'?fields.value!==null:!Number.isSafeInteger(fields.value)||fields.value<0||fields.value>100000))return null
+  return {id,revision:snapshot.revision,type,...fields}
+ }
+ if(!allowed.has(type)||Object.keys(fields).some(k=>!['memberId','loadKg','actual','abort'].includes(k)))return null
  const v=snapshot.view
  const permitted=type==='join'?snapshot.isMember&&!snapshot.joined&&v.phase==='ready':
   type==='start'?v.canStart:type==='takeover'?v.canTakeover||snapshot.leader&&v.phase==='running'&&typeof fields.memberId==='string':
