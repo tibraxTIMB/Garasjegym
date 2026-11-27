@@ -64,6 +64,17 @@ try {
     if ([int]$counts[0] -lt 1 -or [int]$counts[1] -ne 0) { throw 'Unexpected database or Storage objects found. Separate object backup is required before a success receipt.' }
     $tables = @(& $psql -X -A -t -v ON_ERROR_STOP=1 -c "select table_name from information_schema.tables where table_schema='public' and table_type='BASE TABLE' order by table_name")
     if ($LASTEXITCODE -ne 0 -or $tables.Count -ne [int]$counts[0]) { throw 'Public table inventory failed.' }
+    # SYNCHRON is an independent, optional installed schema; include its data when present.
+    $syncProbe = (& $psql -X -A -t -v ON_ERROR_STOP=1 -c "select case when exists(select 1 from pg_namespace where nspname='gg_synchron_private') then 'installed' else 'absent' end" | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or $syncProbe -notin @('installed','absent')) { throw 'SYNCHRON schema inventory failed.' }
+    $syncTables=@(); $syncRoles=@()
+    if ($syncProbe -eq 'installed') {
+        $syncTables=@(& $psql -X -A -t -v ON_ERROR_STOP=1 -c "select table_name from information_schema.tables where table_schema='gg_synchron_private' and table_type='BASE TABLE' order by table_name")
+        if ($LASTEXITCODE -ne 0) { throw 'SYNCHRON table inventory failed.' }
+        foreach ($requiredTable in @('sessions','slots','outbox')) { if ($requiredTable -notin $syncTables) { throw "SYNCHRON table missing: $requiredTable" } }
+        $syncRoles=@(& $psql -X -A -t -v ON_ERROR_STOP=1 -c "select rolname from pg_roles where rolname in ('gg_synchron_server','gg_synchron_login') order by rolname")
+        if ($LASTEXITCODE -ne 0 -or 'gg_synchron_server' -notin $syncRoles) { throw 'SYNCHRON role inventory failed.' }
+    }
     # Persist only non-secret setup after successful connection. Password is never saved.
     @{bin=$bin;destination=$destination;pooler=$pooler;cert=$cert}|ConvertTo-Json|Set-Content -Encoding UTF8 -LiteralPath $configFile
     $stamp = (Get-Date).ToString('yyyy-MM-dd_HH-mm-ss')
@@ -86,6 +97,16 @@ try {
     foreach ($table in @('users','identities')) {
         if (!($toc -match ("\bTABLE DATA auth " + $table + '\s'))) { throw "Missing auth.$table in archive." }
     }
+    if ($syncProbe -eq 'installed') {
+        if (!($toc -match '\bSCHEMA - gg_synchron_private\s')) { throw 'Missing SYNCHRON schema in archive.' }
+        foreach ($table in $syncTables) {
+            if (!($toc -match ('\bTABLE DATA gg_synchron_private ' + [regex]::Escape($table) + '\s'))) { throw "Missing SYNCHRON table data in archive: $table" }
+        }
+        $roleText=Get-Content -LiteralPath (Join-Path $dbDir 'roles.sql') -Raw
+        foreach ($role in $syncRoles) {
+            if ($roleText -notmatch ('(?m)^CREATE ROLE "?'+[regex]::Escape($role)+'"?\s*;')) { throw "Missing SYNCHRON role definition: $role" }
+        }
+    }
     # Decode the entire archive without connecting to a database or writing a second SQL copy.
     Invoke-Checked $restore @('--file=NUL',$archive)
     # Remove database password before contacting GitHub.
@@ -105,8 +126,8 @@ try {
         foreach ($entry in $zipCheck.Entries) { $stream=$entry.Open(); try { $stream.CopyTo([IO.Stream]::Null) } finally { $stream.Dispose() } }
     } finally { $zipCheck.Dispose() }
     $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash.ToLowerInvariant()
-    $receipt = [ordered]@{version=1;project=$project;completed_at=[DateTime]::UtcNow.ToString('o');archive_checked=$true;auth_tables_present=$true;public_tables_present=$true;storage_objects=0;code_zip_checked=$true;archive_sha256=$hash;archive_bytes=(Get-Item -LiteralPath $archive).Length;code_commit=$commit}
-    @('Logical archive includes public and auth data, not a tested recovery.','Do not restore over production. Use a compatible isolated Supabase instance.','Project configuration, Edge Function secrets and Storage object bytes require separate handling.','Source ZIP is branch head at capture, not a Git history mirror or proof of deployed revision.','Source project: '+$project,'PostgreSQL tools: '+$v,'Public table count at probe: '+$counts[0],'Auth user count at probe: '+$counts[2]) | Set-Content -Encoding UTF8 (Join-Path $guideDir 'capture-notes.txt')
+    $receipt = [ordered]@{version=1;project=$project;completed_at=[DateTime]::UtcNow.ToString('o');archive_checked=$true;auth_tables_present=$true;public_tables_present=$true;storage_objects=0;code_zip_checked=$true;archive_sha256=$hash;archive_bytes=(Get-Item -LiteralPath $archive).Length;code_commit=$commit;synchron_schema=$syncProbe;synchron_tables_checked=$syncTables.Count;synchron_roles_checked=$syncRoles.Count}
+    @('Logical archive includes public and auth data, not a tested recovery.','Do not restore over production. Use a compatible isolated Supabase instance.','Project configuration, Edge Function secrets and Storage object bytes require separate handling.','Source ZIP is branch head at capture, not a Git history mirror or proof of deployed revision.','Source project: '+$project,'PostgreSQL tools: '+$v,'Public table count at probe: '+$counts[0],'Auth user count at probe: '+$counts[2],'SYNCHRON schema: '+$syncProbe,'SYNCHRON tables checked: '+$syncTables.Count,'SYNCHRON roles checked: '+$syncRoles.Count,'SYNCHRON Edge Function secrets must be provisioned separately; never include passwords in the archive.') | Set-Content -Encoding UTF8 (Join-Path $guideDir 'capture-notes.txt')
     $receipt | ConvertTo-Json | Set-Content -Encoding UTF8 (Join-Path $controlDir 'DATABUNKER-receipt.json')
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'LES-MEG.txt') -Destination (Join-Path $guideDir 'START-HER.txt')
     @('GARASJEGYM DATABUNKER','This ZIP is NOT password encrypted. Store only on approved encrypted media.','01-DATABASE: data, schema and role definitions.','02-APP: source code ZIP.','03-KONTROLL: receipt and file checksums.','04-GJENOPPRETTING: read START-HER.txt.','Never restore directly into production. No restore has been tested.') | Set-Content -Encoding UTF8 (Join-Path $stage 'START-HER.txt')
