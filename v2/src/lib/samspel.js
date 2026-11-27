@@ -250,7 +250,7 @@ export function samspelParticipantRows(s,values={}){
   const slot=i+1, row=values[slot]||{}
   if(samspelChipper(s))return {slot,chipper:s.targets.map((_,i)=>row['chipper-'+i]??'')}
   if(samspelRelay(s))return {slot,rounds:row.rounds??'',reps:row.reps??''}
-  if(samspelPairedEmom(s))return {slot,paired:s.tracks.map((_,i)=>({intervals:row['paired-'+i]??'',reps:row['paired-reps-'+i]??'',kg:row['paired-kg-'+i]??''}))}
+  if(samspelPairedEmom(s))return {slot,level:row.level??'',paired:s.tracks.map((_,i)=>({intervals:row['paired-'+i]??'',reps:row['paired-reps-'+i]??'',kg:row['paired-kg-'+i]??''}))}
   if(samspelDouble(s))return {slot,trackA:row.trackA??'',trackB:row.trackB??''}
   if(samspelStrength(s))return {slot,sets:Array.from({length:s.planned_sets},(_,i)=>({set_number:i+1,reps:row['reps-'+i]??'',load_kg:row['load-'+i]??'',rir:row['rir-'+i]??''}))}
   if(samspelRecovery(s))return {slot,quality:row.quality??'',erg:''}
@@ -278,6 +278,7 @@ export function samspelParticipantResults(s,values={}, {elapsed}={}){
    continue
   }
   if(samspelPairedEmom(s)){
+   if(row.level!==''&&!['rx','scaled','foundation'].includes(row.level))return {rows:[],issue:'Utøvar '+row.slot+': vel gyldig doseringsnivå.',slot:row.slot,field:'level'}
    const counts=[],reps=[],loads=[]
    for(const [i,value] of row.paired.entries()){
     const opportunity=pairedEmomOpportunity(s,i,row.slot,elapsed)
@@ -290,7 +291,7 @@ export function samspelParticipantResults(s,values={}, {elapsed}={}){
     if(kg!==null&&(!Number.isFinite(kg)||kg<0||opportunity===0||!(actual>0)))return issue('paired-kg-'+i,'Vekt krev faktisk registrerte reps.')
     counts.push(count);reps.push(actual);loads.push(kg)
    }
-   if([...counts,...reps].some(n=>n!==null))results.push({slot:row.slot,paired_intervals:counts,paired_reps:reps,paired_load_kg:loads,rounds:null,extra_reps:null,erg_value:null})
+   if([...counts,...reps].some(n=>n!==null))results.push({slot:row.slot,prescription_level:row.level||null,paired_intervals:counts,paired_reps:reps,paired_load_kg:loads,rounds:null,extra_reps:null,erg_value:null})
    continue
   }
   if(samspelDouble(s)){

@@ -131,22 +131,27 @@ with sync_playwright() as pw:
     section.get_by_role("button",name="Hent plan · 6 reps/intervall",exact=True).first.click()
     expect(page.locator('[data-result-field="samspel-1-paired-reps-0"]')).to_have_value("16")
     section.get_by_text("Utøvar 2",exact=True).click()
+    section.get_by_role("group",name="Dosering P2").get_by_role("button",name="Scaled",exact=True).click()
     page.locator('[data-result-field="samspel-2-paired-0"]').fill("2")
-    page.locator('[data-result-field="samspel-2-paired-reps-0"]').fill("12")
     if keypad.is_visible():
         keypad.get_by_role("button",name="Lukk taltastatur").click()
-    page.wait_for_function("(k)=>JSON.parse(localStorage.getItem(k)||'{}').participantScores?.['2']?.['paired-reps-0']==='12'",arg=DRAFT)
+    section.get_by_role("button",name="Hent plan · 4 reps/intervall",exact=True).first.click()
+    expect(page.locator('[data-result-field="samspel-2-paired-reps-0"]')).to_have_value("8")
+    if keypad.is_visible():
+        keypad.get_by_role("button",name="Lukk taltastatur").click()
+    page.wait_for_function("(k)=>JSON.parse(localStorage.getItem(k)||'{}').participantScores?.['2']?.['paired-reps-0']==='8'",arg=DRAFT)
     page.reload(wait_until="domcontentloaded")
     expect(save).to_be_visible(timeout=15000)
     draft=page.evaluate("(k)=>JSON.parse(localStorage.getItem(k))",DRAFT)
     assert draft["participantScores"]["1"]["paired-reps-0"]=="16"
-    assert draft["participantScores"]["2"]["paired-reps-0"]=="12"
+    assert draft["participantScores"]["2"]["paired-reps-0"]=="8"
     save.click()
     page.wait_for_function("(k)=>JSON.parse(localStorage.getItem(k)||'[]').length===1",arg=WRITES,timeout=20000)
     payload=page.evaluate("(k)=>JSON.parse(localStorage.getItem(k))[0].payload",WRITES)
     rows=payload["result_data"]["samspel"]["participant_results"]
-    assert [row["paired_reps"][0] for row in rows]==[16,12],rows
+    assert [row["paired_reps"][0] for row in rows]==[16,8],rows
     assert [row["paired_intervals"][0] for row in rows]==[3,2],rows
+    assert [row["prescription_level"] for row in rows]==["rx","scaled"],rows
     assert payload["result_data"]["completed"] is False
     assert not payload["result_data"].get("pr_victories")
     assert payload["score_rounds"] is None and payload["score_reps"] is None

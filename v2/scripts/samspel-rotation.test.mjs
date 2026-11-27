@@ -352,3 +352,8 @@ assert.deepEqual(samspelParticipantResults(front,{},{}).rows,[])
 assert.equal(synchronTransportFormatSupported('Chipper'),true)
 assert.equal(synchronTransportFormatSupported('EMOM'),false)
 console.log('YGIG EMOM uses canonical Samspel clock and separate measured participant results')
+
+const mixedPaired=samspelParticipantResults(front,{1:{level:'rx','paired-0':'3','paired-reps-0':'18'},2:{level:'foundation','paired-0':'2','paired-reps-0':'4'}},{elapsed:1080})
+assert.equal(mixedPaired.issue,null)
+assert.deepEqual(mixedPaired.rows.map(r=>r.prescription_level),['rx','foundation'])
+assert.ok(samspelParticipantResults(front,{1:{level:'invented','paired-0':'1'}},{elapsed:1080}).issue)
