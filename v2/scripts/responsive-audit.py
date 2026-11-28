@@ -377,7 +377,18 @@ with sync_playwright() as pw:
                     menu.get_by_role("button",name="Tilpass økt",exact=True).tap()
                     editor=page.get_by_role("dialog",name="Tilpass økt for",exact=False)
                     editor.get_by_role("navigation",name="Delar i WOD-en").wait_for(timeout=15000)
-                    assert editor.get_by_role("textbox",name="WOD-namn",exact=True).first.input_value().startswith("Stålsnakke")
+                    name_field=editor.get_by_role("textbox",name="WOD-namn",exact=True)
+                    assert name_field.count()==1
+                    assert name_field.is_visible() and name_field.is_editable()
+                    original_name=name_field.input_value()
+                    assert original_name.startswith("Stålsnakke")
+                    name_field.fill(original_name+" · test")
+                    nav=editor.get_by_role("navigation",name="Framdrift i WOD-byggjaren")
+                    nav.get_by_role("button",name="Gjennomgang",exact=True).tap()
+                    assert editor.get_by_role("textbox",name="WOD-namn",exact=True).input_value()==original_name+" · test"
+                    nav.get_by_role("button",name="Bygg økta",exact=True).tap()
+                    assert name_field.input_value()==original_name+" · test"
+                    name_field.fill(original_name)
                     check(page,"architect-pt-edit",w,h)
                 if screen=="acta":
                     panel=page.get_by_role("region",name="Treningsrapport per del")
