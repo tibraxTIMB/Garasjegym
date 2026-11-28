@@ -103,3 +103,10 @@ test('equipment plan collection cannot shadow the callable catalogue equipment l
  assert.match(code,/equipmentItems\(ex\.equipment\)\.map/)
  assert.match(code,/equipmentPlanSnapshot\(plannedEquipmentItems,equipmentPlan\)/)
 })
+
+import {exerciseMark} from '../src/lib/exerciseMark.js'
+test('exercise identity marks follow movement or equipment without modifying prescriptions',()=>{
+ const cases=[['Beinhev på benk (Bench Leg Raise)','Benk','Kjerne','core'],['KB swing','Kettlebell','','kettlebell'],['Deadlift','Vektstong','','barbell'],['Air Squat','Kroppsvekt','','squat'],['Box Jump','Plyoboks','','box'],['Row','Romaskin','','row'],['Bent Over Row','Barbell','','barbell'],['TRX Row','TRX','','trx'],['Double Under','Hoppetau','','rope'],['Pause','','','pause'],['Ukjend øving','','','body']]
+ for(const [name,equipment,category,expected] of cases){const ex=Object.freeze({name,equipment,category});assert.equal(exerciseMark(ex),expected,name)}
+ assert.equal(exerciseMark({name:'Clean and Jerk',is_complex:true}),'complex')
+})
