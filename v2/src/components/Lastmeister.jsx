@@ -1,3 +1,4 @@
+import {DnaChoice} from './DesignDNA.jsx'
 import {useState} from 'react'
 import {plateAllocation,ironTwinsPlateAllocation,inventoryGroup,prescribedBarbellLoads} from '../lib/garageInventory.js'
 import './garage-inventory.css'
@@ -15,7 +16,7 @@ export default function Lastmeister({rows=[],items=[],level='rx',ironTwins=false
  const plateText=load=>load.perSide.length?load.perSide.map(p=>p.count+' × '+kg(p.kg)).join(' + '):'Ingen skiver'
  return <details className="customer-plan-details">
   <summary>{ironTwins?'Lastmeister · '+title+' · to utøvarar':'Lastmeister · vektskiver og samtidige stenger'}</summary>
-  {ironTwins&&<><label>Utstyrsbruk<select value={mode} onChange={e=>setMode(e.target.value)}><option value="">Vel gjennomføring</option><option value="simultaneous">To ferdig rigga stenger samstundes</option><option value="sequential">Etter tur – rigg om mellom setta</option></select></label><small>{mode==='sequential'?'Kvart oppsett blir kontrollert for seg. Skiver kan berre gjenbrukast etter omrigging.':'Ved samtidig bruk må begge stengene og alle skivepar vera tilgjengelege på same tid.'}</small></>}
+  {ironTwins&&<><div className="gg-fw-choice-field"><strong>Utstyrsbruk</strong><DnaChoice label="Utstyrsbruk" value={mode} onChange={setMode} options={[{value:'simultaneous',label:'To stenger samstundes'},{value:'sequential',label:'Etter tur · rigg om'}]}/></div><small>{mode==='sequential'?'Kvart oppsett blir kontrollert for seg. Skiver kan berre gjenbrukast etter omrigging.':'Ved samtidig bruk må begge stengene og alle skivepar vera tilgjengelege på same tid.'}</small></>}
   <small>Brukar registrert inventar. Vel stong og totalvekt for kvar deltakar. Kontroller fysisk passform, låsar, stongkapasitet og skiveplass. Berekninga er ikkje ei reservasjon eller tryggleiksgodkjenning.</small>
   {requests.map((req,i)=>{const bar=bars.find(b=>b.equipment_key===req.barKey);return <div key={i} style={{padding:'10px 0'}}>
    <strong>{ironTwins?'Utøvar':'Stong'} {i+1}</strong>

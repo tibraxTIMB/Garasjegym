@@ -2102,5 +2102,6 @@
       "checks": {},
       "evidence": []
     }
-  ]
+  ],
+  "approvalRule": "Each approved entry must include reviewedSha256 matching current file bytes, all required checks and concrete evidence. Registration is not approval."
 }

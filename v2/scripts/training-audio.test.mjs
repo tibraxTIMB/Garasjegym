@@ -122,5 +122,7 @@ test('FLOW keypad replaces selection, handles decimals and preserves empty resul
  const keypad=read('../src/components/FlowEntry.jsx')
  assert.match(keypad,/inputMode=\{ctx\?\'none\'/)
  assert.match(keypad,/decimal\?\'decimal\':\'numeric\'/)
- assert.match(keypad,/aria-label="Neste talfelt"/)
+ assert.match(keypad,/<DnaKeyMatrix\b[^>]*onNext=/)
+ const matrix=read('../src/components/DesignDNA.jsx')
+ assert.match(matrix,/aria-label=\{last\?'Ferdig':'Neste talfelt'\}/)
 })
