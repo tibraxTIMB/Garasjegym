@@ -435,3 +435,31 @@ body:has(> .gg-architect-issue-backdrop) > #root{isolation:isolate}
 .gg-three-stage.gg-sixstep-edit.gg-three-stage-2 .gg-architect-heading>button{display:none!important}
 .gg-three-stage.gg-sixstep-edit.gg-three-stage-2 .gg-architect-heading label{gap:2px}
 .gg-three-stage.gg-sixstep-edit.gg-three-stage-2 .gg-architect-heading input{min-height:44px;font-size:16px;font-weight:700;line-height:1.25;width:100%;box-sizing:border-box}
+
+/* Production screenshot regression: one horizontal part row per logical part.
+   Reserve actual width for name before action icons. Never distribute part cards as columns. */
+.gg-three-stage .gg-logical-parts,.gg-three-stage.gg-three-stage-2 .gg-part-workbench .gg-logical-parts{display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;align-items:stretch!important;gap:4px;max-height:none;overflow:visible;position:static;width:100%;min-width:0}
+.gg-three-stage .gg-logical-parts .gg-part-chip{display:flex!important;flex:0 0 auto!important;flex-wrap:nowrap;align-items:center;gap:2px;width:100%;min-width:0;min-height:46px;height:auto!important;max-height:none;padding:2px;border:0;border-bottom:1px solid #35464e;border-radius:0}
+.gg-three-stage .gg-logical-parts .gg-part-chip>button:first-child{display:grid!important;grid-template-columns:24px minmax(0,1fr)!important;grid-template-rows:auto auto!important;align-content:center;align-items:center;flex:1 1 0!important;width:auto!important;min-width:0!important;max-width:none!important;min-height:44px;height:auto!important;padding:4px 5px;gap:2px 5px;text-align:left}
+.gg-three-stage .gg-logical-parts .gg-part-chip>button:first-child b{grid-column:1;grid-row:1/3}
+.gg-three-stage .gg-logical-parts .gg-part-chip>button:first-child span{grid-column:2;grid-row:1;font-size:13px;line-height:1.2;overflow-wrap:normal;word-break:normal;white-space:normal}
+.gg-three-stage .gg-logical-parts .gg-part-chip>button:first-child small{grid-column:2;grid-row:2;font-size:11px;text-align:left;line-height:1.2;overflow-wrap:normal;word-break:normal;white-space:normal}
+.gg-three-stage .gg-logical-parts .gg-part-chip>.gg-part-settings-button{flex:0 0 36px!important;min-width:36px!important;max-width:36px!important;width:36px!important;min-height:44px;height:44px;padding:3px}
+.gg-three-stage .gg-architect-overview{margin:3px 0!important;gap:4px!important}
+.gg-three-stage .gg-architect-meta{min-height:32px!important;display:flex;flex-wrap:nowrap!important;gap:3px}
+.gg-three-stage .gg-architect-meta>span{flex:1 1 0!important;min-width:0;font-size:11px}
+.gg-three-stage .gg-architect-meta>button{padding:3px 5px!important;min-height:36px!important;min-width:0}
+.gg-three-stage .gg-builder-notice,.gg-three-stage .gg-builder-error{display:flex;align-items:center;gap:7px;padding:5px 8px!important;margin:3px 0!important;font-size:12px;line-height:1.3}
+.gg-three-stage .gg-builder-notice{background:transparent!important;border:0!important;color:#a2d3c4}
+.gg-three-stage .gg-builder-notice button{margin-left:auto;border:0;background:transparent;color:inherit;min-width:32px;min-height:32px}
+.gg-three-stage .gg-builder-error span{flex:1;min-width:0}
+.gg-three-stage .gg-builder-error button{flex:0 0 auto;max-width:88px;white-space:normal;min-height:40px;font-size:12px}
+.gg-work-intent{display:grid;gap:6px;min-width:0}
+.gg-work-intent>strong{font-size:14px}
+.gg-work-intent .gg-direct-choices{grid-template-columns:minmax(0,1fr)!important}
+.gg-work-intent .gg-direct-choices button{text-align:left;min-height:44px;padding:7px 10px;font-size:13px}
+.gg-work-intent small{font-size:12px;line-height:1.35;color:#b7c7ce}
+.gg-three-stage .gg-review-exercise{grid-template-columns:minmax(0,1fr) auto 15px!important;gap:5px!important}
+.gg-three-stage .gg-review-exercise>strong{max-width:105px;font-size:12px;overflow-wrap:break-word}
+.gg-three-stage .gg-review-exercise .gg-exercise-title{font-size:13px;overflow-wrap:break-word;word-break:normal}
+@media(max-width:380px){.gg-three-stage .gg-logical-parts .gg-part-chip>.gg-part-settings-button{flex-basis:32px!important;min-width:32px!important;width:32px!important;max-width:32px!important}.gg-three-stage .gg-logical-parts .gg-part-chip>button:first-child{grid-template-columns:20px minmax(0,1fr)!important}.gg-three-stage .gg-review-exercise>strong{max-width:85px}}

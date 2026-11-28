@@ -110,3 +110,28 @@ test('exercise identity marks follow movement or equipment without modifying pre
  for(const [name,equipment,category,expected] of cases){const ex=Object.freeze({name,equipment,category});assert.equal(exerciseMark(ex),expected,name)}
  assert.equal(exerciseMark({name:'Clean and Jerk',is_complex:true}),'complex')
 })
+
+import {partWorkOptions,partWorkIntent,partWorkPatch} from '../src/lib/partWorkIntent.js'
+test('plain part intent is isolated; switching shared Chipper to same-work restores mixed metrics',()=>{
+ const prep={id:'warm',title:'Eisen Knie',format:'Eigen økt',minutes:12,warmup_group:'g',participation:'individual',collaboration:'solo'}
+ const main={id:'main',title:'Del A',format:'Chipper',minutes:20}
+ const shared={...main,...partWorkPatch(main,'share',2)}
+ assert.equal(partWorkIntent(shared),'share')
+ const mixed={...shared,...partWorkPatch(shared,'together',2)}
+ assert.equal(mixed.samspel,null)
+ assert.equal(mixed.collaboration,'synchronized')
+ assert.equal(partWorkIntent(prep),'solo')
+ assert.equal(partWorkPatch(prep,'share',2),null)
+ assert.equal(partWorkPatch(main,'tracks',2),null)
+ const exercises=[{...item('warm','warm'),reps:10},{...item('a','main'),reps:80},{...item('row','main'),reps:null,meters:2000}]
+ assert.equal(validateCompositeBlocks([prep,mixed],exercises),'')
+ const timer=compositeTimerConfig({...mixed,items:exercises.slice(1)}).timerSettings.workout_schema
+ assert.equal(timer.time_cap_seconds,1200)
+ assert.equal(timer.wod_engine.collaboration,'synchronized')
+ assert.equal(timer.items[1].meters,2000)
+ assert.equal(compositeTimerConfig({...prep,items:[exercises[0]]}).timerSettings.workout_schema.wod_engine.collaboration,'solo')
+ assert.match(validateCompositeBlocks([prep,{...shared,samspel:{...shared.samspel,targets:[{exercise_name:'Test a',target_reps:80},{exercise_name:'Test row',target_reps:0}]}}],exercises),/Fordelt arbeid krev faste repetisjonar/)
+ for(const format of COMPOSITE_BLOCK_FORMATS)for(const [intent] of partWorkOptions({format,minutes:20})){
+  const patch=partWorkPatch({format,minutes:20},intent,2);assert.ok(patch,format+' '+intent);assert.equal(partWorkIntent({...patch,format}),intent)
+ }
+})
