@@ -54,7 +54,8 @@ with sync_playwright() as pw:
   pad.get_by_role('button',name='Lukk tastatur').click()
   page.get_by_role('button',name='Gjennomgang →',exact=True).last.click()
   assert page.locator('.gg-sixstep-header small').inner_text()=='Steg 3/3'
-  page.get_by_role('button',name='Lagra kladd',exact=True).click()
+  assert page.get_by_role('button',name='Lagra privat og start økta →',exact=True).count()==0
+  page.get_by_role('button',name='Lagra for Testmedlem',exact=True).click()
   try:
    page.wait_for_function("document.querySelector('[data-testid=builder-payload]').textContent.length>0",timeout=10000)
   except Exception:
