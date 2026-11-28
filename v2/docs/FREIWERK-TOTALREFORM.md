@@ -52,3 +52,5 @@ Integrated CLEAN UI #32 after conflict check. PT summary uses validated stored s
 
 ## FW11 slice
 PT review can replay a currently published source WOD with the same client or create a new appointment. No reuse of completed assignment IDs or past scores. Replay uses current library version, not immutable historical prescription. PT calendar forwards exact appointment ID to PT list. Eligible single published Chipper appointments expose preselected Synchron preparation. This does not attach the Synchron session/log to the appointment, automatically complete the appointment, or support multi-WOD Synchron. Office mode remains guarded. Device and persistence tests pending.
+
+CI run 46148357651 failed at the existing PT feedback confirmation copy assertion. Restored the expected customer-visibility wording without weakening the assertion; retest required.

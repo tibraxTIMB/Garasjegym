@@ -64,7 +64,7 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
   if(message.length<5||message.length>2000){setError('Skriv ei konkret tilbakemelding på 5–2000 teikn.');return}
   sending.current=true
   try{
-  if(!(await confirm.ask({title:'Send tilbakemelding?',message:'Kunden vil sjå meldinga i PT-dialogen.',confirmLabel:'Send',cancelLabel:'Avbryt'})))return
+  if(!(await confirm.ask({title:'Send tilbakemelding?',message:'Kunden vil sjå ho i PT-dialogen.',confirmLabel:'Send',cancelLabel:'Avbryt'})))return
   setSaving(true);setError('');setSent(false)
   const {error:saveError}=await supabase.rpc('send_pt_wod_feedback',{
    p_feedback_text:message,p_dosing:dosing,p_assignment_id:assignmentId||null,p_program_session_id:programSessionId||null
