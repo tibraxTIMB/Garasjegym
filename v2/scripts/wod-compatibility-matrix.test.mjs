@@ -159,3 +159,24 @@ test('Svart Motor: shared Chipper with reps and meters; no invented individual c
  assert.equal(cap.issue,null);assert.equal(cap.rows[0].completed,false);assert.equal(cap.rows[0].samspel.team_totals[4].remaining,800)
  assert.equal(samspelConfig({samspel:{...teamChipperConfig(),targets:[{exercise_name:'Row',target_reps:2000,unit:'m'}]}}),null)
 })
+
+import {buildTrainingSession,moveSessionWod,sessionWarmup,sessionWodSeconds} from '../src/lib/sessionComposer.js'
+test('session selects and sequences saved WODs without editing or creating library rows',()=>{
+ const w=(id,format,seconds,items,extra={})=>({id,name:id,format,category:'main',is_published:true,duration_minutes:seconds/60,timer_settings:{workout_schema:{format,duration_seconds:seconds,items,...extra}}})
+ const warm={...w('Eisen Knie','Eigen økt',720,[item('warm')],{library_category:'warmup',prep_countdown:true,flowPurpose:'prep'}),category:'warmup'}
+ const chip=w('Svart Motor','Chipper',1800,[{...item('wall'),reps:80},{exercise_name:'Row',meters:2000,row_unit:'m',levels:{rx:{distanceMeters:2000}}}],{time_cap_seconds:1800,wod_engine:{version:2,participation:'partner',participant_count:2,collaboration:'free_split',blocks:[]},samspel:{...teamChipperConfig(),team_totals_only:true,targets:[{exercise_name:'Test wall',target_reps:80,unit:'reps'},{exercise_name:'Row',target_reps:2000,unit:'m'}]}})
+ const emom=w('EMOM','EMOM',360,[{...item('a'),minute_slot:'1,3,5'},{...item('b'),minute_slot:'2,4,6'}],{interval:{work_every_seconds:60}})
+ const before=JSON.stringify([warm,chip,emom]);assert.equal(sessionWarmup(warm),true);assert.equal(sessionWodSeconds(chip),1800)
+ assert.equal(buildTrainingSession([chip]),chip)
+ const combined=buildTrainingSession([warm,chip,emom]),schema=combined.timer_settings.workout_schema,parts=schema.wod_engine.blocks
+ assert.equal(combined.id,undefined);assert.deepEqual(combined.session_wod_ids,['Eisen Knie','Svart Motor','EMOM']);assert.equal(parts.length,3)
+ assert.equal(schema.session_contains_partner,true);assert.equal(parts[0].warmup_group,'warm-0');assert.equal(parts[0].flowReporting,'done')
+ assert.equal(parts[1].title,'Svart Motor');assert.equal(parts[1].collaboration,'free_split');assert.equal(parts[1].samspel.targets[1].unit,'m')
+ assert.equal(compositeTimerConfig(parts[1]).timerSettings.workout_schema.time_cap_seconds,1800)
+ assert.deepEqual(compositeTimerConfig(parts[2]).timerSettings.workout_schema.items.map(x=>x.minute_slot),['1,3,5','2,4,6'])
+ assert.deepEqual(schema.items.map(x=>x.sort_order),[1,2,3,4,5]);assert.equal(JSON.stringify([warm,chip,emom]),before)
+ assert.deepEqual(moveSessionWod(['a','b','c'],2,-1),['a','c','b']);assert.deepEqual(moveSessionWod(['a','b'],0,-1),['a','b'])
+ const reversed=buildTrainingSession([emom,warm]);assert.deepEqual(reversed.session_wod_ids,['EMOM','Eisen Knie']);assert.equal(reversed.timer_settings.workout_schema.wod_engine.blocks[0].title,'EMOM')
+ const nested=buildTrainingSession([{...combined,id:'saved-composite'},emom]);assert.equal(nested.timer_settings.workout_schema.wod_engine.blocks.length,4);assert.equal(new Set(nested.timer_settings.workout_schema.wod_engine.blocks.map(b=>b.id)).size,4)
+ assert.throws(()=>buildTrainingSession([chip,{...emom,is_archived:true}]),/tilgjengeleg/)
+})
