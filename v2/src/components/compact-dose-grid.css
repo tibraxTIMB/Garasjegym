@@ -12,3 +12,24 @@
 
 /* One shared level control on the dosage screen, not two duplicate strips. */
 .wod-builder-step-3 .gg-architect-levels{display:none!important}
+
+/* Tactile keypad: persistent active row, exact draft value and fast feedback. */
+.gg-compact-dose-row.gg-dose-row-active{background:#30291d;border-radius:8px;box-shadow:inset 3px 0 0 #efa63c}
+.gg-compact-dose-values button.active{background:#44341f;color:#ffda99;box-shadow:0 0 0 1px #ffb54c}
+.gg-compact-dose-values button.gg-key-reject{border-color:#e0918b;box-shadow:0 0 0 1px #e0918b}
+.gg-compact-dose-values button,.gg-compact-keypad button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.gg-compact-keypad button:not(:disabled){transition:background-color 70ms,border-color 70ms,box-shadow 70ms}
+.gg-compact-keypad button:not(:disabled):active,.gg-compact-keypad button[data-feedback=tap],.gg-compact-keypad button[data-feedback=next]{background:#815c29!important;color:#fff4db!important;border-color:#ffbb61!important;box-shadow:inset 0 2px 5px #0008}
+.gg-compact-keypad button[data-feedback=reject]{background:#572c2c!important;color:#ffe0df!important;border-color:#e0918b!important}
+.gg-compact-keypad button:disabled{opacity:.3}
+.gg-compact-keypad button:focus-visible{outline:2px solid #ffd18e;outline-offset:2px}
+.gg-compact-keypad header{gap:6px;min-width:0}
+.gg-keypad-context{display:grid;flex:1;min-width:0;gap:2px}
+.gg-keypad-context strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gg-keypad-context small{font-size:10px;color:#b7c5cc}
+.gg-compact-keypad .gg-keypad-value{flex:none;max-width:35%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.25rem;font-weight:800;color:#ffc36f;font-variant-numeric:tabular-nums}
+.gg-compact-keypad-keys{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.gg-compact-keypad-keys button{min-height:44px}
+.gg-compact-next-field{grid-column:span 3;font-size:14px!important}
+@media(max-height:550px){.gg-compact-keypad-keys button{min-height:34px}.gg-compact-keypad{padding:4px}.gg-compact-keypad-keys{gap:3px}}
+@media(prefers-reduced-motion:reduce){.gg-compact-keypad button{transition:none}}
