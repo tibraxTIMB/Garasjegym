@@ -1,3 +1,4 @@
+import {DnaChoice} from './DesignDNA.jsx'
 import {arenaBlockContext} from '../lib/trainingActivity.js'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CalendarDays, Clock3, MonitorUp, Play, Pause, RotateCcw, TimerReset, Music2, LoaderCircle, Lock, Unlock, Maximize2, Minimize2, X } from 'lucide-react'
@@ -124,7 +125,7 @@ function DemoClock({onClose}){
      </div>
      <div className="infotainment-demo-screen-lock">
       <div><strong>Skjermformat</strong><small>{screenFormatLocked?'Formatet er låst':'Automatisk tilpassing er tilgjengeleg'}</small></div>
-      <select aria-label="Skjermformat" value={screenFormat} disabled={screenFormatLocked} onChange={event=>setScreenFormat(event.target.value)}><option value="auto">Automatisk</option><option value="landscape">Liggjande · brei vising</option><option value="portrait">Ståande · høg vising</option></select>
+      <DnaChoice label="Skjermformat" value={screenFormat} disabled={screenFormatLocked} onChange={setScreenFormat} options={[{value:'auto',label:'Auto'},{value:'landscape',label:'Liggjande'},{value:'portrait',label:'Ståande'}]}/>
       <button type="button" onClick={()=>setScreenFormatLocked(value=>!value)}>{screenFormatLocked?<><Unlock size={14}/> Lås opp format</>:<><Lock size={14}/> Lås skjermformat</>}</button>
      </div>
     </aside>

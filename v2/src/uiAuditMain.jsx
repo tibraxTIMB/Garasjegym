@@ -18,6 +18,10 @@ import {FlowEntryProvider,FlowNumberInput,FlowKeypad,FlowConfirmDialog} from './
 import {MusicProvider} from './components/Music.jsx'
 import './styles.css'
 import './app-shell-mobile.css'
+import './styles/freiwerk.css'
+import {applyFreiwerkProfile} from './lib/freiwerkProfile.js'
+
+applyFreiwerkProfile(document.documentElement, new URLSearchParams(location.search).get('design')!=='classic')
 const screen=new URLSearchParams(location.search).get('screen')||'flow'
 const profile={id:'demo-admin',display_name:'Demo-eigar',role:'admin',active:true,membership_status:'approved'}
 const longName='Alternating Dumbbell Push Jerk – teknisk innøving og kontrollert arbeidsvekt'

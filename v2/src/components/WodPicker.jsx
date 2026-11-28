@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useState} from 'react'
-import {Check,Search,Layers} from 'lucide-react'
+import {Check,Search,Layers,SlidersHorizontal} from 'lucide-react'
 import './wod-picker-repair.css'
 
 const categoryLabel=value=>({warmup:'Oppvarming',daily:'Dagens WOD',standard:'Standard-WOD',benchmark:'Benchmark',assessment:'Test og evaluering',rehab:'Rehabilitering',recovery:'Restitusjon',other:'Anna / spesialøkt'}[value]||value||'Standard-WOD')
@@ -28,10 +28,10 @@ export default function WodPicker({wods=[],selectedIds=[],onChange,onCancel,mult
  return <section className={compact?'wod-picker compact':'wod-picker'}>
   <div className="wod-picker-heading"><div><strong>{title}</strong><small>{hint}</small></div><span className="count-pill">{draftIds.length} valde</span></div>
   <div className="wod-picker-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} aria-label="Søk i WOD-biblioteket" placeholder="Søk namn, øving, format …"/></div>
-  <button type="button" className="gg-picker-filter-toggle" aria-expanded={filtersOpen} onClick={()=>setFiltersOpen(v=>!v)}>Filter{format!=='all'||visibility!=='all'||category!=='all'?' · aktivt':''} {filtersOpen?'−':'+'}</button>{filtersOpen&&<div className="wod-picker-filters">
+  <button type="button" className="gg-picker-filter-toggle" aria-expanded={filtersOpen} onClick={()=>setFiltersOpen(v=>!v)}><SlidersHorizontal size={15}/> Filter{[format,visibility,category].filter(v=>v!=='all').length>0?' ('+[format,visibility,category].filter(v=>v!=='all').length+')':''}</button>{filtersOpen&&<div className="wod-picker-filters">
    <select value={format} onChange={e=>setFormat(e.target.value)} aria-label="Filtrer på WOD-format"><option value="all">Alle format</option>{formats.map(x=><option key={x} value={x}>{x}</option>)}</select>
    <select value={category} onChange={e=>setCategory(e.target.value)} aria-label="Filtrer på WOD-type"><option value="all">Alle kategoriar</option>{categories.map(value=><option key={value} value={value}>{categoryLabel(value)}</option>)}</select>
-   <select value={visibility} onChange={e=>setVisibility(e.target.value)} aria-label="Filtrer publisering"><option value="all">Publiserte og private</option><option value="published">Publiserte</option><option value="private">Private PT-WOD-ar</option></select>
+   <select value={visibility} onChange={e=>setVisibility(e.target.value)} aria-label="Filtrer publisering"><option value="all">Publiserte og private</option><option value="published">Publiserte</option><option value="private">Private PT-WOD-ar</option></select><button type="button" className="text-button gg-fw-picker-reset" onClick={()=>{setFormat('all');setCategory('all');setVisibility('all')}}>Nullstill filter</button>
   </div>}
   <div className="wod-picker-results">
    {rows.length?rows.map(w=>{

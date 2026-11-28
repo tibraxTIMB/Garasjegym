@@ -60,3 +60,15 @@ test('completion does not create measured lifts and persists separately from sco
 import {deriveBenchmarkRecords} from '../src/lib/prMetrics.js'
 import {hasMeasuredFlowSet} from '../src/lib/workoutFlow.js'
 test('FLOW completion-only preparation cannot become a benchmark record',()=>{const log={id:'log',source_wod_id:'w',format:'For Time',score_time_seconds:25,result_data:{flow_completion_only:true,completed:true}};assert.equal(deriveBenchmarkRecords([log],['w']).length,0);const composite={id:'c',source_wod_id:'w',format:'Samansett økt',result_data:{flow_completion:[{id:'p',status:'done'}],block_summary:[{id:'p',format:'For Time',completed:true,elapsed:30},{id:'q',format:'AMRAP',completed:true,roundsCompleted:3,extra_reps:2}]}};assert.equal(deriveBenchmarkRecords([composite],['w']).length,1);assert.equal(hasMeasuredFlowSet({reps:'4'},true),false);assert.equal(hasMeasuredFlowSet({reps:'4',load_kg:'60'},true),true);assert.equal(flowReporting({format:'EMOM'},{library_category:'flow_build'}),'done')})
+
+import {sessionQueueCheck} from '../src/lib/sessionQueueCheck.js'
+test('session queue checks actual ordered sources and reuses execution builder',()=>{
+ const a={id:'a'},b={id:'b'};let called=0;const build=rows=>{called++;return {session_wod_ids:rows.map(x=>x.id)}}
+ assert.equal(sessionQueueCheck([],[],build).ok,false)
+ assert.equal(sessionQueueCheck(['a','b'],[a],build).ok,false)
+ assert.equal(sessionQueueCheck(['a','b'],[b,a],build).ok,false)
+ assert.equal(sessionQueueCheck(['a'],[{...a,is_archived:true}],build).ok,false)
+ assert.equal(called,0)
+ assert.deepEqual(sessionQueueCheck(['b','a'],[b,a],build),{ok:true,session:{session_wod_ids:['b','a']}})
+ assert.deepEqual(sessionQueueCheck(['a'],[a],()=>{throw Error('Unsupported')}),{ok:false,issue:'Unsupported'})
+})

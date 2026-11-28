@@ -1,0 +1,147 @@
+/* FREIWERK 01 – shared visual foundation. Do not change timing, data or visibility of actions. */
+html[data-gg-design="freiwerk"] {
+  --fw-bg:#111615; --fw-surface:#19221e; --fw-raised:#23302a;
+  --fw-line:#526259; --fw-text:#f1eee5; --fw-muted:#b4c2b9;
+  --fw-accent:#e6c58d; --fw-selected:#393326;
+  --fw-success:#91c4a6; --fw-warning:#e6ba70; --fw-danger:#ec9999;
+  --fw-radius:8px; --fw-control:44px;
+  --bg:var(--fw-bg); --panel:var(--fw-surface); --panel2:var(--fw-raised);
+  --line:var(--fw-line); --muted:var(--fw-muted); --orange:var(--fw-accent);
+  --gg-shell-bg:var(--fw-bg); --gg-shell-panel:var(--fw-surface);
+  --gg-shell-panel-raised:var(--fw-raised); --gg-shell-border:var(--fw-line);
+  --gg-shell-text:var(--fw-text); --gg-shell-muted:var(--fw-muted);
+  --gg-shell-accent:var(--fw-accent); --gg-panel-radius:var(--fw-radius);
+  --gg-control-height:var(--fw-control);
+  color:var(--fw-text); background:var(--fw-bg); color-scheme:dark;
+}
+html[data-gg-design="freiwerk"] :is(.app-shell,.auth-shell,.loading-shell) {background:var(--fw-bg)}
+html[data-gg-design="freiwerk"] .app-shell>.sidebar {background:var(--fw-surface);border-color:var(--fw-line)}
+html[data-gg-design="freiwerk"] .app-shell>.main>.topbar {background:var(--fw-bg);border-color:var(--fw-line)}
+html[data-gg-design="freiwerk"] .app-shell .content-card {background:var(--fw-surface);border-color:var(--fw-line);border-radius:var(--fw-radius);box-shadow:none}
+html[data-gg-design="freiwerk"] .auth-card {background:var(--fw-surface);border-color:var(--fw-line);border-radius:var(--fw-radius)}
+html[data-gg-design="freiwerk"] :is(.section-kicker,.side-label,.eyebrow,.app-shell-eyebrow) {letter-spacing:.08em;font-weight:750}
+html[data-gg-design="freiwerk"] :is(.training-heading,.engine-section-title,.pt2-panel-head) {min-width:0;gap:8px}
+html[data-gg-design="freiwerk"] :is(.training-heading,.engine-section-title,.pt2-panel-head)>div {min-width:0}
+html[data-gg-design="freiwerk"] :is(.training-heading h3,.pt2-panel-head h3,.engine-section-title h4) {line-height:1.25;overflow-wrap:break-word;word-break:normal;letter-spacing:-.015em}
+html[data-gg-design="freiwerk"] :is(.primary-button,.secondary-button,.icon-button) {border-radius:var(--fw-radius);box-shadow:none}
+html[data-gg-design="freiwerk"] .primary-button:not([class*="danger"]):not([class*="delete"]):not([class*="discard"]):not([class*="cancel"]) {background:var(--fw-accent);color:#171710;font-weight:750}
+html[data-gg-design="freiwerk"] .secondary-button {border-color:var(--fw-line);color:var(--fw-accent);font-weight:650}
+html[data-gg-design="freiwerk"] :is(.nav-item.selected,.app-mobile-nav-item.is-active) {color:var(--fw-accent);background:var(--fw-selected)}
+html[data-gg-design="freiwerk"] .app-mobile-nav {background:var(--fw-surface);border-color:var(--fw-line);box-shadow:none}
+html[data-gg-design="freiwerk"] .app-mobile-nav-item {border-radius:var(--fw-radius)}
+html[data-gg-design="freiwerk"] :is(.gg-select-sheet,.gg-flow-confirm-dialog,.app-more-sheet,.gg-library-training) {background:var(--fw-surface);color:var(--fw-text);border-color:var(--fw-line);border-radius:12px}
+html[data-gg-design="freiwerk"] :is(.gg-select-options button,.gg-garage-select,.gg-select-close) {background:var(--fw-raised);border-color:var(--fw-line);color:var(--fw-text);border-radius:var(--fw-radius)}
+html[data-gg-design="freiwerk"] .gg-select-options button.selected {background:var(--fw-selected);border-color:var(--fw-accent);color:var(--fw-accent)}
+html[data-gg-design="freiwerk"] :is(.gg-compact-dose-tabs,.gg-flow-level-buttons,.gg-wod-levels,.gg-wod-tabs) {min-width:0;gap:3px}
+html[data-gg-design="freiwerk"] :is(.gg-compact-dose-tabs,.gg-flow-level-buttons,.gg-wod-levels,.gg-wod-tabs)>button {
+  min-width:0;white-space:nowrap;word-break:normal;overflow-wrap:normal;
+  border-radius:4px;font-size:clamp(10px,3.05vw,13px);padding-inline:3px;
+  font-weight:650;box-shadow:none;
+}
+html[data-gg-design="freiwerk"] :is(.gg-compact-dose-tabs,.gg-flow-level-buttons,.gg-wod-levels,.gg-wod-tabs)>button:is(.selected,[aria-pressed=true]) {
+  background:var(--fw-selected)!important;color:var(--fw-accent)!important;border-color:transparent!important;
+  box-shadow:inset 0 -2px var(--fw-accent)!important;
+}
+html[data-gg-design="freiwerk"] :is(.gg-flow-keypad,.gg-compact-keypad) {background:var(--fw-surface);border-color:var(--fw-line);box-shadow:none}
+html[data-gg-design="freiwerk"] :is(.gg-flow-keys,.gg-compact-keypad-keys,.gg-dna-keys)>button {border-radius:5px}
+html[data-gg-design="freiwerk"] :is(.gg-keypad-value,.timer-main-clock,.gg-wod-stats b) {font-variant-numeric:tabular-nums}
+html[data-gg-design="freiwerk"] .gg-wod-part {background:var(--fw-surface);border-top:0;border-right:0;border-bottom:1px solid var(--fw-line);border-left-width:2px;border-radius:0}
+html[data-gg-design="freiwerk"] .gg-wod-identity h1 {letter-spacing:-.025em;word-break:normal;overflow-wrap:break-word}
+html[data-gg-design="freiwerk"] :is(.app-shell,.auth-shell,.gg-wod-screen,.gg-select-sheet,.gg-flow-confirm-dialog) :is(button,input,select,textarea,summary,a):focus-visible {outline:2px solid var(--fw-accent);outline-offset:2px}
+html[data-gg-design="freiwerk"] :is(.auth-error,[role=alert]) {overflow-wrap:break-word}
+@media(max-width:900px){
+ html[data-gg-design="freiwerk"] .app-shell .content-card {padding:clamp(10px,2.8vw,18px)}
+ html[data-gg-design="freiwerk"] .app-shell :is(.notice,.empty-state) {box-shadow:none;border-radius:var(--fw-radius)}
+ html[data-gg-design="freiwerk"] .gg-select-sheet {padding:12px;gap:6px}
+}
+@media(min-width:700px) and (orientation:landscape){
+ html[data-gg-design="freiwerk"] .gg-select-sheet {max-width:540px}
+}
+@media(prefers-reduced-motion:reduce){
+ html[data-gg-design="freiwerk"] :is(.gg-dna-choice,.gg-select-options,.gg-compact-dose-tabs) button {transition:none}
+}
+/* Safety, timer stage colours, destructive-action colours and existing functionality
+   remain owned by their feature modules. No blanket hide or overflow clipping. */
+
+/* FW06–07: WOD library, readable cards and compact programming choices. */
+html[data-gg-design="freiwerk"] .wod-library-page .librarium-tile{background:var(--fw-surface);color:var(--fw-text);border-color:var(--fw-line);border-radius:var(--fw-radius)}
+html[data-gg-design="freiwerk"] .wod-library-page .librarium-footer{border-color:var(--fw-line);color:var(--fw-muted)}
+html[data-gg-design="freiwerk"] .wod-library-page .librarium-name{word-break:normal;overflow-wrap:break-word}
+html[data-gg-design="freiwerk"] .wod-library-page .librarium-more{color:var(--fw-muted)}
+.gg-fw-card-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;min-width:0}
+.gg-fw-card-actions-pair{grid-template-columns:repeat(2,minmax(0,1fr))}
+.gg-fw-card-actions .gg-fw-plan{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;min-height:48px;border:1px solid #526259;border-radius:8px;color:inherit;background:transparent;font:inherit;font-weight:700}
+html[data-gg-design="freiwerk"] .gg-fw-card-actions .gg-wod-start{min-height:48px;border:1px solid var(--fw-accent);background:var(--fw-accent);color:#171710;font-size:16px;border-radius:8px}
+html[data-gg-design="freiwerk"] .gg-wod-screen .gg-fw-plan{color:var(--fw-accent);border-color:var(--fw-line)}
+html[data-gg-design="freiwerk"] .gg-wod-screen .gg-wod-swipe{color:var(--fw-muted)}
+.gg-fw-choice-field{display:grid;gap:5px;min-width:0}.gg-fw-choice-field>strong{font-size:12px;line-height:1.3}.gg-fw-choice-field .gg-dna-choice{grid-template-columns:repeat(auto-fit,minmax(min(100%,86px),1fr))}
+html[data-gg-design="freiwerk"] .gg-sixstep-mobile .gg-sixstep-formats button,html[data-gg-design="freiwerk"] .gg-direct-choices button,html[data-gg-design="freiwerk"] .gg-participation-choices button{min-width:0;border-color:var(--fw-line);background:var(--fw-surface);color:var(--fw-text);border-radius:6px;box-shadow:none}
+html[data-gg-design="freiwerk"] .gg-sixstep-mobile .gg-sixstep-formats button[aria-pressed=true],html[data-gg-design="freiwerk"] .gg-direct-choices button[aria-pressed=true],html[data-gg-design="freiwerk"] .gg-participation-choices button[aria-pressed=true]{background:var(--fw-selected);color:var(--fw-accent);border-color:var(--fw-line);box-shadow:inset 0 -2px var(--fw-accent)}
+html[data-gg-design="freiwerk"] .gg-sixstep-formats button strong{overflow-wrap:normal;word-break:normal;font-size:12px;line-height:1.2}
+@media(max-width:380px){html[data-gg-design="freiwerk"] .gg-sixstep-mobile .gg-sixstep-formats{grid-template-columns:repeat(2,minmax(0,1fr))}html[data-gg-design="freiwerk"] .gg-participation-choices button{flex-direction:row;font-size:11px}}
+@media(max-height:480px) and (orientation:landscape){.gg-fw-card-actions .gg-fw-plan,.gg-fw-card-actions .gg-wod-start{min-height:44px}}
+
+/* FW08 — shared session and planning surfaces. */
+html[data-gg-design="freiwerk"] .gg-session-composer :is(.gg-session-wod,.gg-session-filters button,.gg-session-search){background:var(--fw-surface);color:var(--fw-text);border-color:var(--fw-line);border-radius:6px}
+html[data-gg-design="freiwerk"] .gg-session-composer :is(.gg-session-wod,.gg-session-filters button)[aria-pressed=true]{background:var(--fw-selected);color:var(--fw-accent);border-color:var(--fw-line);box-shadow:inset 0 -2px var(--fw-accent)}
+html[data-gg-design="freiwerk"] .gg-session-selected-row>b{color:var(--fw-accent);font-variant-numeric:tabular-nums}
+html[data-gg-design="freiwerk"] .gg-session-composer footer{background:var(--fw-bg);border-color:var(--fw-line)}
+html[data-gg-design="freiwerk"] .wod-picker-option{border-color:var(--fw-line);background:var(--fw-surface);color:var(--fw-text);border-radius:6px}
+html[data-gg-design="freiwerk"] .wod-picker-option.selected{border-color:var(--fw-accent);background:var(--fw-selected)}
+html[data-gg-design="freiwerk"] .wod-picker-option-main b{word-break:normal;overflow-wrap:break-word}
+.gg-fw-picker-reset{min-height:44px;align-self:center}
+
+/* FW09: preserve timer phase semantics and interaction guards; style the instrument, not the engine. */
+html[data-gg-design="freiwerk"] .gg-live-timer__tools button{border-radius:6px;box-shadow:none}
+html[data-gg-design="freiwerk"] .gg-live-timer__tools button.is-selected{color:var(--fw-accent);border-color:var(--fw-accent)}
+html[data-gg-design="freiwerk"] .gg-live-timer__time{font-variant-numeric:tabular-nums}
+html[data-gg-design="freiwerk"] .gg-live-timer__footer{border-color:var(--fw-line)}
+html[data-gg-design="freiwerk"] .gg-live-timer__footer button{border-radius:8px;box-shadow:none;white-space:normal;word-break:normal;overflow-wrap:normal}
+html[data-gg-design="freiwerk"] .gg-live-timer__exercise-title button{color:var(--fw-accent)}
+html[data-gg-design="freiwerk"] .gg-live-timer__next{color:var(--fw-muted)}
+html[data-gg-design="freiwerk"] .gg-synchron-panel{background:var(--fw-surface);border-color:var(--fw-line);border-radius:8px;gap:10px}
+html[data-gg-design="freiwerk"] .gg-sync-review{border-color:var(--fw-line);border-radius:8px;min-width:0;box-shadow:none}
+.gg-fw-sync-head{display:grid;gap:3px;min-width:0;text-align:left}.gg-fw-sync-head span{font-size:10px;letter-spacing:.08em;font-weight:750;color:var(--fw-muted,#b4c2b9)}.gg-fw-sync-head h3{margin:0;font-size:clamp(18px,4.5vw,26px);line-height:1.2;overflow-wrap:break-word}.gg-fw-sync-head small{font-size:12px;line-height:1.4}
+.gg-fw-connection-ok{color:var(--fw-success,#91c4a6)}.gg-fw-connection-lost{color:var(--fw-warning,#e6ba70);font-weight:750}
+html[data-gg-design="freiwerk"] .gg-sync-review fieldset{min-width:0;border:0;border-top:1px solid var(--fw-line);padding:7px 0;margin:0}
+html[data-gg-design="freiwerk"] .gg-sync-review details{min-width:0;border-bottom:1px solid var(--fw-line);padding:6px 0}
+html[data-gg-design="freiwerk"] .gg-sync-review summary{min-height:44px;align-content:center;overflow-wrap:break-word}
+html[data-gg-design="freiwerk"] .gg-chipper-segments .current{background:var(--fw-accent)}
+@media(max-height:480px) and (orientation:landscape){html[data-gg-design="freiwerk"] .gg-fw-sync-head h3{font-size:18px}html[data-gg-design="freiwerk"] .gg-synchron-panel{gap:6px;padding:9px}}
+
+/* FW10: results and anatomy. Preserve evidentiary colours and destructive actions. */
+html[data-gg-design="freiwerk"] :is(.ptreview,.workout-detail-dialog){background:var(--fw-surface);color:var(--fw-text);border-color:var(--fw-line);border-radius:8px}
+html[data-gg-design="freiwerk"] :is(.ptreview-header,.workout-detail-header){border-color:var(--fw-line);background:var(--fw-bg)}
+html[data-gg-design="freiwerk"] :is(.ptreview-heading h3,.workout-detail-intro h2){letter-spacing:-.025em;overflow-wrap:break-word;word-break:normal}
+html[data-gg-design="freiwerk"] :is(.ptreview-metric,.workout-detail-stats>div,.exercise-pr-record){background:var(--fw-surface);border:0;border-bottom:1px solid var(--fw-line);border-radius:0;box-shadow:none;min-width:0}
+html[data-gg-design="freiwerk"] :is(.ptreview-metric,.workout-detail-stats>div,.exercise-pr-record)>strong{color:var(--fw-accent);font-variant-numeric:tabular-nums}
+html[data-gg-design="freiwerk"] :is(.ptreview-disclosure,.workout-detail-timing,.workout-detail-edit-card,.gg-pt-muscle-compact){border:0;border-bottom:1px solid var(--fw-line);background:transparent;border-radius:0;box-shadow:none;min-width:0}
+html[data-gg-design="freiwerk"] .gg-pt-muscle-compact{padding:8px 0}
+html[data-gg-design="freiwerk"] .gg-pt-muscle-compact h4{margin:0;font-size:15px}
+html[data-gg-design="freiwerk"] .gg-fw-anatomy-map figure{min-width:0}
+html[data-gg-design="freiwerk"] .gg-fw-anatomy-map [role=button]:focus-visible{outline:2px solid var(--fw-accent)}
+html[data-gg-design="freiwerk"] .exercise-pr-record footer{border-color:var(--fw-line)}
+html[data-gg-design="freiwerk"] .exercise-pr-record footer button{min-height:44px}
+@media(max-width:380px){html[data-gg-design="freiwerk"] .ptreview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* FW11: explicit replay actions and calendar focus. */
+.gg-fw-replay{display:grid;gap:5px;padding:8px 0;border-bottom:1px solid var(--fw-line,#526259)}.gg-fw-replay>div{display:flex;flex-wrap:wrap;gap:6px}.gg-fw-replay>div>button{flex:1 1 130px;min-height:44px;white-space:normal}.gg-fw-replay>small{color:var(--fw-muted,#b4c2b9)}
+html[data-gg-design="freiwerk"] .gg-cal-modes button[aria-pressed=true]{background:var(--fw-selected);color:var(--fw-accent);box-shadow:inset 0 -2px var(--fw-accent)}
+html[data-gg-design="freiwerk"] .ptfollow-wod-row{border-color:var(--fw-line);background:transparent;box-shadow:none}
+html[data-gg-design="freiwerk"] .pt-prescribed-wod{min-width:0;border-color:var(--fw-line)}
+
+/* FW12 — remaining operational and membership workspaces. Keep status colours,
+   safety messages, actual data tables, role and destructive-action controls intact. */
+html[data-gg-design="freiwerk"] :is(.admin-module,.booking-module,.calendar-admin,.coffee-module,.community-module,.challenge-module,.my-page,.music-page,.gg-werkstatt,.gg-inventory,.gm-maintenance,.gg-safehouse,.gg-help,.gg-plan-production,.gg-meisterwerk-control,.notification-wrap){min-width:0;color:var(--fw-text)}
+html[data-gg-design="freiwerk"] :is(.admin-module,.booking-module,.calendar-admin,.coffee-module,.community-module,.challenge-module,.my-page,.music-page,.gg-werkstatt,.gg-inventory,.gm-maintenance,.gg-safehouse,.gg-help) :is(h2,h3,h4){word-break:normal;overflow-wrap:break-word;letter-spacing:-.015em}
+html[data-gg-design="freiwerk"] :is(.class-card,.challenge-card,.community-compose,.coffee-cart-line,.coffee-review-row,.gg-werkstatt-panel,.gg-help-topic,.personal-spotify-player,.notification-item-v2){border-color:var(--fw-line);border-radius:8px;box-shadow:none;min-width:0}
+html[data-gg-design="freiwerk"] :is(.coffee-cart-line,.community-compose,.gg-help-topic,.gg-werkstatt-panel,.personal-spotify-player){background:var(--fw-surface);color:var(--fw-text)}
+html[data-gg-design="freiwerk"] :is(.gg-werkstatt-toolbar,.gg-inventory-fields,.coffee-review-filters,.calendar-modal-actions,.admin-exercise-toolbar){min-width:0;gap:7px}
+html[data-gg-design="freiwerk"] :is(.gg-werkstatt-table-wrap){overflow-x:auto;max-width:100%}
+html[data-gg-design="freiwerk"] :is(.gg-werkstatt-grid,.gg-plan-week-summary) button[aria-pressed=true]{color:var(--fw-accent);background:var(--fw-selected);border-color:var(--fw-line);box-shadow:inset 0 -2px var(--fw-accent)}
+html[data-gg-design="freiwerk"] :is(.admin-advanced-tools,.gm-maintenance-history,.gg-safehouse details,.gg-meisterwerk-control details){border-color:var(--fw-line);border-radius:6px;box-shadow:none}
+html[data-gg-design="freiwerk"] :is(.admin-advanced-tools,.gm-maintenance-history,.gg-safehouse details,.gg-meisterwerk-control details)>summary{min-height:44px;overflow-wrap:break-word}
+html[data-gg-design="freiwerk"] :is(.calendar-modal,.class-detail-modal){border-color:var(--fw-line);border-radius:8px;background:var(--fw-surface);color:var(--fw-text)}
+html[data-gg-design="freiwerk"] :is(.calendar-admin,.booking-module,.gg-werkstatt,.coffee-module,.community-module,.challenge-module,.my-page,.music-page,.gg-help) :is(button,input,textarea,select,summary):focus-visible{outline:2px solid var(--fw-accent);outline-offset:2px}
+html[data-gg-design="freiwerk"] .coffee-review-filters .gg-dna-choice{min-width:0;grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:420px){html[data-gg-design="freiwerk"] .gg-werkstatt-toolbar{flex-wrap:wrap}html[data-gg-design="freiwerk"] .coffee-review-filters .gg-dna-choice{grid-column:1/-1}html[data-gg-design="freiwerk"] .gg-werkstatt-panel{padding:10px}}

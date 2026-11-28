@@ -227,7 +227,7 @@ with sync_playwright() as pw:
                     })""")
                     rows.nth(1).tap()
                     assert rows.nth(1).get_attribute("aria-pressed")=="true"
-                    picker.get_by_role("button",name="Filter",exact=False).tap()
+                    picker.locator("button.gg-picker-filter-toggle").tap()
                     assert picker.get_by_role("combobox",name="Filtrer på WOD-format").is_visible()
                     check(page,"picker-expanded",w,h)
                 if screen=="assign":
@@ -311,7 +311,7 @@ with sync_playwright() as pw:
                     assert action.evaluate("""e=>{const r=e.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;return y>=0&&y<innerHeight&&e.contains(document.elementFromPoint(x,y))}""")
                     check(page,"pt-schedule-picker-selected",w,h)
                     action.tap()
-                    assert dialog.get_by_label("Tildelingstype").input_value()=="plan"
+                    assert dialog.get_by_role("group",name="Tildelingstype").get_by_role("button",name="Treningsplan",exact=True).get_attribute("aria-pressed")=="true"
                     assert dialog.locator('input[type=date]').input_value()==date
                     dialog.locator('input[type=time]').fill("17:15")
                     check(page,"pt-schedule-confirm",w,h)
@@ -332,7 +332,9 @@ with sync_playwright() as pw:
                     today.get_by_role("button",name="Legg til økt",exact=False).tap()
                     dialog.locator(".wod-picker-option").first.tap()
                     dialog.get_by_role("button",name="Bruk val (1)",exact=True).tap()
-                    dialog.get_by_label("Tildelingstype").select_option("deadline")
+                    deadline=dialog.get_by_role("group",name="Tildelingstype").get_by_role("button",name="Innan dato",exact=True)
+                    deadline.tap()
+                    assert deadline.get_attribute("aria-pressed")=="true"
                     dialog.get_by_role("button",name="Stadfest tildeling").tap()
                     dialog.wait_for(state="hidden",timeout=10000)
                     today.locator(".gg-schedule-assignment").wait_for(timeout=10000)
@@ -370,9 +372,9 @@ with sync_playwright() as pw:
                       return (main&&(main.bottom>box.bottom+1||main.top<box.top-1)||next&&box.bottom>next.top+1)?[row.textContent.trim().slice(0,80)]:[]
                     })""")
                     assert not overlaps,overlaps
-                    picker.get_by_role("button",name="Filter",exact=False).tap()
+                    picker.locator("button.gg-picker-filter-toggle").tap()
                     assert picker.get_by_role("combobox",name="Filtrer på WOD-format").is_visible()
-                    picker.get_by_role("button",name="Filter",exact=False).tap()
+                    picker.locator("button.gg-picker-filter-toggle").tap()
                     check(page,"pt-wod-picker",w,h)
                     picker.get_by_role("button",name="Avbryt",exact=True).tap()
                     assert page.get_by_role("button",name="Byt WOD",exact=True).count()==0

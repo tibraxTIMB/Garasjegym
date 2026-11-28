@@ -1,3 +1,4 @@
+import {DnaDateTimeInput} from './DesignDNA.jsx'
 import {useEffect,useState} from 'react'
 import {CheckCircle2,Flag,LoaderCircle,Plus,Target,Trophy} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
@@ -101,7 +102,7 @@ export default function Challenges({profile}){
    <label>Namn<input value={title} onChange={e=>setTitle(e.target.value)} maxLength={100} required placeholder="Til dømes 10 økter i november"/></label>
    <label>Skildring<textarea value={description} onChange={e=>setDescription(e.target.value)} rows="2" maxLength={1000}/></label>
    <div className="engine-fields"><label>Måltype<select value={metric} onChange={e=>setMetric(e.target.value)}>{METRICS.map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label><label>Mål<input type="number" min="0.01" step="0.01" value={goal} onChange={e=>setGoal(e.target.value)} required/></label></div>
-   <div className="engine-fields"><label>Startdato<input type="date" value={startsOn} onChange={e=>setStartsOn(e.target.value)} required/></label><label>Sluttdato<input type="date" value={endsOn} onChange={e=>setEndsOn(e.target.value)} required/></label></div>
+   <div className="engine-fields"><label>Startdato<DnaDateTimeInput type="date" value={startsOn} onChange={e=>setStartsOn(e.target.value)} required/></label><label>Sluttdato<DnaDateTimeInput type="date" value={endsOn} onChange={e=>setEndsOn(e.target.value)} required/></label></div>
    <button className="primary-button" disabled={busy==='create'}>{busy==='create'?'Publiserer …':'Publiser utfordring'}</button>
   </form>}
   {challenges.length?challenges.map(challenge=>{

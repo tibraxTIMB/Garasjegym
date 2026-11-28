@@ -1,0 +1,35 @@
+/* GG DESIGN DNA: scoped controls, compatible with existing app surfaces. */
+.gg-dna-keys{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;min-width:0}
+.gg-dna-keys>button{display:flex;align-items:center;justify-content:center;min-width:0;min-height:36px;padding:2px 5px;border:1px solid #8290a64d;border-radius:7px;background:#7d89971a;color:inherit;font-size:1.15rem;font-weight:700;touch-action:manipulation}
+.gg-dna-keys>button.gg-dna-next{background:#b68b48;color:#171717;border-color:#b68b48}
+.gg-dna-keys>button:disabled{opacity:.26}
+.gg-dna-keys>button:focus-visible,.gg-dna-choice button:focus-visible,.gg-dna-sheet-handle:focus-visible{outline:2px solid #ffc76e;outline-offset:2px}
+.gg-dna-keys>button[data-feedback="reject"]{outline:2px solid #df746b}.gg-dna-keys>button[data-feedback="tap"]{background:#b68b4855}
+.gg-dna-choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,135px),1fr));gap:5px;min-width:0}
+.gg-dna-choice>button{min-height:44px;white-space:normal;overflow-wrap:anywhere;text-align:left;padding:7px 9px;border:1px solid #63766f;border-radius:8px;background:transparent;color:inherit;font-size:.84rem}
+.gg-dna-choice>button[aria-pressed=true]{background:#493724;color:#ffd193;border-color:#dca64c;font-weight:750}
+.gg-dna-sheet-handle{width:100%;min-height:28px;display:grid;place-items:center;border:0;background:transparent;touch-action:none;padding:4px}
+.gg-dna-sheet-handle span{height:4px;width:42px;border-radius:10px;background:#a1afa9}
+.gg-select-sheet:has(.gg-dna-sheet-handle){grid-template-rows:auto auto minmax(0,1fr);gap:5px}
+input[type=checkbox][role=switch].gg-dna-switch{appearance:none!important;display:inline-block;flex:none;width:42px!important;height:24px!important;min-width:42px!important;min-height:24px!important;border:1px solid #82948e;border-radius:24px;background:#263737;position:relative;vertical-align:middle;margin:0 6px 0 0;cursor:pointer}
+input.gg-dna-switch::before{content:"";display:block;position:absolute;width:18px;height:18px;left:2px;top:2px;border-radius:50%;background:#dce5df}
+input.gg-dna-switch:checked{background:#b68b48;border-color:#e9a951}input.gg-dna-switch:checked::before{left:20px;background:#fff}
+input.gg-dna-switch:focus-visible{outline:2px solid #ffc76e;outline-offset:3px}input.gg-dna-switch:disabled{opacity:.45}
+.gg-dna-date-time{min-width:0;width:100%;box-sizing:border-box;min-height:44px;color-scheme:dark;font-variant-numeric:tabular-nums}
+.gg-dna-duration-toggle{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;min-height:44px;padding:6px 9px;background:transparent;border:1px solid #63766f;border-radius:8px;color:inherit}
+.gg-dna-duration-toggle strong{font-variant-numeric:tabular-nums;color:#f2bd73}
+@media(max-height:550px){.gg-dna-keys>button{min-height:29px;font-size:1rem}.gg-dna-keys{gap:3px}}
+@media(prefers-reduced-motion:reduce){.gg-dna-keys>button{transition:none}}
+
+/* FREIWERK refinement: compact instrument controls, no duplicate keypad. */
+.gg-dna-time-presets{display:flex;flex-wrap:wrap;gap:4px;min-width:0}.gg-dna-time-presets>button{flex:1 1 auto;min-width:0;min-height:40px;padding:4px 7px;white-space:nowrap;border:1px solid var(--fw-line,#526259);border-radius:5px;background:transparent;color:inherit;font-size:12px}
+.gg-dna-time-presets>button[aria-pressed=true]{color:var(--fw-accent,#e6c58d);background:var(--fw-selected,#393326);box-shadow:inset 0 -2px var(--fw-accent,#e6c58d)}
+html[data-gg-design="freiwerk"] .gg-dna-keys>button.gg-dna-next{background:var(--fw-accent);border-color:var(--fw-accent);color:#171710}
+html[data-gg-design="freiwerk"] .gg-dna-choice>button[aria-pressed=true]{color:var(--fw-accent);border-color:var(--fw-line);background:var(--fw-selected);box-shadow:inset 0 -2px var(--fw-accent)}
+.gg-dna-weight-steps>button{min-width:0;font-size:12px}.gg-dna-weight-steps>button[data-feedback=reject]{outline:2px solid #df746b}
+
+/* Q02: preserve words and keep direct choice/close controls accessible. */
+.gg-dna-choice>button{overflow-wrap:break-word;word-break:normal;line-height:1.25}
+.gg-dna-choice>button:disabled{opacity:.45;cursor:not-allowed}
+.gg-dna-sheet-handle{min-height:32px}
+@media(max-width:360px){.gg-dna-choice{grid-template-columns:repeat(auto-fit,minmax(min(100%,125px),1fr))}}

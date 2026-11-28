@@ -5,6 +5,10 @@ import App from './App.jsx'
 import MobileNativeControls from './components/MobileNativeControls.jsx'
 import './styles.css'
 import './app-shell-mobile.css'
+import './styles/freiwerk.css'
+import {applyFreiwerkProfile} from './lib/freiwerkProfile.js'
+
+applyFreiwerkProfile(document.documentElement, new URLSearchParams(location.search).get('design')!=='classic')
 import { startupDelay } from './lib/startupIntro.js'
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {

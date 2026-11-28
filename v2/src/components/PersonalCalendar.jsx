@@ -68,7 +68,7 @@ export default function PersonalCalendar({profile,onOpenClass=()=>{},onOpenPT=()
     const uniquePT=new Map([...(ownPT.data||[]),...(bookedPT.data||[])].map(row=>[row.id,row]))
     for(const session of uniquePT.values()) {
      if(!session.starts_at)continue
-     items.push({id:'pt-'+session.id,type:'pt',title:session.title||'PT-time',date:localCalendarDay(session.starts_at),time:timeOf(session.starts_at),detail:session.status==='cancelled'?'Avlyst':ptStatus.get(session.id)==='waitlist'?'Venteliste':`${session.duration_minutes||60} min`,clientId:session.client_id})
+     items.push({id:'pt-'+session.id,type:'pt',title:session.title||'PT-time',date:localCalendarDay(session.starts_at),time:timeOf(session.starts_at),detail:session.status==='cancelled'?'Avlyst':ptStatus.get(session.id)==='waitlist'?'Venteliste':`${session.duration_minutes||60} min`,clientId:session.client_id,sessionId:session.id})
     }
     for(const entry of calendarEntries({assignments:assignments.data||[],appointments:[...uniquePT.values()]}).filter(e=>e.kind==='assignment'&&e.date)) {
      const assignment=entry.row
@@ -128,7 +128,7 @@ export default function PersonalCalendar({profile,onOpenClass=()=>{},onOpenPT=()
    finally{launchLock.current=false;setLaunching(false)}
    return
   }
-  if(event.type==='class')onOpenClass(event.classId);else if(event.type==='pt')onOpenPT(event.clientId);else if(event.type==='assigned'&&event.wodId)onOpenAssignment(event.wodId,event.assignmentId)
+  if(event.type==='class')onOpenClass(event.classId);else if(event.type==='pt')onOpenPT(event.clientId,event.sessionId);else if(event.type==='assigned'&&event.wodId)onOpenAssignment(event.wodId,event.assignmentId)
  }
 
  return <section className="gg-personal-calendar" aria-label="Min timeplan">

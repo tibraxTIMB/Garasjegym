@@ -1,7 +1,7 @@
 name: Gazelle responsive browser audit (no deploy)
 on:
   push:
-    branches: [gazelle-responsive-audit, gazelle-librarium, gazelle-librarium-polish, gazelle-plan-folders, gazelle-acta, gazelle-pt-plan, gazelle-pt-compact, gazelle-architect, gazelle-pt-flow-repair, gazelle-operational-anatomical, volksmaschine-reibungslos, hotfix-pt-dialog-layout-20261126, werkstatt-pc-companion, 'ops/werkstatt-fertigstellung-49', exportwerk-fertigstelling, 'fix/wod-sixstep-release-20261128', 'fix/wod-del-zero-20261128', 'fix/wod-child-first-20261128', 'feat/wod-three-step-20261128', 'fix/intent-first-20261128', 'fix/shared-chipper-mixed-20261128', 'feat/okt-wod-rekkjefolgje-20261128']
+    branches: [gazelle-responsive-audit, gazelle-librarium, gazelle-librarium-polish, gazelle-plan-folders, gazelle-acta, gazelle-pt-plan, gazelle-pt-compact, gazelle-architect, gazelle-pt-flow-repair, gazelle-operational-anatomical, volksmaschine-reibungslos, hotfix-pt-dialog-layout-20261126, werkstatt-pc-companion, 'ops/werkstatt-fertigstellung-49', exportwerk-fertigstelling, 'fix/wod-sixstep-release-20261128', 'fix/wod-del-zero-20261128', 'fix/wod-child-first-20261128', 'feat/wod-three-step-20261128', 'fix/intent-first-20261128', 'fix/shared-chipper-mixed-20261128', 'feat/okt-wod-rekkjefolgje-20261128', 'fix/chipper-progress-20261128', 'feat/freiwerk-totalreform-20261128']
 permissions:
   contents: read
 jobs:
@@ -34,6 +34,11 @@ jobs:
             python -m playwright install --with-deps chromium
             python -c "from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(); b.close(); p.stop()"
           }
+      - name: FREIWERK source inventory (no approval claimed)
+        if: ${{ github.ref_name == 'feat/freiwerk-totalreform-20261128' }}
+        run: |
+          mkdir -p ui-audit-results
+          node scripts/freiwerk-audit.mjs --inventory --json > ui-audit-results/freiwerk-inventory.json
       - name: Check real components with isolated demo data
         run: |
           npm run help:demo > /tmp/gg-ui-audit-vite.log 2>&1 &
@@ -44,6 +49,8 @@ jobs:
           if [ "$GITHUB_REF_NAME" = 'feat/wod-three-step-20261128' ] || [ "$GITHUB_REF_NAME" = 'fix/intent-first-20261128' ] || [ "$GITHUB_REF_NAME" = 'fix/shared-chipper-mixed-20261128' ]; then python scripts/wod-compact-browser-test.py; fi
           if [ "$GITHUB_REF_NAME" = 'fix/shared-chipper-mixed-20261128' ]; then python scripts/shared-chipper-browser-test.py; fi
           if [ "$GITHUB_REF_NAME" = 'feat/okt-wod-rekkjefolgje-20261128' ]; then python scripts/wod-compact-browser-test.py; python scripts/shared-chipper-browser-test.py; python scripts/session-composer-browser-test.py; fi
+          if [ "$GITHUB_REF_NAME" = 'fix/chipper-progress-20261128' ]; then python scripts/shared-chipper-browser-test.py; python scripts/session-composer-browser-test.py; fi
+          if [ "$GITHUB_REF_NAME" = 'feat/freiwerk-totalreform-20261128' ]; then python scripts/wod-compact-browser-test.py; python scripts/shared-chipper-browser-test.py; python scripts/session-composer-browser-test.py; fi
       - name: Test built Tablet Lab with isolated storage and backend
         if: ${{ github.ref_name == 'werkstatt-pc-companion' || github.ref_name == 'ops/werkstatt-fertigstellung-49' || github.ref_name == 'exportwerk-fertigstellung' || github.ref_name == 'gazelle-operational-anatomical' }}
         run: |

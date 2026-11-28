@@ -1,0 +1,2107 @@
+{
+  "version": 1,
+  "baseline": "d03765e342a94795a197691f7cf725429fe3fc31",
+  "scope": "All source UI/runtime/styles and HTML entrypoints/templates, including retained legacy HTML; no exclusion without evidence.",
+  "requiredChecks": [
+    "purpose",
+    "visual",
+    "controls",
+    "information",
+    "gestures",
+    "responsive",
+    "roles",
+    "accessibility",
+    "integration",
+    "dataSafety",
+    "deviceEvidence"
+  ],
+  "files": [
+    {
+      "path": "Backup.html",
+      "category": "entry/template",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "GarasjeGym_1.8.16_LIVE_GRUPPETRENING.html",
+      "category": "entry/template",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "index-backup.html",
+      "category": "entry/template",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "index.html",
+      "category": "entry/template",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "src/src/lib/supabase.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/docs/prototypes/pt-flow-unlock.html",
+      "category": "entry/template",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/index.html",
+      "category": "entry/template",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/public/help/videos/manifest.json",
+      "category": "entry/runtime",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/public/sw.js",
+      "category": "entry/runtime",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/app-shell-mobile.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/App.jsx",
+      "category": "entry/runtime",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/admin-advanced.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/Admin.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/AnatomyEvidence.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/AppMobileNavigation.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/Booking.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/builder-form-contrast.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/CalendarAdmin.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/Challenges.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/chipper-progress.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/coffee-order-flow.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/CoffeeBar.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/Community.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/compact-dose-grid.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/CompactDoseGrid.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/customer-journey.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/DailyWodStrip.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/design-dna.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/DesignDNA.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/EquipmentPreparation.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/exercise-pr-center.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/ExerciseMark.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/ExercisePRCenter.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/Exportwerk.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/flow-entry.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/FlowEntry.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/GameRekordScene.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/garage-inventory.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/garage-maintenance.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/garage-select.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/GarageInventory.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/GarageMaintenance.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/GarageOwnerBadge.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/GarageSelect.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/GarminExport.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/gg-clean-ui.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/GroupClassResults.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/heart-rate.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/HeartRateSettings.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/HeartRateTrainingPanel.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/help-center.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/HelpCenter.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/IndividualCalibrationReview.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/infotainment.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/Infotainment.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/invitation.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/Lastmeister.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/librarium.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/Librarium.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/library-training-entry.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/LibraryTrainingEntry.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/mobile-native-controls.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/MobileNativeControls.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/muscle-map.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/MuscleMap.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/Music.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/MyPage.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/MyTraining.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/Notifications.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/Overview.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/performance-center.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PerformanceCenter.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PersonalCalendar.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PlanExchange.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PlanProduction.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/pr-victory-overlay.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/ProjectControl.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PRVictoryOverlay.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/pt-client-followup.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/pt-inquiry.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/pt-management-ux.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/pt-schedule.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/pt-studio-refine.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PT.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PTClientWods.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PTInfo.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PTInquiry.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PTManagement.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PTPreparation.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PTSchedule.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PTStudio.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PTWodReview.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/RekordGorilla.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/RekordLift.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/Safehouse.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/SamspelParticipantResults.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/ScheduleHub.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/session-composer.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/SessionComposer.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/SharedInventory.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/SimpleCustomerHome.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/synchron-preview.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/SynchronCalibrationReview.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/SynchronDisposition.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/SynchronLaunch.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/SynchronPreparation.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/SynchronResultReview.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/SynchronSessionPanel.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/TabletLabDock.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/TabletLabSafehouse.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/timer-viewport.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/TimerClockFace.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/Training.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WarmupGuide.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/werkstatt.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/Werkstatt.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/wod-architect.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/wod-builder-contrast.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/wod-card.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/wod-compact.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/wod-import.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/wod-ordering.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/wod-picker-repair.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/wod-wizard-refine.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WodBuilder.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WodCard.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WodHub.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WodImportPanel.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WodLibrary.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WodPicker.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WodTimeDial.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/workout-detail.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WorkoutDetail.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/hooks/useSwipeGesture.js",
+      "category": "entry/runtime",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/anatomicalIntelligence.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/anatomyMap.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/appBaseUrl.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/auth.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/calendarView.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/chipperProgress.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/classCapacity.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/coffeeCart.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/compactDoseRows.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/compactWorkout.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/compositeLibrary.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/compositeWod.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/deathBy.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/deleteWorkout.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/designDNA.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/deviceLayout.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/doseProfile.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/equipmentPreparation.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/exerciseCategories.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/exerciseMark.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/exerciseMeasurements.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/exerciseMuscleProfiles.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/exerciseQuality.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/exportwerk.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/exportwerkFit.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/exportwerkXlsx.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/flowKeypad.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/freeSession.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/freiwerkProfile.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/garageInventory.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/gesture.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/groupClassLiveTimer.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/heartRate.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/helpContent.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/helpVideos.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/individualCalibration.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/infotainmentEvents.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/infotainmentTimer.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/invitationFlow.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/ladder.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/libraryTrainingEntry.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/maintenancePlan.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/meisterwerkProjects.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/membershipAccess.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/memberViewMode.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/muscleGrades.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/muscleProfile.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/nativeMobileControls.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/offlineTraining.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/partWorkIntent.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/performanceEvidence.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/personalDose.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/prDirectory.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/prestartExit.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/previousResult.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/prMetrics.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/programReuse.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/prVictory.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/ptFlow.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/ptFlowPresets.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/ptNotificationSafety.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/ptPreparationHistory.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/ptSchedule.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/ptWodReview.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/qualityPrescription.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/recordLiftMotion.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/rekordGame3d.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/release.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/resultReview.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/resultValidation.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/retrospectiveWod.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/roundGhost.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/safehouse.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/samspel.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/sessionComposer.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/sessionQueueCheck.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/spotifyDevices.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/spotifyOAuthStorage.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/spotifyTokens.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/stacheldraht.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/startupDeadline.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/startupIntro.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/supabase.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchron.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronAnatomy.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronCalibration.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronClient.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronConfiguredRuntime.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronDisposition.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronHttpClient.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronInvitations.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronLog.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronPace.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronPairedSession.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronPreparation.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronPresence.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronReview.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronRuntime.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronSchedule.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronSeal.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronStrength.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/synchronTransport.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/tabletLabProtocol.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/timerClock.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/timerCues.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/trainingActivity.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/trainingAudio.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/trainingLaunchContext.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/warmupGuidance.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/warmupLibrary49.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/warmupPresets49.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/werkstattExchange.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/werkstattProjects.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/wodArchitect.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/wodCard.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/wodComplexes.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/wodEngine.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/wodFormatAdvisor.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/wodImport.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/wodNaming.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/wodOrdering.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/wodReps.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/wodSides.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/wodTimeDial.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/workoutCorrections.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/workoutDetail.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/workoutDraft.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/workoutFlow.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/zuendung.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/main.jsx",
+      "category": "entry/runtime",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/freiwerk.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/admin.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/app-shell.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/auth.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/calendar-unified.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/coffee.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/community.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/compact-information.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/experience-system.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/member-profile.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/music.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/notification-center.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/overview.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/pt-schedule.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/shared-responsive.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/touch-basics.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/training-library.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/training.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/wod-studio-touch.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/styles/mobile/wod-studio.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/synchron-preview.jsx",
+      "category": "entry/runtime",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/tabletLabBootstrap.js",
+      "category": "entry/runtime",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/tabletLabMain.jsx",
+      "category": "entry/runtime",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/tabletLabSupabase.js",
+      "category": "entry/runtime",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/uiAuditMain.jsx",
+      "category": "entry/runtime",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/video-demo.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/videoDemoMain.jsx",
+      "category": "entry/runtime",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/videoDemoSupabase.js",
+      "category": "entry/runtime",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/supabase/templates/garasjegym-invite.html",
+      "category": "entry/template",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/synchron-preview.html",
+      "category": "entry/template",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/tablet-lab.html",
+      "category": "entry/template",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/ui-audit.html",
+      "category": "entry/template",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/video-demo.html",
+      "category": "entry/template",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    }
+  ],
+  "approvalRule": "Each approved entry must include reviewedSha256 matching current file bytes, all required checks and concrete evidence. Registration is not approval."
+}

@@ -4,6 +4,7 @@ import {Check,X} from 'lucide-react'
 import {chooseNativeSelectOption,nativeSelectOptions,nativeSelectTitle} from '../lib/nativeMobileControls.js'
 import './garage-select.css'
 import './mobile-native-controls.css'
+import {DnaSheetHandle} from './DesignDNA.jsx'
 
 /**
  * Mobile-only progressive enhancement for existing form selects.
@@ -22,7 +23,7 @@ export default function MobileNativeControls(){
   let pending=null
   let suppressUntil=0
   function onPointerDown(event){
-   if(event.pointerType!=='touch'&&event.pointerType!=='pen')return
+   if(!event.isPrimary||(event.pointerType!=='touch'&&event.pointerType!=='pen'))return
    const select=event.target?.closest?.('select')||
     (!event.target?.closest?.('button, input, textarea, a')&&event.target?.closest?.('label')?.querySelector('select'))
    if(!select||select.disabled||select.multiple||select.size>1||select.hasAttribute('data-native-picker'))return
@@ -32,7 +33,7 @@ export default function MobileNativeControls(){
    event.preventDefault()
    event.stopPropagation()
    active=select
-   pending={select,options,title:nativeSelectTitle(select),selectedIndex:select.selectedIndex,pointerId:event.pointerId}
+   pending={select,options,title:nativeSelectTitle(select),selectedIndex:select.selectedIndex,pointerId:event.pointerId,x:event.clientX,y:event.clientY}
    suppressUntil=performance.now()+800
   }
   function onPointerUp(event){
@@ -41,12 +42,14 @@ export default function MobileNativeControls(){
    event.stopPropagation()
    const next=pending
    pending=null
+   if(Math.hypot(event.clientX-next.x,event.clientY-next.y)>12)return
+   if(!next.select.isConnected||next.select.disabled)return
    lastSelectRef.current=next.select
    next.select.blur()
    // Vent til Android har sendt klikket til den gamle kontrollen.
    // Å leggja arket over skjermen på pointerdown kunne opna og lukka det same trykket.
    window.setTimeout(()=>{
-    if(next.select.isConnected)setPicker({select:next.select,options:next.options,title:next.title,selectedIndex:next.selectedIndex})
+    if(next.select.isConnected&&!next.select.disabled)setPicker({select:next.select,options:nativeSelectOptions(next.select),title:nativeSelectTitle(next.select),selectedIndex:next.select.selectedIndex})
    },0)
   }
   function suppressNativeClick(event){
@@ -55,7 +58,7 @@ export default function MobileNativeControls(){
    }
    active=null
   }
-  function onPointerCancel(){pending=null;active=null}
+  function onPointerCancel(event){if(pending&&event.pointerId===pending.pointerId){pending=null;active=null}}
   function closeOnFullscreenChange(){setPicker(null)}
   document.addEventListener('pointerdown',onPointerDown,true)
   document.addEventListener('pointerup',onPointerUp,true)
@@ -78,7 +81,8 @@ export default function MobileNativeControls(){
   const frame=requestAnimationFrame(()=>{
    const choices=[...(listRef.current?.querySelectorAll('[role="option"]:not([disabled])')||[])]
    const selectedChoice=choices.find(choice=>choice.getAttribute('aria-selected')==='true')||choices[0]
-   selectedChoice?.focus()
+   if(selectedChoice)selectedChoice.focus()
+   else sheetRef.current?.querySelector('.gg-select-close')?.focus()
   })
   return()=>{
    cancelAnimationFrame(frame)
@@ -113,7 +117,7 @@ export default function MobileNativeControls(){
  if(!picker)return null
  return createPortal(<div className="gg-select-backdrop gg-native-select-backdrop" onPointerDown={event=>event.stopPropagation()} onClick={close}>
   <section ref={sheetRef} className="gg-select-sheet gg-native-select-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={event=>event.stopPropagation()} onKeyDown={onKeyDown}>
-   <header><div><span className="section-kicker">GARASJEGYM · VAL</span><h2 id={titleId}>{picker.title}</h2></div><button type="button" className="gg-select-close" onClick={close} aria-label="Lukk val"><X size={20}/></button></header>
+   <DnaSheetHandle onClose={close}/><header><div><span className="section-kicker">GARASJEGYM · VAL</span><h2 id={titleId}>{picker.title}</h2></div><button type="button" className="gg-select-close" onClick={close} aria-label="Lukk val"><X size={20}/></button></header>
    <div className="gg-select-options" role="listbox" ref={listRef} aria-label={picker.title}>
     {picker.options.map((option,index)=><div key={index} className="gg-native-option-group">
      {option.group&&(index===0||picker.options[index-1].group!==option.group)&&<span className="gg-native-optgroup-label">{option.group}</span>}

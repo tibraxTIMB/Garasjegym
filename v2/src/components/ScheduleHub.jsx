@@ -6,10 +6,11 @@ import CalendarAdmin from './CalendarAdmin.jsx'
 import PersonalCalendar from './PersonalCalendar.jsx'
 import {isStaff} from '../lib/auth.js'
 
-export default function ScheduleHub({profile,onLogResult,onLaunchWorkout,onOpenWod,onOpenAssignment,onOpenProgramSession,onContactPT=()=>{},focusRequestId,onFocusConsumed,initialClassId=null,initialTab='mine',onTabChange=()=>{},simpleMode=false,hidePTTab=false,onInitialClassConsumed=()=>{}}){
+export default function ScheduleHub({profile,onLogResult,onLaunchWorkout,onOpenWod,onOpenAssignment,onOpenProgramSession,onContactPT=()=>{},focusRequestId,onFocusConsumed,initialClassId=null,initialTab='mine',onTabChange=()=>{},simpleMode=false,hidePTTab=false,onInitialClassConsumed=()=>{},onPrepareSynchron=null}){
  const [tab,setTab]=useState(initialTab)
  const [focusClassId,setFocusClassId]=useState(initialClassId)
  const [focusPTClientId,setFocusPTClientId]=useState(null)
+ const [focusPTSessionId,setFocusPTSessionId]=useState(null)
  useEffect(()=>{setTab(initialTab)},[initialTab,simpleMode])
  useEffect(()=>{setFocusClassId(initialClassId)},[initialClassId])
  const allowedTab=value=>(hidePTTab&&['pt','mine'].includes(value))?'booking':((!isStaff(profile)&&value==='calendar')||(simpleMode&&value==='pt'))?'mine':value
@@ -24,6 +25,6 @@ export default function ScheduleHub({profile,onLogResult,onLaunchWorkout,onOpenW
    {!simpleMode&&!hidePTTab&&<button type="button" role="tab" aria-selected={activeTab==='pt'} className={activeTab==='pt'?'selected':''} onClick={()=>changeTab('pt')}><UserRound size={16}/> PT-timar</button>}
    {isStaff(profile)&&<button type="button" role="tab" aria-selected={activeTab==='calendar'} className={activeTab==='calendar'?'selected':''} onClick={()=>changeTab('calendar')}><CalendarDays size={16}/> Administrer</button>}
   </div>
-  {activeTab==='mine'?<PersonalCalendar profile={profile} onOpenClass={classId=>{setFocusClassId(classId);changeTab('booking')}} onOpenPT={clientId=>{setFocusPTClientId(clientId||null);changeTab('pt')}} onOpenAssignment={(wodId,assignmentId)=>onOpenAssignment?.(wodId,assignmentId)} onOpenProgramSession={onOpenProgramSession} onOpenClasses={()=>changeTab('booking')}/>:activeTab==='booking'?<Booking profile={profile} onLogResult={onLogResult} onOpenWod={onOpenWod} initialClassId={focusClassId} onInitialClassConsumed={()=>{setFocusClassId(null);onInitialClassConsumed?.()}}/>:activeTab==='pt'?<PT profile={profile} controlledClientId={focusPTClientId} onClientChange={setFocusPTClientId} focusRequestId={focusRequestId} onFocusConsumed={onFocusConsumed} onLaunchWorkout={onLaunchWorkout}/>:<CalendarAdmin onNavigate={(target,classId,clientId)=>{changeTab(target==='pt'?'pt':'booking');if(target==='pt')setFocusPTClientId(clientId||null);else if(classId)setFocusClassId(classId)}}/>}
+  {activeTab==='mine'?<PersonalCalendar profile={profile} onOpenClass={classId=>{setFocusClassId(classId);changeTab('booking')}} onOpenPT={(clientId,sessionId)=>{setFocusPTClientId(clientId||null);setFocusPTSessionId(sessionId||null);changeTab('pt')}} onOpenAssignment={(wodId,assignmentId)=>onOpenAssignment?.(wodId,assignmentId)} onOpenProgramSession={onOpenProgramSession} onOpenClasses={()=>changeTab('booking')}/>:activeTab==='booking'?<Booking profile={profile} onLogResult={onLogResult} onOpenWod={onOpenWod} initialClassId={focusClassId} onInitialClassConsumed={()=>{setFocusClassId(null);onInitialClassConsumed?.()}}/>:activeTab==='pt'?<PT profile={profile} focusSessionId={focusPTSessionId} onPrepareSynchron={onPrepareSynchron} controlledClientId={focusPTClientId} onClientChange={setFocusPTClientId} focusRequestId={focusRequestId} onFocusConsumed={onFocusConsumed} onLaunchWorkout={onLaunchWorkout}/>:<CalendarAdmin onNavigate={(target,classId,clientId)=>{changeTab(target==='pt'?'pt':'booking');if(target==='pt')setFocusPTClientId(clientId||null);else if(classId)setFocusClassId(classId)}}/>}
  </div>
 }
