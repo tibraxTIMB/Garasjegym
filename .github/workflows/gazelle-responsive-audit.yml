@@ -42,6 +42,7 @@ jobs:
           for i in $(seq 1 60); do curl -fs http://127.0.0.1:4173/ui-audit.html >/dev/null && break; sleep 1; done
           python scripts/responsive-audit.py
           if [ "$GITHUB_REF_NAME" = 'feat/wod-three-step-20261128' ] || [ "$GITHUB_REF_NAME" = 'fix/intent-first-20261128' ] || [ "$GITHUB_REF_NAME" = 'fix/shared-chipper-mixed-20261128' ]; then python scripts/wod-compact-browser-test.py; fi
+          if [ "$GITHUB_REF_NAME" = 'fix/shared-chipper-mixed-20261128' ]; then python scripts/shared-chipper-browser-test.py; fi
       - name: Test built Tablet Lab with isolated storage and backend
         if: ${{ github.ref_name == 'werkstatt-pc-companion' || github.ref_name == 'ops/werkstatt-fertigstellung-49' || github.ref_name == 'exportwerk-fertigstellung' || github.ref_name == 'gazelle-operational-anatomical' }}
         run: |
