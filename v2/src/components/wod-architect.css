@@ -288,3 +288,54 @@ body:has(> .gg-architect-issue-backdrop) > #root{isolation:isolate}
 .gg-three-stage .gg-time-next{display:flex!important;justify-content:flex-end}
 .gg-three-stage .gg-time-next button{min-height:46px;width:100%}
 @media(max-width:380px){.gg-three-stage .gg-compact-time-presets{grid-template-columns:repeat(3,minmax(0,1fr))}.gg-three-stage .gg-compact-dose-row{grid-template-columns:minmax(85px,1fr) minmax(0,1.5fr)}}
+
+/* Artist finish: the three-stage PT workspace is a tool, not a stack of cards.
+   Scope every rule to the mobile/tablet three-stage flow. Keep all controls. */
+.gg-three-stage{--gg-artist-ink:#f2f5f5;--gg-artist-muted:#b7c7ce;--gg-artist-accent:#f4b65d;--gg-artist-line:#35464e;--gg-artist-field:#1b2a30;--gg-artist-selected:#3c301f}
+.gg-three-stage .gg-sixstep-header{gap:5px;padding:5px 2px 8px!important}
+.gg-three-stage .gg-sixstep-header nav{gap:6px}
+.gg-three-stage .gg-sixstep-header nav button{font-size:12px;min-height:38px;text-align:left;gap:6px;padding:5px 2px}
+.gg-three-stage .gg-sixstep-header .gg-step-mark{height:3px}
+.gg-three-stage .gg-sixstep-header button[aria-current=step]{color:var(--gg-artist-accent)}
+.gg-three-stage .gg-sixstep-formats button{min-height:48px;gap:6px;border-radius:8px;padding:5px;justify-content:center}
+.gg-three-stage .gg-sixstep-formats button strong{font-size:12px;line-height:1.2;overflow-wrap:anywhere}
+.gg-three-stage .gg-sixstep-formats button[aria-pressed=true]{background:var(--gg-artist-selected);border-color:var(--gg-artist-accent);color:#ffdb9e}
+.gg-three-stage .gg-compact-participation{border:0!important;padding:5px 0!important;background:transparent!important}
+.gg-three-stage .gg-participation-choices button{min-height:44px;line-height:1.15}
+.gg-three-stage .gg-sixstep-time-panel{border:0!important;background:transparent!important;padding:3px 0!important}
+.gg-three-stage .wizard-format-panel{border:0!important;background:transparent!important;box-shadow:none!important}
+.gg-three-stage .gg-cap-choice>button[aria-pressed=true],.gg-three-stage .gg-compact-time-presets>button[aria-pressed=true]{background:var(--gg-artist-selected);color:#ffdb9e;border-color:var(--gg-artist-accent)}
+.gg-three-stage .gg-compact-time input{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;min-height:44px}
+.gg-three-stage .gg-active-part-context{padding:7px 9px;background:#202e35}
+.gg-three-stage .gg-active-part-context strong{font-size:17px}
+.gg-three-stage .gg-active-part-context small{font-size:12px}
+.gg-three-stage .gg-part-workbench .gg-part-chip{border:1px solid var(--gg-artist-line);border-radius:8px;padding:2px;min-width:0}
+.gg-three-stage .gg-part-workbench .gg-part-chip>button:first-child{grid-template-columns:22px minmax(0,1fr);grid-template-rows:auto auto;column-gap:5px;row-gap:2px;min-height:46px}
+.gg-three-stage .gg-part-workbench .gg-part-chip>button:first-child b{grid-row:1/3}
+.gg-three-stage .gg-part-workbench .gg-part-chip>button:first-child small{grid-column:2;text-align:left;font-size:11px}
+.gg-three-stage .gg-part-workbench .gg-part-chip>button:first-child.active{background:var(--gg-artist-selected);color:#ffdb9e}
+.gg-three-stage .gg-exercise-actions{display:flex;gap:6px;min-width:0}
+.gg-three-stage .gg-exercise-actions .wod-open-library{flex:1;min-height:46px;min-width:0;font-size:14px}
+.gg-three-stage .gg-exercise-actions .gg-add-pause{min-height:46px}
+.gg-three-stage .gg-compact-dose-grid{gap:4px}
+.gg-three-stage .gg-compact-dose-tabs{gap:3px;padding:3px;background:#172329;border:1px solid var(--gg-artist-line);border-radius:9px}
+.gg-three-stage .gg-compact-dose-tabs button{min-height:38px;border-color:transparent;font-size:12px;background:transparent;border-radius:6px}
+.gg-three-stage .gg-compact-dose-tabs button[aria-pressed=true]{background:var(--gg-artist-selected)!important;color:#ffdb9e!important;border-color:var(--gg-artist-accent)!important}
+.gg-three-stage .gg-compact-dose-row{padding:7px 4px;gap:7px;align-items:center;border-color:var(--gg-artist-line)}
+.gg-three-stage .gg-compact-dose-name{display:grid;grid-template-columns:minmax(0,1fr) 36px;gap:2px 4px;align-items:center}
+.gg-three-stage .gg-compact-dose-name strong{grid-column:1;font-size:13px;line-height:1.25;overflow-wrap:anywhere}
+.gg-three-stage .gg-compact-dose-name .gg-compact-equipment{grid-column:1;border:0;padding:0;font-size:11px;line-height:1.3;color:var(--gg-artist-muted)}
+.gg-three-stage .gg-compact-dose-name small{grid-column:1/-1}
+.gg-three-stage .gg-compact-dose-name>button{grid-column:2;grid-row:1/3;min-width:36px;min-height:44px;align-self:center;border-radius:6px;color:var(--gg-artist-accent)}
+.gg-three-stage .gg-compact-cell{color:var(--gg-artist-muted);font-size:11px;gap:3px}
+.gg-three-stage .gg-compact-dose-values{gap:4px}
+.gg-three-stage .gg-compact-dose-values button{min-height:44px;background:var(--gg-artist-field);border-color:#4b616a;font-size:18px;font-weight:750;font-variant-numeric:tabular-nums;border-radius:7px}
+.gg-three-stage .gg-compact-dose-values button.active{background:var(--gg-artist-selected);color:#ffdb9e;border-color:var(--gg-artist-accent)}
+.gg-three-stage .gg-compact-dose-row.gg-dose-row-active{background:#2d2a21}
+.gg-three-stage .gg-compact-keypad{border-color:#596d76;box-shadow:0 -5px 18px #0008}
+.gg-three-stage .gg-review-exercise{min-height:44px;border-radius:5px;gap:8px}
+.gg-three-stage .gg-review-exercise>strong{color:#ffcf8a;font-variant-numeric:tabular-nums}
+.gg-three-stage .gg-review-notes>summary,.gg-three-stage .gg-composite-block>summary{min-height:44px;cursor:pointer}
+.gg-three-stage button:focus-visible{outline:2px solid #ffcf8a;outline-offset:2px}
+@media(max-width:380px){.gg-three-stage .gg-compact-dose-name{grid-template-columns:minmax(0,1fr) 32px}.gg-three-stage .gg-compact-dose-name>button{min-width:32px}.gg-three-stage .gg-compact-dose-row{grid-template-columns:minmax(100px,1fr) minmax(0,1.4fr);gap:4px}.gg-three-stage .gg-sixstep-formats button strong{font-size:11px}}
+@media(orientation:landscape) and (min-width:600px){.gg-three-stage .gg-compact-dose-name strong{font-size:14px}.gg-three-stage .gg-compact-dose-row{grid-template-columns:minmax(150px,1fr) minmax(0,1.5fr)}}
