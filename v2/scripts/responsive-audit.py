@@ -1,5 +1,5 @@
 """Browser audit using only local synthetic data. Block all other network requests."""
-import json,sys
+import json,sys,traceback
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 BASE="http://127.0.0.1:4173"
@@ -121,7 +121,7 @@ with sync_playwright() as pw:
                     parts=page.get_by_role("navigation",name="Delar i WOD-en")
                     parts.wait_for()
                     assert parts.locator(".gg-part-chip").count()==1
-                    assert "Chipper" in parts.inner_text() and "15:00" in parts.inner_text()
+                    assert "Chipper" in parts.inner_text() and "15:00" in parts.inner_text(), parts.inner_text()
                     check(page,"architect-overview",w,h)
                     page.get_by_role("button",name="WOD-handlingar",exact=True).tap()
                     page.get_by_role("button",name="Endra format",exact=True).tap()
@@ -161,7 +161,7 @@ with sync_playwright() as pw:
                         settings.get_by_role("button",name="15",exact=True).tap()
                         settings.get_by_role("button",name="Partner · Synkron",exact=True).tap()
                         settings.get_by_role("button",name="Ferdig",exact=True).tap()
-                        assert "Synkron" in parts.inner_text()
+                        assert "Synkron" in parts.inner_text(), parts.inner_text()
                         warm.get_by_role("button",name="Legg til øving",exact=True).tap()
                         picker=warm.get_by_role("region",name="Vel øvingar til WOD")
                         assert "Del A" in picker.locator(".gg-picker-part-context").inner_text()
@@ -191,8 +191,13 @@ with sync_playwright() as pw:
                         assert warm.locator(".gg-active-part-context strong").inner_text()=="Del B"
                         warm.get_by_role("button",name="Legg til øving",exact=True).tap()
                         assert "Del B" in picker.locator(".gg-picker-part-context").inner_text()
-                        picker.locator(".wod-add-button").first.tap()
+                        picker.locator(".gg-picker-name").first.tap()
+                        assert "1 valde" in picker.locator(".wod-library-ok-top").inner_text()
+                        picker.locator(".gg-picker-name").first.tap()
+                        assert "2 valde" in picker.locator(".wod-library-ok-top").inner_text()
                         picker.locator(".wod-library-ok-top").tap()
+                        assert warm.locator(".wod-selected-list .wod-selected-card").count()==2
+                        warm.get_by_role("button",name="Fjern øving",exact=True).last.tap()
                         assert warm.locator(".wod-selected-list .wod-selected-card").count()==1
                         warm.get_by_role("button",name="Del A · Chipper",exact=True).tap()
                         assert warm.locator(".wod-selected-list .wod-selected-card").count()==6
@@ -396,7 +401,8 @@ with sync_playwright() as pw:
                     page.get_by_role("listbox").get_by_role("option").nth(1).tap()
                     assert page.get_by_role("combobox",name="Testval").input_value()=="b"
                 if errors: failures.append(f"{screen} {w}x{h}: JS {errors[:2]}")
-            except Exception as e: failures.append(f"{screen} {w}x{h}: {e}")
+            except Exception as e:
+                failures.append(f"{screen} {w}x{h}: {type(e).__name__}: {e}\n{traceback.format_exc()}")
             finally:
                 if page: page.close()
         for screen in ["home","wod","group","pt","my-page","maintenance","help"]:
