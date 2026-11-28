@@ -1,0 +1,36 @@
+# FREIWERK TOTALREFORM — binding build contract
+
+Baseline: d03765e342a94795a197691f7cf725429fe3fc31 (production branch HEAD, not proof of currently deployed artifact).
+No production release or database write is authorised by this candidate.
+Scope is every UI, role, entry point, state, control, stylesheet, integration and runtime module.
+The register covers source paths, not the number of screens; one file can render many surfaces.
+A registered file is not a reviewed file. Every route, branch, modal, error and empty state must also be exercised.
+Retained legacy entrypoints and lab/demo screens require verified use/disposition, never silent exclusion.
+
+## Orders
+01 shared visual tokens and source inventory; 02 choices and switches; 03 numeric/text input;
+04 date/time/duration; 05 information, gestures, confirmation and action;
+06 library/card; 07 builder; 08 session composer and training plan; 09 timer/Samspel/Synchron;
+10 results/anatomy/history/PR; 11 PT/appointments/calendar/replay; 12 all remaining surfaces and final acceptance.
+All modules must meet the same standard. Keep legacy controls accessible until replacements are verified.
+
+## Production invariants
+Preserve member IDs, permissions, WODs, historical results, PR, assignments, programmes and current sessions.
+Never infer individual work from team totals. Timer authority, offline recovery, and valid format semantics are unchanged by styling.
+No global hide of warnings or essential actions. No hidden-only gesture. Never split an ordinary word to fit a compact control.
+Support mobile 320/360/390/430, tablet 768/1024, desktop 1440; portrait/landscape, keyboard and touch, member/staff/admin,
+long names, empty/loading/error, zoom, fullscreen, active session, network loss and safe recovery. Use isolated test data only.
+Visual profile is reversible within the candidate with ?design=classic; this is not a production rollback mechanism.
+
+## Integration
+Open work at baseline: #18, #19, #31, #32, #33, #34. They overlap on Training, WodBuilder, App, WodCard, WodLibrary,
+SynchronPreparation and other modules. Do not blindly cherry-pick or replace. Review the diffs and reconcile after acceptance.
+Do not edit production-release.json or existing release automation. The FREIWERK candidate is separate.
+
+## Audit evidence
+Run `node scripts/freiwerk-audit.mjs --json` from v2 to enumerate current source and static controls.
+Run `node scripts/freiwerk-audit.mjs --release` for mandatory FREIWERK release gate.
+Each register entry needs checks for every required dimension and concrete evidence (test report/screenshot/commit and scenario).
+New files are automatically flagged unregistered; deleted files require reconciliation.
+This is a separate total-reform release gate, not a claim that ordinary npm test already runs the full audit.
+No approval is fabricated. The first candidate introduces shared appearance and register only.

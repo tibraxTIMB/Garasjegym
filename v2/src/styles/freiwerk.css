@@ -1,0 +1,64 @@
+/* FREIWERK 01 – shared visual foundation. Do not change timing, data or visibility of actions. */
+html[data-gg-design="freiwerk"] {
+  --fw-bg:#111615; --fw-surface:#19221e; --fw-raised:#23302a;
+  --fw-line:#526259; --fw-text:#f1eee5; --fw-muted:#b4c2b9;
+  --fw-accent:#e6c58d; --fw-selected:#393326;
+  --fw-success:#91c4a6; --fw-warning:#e6ba70; --fw-danger:#ec9999;
+  --fw-radius:8px; --fw-control:44px;
+  --bg:var(--fw-bg); --panel:var(--fw-surface); --panel2:var(--fw-raised);
+  --line:var(--fw-line); --muted:var(--fw-muted); --orange:var(--fw-accent);
+  --gg-shell-bg:var(--fw-bg); --gg-shell-panel:var(--fw-surface);
+  --gg-shell-panel-raised:var(--fw-raised); --gg-shell-border:var(--fw-line);
+  --gg-shell-text:var(--fw-text); --gg-shell-muted:var(--fw-muted);
+  --gg-shell-accent:var(--fw-accent); --gg-panel-radius:var(--fw-radius);
+  --gg-control-height:var(--fw-control);
+  color:var(--fw-text); background:var(--fw-bg); color-scheme:dark;
+}
+html[data-gg-design="freiwerk"] :is(.app-shell,.auth-shell,.loading-shell) {background:var(--fw-bg)}
+html[data-gg-design="freiwerk"] .app-shell>.sidebar {background:var(--fw-surface);border-color:var(--fw-line)}
+html[data-gg-design="freiwerk"] .app-shell>.main>.topbar {background:var(--fw-bg);border-color:var(--fw-line)}
+html[data-gg-design="freiwerk"] .app-shell .content-card {background:var(--fw-surface);border-color:var(--fw-line);border-radius:var(--fw-radius);box-shadow:none}
+html[data-gg-design="freiwerk"] .auth-card {background:var(--fw-surface);border-color:var(--fw-line);border-radius:var(--fw-radius)}
+html[data-gg-design="freiwerk"] :is(.section-kicker,.side-label,.eyebrow,.app-shell-eyebrow) {letter-spacing:.08em;font-weight:750}
+html[data-gg-design="freiwerk"] :is(.training-heading,.engine-section-title,.pt2-panel-head) {min-width:0;gap:8px}
+html[data-gg-design="freiwerk"] :is(.training-heading,.engine-section-title,.pt2-panel-head)>div {min-width:0}
+html[data-gg-design="freiwerk"] :is(.training-heading h3,.pt2-panel-head h3,.engine-section-title h4) {line-height:1.25;overflow-wrap:break-word;word-break:normal;letter-spacing:-.015em}
+html[data-gg-design="freiwerk"] :is(.primary-button,.secondary-button,.icon-button) {border-radius:var(--fw-radius);box-shadow:none}
+html[data-gg-design="freiwerk"] .primary-button:not(.danger-button) {background:var(--fw-accent);color:#171710;font-weight:750}
+html[data-gg-design="freiwerk"] .secondary-button {border-color:var(--fw-line);color:var(--fw-accent);font-weight:650}
+html[data-gg-design="freiwerk"] :is(.nav-item.selected,.app-mobile-nav-item.is-active) {color:var(--fw-accent);background:var(--fw-selected)}
+html[data-gg-design="freiwerk"] .app-mobile-nav {background:var(--fw-surface);border-color:var(--fw-line);box-shadow:none}
+html[data-gg-design="freiwerk"] .app-mobile-nav-item {border-radius:var(--fw-radius)}
+html[data-gg-design="freiwerk"] :is(.gg-select-sheet,.gg-flow-confirm-dialog,.app-more-sheet,.gg-library-training) {background:var(--fw-surface);color:var(--fw-text);border-color:var(--fw-line);border-radius:12px}
+html[data-gg-design="freiwerk"] :is(.gg-select-options button,.gg-garage-select,.gg-select-close) {background:var(--fw-raised);border-color:var(--fw-line);color:var(--fw-text);border-radius:var(--fw-radius)}
+html[data-gg-design="freiwerk"] .gg-select-options button.selected {background:var(--fw-selected);border-color:var(--fw-accent);color:var(--fw-accent)}
+html[data-gg-design="freiwerk"] :is(.gg-compact-dose-tabs,.gg-flow-level-buttons,.gg-wod-levels,.gg-wod-tabs) {min-width:0;gap:3px}
+html[data-gg-design="freiwerk"] :is(.gg-compact-dose-tabs,.gg-flow-level-buttons,.gg-wod-levels,.gg-wod-tabs)>button {
+  min-width:0;white-space:nowrap;word-break:normal;overflow-wrap:normal;
+  border-radius:4px;font-size:clamp(10px,3.05vw,13px);padding-inline:3px;
+  font-weight:650;box-shadow:none;
+}
+html[data-gg-design="freiwerk"] :is(.gg-compact-dose-tabs,.gg-flow-level-buttons,.gg-wod-levels,.gg-wod-tabs)>button:is(.selected,[aria-pressed=true]) {
+  background:var(--fw-selected)!important;color:var(--fw-accent)!important;border-color:transparent!important;
+  box-shadow:inset 0 -2px var(--fw-accent)!important;
+}
+html[data-gg-design="freiwerk"] :is(.gg-flow-keypad,.gg-compact-keypad) {background:var(--fw-surface);border-color:var(--fw-line);box-shadow:none}
+html[data-gg-design="freiwerk"] :is(.gg-flow-keys,.gg-compact-keypad-keys,.gg-dna-keys)>button {border-radius:5px}
+html[data-gg-design="freiwerk"] :is(.gg-keypad-value,.timer-main-clock,.gg-wod-stats b) {font-variant-numeric:tabular-nums}
+html[data-gg-design="freiwerk"] .gg-wod-part {background:var(--fw-surface);border-top:0;border-right:0;border-bottom:1px solid var(--fw-line);border-left-width:2px;border-radius:0}
+html[data-gg-design="freiwerk"] .gg-wod-identity h1 {letter-spacing:-.025em;word-break:normal;overflow-wrap:break-word}
+html[data-gg-design="freiwerk"] :is(.app-shell,.auth-shell,.gg-wod-screen,.gg-select-sheet,.gg-flow-confirm-dialog) :is(button,input,select,textarea,summary,a):focus-visible {outline:2px solid var(--fw-accent);outline-offset:2px}
+html[data-gg-design="freiwerk"] :is(.auth-error,[role=alert]) {overflow-wrap:break-word}
+@media(max-width:900px){
+ html[data-gg-design="freiwerk"] .app-shell .content-card {padding:clamp(10px,2.8vw,18px)}
+ html[data-gg-design="freiwerk"] .app-shell :is(.notice,.empty-state) {box-shadow:none;border-radius:var(--fw-radius)}
+ html[data-gg-design="freiwerk"] .gg-select-sheet {padding:12px;gap:6px}
+}
+@media(min-width:700px) and (orientation:landscape){
+ html[data-gg-design="freiwerk"] .gg-select-sheet {max-width:540px}
+}
+@media(prefers-reduced-motion:reduce){
+ html[data-gg-design="freiwerk"] :is(.gg-dna-choice,.gg-select-options,.gg-compact-dose-tabs) button {transition:none}
+}
+/* Safety, timer stage colours, destructive-action colours and existing functionality
+   remain owned by their feature modules. No blanket hide or overflow clipping. */
