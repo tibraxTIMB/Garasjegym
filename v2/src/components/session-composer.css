@@ -22,3 +22,5 @@
 .gg-session-selected-row strong,.gg-session-wod strong{overflow-wrap:break-word;word-break:normal}
 @media(max-width:360px){.gg-session-selected-row{grid-template-columns:16px minmax(0,1fr) repeat(4,30px)}.gg-session-selected-row button{min-width:30px}}
 @media(min-width:720px) and (orientation:landscape){.gg-session-workspace{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.gg-session-selected{border-bottom:0;border-right:1px solid var(--fw-line,#526259);padding-right:12px}.gg-session-wods{max-height:50dvh}}
+
+.gg-session-missing{grid-template-columns:18px minmax(0,1fr) 44px;color:var(--fw-warning,#e6ba70)}.gg-session-missing button{min-width:44px}

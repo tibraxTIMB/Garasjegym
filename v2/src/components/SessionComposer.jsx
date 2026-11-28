@@ -9,7 +9,8 @@ export default function SessionComposer({wods=[],onStart,onCancel}){
  const [ids,setIds]=useState([]),[category,setCategory]=useState('all'),[query,setQuery]=useState(''),[error,setError]=useState('')
  const [infoId,setInfoId]=useState(null),[starting,setStarting]=useState(false)
  const startLock=useRef(false)
- const selected=useMemo(()=>ids.map(id=>wods.find(w=>w.id===id)).filter(Boolean),[ids,wods])
+ const queue=useMemo(()=>ids.map(id=>({id,wod:wods.find(w=>w.id===id&&!w.is_archived)||null})),[ids,wods])
+ const selected=useMemo(()=>queue.map(row=>row.wod).filter(Boolean),[queue])
  const checked=useMemo(()=>sessionQueueCheck(ids,selected,buildTrainingSession),[ids,selected])
  const infoWod=selected.find(w=>w.id===infoId)
  const total=selected.reduce((n,w)=>n+sessionWodSeconds(w),0)
@@ -21,11 +22,11 @@ export default function SessionComposer({wods=[],onStart,onCancel}){
   <header><button type="button" aria-label="Tilbake til ØKT" onClick={onCancel}><ArrowLeft size={20}/></button><div><small>ØKT</small><h3>Set saman økta</h3></div></header>
   <div className="gg-session-workspace"><div className="gg-session-selected" aria-label="Rekkjefølgje i økta">
    <strong>Mi økt <small>{ids.length} WOD-ar{total>0?' · '+minutes(total):''}{hasOpen?' + open tid':''}</small></strong>
-   {selected.length===0?<p>Trykk + ved ein WOD for å leggja han til.</p>:selected.map((w,i)=><div className="gg-session-selected-row" key={w.id}>
+   {queue.length===0?<p>Trykk + ved ein WOD for å leggja han til.</p>:queue.map(({id,wod:w},i)=>!w?<div className="gg-session-selected-row gg-session-missing" key={id}><b>{i+1}</b><div><strong>WOD ikkje tilgjengeleg</strong><small>Fjern valet for å halda fram.</small></div><button type="button" onClick={()=>setIds(old=>old.filter(value=>value!==id))} aria-label={'Fjern utilgjengeleg WOD '+(i+1)}><X size={18}/></button></div>:<div className="gg-session-selected-row" key={w.id}>
     <b>{i+1}</b><div><strong>{w.name}</strong><small>{sessionWarmup(w)?'Oppvarming':w.format} · {minutes(sessionWodSeconds(w))}</small></div>
     <button type="button" aria-label={'Øvingar i '+w.name} aria-expanded={infoId===w.id} aria-controls={infoId===w.id?'gg-session-wod-info':undefined} onClick={()=>setInfoId(old=>old===w.id?null:w.id)}><Info size={17}/></button>
     <button type="button" disabled={i===0} onClick={()=>setIds(old=>moveSessionWod(old,i,-1))} aria-label={'Flytt '+w.name+' opp'}><ArrowUp size={18}/></button>
-    <button type="button" disabled={i===selected.length-1} onClick={()=>setIds(old=>moveSessionWod(old,i,1))} aria-label={'Flytt '+w.name+' ned'}><ArrowDown size={18}/></button>
+    <button type="button" disabled={i===queue.length-1} onClick={()=>setIds(old=>moveSessionWod(old,i,1))} aria-label={'Flytt '+w.name+' ned'}><ArrowDown size={18}/></button>
     <button type="button" onClick={()=>toggle(w)} aria-label={'Fjern '+w.name}><X size={18}/></button>
    </div>)}
    {infoWod&&<section id="gg-session-wod-info" className="gg-session-wod-info" aria-label={'Øvingar i '+infoWod.name}><header><strong>{infoWod.name}</strong><button type="button" aria-label="Lukk øvingsinfo" onClick={()=>setInfoId(null)}><X size={18}/></button></header>{cardParts(infoWod).map((part,i)=><div key={part.id||i}><small>{part.title||part.formatLabel}</small>{(part.items||[]).map((item,j)=><span key={j}>{item.is_rest?'Pause':item.exercise_name||item.name||'Øving'}</span>)}</div>)}<small>Øvingsinnhald frå original WOD.</small></section>}
