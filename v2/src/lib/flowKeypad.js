@@ -31,3 +31,9 @@ export function flowNavigationIndex(fields,active,delta,sameField=false){
  }
  return null
 }
+
+// Optional device feedback. Browser/OS policy may decline vibration; never block input.
+export function flowHaptic(kind='tap',device=typeof navigator==='undefined'?null:navigator){
+ const pattern=kind==='reject'?[12,24,12]:kind==='next'?18:kind==='done'?24:9
+ try{return typeof device?.vibrate==='function'&&device.vibrate(pattern)===true}catch{return false}
+}
