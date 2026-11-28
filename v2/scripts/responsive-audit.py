@@ -159,9 +159,18 @@ with sync_playwright() as pw:
                         settings=warm.get_by_role("dialog",name="Format og tid for øktdelen")
                         settings.get_by_role("combobox",name="Format",exact=True).select_option("Chipper")
                         settings.get_by_role("button",name="15",exact=True).tap()
-                        settings.get_by_role("button",name="Partner · Synkron",exact=True).tap()
+                        settings.get_by_role("button",name="Saman · same øvingar",exact=True).tap()
                         settings.get_by_role("button",name="Ferdig",exact=True).tap()
-                        assert "Synkron" in parts.inner_text(), parts.inner_text()
+                        assert "Saman · same øvingar" in parts.inner_text(), parts.inner_text()
+                        assert "Saman · same øvingar" not in parts.locator(".gg-part-chip").first.inner_text()
+                        # Real regression: warmup label cannot collapse into a one-character column.
+                        for chip in parts.locator(".gg-part-chip").all():
+                            name=chip.locator("button").first.locator("span")
+                            assert name.bounding_box()["width"]>=75, (w,h,chip.inner_text(),name.bounding_box())
+                            assert chip.bounding_box()["height"]<=120, (w,h,chip.inner_text(),chip.bounding_box())
+                        first,second=parts.locator(".gg-part-chip").all()[:2]
+                        assert second.bounding_box()["y"]>=first.bounding_box()["y"]+first.bounding_box()["height"]-1
+                        check(warm,"warmup-chipper-part-layout",w,h)
                         warm.get_by_role("button",name="Legg til øving",exact=True).tap()
                         picker=warm.get_by_role("region",name="Vel øvingar til WOD")
                         assert "Del A" in picker.locator(".gg-picker-part-context").inner_text()
