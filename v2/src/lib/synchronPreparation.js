@@ -10,7 +10,18 @@ export function synchronWodTargets(wod,level='rx'){
  const schema=wod?.timer_settings?.workout_schema
  const blocks=schema?.wod_engine?.blocks
  if(!synchronTransportFormatSupported(wod?.format)||!schema||blocks?.length>1||schema.composite_blocks?.length>1)return fail('Vel ein strukturert Chipper med éin del.')
- if([schema.time_cap_seconds,schema.time_cap_minutes,blocks?.[0]?.time_cap_seconds].some(v=>Number(v)>0))return fail('Chipper med tidsgrense er ikkje støtta i SYNCHRON enno.')
+ // A cap is read only from the trusted WOD, never the lobby request.
+ const capInputs=[[schema.time_cap_seconds,1],[schema.time_cap_minutes,60],[blocks?.[0]?.time_cap_seconds,1]]
+ const caps=[]
+ for(const [raw,factor] of capInputs){
+  if(raw===null||raw===undefined||raw===''||raw===0)continue
+  if(typeof raw!=='number'&&typeof raw!=='string'||!String(raw).trim())return fail('Ugyldig tidsgrense.')
+  const seconds=Number(raw)*factor
+  if(!Number.isSafeInteger(seconds)||seconds<0||seconds>36000)return fail('Ugyldig tidsgrense.')
+  if(seconds>0)caps.push(seconds)
+ }
+ if(new Set(caps).size>1)return fail('Tidsgrensene i WOD-en samsvarar ikkje.')
+ const timeCapSeconds=caps[0]||null
  const items=blocks?.[0]?.items?.length?blocks[0].items:schema.items
  if(!Array.isArray(items)||!items.length||items.length>30)return fail('WOD-en manglar strukturerte øvingar.')
  const rows=[]
@@ -25,7 +36,7 @@ export function synchronWodTargets(wod,level='rx'){
   const [unit,value]=present[0]
   rows.push({id:'movement-'+(i+1),exerciseId:item.exercise_id,name:item.exercise_name,unit,target:amount(value),method:unit==='seconds'?'clock':unit==='reps'?'estimate':'hybrid',collaboration:'relay'})
  }
- return {issue:null,rows}
+ return {issue:null,rows,...(timeCapSeconds?{timeCapSeconds}:{})}
 }
 // Caller supplies the verified active roster and coach permission. A client
 // cannot grant these rights; trusted server must load both independently.
@@ -36,7 +47,7 @@ export function prepareSynchronLobby({wod,level='rx',memberIds,leaderParticipate
  const parsed=synchronWodTargets(wod,level);if(parsed.issue)return fail(parsed.issue)
  const members=leaderParticipates?[actorId,...memberIds]:memberIds.slice()
  const movements=parsed.rows.map(m=>({...m,doses:Object.fromEntries(members.map(id=>{const dose=doses?.[m.id]?.[id];return [id,dose?{variant:dose.variant,loadKg:dose.loadKg}:null]}))}))
- const plan={id:sessionId,title:wod.name||'Samspel',sourceWodId:wod.id,prescriptionLevel:level,leaderId:actorId,members,movements}
+ const plan={id:sessionId,title:wod.name||'Samspel',sourceWodId:wod.id,prescriptionLevel:level,leaderId:actorId,members,movements,...(parsed.timeCapSeconds?{timeCapSeconds:parsed.timeCapSeconds}:{})}
  const issue=synchronPlanIssue(plan);if(issue)return fail(issue)
  const state=createSynchronSession(plan)
  // Intent only. Host must atomically persist session + idempotent notifications.
