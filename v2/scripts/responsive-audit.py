@@ -180,6 +180,7 @@ with sync_playwright() as pw:
                         assert warm.locator(".wod-selected-list .wod-selected-card").count()==9
                         warm.get_by_role("button",name="Vidare · 9 øvingar",exact=True).tap()
                         assert warm.locator(".gg-compact-dose-row").count()==9
+                        assert parts.is_visible(), "Delveljar must remain visible in dosage"
                         warm.get_by_role("button",name="Del A · Chipper",exact=True).tap()
                         assert warm.locator(".gg-compact-dose-row").count()==6
                         warm.get_by_role("button",name="Legg til Del B",exact=True).tap()
@@ -197,7 +198,7 @@ with sync_playwright() as pw:
                         assert "2 valde" in picker.locator(".wod-library-ok-top").inner_text()
                         picker.locator(".wod-library-ok-top").tap()
                         assert warm.locator(".wod-selected-list .wod-selected-card").count()==2
-                        warm.get_by_role("button",name="Fjern øving",exact=True).last.tap()
+                        warm.locator(".wod-selected-list .wod-selected-card").last.locator('button[title="Fjern øving"]').tap()
                         assert warm.locator(".wod-selected-list .wod-selected-card").count()==1
                         warm.get_by_role("button",name="Del A · Chipper",exact=True).tap()
                         assert warm.locator(".wod-selected-list .wod-selected-card").count()==6
