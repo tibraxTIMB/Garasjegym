@@ -164,12 +164,19 @@ with sync_playwright() as pw:
                         assert "Synkron" in parts.inner_text()
                         warm.get_by_role("button",name="Legg til øving",exact=True).tap()
                         picker=warm.get_by_role("region",name="Vel øvingar til WOD")
+                        assert "Del A" in picker.locator(".gg-picker-part-context").inner_text()
+                        assert picker.locator(".gg-composite-active-picker").count()==0
                         picker.locator(".wod-add-button").first.wait_for()
                         for i in range(6):
                             picker.locator(".wod-add-button").nth(i).tap()
                         picker.locator(".wod-library-ok-top").tap()
                         assert warm.locator(".wod-selected-list .wod-selected-card").count()==6
+                        assert warm.locator(".gg-active-part-context strong").inner_text()=="Del A"
+                        assert warm.get_by_role("button",name="Legg til øving",exact=True).count()==1
+                        assert warm.get_by_text("Legg til øving i del 4",exact=True).count()==0
+                        assert warm.locator(".gg-composite-block").get_attribute("open") is None
                         warm.get_by_role("button",name="Del 0 · Blitz Herz",exact=True).tap()
+                        assert warm.locator(".gg-active-part-context strong").inner_text()=="Del 0"
                         assert warm.locator(".wod-selected-list .wod-selected-card").count()==9
                         warm.get_by_role("button",name="Vidare · 9 øvingar",exact=True).tap()
                         assert warm.locator(".gg-compact-dose-row").count()==9
@@ -181,6 +188,15 @@ with sync_playwright() as pw:
                         settings.get_by_role("button",name="5",exact=True).tap()
                         settings.get_by_role("button",name="Ferdig",exact=True).tap()
                         assert parts.locator(".gg-part-chip > button:first-child > b").all_text_contents()==["0","A","B"]
+                        assert warm.locator(".gg-active-part-context strong").inner_text()=="Del B"
+                        warm.get_by_role("button",name="Legg til øving",exact=True).tap()
+                        assert "Del B" in picker.locator(".gg-picker-part-context").inner_text()
+                        picker.locator(".wod-add-button").first.tap()
+                        picker.locator(".wod-library-ok-top").tap()
+                        assert warm.locator(".wod-selected-list .wod-selected-card").count()==1
+                        warm.get_by_role("button",name="Del A · Chipper",exact=True).tap()
+                        assert warm.locator(".wod-selected-list .wod-selected-card").count()==6
+                        assert warm.locator(".gg-active-part-context strong").inner_text()=="Del A"
                         check(warm,"builder-del-zero-chipper",w,h)
                         assert not warm_errors,warm_errors
                     finally:
