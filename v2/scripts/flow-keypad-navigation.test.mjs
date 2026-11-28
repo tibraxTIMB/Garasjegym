@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {flowKeyValue,flowStepValue,flowAcceptValue,flowNavigationIndex} from '../src/lib/flowKeypad.js'
+import {flowKeyValue,flowStepValue,flowAcceptValue,flowNavigationIndex,flowHaptic} from '../src/lib/flowKeypad.js'
 const time={time:true}
 assert.equal(flowAcceptValue('1:02:03',time),'1:02:03')
 assert.equal(flowAcceptValue('1:02:',time),'1:02:')
@@ -27,3 +27,17 @@ assert.equal(flowNavigationIndex(fields,{},1),null)
 assert.equal(flowNavigationIndex(fields,d,-1,true),null)
 assert.equal(flowNavigationIndex(fields,a,0),null)
 console.log('23 keypad interaction checks passed')
+
+// Haptics remain optional and cannot interfere with input on unsupported devices.
+const patterns=[]
+const device={vibrate(pattern){patterns.push(pattern);return true}}
+assert.equal(flowHaptic('tap',device),true)
+assert.equal(flowHaptic('next',device),true)
+assert.equal(flowHaptic('done',device),true)
+assert.equal(flowHaptic('reject',device),true)
+assert.deepEqual(patterns,[9,18,24,[12,24,12]])
+assert.equal(flowHaptic('tap',null),false)
+assert.equal(flowHaptic('tap',{}),false)
+assert.equal(flowHaptic('tap',{vibrate:()=>false}),false)
+assert.equal(flowHaptic('tap',{vibrate(){throw Error('blocked')}}),false)
+console.log('Optional keypad feedback checks passed')

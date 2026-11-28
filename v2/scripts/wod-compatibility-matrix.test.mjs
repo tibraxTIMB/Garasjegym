@@ -79,13 +79,16 @@ test('SAMSPEL template eligibility, validation, and scoring at every format boun
  }
  console.log('SAMSPEL VALID TEMPLATE CASES:',checked)
 })
-test('SYNCHRON admits only executable single-block Chipper and rejects ambiguity, caps and other formats',()=>{
+test('SYNCHRON admits only executable single-block Chipper and supports optional cap and rejects ambiguity and other formats',()=>{
  for(const format of COMPOSITE_BLOCK_FORMATS)for(const level of levels)for(const cap of [null,600]){
   const schema={items:[item('a')],time_cap_seconds:cap}
   const w={format,timer_settings:{workout_schema:schema}}
   const res=synchronWodTargets(w,level)
-  assert.equal(!res.issue,format==='Chipper'&&cap===null,format+' '+level+' '+cap)
+  assert.equal(!res.issue,format==='Chipper',format+' '+level+' '+cap)
+  if(format==='Chipper')assert.equal(res.timeCapSeconds,cap??undefined)
  }
+ for(const time_cap_seconds of [-1,1.5,true,36001])assert.ok(synchronWodTargets({format:'Chipper',timer_settings:{workout_schema:{items:[item('a')],time_cap_seconds}}}).issue)
+ assert.ok(synchronWodTargets({format:'Chipper',timer_settings:{workout_schema:{items:[item('a')],time_cap_seconds:600,time_cap_minutes:5}}}).issue)
  for(const patch of [{is_rest:true},{is_complex:true},{side_mode:'per_side'},{levels:{rx:{reps:5,durationSeconds:30}}},{levels:{rx:{reps:'21-15-9'}}},{levels:{rx:{reps:5,sets:2}}}]){
   assert.ok(synchronWodTargets({format:'Chipper',timer_settings:{workout_schema:{items:[{...item('x'),...patch}]}}}).issue)
  }
@@ -99,4 +102,11 @@ test('equipment plan collection cannot shadow the callable catalogue equipment l
  assert.doesNotMatch(code,/const equipmentItems=equipmentItemsForSamspel/)
  assert.match(code,/equipmentItems\(ex\.equipment\)\.map/)
  assert.match(code,/equipmentPlanSnapshot\(plannedEquipmentItems,equipmentPlan\)/)
+})
+
+import {exerciseMark} from '../src/lib/exerciseMark.js'
+test('exercise identity marks follow movement or equipment without modifying prescriptions',()=>{
+ const cases=[['Beinhev på benk (Bench Leg Raise)','Benk','Kjerne','core'],['KB swing','Kettlebell','','kettlebell'],['Deadlift','Vektstong','','barbell'],['Air Squat','Kroppsvekt','','squat'],['Box Jump','Plyoboks','','box'],['Row','Romaskin','','row'],['Bent Over Row','Barbell','','barbell'],['TRX Row','TRX','','trx'],['Double Under','Hoppetau','','rope'],['Pause','','','pause'],['Ukjend øving','','','body']]
+ for(const [name,equipment,category,expected] of cases){const ex=Object.freeze({name,equipment,category});assert.equal(exerciseMark(ex),expected,name)}
+ assert.equal(exerciseMark({name:'Clean and Jerk',is_complex:true}),'complex')
 })

@@ -16,10 +16,15 @@ with sync_playwright() as pw:
   page.goto(BASE+'/ui-audit.html?scenario=audit-admin&screen=builder-contract')
   wizard=page.locator('.gg-format-wizard')
   wizard.wait_for(timeout=20000)
-  wizard.locator('.gg-other-formats summary').click()
+  nav=page.get_by_role('navigation',name='Framdrift i WOD-byggjaren')
+  nav.get_by_role('button',name='Gjennomgang',exact=True).click()
+  assert page.locator('.gg-preview-empty').is_visible()
+  assert page.locator('.wizard-publish-stage button[type=submit]').is_disabled()
+  nav.get_by_role('button',name='Oppsett',exact=True).click()
+  assert wizard.is_visible()
   wizard.get_by_role('button',name='Chipper',exact=True).click()
   page.get_by_role('button',name='Utan tidsgrense',exact=True).click()
-  page.get_by_role('button',name='Vidare til øvingar',exact=True).click()
+  page.get_by_role('button',name='Bygg økta →',exact=True).click()
   page.get_by_role('button',name='Legg til øving',exact=True).first.click()
   picker=page.get_by_role('region',name='Vel øvingar til WOD')
   try:
@@ -39,6 +44,8 @@ with sync_playwright() as pw:
   grid.wait_for(timeout=10000)
   rows=grid.locator('.gg-compact-dose-row')
   assert rows.count()==2
+  assert page.locator('.wod-selected-list').count()==0
+  assert page.locator('.gg-sixstep-header small').inner_text()=='Steg 2/3'
   rows.first.get_by_role('button',name='Reps',exact=False).click()
   pad=grid.get_by_role('group',name='Numerisk tastatur')
   pad.get_by_role('button',name='2',exact=True).click()
@@ -51,8 +58,16 @@ with sync_playwright() as pw:
   rows.first.get_by_role('button',name='Reps',exact=False).click()
   pad.get_by_role('button',name='8',exact=True).click()
   pad.get_by_role('button',name='Lukk tastatur').click()
-  page.get_by_role('button',name='Lagringsval',exact=True).last.click()
-  page.locator('.wizard-publish-stage button[type=submit]').click()
+  nav.get_by_role('button',name='Gjennomgang',exact=True).click()
+  assert page.get_by_role('region',name='Gjennomgang av WOD').is_visible()
+  nav.get_by_role('button',name='Bygg økta',exact=True).click()
+  assert rows.count()==2
+  assert grid.get_by_role('button',name='Scaled',exact=True).get_attribute('aria-pressed')=='true'
+  assert '8' in rows.first.get_by_role('button',name='Reps',exact=False).inner_text()
+  nav.get_by_role('button',name='Gjennomgang',exact=True).click()
+  assert page.locator('.gg-sixstep-header small').inner_text()=='Steg 3/3'
+  assert page.get_by_role('button',name='Lagra privat og start økta →',exact=True).count()==0
+  page.get_by_role('button',name='Lagra for Testmedlem',exact=True).click()
   try:
    page.wait_for_function("document.querySelector('[data-testid=builder-payload]').textContent.length>0",timeout=10000)
   except Exception:

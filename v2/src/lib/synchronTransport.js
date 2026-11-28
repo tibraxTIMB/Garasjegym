@@ -1,5 +1,5 @@
 import {synchronCoachCalibration,applySynchronCalibration} from './synchronCalibration.js'
-import {applySynchronCommand,synchronView,synchronAssignedTime} from './synchron.js'
+import {applySynchronCommand,synchronView,synchronAssignedTime,synchronDeadline} from './synchron.js'
 import {sealSynchronResults,synchronOwnReservation} from './synchronSeal.js'
 import {initializeSynchronReview,synchronReviewProjection,applySynchronReview} from './synchronReview.js'
 
@@ -14,7 +14,8 @@ export function synchronClientSnapshot(state,actorId,now){
  if(!actorAllowed(state,actorId))return null
  const view=synchronView(state,actorId,now),leader=state.plan.leaderId===actorId
  const stage=state.plan.movements[state.stage],isMember=state.plan.members.includes(actorId)
- const ownOpen=view.active===actorId?(state.open?.memberId===actorId?Math.max(0,now-state.open.from):state.phase==='countdown'&&now>=state.startAt?now-state.startAt:0):0
+ const deadline=synchronDeadline(state),workNow=deadline===null?now:Math.min(now,deadline)
+ const ownOpen=state.open?.memberId===actorId?Math.max(0,workNow-state.open.from):state.phase==='countdown'&&state.resumeMember===actorId&&now>=state.startAt?Math.max(0,workNow-state.startAt):0
  const movements=state.plan.movements.map(m=>({id:m.id,exerciseId:m.exerciseId,name:m.name||m.exerciseId,unit:m.unit,target:m.target,method:m.method}))
  return clone({sessionId:state.plan.id,revision:state.revision,serverAt:now,title:state.plan.title||'Samspel',leader,isMember,
   participantSlot:isMember?state.plan.members.indexOf(actorId)+1:null,joined:state.joined.includes(actorId),joinedCount:state.joined.length,participantCount:state.plan.members.length,
@@ -39,10 +40,10 @@ export function synchronActionRequest(snapshot,type,fields={},id){
  if(!allowed.has(type)||Object.keys(fields).some(k=>!['memberId','loadKg','actual','abort'].includes(k)))return null
  const v=snapshot.view
  const permitted=type==='join'?snapshot.isMember&&!snapshot.joined&&v.phase==='ready':
-  type==='start'?v.canStart:type==='takeover'?v.canTakeover||snapshot.leader&&v.phase==='running'&&typeof fields.memberId==='string':
+  type==='start'?v.canStart:type==='takeover'?v.canTakeover||snapshot.leader&&v.phase==='running'&&!v.capReached&&typeof fields.memberId==='string':
   type==='idle'?v.phase==='running'&&v.active!==null&&(snapshot.leader||v.active===snapshot.participantSlot):
   type==='pause'?v.canPause:type==='resume'?v.canResume:type==='advance'?v.canAdvance:
-  type==='finish'?v.canFinish:type==='load'?v.phase==='running'&&(snapshot.joined||snapshot.leader):false
+  type==='finish'?v.canFinish:type==='load'?v.phase==='running'&&!v.capReached&&(snapshot.joined||snapshot.leader):false
  return permitted?{id,revision:snapshot.revision,type,...fields}:null
 }
 export function createSynchronGateway({authenticate,read,compareAndSwap,now,readCalibrations=async()=>[],readStrengthReferences=async()=>[],reservation=null,authorizeSession=null}){
@@ -113,9 +114,13 @@ export function synchronDisplay(snapshot,{receivedAt,now,online=true,maxAgeMs=50
  const stale=!online||age>maxAgeMs
  const countdown=view.phase==='countdown'?Math.max(0,view.countdown-seconds):0
  const waitingForStart=view.phase==='countdown'&&countdown===0
- const elapsed=view.phase==='running'?view.elapsed+seconds:waitingForStart?Math.max(0,seconds-view.countdown):view.elapsed
- const locked=stale||waitingForStart
- return {...view,countdown,elapsed,stale,waitingForStart,actionsLocked:locked,
+ const rawElapsed=view.phase==='running'?view.elapsed+seconds:waitingForStart?Math.max(0,seconds-view.countdown):view.elapsed
+ const elapsed=view.timeCapSeconds?Math.min(rawElapsed,view.timeCapSeconds):rawElapsed
+ const capReached=!!view.capReached||!!view.timeCapSeconds&&view.phase==='running'&&elapsed>=view.timeCapSeconds
+ // Local projection stops at zero, but only the server may authorize finalization.
+ const waitingForCap=capReached&&!view.capReached
+ const locked=stale||waitingForStart||waitingForCap
+ return {...view,countdown,elapsed,stale,waitingForStart,actionsLocked:locked,...(view.timeCapSeconds?{remaining:Math.max(0,view.timeCapSeconds-elapsed),capReached,waitingForCap,active:capReached?null:view.active}:{}),
   canStart:!locked&&view.canStart,canTakeover:!locked&&view.canTakeover,
   canPause:!locked&&view.canPause,canResume:!locked&&view.canResume,
   canAdvance:!locked&&view.canAdvance,canFinish:!locked&&view.canFinish}

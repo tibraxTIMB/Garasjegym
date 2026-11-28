@@ -9,6 +9,7 @@ const nonnegative=v=>Number.isFinite(v)&&v>=0
 const whole=v=>Number.isSafeInteger(v)&&v>=0
 const copy=v=>JSON.parse(JSON.stringify(v))
 export function synchronPlanIssue(plan){
+ if(plan?.timeCapSeconds!=null&&(!Number.isSafeInteger(plan.timeCapSeconds)||plan.timeCapSeconds<1||plan.timeCapSeconds>36000))return 'Ugyldig tidsgrense.'
  if(!idOk(plan?.id)||!idOk(plan.leaderId)||!Array.isArray(plan.members)||plan.members.length<2||plan.members.length>8||!plan.members.every(idOk)||new Set(plan.members).size!==plan.members.length)return 'Ugyldig økt eller deltakarar.'
  if(!Array.isArray(plan.movements)||!plan.movements.length||plan.movements.length>30||new Set(plan.movements.map(m=>m?.id)).size!==plan.movements.length)return 'Vel 1–30 unike øvingar.'
  for(const m of plan.movements){
@@ -25,9 +26,15 @@ export function createSynchronSession(plan){
  const issue=synchronPlanIssue(plan);if(issue)throw Error(issue)
  return {version:1,plan:copy(plan),revision:0,phase:'ready',currentDoses:plan.movements.map(m=>copy(m.doses)),joined:[],stage:0,active:null,resumeMember:null,startAt:null,lastAt:null,pausedAt:null,pausedMs:0,segments:[],open:null,totals:{},events:[]}
 }
+export function synchronDeadline(state){
+ const cap=state.plan.timeCapSeconds
+ return Number.isSafeInteger(cap)&&cap>0&&state.startAt!==null?state.startAt+state.pausedMs+cap*1000:null
+}
 export function synchronClock(state,now){
  const end=state.phase==='finished'?state.lastAt:state.phase==='paused'?state.pausedAt:now
- return state.startAt===null?0:Math.max(0,Math.floor((end-state.startAt-state.pausedMs)/1000))
+ const deadline=synchronDeadline(state)
+ const bounded=deadline===null?end:Math.min(end,deadline)
+ return state.startAt===null?0:Math.max(0,Math.floor((bounded-state.startAt-state.pausedMs)/1000))
 }
 function open(s,member,at){
  s.active=member
@@ -43,12 +50,14 @@ export function synchronView(state,actorId,now){
  const leader=actorId===state.plan.leaderId,joined=state.joined.includes(actorId)
  const ready=state.phase==='countdown'&&now>=state.startAt
  const phase=ready?'running':state.phase
- const active=ready?state.resumeMember:state.active
- return {phase,active,stage:state.stage,elapsed:synchronClock(state,now),countdown:phase==='countdown'?Math.max(0,Math.ceil((state.startAt-now)/1000)):0,
+ const deadline=synchronDeadline(state),capReached=phase==='running'&&deadline!==null&&now>=deadline
+ const active=capReached?null:ready?state.resumeMember:state.active
+ const elapsed=synchronClock(state,now)
+ return {phase,active,stage:state.stage,elapsed,countdown:phase==='countdown'?Math.max(0,Math.ceil((state.startAt-now)/1000)):0,...(state.plan.timeCapSeconds?{timeCapSeconds:state.plan.timeCapSeconds,remaining:Math.max(0,state.plan.timeCapSeconds-elapsed),capReached:capReached||state.phase==='finished'&&state.capped===true}:{}),
   canStart:leader&&phase==='ready'&&state.joined.length===state.plan.members.length,
-  canTakeover:joined&&phase==='running'&&active!==actorId&&(!active||now-(ready?state.startAt:state.open?.from??now)>=5000),
-  canPause:leader&&phase==='running',canResume:leader&&phase==='paused',
-  canAdvance:leader&&phase==='running'&&state.stage<state.plan.movements.length-1,
+  canTakeover:joined&&phase==='running'&&!capReached&&active!==actorId&&(!active||now-(ready?state.startAt:state.open?.from??now)>=5000),
+  canPause:leader&&phase==='running'&&!capReached,canResume:leader&&phase==='paused',
+  canAdvance:leader&&phase==='running'&&!capReached&&state.stage<state.plan.movements.length-1,
   canFinish:leader&&['running','paused'].includes(phase)}
 }
 export function applySynchronCommand(state,cmd,{actorId,at}={}){
@@ -73,6 +82,8 @@ export function applySynchronCommand(state,cmd,{actorId,at}={}){
  }else {
   // Materialize countdown on the first accepted command after its deadline.
   if(s.phase==='countdown'&&at>=s.startAt){s.phase='running';open(s,s.resumeMember,s.startAt);s.resumeMember=null}
+  const deadline=synchronDeadline(s),capReached=s.phase==='running'&&deadline!==null&&at>=deadline
+  if(capReached&&cmd.type!=='finish')return fail('Tidsgrensa er nådd. Stadfest faktisk resultat.')
   if(cmd.type==='takeover'){
    const next=leader&&cmd.memberId?cmd.memberId:actorId
    if(s.phase!=='running'||!s.joined.includes(next)||next===s.active||!leader&&next!==actorId)return fail('Byte er ikkje tilgjengeleg.')
@@ -93,12 +104,12 @@ export function applySynchronCommand(state,cmd,{actorId,at}={}){
    const wasActive=s.active===target;if(wasActive)close(s,at)
    s.currentDoses[s.stage][target].loadKg=cmd.loadKg;if(wasActive)open(s,target,at)
   }else if(cmd.type==='advance'||cmd.type==='finish'){
-   if(!leader||!['running','paused'].includes(s.phase)||cmd.type==='advance'&&s.stage===s.plan.movements.length-1||cmd.type==='finish'&&s.stage<s.plan.movements.length-1&&cmd.abort!==true)return fail('Øktleiar må stadfesta øvingsbyte eller avslutning.')
+   if(!leader||!['running','paused'].includes(s.phase)||cmd.type==='advance'&&s.stage===s.plan.movements.length-1||cmd.type==='finish'&&s.stage<s.plan.movements.length-1&&cmd.abort!==true&&!capReached)return fail('Øktleiar må stadfesta øvingsbyte eller avslutning.')
    if(cmd.actual!==null&&(!whole(cmd.actual)||cmd.actual>100000))return fail('Stadfest faktisk samla mengd, eller vel ukjent.')
    if(s.phase==='paused'){s.pausedMs+=at-s.pausedAt;s.pausedAt=null}
-   close(s,at);s.totals[move.id]={actual:cmd.actual,unit:move.unit,confirmedBy:actorId}
+   close(s,capReached?deadline:at);s.totals[move.id]={actual:cmd.actual,unit:move.unit,confirmedBy:actorId}
    s.resumeMember=null
-   if(cmd.type==='finish')s.phase='finished'
+   if(cmd.type==='finish'){s.phase='finished';if(capReached)s.capped=true}
    else {s.stage++;s.phase='running'}
   }else return fail('Ukjend handling.')
  }

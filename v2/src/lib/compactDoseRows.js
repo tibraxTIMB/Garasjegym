@@ -23,7 +23,7 @@ export function compactDoseRows(items,level){
    }
    if(fields.load&&d.loadMode==='percent')add('percent','% 1RM',d.percent1rm,v=>({percent1rm:v}),{decimal:true,max:150})
   }
-  return {key:ex.key,name:ex.name,cells,amrap:timed&&ex.repsMode==='amrap',equipment:ex.equipment||'',special:d.loadMode==='rir'?'RIR '+(d.rirRange||d.rir||'–'):d.loadMode==='bodyweight'?'Kroppsvekt':''}
+  return {key:ex.key,name:ex.name,category:ex.category,body_area:ex.body_area,is_rest:ex.is_rest,is_complex:ex.is_complex,cells,amrap:timed&&ex.repsMode==='amrap',equipment:ex.equipment||'',special:d.loadMode==='rir'?'RIR '+(d.rirRange||d.rir||'–'):d.loadMode==='bodyweight'?'Kroppsvekt':''}
  })
 }
 export function doseKeyAllowed(value,field){return value===''||(value.length<=10&&Number.isFinite(Number(value))&&Number(value)>=0&&Number(value)<=field.max)}

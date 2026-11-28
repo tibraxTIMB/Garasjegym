@@ -110,8 +110,9 @@ with sync_playwright() as pw:
                     check(page,"card-dose",w,h)
                 if screen=="builder":
                     page.get_by_role("button",name="Samansett økt",exact=False).first.tap()
-                    page.get_by_role("button",name="Neste →",exact=True).tap()
-                    page.get_by_role("button",name="Vidare til øvingar",exact=True).tap()
+                    assert page.locator(".gg-sixstep-header small").inner_text()=="Steg 1/3"
+                    page.get_by_role("button",name="Bygg økta →",exact=True).tap()
+                    assert page.locator(".gg-sixstep-header small").inner_text()=="Steg 2/3"
                     settings=page.get_by_role("dialog",name="Format og tid for øktdelen")
                     settings.wait_for()
                     settings.get_by_role("combobox",name="Format",exact=True).select_option("Chipper")
@@ -126,7 +127,7 @@ with sync_playwright() as pw:
                     page.get_by_role("button",name="WOD-handlingar",exact=True).tap()
                     page.get_by_role("button",name="Endra format",exact=True).tap()
                     page.get_by_role("button",name="AMRAP",exact=False).first.tap()
-                    page.get_by_role("button",name="Neste →",exact=True).tap()
+                    page.get_by_role("button",name="Bygg økta →",exact=True).tap()
                     page.get_by_role("button",name="WOD-handlingar",exact=True).tap()
                     page.get_by_role("button",name="Samspel",exact=True).tap()
                     panel=page.get_by_role("region",name="Samspel")
@@ -147,7 +148,6 @@ with sync_playwright() as pw:
                     try:
                         assert warm.get_by_text("BENCHMARK COLLECTION",exact=True).count()==0
                         warm.get_by_role("button",name="Samansett økt",exact=True).tap()
-                        warm.get_by_role("button",name="Neste →",exact=True).tap()
                         warm.get_by_role("button",name="Del 0 · Vel oppvarming",exact=False).tap()
                         lib=warm.get_by_role("dialog",name="Vel lagra oppvarming")
                         lib.get_by_role("button",name="Info om Blitz Herz").tap()
@@ -155,7 +155,7 @@ with sync_playwright() as pw:
                         lib.get_by_role("button",name="Blitz Herz",exact=True).tap()
                         parts=warm.get_by_role("navigation",name="Delar i WOD-en")
                         assert parts.locator(".gg-part-chip").count()==2
-                        warm.get_by_role("button",name="Vidare til øvingar",exact=True).tap()
+                        warm.get_by_role("button",name="Bygg økta →",exact=True).tap()
                         settings=warm.get_by_role("dialog",name="Format og tid for øktdelen")
                         settings.get_by_role("combobox",name="Format",exact=True).select_option("Chipper")
                         settings.get_by_role("button",name="15",exact=True).tap()
@@ -170,15 +170,15 @@ with sync_playwright() as pw:
                         for i in range(6):
                             picker.locator(".wod-add-button").nth(i).tap()
                         picker.locator(".wod-library-ok-top").tap()
-                        assert warm.locator(".wod-selected-list .wod-selected-card").count()==6
+                        assert warm.locator(".gg-compact-dose-row").count()==6
                         assert warm.locator(".gg-active-part-context strong").inner_text()=="Del A"
                         assert warm.get_by_role("button",name="Legg til øving",exact=True).count()==1
                         assert warm.get_by_text("Legg til øving i del 4",exact=True).count()==0
                         assert warm.locator(".gg-composite-block").get_attribute("open") is None
                         warm.get_by_role("button",name="Del 0 · Blitz Herz",exact=True).tap()
                         assert warm.locator(".gg-active-part-context strong").inner_text()=="Del 0"
-                        assert warm.locator(".wod-selected-list .wod-selected-card").count()==9
-                        warm.get_by_role("button",name="Vidare · 9 øvingar",exact=True).tap()
+                        assert warm.locator(".gg-compact-dose-row").count()==9
+                        assert warm.locator(".wod-selected-list").count()==0
                         assert warm.locator(".gg-compact-dose-row").count()==9
                         assert parts.is_visible(), "Delveljar must remain visible in dosage"
                         warm.get_by_role("button",name="Del A · Chipper",exact=True).tap()
@@ -197,11 +197,12 @@ with sync_playwright() as pw:
                         picker.locator(".gg-picker-name").first.tap()
                         assert "2 valde" in picker.locator(".wod-library-ok-top").inner_text()
                         picker.locator(".wod-library-ok-top").tap()
-                        assert warm.locator(".wod-selected-list .wod-selected-card").count()==2
-                        warm.locator(".wod-selected-list .wod-selected-card").last.locator('button[title="Fjern øving"]').tap()
-                        assert warm.locator(".wod-selected-list .wod-selected-card").count()==1
+                        assert warm.locator(".gg-compact-dose-row").count()==2
+                        warm.locator(".gg-compact-dose-row").last.get_by_role("button",name="Detaljar for",exact=False).tap()
+                        warm.locator(".gg-compact-advanced-exercises button[title=\"Fjern øving\"]").tap()
+                        assert warm.locator(".gg-compact-dose-row").count()==1
                         warm.get_by_role("button",name="Del A · Chipper",exact=True).tap()
-                        assert warm.locator(".wod-selected-list .wod-selected-card").count()==6
+                        assert warm.locator(".gg-compact-dose-row").count()==6
                         assert warm.locator(".gg-active-part-context strong").inner_text()=="Del A"
                         check(warm,"builder-del-zero-chipper",w,h)
                         assert not warm_errors,warm_errors
@@ -376,7 +377,18 @@ with sync_playwright() as pw:
                     menu.get_by_role("button",name="Tilpass økt",exact=True).tap()
                     editor=page.get_by_role("dialog",name="Tilpass økt for",exact=False)
                     editor.get_by_role("navigation",name="Delar i WOD-en").wait_for(timeout=15000)
-                    assert editor.get_by_role("textbox",name="WOD-namn",exact=True).first.input_value().startswith("Stålsnakke")
+                    name_field=editor.get_by_role("textbox",name="WOD-namn",exact=True)
+                    assert name_field.count()==1
+                    assert name_field.is_visible() and name_field.is_editable()
+                    original_name=name_field.input_value()
+                    assert original_name.startswith("Stålsnakke")
+                    name_field.fill(original_name+" · test")
+                    nav=editor.get_by_role("navigation",name="Framdrift i WOD-byggjaren")
+                    nav.get_by_role("button",name="Gjennomgang",exact=True).tap()
+                    assert editor.get_by_role("textbox",name="WOD-namn",exact=True).input_value()==original_name+" · test"
+                    nav.get_by_role("button",name="Bygg økta",exact=True).tap()
+                    assert name_field.input_value()==original_name+" · test"
+                    name_field.fill(original_name)
                     check(page,"architect-pt-edit",w,h)
                 if screen=="acta":
                     panel=page.get_by_role("region",name="Treningsrapport per del")

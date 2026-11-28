@@ -24,11 +24,12 @@ test('only formats requiring a timing decision get the time screen', () => {
   for (const format of ['Strength', 'Superset', 'Complex', 'Eigen økt']) assert.equal(wodFormatNeedsTime(format), false)
 })
 
-test('format tap advances while multi-choice screens keep an explicit next action', () => {
+test('mobile setup combines format, participation and time with an explicit build action', () => {
   assert.match(code, /setWizardStep\(wodFormatNeedsTime\(item\)&&item!==COMPOSITE_FORMAT\?1:2\)/)
-  assert.match(code, /wizardStep===0&&<section className="gg-format-wizard"/)
-  assert.match(code, /wizardStep===1&&<div className="wizard-stage-actions gg-time-next"/)
-  assert.match(code, /\(wizardStep===2\|\|wizardStep===3\)&&!libraryOpen&&<div className="wizard-selected-stage/ )
+  assert.match(code, /\(wizardStep===0\|\|mobileSetup\)&&<section className="gg-format-wizard"/)
+  assert.match(code, /\(mobileSetup\|\|!mobileFlow&&wizardStep===1\)&&<div className="wizard-stage-actions gg-time-next"/)
+  assert.match(code, /onClick=\{\(\)=>goToStep\(2\)\}>\{mobileFlow\?"Bygg økta →"/)
+  assert.match(code, /\(mobileBuild\|\|!mobileFlow&&\(wizardStep===2\|\|wizardStep===3\)\)&&!libraryOpen&&<div className="wizard-selected-stage/)
   assert.match(code, /wizardStep===4&&<section className="gg-review-before"/)
 })
 
@@ -41,8 +42,8 @@ test('dosage and review both reorder by stable exercise occurrence keys', () => 
   assert.match(code, /WodReviewOrder selected=\{selected\} onMove=\{moveByKey\}/)
 })
 
-test('edit starts at format and retains stored order; no time format continues to exercises', () => {
-  assert.match(code, /setScaledNotes\(schema\.scaled_notes\|\|''\);setWizardStep\(0\)/)
+test('PT plan edits start in the workspace; other edits retain stored order and desktop flow', () => {
+  assert.match(code, /setScaledNotes\(schema\.scaled_notes\|\|''\);setWizardStep\(planContext&&!officeMode\?2:0\)/)
   assert.match(code, /sortWodItems\(getWodSchemaItems\(schema\)\)/)
   assert.match(code, /if\(editWodId\)setWizardStep\(wodFormatNeedsTime\(item\)&&item!==COMPOSITE_FORMAT\?1:2\)/)
   assert.match(code, /onClick=\{\(\)=>chooseFormat\(format\)\}>Behald/)
@@ -119,12 +120,20 @@ test('an explicit reset to RX resumes automatic inheritance', () => {
 })
 
 
-test('mobile wizard follows the six-step design without replacing the legacy engine',()=>{
- assert.match(code,/const MOBILE_WOD_STEPS=\[0,1,2,3,5,4\]/)
+test('mobile wizard has three stages, one exercise list and preserved engine',()=>{
+ assert.match(code,/const MOBILE_WOD_STEPS=\[0,2,4\]/)
  assert.match(code,/chooseFormat\(item,false\)/)
- assert.match(code,/if\(mobileFlow\)\{setMobileTimeOpen\(false\);setWizardStep\(1\);return\}/)
- assert.match(code,/goToStep\(mobileFlow\?5:4\)/)
- assert.match(code,/mobileFlow&&wizardStep===5&&<section className="gg-sixstep-extras"/)
+ assert.match(code,/if\(mobileFlow\)\{setMobileTimeOpen\(true\);setWizardStep\(0\);return\}/)
+ assert.match(code,/onClick=\{\(\)=>mobileFlow\?navigateMobileStage\(4\):goToStep\(4\)\}/)
+ assert.match(code,/disabled=\{busy\} className=\{i<=mobileStageIndex/)
+ assert.match(code,/onClick=\{\(\)=>navigateMobileStage\(step\)\}/)
+ assert.match(code,/gg-preview-empty/)
+ assert.match(code,/if\(!selected.length\)\{setError\('Legg minst ei øving til WOD-en\.'\);return\}/)
+ assert.match(code,/!mobileFlow&&wizardStep===2&&<div className="wod-selected-list"/)
+ assert.match(code,/unified=\{mobileFlow\}/)
+ assert.doesNotMatch(code,/mobileFlow&&wizardStep===5&&<section className="gg-sixstep-extras"/)
+ assert.match(code,/save\(e,\{publishOverride:false,launchAfterSave:true\}\)/)
+ assert.match(code,/if\(launchAfterSave&&savedWodId\)onLaunchWod\(savedWodId\)/)
  assert.match(code,/mobileFlow\?<section className="gg-sixstep-review"/)
  assert.match(code,/prepareLibraryWarmup\(wod\)/)
  assert.match(code,/const freshCompositeDraft=\(\)=>\[newDraftPart\(\)\]/)

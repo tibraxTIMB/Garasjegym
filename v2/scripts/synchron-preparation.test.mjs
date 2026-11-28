@@ -28,7 +28,13 @@ assert.ok(prepareSynchronLobby(args,{...ctx,canCoach:false}).issue)
 assert.ok(prepareSynchronLobby(args,{...ctx,eligibleMemberIds:[]}).issue)
 for(const x of ['https://example.com','synchron-session:','synchron-session:../abc','synchron-session:__proto__'])assert.equal(parseSynchronInvitation(x),null)
 
-assert.ok(synchronWodTargets({...wod,timer_settings:{workout_schema:{...wod.timer_settings.workout_schema,time_cap_seconds:1200}}}).issue)
+const withCap=patch=>({...wod,timer_settings:{workout_schema:{...wod.timer_settings.workout_schema,...patch}}})
+const capped=withCap({time_cap_seconds:1500,time_cap_minutes:25})
+assert.equal(synchronWodTargets(capped).timeCapSeconds,1500)
+assert.equal(synchronWodTargets(withCap({time_cap_minutes:25})).timeCapSeconds,1500)
+assert.equal(prepareSynchronLobby({...args,wod:capped},ctx).state.plan.timeCapSeconds,1500)
+for(const patch of [{time_cap_seconds:-1},{time_cap_seconds:1.5},{time_cap_seconds:true},{time_cap_seconds:36001},{time_cap_seconds:1500,time_cap_minutes:20}])assert.ok(synchronWodTargets(withCap(patch)).issue)
+assert.equal(synchronWodTargets(withCap({time_cap_seconds:null})).timeCapSeconds,undefined)
 
 import {prepareSynchronPairedPlan} from '../src/lib/synchronPreparation.js'
 import {synchronPlanIssue} from '../src/lib/synchron.js'
