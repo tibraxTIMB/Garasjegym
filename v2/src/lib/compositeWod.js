@@ -1,3 +1,4 @@
+import {chipperConfirmedTotals} from './chipperProgress.js'
 import {samspelConfig,samspelNoncompetitive,samspelQuality,samspelEmom,samspelEmomComplete,samspelDouble,samspelClockedEmom,doubleEmomComplete,samspelStrength,samspelStrengthComplete,samspelRelay,relayTotal,samspelChipper,teamChipperComplete,teamChipperProgress,teamChipperTotals,samspelIssue,samspelParticipantResults,samspelResultIssue,normalizeSamspelSwaps} from './samspel.js'
 import {complexResultSummary} from './wodComplexes.js'
 // Multi-part workouts reuse the existing WOD engine and Timer for each part.
@@ -279,7 +280,7 @@ export function compositeSamspelResults(blocks=[],scores={},timerResults={},manu
   if(samspelChipper(s)){
    const result=s.team_totals_only?{rows:[],issue:null}:samspelParticipantResults(s,draft.participants||{})
    if(result.issue)return {rows:[],issue:title+' · '+result.issue,field:'samspel-block-'+block.id+'-'+result.slot+'-'+result.field}
-   const totals=s.team_totals_only?teamChipperTotals(s,draft.team_totals||{},draft.confirmed===true||!manual&&snapshot.chipper_all_goals_confirmed===true):null
+   const totals=s.team_totals_only?teamChipperTotals(s,{...(!manual?chipperConfirmedTotals(s,snapshot):{}),...draft.team_totals},draft.confirmed===true||!manual&&snapshot.chipper_all_goals_confirmed===true):null
    if(totals?.issue)return {rows:[],issue:title+' · '+totals.issue,field:'chipper-block-'+block.id+'-'+totals.index}
    const progress=totals?totals.progress:teamChipperProgress(s,result.rows),allDone=totals?totals.complete:teamChipperComplete(s,result.rows)
    const raw=manual?draft.timeSeconds:snapshot.elapsed

@@ -180,3 +180,19 @@ test('session selects and sequences saved WODs without editing or creating libra
  const nested=buildTrainingSession([{...combined,id:'saved-composite'},emom]);assert.equal(nested.timer_settings.workout_schema.wod_engine.blocks.length,4);assert.equal(new Set(nested.timer_settings.workout_schema.wod_engine.blocks.map(b=>b.id)).size,4)
  assert.throws(()=>buildTrainingSession([chip,{...emom,is_archived:true}]),/tilgjengeleg/)
 })
+
+import {confirmedChipperCount,chipperConfirmedTotals,nextChipperCount} from '../src/lib/chipperProgress.js'
+test('guided shared Chipper only credits explicitly completed targets, including meters, and refuses double or late progress',()=>{
+ const config={team_totals_only:true,targets:[{exercise_name:'Wall Ball',target_reps:80,unit:'reps'},{exercise_name:'Row',target_reps:2000,unit:'m'}]}
+ const targets=config.targets
+ assert.equal(confirmedChipperCount(targets,-1),0)
+ assert.equal(confirmedChipperCount(targets,99),2)
+ assert.equal(nextChipperCount(targets,0,{running:false,elapsed:1}),0)
+ assert.equal(nextChipperCount(targets,0,{running:true,elapsed:1,locked:true}),0)
+ assert.equal(nextChipperCount(targets,0,{running:true,elapsed:1,cap:1200}),1)
+ assert.equal(nextChipperCount(targets,1,{running:true,elapsed:1200,cap:1200}),1)
+ assert.deepEqual(chipperConfirmedTotals(config,{chipper_confirmed_count:1}),{0:'80'})
+ assert.deepEqual(chipperConfirmedTotals(config,{chipper_confirmed_count:2}),{0:'80',1:'2000'})
+ assert.deepEqual(chipperConfirmedTotals(config,{}),{})
+ assert.deepEqual(chipperConfirmedTotals({...config,team_totals_only:false},{chipper_confirmed_count:2}),{})
+})

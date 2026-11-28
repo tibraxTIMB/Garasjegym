@@ -150,6 +150,13 @@
       "evidence": []
     },
     {
+      "path": "v2/src/components/chipper-progress.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/components/coffee-order-flow.css",
       "category": "style",
       "state": "registered",
@@ -970,6 +977,13 @@
     },
     {
       "path": "v2/src/lib/calendarView.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/chipperProgress.js",
       "category": "logic",
       "state": "registered",
       "checks": {},

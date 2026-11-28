@@ -43,3 +43,6 @@ Imported PR #33 by exact non-overlapping path comparison. WOD detail exposes Tra
 
 ## FW08 slice
 Session queue uses real execution builder for preflight, shows selected WOD exercise details and ordered list, keeps the original ephemeral execution snapshot and rejects unsupported combinations before start. Landscape splits queue and catalogue. PT appointment date/time fields use shared semantic component; WodPicker has filter count/reset. Saved multi-WOD scheduling and calendar-to-Synchron launch are not completed by this slice. Device testing and audit approval remain pending.
+
+## FW09 slice
+Integrated PR #31 after exact path comparison. Reconciled Training DNA switches and SynchronPreparation's preselected WOD prop from #33. Local shared Chipper progress, next movement and explicit completion are separate from server-authoritative Synchron. Synchron has clear leader/member identity, connection status, progression and explicit actual-result confirmation. Shared choice controls replace short preparation menus; no change to transport authority. Responsive audit workflow and Chipper test from #31 are included, not executed/verified here. Full timer format/device and live two-device tests remain open. No production writes or approval.

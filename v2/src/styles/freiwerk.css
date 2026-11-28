@@ -90,3 +90,21 @@ html[data-gg-design="freiwerk"] .wod-picker-option{border-color:var(--fw-line);b
 html[data-gg-design="freiwerk"] .wod-picker-option.selected{border-color:var(--fw-accent);background:var(--fw-selected)}
 html[data-gg-design="freiwerk"] .wod-picker-option-main b{word-break:normal;overflow-wrap:break-word}
 .gg-fw-picker-reset{min-height:44px;align-self:center}
+
+/* FW09: preserve timer phase semantics and interaction guards; style the instrument, not the engine. */
+html[data-gg-design="freiwerk"] .gg-live-timer__tools button{border-radius:6px;box-shadow:none}
+html[data-gg-design="freiwerk"] .gg-live-timer__tools button.is-selected{color:var(--fw-accent);border-color:var(--fw-accent)}
+html[data-gg-design="freiwerk"] .gg-live-timer__time{font-variant-numeric:tabular-nums}
+html[data-gg-design="freiwerk"] .gg-live-timer__footer{border-color:var(--fw-line)}
+html[data-gg-design="freiwerk"] .gg-live-timer__footer button{border-radius:8px;box-shadow:none;white-space:normal;word-break:normal;overflow-wrap:normal}
+html[data-gg-design="freiwerk"] .gg-live-timer__exercise-title button{color:var(--fw-accent)}
+html[data-gg-design="freiwerk"] .gg-live-timer__next{color:var(--fw-muted)}
+html[data-gg-design="freiwerk"] .gg-synchron-panel{background:var(--fw-surface);border-color:var(--fw-line);border-radius:8px;gap:10px}
+html[data-gg-design="freiwerk"] .gg-sync-review{border-color:var(--fw-line);border-radius:8px;min-width:0;box-shadow:none}
+.gg-fw-sync-head{display:grid;gap:3px;min-width:0;text-align:left}.gg-fw-sync-head span{font-size:10px;letter-spacing:.08em;font-weight:750;color:var(--fw-muted,#b4c2b9)}.gg-fw-sync-head h3{margin:0;font-size:clamp(18px,4.5vw,26px);line-height:1.2;overflow-wrap:break-word}.gg-fw-sync-head small{font-size:12px;line-height:1.4}
+.gg-fw-connection-ok{color:var(--fw-success,#91c4a6)}.gg-fw-connection-lost{color:var(--fw-warning,#e6ba70);font-weight:750}
+html[data-gg-design="freiwerk"] .gg-sync-review fieldset{min-width:0;border:0;border-top:1px solid var(--fw-line);padding:7px 0;margin:0}
+html[data-gg-design="freiwerk"] .gg-sync-review details{min-width:0;border-bottom:1px solid var(--fw-line);padding:6px 0}
+html[data-gg-design="freiwerk"] .gg-sync-review summary{min-height:44px;align-content:center;overflow-wrap:break-word}
+html[data-gg-design="freiwerk"] .gg-chipper-segments .current{background:var(--fw-accent)}
+@media(max-height:480px) and (orientation:landscape){html[data-gg-design="freiwerk"] .gg-fw-sync-head h3{font-size:18px}html[data-gg-design="freiwerk"] .gg-synchron-panel{gap:6px;padding:9px}}
