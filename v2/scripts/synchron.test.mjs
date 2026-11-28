@@ -67,3 +67,38 @@ assert.equal(synchronAllocate(150,[{memberId:'a',actual:160},{memberId:'b',estim
 assert.equal(synchronAllocate(150,[{memberId:'a',estimate:80},{memberId:'b',estimate:null}]),null)
 assert.equal(synchronAllocate(0,[{memberId:'a',estimate:0},{memberId:'b',estimate:0}])[0].value,0)
 assert.ok(synchronAllocate(100,[{memberId:'a',estimate:33},{memberId:'b',estimate:33},{memberId:'c',estimate:33}]).every(x=>x.quality==='estimated'&&!x.prEligible))
+
+ // Capped Chipper: pause-adjusted server time, no post-cap work or fabricated reps.
+ import {synchronClientSnapshot,synchronDisplay,synchronActionRequest} from '../src/lib/synchronTransport.js'
+ assert.ok(synchronPlanIssue({...plan,timeCapSeconds:-1}))
+ let capped=createSynchronSession({...plan,timeCapSeconds:25*60}),seq=0
+ const capAction=(type,actorId,at,fields={})=>applySynchronCommand(capped,{id:'cap-'+(++seq),revision:capped.revision,type,...fields},{actorId,at})
+ const capAccept=(...args)=>{const r=capAction(...args);assert.equal(r.issue,null);capped=r.state}
+ capAccept('join','a',0);capAccept('join','b',1);capAccept('start','pt',1000,{memberId:'a'})
+ capAccept('pause','pt',21000);capAccept('resume','pt',31000)
+ const deadline=1521000
+ assert.equal(synchronView(capped,'pt',deadline-1000).remaining,1)
+ const before=synchronClientSnapshot(capped,'pt',deadline-1000)
+ const projected=synchronDisplay(before,{receivedAt:0,now:1000})
+ assert.equal(projected.remaining,0);assert.equal(projected.actionsLocked,true)
+ const stop=synchronClientSnapshot(capped,'pt',deadline+30000)
+ assert.equal(stop.view.capReached,true)
+ assert.equal(stop.view.active,null)
+ assert.equal(stop.view.elapsed,1500)
+ assert.equal(stop.view.canAdvance,false);assert.equal(stop.view.canPause,false)
+ assert.equal(stop.view.canFinish,true)
+ assert.equal(synchronActionRequest(stop,'takeover',{memberId:'a'},'late'),null)
+ for(const [type,actor,fields] of [['advance','pt',{actual:100}],['takeover','b',{}],['load','a',{loadKg:12}],['pause','pt',{}],['finish','b',{actual:34}]]){
+  const r=capAction(type,actor,deadline+30000,fields);assert.ok(r.issue);assert.equal(r.state,capped)
+ }
+ capAccept('finish','pt',deadline+30000,{actual:34})
+ assert.equal(capped.phase,'finished');assert.equal(capped.capped,true)
+ assert.equal(capped.totals.step.actual,34);assert.equal(capped.totals.hang,undefined)
+ assert.equal(synchronAssignedTime(capped,'step','a'),1500)
+ assert.equal(synchronClock(capped,deadline+999999),1500)
+ let early=createSynchronSession({...plan,movements:[plan.movements[0]],timeCapSeconds:1500})
+ for(const [i,[type,actorId,at,fields]] of [['join','a',0,{}],['join','b',1,{}],['start','pt',1000,{memberId:'a'}],['finish','pt',71000,{actual:100}]].entries()){
+  const r=applySynchronCommand(early,{id:'early-'+i,revision:early.revision,type,...fields},{actorId,at});assert.equal(r.issue,null);early=r.state
+ }
+ assert.equal(synchronClock(early,9999999),60);assert.notEqual(early.capped,true)
+ console.log('SYNCHRON Chipper cap: deadline, pause, shared projection, early finish, partial result, and no extra work')
