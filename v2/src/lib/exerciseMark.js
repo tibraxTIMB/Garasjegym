@@ -1,0 +1,25 @@
+// Display-only exercise identity. Never use a mark to choose scoring or loading.
+export function exerciseMark(ex={}){
+ const n=String(ex.name||ex.exercise_name||'').toLowerCase(),e=String(ex.equipment||'').toLowerCase(),c=String(ex.category||'').toLowerCase(),b=String(ex.body_area||'').toLowerCase(),s=n+' '+e
+ if(ex.is_rest||n==='pause')return 'pause'
+ if(ex.is_complex||c==='complex')return 'complex'
+ if(/leg.?raise|beinhev|hollow|plank|crunch|sit.?up|dead bug|rollout|toes.to.bar/.test(n))return 'core'
+ if(/box.?jump|box.?over|step.?up|plyo.?boks/.test(s))return 'box'
+ if(/romaskin|rowerg|rowing|concept.?2|^row$/.test(s.trim())||/^row(?:\s|$)/.test(n)&&!/barbell|dumbbell|manual|stong|stang|kettlebell|trx/.test(e))return 'row'
+ if(/bike|sykkel/.test(s))return 'bike'
+ if(/hoppetau|jump.?rope|double.?under|single.?under/.test(s))return 'rope'
+ if(/trx|slynge/.test(s))return 'trx'
+ if(/kettlebell|\bkb\b/.test(s))return 'kettlebell'
+ if(/dumbbell|manual|\bdb\b/.test(s))return 'dumbbell'
+ if(/barbell|vektstong|vektstang|\bstong\b|\bstang\b|landmine|ez.?bar/.test(s))return 'barbell'
+ if(/medisinball|medicine.?ball|wall.?ball/.test(s))return 'ball'
+ if(/pull.?up|chin.?up|dead.?hang|muscle.?up|ring.?dip/.test(n))return 'hang'
+ if(/burpee/.test(n))return 'burpee'
+ if(/squat|knebøy|lunge|utfall/.test(n))return 'squat'
+ if(/push.?up|armheving/.test(n))return 'push'
+ if(/mobilitet|mobility|yoga|pilates|rehab|stretch/.test(c+' '+n))return 'mobility'
+ if(/kjerne|mage|core/.test(c+' '+b))return 'core'
+ if(/kondisjon|run|løp|ski.?erg/.test(s+' '+c))return 'cardio'
+ if(/benk|bench/.test(e))return 'bench'
+ return 'body'
+}
