@@ -253,3 +253,38 @@ body:has(> .gg-architect-issue-backdrop) > #root{isolation:isolate}
 .gg-sixstep-library .gg-picker-name{flex-basis:100%;font-size:.9rem}
 .gg-picker-name:focus-visible{outline:2px solid #ffd18e;outline-offset:2px}
 .gg-sixstep-library .wod-exercise-card.is-picked .gg-picker-name{color:#ffd18e}
+
+/* Three-stage mobile flow. Scope overrides so Werkstatt keeps its desktop workflow. */
+.gg-three-stage .gg-sixstep-header nav{grid-template-columns:repeat(3,minmax(0,1fr))}
+.gg-three-stage.gg-three-stage-0 .wod-builder-layout{display:grid!important;grid-template-columns:minmax(0,1fr)!important}
+.gg-three-stage.gg-three-stage-0 .wod-composer{display:block!important;width:100%!important;max-width:none!important}
+.gg-three-stage.gg-three-stage-0 .wod-composer>.admin-create-form{display:block!important}
+.gg-three-stage.gg-three-stage-0 .wizard-format-panel{display:grid!important;gap:7px!important;padding:5px!important}
+.gg-three-stage.gg-three-stage-0 .wizard-format-panel .wod-name-field,.gg-three-stage.gg-three-stage-0 .wizard-format-panel .wod-setup-format{display:none!important}
+.gg-three-stage.gg-three-stage-0 .gg-architect-heading>button{display:none!important}
+.gg-three-stage .gg-architect-equipment{display:block!important}
+.gg-three-stage.gg-three-stage-0 .gg-architect-equipment,.gg-three-stage.gg-three-stage-2 .gg-architect-equipment{display:none!important}
+.gg-three-stage.gg-three-stage-4 .gg-architect-heading{display:none!important}
+.gg-three-stage.gg-three-stage-4 .wod-final-preview{display:none!important}
+.gg-three-stage.gg-three-stage-2 .wizard-dose-intro{display:none!important}
+.gg-three-stage.gg-three-stage-2 .gg-architect-levels{display:none!important}
+.gg-three-stage.gg-three-stage-2 .wizard-dose-stage{padding:3px 0 calc(100px + env(safe-area-inset-bottom,0px))!important}
+.gg-three-stage.gg-three-stage-2 .gg-part-workbench .gg-logical-parts{display:flex!important;flex-wrap:wrap;gap:4px}
+.gg-three-stage.gg-three-stage-2 .gg-part-chip{flex:1 1 110px;min-width:0}
+.gg-three-stage.gg-three-stage-2 .gg-part-chip>button:first-child{min-height:44px}
+.gg-three-stage .gg-cap-choice{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.gg-three-stage .gg-cap-choice>strong{grid-column:1/-1}
+.gg-three-stage .gg-cap-choice>button{min-height:42px!important;padding:5px!important;font-size:.82rem!important}
+.gg-three-stage .gg-compact-time-presets{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.gg-three-stage .gg-compact-time-presets button{min-width:0;min-height:40px!important;padding:3px!important}
+.gg-three-stage .gg-compact-dose-row{grid-template-columns:minmax(100px,1fr) minmax(0,1.5fr);gap:5px;padding:5px 2px}
+.gg-three-stage .gg-compact-dose-name strong{font-size:13px}
+.gg-three-stage .gg-dose-order{color:#f0b45e;font-size:11px}
+.gg-three-stage .gg-dose-inline-error{color:#ffb2ac;font-size:11px;overflow-wrap:anywhere}
+.gg-three-stage .gg-row-edit-actions{display:flex;justify-content:flex-end}
+.gg-three-stage .gg-quick-start-wod{width:100%;min-height:46px;margin:6px 0}
+.gg-three-stage .gg-compact-dose-row .gg-compact-cell{min-width:44px;flex-basis:44px}
+.gg-three-stage .gg-compact-dose-values button{min-height:44px}
+.gg-three-stage .gg-time-next{display:flex!important;justify-content:flex-end}
+.gg-three-stage .gg-time-next button{min-height:46px;width:100%}
+@media(max-width:380px){.gg-three-stage .gg-compact-time-presets{grid-template-columns:repeat(3,minmax(0,1fr))}.gg-three-stage .gg-compact-dose-row{grid-template-columns:minmax(85px,1fr) minmax(0,1.5fr)}}
