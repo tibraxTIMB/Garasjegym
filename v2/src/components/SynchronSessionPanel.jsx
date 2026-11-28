@@ -4,6 +4,7 @@ import SynchronResultReview from './SynchronResultReview.jsx'
 import SynchronCalibrationReview from './SynchronCalibrationReview.jsx'
 import {acceptSynchronSnapshot,synchronControls,submitSynchronAction,submitSynchronSave} from '../lib/synchronClient.js'
 import './synchron-preview.css'
+import './chipper-progress.css'
 
 const unitLabel={reps:'reps',seconds:'sek',meters:'m',calories:'cal'}
 // Controlled view: transport is supplied by the caller; no local workout/log writes.
@@ -68,6 +69,7 @@ export default function SynchronSessionPanel({adapter,label,online=true,onSnapsh
    <TimerClockFace value={c.phase==='countdown'?c.countdown:c.phase==='finished'&&!c.capReached?c.elapsed:c.timeCapSeconds?c.remaining:c.elapsed}/>
    <small>{c.phase==='countdown'?'START OM':c.capReached?'TIDSGRENSA NÅDD':c.phase==='finished'?'MEDGÅTT TID':c.timeCapSeconds?'TID ATT':'MEDGÅTT TID'}{c.waitingForStart?' · ventar på stadfesting':''}</small>
    <div className="timer-active-under-clock"><span>ØVING {c.stage+1}/{s.movements.length}</span><b>{m.name} · {m.target} {unitLabel[m.unit]}</b></div>
+   <div className="gg-chipper-segments" aria-label={c.stage+' av '+s.movements.length+' øvingar passerte'}>{s.movements.map((x,i)=><span key={x.id} className={i<c.stage?'done':i===c.stage?'current':''}/>)}</div>{s.movements[c.stage+1]&&<small>Neste: {s.movements[c.stage+1].name} · {s.movements[c.stage+1].target} {unitLabel[s.movements[c.stage+1].unit]}</small>}
    <small>{active}{s.ownDose?' · '+s.ownDose.variant+(s.ownDose.loadKg!==null?' · '+s.ownDose.loadKg+' kg':''):''}</small>
    {s.isMember&&<small>Di registrerte arbeidsbolktid: {Math.floor(s.ownAssignedSeconds??0)} sek</small>}
   </div>
@@ -80,8 +82,8 @@ export default function SynchronSessionPanel({adapter,label,online=true,onSnapsh
   {['countdown','running','paused'].includes(c.phase)&&<div className="gg-sync-actions">
    {s.isMember&&<button className="primary-button gg-sync-takeover" disabled={!c.canTakeover} onClick={()=>act('takeover')}>{c.role==='work'?'Du arbeider':'Ta over'}</button>}
    {(c.role==='work'||s.leader)&&<button className="secondary-button" disabled={!c.canIdle} onClick={()=>act('idle')}>Ingen arbeider</button>}
-   {s.leader&&<><button className="secondary-button" disabled={!(c.canPause||c.canResume)} onClick={()=>act(c.phase==='paused'?'resume':'pause')}>{c.phase==='paused'?'Gjenoppta':'Pause'}</button>
-   {c.stage<s.movements.length-1&&<button className="secondary-button" disabled={!c.canAdvance} onClick={()=>{setReview({type:'advance',stage:c.stage});setActual('')}}>Neste øving</button>}
+   {s.leader&&<>{c.stage===s.movements.length-1&&!c.capReached&&<button type="button" className="primary-button gg-sync-takeover" disabled={!c.canFinish} onClick={()=>act('finish',{actual:m.target})}>Ferdig · fullfør ({m.target} {unitLabel[m.unit]})</button>}<button className="secondary-button" disabled={!(c.canPause||c.canResume)} onClick={()=>act(c.phase==='paused'?'resume':'pause')}>{c.phase==='paused'?'Gjenoppta':'Pause'}</button>
+   {c.stage<s.movements.length-1&&<><button type="button" className="primary-button gg-sync-takeover" disabled={!c.canAdvance} onClick={()=>act('advance',{actual:m.target})}>Ferdig · neste øving ({m.target} {unitLabel[m.unit]})</button><button type="button" className="secondary-button" disabled={!c.canAdvance} onClick={()=>{setReview({type:'advance',stage:c.stage});setActual('')}}>Registrer anna mengd</button></>}
    <button className="secondary-button" disabled={!c.canFinish} onClick={()=>{setReview({type:'finish',stage:c.stage});setActual('')}}>{c.capReached?'Stadfest resultat':c.stage<s.movements.length-1?'Avbryt økta':'Avslutt økta'}</button></>}
   </div>}
   {reviewType&&s.leader&&<section className="gg-sync-review" aria-label="Stadfest lagresultat"><strong>{reviewType==='advance'?'Neste øving':'Avslutt økta'} · faktisk lagresultat</strong><label>{m.name} ({unitLabel[m.unit]})<input type="number" min="0" max="100000" step="1" inputMode="numeric" value={actual} onChange={e=>setActual(e.target.value)} placeholder="Faktisk mengd"/></label><div className="gg-sync-actions"><button className="primary-button" disabled={!canSubmit||c.actionsLocked||!(reviewType==='advance'?c.canAdvance:c.canFinish)} onClick={()=>act(reviewType,{actual:Number(actual),...(reviewType==='finish'&&c.stage<s.movements.length-1?{abort:true}:{})})}>Stadfest</button><button className="secondary-button" disabled={c.actionsLocked||!(reviewType==='advance'?c.canAdvance:c.canFinish)} onClick={()=>act(reviewType,{actual:null,...(reviewType==='finish'&&c.stage<s.movements.length-1?{abort:true}:{})})}>Ukjend mengd</button><button className="secondary-button" onClick={()=>setReview(null)}>Tilbake</button></div><small>Planlagt mål blir aldri automatisk registrert som utført.</small></section>}
