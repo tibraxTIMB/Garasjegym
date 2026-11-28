@@ -1,10 +1,12 @@
-import { useRef } from 'react'
+import { useRef,useState } from 'react'
+import './design-dna.css'
 import { clampWodDuration, dialValueFromPoint } from '../lib/wodTimeDial.js'
 
 const pad = value => String(value).padStart(2, '0')
 
 export default function WodTimeDial({ label, value, onChange, unit = 'min', maximum = 600 }) {
   const dragging = useRef(false)
+  const [expanded,setExpanded]=useState(false)
   const number = clampWodDuration(value, maximum)
   const dialNumber = Math.min(60, number)
   const theta = dialNumber / 60 * Math.PI * 2 - Math.PI / 2
@@ -21,8 +23,8 @@ export default function WodTimeDial({ label, value, onChange, unit = 'min', maxi
   }
 
   return <section className="gg-analog-time" aria-label={label}>
-    <div className="gg-analog-time-head"><strong>{label}</strong><small>Trykk eller dra visaren · juster nøyaktig med + / −</small></div>
-    <div className="gg-analog-time-wheel">
+    <button type="button" className="gg-dna-duration-toggle" aria-expanded={expanded} onClick={()=>setExpanded(v=>!v)}><span>{label}</span><strong>{display}</strong><span>{expanded?'−':'+'}</span></button>
+    {expanded&&<div className="gg-analog-time-wheel">
       <svg className="gg-time-clock-face" viewBox="0 0 240 240" role="slider" tabIndex={0} aria-label={`${label}, ${number} ${unit}`} aria-valuemin={1} aria-valuemax={maximum} aria-valuenow={number} aria-valuetext={`${number} ${unit}`} onKeyDown={event => {if(event.key==='ArrowRight'||event.key==='ArrowUp'){event.preventDefault();set(number+1)}else if(event.key==='ArrowLeft'||event.key==='ArrowDown'){event.preventDefault();set(number-1)}else if(event.key==='Home'){event.preventDefault();set(1)}else if(event.key==='End'){event.preventDefault();set(maximum)}}} onPointerDown={event => {event.currentTarget.setPointerCapture(event.pointerId);dragging.current=true;readPointer(event)}} onPointerMove={event => {if(dragging.current)readPointer(event)}} onPointerUp={event => {if(dragging.current)readPointer(event);dragging.current=false;if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId)}} onPointerCancel={() => {dragging.current=false}}>
         <circle cx="120" cy="120" r="87" fill="#0d171c" stroke="#354b56" strokeWidth="11"/>
         <circle cx="120" cy="120" r="87" fill="none" stroke="#ee9d34" strokeWidth="9" strokeLinecap="round" strokeDasharray={`${2*Math.PI*87*dialNumber/60} ${2*Math.PI*87}`} transform="rotate(-90 120 120)"/>
@@ -34,8 +36,8 @@ export default function WodTimeDial({ label, value, onChange, unit = 'min', maxi
         <text x="120" y="154" textAnchor="middle" fill="#f2a64c" fontSize="12" fontWeight="800">{unit === 'sek' ? 'SEKUND' : 'MINUTT'}</text>
       </svg>
       <div className="gg-time-clock-readout" aria-live="polite"><strong>{display}</strong></div>
-    </div>
+    </div>}
     <div className="gg-time-adjust"><button type="button" aria-label="Reduser med eitt" onClick={() => set(number-1)}>−</button><label>Eige val ({unit})<input type="number" min="1" max={maximum} value={value} onChange={event => onChange(event.target.value)} onBlur={() => set(value)}/></label><button type="button" aria-label="Auk med eitt" onClick={() => set(number+1)}>+</button></div>
-    {number > 60 && <small className="gg-time-overflow-note">Over 60 {unit}: bruk talfeltet. Urskiva viser dei første 60.</small>}
+    {expanded && number > 60 && <small className="gg-time-overflow-note">Over 60 {unit}: bruk talfeltet. Urskiva viser dei første 60.</small>}
   </section>
 }
