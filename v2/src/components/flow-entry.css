@@ -105,3 +105,13 @@
 @media(orientation:landscape) and (max-height:400px){
  .gg-result-wizard .gg-flow-entry-host:has(.gg-flow-keypad)>.gg-flow-keypad{max-height:100%;overflow-y:auto;overscroll-behavior:contain}
 }
+
+/* Immediate feedback without shifting the keypad or relying on vibration. */
+.gg-flow-keypad button:not(:disabled){transition:background-color 70ms,border-color 70ms,box-shadow 70ms; -webkit-tap-highlight-color:transparent}
+.gg-flow-keypad button:not(:disabled):active,.gg-flow-keypad button[data-feedback=tap],.gg-flow-keypad button[data-feedback=next]{background:#815c29;color:#fff4db;border-color:#ffbb61;box-shadow:inset 0 2px 5px #0008}
+.gg-flow-keypad button[data-feedback=reject]{background:#572c2c;border-color:#e0918b;color:#ffe0df}
+.gg-flow-keypad button:focus-visible{outline:2px solid #ffd18e;outline-offset:2px}
+.gg-flow-entry-host input[data-flow-active=true]{outline:2px solid #ffb54c;outline-offset:1px;background:#3a3022;color:#ffdb9f;caret-color:#ffb54c}
+.gg-flow-keypad .gg-keypad-value{flex:none;max-width:32%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.12rem;font-weight:800;font-variant-numeric:tabular-nums;color:#ffc36f;padding:0 4px}
+@media(min-height:551px){.gg-flow-keypad .gg-flow-keys button{min-height:44px}}
+@media(prefers-reduced-motion:reduce){.gg-flow-keypad button{transition:none}}
