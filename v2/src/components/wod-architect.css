@@ -339,3 +339,21 @@ body:has(> .gg-architect-issue-backdrop) > #root{isolation:isolate}
 .gg-three-stage button:focus-visible{outline:2px solid #ffcf8a;outline-offset:2px}
 @media(max-width:380px){.gg-three-stage .gg-compact-dose-name{grid-template-columns:minmax(0,1fr) 32px}.gg-three-stage .gg-compact-dose-name>button{min-width:32px}.gg-three-stage .gg-compact-dose-row{grid-template-columns:minmax(100px,1fr) minmax(0,1.4fr);gap:4px}.gg-three-stage .gg-sixstep-formats button strong{font-size:11px}}
 @media(orientation:landscape) and (min-width:600px){.gg-three-stage .gg-compact-dose-name strong{font-size:14px}.gg-three-stage .gg-compact-dose-row{grid-template-columns:minmax(150px,1fr) minmax(0,1.5fr)}}
+
+/* Semantic icon system: icons aid recognition; text remains for decisions. */
+.gg-three-stage .gg-step-label{display:flex;align-items:center;justify-content:flex-start;gap:5px;min-width:0}
+.gg-three-stage .gg-step-label svg,.gg-three-stage .gg-review-exercise>svg{flex:none}
+.gg-three-stage .gg-sixstep-header nav button:disabled .gg-step-label svg{opacity:.65}
+.gg-three-stage .gg-sixstep-header nav button[aria-current=step] .gg-step-label{font-weight:800}
+.gg-three-stage .gg-sixstep-header>div>strong{font-size:16px;font-weight:800;letter-spacing:.015em}
+.gg-three-stage .gg-sixstep-header>div>small{font-size:12px;font-variant-numeric:tabular-nums}
+.gg-three-stage .gg-compact-dose-name>button,.gg-three-stage .gg-compact-keypad button,.gg-three-stage .gg-quick-start-wod{display:flex;align-items:center;justify-content:center;gap:6px}
+.gg-three-stage .gg-compact-dose-name>button[aria-expanded=true]{background:#3c301f;color:#ffdb9e}
+.gg-three-stage .gg-compact-dose-name>button:active{background:#39464d}
+.gg-three-stage .gg-review-exercise>svg{color:var(--gg-artist-muted);align-self:center}
+.gg-three-stage .gg-compact-keypad-keys button{font-size:20px;line-height:1;font-variant-numeric:tabular-nums}
+.gg-three-stage .gg-compact-keypad-keys .gg-compact-next-field{font-size:14px!important;line-height:1.2}
+.gg-three-stage .gg-compact-keypad header button{min-height:40px;min-width:40px}
+.gg-three-stage .gg-compact-dose-values button{letter-spacing:0;font-variant-numeric:tabular-nums}
+.gg-three-stage .gg-sixstep-formats .gg-format-glyph svg{stroke-width:1.9}
+@media(max-width:380px){.gg-three-stage .gg-step-label{gap:3px}.gg-three-stage .gg-step-label svg{width:13px;height:13px}}
