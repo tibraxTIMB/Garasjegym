@@ -14,13 +14,13 @@ export function synchronControls(record,{now,online=true,busy=false}={}){
  if(!display)return null
  const {snapshot}=record,locked=display.actionsLocked||busy
  const own=display.active===snapshot.participantSlot&&snapshot.participantSlot!==null
- return {...display,actionsLocked:locked,role:!snapshot.isMember?'leader':!snapshot.joined?'invited':display.phase==='running'?(own?'work':'rest'):'waiting',
+ return {...display,actionsLocked:locked,role:!snapshot.isMember?'leader':!snapshot.joined?'invited':display.phase==='running'&&!display.capReached?(own?'work':'rest'):'waiting',
   canJoin:!locked&&snapshot.isMember&&!snapshot.joined&&display.phase==='ready',
   canStart:!locked&&display.canStart,canTakeover:!locked&&display.canTakeover,
   canIdle:!locked&&display.phase==='running'&&display.active!==null&&(own||snapshot.leader),
   canPause:!locked&&display.canPause,canResume:!locked&&display.canResume,
   canAdvance:!locked&&display.canAdvance,canFinish:!locked&&display.canFinish,
-  canLoad:!locked&&display.phase==='running'&&snapshot.joined,
+  canLoad:!locked&&display.phase==='running'&&!display.capReached&&snapshot.joined,
   canCalibrate:!locked&&display.phase==='finished'&&snapshot.leader&&snapshot.calibration?.sealed===false&&snapshot.calibration.rows.length>0,
   canReview:!locked&&display.phase==='finished'&&!!snapshot.review&&!snapshot.review.sealed,
   canApprove:!locked&&display.phase==='finished'&&!!snapshot.review?.canApprove&&!snapshot.review.approved&&!snapshot.review.sealed,
