@@ -27,3 +27,9 @@ input.gg-dna-switch:focus-visible{outline:2px solid #ffc76e;outline-offset:3px}i
 html[data-gg-design="freiwerk"] .gg-dna-keys>button.gg-dna-next{background:var(--fw-accent);border-color:var(--fw-accent);color:#171710}
 html[data-gg-design="freiwerk"] .gg-dna-choice>button[aria-pressed=true]{color:var(--fw-accent);border-color:var(--fw-line);background:var(--fw-selected);box-shadow:inset 0 -2px var(--fw-accent)}
 .gg-dna-weight-steps>button{min-width:0;font-size:12px}.gg-dna-weight-steps>button[data-feedback=reject]{outline:2px solid #df746b}
+
+/* Q02: preserve words and keep direct choice/close controls accessible. */
+.gg-dna-choice>button{overflow-wrap:break-word;word-break:normal;line-height:1.25}
+.gg-dna-choice>button:disabled{opacity:.45;cursor:not-allowed}
+.gg-dna-sheet-handle{min-height:32px}
+@media(max-width:360px){.gg-dna-choice{grid-template-columns:repeat(auto-fit,minmax(min(100%,125px),1fr))}}
