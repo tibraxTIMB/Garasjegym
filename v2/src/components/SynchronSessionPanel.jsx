@@ -57,7 +57,7 @@ export default function SynchronSessionPanel({adapter,label,online=true,onSnapsh
  if(!s||!c||!m)return <section className="gg-synchron-panel engine-timer"><strong>{label}</strong><p role="status">{issue||'Koplar til økta …'}</p></section>
  const reviewType=review?.stage===c.stage?review.type:null
  const active=c.active===null?'Ingen arbeider':'Utøvar '+c.active
- const role=c.phase==='finished'?'FERDIG':c.phase==='countdown'?'GJER DEG KLAR':c.phase==='paused'?'PAUSE':c.role==='work'?'ARBEID':c.role==='rest'?'KVILE':c.role==='invited'?'INVITERT':c.role==='leader'&&c.phase==='running'?'ØKTLEIAR':'VENTAR'
+ const role=c.capReached?'TIME CAP':c.phase==='finished'?'FERDIG':c.phase==='countdown'?'GJER DEG KLAR':c.phase==='paused'?'PAUSE':c.role==='work'?'ARBEID':c.role==='rest'?'KVILE':c.role==='invited'?'INVITERT':c.role==='leader'&&c.phase==='running'?'ØKTLEIAR':'VENTAR'
  const first=s.participants?.find(p=>p.joined&&p.slot===1)?.id
  const canSubmit=actual.trim()!==''&&/^\d+$/.test(actual)&&Number(actual)<=100000
  return <section className="gg-synchron-panel engine-timer timer-customized" aria-label={label}>
@@ -65,8 +65,8 @@ export default function SynchronSessionPanel({adapter,label,online=true,onSnapsh
   <div className="gg-sync-status"><span>{s.joinedCount}/{s.participantCount} klare</span><span>{c.stale?'Fråkopla / utdaterte data':'Tilkopla'}</span></div>
   <div className="timer-center">
    <div className="timer-phase">{role}</div>
-   <TimerClockFace value={c.phase==='countdown'?c.countdown:c.elapsed}/>
-   <small>{c.phase==='countdown'?'START OM':'MEDGÅTT TID'}{c.waitingForStart?' · ventar på stadfesting':''}</small>
+   <TimerClockFace value={c.phase==='countdown'?c.countdown:c.phase==='finished'&&!c.capReached?c.elapsed:c.timeCapSeconds?c.remaining:c.elapsed}/>
+   <small>{c.phase==='countdown'?'START OM':c.capReached?'TIDSGRENSA NÅDD':c.phase==='finished'?'MEDGÅTT TID':c.timeCapSeconds?'TID ATT':'MEDGÅTT TID'}{c.waitingForStart?' · ventar på stadfesting':''}</small>
    <div className="timer-active-under-clock"><span>ØVING {c.stage+1}/{s.movements.length}</span><b>{m.name} · {m.target} {unitLabel[m.unit]}</b></div>
    <small>{active}{s.ownDose?' · '+s.ownDose.variant+(s.ownDose.loadKg!==null?' · '+s.ownDose.loadKg+' kg':''):''}</small>
    {s.isMember&&<small>Di registrerte arbeidsbolktid: {Math.floor(s.ownAssignedSeconds??0)} sek</small>}
@@ -82,10 +82,10 @@ export default function SynchronSessionPanel({adapter,label,online=true,onSnapsh
    {(c.role==='work'||s.leader)&&<button className="secondary-button" disabled={!c.canIdle} onClick={()=>act('idle')}>Ingen arbeider</button>}
    {s.leader&&<><button className="secondary-button" disabled={!(c.canPause||c.canResume)} onClick={()=>act(c.phase==='paused'?'resume':'pause')}>{c.phase==='paused'?'Gjenoppta':'Pause'}</button>
    {c.stage<s.movements.length-1&&<button className="secondary-button" disabled={!c.canAdvance} onClick={()=>{setReview({type:'advance',stage:c.stage});setActual('')}}>Neste øving</button>}
-   <button className="secondary-button" disabled={!c.canFinish} onClick={()=>{setReview({type:'finish',stage:c.stage});setActual('')}}>{c.stage<s.movements.length-1?'Avbryt økta':'Avslutt økta'}</button></>}
+   <button className="secondary-button" disabled={!c.canFinish} onClick={()=>{setReview({type:'finish',stage:c.stage});setActual('')}}>{c.capReached?'Stadfest resultat':c.stage<s.movements.length-1?'Avbryt økta':'Avslutt økta'}</button></>}
   </div>}
   {reviewType&&s.leader&&<section className="gg-sync-review" aria-label="Stadfest lagresultat"><strong>{reviewType==='advance'?'Neste øving':'Avslutt økta'} · faktisk lagresultat</strong><label>{m.name} ({unitLabel[m.unit]})<input type="number" min="0" max="100000" step="1" inputMode="numeric" value={actual} onChange={e=>setActual(e.target.value)} placeholder="Faktisk mengd"/></label><div className="gg-sync-actions"><button className="primary-button" disabled={!canSubmit||c.actionsLocked||!(reviewType==='advance'?c.canAdvance:c.canFinish)} onClick={()=>act(reviewType,{actual:Number(actual),...(reviewType==='finish'&&c.stage<s.movements.length-1?{abort:true}:{})})}>Stadfest</button><button className="secondary-button" disabled={c.actionsLocked||!(reviewType==='advance'?c.canAdvance:c.canFinish)} onClick={()=>act(reviewType,{actual:null,...(reviewType==='finish'&&c.stage<s.movements.length-1?{abort:true}:{})})}>Ukjend mengd</button><button className="secondary-button" onClick={()=>setReview(null)}>Tilbake</button></div><small>Planlagt mål blir aldri automatisk registrert som utført.</small></section>}
-  {c.phase==='running'&&s.isMember&&<details><summary>Endra eiga belastning</summary><label>Ny vekt (kg)<input type="number" min="0" step="any" inputMode="decimal" value={load} onChange={e=>setLoad(e.target.value)}/></label><button className="secondary-button" disabled={!c.canLoad||load.trim()===''||!Number.isFinite(Number(load))||Number(load)<0} onClick={()=>act('load',{loadKg:Number(load)})}>Stadfest ny vekt</button></details>}
+  {c.phase==='running'&&!c.capReached&&s.isMember&&<details><summary>Endra eiga belastning</summary><label>Ny vekt (kg)<input type="number" min="0" step="any" inputMode="decimal" value={load} onChange={e=>setLoad(e.target.value)}/></label><button className="secondary-button" disabled={!c.canLoad||load.trim()===''||!Number.isFinite(Number(load))||Number(load)<0} onClick={()=>act('load',{loadKg:Number(load)})}>Stadfest ny vekt</button></details>}
   {c.phase==='finished'&&<><section><strong>Lagresultat</strong>{s.movements.map(x=><p key={x.id}>{x.name}: {s.totals[x.id]?.actual??'Ikkje registrert'} {unitLabel[x.unit]}</p>)}</section>{s.review&&<SynchronResultReview review={s.review} controls={c} onAction={act} onSave={typeof adapter.saveResult==='function'?saveOwn:null} saveReceipt={saveReceipt} saveIssue={saveIssue}/>} {s.calibration&&<SynchronCalibrationReview calibration={s.calibration} revision={s.revision} controls={c} onAction={act}/>}</>}
  </section>
 }
