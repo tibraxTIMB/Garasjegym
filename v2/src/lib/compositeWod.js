@@ -1,4 +1,4 @@
-import {samspelConfig,samspelNoncompetitive,samspelQuality,samspelEmom,samspelEmomComplete,samspelDouble,samspelClockedEmom,doubleEmomComplete,samspelStrength,samspelStrengthComplete,samspelRelay,relayTotal,samspelChipper,teamChipperComplete,teamChipperProgress,samspelIssue,samspelParticipantResults,samspelResultIssue,normalizeSamspelSwaps} from './samspel.js'
+import {samspelConfig,samspelNoncompetitive,samspelQuality,samspelEmom,samspelEmomComplete,samspelDouble,samspelClockedEmom,doubleEmomComplete,samspelStrength,samspelStrengthComplete,samspelRelay,relayTotal,samspelChipper,teamChipperComplete,teamChipperProgress,teamChipperTotals,samspelIssue,samspelParticipantResults,samspelResultIssue,normalizeSamspelSwaps} from './samspel.js'
 import {complexResultSummary} from './wodComplexes.js'
 // Multi-part workouts reuse the existing WOD engine and Timer for each part.
 // No separate timer is introduced. Blocks, pauses and outcomes live in the WOD schema.
@@ -61,7 +61,7 @@ export function validateCompositeBlocks(blocks,items=[]) {
   if(!Number.isFinite(minute)||minute<=0||minute>180||Math.abs(Math.round(minute*60)-minute*60)>0.001)return title+': vel inntil 180 minutt (med sekundpresisjon).'
   const exercises=items.filter(item=>(item.blockId||item.block_id)===block.id&&!item.is_rest)
   if(!exercises.length)return title+': legg til minst éi øving.'
-  if(block.samspel){const s=compositeSamspelConfig(block);if(!s){if(samspelChipper(block.samspel))return title+': Fordelt arbeid krev faste repetisjonar per øving. Vel «Saman · same øvingar» dersom de òg skal måla meter eller sekund.';if(samspelClockedEmom(block.samspel))return title+': Kontroller tidsintervall, tal øvingar og at alle får like mange turar.';if(samspelStrength(block.samspel))return title+': Vel éi styrkeøving med 1–30 sett.';if(samspelRelay(block.samspel))return title+': Vel 2–8 utøvarar og gyldig tidsramme.';return title+': Kontroller gjennomføringsmåten for denne delen.';}const issue=samspelIssue(s,{format:samspelClockedEmom(s)?'EMOM':block.format,participation:s.participant_count===2?'partner':'team',participantCount:s.participant_count,collaboration:samspelChipper(s)?'free_split':samspelRelay(s)?'you_go_i_go':'parallel',items:(samspelDouble(s)||samspelStrength(s)||samspelChipper(s))?items.filter(item=>(item.blockId||item.block_id)===block.id):exercises});if(issue)return title+': '+issue;if(block.scoreMode&&!['auto','none'].includes(block.scoreMode))return title+': bruk Samspel-resultat, ikkje eit ekstra hovudresultat.'}
+  if(block.samspel){const s=compositeSamspelConfig(block);if(!s){if(samspelChipper(block.samspel))return title+': '+(block.samspel.team_totals_only?'Oppgi eitt gyldig felles mål per øving (reps, meter, kaloriar eller sekund).':'Fordelt arbeid krev faste repetisjonar per øving. Vel «Fordel arbeidet» på nytt for blanda måleeiningar.');if(samspelClockedEmom(block.samspel))return title+': Kontroller tidsintervall, tal øvingar og at alle får like mange turar.';if(samspelStrength(block.samspel))return title+': Vel éi styrkeøving med 1–30 sett.';if(samspelRelay(block.samspel))return title+': Vel 2–8 utøvarar og gyldig tidsramme.';return title+': Kontroller gjennomføringsmåten for denne delen.';}const issue=samspelIssue(s,{format:samspelClockedEmom(s)?'EMOM':block.format,participation:s.participant_count===2?'partner':'team',participantCount:s.participant_count,collaboration:samspelChipper(s)?'free_split':samspelRelay(s)?'you_go_i_go':'parallel',items:(samspelDouble(s)||samspelStrength(s)||samspelChipper(s))?items.filter(item=>(item.blockId||item.block_id)===block.id):exercises});if(issue)return title+': '+issue;if(block.scoreMode&&!['auto','none'].includes(block.scoreMode))return title+': bruk Samspel-resultat, ikkje eit ekstra hovudresultat.'}
   const every=compositeIntervalMinutes(block.format,block)
   if(every && Math.round(minute*60)%Math.round(every*60)!==0)return title+': øktlengda må gå opp i intervalla på '+Math.round(every*60)+' sekund.'
   if(block.format==='For Time'&&block.rounds!=null&&String(block.rounds).trim()!==''&&(!Number.isInteger(Number(block.rounds))||Number(block.rounds)<1||Number(block.rounds)>100))return title+': vel 1–100 rundar eller la feltet stå tomt.'
@@ -237,9 +237,9 @@ export function explicitBlockResults(blocks=[],overrides={},items=[]){
 
 // Composite Samspel parts own their clock and measured participant evidence.
 // Build explicit track names from the builder's current ordered exercise selection.
-export function compositeChipperTargets(block,items=[],repsFor=item=>item.reps){
+export function compositeChipperTargets(block,items=[],repsFor=item=>item.reps,targetFor=null){
  if(!samspelChipper(block?.samspel))return block
- return {...block,samspel:{...block.samspel,targets:items.filter(item=>(item.blockId||item.block_id)===block.id).map(item=>({exercise_name:String(item.name||item.exercise_name||'').trim(),target_reps:item.is_rest||item.is_complex||item.repsMode==='amrap'||item.reps_mode==='amrap'?0:Number(repsFor(item))}))}}
+ return {...block,samspel:{...block.samspel,targets:items.filter(item=>(item.blockId||item.block_id)===block.id).map(item=>block.samspel.team_totals_only&&targetFor?targetFor(item):({exercise_name:String(item.name||item.exercise_name||'').trim(),target_reps:item.is_rest||item.is_complex||item.repsMode==='amrap'||item.reps_mode==='amrap'?0:Number(repsFor(item))}))}}
 }
 export function compositeIronTwinsDose(block,items=[],level='rx'){
  if(!samspelStrength(block?.samspel))return block
@@ -275,14 +275,16 @@ export function compositeSamspelResults(blocks=[],scores={},timerResults={},manu
   const snapshot=timerResults[index]||{}
   const draft=snapshot.prep_skipped&&block.warmup_group?{participants:Object.fromEntries(Array.from({length:s.participant_count},(_,i)=>[i+1,{quality:'skipped'}]))}:scores['samspel:'+block.id]||{}
   if(samspelChipper(s)){
-   const result=samspelParticipantResults(s,draft.participants||{})
+   const result=s.team_totals_only?{rows:[],issue:null}:samspelParticipantResults(s,draft.participants||{})
    if(result.issue)return {rows:[],issue:title+' · '+result.issue,field:'samspel-block-'+block.id+'-'+result.slot+'-'+result.field}
-   const progress=teamChipperProgress(s,result.rows),allDone=teamChipperComplete(s,result.rows)
+   const totals=s.team_totals_only?teamChipperTotals(s,draft.team_totals||{},draft.confirmed===true||!manual&&snapshot.chipper_all_goals_confirmed===true):null
+   if(totals?.issue)return {rows:[],issue:title+' · '+totals.issue,field:'chipper-block-'+block.id+'-'+totals.index}
+   const progress=totals?totals.progress:teamChipperProgress(s,result.rows),allDone=totals?totals.complete:teamChipperComplete(s,result.rows)
    const raw=manual?draft.timeSeconds:snapshot.elapsed
    const elapsed=raw==null||String(raw).trim()===''?null:Number(raw)
    if(elapsed!==null&&(!Number.isSafeInteger(elapsed)||elapsed<0||elapsed>s.duration_seconds))return {rows:[],issue:title+': oppgi gyldig medgått tid innan tidsgrensa.',field:'samspel-block-'+block.id+'-time'}
    if(progress.some(r=>r.reps>0)&&!(elapsed>0))return {rows:[],issue:title+': registrer faktisk medgått tid for utført arbeid.',field:'samspel-block-'+block.id+'-time'}
-   rows.push({block_id:block.id,title,samspel:{...s,team_score:true,participant_results:result.rows,manual_swaps:[]},chipper_progress:progress,distance:null,calories:null,elapsed,completed:allDone&&elapsed>0})
+   rows.push({block_id:block.id,title,samspel:{...s,team_score:true,participant_results:result.rows,...(totals?{team_totals:progress}:{}),manual_swaps:[]},chipper_progress:progress,distance:null,calories:null,elapsed,completed:allDone&&elapsed>0})
    continue
   }
   if(samspelRelay(s)){

@@ -9,6 +9,29 @@ export function samspelQuality(s){return s?.version===2&&s.main_track==='quality
 // Team Chipper: one shared target per movement and measured individual contributions.
 export function samspelChipper(s){return s?.version===2&&s.main_track==='chipper'}
 export function teamChipperConfig(){return {version:2,mode:'parallel_round_swap',main_track:'chipper',participant_count:2,switch_rule:'fixed',individual_scores:true,targets:[]}}
+// target_reps is the legacy numeric slot; unit identifies its actual dimension.
+export const chipperUnit=target=>target?.unit||'reps'
+export function sharedChipperTarget(item,dose={},metric=null){
+ const name=String(item.name||item.exercise_name||'').trim()
+ const invalid=item.is_rest||item.is_complex||['amrap'].includes(item.repsMode||item.reps_mode)||!['none','',undefined,null].includes(item.sideMode??item.side_mode)
+ let unit='reps',value=dose.reps??item.reps
+ if(metric==='rowing'){const u=item.rowUnit||item.row_unit||'m';unit=u==='cal'?'cal':u==='s'||u==='min'?'s':'m';value=u==='min'?Number(item.rowValue??item.row_value)*60:item.rowValue??item.row_value??(unit==='m'?dose.distanceMeters:unit==='s'?dose.durationSeconds:dose.calories)}
+ else if(metric==='distance'){unit='m';value=dose.distanceMeters??item.meters}
+ else if(metric==='calories'){unit='cal';value=dose.calories??item.calories}
+ else if(metric==='time'){unit='s';value=dose.durationSeconds??item.work_seconds}
+ return {exercise_name:name,target_reps:invalid?0:Number(value)||0,unit}
+}
+export function teamChipperTotals(s,values={},confirmed=false){
+ if(!samspelChipper(s)||s.team_totals_only!==true||!samspelConfig({samspel:s}))return {progress:[],complete:false,issue:'Kontroller dei felles måla.'}
+ const progress=[]
+ for(const [i,target] of s.targets.entries()){
+  const raw=values[i]??(confirmed?target.target_reps:'')
+  const actual=Number(raw)
+  if(String(raw).trim()===''||!Number.isSafeInteger(actual)||actual<0||actual>target.target_reps)return {progress:[],complete:false,issue:target.exercise_name+': oppgi faktisk '+chipperUnit(target)+' frå 0 til '+target.target_reps+'.',index:i}
+  progress.push({...target,reps:actual,remaining:target.target_reps-actual,complete:actual===target.target_reps})
+ }
+ return {progress,complete:progress.every(r=>r.complete),issue:null}
+}
 export function teamChipperProgress(s,rows=[]){
  if(!samspelChipper(s)||!samspelConfig({samspel:s})||!Array.isArray(rows))return []
  return s.targets.map((target,i)=>{
@@ -83,7 +106,7 @@ export function samspelEmomComplete(s,rows=[],{elapsed}={}){
 export function samspelConfig(schema={}){
  const s=schema?.samspel
  if(s?.mode!=='parallel_round_swap')return null
- if(samspelChipper(s))return Number.isInteger(s.participant_count)&&s.participant_count>=2&&s.participant_count<=8&&s.switch_rule==='fixed'&&s.individual_scores===true&&!s.station_tasks&&Array.isArray(s.targets)&&s.targets.length>=1&&s.targets.length<=30&&s.targets.every(x=>typeof x?.exercise_name==='string'&&!!x.exercise_name.trim()&&Number.isSafeInteger(x.target_reps)&&x.target_reps>=1&&x.target_reps<=10000)?s:null
+ if(samspelChipper(s))return Number.isInteger(s.participant_count)&&s.participant_count>=2&&s.participant_count<=8&&s.switch_rule==='fixed'&&s.individual_scores===true&&!s.station_tasks&&Array.isArray(s.targets)&&s.targets.length>=1&&s.targets.length<=30&&s.targets.every(x=>typeof x?.exercise_name==='string'&&!!x.exercise_name.trim()&&Number.isSafeInteger(x.target_reps)&&x.target_reps>=1&&x.target_reps<=10000&&['reps','m','cal','s'].includes(chipperUnit(x))&&(chipperUnit(x)==='reps'||s.team_totals_only===true))?s:null
  if(samspelRelay(s))return Number.isInteger(s.participant_count)&&s.participant_count>=2&&s.participant_count<=8&&s.switch_rule==='manual'&&s.individual_scores===true&&!s.station_tasks?s:null
  if(samspelRecovery(s))return Number.isInteger(s.participant_count)&&s.participant_count>=2&&s.participant_count<=8&&s.individual_scores===true&&s.switch_rule==='fixed'&&Number.isInteger(s.duration_seconds)&&s.duration_seconds>=60&&s.duration_seconds<=10800&&!s.station_tasks?s:null
  if(samspelPairedEmom(s))return s.participant_count===2&&s.individual_scores===true&&s.switch_rule==='time'&&!s.station_tasks&&Array.isArray(s.tracks)&&s.tracks.every(x=>typeof x==='string'&&x.trim())&&!pairedEmomScheduleIssue({durationSeconds:s.duration_seconds,intervalSeconds:s.switch_seconds,exerciseCount:s.tracks.length})?s:null
@@ -99,9 +122,9 @@ export function samspelConfig(schema={}){
 export function samspelIssue(s,{format,participation,collaboration,participantCount=2,items=[]}={}){
  if(!s)return null
  if(samspelChipper(s)){
-  if(!samspelConfig({samspel:s}))return 'Vel 1–30 øvingar med 1–10 000 felles reps per øving.'
+  if(!samspelConfig({samspel:s}))return 'Vel 1–30 øvingar med eit gyldig felles mål per øving.'
   if(format!=='Chipper'||collaboration!=='free_split'||(s.participant_count===2?participation!=='partner':participation!=='team'||Number(participantCount)!==s.participant_count))return 'Team Chipper krev Chipper og fritt delt arbeid.'
-  if(items.length!==s.targets.length||items.some((x,i)=>x.is_rest||x.is_complex||String(x.name||x.exercise_name||'').trim()!==s.targets[i].exercise_name))return 'Vel vanlege repetisjonsbaserte øvingar utan pausar.'
+  if(items.length!==s.targets.length||items.some((x,i)=>x.is_rest||x.is_complex||String(x.name||x.exercise_name||'').trim()!==s.targets[i].exercise_name))return 'Vel vanlege øvingar med eintydig mengd, utan pausar.'
   return null
  }
  if(samspelRelay(s)){

@@ -5,7 +5,7 @@ export function partWorkOptions(block={}){
  if(block.warmup_group)return [['solo','Kvar for oss']]
  const options=[['solo','Kvar for oss']]
  if(['Chipper','For Time','AMRAP'].includes(block.format)||isEmomFormat(block.format))options.push(['together','Saman · same øvingar'])
- if(block.format==='Chipper')options.push(['share','Fordel repetisjonane'])
+ if(block.format==='Chipper')options.push(['share','Fordel arbeidet'])
  if(block.format==='AMRAP')options.push(['turns','Annankvar runde'])
  if(isEmomFormat(block.format))options.push(['tracks','To øvingar · byt på tid'],['machine','Éi maskin · byt på tid'])
  if(block.format==='Strength')options.push(['strength','Tren styrke saman'])
@@ -31,7 +31,7 @@ export function partWorkPatch(block,intent,count=2){
  const duration=Math.round(Number(block.minutes||0)*60),every=emomIntervalSeconds(block.format,{work_every_seconds:block.emomIntervalSeconds})
  let samspel=null,collaboration='solo'
  if(intent==='together')collaboration='synchronized'
- if(intent==='share'){samspel=teamChipperConfig();collaboration='free_split'}
+ if(intent==='share'){samspel={...teamChipperConfig(),team_totals_only:true};collaboration='free_split'}
  if(intent==='turns'){samspel=youGoIGoConfig();collaboration='you_go_i_go'}
  if(intent==='tracks'){samspel=doubleEmomConfig(every,duration);collaboration='parallel'}
  if(intent==='machine'){samspel=engineSwapConfig(every,duration);collaboration='parallel'}
