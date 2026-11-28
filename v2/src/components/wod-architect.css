@@ -463,3 +463,15 @@ body:has(> .gg-architect-issue-backdrop) > #root{isolation:isolate}
 .gg-three-stage .gg-review-exercise>strong{max-width:105px;font-size:12px;overflow-wrap:break-word}
 .gg-three-stage .gg-review-exercise .gg-exercise-title{font-size:13px;overflow-wrap:break-word;word-break:normal}
 @media(max-width:380px){.gg-three-stage .gg-logical-parts .gg-part-chip>.gg-part-settings-button{flex-basis:32px!important;min-width:32px!important;width:32px!important;max-width:32px!important}.gg-three-stage .gg-logical-parts .gg-part-chip>button:first-child{grid-template-columns:20px minmax(0,1fr)!important}.gg-three-stage .gg-review-exercise>strong{max-width:85px}}
+
+/* Narrow phone release audit: constrain grid tracks rather than clipping text. */
+@media(max-width:380px){
+ .gg-three-stage,.gg-three-stage .gg-architect-overview,.gg-three-stage .gg-part-workbench,.gg-three-stage .gg-logical-parts,.gg-three-stage .gg-samspel-setup{min-width:0!important;max-width:100%;box-sizing:border-box}
+ .gg-three-stage .gg-architect-overview{grid-template-columns:minmax(0,1fr)!important}
+ .gg-three-stage .gg-architect-overview>*{min-width:0;max-width:100%;box-sizing:border-box}
+ .gg-three-stage .gg-architect-meta{flex-wrap:wrap!important}
+ .gg-three-stage .gg-architect-meta>span{flex:1 1 100%!important}
+ .gg-three-stage .gg-logical-parts .gg-part-chip{box-sizing:border-box;max-width:100%}
+ .gg-three-stage .gg-samspel-fields{grid-template-columns:minmax(0,1fr)!important;min-width:0}
+ .gg-three-stage .gg-samspel-setup fieldset,.gg-three-stage .gg-samspel-setup label,.gg-three-stage .gg-samspel-setup select,.gg-three-stage .gg-samspel-setup input{min-width:0;max-width:100%;box-sizing:border-box}
+}
