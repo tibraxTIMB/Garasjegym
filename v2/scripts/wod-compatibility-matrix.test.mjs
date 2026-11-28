@@ -130,8 +130,32 @@ test('plain part intent is isolated; switching shared Chipper to same-work resto
  assert.equal(timer.wod_engine.collaboration,'synchronized')
  assert.equal(timer.items[1].meters,2000)
  assert.equal(compositeTimerConfig({...prep,items:[exercises[0]]}).timerSettings.workout_schema.wod_engine.collaboration,'solo')
- assert.match(validateCompositeBlocks([prep,{...shared,samspel:{...shared.samspel,targets:[{exercise_name:'Test a',target_reps:80},{exercise_name:'Test row',target_reps:0}]}}],exercises),/Fordelt arbeid krev faste repetisjonar/)
+ assert.match(validateCompositeBlocks([prep,{...shared,samspel:{...shared.samspel,targets:[{exercise_name:'Test a',target_reps:80},{exercise_name:'Test row',target_reps:0}]}}],exercises),/gyldig felles mål/)
  for(const format of COMPOSITE_BLOCK_FORMATS)for(const [intent] of partWorkOptions({format,minutes:20})){
   const patch=partWorkPatch({format,minutes:20},intent,2);assert.ok(patch,format+' '+intent);assert.equal(partWorkIntent({...patch,format}),intent)
  }
+})
+
+import {sharedChipperTarget,teamChipperTotals,teamChipperConfig,samspelConfig} from '../src/lib/samspel.js'
+import {compositeSamspelResults,compositeChipperTargets} from '../src/lib/compositeWod.js'
+test('Svart Motor: shared Chipper with reps and meters; no invented individual contributions',()=>{
+ const moves=[{name:'Wall Ball Shot',reps:80},{name:'Beinhev på benk',reps:100},{name:'Box Step-up',reps:80},{name:'Dumbbell Snatch',reps:50},{name:'Row',rowUnit:'m',rowValue:'2000'}].map((x,i)=>({...x,blockId:'a',key:String(i)}))
+ const targetFor=x=>sharedChipperTarget(x,{reps:x.reps},x.name==='Row'?'rowing':null)
+ const base={id:'a',title:'Del A',format:'Chipper',minutes:20,...partWorkPatch({format:'Chipper'},'share',2)}
+ const part=compositeChipperTargets(base,moves,x=>x.reps,targetFor)
+ const config=part.samspel
+ assert.equal(config.team_totals_only,true)
+ assert.deepEqual(config.targets.map(x=>[x.target_reps,x.unit]),[[80,'reps'],[100,'reps'],[80,'reps'],[50,'reps'],[2000,'m']])
+ assert.ok(samspelConfig({samspel:config}))
+ assert.equal(teamChipperTotals(config,{}).complete,false)
+ assert.ok(teamChipperTotals(config,{}).issue)
+ const complete=teamChipperTotals(config,{},true);assert.equal(complete.complete,true);assert.equal(complete.progress[4].reps,2000)
+ assert.equal(teamChipperTotals(config,{4:'1200'},true).complete,false)
+ assert.ok(teamChipperTotals(config,{4:'2001'},true).issue)
+ assert.ok(teamChipperTotals(config,{4:''},true).issue)
+ const actual=compositeSamspelResults([part],{}, {0:{elapsed:1100,chipper_all_goals_confirmed:true}})
+ assert.equal(actual.issue,null);assert.equal(actual.rows[0].completed,true);assert.deepEqual(actual.rows[0].samspel.participant_results,[]);assert.equal(actual.rows[0].samspel.team_totals[4].unit,'m')
+ const cap=compositeSamspelResults([part],{'samspel:a':{team_totals:{0:80,1:100,2:80,3:50,4:1200}}},{0:{elapsed:1200,phase:'TIDSGRENSE'}})
+ assert.equal(cap.issue,null);assert.equal(cap.rows[0].completed,false);assert.equal(cap.rows[0].samspel.team_totals[4].remaining,800)
+ assert.equal(samspelConfig({samspel:{...teamChipperConfig(),targets:[{exercise_name:'Row',target_reps:2000,unit:'m'}]}}),null)
 })
