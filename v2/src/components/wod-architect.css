@@ -375,3 +375,19 @@ body:has(> .gg-architect-issue-backdrop) > #root{isolation:isolate}
 .gg-three-stage .gg-compact-dose-name .gg-dose-order{color:#b7c7ce;font-size:10px;font-weight:600}
 .gg-three-stage .gg-compact-dose-name .gg-exercise-title{min-width:0}
 @media(max-width:380px){.gg-three-stage .gg-compact-dose-name .gg-exercise-identity{flex-wrap:wrap;gap:3px}.gg-three-stage .gg-compact-dose-name .gg-exercise-mark{width:22px;height:22px;flex-basis:22px}}
+
+/* Keep the stage strip visible during long workouts and inside the exercise catalogue. */
+.gg-three-stage .gg-sixstep-header{position:sticky;top:var(--gg-builder-sticky-top,0px);z-index:20;background:#172229!important;padding:6px 4px!important;box-shadow:0 3px 10px #0003}
+.gg-three-stage .gg-sixstep-header nav button,.gg-sixstep-library .gg-mobile-step-nav button{min-height:42px}
+.gg-three-stage .gg-sixstep-header nav button:not([aria-current=step]):not(:disabled){color:#c7d2d7}
+.gg-three-stage .gg-sixstep-header nav button:active .gg-step-mark,.gg-sixstep-library .gg-mobile-step-nav button:active .gg-step-mark{background:#f4b65d}
+.gg-sixstep-library .gg-picker-step-header{flex:0 0 auto;min-width:0;padding:3px 8px 6px;border-bottom:1px solid #35464e;background:#172229}
+.gg-sixstep-library .gg-mobile-step-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.gg-sixstep-library .gg-mobile-step-nav button{display:grid;gap:4px;min-width:0;border:0;border-radius:5px;padding:4px;color:#c7d2d7;background:transparent;text-align:left;font-size:12px}
+.gg-sixstep-library .gg-mobile-step-nav .gg-step-mark{height:3px;background:#405159;border-radius:2px}
+.gg-sixstep-library .gg-mobile-step-nav button[aria-current=step]{color:#f4b65d;font-weight:750}
+.gg-sixstep-library .gg-mobile-step-nav button[aria-current=step] .gg-step-mark{background:#f4b65d}
+.gg-sixstep-library .gg-mobile-step-nav .gg-step-label{display:flex;align-items:center;gap:4px}
+.gg-three-stage .gg-preview-empty{font-size:13px;color:#b7c7ce;padding:6px 0}
+.gg-three-stage .gg-preview-empty button{color:#f4b65d;min-height:40px}
+@media(max-height:450px) and (orientation:landscape){.gg-three-stage .gg-sixstep-header{display:flex;align-items:center;gap:8px}.gg-three-stage .gg-sixstep-header>div{flex:0 1 auto}.gg-three-stage .gg-sixstep-header nav{flex:1;min-width:0}.gg-three-stage .gg-sixstep-header>div>small{white-space:nowrap}.gg-three-stage .gg-sixstep-header>div>strong{display:none}}
