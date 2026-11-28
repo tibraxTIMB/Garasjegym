@@ -225,3 +225,31 @@
 body:has(> .gg-architect-issue-backdrop) > #root{isolation:isolate}
 .gg-architect-issue-backdrop{z-index:2147483000!important;pointer-events:auto}
 .gg-architect-issue-sheet{pointer-events:auto}
+
+/* Exercise entry: refine the existing artist palette, not a replacement theme.
+   Keep all part names, durations, counts and settings visible. */
+.gg-architect .gg-active-part-context{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 10px;min-width:0;padding:8px 10px;border-left:3px solid #f0b45e;background:#202d34;border-radius:4px 8px 8px 4px}
+.gg-active-part-context>div{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;min-width:0}
+.gg-active-part-context strong{font-size:1.12rem;font-weight:800;letter-spacing:.025em;color:#ffd18e;white-space:nowrap}
+.gg-active-part-context span{font-size:.86rem;color:#e8edf0;overflow-wrap:anywhere}
+.gg-active-part-context small{font-size:.76rem;color:#b7c5cd;font-variant-numeric:tabular-nums}
+.gg-sixstep-mobile .gg-part-workbench{display:grid;gap:6px;min-width:0}
+.gg-sixstep-mobile .gg-part-workbench .gg-logical-parts{position:static;max-height:none;overflow:visible}
+.gg-sixstep-mobile .gg-part-workbench .gg-part-chip>button:first-child.active{border-left-color:#f0b45e;box-shadow:inset 2px 0 0 #f0b45e;background:#332b20;color:#ffd18e}
+.gg-sixstep-mobile .gg-part-workbench .gg-part-chip>button:first-child small{display:block;white-space:normal}
+.gg-sixstep-mobile .gg-part-workbench .gg-exercise-actions{display:flex;gap:6px;margin:0;padding:0;min-width:0}
+.gg-sixstep-mobile .gg-part-workbench .wod-open-library{flex:1 1 0;min-width:0;min-height:44px}
+.gg-sixstep-mobile .gg-part-workbench .gg-add-pause{flex:0 0 auto;min-height:44px;padding:5px 10px}
+.gg-sixstep-mobile .gg-composite-editor{margin:5px 0;padding:3px 0!important;border:0;background:transparent}
+.gg-sixstep-mobile .gg-composite-block:not([open]){padding:2px 0!important;margin:0!important}
+.gg-sixstep-mobile .gg-composite-block>summary{min-height:40px;font-size:.83rem}
+.gg-exercise-move{font-size:.78rem;margin-top:3px;color:#b7c5cd}
+.gg-exercise-move>summary{cursor:pointer;min-height:24px}
+.gg-picker-part-context{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;padding:7px 9px;border-left:3px solid #f0b45e;border-radius:4px;background:#202d34;color:#ffd18e;font-size:.85rem;min-width:0}
+.gg-picker-part-context strong{overflow-wrap:anywhere}
+.gg-picker-part-context label{display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-width:0;color:#e8edf0;font-size:.78rem}
+.gg-picker-part-context select{min-width:0;max-width:100%}
+.gg-picker-name{display:block;width:100%;min-height:36px;text-align:left;padding:3px 0;border:0;background:none;color:inherit;font:inherit;font-weight:700;line-height:1.2;overflow-wrap:anywhere;cursor:pointer}
+.gg-sixstep-library .gg-picker-name{flex-basis:100%;font-size:.9rem}
+.gg-picker-name:focus-visible{outline:2px solid #ffd18e;outline-offset:2px}
+.gg-sixstep-library .wod-exercise-card.is-picked .gg-picker-name{color:#ffd18e}
