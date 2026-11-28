@@ -357,3 +357,21 @@ body:has(> .gg-architect-issue-backdrop) > #root{isolation:isolate}
 .gg-three-stage .gg-compact-dose-values button{letter-spacing:0;font-variant-numeric:tabular-nums}
 .gg-three-stage .gg-sixstep-formats .gg-format-glyph svg{stroke-width:1.9}
 @media(max-width:380px){.gg-three-stage .gg-step-label{gap:3px}.gg-three-stage .gg-step-label svg{width:13px;height:13px}}
+
+/* Exercise identity: one small mark, human-readable name, subdued metadata. */
+.gg-exercise-mark{display:inline-flex;align-items:center;justify-content:center;flex:0 0 27px;width:27px;height:27px;border:1px solid #53656c;border-radius:6px;background:#202e34;color:#b8ccd4}
+.gg-exercise-mark svg{width:21px;height:21px;flex:none}
+.gg-exercise-mark[data-mark=kettlebell],.gg-exercise-mark[data-mark=barbell],.gg-exercise-mark[data-mark=dumbbell],.gg-exercise-mark[data-mark=complex]{color:#f3c181;border-color:#735e42}
+.gg-exercise-mark[data-mark=core],.gg-exercise-mark[data-mark=mobility],.gg-exercise-mark[data-mark=trx]{color:#a2d3c4;border-color:#4e7169}
+.gg-exercise-mark[data-mark=row],.gg-exercise-mark[data-mark=bike],.gg-exercise-mark[data-mark=cardio],.gg-exercise-mark[data-mark=rope]{color:#a7d3eb;border-color:#4b6a7b}
+.gg-exercise-mark[data-mark=pause]{color:#c4c9cc;border-color:#5d666b}
+.gg-exercise-identity,.gg-sixstep-library .gg-picker-name{display:flex!important;align-items:center;gap:6px;min-width:0;text-align:left}
+.gg-exercise-title{min-width:0;overflow-wrap:anywhere;line-height:1.22;font-weight:700;letter-spacing:.005em}
+.gg-three-stage .gg-compact-dose-name .gg-exercise-identity{font-size:13px}
+.gg-three-stage .gg-compact-dose-name .gg-exercise-mark{flex-basis:24px;width:24px;height:24px}
+.gg-three-stage .gg-compact-dose-name .gg-exercise-mark svg{width:19px;height:19px}
+.gg-sixstep-library .gg-picker-name{font-size:14px;min-height:42px}
+.gg-three-stage .gg-review-exercise .gg-exercise-identity{font-size:13px;flex:1}
+.gg-three-stage .gg-compact-dose-name .gg-dose-order{color:#b7c7ce;font-size:10px;font-weight:600}
+.gg-three-stage .gg-compact-dose-name .gg-exercise-title{min-width:0}
+@media(max-width:380px){.gg-three-stage .gg-compact-dose-name .gg-exercise-identity{flex-wrap:wrap;gap:3px}.gg-three-stage .gg-compact-dose-name .gg-exercise-mark{width:22px;height:22px;flex-basis:22px}}
