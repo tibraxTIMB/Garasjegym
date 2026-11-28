@@ -2,6 +2,7 @@ import {cardDose,cardTone,formatCardTime} from './wodCard.js'
 import {flowPurpose,flowReporting} from './workoutFlow.js'
 import {compositeBlockDuration,COMPOSITE_INTERVAL_FORMATS,isValidRirTarget} from './compositeWod.js'
 import {isEmomFormat,emomDisplayLabel} from './wodEngine.js'
+import {compositePartLabel} from './zuendung.js'
 
 // Adapt editable rows to the same presentation contract as persisted WOD cards.
 export function architectCardItem(item){
@@ -51,3 +52,19 @@ export function hydrateArchitectLevels(item,defaults){
  }
  return result
 }
+
+// A saved warmup is one authoring part. Its timed sub-blocks retain their IDs and
+// format so the existing timer, results and SYNCHRON contracts are unchanged.
+export function logicalArchitectParts(parts,blocks,composite=true){
+ const rows=[]
+ for(const part of parts){
+  const existing=part.warmup_group&&rows.find(p=>p.warmup_group===part.warmup_group)
+  if(existing){existing.blockIds.push(part.id);existing.group.push(...part.group);existing.seconds+=part.seconds;existing.time=formatCardTime(existing.seconds);continue}
+  rows.push({...part,group:[...part.group],blockIds:[part.id],partLabel:composite?part.warmup_group?'0':compositePartLabel(blocks,part.index):'A',...(part.warmup_group?{title:part.warmup_source_wod_name||'Oppvarming',label:'Oppvarming'}:{})})
+ }
+ return rows
+}
+export function logicalPartLabel(blocks,index){const b=blocks[index];return b?.warmup_group?'0':compositePartLabel(blocks,index)}
+// Use the first unused letter, not the physical array offset. Renumbered labels
+// are derived at render time; stored titles and IDs remain untouched.
+export function nextMainPartLabel(blocks){return String.fromCharCode(65+blocks.filter(b=>!b.warmup_group).length)}

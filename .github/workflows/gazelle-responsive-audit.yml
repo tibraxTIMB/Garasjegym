@@ -1,7 +1,7 @@
 name: Gazelle responsive browser audit (no deploy)
 on:
   push:
-    branches: [gazelle-responsive-audit, gazelle-librarium, gazelle-librarium-polish, gazelle-plan-folders, gazelle-acta, gazelle-pt-plan, gazelle-pt-compact, gazelle-architect, gazelle-pt-flow-repair, gazelle-operational-anatomical, volksmaschine-reibungslos, hotfix-pt-dialog-layout-20261126, werkstatt-pc-companion, 'ops/werkstatt-fertigstellung-49', exportwerk-fertigstelling, 'fix/wod-sixstep-release-20261128']
+    branches: [gazelle-responsive-audit, gazelle-librarium, gazelle-librarium-polish, gazelle-plan-folders, gazelle-acta, gazelle-pt-plan, gazelle-pt-compact, gazelle-architect, gazelle-pt-flow-repair, gazelle-operational-anatomical, volksmaschine-reibungslos, hotfix-pt-dialog-layout-20261126, werkstatt-pc-companion, 'ops/werkstatt-fertigstellung-49', exportwerk-fertigstelling, 'fix/wod-sixstep-release-20261128', 'fix/wod-del-zero-20261128']
 permissions:
   contents: read
 jobs:

@@ -142,6 +142,49 @@ with sync_playwright() as pw:
                     panel.get_by_label("Tilgjengeleg · Romaskin",exact=True).fill("1")
                     panel.get_by_label("Tilgjengeleg · Sykkel",exact=True).fill("1")
                     check(page,"architect-samspel",w,h)
+                if screen=="builder":
+                    warm, warm_errors=open_page(context,"/ui-audit.html?scenario=audit-builder-warmup&screen=builder")
+                    try:
+                        assert warm.get_by_text("BENCHMARK COLLECTION",exact=True).count()==0
+                        warm.get_by_role("button",name="Samansett økt",exact=True).tap()
+                        warm.get_by_role("button",name="Neste →",exact=True).tap()
+                        warm.get_by_role("button",name="Del 0 · Vel oppvarming",exact=False).tap()
+                        lib=warm.get_by_role("dialog",name="Vel lagra oppvarming")
+                        lib.get_by_role("button",name="Info om Blitz Herz").tap()
+                        assert lib.locator("li").count()==9
+                        lib.get_by_role("button",name="Blitz Herz",exact=True).tap()
+                        parts=warm.get_by_role("navigation",name="Delar i WOD-en")
+                        assert parts.locator(".gg-part-chip").count()==2
+                        warm.get_by_role("button",name="Vidare til øvingar",exact=True).tap()
+                        settings=warm.get_by_role("dialog",name="Format og tid for øktdelen")
+                        settings.get_by_role("combobox",name="Format",exact=True).select_option("Chipper")
+                        settings.get_by_role("button",name="15",exact=True).tap()
+                        settings.get_by_role("button",name="Partner · Synkron",exact=True).tap()
+                        settings.get_by_role("button",name="Ferdig",exact=True).tap()
+                        assert "Synkron" in parts.inner_text()
+                        warm.get_by_role("button",name="Legg til øving",exact=True).tap()
+                        picker=warm.get_by_role("region",name="Vel øvingar til WOD")
+                        picker.locator(".wod-add-button").first.wait_for()
+                        for i in range(6):
+                            picker.locator(".wod-add-button").nth(i).tap()
+                        picker.locator(".wod-library-ok-top").tap()
+                        assert warm.locator(".wod-selected-list .wod-selected-card").count()==6
+                        warm.get_by_role("button",name="Del 0 · Blitz Herz",exact=True).tap()
+                        assert warm.locator(".wod-selected-list .wod-selected-card").count()==9
+                        warm.get_by_role("button",name="Vidare · 9 øvingar",exact=True).tap()
+                        assert warm.locator(".gg-compact-dose-row").count()==9
+                        warm.get_by_role("button",name="Del A · Chipper",exact=True).tap()
+                        assert warm.locator(".gg-compact-dose-row").count()==6
+                        warm.get_by_role("button",name="Legg til Del B",exact=True).tap()
+                        settings=warm.get_by_role("dialog",name="Format og tid for øktdelen")
+                        settings.get_by_role("combobox",name="Format",exact=True).select_option("AMRAP")
+                        settings.get_by_role("button",name="5",exact=True).tap()
+                        settings.get_by_role("button",name="Ferdig",exact=True).tap()
+                        assert parts.locator(".gg-part-chip > button:first-child > b").all_text_contents()==["0","A","B"]
+                        check(warm,"builder-del-zero-chipper",w,h)
+                        assert not warm_errors,warm_errors
+                    finally:
+                        warm.close()
                 if screen=="picker":
                     picker=page.locator(".wod-picker")
                     rows=picker.locator(".wod-picker-option")

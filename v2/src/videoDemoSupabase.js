@@ -2,13 +2,14 @@
 // imported by the production app. No requests to Supabase are made here.
 import {qualityRowConfig,pairedEmomConfig} from './lib/samspel.js'
 import {buildZuendung} from './lib/zuendung.js'
+import {warmupLibraryPayload} from './lib/warmupLibrary49.js'
 import {compositeBlockForTimer,compositeTotalSeconds} from './lib/compositeWod.js'
 import catalogueManifest from '../supabase/catalog/exercise_catalogue_manifest_sturmKopf_feuer_1_1.json'
 const now = new Date()
 const future = new Date(now.getTime() + 86400000 * 3).toISOString()
 const scenario = () => new URLSearchParams(location.search).get('scenario') || ''
 const isAudit = () => scenario().startsWith('audit')
-const currentDemoId = () => ['maintenance','audit-admin','audit-pt-plan','audit-pt-schedule'].includes(scenario()) ? 'demo-admin' : 'demo-member'
+const currentDemoId = () => ['maintenance','audit-admin','audit-pt-plan','audit-pt-schedule','audit-builder-warmup'].includes(scenario()) ? 'demo-admin' : 'demo-member'
 
 let maintenanceLogs = []
 let requests = []
@@ -52,7 +53,7 @@ function rowsFor(table) {
     case 'pt_coaches': return [{id:'coach-demo',user_id:'demo-coach',public_name:'Garasje PT (døme)',bio:'Hjelp med teknikk, styrke og treningsglede.',specialties:['Styrke','Kom i gang'],is_active:true}]
     case 'pt_services': return [{id:'service-demo',title:'Uforpliktande prat',description:'Finn ut om PT passar for deg.',duration_label:'Etter avtale',price_label:'0 kr i denne demoen',is_active:true}]
     case 'pt_service_requests': return requests
-    case 'wods': return scenario()==='audit-frontdienst'?[...demoWods,auditQualityWod,auditPairedWod,auditWarmupWod()]:scenario()==='audit-folders'?[...demoWods,{...demoWods[0],id:'folder-wod-1',name:'Z – Første økt'},{...demoWods[0],id:'folder-wod-2',name:'A – Andre økt'}]:demoWods
+    case 'wods': return scenario()==='audit-builder-warmup'?[...demoWods,{...warmupLibraryPayload('Blitz Herz',[...auditCatalogue,{id:'audit-warmup-ityw',name:'ITYW + rygghev',category:'Mobilitet',equipment:'Kroppsvekt',body_area:'Rygg',is_active:true},{id:'audit-warmup-thread',name:'Thread the needle',category:'Mobilitet',equipment:'Kroppsvekt',body_area:'Rygg',is_active:true}]),id:'audit-saved-warmup',created_by:'demo-admin',created_at:now.toISOString()}]:scenario()==='audit-frontdienst'?[...demoWods,auditQualityWod,auditPairedWod,auditWarmupWod()]:scenario()==='audit-folders'?[...demoWods,{...demoWods[0],id:'folder-wod-1',name:'Z – Første økt'},{...demoWods[0],id:'folder-wod-2',name:'A – Andre økt'}]:demoWods
     case 'wod_favorites': case 'wod_daily_schedules': case 'exercise_favorites': return []
     case 'classes': return [{id:'demo-class',title:'Garasjesirkel (døme)',type:'Gruppetime',starts_at:future,duration_minutes:45,capacity:6,published:true,cancelled_at:null,description:'Ei fellesøkt med roing, styrke og mobilitet.',workout_text:'45 min trening',wod_ids:[]}]
     case 'class_bookings': return bookings
@@ -61,7 +62,7 @@ function rowsFor(table) {
     case 'pt_wod_assignments': return memberCalendarAudit()?[calendarAssignment()]:scheduleAudit()?scheduleAssignments:scenario()==='audit-pt-plan'?[{id:'audit-assignment',member_id:'demo-member',wod_id:'demo-wod',status:'completed',completed_at:'2026-11-23T19:00:00Z',workout_log_id:'audit-log',wods:{id:'demo-wod',name:'Mancave Paincave med eit ekstra langt namn'}}]:[]
     case 'pt_program_sessions': return memberCalendarAudit()?calendarPlanRows():scheduleAudit()?scheduleRows:scenario()==='audit-folders'?[{program_id:'folder-plan',wod_id:'folder-wod-2',sequence_no:2,archived_at:null},{program_id:'folder-plan',wod_id:'folder-wod-1',sequence_no:1,archived_at:null}]:isAudit()?[1,2,3,4,5,6].map(n=>({id:'audit-session-'+n,program_id:'audit-plan',sequence_no:n,week_no:n,day_no:1,title:'Økt '+n+' – Alternating Dumbbell Push Jerk og grunnrørsler',status:'planned',session_kind:'training',estimated_minutes:35,focus_area:'Teknikk og styrke',coach_note:'Lett belastning.',wod_id:'demo-wod',archived_at:null,flow_requires_approval:true,flow_approved:false,flow_override:false})):[]
     case 'workout_logs': return scenario()==='audit-folders'?[{member_id:'demo-member',source_wod_id:'folder-wod-1',workout_date:'2026-11-24',created_at:'2026-11-24T12:00:00Z'},{member_id:'demo-member',source_wod_id:'demo-wod',workout_date:'2026-11-25',created_at:'2026-11-25T12:00:00Z'},{member_id:'other',source_wod_id:'folder-wod-2',workout_date:'2026-11-25',created_at:'2026-11-25T13:00:00Z'}]:[]
-    case 'exercises': return scenario()==='audit-admin'||scenario()==='audit-frontdienst'?auditCatalogue:[]
+    case 'exercises': return ['audit-admin','audit-frontdienst','audit-builder-warmup'].includes(scenario())?auditCatalogue:[]
     case 'personal_records': case 'class_live_sessions': return []
     default: return []
   }
