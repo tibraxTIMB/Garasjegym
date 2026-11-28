@@ -22,11 +22,21 @@ with sync_playwright() as pw:
                 page.get_by_role("button",name="Start no",exact=True).first.click()
                 page.wait_for_function("(k)=>JSON.parse(localStorage.getItem(k)||'{}').timerSnapshot?.running===true",arg=DRAFT)
                 page.clock.fast_forward(61000)
-                page.locator(".gg-live-timer").get_by_role("button",name="Fullfør Chipper",exact=True).click()
-                dialog=page.get_by_role("dialog",name="Stadfest avslutning")
-                dialog.get_by_role("button",name="Alle mål ferdige" if complete else "Avslutt delvis",exact=True).click()
+                progress=page.get_by_role("region",name="Chipper-framdrift")
+                expect(progress).to_contain_text("0/2 ferdige")
+                progress.get_by_role("button",name="FERDIG · NESTE ØVING",exact=True).click()
+                expect(progress).to_contain_text("1/2 ferdige")
+                expect(progress).to_contain_text("2000 m")
+                page.wait_for_function("(k)=>JSON.parse(localStorage.getItem(k)||'{}').timerSnapshot?.chipper_confirmed_count===1",arg=DRAFT)
+                if complete:
+                    page.clock.fast_forward(2000)
+                    progress.get_by_role("button",name="FERDIG · FULLFØR CHIPPER",exact=True).click()
+                else:
+                    page.locator(".gg-live-timer").get_by_role("button",name="Fullfør Chipper",exact=True).click()
+                    dialog=page.get_by_role("dialog",name="Stadfest avslutning")
+                    dialog.get_by_role("button",name="Avslutt delvis",exact=True).click()
                 page.wait_for_function("([k,expected])=>JSON.parse(localStorage.getItem(k)||'{}').timerSnapshot?.chipper_all_goals_confirmed===expected",arg=[DRAFT,complete])
-                expect(page.locator('[data-result-field="chipper-total-0"]')).to_have_value("80" if complete else "")
+                expect(page.locator('[data-result-field="chipper-total-0"]')).to_have_value("80")
                 expect(page.locator('[data-result-field="chipper-total-1"]')).to_have_value("2000" if complete else "")
                 assert page.evaluate("(k)=>localStorage.getItem(k)","gg.audit.frontdienst.writes") is None
                 assert not errors,errors
