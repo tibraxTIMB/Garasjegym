@@ -78,7 +78,8 @@ test('only an unstarted WOD can leave without discarding; countdown can be cance
 
 test('manual Finish and Next part are silent while automatic completion retains the finish cue',()=>{
  const timer=source('../src/components/Training.jsx')
- const finish=timer.match(/const finishCurrent=\(\)=>\{[^\n]+/)[0]
+ const finish=timer.match(/const finishCurrent=\([^)]*\)=>\{[^\n]+/)?.[0]
+ assert.ok(finish,'Manual finish handler must be present')
  assert.match(finish,/onFinish\(/)
  assert.doesNotMatch(finish,/playSignal|playPackSignal/)
  const automatic=timer.slice(timer.indexOf('if (timerLimitReached) {'),timer.indexOf('const phaseChanged = elapsed > 0'))
