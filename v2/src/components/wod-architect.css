@@ -428,3 +428,10 @@ body:has(> .gg-architect-issue-backdrop) > #root{isolation:isolate}
 .gg-three-stage .wizard-final-stage .wizard-stage-actions{gap:5px;flex-wrap:wrap}
 .gg-three-stage .wizard-final-stage .wizard-stage-actions button{min-height:44px}
 @media(max-width:380px){.gg-three-stage .gg-sixstep-review .gg-review-exercise{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 15px}.gg-three-stage .gg-review-name>button{font-size:11px;max-width:92px}}
+
+/* PT edit: expose the existing shared name field at setup and build.
+   No duplicate save action and no additional wizard step. */
+.gg-three-stage.gg-sixstep-edit.gg-three-stage-2 .gg-architect-heading{display:grid!important;grid-template-columns:minmax(0,1fr);gap:3px;margin:0;padding:0}
+.gg-three-stage.gg-sixstep-edit.gg-three-stage-2 .gg-architect-heading>button{display:none!important}
+.gg-three-stage.gg-sixstep-edit.gg-three-stage-2 .gg-architect-heading label{gap:2px}
+.gg-three-stage.gg-sixstep-edit.gg-three-stage-2 .gg-architect-heading input{min-height:44px;font-size:16px;font-weight:700;line-height:1.25;width:100%;box-sizing:border-box}
