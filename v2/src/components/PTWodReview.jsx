@@ -3,9 +3,9 @@ import SamspelParticipantResults from './SamspelParticipantResults.jsx'
 import AnatomyEvidence from './AnatomyEvidence.jsx'
 import {workoutAnatomyExercises} from '../lib/anatomicalIntelligence.js'
 import {useEffect,useMemo,useState} from 'react'
-import {ArrowLeft,Award,CheckCircle2,ChevronDown,MessageSquareText,Send,ShieldCheck} from 'lucide-react'
+import {X,Award,CheckCircle2,ChevronDown,MessageSquareText,Send} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
-import {dosageLabel,formatDuration,pacingReview,plannedDoseForExercise,ptDosingOptions,ptIsAmrapPart,ptPartCompletion,ptPartScore,ptPrescribedWorkContext,ptReviewHighlights,ptTeamResult,ptRoundSplits,validRoundSplits} from '../lib/ptWodReview.js'
+import {dosageLabel,formatDuration,pacingReview,plannedDoseForExercise,ptDosingOptions,ptIsAmrapPart,ptPartCompletion,ptPartScore,ptPrescribedWorkContext,ptReviewHighlights,ptTeamResult,ptSessionMuscleItems,ptRoundSplits,validRoundSplits} from '../lib/ptWodReview.js'
 
 const formattedDate=value=>value?new Date(value+'T12:00:00').toLocaleDateString('nn-NO',{day:'numeric',month:'long',year:'numeric'}):'Dato ikkje registrert'
 const array=value=>Array.isArray(value)?value:[]
@@ -50,6 +50,8 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
  const isAmrap=String(result?.format||'').toLowerCase()==='amrap'||['couplet','triplet'].includes(String(result?.format||'').toLowerCase())&&result?.result_data?.combination_mode==='AMRAP'
  const teamResult=ptTeamResult(result)
  const exerciseResults=array(result?.result_data?.exercise_results)
+ const sessionMuscleItems=ptSessionMuscleItems(result,prescriptionSchema)
+ const individualMuscle=!teamResult&&result?.result_data?.participation_verified==='individual'
  const blockResults=array(result?.result_data?.block_summary)
  const firstAmrapPart=blockResults.findIndex(ptIsAmrapPart)
  const send=async event=>{
@@ -92,18 +94,17 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
      {clientRank?.title&&<span className="ptreview-client-rank"><Award size={12}/>{clientRank.title}{Number(clientRank.stars)>0&&<span aria-label={clientRank.stars+' stjerner'}>{'★'.repeat(Math.min(5,clientRank.stars))}</span>}</span>}
     </div>
     <h3>{wodName||'Gjennomført WOD'}</h3>
-    <p>{result?formattedDate(result.workout_date):'Opnar resultat'} · PT-tildelt økt</p>
+    <p>{result?formattedDate(result.workout_date):'Opnar resultat'}{teamResult?' · Lagøkt':' · PT-tildelt økt'}</p>
    </div>
-   <button type="button" className="secondary-button" onClick={onClose}><ArrowLeft size={15}/> WOD-lista</button>
+   <button type="button" className="ptreview-close" aria-label="Lukk resultat" title="Lukk resultat" onClick={onClose}><X size={18}/></button>
   </header>
   {loading&&<p role="status" className="ptfollow-info">Hentar resultat frå denne PT-tildelinga …</p>}
   {error&&<p className="auth-error" role="alert">{error}</p>}
   {!loading&&!result&&!error&&<p className="ptfollow-empty">Det finst ikkje ein lagra treningslogg knytt til denne PT-tildelinga. Ingen resultat er gjetta.</p>}
   {result&&!loading&&<>
    <div className="ptreview-metrics" aria-label="Resultatsamandrag">
-    {metrics.map(m=><div className="ptreview-metric" key={m.label}><strong>{m.value}</strong><small>{m.label}</small></div>)}
+    {metrics.filter(m=>m.label!=='Resultattype').map(m=><div className="ptreview-metric" key={m.label}><strong>{m.value}</strong><small>{m.label}</small></div>)}
    </div>
-   {teamResult&&<p className="ptreview-insight is-note">Lagøkt · utøvarplassane er ikkje knytte til medlemsidentitet. Bruk resultata som samtalegrunnlag, ikkje som personleg progresjon.</p>}
    <SamspelParticipantResults samspel={result.result_data?.samspel}/>
    {(Array.isArray(result.result_data?.samspel_blocks)?result.result_data.samspel_blocks:[]).map(part=><section key={part.block_id}><strong>{part.title} · Samspel</strong><small>{part.completed?'Registrert fullført':'Delvis / ikkje utført'}{part.distance!=null?' · '+part.distance+' m':''}{part.calories!=null?' · '+part.calories+' cal':''}{part.relay_rounds!=null?' · '+part.relay_rounds+' lagrundar':''}</small><SamspelParticipantResults samspel={part.samspel}/></section>)}
    {result.result_data?.time_cap_reached&&<p className="ptreview-insight is-review">Tidsgrensa vart nådd. For Time-resultat må vurderast ut frå faktisk gjennomført arbeid, ikkje som automatisk fullføring.</p>}
@@ -134,7 +135,7 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
     <summary><span className="ptreview-disclosure-main"><strong>Rundetider og disponering</strong><small>AMRAP · registrerte rundar</small></span><ChevronDown size={18}/></summary>
     <div className="ptreview-disclosure-content">{renderPacing(laps)}</div>
    </details>}
-   {exerciseResults.length>0&&(teamResult||result.result_data?.participation_verified!=='individual'?<small>{result.result_data?.participation_verified==='team'?'Lagresultat · ikkje grunnlag for personleg muskelkart.':'Individuell gjennomføring er ikkje stadfesta i PT-resultatgrensesnittet. Muskelkart blir ikkje gjetta.'}</small>:<AnatomyEvidence exercises={workoutAnatomyExercises(result)} scope="Denne PT-økta"/>)}
+   {individualMuscle&&workoutAnatomyExercises(result).length>0?<AnatomyEvidence exercises={workoutAnatomyExercises(result)} scope="Registrert individuelt arbeid" compact/>:sessionMuscleItems.length>0&&<AnatomyEvidence exercises={sessionMuscleItems} scope={teamResult?'Lagøkta · øvingsprofil':'Økta · øvingsprofil'} planned compact/>}
    {!teamResult&&exerciseResults.length>0&&<details className="ptreview-disclosure ptreview-dose">
     <summary><span className="ptreview-disclosure-main"><strong><CheckCircle2 size={16}/> Planlagt og utført dosering</strong><small>{exerciseResults.length} øvingar · opna for sett, reps og vekt</small></span><ChevronDown size={18}/></summary>
     <div className="ptreview-disclosure-content">
@@ -155,7 +156,7 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
    </details>}
    {!teamResult&&<IndividualCalibrationReview key={assignmentId||programSessionId} result={result} assignmentId={assignmentId} programSessionId={programSessionId} onRecord={onRecordCalibration}/>}
    <div className="ptreview-next-action">
-    <div><strong>PT-vurdering</strong><small>Gje {clientName} ei konkret tilbakemelding etter å ha sett resultata.</small></div>
+    <strong>PT-vurdering</strong>
     <button type="button" className="primary-button" aria-expanded={feedbackOpen} onClick={()=>setFeedbackOpen(x=>!x)}><MessageSquareText size={17}/>{feedbackOpen?'Lukk tilbakemelding':'Gje tilbakemelding'}</button>
    </div>
    {feedbackOpen&&<section className="ptreview-feedback-panel" aria-label="Personleg PT-tilbakemelding">
@@ -173,7 +174,6 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
       <div><strong>{dosageLabel(f.dosing)}</strong><small>{new Date(f.created_at).toLocaleDateString('nn-NO')}</small></div><p>{f.body}</p>
     </article>)}</div>
    </details>}
-   <p className="ptreview-privacy"><ShieldCheck size={16}/> Berre resultat frå denne PT-tildelinga. Andre private treningsøkter er ikkje henta.</p>
   </>}
  </section>
 }

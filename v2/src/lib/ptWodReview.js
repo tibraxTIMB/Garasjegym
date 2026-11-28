@@ -181,3 +181,13 @@ export function ptPrescribedWorkContext(result,schema,exercise) {
  const prescribedSet=count>0&&Number.isInteger(prescribedReps)&&prescribedReps>0?`${count} planlagde intervall × ${prescribedReps} reps`:count>0?`${count} planlagde intervall`:null
  return {kind:'assumed',text:`EMOM: ${prescribedSet?prescribedSet+'. ':''}Øvinga blir rekna som gjennomført etter WOD-oppsettet når ingen avvik er meldt; det er ikkje ei måling av kvart sett.`}
 }
+
+// A session profile is descriptive only: never feeds individual history or PRs.
+export function ptSessionMuscleItems(result,schema=null){
+ if(!result)return []
+ const d=result.result_data||{},list=x=>Array.isArray(x)?x:[]
+ const samspel=[d.samspel,...list(d.samspel_blocks).map(b=>b.samspel)].filter(Boolean)
+ const items=[...list(d.exercise_results),...list(schema?.items),...samspel.flatMap(s=>[...list(s.targets),...list(s.tracks),s.exercise_name])]
+ const seen=new Set()
+ return items.filter(item=>{const name=typeof item==='string'?item:item?.exercise_name||item?.name;if(typeof name!=='string'||!name.trim()||item?.is_rest)return false;const key=name.trim().toLowerCase();if(seen.has(key))return false;seen.add(key);return true})
+}
