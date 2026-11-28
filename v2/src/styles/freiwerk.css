@@ -24,7 +24,7 @@ html[data-gg-design="freiwerk"] :is(.training-heading,.engine-section-title,.pt2
 html[data-gg-design="freiwerk"] :is(.training-heading,.engine-section-title,.pt2-panel-head)>div {min-width:0}
 html[data-gg-design="freiwerk"] :is(.training-heading h3,.pt2-panel-head h3,.engine-section-title h4) {line-height:1.25;overflow-wrap:break-word;word-break:normal;letter-spacing:-.015em}
 html[data-gg-design="freiwerk"] :is(.primary-button,.secondary-button,.icon-button) {border-radius:var(--fw-radius);box-shadow:none}
-html[data-gg-design="freiwerk"] .primary-button:not(.danger-button) {background:var(--fw-accent);color:#171710;font-weight:750}
+html[data-gg-design="freiwerk"] .primary-button:not([class*="danger"]):not([class*="delete"]):not([class*="discard"]):not([class*="cancel"]) {background:var(--fw-accent);color:#171710;font-weight:750}
 html[data-gg-design="freiwerk"] .secondary-button {border-color:var(--fw-line);color:var(--fw-accent);font-weight:650}
 html[data-gg-design="freiwerk"] :is(.nav-item.selected,.app-mobile-nav-item.is-active) {color:var(--fw-accent);background:var(--fw-selected)}
 html[data-gg-design="freiwerk"] .app-mobile-nav {background:var(--fw-surface);border-color:var(--fw-line);box-shadow:none}
