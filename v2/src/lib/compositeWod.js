@@ -24,6 +24,7 @@ export function compositeIntervalMinutes(format,block=null) {
 }
 
 export function compositeBlockDuration(block, itemsCount=1) {
+ if(block?.session_timer_settings&&Number.isFinite(block.session_duration_seconds))return Math.max(0,block.session_duration_seconds)
  const format=String(block?.format||'')
  // Older saved block engines only carried duration_seconds, not minutes/round settings.
  if(block?.minutes==null && Number(block?.duration_seconds)>0)return Math.round(Number(block.duration_seconds))
@@ -99,13 +100,14 @@ export function compositeBlockForTimer(block,index=0){
  return {
   ...block, ...(block.samspel?{samspel:compositeSamspelConfig(block)||block.samspel}:{}), title:block.title||'Del '+(index+1),
   duration_seconds:duration,
-  items:every&&!samspelDouble(block.samspel)?items.map(item=>({...item,minute_slot:item.minute_slot||Array.from({length:slots},(_,i)=>i+1).join(',')})):items,
+  items:every&&!block.session_preserve_items&&!samspelDouble(block.samspel)?items.map(item=>({...item,minute_slot:item.minute_slot||Array.from({length:slots},(_,i)=>i+1).join(',')})):items,
  }
 }
 
 /** Build the block settings consumed by the existing Timer, not a new timer. */
 export function compositeTimerConfig(block) {
  const current=compositeBlockForTimer(block)
+ if(current.session_timer_settings){const seconds=current.duration_seconds;return {format:current.format,minutes:String(Math.floor(seconds/60)),seconds:String(seconds%60),timerSettings:current.session_timer_settings}}
  const every=compositeIntervalMinutes(current.format,current)
  const interval=COMPOSITE_INTERVAL_FORMATS.includes(current.format)
  const station=current.format==='Stasjonssirkel'
