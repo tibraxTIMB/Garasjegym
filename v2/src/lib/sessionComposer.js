@@ -49,10 +49,11 @@ export function buildTrainingSession(selected){
     b.session_duration_seconds=seconds
     if(samspelChipper(b.samspel)&&!seconds)throw Error(w.name+': legg inn ei tidsgrense før du kombinerer denne WOD-en.')
    }
+   if(b.session_timer_settings)b.session_timer_settings={...b.session_timer_settings,workout_schema:{...b.session_timer_settings.workout_schema,items:partItems}}
    if(b.samspel&&!compositeSamspelConfig(b))throw Error(w.name+': dette samarbeidsoppsettet må førebels køyrast separat.')
    // One original composite can contain its own benchmark sources. Do not use
    // the entire composite WOD as the benchmark for an individual child block.
-   if(grouped){delete b.source_wod_snapshot;delete b.source_wod_id;delete b.source_wod_name}
+   if(grouped||b.participation&&b.participation!=='individual'||b.samspel){delete b.source_wod_snapshot;delete b.source_wod_id;delete b.source_wod_name}
    blocks.push(compositeBlockForTimer(b,blocks.length));items.push(...partItems)
   })
  })
