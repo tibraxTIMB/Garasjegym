@@ -55,3 +55,22 @@ assert.throws(()=>resolvePlanSlot(program,{week:7,day:1}))
 assert.throws(()=>resolvePlanSlot(program,{week:1,day:1,time:'25:00'}))
 assert.throws(()=>resolvePlanSlot({...program,start_date:null},{week:1,day:1,time:'17:00'}))
 assert.deepEqual(resolvePlanSlot({...program,start_date:null,flow_unlock_mode:'open'},{week:1,day:1}),{week:1,day:1,date:'',time:''})
+
+import {libraryAppointmentStart,libraryAppointmentRow,sameLibraryAppointment} from '../src/lib/libraryTrainingEntry.js'
+import assertReplay from 'node:assert/strict'
+assertReplay.equal(libraryAppointmentStart('2026-12-05','10:00',0),'2026-12-05T09:00:00.000Z')
+assertReplay.equal(libraryAppointmentStart('2026-07-05','10:00',0),'2026-07-05T08:00:00.000Z')
+assertReplay.throws(()=>libraryAppointmentStart('2026-03-29','02:30',0))
+assertReplay.throws(()=>libraryAppointmentStart('2026-10-25','02:30',0))
+assertReplay.throws(()=>libraryAppointmentStart('2026-12-05','10:00',Date.parse('2026-12-06')))
+const replayRow=libraryAppointmentRow({id:'new',wod:{id:'old',name:'Svart Motor'},memberId:'client',actorId:'pt',date:'2026-12-05',time:'10:00',duration:30},0)
+assertReplay.deepEqual(replayRow.wod_ids,['old'])
+assertReplay.equal(sameLibraryAppointment(replayRow,replayRow),true)
+assertReplay.equal(sameLibraryAppointment({...replayRow,client_id:'other'},replayRow),false)
+
+// FREIWERK route wiring: static contract in addition to appointment domain tests.
+import {readFileSync as readFreiwerkSource} from 'node:fs'
+const freiwerkCard=readFreiwerkSource(new URL('../src/components/WodCard.jsx',import.meta.url),'utf8')
+const freiwerkLibrary=readFreiwerkSource(new URL('../src/components/WodLibrary.jsx',import.meta.url),'utf8')
+assertReplay.match(freiwerkCard,/onPlan&&<button[^>]*onClick=\{onPlan\}/)
+assertReplay.match(freiwerkLibrary,/onPlan=\{staff&&!simpleMode&&directTraining&&!protectedMode/)

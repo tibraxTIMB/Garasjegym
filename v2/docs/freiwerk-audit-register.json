@@ -416,6 +416,20 @@
       "evidence": []
     },
     {
+      "path": "v2/src/components/library-training-entry.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/LibraryTrainingEntry.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/components/mobile-native-controls.css",
       "category": "style",
       "state": "registered",
@@ -1194,6 +1208,13 @@
     },
     {
       "path": "v2/src/lib/ladder.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/libraryTrainingEntry.js",
       "category": "logic",
       "state": "registered",
       "checks": {},

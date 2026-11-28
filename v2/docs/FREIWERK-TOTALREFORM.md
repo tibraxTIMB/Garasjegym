@@ -37,3 +37,6 @@ No approval is fabricated. The first candidate introduces shared appearance and 
 
 ## Integration slice 02–05
 Imported PR #34 candidate changes after exact path-level conflict check against baseline. Extended shared weight-step controls to builder and FLOW, same-field navigation in builder, preset durations and guarded sheet gesture. All remain registered, not approved. PR #31/#32/#33 and older PRs still require reconciliation. Native date/time inputs retain semantic accessibility; full date/time, info and confirmation coverage remains pending.
+
+## FW06–07 integration slice
+Imported PR #33 by exact non-overlapping path comparison. WOD detail exposes Train now/Plan with role and launch-context guards; existing direct assignment and class launch stay on their existing paths. Guard WOD-card swipe around interactive controls; use shared date/time and confirmation in library entry; convert selected short builder menus to direct choices. Library grid and form controls restyled. Full builder migration and actual two-device Synchron/calendar validation remain pending; no approval recorded.

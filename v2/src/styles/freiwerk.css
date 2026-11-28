@@ -62,3 +62,21 @@ html[data-gg-design="freiwerk"] :is(.auth-error,[role=alert]) {overflow-wrap:bre
 }
 /* Safety, timer stage colours, destructive-action colours and existing functionality
    remain owned by their feature modules. No blanket hide or overflow clipping. */
+
+/* FW06–07: WOD library, readable cards and compact programming choices. */
+html[data-gg-design="freiwerk"] .wod-library-page .librarium-tile{background:var(--fw-surface);color:var(--fw-text);border-color:var(--fw-line);border-radius:var(--fw-radius)}
+html[data-gg-design="freiwerk"] .wod-library-page .librarium-footer{border-color:var(--fw-line);color:var(--fw-muted)}
+html[data-gg-design="freiwerk"] .wod-library-page .librarium-name{word-break:normal;overflow-wrap:break-word}
+html[data-gg-design="freiwerk"] .wod-library-page .librarium-more{color:var(--fw-muted)}
+.gg-fw-card-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;min-width:0}
+.gg-fw-card-actions-pair{grid-template-columns:repeat(2,minmax(0,1fr))}
+.gg-fw-card-actions .gg-fw-plan{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;min-height:48px;border:1px solid #526259;border-radius:8px;color:inherit;background:transparent;font:inherit;font-weight:700}
+html[data-gg-design="freiwerk"] .gg-fw-card-actions .gg-wod-start{min-height:48px;border:1px solid var(--fw-accent);background:var(--fw-accent);color:#171710;font-size:16px;border-radius:8px}
+html[data-gg-design="freiwerk"] .gg-wod-screen .gg-fw-plan{color:var(--fw-accent);border-color:var(--fw-line)}
+html[data-gg-design="freiwerk"] .gg-wod-screen .gg-wod-swipe{color:var(--fw-muted)}
+.gg-fw-choice-field{display:grid;gap:5px;min-width:0}.gg-fw-choice-field>strong{font-size:12px;line-height:1.3}.gg-fw-choice-field .gg-dna-choice{grid-template-columns:repeat(auto-fit,minmax(min(100%,86px),1fr))}
+html[data-gg-design="freiwerk"] .gg-sixstep-mobile .gg-sixstep-formats button,html[data-gg-design="freiwerk"] .gg-direct-choices button,html[data-gg-design="freiwerk"] .gg-participation-choices button{min-width:0;border-color:var(--fw-line);background:var(--fw-surface);color:var(--fw-text);border-radius:6px;box-shadow:none}
+html[data-gg-design="freiwerk"] .gg-sixstep-mobile .gg-sixstep-formats button[aria-pressed=true],html[data-gg-design="freiwerk"] .gg-direct-choices button[aria-pressed=true],html[data-gg-design="freiwerk"] .gg-participation-choices button[aria-pressed=true]{background:var(--fw-selected);color:var(--fw-accent);border-color:var(--fw-line);box-shadow:inset 0 -2px var(--fw-accent)}
+html[data-gg-design="freiwerk"] .gg-sixstep-formats button strong{overflow-wrap:normal;word-break:normal;font-size:12px;line-height:1.2}
+@media(max-width:380px){html[data-gg-design="freiwerk"] .gg-sixstep-mobile .gg-sixstep-formats{grid-template-columns:repeat(2,minmax(0,1fr))}html[data-gg-design="freiwerk"] .gg-participation-choices button{flex-direction:row;font-size:11px}}
+@media(max-height:480px) and (orientation:landscape){.gg-fw-card-actions .gg-fw-plan,.gg-fw-card-actions .gg-wod-start{min-height:44px}}
