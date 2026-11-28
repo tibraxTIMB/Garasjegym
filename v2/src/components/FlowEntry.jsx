@@ -1,7 +1,8 @@
 import {createContext,useContext,useEffect,useId,useRef,useState} from 'react'
-import {ArrowDown,ArrowLeft,ArrowRight,Check,Delete} from 'lucide-react'
+import {Check} from 'lucide-react'
 import {flowKeyValue,flowStepValue,flowAcceptValue,flowNavigationIndex,flowHaptic} from '../lib/flowKeypad.js'
 import './flow-entry.css'
+import {DnaKeyMatrix,DnaWeightSteps} from './DesignDNA.jsx'
 const FlowContext=createContext(null)
 export function FlowEntryProvider({children}){
  const [active,setActive]=useState(null)
@@ -38,16 +39,10 @@ export function FlowKeypad(){
  const label=active.getAttribute('aria-label')||active.closest('label')?.textContent?.trim()||'Resultat'
  function press(key){if(active.disabled||!active.isConnected)return;const v=flowKeyValue(active.value,key,{...meta,fresh:ctx.fresh.current});if((key===','||key===':'||key==='.')&&v===active.value){respond(key,'reject');return}ctx.fresh.current=false;meta.change(v);setDisplay(v);respond(key)}
  function adjust(delta){if(active.disabled||!active.isConnected)return;const v=flowStepValue(active.value,delta,meta.min,meta.max);if(v===active.value){respond(delta,'reject');return}ctx.fresh.current=false;meta.change(v);setDisplay(v);respond(delta)}
- const btn=(key,content=key,disabled=false)=><button key={key} type="button" disabled={disabled} data-feedback={feedback?.key===key?feedback.kind:undefined} onPointerDown={e=>e.preventDefault()} onClick={()=>press(key)}>{content}</button>
  return <aside className="gg-flow-keypad" aria-label="Garasjegym taltastatur">
   <header><strong>{label}</strong><output className="gg-keypad-value" aria-live="off">{String(display??active.value).replace('.',',')||'–'}</output><button type="button" aria-label="Lukk taltastatur" onClick={()=>{respond('done','done');ctx.close()}}><Check size={18}/> Ferdig</button></header>
-  {meta.key==='load_kg'&&<div className="gg-flow-weight-steps">{[-5,-2.5,2.5,5].map(n=><button key={n} type="button" data-feedback={feedback?.key===n?feedback.kind:undefined} onPointerDown={e=>e.preventDefault()} onClick={()=>adjust(n)}>{n>0?'+':''}{String(n).replace('.',',')}</button>)}</div>}
-  <div className="gg-flow-keys">
-   {['1','2','3'].map(k=>btn(k))}{btn('backspace',<Delete size={19}/>)}
-   {['4','5','6'].map(k=>btn(k))}<button type="button" aria-label="Førre felt" onPointerDown={e=>e.preventDefault()} onClick={()=>{respond('previous','next');ctx.move(-1)}}><ArrowLeft size={20}/></button>
-   {['7','8','9'].map(k=>btn(k))}<button type="button" aria-label="Neste felt av same type" onPointerDown={e=>e.preventDefault()} onClick={()=>{respond('same','next');ctx.move(1,true)}}><ArrowDown size={20}/></button>
-   {btn(meta.time?':':',',meta.time?':':',',!meta.time&&!meta.decimal)}{btn('0')}{btn(meta.negative?'-':'clear',meta.negative?'−':'C')}<button type="button" className="gg-flow-next-key" aria-label="Neste talfelt" onPointerDown={e=>e.preventDefault()} onClick={()=>{respond('next','next');ctx.move(1)}}><ArrowRight size={21}/></button>
-  </div>
+  {meta.key==='load_kg'&&<DnaWeightSteps onStep={adjust} feedback={feedback}/>} 
+  <DnaKeyMatrix onKey={press} onPrevious={()=>{respond('previous','next');ctx.move(-1)}} onNext={()=>{respond('next','next');ctx.move(1)}} onSame={()=>{respond('same','next');ctx.move(1,true)}} decimal={meta.decimal} time={meta.time} negative={meta.negative} feedback={feedback} preventFocus/>
  </aside>
 }
 export function useFlowConfirm(){

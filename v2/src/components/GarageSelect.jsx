@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Check, ChevronDown, X } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import './garage-select.css'
+import {DnaSheetHandle} from './DesignDNA.jsx'
 
 // Styled choice sheet for the most-used mobile selections. Keeps native form
 // controls elsewhere, where keyboard and specialised platform input are useful.
@@ -31,6 +32,6 @@ export default function GarageSelect({label='',value='',options=[],onChange=()=>
   function choose(next){onChange(next);setOpen(false)}
   return <>
     <button ref={triggerRef} type="button" className={'gg-garage-select '+className} aria-label={label||'Vel eit alternativ'} aria-haspopup="dialog" aria-expanded={open} disabled={disabled} onClick={()=>setOpen(true)}><span className={selected?'':'gg-garage-select-placeholder'}>{selected?.label||placeholder}</span><ChevronDown size={17}/></button>
-    {open&&createPortal(<div className="gg-select-backdrop" onClick={()=>setOpen(false)}><section ref={sheetRef} className="gg-select-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={event=>event.stopPropagation()}><header><div><span className="section-kicker">GARASJEGYM · VAL</span><h2 id={titleId}>{label||'Vel eit alternativ'}</h2></div><button type="button" className="gg-select-close" onClick={()=>setOpen(false)} aria-label="Lukk val"><X size={20}/></button></header><div className="gg-select-options" role="listbox" ref={listRef} aria-label={label||'Alternativ'}>{options.map(option=><button role="option" type="button" key={String(option.value)} aria-selected={String(value)===String(option.value)} className={String(value)===String(option.value)?'selected':''} onClick={()=>choose(option.value)}><span>{option.label}</span>{String(value)===String(option.value)&&<Check size={19}/>}</button>)}</div></section></div>,document.fullscreenElement||document.body)}
+    {open&&createPortal(<div className="gg-select-backdrop" onClick={()=>setOpen(false)}><section ref={sheetRef} className="gg-select-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={event=>event.stopPropagation()}><DnaSheetHandle onClose={()=>setOpen(false)}/><header><div><span className="section-kicker">GARASJEGYM · VAL</span><h2 id={titleId}>{label||'Vel eit alternativ'}</h2></div><button type="button" className="gg-select-close" onClick={()=>setOpen(false)} aria-label="Lukk val"><X size={20}/></button></header><div className="gg-select-options" role="listbox" ref={listRef} aria-label={label||'Alternativ'}>{options.map(option=><button role="option" type="button" key={String(option.value)} aria-selected={String(value)===String(option.value)} className={String(value)===String(option.value)?'selected':''} onClick={()=>choose(option.value)}><span>{option.label}</span>{String(value)===String(option.value)&&<Check size={19}/>}</button>)}</div></section></div>,document.fullscreenElement||document.body)}
   </>
 }

@@ -41,3 +41,12 @@ assert.equal(flowHaptic('tap',{}),false)
 assert.equal(flowHaptic('tap',{vibrate:()=>false}),false)
 assert.equal(flowHaptic('tap',{vibrate(){throw Error('blocked')}}),false)
 console.log('Optional keypad feedback checks passed')
+
+import {DNA_NUMBER_KEYS,shouldDismissSheet} from '../src/lib/designDNA.js'
+import dnaAssert from 'node:assert/strict'
+dnaAssert.deepEqual(DNA_NUMBER_KEYS.filter(k=>/^\d$/.test(k)),['1','2','3','4','5','6','7','8','9','0'])
+dnaAssert.equal(new Set(DNA_NUMBER_KEYS).size,16)
+dnaAssert.equal(shouldDismissSheet(4,70),true)
+dnaAssert.equal(shouldDismissSheet(80,70),false)
+dnaAssert.equal(shouldDismissSheet(4,-70),false)
+dnaAssert.equal(shouldDismissSheet(0,30),false)

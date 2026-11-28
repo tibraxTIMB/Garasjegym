@@ -80,6 +80,13 @@
       "evidence": []
     },
     {
+      "path": "v2/src/app-shell-mobile.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/App.jsx",
       "category": "entry/runtime",
       "state": "registered",
@@ -87,7 +94,7 @@
       "evidence": []
     },
     {
-      "path": "v2/src/app-shell-mobile.css",
+      "path": "v2/src/components/admin-advanced.css",
       "category": "style",
       "state": "registered",
       "checks": {},
@@ -122,6 +129,13 @@
       "evidence": []
     },
     {
+      "path": "v2/src/components/builder-form-contrast.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/components/CalendarAdmin.jsx",
       "category": "component",
       "state": "registered",
@@ -131,6 +145,13 @@
     {
       "path": "v2/src/components/Challenges.jsx",
       "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/coffee-order-flow.css",
+      "category": "style",
       "state": "registered",
       "checks": {},
       "evidence": []
@@ -150,8 +171,22 @@
       "evidence": []
     },
     {
+      "path": "v2/src/components/compact-dose-grid.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/components/CompactDoseGrid.jsx",
       "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/customer-journey.css",
+      "category": "style",
       "state": "registered",
       "checks": {},
       "evidence": []
@@ -164,8 +199,29 @@
       "evidence": []
     },
     {
+      "path": "v2/src/components/design-dna.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/DesignDNA.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/components/EquipmentPreparation.jsx",
       "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/exercise-pr-center.css",
+      "category": "style",
       "state": "registered",
       "checks": {},
       "evidence": []
@@ -192,6 +248,13 @@
       "evidence": []
     },
     {
+      "path": "v2/src/components/flow-entry.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/components/FlowEntry.jsx",
       "category": "component",
       "state": "registered",
@@ -201,6 +264,27 @@
     {
       "path": "v2/src/components/GameRekordScene.jsx",
       "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/garage-inventory.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/garage-maintenance.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/garage-select.css",
+      "category": "style",
       "state": "registered",
       "checks": {},
       "evidence": []
@@ -248,6 +332,13 @@
       "evidence": []
     },
     {
+      "path": "v2/src/components/heart-rate.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/components/HeartRateSettings.jsx",
       "category": "component",
       "state": "registered",
@@ -257,6 +348,13 @@
     {
       "path": "v2/src/components/HeartRateTrainingPanel.jsx",
       "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/help-center.css",
+      "category": "style",
       "state": "registered",
       "checks": {},
       "evidence": []
@@ -276,8 +374,22 @@
       "evidence": []
     },
     {
+      "path": "v2/src/components/infotainment.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/components/Infotainment.jsx",
       "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/invitation.css",
+      "category": "style",
       "state": "registered",
       "checks": {},
       "evidence": []
@@ -290,6 +402,13 @@
       "evidence": []
     },
     {
+      "path": "v2/src/components/librarium.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/components/Librarium.jsx",
       "category": "component",
       "state": "registered",
@@ -297,8 +416,22 @@
       "evidence": []
     },
     {
+      "path": "v2/src/components/mobile-native-controls.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/components/MobileNativeControls.jsx",
       "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/muscle-map.css",
+      "category": "style",
       "state": "registered",
       "checks": {},
       "evidence": []
@@ -346,8 +479,92 @@
       "evidence": []
     },
     {
+      "path": "v2/src/components/performance-center.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PerformanceCenter.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PersonalCalendar.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PlanExchange.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/PlanProduction.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/pr-victory-overlay.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/ProjectControl.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/components/PRVictoryOverlay.jsx",
       "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/pt-client-followup.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/pt-inquiry.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/pt-management-ux.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/pt-schedule.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/pt-studio-refine.css",
+      "category": "style",
       "state": "registered",
       "checks": {},
       "evidence": []
@@ -416,41 +633,6 @@
       "evidence": []
     },
     {
-      "path": "v2/src/components/PerformanceCenter.jsx",
-      "category": "component",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/PersonalCalendar.jsx",
-      "category": "component",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/PlanExchange.jsx",
-      "category": "component",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/PlanProduction.jsx",
-      "category": "component",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/ProjectControl.jsx",
-      "category": "component",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
       "path": "v2/src/components/RekordGorilla.jsx",
       "category": "component",
       "state": "registered",
@@ -486,6 +668,13 @@
       "evidence": []
     },
     {
+      "path": "v2/src/components/session-composer.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/components/SessionComposer.jsx",
       "category": "component",
       "state": "registered",
@@ -502,6 +691,13 @@
     {
       "path": "v2/src/components/SimpleCustomerHome.jsx",
       "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/synchron-preview.css",
+      "category": "style",
       "state": "registered",
       "checks": {},
       "evidence": []
@@ -563,6 +759,13 @@
       "evidence": []
     },
     {
+      "path": "v2/src/components/timer-viewport.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/components/TimerClockFace.jsx",
       "category": "component",
       "state": "registered",
@@ -584,260 +787,15 @@
       "evidence": []
     },
     {
-      "path": "v2/src/components/Werkstatt.jsx",
-      "category": "component",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/WodBuilder.jsx",
-      "category": "component",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/WodCard.jsx",
-      "category": "component",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/WodHub.jsx",
-      "category": "component",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/WodImportPanel.jsx",
-      "category": "component",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/WodLibrary.jsx",
-      "category": "component",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/WodPicker.jsx",
-      "category": "component",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/WodTimeDial.jsx",
-      "category": "component",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/WorkoutDetail.jsx",
-      "category": "component",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/admin-advanced.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/builder-form-contrast.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/coffee-order-flow.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/compact-dose-grid.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/customer-journey.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/exercise-pr-center.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/flow-entry.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/garage-inventory.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/garage-maintenance.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/garage-select.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/heart-rate.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/help-center.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/infotainment.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/invitation.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/librarium.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/mobile-native-controls.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/muscle-map.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/performance-center.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/pr-victory-overlay.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/pt-client-followup.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/pt-inquiry.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/pt-management-ux.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/pt-schedule.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/pt-studio-refine.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/session-composer.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/synchron-preview.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/components/timer-viewport.css",
-      "category": "style",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
       "path": "v2/src/components/werkstatt.css",
       "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/Werkstatt.jsx",
+      "category": "component",
       "state": "registered",
       "checks": {},
       "evidence": []
@@ -899,8 +857,64 @@
       "evidence": []
     },
     {
+      "path": "v2/src/components/WodBuilder.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WodCard.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WodHub.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WodImportPanel.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WodLibrary.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WodPicker.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WodTimeDial.jsx",
+      "category": "component",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/components/workout-detail.css",
       "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/components/WorkoutDetail.jsx",
+      "category": "component",
       "state": "registered",
       "checks": {},
       "evidence": []
@@ -998,6 +1012,13 @@
     },
     {
       "path": "v2/src/lib/deleteWorkout.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/designDNA.js",
       "category": "logic",
       "state": "registered",
       "checks": {},
@@ -1193,14 +1214,14 @@
       "evidence": []
     },
     {
-      "path": "v2/src/lib/memberViewMode.js",
+      "path": "v2/src/lib/membershipAccess.js",
       "category": "logic",
       "state": "registered",
       "checks": {},
       "evidence": []
     },
     {
-      "path": "v2/src/lib/membershipAccess.js",
+      "path": "v2/src/lib/memberViewMode.js",
       "category": "logic",
       "state": "registered",
       "checks": {},
@@ -1263,20 +1284,6 @@
       "evidence": []
     },
     {
-      "path": "v2/src/lib/prMetrics.js",
-      "category": "logic",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
-      "path": "v2/src/lib/prVictory.js",
-      "category": "logic",
-      "state": "registered",
-      "checks": {},
-      "evidence": []
-    },
-    {
       "path": "v2/src/lib/prestartExit.js",
       "category": "logic",
       "state": "registered",
@@ -1291,7 +1298,21 @@
       "evidence": []
     },
     {
+      "path": "v2/src/lib/prMetrics.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/lib/programReuse.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
+      "path": "v2/src/lib/prVictory.js",
       "category": "logic",
       "state": "registered",
       "checks": {},

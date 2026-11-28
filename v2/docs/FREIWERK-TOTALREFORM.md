@@ -34,3 +34,6 @@ Each register entry needs checks for every required dimension and concrete evide
 New files are automatically flagged unregistered; deleted files require reconciliation.
 This is a separate total-reform release gate, not a claim that ordinary npm test already runs the full audit.
 No approval is fabricated. The first candidate introduces shared appearance and register only.
+
+## Integration slice 02–05
+Imported PR #34 candidate changes after exact path-level conflict check against baseline. Extended shared weight-step controls to builder and FLOW, same-field navigation in builder, preset durations and guarded sheet gesture. All remain registered, not approved. PR #31/#32/#33 and older PRs still require reconciliation. Native date/time inputs retain semantic accessibility; full date/time, info and confirmation coverage remains pending.
