@@ -1,6 +1,6 @@
 import {createContext,useContext,useEffect,useId,useRef,useState} from 'react'
 import {ArrowDown,ArrowLeft,ArrowRight,Check,Delete} from 'lucide-react'
-import {flowKeyValue,flowStepValue,flowAcceptValue,flowNavigationIndex} from '../lib/flowKeypad.js'
+import {flowKeyValue,flowStepValue,flowAcceptValue,flowNavigationIndex,flowHaptic} from '../lib/flowKeypad.js'
 import './flow-entry.css'
 const FlowContext=createContext(null)
 export function FlowEntryProvider({children}){
@@ -25,24 +25,28 @@ export function FlowNumberInput({type,inputMode,min,max,step,value,onChange,kind
  const key=field||props['data-result-field']||''
  meta.current={decimal,negative,time,min:min??0,max:max??Infinity,key,change:v=>onChange?.({target:{value:v}})}
  useEffect(()=>{const el=node.current;if(el&&ctx)ctx.registry.current.set(el,meta);return()=>{if(el&&ctx)ctx.registry.current.delete(el)}},[ctx?.registry])
- return <input {...props} ref={node} type="text" inputMode={ctx?'none':time?'text':decimal?'decimal':'numeric'} autoComplete="off" spellCheck={false} data-flow-number="" data-flow-field={key} value={value??''} onFocus={e=>ctx?.open(e.currentTarget)} onClick={e=>{if(ctx?.active!==e.currentTarget)ctx?.open(e.currentTarget)}} onChange={e=>{const v=flowAcceptValue(e.target.value,meta.current);if(v!==null){if(ctx)ctx.fresh.current=false;onChange?.({target:{value:v}})}}} onKeyDown={e=>{if(ctx&&e.key==='Enter'){e.preventDefault();ctx.move(1)}else if(ctx&&e.key==='Escape'){e.preventDefault();ctx.close()}}}/>
+ return <input {...props} ref={node} type="text" inputMode={ctx?'none':time?'text':decimal?'decimal':'numeric'} autoComplete="off" spellCheck={false} data-flow-number="" data-flow-field={key} data-flow-active={ctx?.active===node.current&&node.current?'true':undefined} value={value??''} onFocus={e=>ctx?.open(e.currentTarget)} onClick={e=>{if(ctx?.active!==e.currentTarget)ctx?.open(e.currentTarget)}} onChange={e=>{const v=flowAcceptValue(e.target.value,meta.current);if(v!==null){if(ctx)ctx.fresh.current=false;onChange?.({target:{value:v}})}}} onKeyDown={e=>{if(ctx&&e.key==='Enter'){e.preventDefault();ctx.move(1)}else if(ctx&&e.key==='Escape'){e.preventDefault();ctx.close()}}}/>
 }
 export function FlowKeypad(){
  const ctx=useContext(FlowContext),active=ctx?.active
+ const [feedback,setFeedback]=useState(null),[display,setDisplay]=useState(null),flash=useRef(null)
+ useEffect(()=>()=>clearTimeout(flash.current),[])
+ useEffect(()=>{setDisplay(null);setFeedback(null)},[active])
+ function respond(key,kind='tap'){flowHaptic(kind);clearTimeout(flash.current);setFeedback({key,kind});flash.current=setTimeout(()=>setFeedback(null),170)}
  const meta=active&&ctx.registry.current.get(active)?.current
  if(!active||!meta||!active.isConnected)return null
  const label=active.getAttribute('aria-label')||active.closest('label')?.textContent?.trim()||'Resultat'
- function press(key){if(active.disabled||!active.isConnected)return;const v=flowKeyValue(active.value,key,{...meta,fresh:ctx.fresh.current});ctx.fresh.current=false;meta.change(v)}
- function adjust(delta){if(active.disabled||!active.isConnected)return;ctx.fresh.current=false;meta.change(flowStepValue(active.value,delta,meta.min,meta.max))}
- const btn=(key,content=key,disabled=false)=><button key={key} type="button" disabled={disabled} onPointerDown={e=>e.preventDefault()} onClick={()=>press(key)}>{content}</button>
+ function press(key){if(active.disabled||!active.isConnected)return;const v=flowKeyValue(active.value,key,{...meta,fresh:ctx.fresh.current});if((key===','||key===':'||key==='.')&&v===active.value){respond(key,'reject');return}ctx.fresh.current=false;meta.change(v);setDisplay(v);respond(key)}
+ function adjust(delta){if(active.disabled||!active.isConnected)return;const v=flowStepValue(active.value,delta,meta.min,meta.max);if(v===active.value){respond(delta,'reject');return}ctx.fresh.current=false;meta.change(v);setDisplay(v);respond(delta)}
+ const btn=(key,content=key,disabled=false)=><button key={key} type="button" disabled={disabled} data-feedback={feedback?.key===key?feedback.kind:undefined} onPointerDown={e=>e.preventDefault()} onClick={()=>press(key)}>{content}</button>
  return <aside className="gg-flow-keypad" aria-label="Garasjegym taltastatur">
-  <header><strong>{label}</strong><button type="button" aria-label="Lukk taltastatur" onClick={ctx.close}><Check size={18}/> Ferdig</button></header>
-  {meta.key==='load_kg'&&<div className="gg-flow-weight-steps">{[-5,-2.5,2.5,5].map(n=><button key={n} type="button" onPointerDown={e=>e.preventDefault()} onClick={()=>adjust(n)}>{n>0?'+':''}{String(n).replace('.',',')}</button>)}</div>}
+  <header><strong>{label}</strong><output className="gg-keypad-value" aria-live="off">{String(display??active.value).replace('.',',')||'–'}</output><button type="button" aria-label="Lukk taltastatur" onClick={()=>{respond('done','done');ctx.close()}}><Check size={18}/> Ferdig</button></header>
+  {meta.key==='load_kg'&&<div className="gg-flow-weight-steps">{[-5,-2.5,2.5,5].map(n=><button key={n} type="button" data-feedback={feedback?.key===n?feedback.kind:undefined} onPointerDown={e=>e.preventDefault()} onClick={()=>adjust(n)}>{n>0?'+':''}{String(n).replace('.',',')}</button>)}</div>}
   <div className="gg-flow-keys">
    {['1','2','3'].map(k=>btn(k))}{btn('backspace',<Delete size={19}/>)}
-   {['4','5','6'].map(k=>btn(k))}<button type="button" aria-label="Førre felt" onPointerDown={e=>e.preventDefault()} onClick={()=>ctx.move(-1)}><ArrowLeft size={20}/></button>
-   {['7','8','9'].map(k=>btn(k))}<button type="button" aria-label="Neste felt av same type" onPointerDown={e=>e.preventDefault()} onClick={()=>ctx.move(1,true)}><ArrowDown size={20}/></button>
-   {btn(meta.time?':':',',meta.time?':':',',!meta.time&&!meta.decimal)}{btn('0')}{btn(meta.negative?'-':'clear',meta.negative?'−':'C')}<button type="button" className="gg-flow-next-key" aria-label="Neste talfelt" onPointerDown={e=>e.preventDefault()} onClick={()=>ctx.move(1)}><ArrowRight size={21}/></button>
+   {['4','5','6'].map(k=>btn(k))}<button type="button" aria-label="Førre felt" onPointerDown={e=>e.preventDefault()} onClick={()=>{respond('previous','next');ctx.move(-1)}}><ArrowLeft size={20}/></button>
+   {['7','8','9'].map(k=>btn(k))}<button type="button" aria-label="Neste felt av same type" onPointerDown={e=>e.preventDefault()} onClick={()=>{respond('same','next');ctx.move(1,true)}}><ArrowDown size={20}/></button>
+   {btn(meta.time?':':',',meta.time?':':',',!meta.time&&!meta.decimal)}{btn('0')}{btn(meta.negative?'-':'clear',meta.negative?'−':'C')}<button type="button" className="gg-flow-next-key" aria-label="Neste talfelt" onPointerDown={e=>e.preventDefault()} onClick={()=>{respond('next','next');ctx.move(1)}}><ArrowRight size={21}/></button>
   </div>
  </aside>
 }
