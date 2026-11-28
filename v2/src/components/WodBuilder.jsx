@@ -293,7 +293,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   const storedEmomSeconds=emomIntervalSeconds(legacyFormat,schema.interval)
   setEmomIntervalMin(String(Math.floor(storedEmomSeconds/60)));setEmomIntervalSec(String(storedEmomSeconds%60))
   setNotes(schema.coach_notes||w.notes||'');setStimulus(schema.stimulus||'Jamn intensitet · teknisk kvalitet · kontrollert tempo')
-  setIntensity(String(schema.intensity||2));setPrescription(schema.prescription||'rx');setCustomInstructions(schema.custom_instructions||'');setRxNotes(schema.rx_notes||'');setScaledNotes(schema.scaled_notes||'');setWizardStep(0);setLibraryOpen(false);setOverviewLevel('rx');setDoseLevelByKey({});setEditingSelectedKey(null);setBuilderMode('build')
+  setIntensity(String(schema.intensity||2));setPrescription(schema.prescription||'rx');setCustomInstructions(schema.custom_instructions||'');setRxNotes(schema.rx_notes||'');setScaledNotes(schema.scaled_notes||'');setWizardStep(planContext&&!officeMode?2:0);setLibraryOpen(false);setOverviewLevel('rx');setDoseLevelByKey({});setEditingSelectedKey(null);setBuilderMode('build')
   if(schema.time_cap_seconds){setTimeCap(String(Math.floor(schema.time_cap_seconds/60)));setTimeCapSeconds(String(schema.time_cap_seconds%60))}else if(mappedFormat==='AMRAP'&&Number(schema.duration_seconds||w.duration_minutes*60)>0){const total=Number(schema.duration_seconds||w.duration_minutes*60);setTimeCap(String(Math.floor(total/60)));setTimeCapSeconds(String(total%60))}else{setTimeCap('');setTimeCapSeconds('0')}
   if(schema.rounds)setRounds(String(schema.rounds))
   if(isFixedInterval(mappedFormat))setIntervalExerciseCount(String(schema.interval_exercise_count||items.length||1))
@@ -375,7 +375,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
  const targetBlockId=isComposite?activeArchitectPart?.id||compositeBlocks[0]?.id:activeBlockId
  const openExercisePicker=()=>{if(isComposite&&targetBlockId)setActiveBlockId(targetBlockId);setPickerFeedback(null);setError('');setLibraryOpen(true)}
  const blockName=(block,index)=>'Del '+logicalPartLabel(compositeBlocks,index)+(block.warmup_group?' · '+(block.title||block.format):' · '+(block.format||'Vel format'))
- const activatePart=(p)=>{setActiveBlockId(p.id);setEditingSelectedKey(null);setComplexSelection({});setPickerFeedback(null);if(!mobileFlow||![1,2,3,5].includes(wizardStep))setWizardStep(2);if(isComposite&&!p.format)setPartSettings(p.id)}
+ const activatePart=(p)=>{setActiveBlockId(p.id);setEditingSelectedKey(null);setComplexSelection({});setPickerFeedback(null);if(!mobileFlow||wizardStep===4)setWizardStep(2);if(isComposite&&!p.format)setPartSettings(p.id)}
  function addMainPart(){if(compositeBlocks.length>=8)return;const id=crypto.randomUUID();setCompositeBlocks(rows=>[...rows,newDraftPart(id,'Del '+nextMainPartLabel(rows))]);setActiveBlockId(id);setEditingSelectedKey(null);setPartSettings(id);setWizardStep(2)}
   const quickBlock=isComposite?compositeBlocks.find(b=>b.id===partSettings):null
   const updateQuickBlock=patch=>setCompositeBlocks(rows=>rows.map(b=>b.id===quickBlock?.id?{...b,...patch}:b))
@@ -487,7 +487,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
    const oldIds=new Set(oldPrep.map(b=>b.id))
    setCompositeBlocks([...prepared.blocks,...main])
    setSelected(rows=>[...copied,...rows.filter(item=>!oldIds.has(item.blockId)).map(item=>isComposite?item:{...item,blockId:main[0].id})])
-   setFormat(COMPOSITE_FORMAT);setActiveBlockId(main[0].id);setEditingSelectedKey(null);if(!mobileFlow||![1,2,3,5].includes(wizardStep))setWizardStep(2);setWarmupPicker(false);setWarmupInfo(null);setError('');setNotice('Del 0 · '+wod.name+' lagt til. Originalen er uendra.')
+   setFormat(COMPOSITE_FORMAT);setActiveBlockId(main[0].id);setEditingSelectedKey(null);if(!mobileFlow)setWizardStep(2);else if(wizardStep===4)setWizardStep(2);setWarmupPicker(false);setWarmupInfo(null);setError('');setNotice('Del 0 · '+wod.name+' lagt til. Originalen er uendra.')
   }catch(e){setError(e.message||'Kunne ikkje leggja til oppvarming.');setWarmupPicker(false)}
  }
  function removeSavedWarmup(){
@@ -761,7 +761,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
     if(item==='Stasjonssirkel')setSelected(rows=>rows.map(x=>({...x,repsMode:x.repsMode||'amrap'})))
    }
    if(!advance)return
-   if(mobileFlow){setMobileTimeOpen(true);goToStep(2);return}
+   if(mobileFlow){setMobileTimeOpen(true);setWizardStep(0);return}
    if(item===COMPOSITE_FORMAT&&changed&&!selected.length){setPartSettings(compositeBlocks[0]?.id||'a')}
    if(editWodId)setWizardStep(wodFormatNeedsTime(item)&&item!==COMPOSITE_FORMAT?1:2)
    else setWizardStep(wodFormatNeedsTime(item)&&item!==COMPOSITE_FORMAT?1:2)
@@ -815,7 +815,7 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
   </section>}
    {!warmupBlocks.length&&<div className="gg-warmup-compact"><button type="button" className="text-button" onClick={()=>{setWarmupInfo(null);setWarmupPicker(true)}}><Plus size={15}/> Del 0 · Vel oppvarming</button></div>}
    {warmupPicker&&createPortal(<div className="gg-architect-issue-backdrop" onClick={()=>setWarmupPicker(false)}><section role="dialog" aria-modal="true" aria-label="Vel lagra oppvarming" className="gg-architect-issue-sheet gg-compact-settings" onClick={e=>e.stopPropagation()}><header><strong>Vel oppvarming</strong><button type="button" aria-label="Lukk" onClick={()=>setWarmupPicker(false)}>×</button></header>{!savedWarmups.length&&<p>Ingen lagra oppvarmings-WOD-ar tilgjengelege.</p>}{savedWarmups.map(w=><div key={w.id} className="gg-warmup-choice"><div><button type="button" aria-label={w.name} onClick={()=>attachSavedWarmup(w)}><strong>{w.name}</strong><small>{w.duration_minutes||'–'} min · {getWodSchemaItems(w.timer_settings?.workout_schema||{}).length} øvingar</small></button><button type="button" aria-label={'Info om '+w.name} aria-expanded={warmupInfo===w.id} onClick={()=>setWarmupInfo(warmupInfo===w.id?null:w.id)}><Info size={17}/></button></div>{warmupInfo===w.id&&<ul>{sortWodItems(getWodSchemaItems(w.timer_settings?.workout_schema||{})).map((item,i)=><li key={i}>{item.exercise_name||item.name||'Pause'}{item.reps?' · '+item.reps+' reps':''}{item.work_seconds?' · '+item.work_seconds+' s':''}</li>)}</ul>}</div>)}</section></div>,document.body)}
-   {(!mobileFlow||isComposite&&!mobileBuild)&&partNavigation}
+   {(!mobileFlow||!mobileBuild&&(isComposite||!!planContext))&&partNavigation}
    {quickBlock&&createPortal(<div className="gg-architect-issue-backdrop" onClick={()=>setPartSettings(null)}><section role="dialog" aria-modal="true" aria-label="Format og tid for øktdelen" className="gg-architect-issue-sheet gg-compact-settings" onClick={e=>e.stopPropagation()}><header><strong>Del {logicalPartLabel(compositeBlocks,compositeBlocks.findIndex(b=>b.id===quickBlock.id))}</strong><button type="button" aria-label="Lukk" onClick={()=>setPartSettings(null)}>×</button></header>{quickBlock.warmup_group&&warmupBlocks.length>1&&<label>Tidsoppsett<select aria-label="Tidsoppsett i Del 0" value={quickBlock.id} onChange={e=>setPartSettings(e.target.value)}>{warmupBlocks.map(b=><option key={b.id} value={b.id}>{b.title||b.format}</option>)}</select></label>}<label>Format<select value={isEmomFormat(quickBlock.format)?'EMOM':quickBlock.format} onChange={e=>changePartFormat(quickBlock,e.target.value)}><option value="" disabled>Vel format</option>{COMPOSITE_BLOCK_FORMATS.filter(f=>!/^E\d+(?:\.\d+)?MOM$/.test(f)).map(f=><option key={f} value={f}>{f}</option>)}</select></label>
    {quickBlock.format&&!(COMPOSITE_INTERVAL_FORMATS.includes(quickBlock.format)||quickBlock.format==='Stasjonssirkel')&&<WodTimeDial label={['For Time','Chipper'].includes(quickBlock.format)?'Tidsgrense':'Øktlengd'} value={quickBlock.minutes??''} onChange={v=>updateQuickBlock({minutes:v})} maximum={180}/>}
    {quickBlock.format==='For Time'&&<label>Rundar (valfritt)<input type="number" min="1" max="100" value={quickBlock.rounds??''} onChange={e=>updateQuickBlock({rounds:e.target.value})}/></label>}
@@ -902,8 +902,8 @@ export default function WodBuilder({assignedClientId=null,onAssigned,editWodId=n
      
      {isCustom&&<><label className="wod-custom-sets"><input type="checkbox" checked={customUseSets} onChange={e=>setCustomUseSets(e.target.checked)}/> Bruk sett-programmering på øvingane</label><label>Fri struktur / instruksjon<textarea rows="3" value={customInstructions} onChange={e=>setCustomInstructions(e.target.value)} placeholder="Beskriv struktur, sett, rundar, pausar og gjennomføring …"/></label></>}
       </>}</div></details>}{(mobileBuild||!mobileFlow&&(wizardStep===2||wizardStep===3))&&!libraryOpen&&<div className="wizard-selected-stage gg-architect-part-settings">
-       <div className={isComposite&&mobileFlow?'gg-part-workbench':''}>
-       {isComposite&&mobileBuild&&partNavigation}
+       <div className={mobileFlow&&(isComposite||!!planContext)?'gg-part-workbench':''}>
+       {mobileBuild&&(isComposite||!!planContext)&&partNavigation}
        <div className="gg-active-part-context" role="status" aria-live="polite"><div><strong>{isComposite?activePartLabel:format}</strong>{isComposite&&<span>{activePartName}{activeLogicalPart?.collaboration==='synchronized'?' · Synkron':activeLogicalPart?.participation==='partner'?' · Partner':''}</span>}</div><small>{shownItems.length} øvingar{isComposite?' · '+activeLogicalPart?.time:''}</small></div>
        <div className="gg-exercise-actions"><button type="button" className="primary-button wod-open-library" onClick={openExercisePicker}><Plus size={17}/> Legg til øving</button><button type="button" className="secondary-button gg-add-pause" onClick={addPause}><Plus size={16}/> Pause</button></div>
        
