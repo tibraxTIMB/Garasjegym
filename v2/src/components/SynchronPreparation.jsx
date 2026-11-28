@@ -5,9 +5,9 @@ import './synchron-preview.css'
 const units={reps:'reps',seconds:'sek',meters:'m',calories:'cal'}
 // Optional host callback must authorize coach, roster and WOD server-side,
 // and atomically create session and invitations. Do not wire to ordinary assignment writes.
-export default function SynchronPreparation({wods=[],members=[],leaderId,initialMemberId='',onPrepare}){
+export default function SynchronPreparation({wods=[],members=[],leaderId,initialMemberId='',initialWodId='',onPrepare}){
  const choices=useMemo(()=>wods.filter(w=>w.is_published===true&&!w.is_archived&&synchronTransportFormatSupported(w.format)),[wods])
- const [wodId,setWodId]=useState(''),[level,setLevel]=useState('rx'),[selected,setSelected]=useState(()=>initialMemberId?[initialMemberId]:[]),[participates,setParticipates]=useState(true),[doses,setDoses]=useState({}),[busy,setBusy]=useState(false),[submitted,setSubmitted]=useState(false),[issue,setIssue]=useState('')
+ const [wodId,setWodId]=useState(()=>initialWodId),[level,setLevel]=useState('rx'),[selected,setSelected]=useState(()=>initialMemberId?[initialMemberId]:[]),[participates,setParticipates]=useState(true),[doses,setDoses]=useState({}),[busy,setBusy]=useState(false),[submitted,setSubmitted]=useState(false),[issue,setIssue]=useState('')
  const pending=useRef(false),request=useRef(null)
  const wod=choices.find(w=>w.id===wodId),parsed=wod?synchronWodTargets(wod,level):{rows:[],issue:'Vel WOD først.'}
  const roster=members.filter(m=>m.id!==leaderId),ids=selected.filter(id=>roster.some(m=>m.id===id)),participants=participates?[leaderId,...ids]:ids
