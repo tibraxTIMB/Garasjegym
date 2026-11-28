@@ -81,7 +81,8 @@ export default function MobileNativeControls(){
   const frame=requestAnimationFrame(()=>{
    const choices=[...(listRef.current?.querySelectorAll('[role="option"]:not([disabled])')||[])]
    const selectedChoice=choices.find(choice=>choice.getAttribute('aria-selected')==='true')||choices[0]
-   (selectedChoice||sheetRef.current?.querySelector('.gg-select-close'))?.focus()
+   if(selectedChoice)selectedChoice.focus()
+   else sheetRef.current?.querySelector('.gg-select-close')?.focus()
   })
   return()=>{
    cancelAnimationFrame(frame)

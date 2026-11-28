@@ -72,6 +72,6 @@ test('valmenyen opnar etter at trykket er avslutta, utan å blinka bort på Andr
  assert.match(source,/function onPointerUp\(event\)/)
  assert.match(source,/document\.addEventListener\('pointerup',onPointerUp,true\)/)
  assert.match(source,/document\.addEventListener\('pointercancel',onPointerCancel,true\)/)
- assert.match(source,/window\.setTimeout\(\(\)=>\{\s*if\(next\.select\.isConnected\)setPicker/)
+ assert.match(source,/window\.setTimeout\(\(\)=>\{\s*if\(next\.select\.isConnected&&!next\.select\.disabled\)setPicker/)
  assert.doesNotMatch(source.split('function onPointerUp')[0],/setPicker\(/)
 })

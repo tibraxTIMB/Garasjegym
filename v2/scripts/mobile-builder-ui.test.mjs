@@ -371,6 +371,7 @@ test('FLOW compact gives custom complexes one grid and explicit outcome buttons'
 test('choice sheet initializes focus after building the option list',()=>{
  const component=source('../src/components/MobileNativeControls.jsx')
  assert.match(component,/const selectedChoice=choices\.find\(/)
- assert.match(component,/selectedChoice\?\.focus\(\)/)
+ assert.match(component,/if\(selectedChoice\)selectedChoice\.focus\(\)/)
+ assert.match(component,/else sheetRef\.current\?\.querySelector\('\.gg-select-close'\)\?\.focus\(\)/)
  assert.doesNotMatch(component,/\n\s*\(choices\.find\(/)
 })
