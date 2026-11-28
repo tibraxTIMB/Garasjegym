@@ -125,3 +125,19 @@ test('PT Samspel review keeps team evidence separate from individual prescriptio
  assert.equal(ptTeamResult({result_data:{wod_engine:{participation:'partner'}}}),true)
  assert.equal(ptTeamResult({result_data:{wod_engine:{participation:'individual'}}}),false)
 })
+
+import {ptSessionMuscleItems} from '../src/lib/ptWodReview.js'
+test('team muscle profile uses saved exercise names without attributing individual work',()=>{
+ const result={result_data:{participation_verified:'team',exercise_results:[{exercise_name:'Wall Ball',sets:[]}],samspel:{targets:[{exercise_name:'Row',target_reps:2000},{exercise_name:'Wall Ball'}]}}}
+ assert.deepEqual(ptSessionMuscleItems(result).map(x=>x.exercise_name),['Wall Ball','Row'])
+ assert.equal(result.result_data.exercise_results[0].sets.length,0)
+ assert.deepEqual(ptSessionMuscleItems(null),[])
+ assert.deepEqual(ptSessionMuscleItems({result_data:{samspel_blocks:[{samspel:{targets:[{exercise_name:'Squat'}]}}]}}).map(x=>x.exercise_name),['Squat'])
+ const screen=read('../src/components/PTWodReview.jsx')
+ assert.doesNotMatch(screen,/WOD-lista|Lagresultat · ikkje grunnlag/)
+ assert.match(screen,/planned compact/)
+ assert.match(screen,/individualMuscle/)
+ const notes=read('../src/components/SharedInventory.jsx')
+ assert.match(notes,/gg-inventory-notes-compact/)
+ assert.match(notes,/\{row.notes\}/)
+})
