@@ -47,6 +47,7 @@ import { countdownSignal, secondsToTimerBoundary, runningTimerSignal, TRAINING_A
 import { preloadSoundPack, unlockSoundPack, playPackSignal, playDirectPackSignal, stopDirectAudio, stopPackAudio, SOUND_PACK_NAMES, SOUND_PACK_VERSION, readAudioPack, setAudioPack } from '../lib/trainingAudio.js'
 import GarageSelect from './GarageSelect.jsx'
 import {FlowEntryProvider,FlowNumberInput,FlowKeypad,useFlowConfirm,FlowConfirmDialog} from './FlowEntry.jsx'
+import './design-dna.css'
 import './timer-viewport.css'
 import TimerClockFace from './TimerClockFace.jsx'
 import PRVictoryOverlay from './PRVictoryOverlay.jsx'
@@ -662,7 +663,7 @@ function Timer({ doseVariant='common', format, minutes, seconds = 0, activeExerc
   const actionControls=<div className="gg-timer-audio-controls">
     <label>Trefflate<select value={buttonSize} onChange={e=>setButtonSize(e.target.value)}><option value="large">Stor (standard)</option><option value="xl">Ekstra stor</option></select></label>
     <label>Sperre mot dobbelttrykk<select value={roundGuardSeconds} onChange={e=>setRoundGuardSeconds(Number(e.target.value))}>{[1,2,3,5,10].map(s=><option key={s} value={s}>{s} sekund</option>)}</select></label>
-    <label className="gg-timer-check"><input type="checkbox" checked={roundHaptic} onChange={e=>setRoundHaptic(e.target.checked)}/> Vibrasjon ved registrering</label>
+    <label className="gg-timer-check"><input type="checkbox" role="switch" className="gg-dna-switch" checked={roundHaptic} onChange={e=>setRoundHaptic(e.target.checked)}/> Vibrasjon ved registrering</label>
     <small>Automatiske rundeskifte blir ikkje påverka. Angre siste AMRAP-runde eller mellomtid utan å stoppa klokka.</small>
   </div>
   const audioControls=<div className="gg-timer-audio-controls">
@@ -670,11 +671,11 @@ function Timer({ doseVariant='common', format, minutes, seconds = 0, activeExerc
       {[{id:'pt',name:'EISEN',desc:'Classic Fight Club · klokke og metall'},{id:'personal',name:'DISKOPANZER',desc:'Eurodance Kampfparty · synth og klubbslag'},{id:'group',name:'BALKAN BERSERK',desc:'Metal Brass Assault · trompet, gitar og tromme'}].map(p=><button type="button" key={p.id} aria-pressed={audioProfile===p.id} className={audioProfile===p.id?'is-selected':''} onClick={()=>{setAudioProfile(p.id);soundOnRef.current=true;setSoundOn(true)}}><strong>{p.name}</strong><small>{p.desc}</small></button>)}
     </div>
     <label>Lydpakke<select value={audioPack} onChange={e=>{stopPackAudio(sharedTrainingAudioContext);stopDirectAudio();setAudioPack(e.target.value);chooseAudioPack(e.target.value)}}><option value="standard">Standard · eksisterande</option><option value="generative">KI lyd · generativ prototype</option></select></label>
-    <label className="gg-timer-check"><input type="checkbox" checked={soundOn} onChange={e=>setSoundOn(e.target.checked)}/> Lydsignal på</label>
+    <label className="gg-timer-check"><input type="checkbox" role="switch" className="gg-dna-switch" checked={soundOn} onChange={e=>setSoundOn(e.target.checked)}/> Lydsignal på</label>
     <label>Timerlyd · {soundVolume}%<input type="range" min="0" max="100" step="5" value={soundVolume} onChange={e=>setSoundVolume(Number(e.target.value))}/></label>
-    <label className="gg-timer-check"><input type="checkbox" checked={countdownAudio} onChange={e=>setCountdownAudio(e.target.checked)}/> Nedtelling 3–2–1</label>
-    <label className="gg-timer-check"><input type="checkbox" checked={prVictoryAudio} onChange={e=>{setPRVictoryAudio(e.target.checked);setPRVictorySoundEnabled(e.target.checked)}}/> Du hast Rekord! · lyd av/på (skjermfeiring alltid på)</label>
-    <label className="gg-timer-check"><input type="checkbox" checked={vibration} onChange={e=>setVibration(e.target.checked)}/> Vibrasjon ved skifte (støtta mobil)</label>
+    <label className="gg-timer-check"><input type="checkbox" role="switch" className="gg-dna-switch" checked={countdownAudio} onChange={e=>setCountdownAudio(e.target.checked)}/> Nedtelling 3–2–1</label>
+    <label className="gg-timer-check"><input type="checkbox" role="switch" className="gg-dna-switch" checked={prVictoryAudio} onChange={e=>{setPRVictoryAudio(e.target.checked);setPRVictorySoundEnabled(e.target.checked)}}/> Du hast Rekord! · lyd av/på (skjermfeiring alltid på)</label>
+    <label className="gg-timer-check"><input type="checkbox" role="switch" className="gg-dna-switch" checked={vibration} onChange={e=>setVibration(e.target.checked)}/> Vibrasjon ved skifte (støtta mobil)</label>
     <label>Test signal<select value={testCue} onChange={e=>setTestCue(e.target.value)}><option value="start">Start</option><option value="tick-1">Nedtelling</option><option value="round">Ny runde</option><option value="rest">Pause</option><option value="station">Stasjonsbyte</option><option value="finish">Ferdig</option><option value="registered">Runde registrert</option><option value="pr">Du hast Rekord!</option></select></label>
     <button type="button" className="secondary-button" disabled={audioProfile==='silent'||!soundOn||soundVolume===0} onClick={()=>playSignal(testCue,{test:true})}><Volume2 size={17}/> Test lydsignal</button>
     <details className="gg-sound-diagnostics"><summary>Lyddiagnostikk · samanlikn same lydfil</summary>
@@ -762,8 +763,8 @@ function Timer({ doseVariant='common', format, minutes, seconds = 0, activeExerc
         </nav>}
         {stagePanel==='audio'&&audioControls}
         {stagePanel==='actions'&&actionControls}
-        {stagePanel==='music'&&<><label className="gg-timer-check"><input type="checkbox" checked={showMusic} onChange={e=>setShowMusic(e.target.checked)}/> Vis minispelar</label><Music/></>}
-        {stagePanel==='pulse'&&<><label className="gg-timer-check"><input type="checkbox" checked={showPulse} onChange={e=>setShowPulse(e.target.checked)}/> Vis eigen puls på klokka</label><HeartRateTrainingPanel settings/></>}
+        {stagePanel==='music'&&<><label className="gg-timer-check"><input type="checkbox" role="switch" className="gg-dna-switch" checked={showMusic} onChange={e=>setShowMusic(e.target.checked)}/> Vis minispelar</label><Music/></>}
+        {stagePanel==='pulse'&&<><label className="gg-timer-check"><input type="checkbox" role="switch" className="gg-dna-switch" checked={showPulse} onChange={e=>setShowPulse(e.target.checked)}/> Vis eigen puls på klokka</label><HeartRateTrainingPanel settings/></>}
         {stagePanel==='display'&&<>
         <label className="gg-live-timer__setting">Storleik på klokka <input type="range" min="88" max="130" step="7" value={Math.max(88,Math.min(130,appearance.clockSize))} onChange={e=>setAppearance(value=>({...value,clockSize:Number(e.target.value)}))}/></label>
         <label className="gg-live-timer__setting">Klokkefarge <input type="color" value={appearance.accent} onChange={e=>setAppearance(value=>({...value,accent:e.target.value}))}/></label>

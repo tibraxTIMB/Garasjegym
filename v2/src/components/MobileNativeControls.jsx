@@ -4,6 +4,7 @@ import {Check,X} from 'lucide-react'
 import {chooseNativeSelectOption,nativeSelectOptions,nativeSelectTitle} from '../lib/nativeMobileControls.js'
 import './garage-select.css'
 import './mobile-native-controls.css'
+import {DnaSheetHandle} from './DesignDNA.jsx'
 
 /**
  * Mobile-only progressive enhancement for existing form selects.
@@ -113,7 +114,7 @@ export default function MobileNativeControls(){
  if(!picker)return null
  return createPortal(<div className="gg-select-backdrop gg-native-select-backdrop" onPointerDown={event=>event.stopPropagation()} onClick={close}>
   <section ref={sheetRef} className="gg-select-sheet gg-native-select-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={event=>event.stopPropagation()} onKeyDown={onKeyDown}>
-   <header><div><span className="section-kicker">GARASJEGYM · VAL</span><h2 id={titleId}>{picker.title}</h2></div><button type="button" className="gg-select-close" onClick={close} aria-label="Lukk val"><X size={20}/></button></header>
+   <DnaSheetHandle onClose={close}/><header><div><span className="section-kicker">GARASJEGYM · VAL</span><h2 id={titleId}>{picker.title}</h2></div><button type="button" className="gg-select-close" onClick={close} aria-label="Lukk val"><X size={20}/></button></header>
    <div className="gg-select-options" role="listbox" ref={listRef} aria-label={picker.title}>
     {picker.options.map((option,index)=><div key={index} className="gg-native-option-group">
      {option.group&&(index===0||picker.options[index-1].group!==option.group)&&<span className="gg-native-optgroup-label">{option.group}</span>}
