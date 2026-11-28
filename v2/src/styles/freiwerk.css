@@ -80,3 +80,13 @@ html[data-gg-design="freiwerk"] .gg-sixstep-mobile .gg-sixstep-formats button[ar
 html[data-gg-design="freiwerk"] .gg-sixstep-formats button strong{overflow-wrap:normal;word-break:normal;font-size:12px;line-height:1.2}
 @media(max-width:380px){html[data-gg-design="freiwerk"] .gg-sixstep-mobile .gg-sixstep-formats{grid-template-columns:repeat(2,minmax(0,1fr))}html[data-gg-design="freiwerk"] .gg-participation-choices button{flex-direction:row;font-size:11px}}
 @media(max-height:480px) and (orientation:landscape){.gg-fw-card-actions .gg-fw-plan,.gg-fw-card-actions .gg-wod-start{min-height:44px}}
+
+/* FW08 — shared session and planning surfaces. */
+html[data-gg-design="freiwerk"] .gg-session-composer :is(.gg-session-wod,.gg-session-filters button,.gg-session-search){background:var(--fw-surface);color:var(--fw-text);border-color:var(--fw-line);border-radius:6px}
+html[data-gg-design="freiwerk"] .gg-session-composer :is(.gg-session-wod,.gg-session-filters button)[aria-pressed=true]{background:var(--fw-selected);color:var(--fw-accent);border-color:var(--fw-line);box-shadow:inset 0 -2px var(--fw-accent)}
+html[data-gg-design="freiwerk"] .gg-session-selected-row>b{color:var(--fw-accent);font-variant-numeric:tabular-nums}
+html[data-gg-design="freiwerk"] .gg-session-composer footer{background:var(--fw-bg);border-color:var(--fw-line)}
+html[data-gg-design="freiwerk"] .wod-picker-option{border-color:var(--fw-line);background:var(--fw-surface);color:var(--fw-text);border-radius:6px}
+html[data-gg-design="freiwerk"] .wod-picker-option.selected{border-color:var(--fw-accent);background:var(--fw-selected)}
+html[data-gg-design="freiwerk"] .wod-picker-option-main b{word-break:normal;overflow-wrap:break-word}
+.gg-fw-picker-reset{min-height:44px;align-self:center}

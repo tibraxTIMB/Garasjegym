@@ -8,3 +8,17 @@
 .gg-session-wods{display:grid;gap:3px;min-width:0;max-height:40vh;overflow-y:auto;overscroll-behavior:contain}.gg-session-wod{display:grid;grid-template-columns:21px minmax(0,1fr) 24px;gap:7px;text-align:left;align-items:center;border:1px solid #34464e;border-radius:6px;min-height:46px;padding:6px 8px;background:#1c282e;color:inherit;width:100%;min-width:0}.gg-session-wod[aria-pressed=true]{border-color:#b78a45;color:#f3bd6c}
 .gg-session-composer footer{display:grid;gap:3px;position:sticky;bottom:0;background:var(--surface,#172229);padding:6px 0 2px;z-index:2}.gg-session-composer footer span{font-size:.75rem;color:#b7c5cd}.gg-session-composer footer button{display:flex;gap:7px;align-items:center;justify-content:center;min-height:44px}
 @media(max-width:360px){.gg-session-selected-row{grid-template-columns:16px minmax(0,1fr) 30px 30px 30px}.gg-session-selected-row button{min-width:30px}}
+
+/* FREIWERK queue workspace: no extra cards or hidden mandatory operations. */
+.gg-session-workspace,.gg-session-catalogue{display:grid;gap:8px;min-width:0;align-content:start}
+.gg-session-selected-row{grid-template-columns:18px minmax(0,1fr) repeat(4,32px);gap:2px}
+.gg-session-selected-row button{min-height:44px;min-width:32px}
+.gg-session-selected-row button[aria-expanded=true]{color:var(--fw-accent,#e6c58d)}
+.gg-session-wod-info{display:grid;gap:5px;padding:7px 0;border-bottom:1px solid var(--fw-line,#526259)}
+.gg-session-wod-info>header{justify-content:space-between;align-items:center}
+.gg-session-wod-info>div{display:grid;gap:3px;min-width:0}
+.gg-session-wod-info>div>span{font-size:.82rem;overflow-wrap:break-word}
+.gg-session-compatibility{color:var(--fw-warning,#e6ba70);font-size:.8rem;line-height:1.4;white-space:normal;margin:6px 0}
+.gg-session-selected-row strong,.gg-session-wod strong{overflow-wrap:break-word;word-break:normal}
+@media(max-width:360px){.gg-session-selected-row{grid-template-columns:16px minmax(0,1fr) repeat(4,30px)}.gg-session-selected-row button{min-width:30px}}
+@media(min-width:720px) and (orientation:landscape){.gg-session-workspace{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.gg-session-selected{border-bottom:0;border-right:1px solid var(--fw-line,#526259);padding-right:12px}.gg-session-wods{max-height:50dvh}}

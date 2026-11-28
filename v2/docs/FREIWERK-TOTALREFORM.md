@@ -40,3 +40,6 @@ Imported PR #34 candidate changes after exact path-level conflict check against 
 
 ## FW06–07 integration slice
 Imported PR #33 by exact non-overlapping path comparison. WOD detail exposes Train now/Plan with role and launch-context guards; existing direct assignment and class launch stay on their existing paths. Guard WOD-card swipe around interactive controls; use shared date/time and confirmation in library entry; convert selected short builder menus to direct choices. Library grid and form controls restyled. Full builder migration and actual two-device Synchron/calendar validation remain pending; no approval recorded.
+
+## FW08 slice
+Session queue uses real execution builder for preflight, shows selected WOD exercise details and ordered list, keeps the original ephemeral execution snapshot and rejects unsupported combinations before start. Landscape splits queue and catalogue. PT appointment date/time fields use shared semantic component; WodPicker has filter count/reset. Saved multi-WOD scheduling and calendar-to-Synchron launch are not completed by this slice. Device testing and audit approval remain pending.

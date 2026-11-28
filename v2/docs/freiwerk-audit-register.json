@@ -1459,6 +1459,13 @@
       "evidence": []
     },
     {
+      "path": "v2/src/lib/sessionQueueCheck.js",
+      "category": "logic",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/lib/spotifyDevices.js",
       "category": "logic",
       "state": "registered",
