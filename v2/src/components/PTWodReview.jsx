@@ -20,7 +20,7 @@ const formatExerciseSet=set=>[
 ].filter(Boolean).join(' · ')
 
 /** Only data returned by the assignment-scoped RPC is shown. Never query workout_logs directly. */
-export default function PTWodReview({assignmentId=null,programSessionId=null,clientName='',clientRank=null,wodName='',prescriptionSchema=null,onClose=()=>{},onRecordCalibration=null}){
+export default function PTWodReview({assignmentId=null,programSessionId=null,clientName='',clientRank=null,wodName='',prescriptionSchema=null,onClose=()=>{},onRecordCalibration=null,onReplayNow,onReplayPlan}){
  const [result,setResult]=useState(null)
  const [feedback,setFeedback]=useState([])
  const [loading,setLoading]=useState(true)
@@ -111,6 +111,7 @@ export default function PTWodReview({assignmentId=null,programSessionId=null,cli
    <div className="ptreview-metrics" aria-label="Resultatsamandrag">
     {metrics.filter(m=>m.label!=='Resultattype').map(m=><div className="ptreview-metric" key={m.label}><strong>{m.value}</strong><small>{m.label}</small></div>)}
    </div>
+   {(onReplayNow||onReplayPlan)&&<div className="gg-fw-replay"><small>Ny gjennomføring · dagens WOD-versjon</small><div>{onReplayNow&&<button type="button" className="primary-button" onClick={onReplayNow}>Tren saman no</button>}{onReplayPlan&&<button type="button" className="secondary-button" onClick={onReplayPlan}>Planlegg på nytt</button>}</div></div>}
    <SamspelParticipantResults samspel={result.result_data?.samspel}/>
    {(Array.isArray(result.result_data?.samspel_blocks)?result.result_data.samspel_blocks:[]).map(part=><section key={part.block_id}><strong>{part.title} · Samspel</strong><small>{part.completed?'Registrert fullført':'Delvis / ikkje utført'}{part.distance!=null?' · '+part.distance+' m':''}{part.calories!=null?' · '+part.calories+' cal':''}{part.relay_rounds!=null?' · '+part.relay_rounds+' lagrundar':''}</small><SamspelParticipantResults samspel={part.samspel}/></section>)}
    {result.result_data?.time_cap_reached&&<p className="ptreview-insight is-review">Tidsgrensa vart nådd. For Time-resultat må vurderast ut frå faktisk gjennomført arbeid, ikkje som automatisk fullføring.</p>}

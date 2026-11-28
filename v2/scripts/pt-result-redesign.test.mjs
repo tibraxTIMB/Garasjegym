@@ -154,3 +154,11 @@ test('saved shared totals are used without assigning reps to individual athletes
  assert.equal(ptTeamResult({result_data:{synchron_result:{version:1}}}),true)
  assert.equal(ptSessionMuscleItems({result_data:{report_parts:[{items:targets}]}}).length,2)
 })
+
+test('replay uses current published source and opens new session entry with selected client',()=>{
+ const client=read('../src/components/PTClientWods.jsx'),entry=read('../src/components/LibraryTrainingEntry.jsx'),review=read('../src/components/PTWodReview.jsx')
+ assert.match(client,/wods\.find\(w=>w\.id===sourceId&&!w\.is_archived&&w\.is_published===true\)/)
+ assert.match(client,/initialMemberId=\{clientId\}/)
+ assert.match(entry,/Tidlegare resultat og tildelingar blir ikkje endra/)
+ assert.match(review,/onClick=\{onReplayPlan\}/)
+})

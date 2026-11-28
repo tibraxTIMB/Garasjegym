@@ -3,6 +3,8 @@ import {createPortal} from 'react-dom'
 import {ArrowRight,CheckCircle2,ClipboardList,Dumbbell,Plus,RefreshCw,X} from 'lucide-react'
 import {supabase} from '../lib/supabase.js'
 import PTWodReview from './PTWodReview.jsx'
+import LibraryTrainingEntry from './LibraryTrainingEntry.jsx'
+import {synchronWodTargets} from '../lib/synchronPreparation.js'
 import {savedPlanPrescription,planWodDisplayName} from '../lib/ptPreparationHistory.js'
 import './pt-client-followup.css'
 
@@ -14,19 +16,20 @@ const shortDate=value=>value?new Date(value).toLocaleDateString('nn-NO',{day:'nu
 /** PTs can see only explicit PT WOD assignments and their own PT program sessions.
  * No workout_logs query: a customer's unrelated private training remains private.
  */
-export default function PTClientWods({clientId,clientName='',clientRank=null,mode='full',planSessions=[],wods=[],initialReview=null,assignRequest=null,onAssignClosed=()=>{},onAssign=null,revisionToken=0,onOpenFull=()=>{},onOpenReview=()=>{},onReviewClosed=()=>{},onRecordCalibration=null}){
+export default function PTClientWods({clientId,clientName='',clientRank=null,mode='full',planSessions=[],wods=[],initialReview=null,assignRequest=null,onAssignClosed=()=>{},onAssign=null,revisionToken=0,onOpenFull=()=>{},onOpenReview=()=>{},onReviewClosed=()=>{},onRecordCalibration=null,actorId=null,onPrepareSynchron=null,onReplaySaved}){
  const [assignments,setAssignments]=useState([])
  const [loading,setLoading]=useState(false)
  const [error,setError]=useState('')
  const [revision,setRevision]=useState(0)
  const [showAssign,setShowAssign]=useState(false)
  const [openedReview,setOpenedReview]=useState(null)
+ const [replayMode,setReplayMode]=useState(null),[replayNotice,setReplayNotice]=useState('')
  useEffect(()=>{
   let active=true
   setAssignments([])
   setError('')
   setShowAssign(false)
-  setOpenedReview(null)
+  setOpenedReview(null);setReplayMode(null);setReplayNotice('')
   if(!clientId){setLoading(false);return()=>{active=false}}
   setLoading(true)
   supabase.from('pt_wod_assignments')
@@ -77,12 +80,18 @@ export default function PTClientWods({clientId,clientName='',clientRank=null,mod
  const selectedProgram=reviewKind==='program'?programWods.find(row=>row.id===reviewId&&completedStatus(row.status)&&row.workout_log_id):null
  if(mode==='full'&&openedReview&&!loading&&(selectedAssignment||selectedProgram)){
   const a=selectedAssignment,p=selectedProgram
+  const sourceId=a?.wod_id||a?.wods?.id||p?.wod_id
+  const replayWod=wods.find(w=>w.id===sourceId&&!w.is_archived&&w.is_published===true)
+  const canReplayNow=!!replayWod&&typeof onPrepareSynchron==='function'&&['rx','scaled','foundation'].some(level=>!synchronWodTargets(replayWod,level).issue)
   return <section className="ptfollow ptfollow-fullreview" aria-label={'PT-resultat for '+clientName}>
    <PTWodReview onRecordCalibration={onRecordCalibration} key={openedReview} assignmentId={a?.id||null} programSessionId={p?.id||null}
     clientName={clientName} clientRank={clientRank}
     wodName={a?.wods?.name||p?.wodName||'Tildelt WOD'}
-    prescriptionSchema={p?savedPlanPrescription(p):null}
+    prescriptionSchema={p?savedPlanPrescription(p):a?.wods?.timer_settings?.workout_schema||null}
+    onReplayNow={actorId&&canReplayNow?()=>setReplayMode('now'):undefined} onReplayPlan={actorId&&replayWod?()=>setReplayMode('plan'):undefined}
     onClose={()=>{setOpenedReview(null);onReviewClosed()}}/>
+   {replayNotice&&<p role="status" className="auth-message">{replayNotice}</p>}
+   {replayMode&&replayWod&&actorId&&createPortal(<LibraryTrainingEntry key={clientId+':'+replayMode} wod={replayWod} mode={replayMode} members={[{id:clientId,display_name:clientName}]} actorId={actorId} initialMemberId={clientId} initialShared={replayMode==='now'} replay onPrepareSynchron={onPrepareSynchron} onClose={()=>setReplayMode(null)} onSaved={message=>{setReplayMode(null);setReplayNotice(message);onReplaySaved?.()}}/>,document.body)}
   </section>
  }
  return <section className={'ptfollow ptfollow-'+mode} aria-label={'PT-tildelte WOD-ar for '+clientName}>

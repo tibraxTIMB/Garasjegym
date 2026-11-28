@@ -123,3 +123,9 @@ html[data-gg-design="freiwerk"] .gg-fw-anatomy-map [role=button]:focus-visible{o
 html[data-gg-design="freiwerk"] .exercise-pr-record footer{border-color:var(--fw-line)}
 html[data-gg-design="freiwerk"] .exercise-pr-record footer button{min-height:44px}
 @media(max-width:380px){html[data-gg-design="freiwerk"] .ptreview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* FW11: explicit replay actions and calendar focus. */
+.gg-fw-replay{display:grid;gap:5px;padding:8px 0;border-bottom:1px solid var(--fw-line,#526259)}.gg-fw-replay>div{display:flex;flex-wrap:wrap;gap:6px}.gg-fw-replay>div>button{flex:1 1 130px;min-height:44px;white-space:normal}.gg-fw-replay>small{color:var(--fw-muted,#b4c2b9)}
+html[data-gg-design="freiwerk"] .gg-cal-modes button[aria-pressed=true]{background:var(--fw-selected);color:var(--fw-accent);box-shadow:inset 0 -2px var(--fw-accent)}
+html[data-gg-design="freiwerk"] .ptfollow-wod-row{border-color:var(--fw-line);background:transparent;box-shadow:none}
+html[data-gg-design="freiwerk"] .pt-prescribed-wod{min-width:0;border-color:var(--fw-line)}

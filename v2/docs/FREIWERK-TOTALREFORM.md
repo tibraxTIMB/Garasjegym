@@ -49,3 +49,6 @@ Integrated PR #31 after exact path comparison. Reconciled Training DNA switches 
 
 ## FW10 slice
 Integrated CLEAN UI #32 after conflict check. PT summary uses validated stored shared totals instead of empty participant rows; absent totals stay unknown. Synchron results classified as team, not individual. Historical team exercise profile uses available stored movements, explicitly planned/descriptive, never feeds PR or muscle history. Compact anatomy, result and PR surfaces, shared feedback confirmation and date field. Test fixture represents hypothetical two-goal 24:47, not the actual user's log. Full result, PR and device regression tests pending.
+
+## FW11 slice
+PT review can replay a currently published source WOD with the same client or create a new appointment. No reuse of completed assignment IDs or past scores. Replay uses current library version, not immutable historical prescription. PT calendar forwards exact appointment ID to PT list. Eligible single published Chipper appointments expose preselected Synchron preparation. This does not attach the Synchron session/log to the appointment, automatically complete the appointment, or support multi-WOD Synchron. Office mode remains guarded. Device and persistence tests pending.
