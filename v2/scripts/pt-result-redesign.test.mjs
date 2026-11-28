@@ -125,3 +125,32 @@ test('PT Samspel review keeps team evidence separate from individual prescriptio
  assert.equal(ptTeamResult({result_data:{wod_engine:{participation:'partner'}}}),true)
  assert.equal(ptTeamResult({result_data:{wod_engine:{participation:'individual'}}}),false)
 })
+
+import {ptSessionMuscleItems} from '../src/lib/ptWodReview.js'
+test('team muscle profile uses saved exercise names without attributing individual work',()=>{
+ const result={result_data:{participation_verified:'team',exercise_results:[{exercise_name:'Wall Ball',sets:[]}],samspel:{targets:[{exercise_name:'Row',target_reps:2000},{exercise_name:'Wall Ball'}]}}}
+ assert.deepEqual(ptSessionMuscleItems(result).map(x=>x.exercise_name),['Wall Ball','Row'])
+ assert.equal(result.result_data.exercise_results[0].sets.length,0)
+ assert.deepEqual(ptSessionMuscleItems(null),[])
+ assert.deepEqual(ptSessionMuscleItems({result_data:{samspel_blocks:[{samspel:{targets:[{exercise_name:'Squat'}]}}]}}).map(x=>x.exercise_name),['Squat'])
+ const screen=read('../src/components/PTWodReview.jsx')
+ assert.doesNotMatch(screen,/WOD-lista|Lagresultat · ikkje grunnlag/)
+ assert.match(screen,/planned compact/)
+ assert.match(screen,/individualMuscle/)
+ const notes=read('../src/components/SharedInventory.jsx')
+ assert.match(notes,/gg-inventory-notes-compact/)
+ assert.match(notes,/\{row.notes\}/)
+})
+
+import {recordedTeamChipperProgress} from '../src/lib/ptWodReview.js'
+test('saved shared totals are used without assigning reps to individual athletes',()=>{
+ const targets=[{exercise_name:'Row',target_reps:1000,unit:'m'},{exercise_name:'Box Step-up',target_reps:50,unit:'reps'}]
+ const s={version:2,mode:'parallel_round_swap',main_track:'chipper',participant_count:2,switch_rule:'fixed',individual_scores:true,team_totals_only:true,targets,team_totals:targets.map(t=>({...t,reps:t.target_reps}))}
+ const log={format:'Chipper',score_time_seconds:1487,result_data:{samspel:s,completed:true}}
+ assert.equal(ptTeamSummary(log).find(x=>x.label==='Felles øvingsmål').value,'2 / 2')
+ assert.equal(ptTeamSummary(log).find(x=>x.label==='Medgått tid').value,'24:47')
+ assert.equal(recordedTeamChipperProgress({...s,team_totals:undefined}),null)
+ assert.equal(recordedTeamChipperProgress({...s,team_totals:[{...s.team_totals[0],reps:null},s.team_totals[1]]}),null)
+ assert.equal(ptTeamResult({result_data:{synchron_result:{version:1}}}),true)
+ assert.equal(ptSessionMuscleItems({result_data:{report_parts:[{items:targets}]}}).length,2)
+})

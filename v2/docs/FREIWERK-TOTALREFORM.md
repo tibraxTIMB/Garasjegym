@@ -46,3 +46,6 @@ Session queue uses real execution builder for preflight, shows selected WOD exer
 
 ## FW09 slice
 Integrated PR #31 after exact path comparison. Reconciled Training DNA switches and SynchronPreparation's preselected WOD prop from #33. Local shared Chipper progress, next movement and explicit completion are separate from server-authoritative Synchron. Synchron has clear leader/member identity, connection status, progression and explicit actual-result confirmation. Shared choice controls replace short preparation menus; no change to transport authority. Responsive audit workflow and Chipper test from #31 are included, not executed/verified here. Full timer format/device and live two-device tests remain open. No production writes or approval.
+
+## FW10 slice
+Integrated CLEAN UI #32 after conflict check. PT summary uses validated stored shared totals instead of empty participant rows; absent totals stay unknown. Synchron results classified as team, not individual. Historical team exercise profile uses available stored movements, explicitly planned/descriptive, never feeds PR or muscle history. Compact anatomy, result and PR surfaces, shared feedback confirmation and date field. Test fixture represents hypothetical two-goal 24:47, not the actual user's log. Full result, PR and device regression tests pending.

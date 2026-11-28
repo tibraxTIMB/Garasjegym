@@ -215,3 +215,15 @@
 .ptfollow .ptreview-disclosure>summary::after,.ptfollow .ptreview-disclosure>summary::before{content:none!important}
 .ptfollow .ptreview-disclosure-main{min-width:0;overflow-wrap:anywhere}.ptfollow .ptreview-disclosure-main strong{font-size:13px;line-height:1.3}.ptfollow .ptreview-disclosure-right{max-width:45%;flex-shrink:0}.ptfollow .ptreview-part-state{white-space:normal;overflow-wrap:normal;font-size:10px}
 @media(max-width:480px){.ptfollow{padding:7px!important;gap:8px}.ptfollow .ptreview{padding:7px!important;gap:8px}.wod-picker .wod-picker-option{grid-template-columns:22px minmax(0,1fr)!important}.wod-picker .wod-picker-status{grid-column:2!important;justify-self:start}.ptfollow-heading-actions button{font-size:12px!important;min-height:44px!important;white-space:nowrap!important}.gg-pt-assign-sheet{max-height:96dvh;padding:8px}}
+
+/* GG CLEAN UI — scoped PT results. */
+.ptfollow-fullreview .ptreview{border:0;background:transparent;border-radius:0;padding:6px;gap:10px;min-width:0}
+.ptfollow-fullreview .ptreview-header{flex-direction:row;align-items:flex-start;flex-wrap:nowrap;padding-bottom:8px}
+.ptfollow-fullreview .ptreview-close{width:36px;min-height:36px;padding:4px;display:grid;place-items:center;flex:none;background:transparent;border:0;color:inherit}
+.ptfollow-fullreview .ptreview-metrics{display:flex;flex-wrap:wrap;gap:14px;border-bottom:1px solid #425a51;padding-bottom:8px}
+.ptfollow-fullreview .ptreview-metric{background:none;border:0;padding:0;text-align:left;gap:2px;min-width:0;flex:1 1 85px}
+.ptfollow-fullreview .ptreview-next-action{background:none;border:0;border-top:1px solid #425a51;border-radius:0;padding:8px 0;flex-direction:row;align-items:center;flex-wrap:wrap}
+.ptfollow-fullreview .ptreview-next-action button{width:auto;flex:0 1 auto;min-height:40px}
+.ptfollow-fullreview .ptreview-disclosure,.ptfollow-fullreview .ptreview-feedback-panel{background:none;border:0;border-top:1px solid #425a51;border-radius:0;padding-inline:0}
+.gg-pt-muscle-compact{display:grid;gap:4px;border-top:1px solid #425a51;padding-top:8px;min-width:0;overflow-wrap:anywhere}
+.gg-pt-muscle-compact h4{margin:0}.gg-pt-muscle-compact figure svg{max-width:104px!important}.gg-pt-muscle-compact figure figcaption{font-size:11px}

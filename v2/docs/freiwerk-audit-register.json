@@ -332,6 +332,13 @@
       "evidence": []
     },
     {
+      "path": "v2/src/components/gg-clean-ui.css",
+      "category": "style",
+      "state": "registered",
+      "checks": {},
+      "evidence": []
+    },
+    {
       "path": "v2/src/components/GroupClassResults.jsx",
       "category": "component",
       "state": "registered",

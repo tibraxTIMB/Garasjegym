@@ -108,3 +108,18 @@ html[data-gg-design="freiwerk"] .gg-sync-review details{min-width:0;border-botto
 html[data-gg-design="freiwerk"] .gg-sync-review summary{min-height:44px;align-content:center;overflow-wrap:break-word}
 html[data-gg-design="freiwerk"] .gg-chipper-segments .current{background:var(--fw-accent)}
 @media(max-height:480px) and (orientation:landscape){html[data-gg-design="freiwerk"] .gg-fw-sync-head h3{font-size:18px}html[data-gg-design="freiwerk"] .gg-synchron-panel{gap:6px;padding:9px}}
+
+/* FW10: results and anatomy. Preserve evidentiary colours and destructive actions. */
+html[data-gg-design="freiwerk"] :is(.ptreview,.workout-detail-dialog){background:var(--fw-surface);color:var(--fw-text);border-color:var(--fw-line);border-radius:8px}
+html[data-gg-design="freiwerk"] :is(.ptreview-header,.workout-detail-header){border-color:var(--fw-line);background:var(--fw-bg)}
+html[data-gg-design="freiwerk"] :is(.ptreview-heading h3,.workout-detail-intro h2){letter-spacing:-.025em;overflow-wrap:break-word;word-break:normal}
+html[data-gg-design="freiwerk"] :is(.ptreview-metric,.workout-detail-stats>div,.exercise-pr-record){background:var(--fw-surface);border:0;border-bottom:1px solid var(--fw-line);border-radius:0;box-shadow:none;min-width:0}
+html[data-gg-design="freiwerk"] :is(.ptreview-metric,.workout-detail-stats>div,.exercise-pr-record)>strong{color:var(--fw-accent);font-variant-numeric:tabular-nums}
+html[data-gg-design="freiwerk"] :is(.ptreview-disclosure,.workout-detail-timing,.workout-detail-edit-card,.gg-pt-muscle-compact){border:0;border-bottom:1px solid var(--fw-line);background:transparent;border-radius:0;box-shadow:none;min-width:0}
+html[data-gg-design="freiwerk"] .gg-pt-muscle-compact{padding:8px 0}
+html[data-gg-design="freiwerk"] .gg-pt-muscle-compact h4{margin:0;font-size:15px}
+html[data-gg-design="freiwerk"] .gg-fw-anatomy-map figure{min-width:0}
+html[data-gg-design="freiwerk"] .gg-fw-anatomy-map [role=button]:focus-visible{outline:2px solid var(--fw-accent)}
+html[data-gg-design="freiwerk"] .exercise-pr-record footer{border-color:var(--fw-line)}
+html[data-gg-design="freiwerk"] .exercise-pr-record footer button{min-height:44px}
+@media(max-width:380px){html[data-gg-design="freiwerk"] .ptreview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}

@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react'
 import {supabase} from '../lib/supabase.js'
 import {equipmentCapacity,applyEquipmentInventory} from '../lib/equipmentPreparation.js'
 import Lastmeister,{hasBarbellWork} from './Lastmeister.jsx'
+import './gg-clean-ui.css'
 import {inventoryFromRows,inventoryNotes,doubleEmomStationCapacity} from '../lib/garageInventory.js'
 export {inventoryFromRows} from '../lib/garageInventory.js'
 
@@ -41,5 +42,7 @@ export function useInventoryCapacity(items,values){
 export function InventoryNotes({items=[],rows=[]}){
  const notes=inventoryNotes(items,rows)
  if(!notes.length)return null
- return <div className="customer-plan-details"><strong>Utstyrsmerknader · kontroller før bruk</strong>{notes.map(row=><div key={row.equipment_key}><strong>{row.equipment_label}{row.weight_kg!=null?' · '+row.weight_kg+' kg':''}</strong><p>{row.notes}</p></div>)}</div>
+ const visible=notes.filter(row=>!['Ny modell.','Eldre modell, sjeldan brukt; fungerer. Vektspenn ikkje oppgitt.'].includes(String(row.notes).trim()))
+ if(!visible.length)return null
+ return <section className="gg-inventory-notes-compact" aria-label="Utstyrsmerknader"><strong>! Kontroller utstyr</strong>{visible.map(row=><div key={row.equipment_key}><b>{row.equipment_label}{row.weight_kg!=null?' · '+row.weight_kg+' kg':''}</b><small>{row.notes}</small></div>)}</section>
 }

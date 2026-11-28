@@ -1,4 +1,5 @@
-import {samspelConfig,teamChipperProgress} from './samspel.js'
+import {samspelConfig,teamChipperProgress,chipperUnit} from './samspel.js'
+import {synchronHistoryRows} from './synchronLog.js'
 /** PT follow-up metrics derived solely from a workout explicitly linked to a PT assignment. */
 export function validRoundSplits(result) {
  const values=result?.result_data?.split_seconds
@@ -20,7 +21,16 @@ export function formatDuration(seconds) {
 }
 export function ptTeamResult(result){
  const d=result?.result_data||{}
- return !!d.samspel||!!d.samspel_blocks?.length||!!d.wod_engine?.blocks?.some?.(b=>b.samspel)||d.participation_verified==='team'||['partner','team'].includes(d.wod_engine?.participation)
+ return !!d.synchron_result||!!d.samspel||!!d.samspel_blocks?.length||!!d.wod_engine?.blocks?.some?.(b=>b.samspel)||d.participation_verified==='team'||['partner','team'].includes(d.wod_engine?.participation)
+}
+export function recordedTeamChipperProgress(s){
+ if(!samspelConfig({samspel:s})||s.main_track!=='chipper'||s.team_totals_only!==true||!Array.isArray(s.team_totals)||s.team_totals.length!==s.targets.length)return null
+ const progress=s.targets.map((target,i)=>{
+  const row=s.team_totals[i]
+  if(!row||row.exercise_name!==target.exercise_name||chipperUnit(row)!==chipperUnit(target)||row.target_reps!==target.target_reps||!Number.isSafeInteger(row.reps)||row.reps<0||row.reps>target.target_reps)return null
+  return {...target,reps:row.reps,complete:row.reps===target.target_reps,remaining:target.target_reps-row.reps}
+ })
+ return progress.every(Boolean)?progress:null
 }
 export function ptTeamSummary(result){
  const d=result?.result_data||{},s=d.samspel,rows=Array.isArray(s?.participant_results)?s.participant_results:[]
@@ -30,8 +40,10 @@ export function ptTeamSummary(result){
  const time=Number(d.elapsed_seconds||result?.score_time_seconds)
  if(Number.isFinite(time)&&time>0)metrics.push({label:'Medgått tid',value:formatDuration(time)})
  if(s?.main_track==='chipper'&&samspelConfig({samspel:s})){
-  const progress=teamChipperProgress(s,rows)
-  metrics.push({label:'Felles øvingsmål',value:progress.filter(x=>x.complete).length+' / '+progress.length})
+  // Team-total-only records store measured shared totals, not participant rows.
+  // Missing or malformed totals are unknown; never substitute zero or the prescription.
+  const progress=s.team_totals_only===true?recordedTeamChipperProgress(s):rows.length?teamChipperProgress(s,rows):null
+  metrics.push({label:'Felles øvingsmål',value:progress?progress.filter(x=>x.complete).length+' / '+progress.length:'Ikkje registrert'})
  }else if(s?.main_track==='relay'&&result.score_rounds!=null&&Number.isSafeInteger(Number(result.score_rounds)))metrics.push({label:'Lagets rundar',value:Number(result.score_rounds)})
  if(rows.length)metrics.push({label:'Utøvarplassar registrerte',value:rows.length})
  return metrics
@@ -180,4 +192,14 @@ export function ptPrescribedWorkContext(result,schema,exercise) {
  )
  const prescribedSet=count>0&&Number.isInteger(prescribedReps)&&prescribedReps>0?`${count} planlagde intervall × ${prescribedReps} reps`:count>0?`${count} planlagde intervall`:null
  return {kind:'assumed',text:`EMOM: ${prescribedSet?prescribedSet+'. ':''}Øvinga blir rekna som gjennomført etter WOD-oppsettet når ingen avvik er meldt; det er ikkje ei måling av kvart sett.`}
+}
+
+// A session profile is descriptive only: never feeds individual history or PRs.
+export function ptSessionMuscleItems(result,schema=null){
+ if(!result)return []
+ const d=result.result_data||{},list=x=>Array.isArray(x)?x:[]
+ const samspel=[d.samspel,...list(d.samspel_blocks).map(b=>b.samspel)].filter(Boolean)
+ const items=[...list(d.exercise_results),...list(schema?.items),...list(d.report_parts).flatMap(p=>list(p.items)),...synchronHistoryRows(result),...samspel.flatMap(s=>[...list(s.targets),...list(s.tracks),s.exercise_name])]
+ const seen=new Set()
+ return items.filter(item=>{const name=typeof item==='string'?item:item?.exercise_name||item?.name;if(typeof name!=='string'||!name.trim()||item?.is_rest)return false;const key=name.trim().toLowerCase();if(seen.has(key))return false;seen.add(key);return true})
 }
